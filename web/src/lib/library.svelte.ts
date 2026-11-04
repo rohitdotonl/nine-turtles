@@ -157,16 +157,16 @@ export class LoadedLibrary {
     };
   }
 
-  /** Deletes a folder (never its feeds): "Deleted the folder … · Undo", which puts its feeds, rules and saved searches back. */
+  /** Deletes a folder (never its feeds): "Deleted the folder … · Undo", which puts its feeds and saved searches back. */
   async deleteFolder(folder: Folder): Promise<Removed> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, rules, searches } = await deleteFolder(folder.id);
+    const { refusal, searches } = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await this.loadFeeds();
     return {
       message: `Deleted the folder ${folder.name}`,
       undo: async () => {
-        const problem = await createFolder(folder.name, inside, rules, searches);
+        const problem = await createFolder(folder.name, inside, searches);
         if (problem) return refused(problem, "folder");
         await this.loadFeeds();
         if (searches.length > 0) await this.loadSearches();
@@ -178,12 +178,12 @@ export class LoadedLibrary {
   /**
    * "This is one person" on a folder (SPEC section 36): its places become one person named as the
    * folder was, and the folder goes. "… is one person now · Undo" puts the places back on their
-   * own and makes the folder again, with its rules and saved searches. Answers the place the
+   * own and makes the folder again, with its saved searches. Answers the place the
    * person's row opens.
    */
   async folderToPerson(folder: Folder): Promise<(Notice & { lead: number }) | string> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, before, rules, searches } = await folderToPerson(folder.id);
+    const { refusal, before, searches } = await folderToPerson(folder.id);
     // Either way the sidebar catches up: a rename saved in the same press stays saved.
     await this.loadFeeds();
     if (refusal) return refusal;
@@ -194,7 +194,7 @@ export class LoadedLibrary {
       undo: async () => {
         const back = await putBack(before);
         if (back) return back;
-        const refusal = await createFolder(folder.name, inside, rules, searches);
+        const refusal = await createFolder(folder.name, inside, searches);
         await this.loadFeeds();
         if (searches.length > 0) await this.loadSearches();
         return refusal ? refused(refusal, "folder") : undefined;

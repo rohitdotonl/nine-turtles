@@ -157,9 +157,9 @@
   let wordmark: HTMLHeadingElement | undefined = $state();
   /** The headings (and the add field) the keyboard's place lands on (`landing.ts`). */
   const headings: Headings = $state({});
-  /** "Add a rule for this feed…" in Edit feed: Settings opens with a new rule for it. */
+  /** "Hide articles about…" on an article or a person's page: Settings › Hiding opens with a new rule for them. */
   let ruleForFeed: number | undefined = $state();
-  /** Feed health, Your feeds, Muted articles or Readers was opened from Settings, so closing it is a step back in history. */
+  /** Feed health, Your feeds, Hidden articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -706,7 +706,7 @@
     follow(event, { kind: "your-feeds" });
   }
 
-  /** Settings › Rules › Muted articles. */
+  /** Settings › Hiding › Hidden articles. */
   function goMuted(event: MouseEvent) {
     follow(event, { kind: "muted" });
   }
@@ -742,13 +742,13 @@
     return movedFeed?.to === id ? movedFeed.from : id;
   }
 
-  function addRuleFor(feed: Feed) { // Edit feed's "Add a rule for this feed…": Settings, with a new rule for the feed.
-    ruleForFeed = feed.id;
-    go({ kind: "settings", page: "rules" });
+  function hideFrom(feed: number) { // "Hide articles about…" (an article's More menu, a person's page): Settings › Hiding, with a new rule for them.
+    ruleForFeed = feed;
+    go({ kind: "settings", page: "hiding" });
   }
 
   /**
-   * Close a page opened from Settings (Feed health, Your feeds, Muted articles, All readers, and
+   * Close a page opened from Settings (Feed health, Your feeds, Hidden articles, All readers, and
    * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
    * step back in history when it came from there.
    */
@@ -1168,8 +1168,7 @@
           onYourFeeds={goYourFeeds}
           onMuted={goMuted}
           onReaders={goReaders}
-          feeds={library.feeds ?? []}
-          folders={library.folders}
+          people={library.rows ?? []}
           {phone}
           bind:ruleForFeed
           besideToggle={!phone && !panes.sidebar}
@@ -1360,6 +1359,7 @@
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onCollect={() => openCollecting(selected!)}
+              onHide={hideFrom}
               beforeToolbar={nowPlayingAboveToolbar}
               phone={phone
                 ? {
@@ -1440,7 +1440,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onAddRule={addRuleFor} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
     {/key}
   {/if}
 {/snippet}

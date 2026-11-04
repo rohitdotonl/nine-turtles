@@ -266,19 +266,16 @@ export async function renameFolder(id: number, name: string): Promise<Refusal | 
   return (await change(`/api/folders/${id}`, { name })).refusal;
 }
 
-/**
- * Deletes a folder. Answers the rules that applied to it (SPEC section 27) and the saved searches that looked in it,
- * for Undo to hand back.
- */
-export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; rules: number[]; searches: number[] }> {
+/** Deletes a folder. Answers the saved searches that looked in it, for Undo to hand back. */
+export async function deleteFolder(id: number): Promise<{ refusal?: Refusal; searches: number[] }> {
   const { refusal, answer } = await change(`/api/folders/${id}/delete`, {});
   const numbers = (list: unknown) => (Array.isArray(list) ? list.map(Number) : []);
-  return { refusal, rules: numbers(answer?.rules), searches: numbers(answer?.searches) };
+  return { refusal, searches: numbers(answer?.searches) };
 }
 
-/** Creates a folder with these feeds (and rules and saved searches) in it: Undo for deleting one. */
-export async function createFolder(name: string, feeds: number[], rules: number[] = [], searches: number[] = []): Promise<Refusal | undefined> {
-  return (await change("/api/folders", { name, feeds, rules, searches })).refusal;
+/** Creates a folder with these feeds (and saved searches) in it: Undo for deleting one. */
+export async function createFolder(name: string, feeds: number[], searches: number[] = []): Promise<Refusal | undefined> {
+  return (await change("/api/folders", { name, feeds, searches })).refusal;
 }
 
 /** What an edit page says when a change wasn't made. */

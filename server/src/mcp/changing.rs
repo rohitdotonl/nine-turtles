@@ -45,12 +45,10 @@ pub(super) struct FeedEdit {
 pub(super) struct FolderName {
     folder_id: Option<i64>,
     name: Option<String>,
-    /// For create_folder: feeds to put in it, and rules and saved searches
-    /// to point at it again, as delete_folder answered them (its undo).
+    /// For create_folder: feeds to put in it, and saved searches to point
+    /// at it again, as delete_folder answered them (its undo).
     #[serde(default)]
     feed_ids: Vec<i64>,
-    #[serde(default)]
-    rule_ids: Vec<i64>,
     #[serde(default)]
     search_ids: Vec<i64>,
 }
@@ -218,7 +216,6 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
                     person,
                     id,
                     &asked.feed_ids,
-                    &asked.rule_ids,
                     &asked.search_ids,
                 )
                 .await?;
@@ -238,9 +235,8 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
                         "done": true,
                         "removed": gone.name,
                         "feed_ids": gone.feeds,
-                        "rule_ids": gone.rules,
                         "search_ids": gone.searches,
-                        "undo": "create_folder with this name, feed_ids, rule_ids and search_ids puts it back as it was",
+                        "undo": "create_folder with this name, feed_ids and search_ids puts it back as it was",
                     })),
                     None => Err("The reader has no folder with that id.".to_owned()),
                 }
@@ -256,45 +252,41 @@ pub(super) async fn folder(state: &AppState, person: i64, tool: &str, asked: Fol
 
 #[derive(Deserialize)]
 pub(super) struct RuleAsked {
-    #[serde(default)]
     words: String,
+    feed_id: Option<i64>,
     #[serde(default)]
     title_only: bool,
     #[serde(default)]
-    author: String,
-    feed_id: Option<i64>,
-    folder_id: Option<i64>,
-    action: rules::Action,
-    #[serde(default)]
     paused: bool,
+    #[serde(default)]
+    place_gone: bool,
 }
 
 pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
     let form = rules::RuleForm {
         words: asked.words,
-        title_only: asked.title_only,
-        author: asked.author,
         feed_id: asked.feed_id,
-        folder_id: asked.folder_id,
-        action: asked.action,
+        title_only: asked.title_only,
         paused: asked.paused,
-        place_gone: false,
+        place_gone: asked.place_gone,
     };
     match rules::make(state, person, &form).await {
         Ok(Ok((id, matching))) => Ok(json!({
             "done": true,
             "rule_id": id,
             "unread_articles_already_matching": matching,
-            "note": "It acts on articles arriving from now on; the reader can apply it to those already here in Settings.",
+            "note": "It hides articles arriving from now on; the reader can hide those already here too, in Settings › Hiding.",
         })),
         Ok(Err("too-long")) => Err(format!(
-            "Words and author are at most {} characters.",
+            "The words are at most {} characters.",
             rules::LONGEST
         )),
-        Ok(Err("nothing-to-match")) => Err("Give words or an author to look for.".to_owned()),
-        Ok(Err(_)) => Err(
-            "Give one feed or one folder of the reader's, or neither for every feed.".to_owned(),
-        ),
+        Ok(Err("nothing-to-match")) => {
+            Err("Give a word or phrase to hide articles about.".to_owned())
+        }
+        Ok(Err(_)) => {
+            Err("Give the feed_id of a person the reader follows, or none for everyone.".to_owned())
+        }
         Err(error) => Err(database(&error)),
     }
 }

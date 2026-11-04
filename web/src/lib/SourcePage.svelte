@@ -21,7 +21,6 @@
     heading = $bindable(),
     onDone,
     onPeople,
-    onAddRule,
     onMoved,
   }: {
     source: Feed;
@@ -33,7 +32,6 @@
     onDone: (saved: boolean) => void;
     /** Taken out: the list it opens on now, with "… · Undo". */
     onPeople: (done: Notice, lead: number) => void;
-    onAddRule: () => void;
     onMoved: (feed: Sick) => void;
   } = $props();
 
@@ -96,7 +94,7 @@
   </div>
 
   <form id={formId} onsubmit={save} class="flex flex-col gap-5">
-    <SourceFields feed={source} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
+    <SourceFields feed={source} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onMoved} />
 
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}

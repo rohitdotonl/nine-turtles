@@ -530,8 +530,8 @@ async fn separate_place(
 
 /// "This is one person", on a folder that holds one person's places: its
 /// places become one person, named as the folder was, and the folder goes.
-/// Answers what Undo needs: the places as they were, and the folder's rules
-/// and saved searches (as deleting a folder does).
+/// Answers what Undo needs: the places as they were, and the folder's saved
+/// searches (as deleting a folder does).
 async fn folder_to_person(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -573,7 +573,6 @@ async fn folder_to_person(
         Ok::<_, sqlx::Error>(Some(json!({
             "writer": writer,
             "before": before,
-            "rules": deleted.rules,
             "searches": deleted.searches,
         })))
     }

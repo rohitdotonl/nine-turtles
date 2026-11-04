@@ -1,10 +1,11 @@
-//! Rules and mutes (SPEC section 27, decision 0077): "when a new article
-//! matches this, do that", written by the reader in plain fields.
+//! Hiding (SPEC section 27, decisions 0077 and 0173): "Hide articles about
+//! [words] from [everyone / this person]", one sentence the reader fills in.
 //!
-//! A rule looks for a word or phrase (in the title, or in the title or the
-//! text) and an author, in every feed, one folder or one feed. It mutes the
-//! article, stars it, or marks it read. Only what the feed holds and what
-//! the reader wrote are used: no guessing, no ranking (DESIGN.md → "Never").
+//! A rule looks for a word or phrase in an article's title or text (an old
+//! rule may look in titles only), from everyone or from one person: one of
+//! their places stands for all of them. A matching article is hidden. Only
+//! what the feed holds and what the reader wrote are used: no guessing, no
+//! ranking (DESIGN.md → "Never").
 //!
 //! Rules act on articles as they arrive (`feeds::store_articles` calls
 //! `apply_to_new`). A new rule can also be applied, once, to the unread
@@ -13,9 +14,14 @@
 //! Each rule is a reader's, and changes only that reader's marks (their
 //! entries); another reader of the same feed sees the article as before.
 //!
-//! A muted article is kept and counts as read, so it waits in no list and
-//! other feed readers see it as read too. Only the Muted page, search and
-//! (if it's starred) Starred show it; unmuting it (or marking it unread) brings it back, unread.
+//! A hidden article (`muted` in the database) is kept and counts as read,
+//! so it waits in no list and other feed readers see it as read too. Only
+//! the Hidden articles page, search and (if it's starred) Starred show it;
+//! unhiding it (or marking it unread) brings it back, unread.
+//!
+//! Rules from before step 8 that had an author, starred or marked read, or
+//! applied to a folder are kept in the database but never shown or run
+//! (`RULES` reads only the others): what they did stays done.
 
 use std::collections::HashSet;
 
@@ -38,12 +44,12 @@ use crate::{
 };
 
 mod shared;
-pub use shared::{back_in_folder, delete, place_gone, place_gone_for};
+pub use shared::{delete, place_gone_for};
 
-/// The longest phrase or author name a rule can hold, in characters.
+/// The longest phrase a rule can hold, in characters.
 pub const LONGEST: usize = 200;
 
-/// The most muted articles the Muted page lists at once, newest first.
+/// The most hidden articles the Hidden articles page lists at once, newest first.
 pub const MUTED_SHOWN: i64 = 200;
 
 pub fn routes() -> Router<AppState> {
@@ -56,55 +62,10 @@ pub fn routes() -> Router<AppState> {
         .route("/api/muted", get(list_muted))
 }
 
-/// What a rule does to an article that matches.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Action {
-    /// Kept, counted as read, shown only on the Muted page and in search.
-    Mute,
-    /// Starred.
-    Star,
-    /// Marked as read: it stays in its feed's list.
-    Read,
-}
-
-impl Action {
-    const fn word(self) -> &'static str {
-        match self {
-            Self::Mute => "mute",
-            Self::Star => "star",
-            Self::Read => "read",
-        }
-    }
-
-    fn from_word(word: &str) -> Option<Self> {
-        match word {
-            "mute" => Some(Self::Mute),
-            "star" => Some(Self::Star),
-            "read" => Some(Self::Read),
-            _ => None,
-        }
-    }
-
-    /// Changes the named articles' marks for one reader, all in one step.
-    /// Takes the reader, then the articles.
-    const fn sql(self) -> &'static str {
-        match self {
-            Self::Mute => {
-                "UPDATE entries SET muted = 1, read = 1
-                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
-            }
-            Self::Star => {
-                "UPDATE entries SET starred = 1
-                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
-            }
-            Self::Read => {
-                "UPDATE entries SET read = 1
-                 WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))"
-            }
-        }
-    }
-}
+/// Hides the named articles for one reader, all in one step. Takes the
+/// reader, then the articles.
+const HIDE: &str = "UPDATE entries SET muted = 1, read = 1
+     WHERE person_id = ? AND article_id IN (SELECT value FROM json_each(?))";
 
 /// One rule, as stored and as the screen shows it.
 #[derive(Clone, Debug, Serialize)]
@@ -114,32 +75,23 @@ pub struct Rule {
     #[serde(skip)]
     pub person_id: i64,
     pub words: String,
+    /// Only an old rule looks in titles alone; new ones look in the text too.
     pub title_only: bool,
-    pub author: String,
+    /// The person it hides from, by one of their places; none for everyone.
     pub feed_id: Option<i64>,
-    pub folder_id: Option<i64>,
-    /// The feed or folder it applied to is gone, so it matches nothing.
+    /// The person it applied to is no longer followed, so it matches nothing.
     pub place_gone: bool,
-    pub action: Action,
     pub paused: bool,
 }
 
-type RuleLine = (
-    i64,
-    i64,
-    String,
-    bool,
-    String,
-    Option<i64>,
-    Option<i64>,
-    bool,
-    String,
-    bool,
-);
+type RuleLine = (i64, i64, String, bool, Option<i64>, bool, bool);
 
-/// A reader's rules, in the order they were made. Takes the reader.
-const RULES: &str = "SELECT id, person_id, words, title_only, author, feed_id, folder_id,
-        place_gone, action, paused FROM rules WHERE person_id = ? ORDER BY id";
+/// A reader's rules, in the order they were made. Takes the reader. Rules
+/// that no longer fit (an author, star or mark read, a folder) are left out.
+const RULES: &str = "SELECT id, person_id, words, title_only, feed_id, place_gone, paused
+    FROM rules WHERE person_id = ? AND action = 'mute' AND author = '' AND words != ''
+        AND folder_id IS NULL
+    ORDER BY id";
 
 pub(crate) async fn rules(
     connection: &mut SqliteConnection,
@@ -151,31 +103,15 @@ pub(crate) async fn rules(
         .await?;
     Ok(lines
         .into_iter()
-        .filter_map(
-            |(
+        .map(
+            |(id, person_id, words, title_only, feed_id, place_gone, paused)| Rule {
                 id,
                 person_id,
                 words,
                 title_only,
-                author,
                 feed_id,
-                folder_id,
                 place_gone,
-                action,
                 paused,
-            )| {
-                Some(Rule {
-                    id,
-                    person_id,
-                    words,
-                    title_only,
-                    author,
-                    feed_id,
-                    folder_id,
-                    place_gone,
-                    action: Action::from_word(&action)?,
-                    paused,
-                })
             },
         )
         .collect())
@@ -206,7 +142,6 @@ pub struct Candidate {
     pub feed_id: i64,
     title: Vec<String>,
     text: Vec<String>,
-    author: Vec<String>,
 }
 
 impl Candidate {
@@ -214,7 +149,6 @@ impl Candidate {
         id: i64,
         feed_id: i64,
         title: &str,
-        author: Option<&str>,
         content: Option<&str>,
         summary: Option<&str>,
     ) -> Self {
@@ -227,72 +161,53 @@ impl Candidate {
             feed_id,
             title: words_of(title),
             text: words_of(&text),
-            author: words_of(author.unwrap_or_default()),
         }
     }
 }
 
 impl Rule {
-    /// Whether it applies to a feed in these folders, whatever the article.
-    fn covers(&self, feed_id: i64, folders: &HashSet<i64>) -> bool {
+    /// Whether it applies to a feed whose person has these places (the feed
+    /// itself among them), whatever the article.
+    fn covers(&self, places: &HashSet<i64>) -> bool {
         if self.paused || self.place_gone {
             return false;
         }
-        match (self.feed_id, self.folder_id) {
-            (Some(feed), _) => feed == feed_id,
-            (None, Some(folder)) => folders.contains(&folder),
-            (None, None) => true,
-        }
+        self.feed_id.is_none_or(|feed| places.contains(&feed))
     }
 
-    /// Whether an article (of a feed it covers) matches: every part the
-    /// reader filled in must hold.
+    /// Whether an article (of a feed it covers) is about its words.
     pub fn matches(&self, article: &Candidate) -> bool {
         let words = words_of(&self.words);
-        let author = words_of(&self.author);
-        if words.is_empty() && author.is_empty() {
-            return false;
-        }
-        let words_hold = words.is_empty()
-            || holds(&article.title, &words)
-            || (!self.title_only && holds(&article.text, &words));
-        let author_holds = author.is_empty() || holds(&article.author, &author);
-        words_hold && author_holds
+        holds(&article.title, &words) || (!self.title_only && holds(&article.text, &words))
     }
 }
 
-/// The reader's folders a feed is in.
-async fn folders_of(
+/// Every place, the reader's, of the person a feed belongs to: just the
+/// feed for a place on its own.
+async fn places_of(
     connection: &mut SqliteConnection,
     person: i64,
     feed_id: i64,
 ) -> Result<HashSet<i64>, sqlx::Error> {
-    let folders: Vec<i64> = sqlx::query_scalar(
-        "SELECT feed_folders.folder_id FROM feed_folders
-             JOIN folders ON folders.id = feed_folders.folder_id
-         WHERE feed_folders.feed_id = ? AND folders.person_id = ?",
-    )
-    .bind(feed_id)
-    .bind(person)
-    .fetch_all(connection)
-    .await?;
-    Ok(folders.into_iter().collect())
+    let places: Vec<i64> = sqlx::query_scalar(PLACES)
+        .bind(person)
+        .bind(feed_id)
+        .fetch_all(connection)
+        .await?;
+    Ok(places.into_iter().chain([feed_id]).collect())
 }
 
-type ArticleLine = (
-    i64,
-    i64,
-    String,
-    Option<String>,
-    Option<String>,
-    Option<String>,
-);
+/// The reader's places that share a person with one feed. Takes the
+/// reader, then the feed.
+const PLACES: &str = "SELECT feed_id FROM subscriptions
+    WHERE person_id = ?1 AND writer_id =
+        (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)";
+
+type ArticleLine = (i64, i64, String, Option<String>, Option<String>);
 
 /// Does each reader's rules' work on one feed's articles numbered above
 /// `after`: the ones that just arrived. Only readers who have them (whose
-/// subscription isn't cleared) are asked. Each reader's rules run in the
-/// order they were made, on that reader's marks; an article can be both
-/// starred and muted.
+/// subscription isn't cleared) are asked.
 pub async fn apply_to_new(
     connection: &mut SqliteConnection,
     feed_id: i64,
@@ -309,18 +224,13 @@ pub async fn apply_to_new(
     .await?;
     let mut candidates = None;
     for person in people {
-        let all = rules(connection, person).await?;
-        let folders = folders_of(connection, person, feed_id).await?;
-        let covering: Vec<&Rule> = all
-            .iter()
-            .filter(|rule| rule.covers(feed_id, &folders))
-            .collect();
+        let covering = covering(connection, person, feed_id).await?;
         if covering.is_empty() {
             continue;
         }
         if candidates.is_none() {
             let lines: Vec<ArticleLine> = sqlx::query_as(
-                "SELECT id, feed_id, title, author, content, summary FROM articles
+                "SELECT id, feed_id, title, content, summary FROM articles
                  WHERE feed_id = ? AND id > ?",
             )
             .bind(feed_id)
@@ -330,7 +240,7 @@ pub async fn apply_to_new(
             candidates = Some(self::candidates(lines));
         }
         let candidates = candidates.as_deref().unwrap_or_default();
-        act_on_each(connection, person, &covering, candidates).await?;
+        hide_matching(connection, person, &covering, candidates).await?;
     }
     Ok(())
 }
@@ -346,70 +256,68 @@ pub async fn apply_to(
     if ids.is_empty() {
         return Ok(());
     }
-    let all = rules(connection, person).await?;
-    let folders = folders_of(connection, person, feed_id).await?;
-    let covering: Vec<&Rule> = all
-        .iter()
-        .filter(|rule| rule.covers(feed_id, &folders))
-        .collect();
+    let covering = covering(connection, person, feed_id).await?;
     if covering.is_empty() {
         return Ok(());
     }
     let lines: Vec<ArticleLine> = sqlx::query_as(
-        "SELECT id, feed_id, title, author, content, summary FROM articles
+        "SELECT id, feed_id, title, content, summary FROM articles
          WHERE feed_id = ? AND id IN (SELECT value FROM json_each(?))",
     )
     .bind(feed_id)
     .bind(serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned()))
     .fetch_all(&mut *connection)
     .await?;
-    act_on_each(connection, person, &covering, &candidates(lines)).await
+    hide_matching(connection, person, &covering, &candidates(lines)).await
 }
 
-/// Does each of one reader's rules' work on the articles that match it.
-async fn act_on_each(
+/// One reader's running rules that apply to a feed.
+async fn covering(
     connection: &mut SqliteConnection,
     person: i64,
-    covering: &[&Rule],
+    feed_id: i64,
+) -> Result<Vec<Rule>, sqlx::Error> {
+    let all = rules(connection, person).await?;
+    let places = places_of(connection, person, feed_id).await?;
+    Ok(all
+        .into_iter()
+        .filter(|rule| rule.covers(&places))
+        .collect())
+}
+
+/// Hides, for one reader, the articles any of these rules matches.
+async fn hide_matching(
+    connection: &mut SqliteConnection,
+    person: i64,
+    covering: &[Rule],
     candidates: &[Candidate],
 ) -> Result<(), sqlx::Error> {
-    for &rule in covering {
-        let ids: Vec<i64> = candidates
-            .iter()
-            .filter(|article| rule.matches(article))
-            .map(|article| article.id)
-            .collect();
-        act(connection, person, rule.action, &ids).await?;
-    }
-    Ok(())
+    let ids: Vec<i64> = candidates
+        .iter()
+        .filter(|article| covering.iter().any(|rule| rule.matches(article)))
+        .map(|article| article.id)
+        .collect();
+    hide(connection, person, &ids).await
 }
 
 fn candidates(lines: Vec<ArticleLine>) -> Vec<Candidate> {
     lines
         .into_iter()
-        .map(|(id, feed_id, title, author, content, summary)| {
-            Candidate::new(
-                id,
-                feed_id,
-                &title,
-                author.as_deref(),
-                content.as_deref(),
-                summary.as_deref(),
-            )
+        .map(|(id, feed_id, title, content, summary)| {
+            Candidate::new(id, feed_id, &title, content.as_deref(), summary.as_deref())
         })
         .collect()
 }
 
-async fn act(
+async fn hide(
     connection: &mut SqliteConnection,
     person: i64,
-    action: Action,
     ids: &[i64],
 ) -> Result<(), sqlx::Error> {
     if ids.is_empty() {
         return Ok(());
     }
-    sqlx::query(action.sql())
+    sqlx::query(HIDE)
         .bind(person)
         .bind(serde_json::to_string(ids).unwrap_or_else(|_| "[]".to_owned()))
         .execute(connection)
@@ -417,14 +325,13 @@ async fn act(
     Ok(())
 }
 
-/// How many unread articles `matching_now` reads at a time, so even an
-/// all-feeds rule never holds every article's text in memory at once.
+/// How many unread articles `matching_now` reads at a time, so even a rule
+/// for everyone never holds every article's text in memory at once.
 const MATCH_BATCH: i64 = 500;
 
-/// The unread articles of feeds its reader follows that a rule would change
-/// now: for a star rule, only those not starred yet. It only reads, a batch
-/// at a time, so callers run it outside a write, never holding up
-/// background checks.
+/// The unread articles of feeds its reader follows that a rule would hide
+/// now. It only reads, a batch at a time, so callers run it outside a
+/// write, never holding up background checks.
 async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sqlx::Error> {
     let mut found = Vec::new();
     if rule.place_gone {
@@ -433,26 +340,21 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
     let mut after = 0;
     loop {
         let lines: Vec<ArticleLine> = sqlx::query_as(
-            "SELECT articles.id, entries.feed_id, articles.title, articles.author,
+            "SELECT articles.id, entries.feed_id, articles.title,
                     articles.content, articles.summary
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
-             WHERE entries.person_id = ?6 AND entries.read = 0
-                 AND subscriptions.unsubscribed_at IS NULL AND entries.article_id > ?4
-                 AND (?1 = 0 OR entries.starred = 0)
-                 AND (?2 IS NULL OR entries.feed_id = ?2)
-                 AND (?3 IS NULL OR entries.feed_id IN
-                      (SELECT feed_id FROM feed_folders WHERE folder_id =
-                           (SELECT id FROM folders WHERE id = ?3 AND person_id = ?6)))
-             ORDER BY entries.article_id LIMIT ?5",
+             WHERE entries.person_id = ?1 AND entries.read = 0
+                 AND subscriptions.unsubscribed_at IS NULL AND entries.article_id > ?3
+                 AND (?2 IS NULL OR entries.feed_id = ?2 OR subscriptions.writer_id =
+                      (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2))
+             ORDER BY entries.article_id LIMIT ?4",
         )
-        .bind(rule.action == Action::Star)
+        .bind(rule.person_id)
         .bind(rule.feed_id)
-        .bind(rule.folder_id)
         .bind(after)
         .bind(MATCH_BATCH)
-        .bind(rule.person_id)
         .fetch_all(db)
         .await?;
         let Some(last) = lines.last() else {
@@ -468,7 +370,7 @@ async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sq
     }
 }
 
-/// Every rule, and how many articles are muted, for Settings.
+/// Every rule, and how many articles are hidden, for Settings.
 async fn list_rules(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<Rule>, i64), sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
@@ -489,17 +391,14 @@ async fn list_rules(SignedIn(person): SignedIn, State(state): State<AppState>) -
 /// A rule as the screen sends it.
 #[derive(Deserialize)]
 pub(crate) struct RuleForm {
-    #[serde(default)]
     pub words: String,
+    /// The person, by one of their places; none for everyone.
+    pub feed_id: Option<i64>,
+    /// Kept as it was when an old title-only rule is edited or made again.
     #[serde(default)]
     pub title_only: bool,
-    #[serde(default)]
-    pub author: String,
-    pub feed_id: Option<i64>,
-    pub folder_id: Option<i64>,
-    pub action: Action,
     /// Undo for deleting a rule brings it back paused if it was, and with
-    /// its place gone if it was, so it never spreads to every feed.
+    /// its person gone if it was, so it never spreads to everyone.
     #[serde(default)]
     pub paused: bool,
     #[serde(default)]
@@ -512,39 +411,24 @@ fn tidy(text: &str) -> Option<String> {
     (tidied.chars().count() <= LONGEST).then_some(tidied)
 }
 
-/// The form, checked: something to look for, a place that exists and is
-/// the reader's.
+/// The form, checked: words to look for, and a person the reader follows.
 async fn checked(
     connection: &mut SqliteConnection,
     person: i64,
     form: &RuleForm,
-) -> Result<Result<(String, String), &'static str>, sqlx::Error> {
-    let (Some(words), Some(author)) = (tidy(&form.words), tidy(&form.author)) else {
+) -> Result<Result<String, &'static str>, sqlx::Error> {
+    let Some(words) = tidy(&form.words) else {
         return Ok(Err("too-long"));
     };
-    if words_of(&words).is_empty() && words_of(&author).is_empty() {
+    if words_of(&words).is_empty() {
         return Ok(Err("nothing-to-match"));
-    }
-    if form.feed_id.is_some() && form.folder_id.is_some() {
-        return Ok(Err("no-place"));
     }
     if let Some(feed) = form.feed_id
         && !follows(connection, person, feed).await?
     {
         return Ok(Err("no-place"));
     }
-    if let Some(folder) = form.folder_id {
-        let found: Option<i64> =
-            sqlx::query_scalar("SELECT id FROM folders WHERE id = ? AND person_id = ?")
-                .bind(folder)
-                .bind(person)
-                .fetch_optional(&mut *connection)
-                .await?;
-        if found.is_none() {
-            return Ok(Err("no-place"));
-        }
-    }
-    Ok(Ok((words, author)))
+    Ok(Ok(words))
 }
 
 async fn rule(
@@ -567,23 +451,20 @@ pub(crate) async fn make(
     form: &RuleForm,
 ) -> Result<Result<(i64, usize), &'static str>, sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-    let (words, author) = match checked(&mut transaction, person, form).await? {
-        Ok(parts) => parts,
+    let words = match checked(&mut transaction, person, form).await? {
+        Ok(words) => words,
         Err(refusal) => return Ok(Err(refusal)),
     };
     let id: i64 = sqlx::query_scalar(
-        "INSERT INTO rules (person_id, words, title_only, author, feed_id, folder_id,
-             place_gone, action, paused, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO rules (person_id, words, title_only, feed_id, place_gone, action, paused,
+             created_at)
+         VALUES (?, ?, ?, ?, ?, 'mute', ?, ?) RETURNING id",
     )
     .bind(person)
     .bind(&words)
     .bind(form.title_only)
-    .bind(&author)
     .bind(form.feed_id)
-    .bind(form.folder_id)
-    .bind(form.place_gone && form.feed_id.is_none() && form.folder_id.is_none())
-    .bind(form.action.word())
+    .bind(form.place_gone && form.feed_id.is_none())
     .bind(form.paused)
     .bind(now())
     .fetch_one(&mut *transaction)
@@ -598,7 +479,7 @@ pub(crate) async fn make(
 }
 
 /// Makes a rule. Answers its number and how many unread articles already
-/// match it, so the screen can offer to apply it to them too.
+/// match it, so the screen can offer to hide them too.
 async fn create_rule(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -621,20 +502,20 @@ async fn edit_rule(
 ) -> Response {
     let saved: Result<Result<bool, &str>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let (words, author) = match checked(&mut transaction, person, &form).await? {
-            Ok(parts) => parts,
+        if rule(&mut transaction, person, id).await?.is_none() {
+            return Ok(Ok(false));
+        }
+        let words = match checked(&mut transaction, person, &form).await? {
+            Ok(words) => words,
             Err(refusal) => return Ok(Err(refusal)),
         };
         let changed = sqlx::query(
-            "UPDATE rules SET words = ?, title_only = ?, author = ?, feed_id = ?, folder_id = ?,
-                 place_gone = 0, action = ? WHERE id = ? AND person_id = ?",
+            "UPDATE rules SET words = ?, title_only = ?, feed_id = ?, place_gone = 0
+             WHERE id = ? AND person_id = ?",
         )
         .bind(&words)
         .bind(form.title_only)
-        .bind(&author)
         .bind(form.feed_id)
-        .bind(form.folder_id)
-        .bind(form.action.word())
         .bind(id)
         .bind(person)
         .execute(&mut *transaction)
@@ -663,15 +544,23 @@ async fn pause_rule(
     Path(id): Path<i64>,
     Json(form): Json<Paused>,
 ) -> Response {
-    let changed = sqlx::query("UPDATE rules SET paused = ? WHERE id = ? AND person_id = ?")
-        .bind(form.paused)
-        .bind(id)
-        .bind(person)
-        .execute(&state.db)
-        .await;
+    let changed = async {
+        let mut connection = state.db.acquire().await?;
+        if rule(&mut connection, person, id).await?.is_none() {
+            return Ok(false);
+        }
+        sqlx::query("UPDATE rules SET paused = ? WHERE id = ? AND person_id = ?")
+            .bind(form.paused)
+            .bind(id)
+            .bind(person)
+            .execute(&mut *connection)
+            .await?;
+        Ok::<_, sqlx::Error>(true)
+    }
+    .await;
     match changed {
-        Ok(changed) if changed.rows_affected() == 0 => StatusCode::NOT_FOUND.into_response(),
-        Ok(_) => StatusCode::NO_CONTENT.into_response(),
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("pausing a rule", &error),
     }
 }
@@ -691,13 +580,13 @@ async fn delete_rule(
 }
 
 /// Applies a rule, once, to the unread articles that match it now. Answers
-/// the articles it changed, so the screen can undo exactly those.
+/// the articles it hid, so the screen can undo exactly those.
 async fn apply_rule(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Response {
-    let applied: Result<Option<(Action, Vec<i64>)>, sqlx::Error> = async {
+    let applied: Result<Option<Vec<i64>>, sqlx::Error> = async {
         let found = rule(&mut *state.db.acquire().await?, person, id).await?;
         let Some(rule) = found else {
             return Ok(None);
@@ -714,23 +603,23 @@ async fn apply_rule(
         .bind(serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_owned()))
         .fetch_all(&mut *transaction)
         .await?;
-        act(&mut transaction, person, rule.action, &ids).await?;
+        hide(&mut transaction, person, &ids).await?;
         transaction.commit().await?;
-        Ok(Some((rule.action, ids)))
+        Ok(Some(ids))
     }
     .await;
     match applied {
-        Ok(Some((action, ids))) => Json(json!({ "action": action, "ids": ids })).into_response(),
+        Ok(Some(ids)) => Json(json!({ "ids": ids })).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(error) => database_problem("applying a rule", &error),
     }
 }
 
-/// How many articles the reader has muted, from the `entries_muted` index.
+/// How many articles the reader has hidden, from the `entries_muted` index.
 pub(crate) const MUTED_COUNT: &str =
     "SELECT COUNT(*) FROM entries WHERE person_id = ? AND muted = 1";
 
-/// The Muted page: the reader's newest muted articles, and how many there are.
+/// The Hidden articles page: the reader's newest hidden articles, and how many there are.
 async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<ArticleRow>, i64), sqlx::Error> = async {
         let articles = sqlx::query_as(
@@ -760,7 +649,7 @@ async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -
         Ok((articles, count)) => {
             Json(json!({ "articles": articles, "count": count })).into_response()
         }
-        Err(error) => database_problem("listing muted articles", &error),
+        Err(error) => database_problem("listing hidden articles", &error),
     }
 }
 
@@ -772,89 +661,67 @@ fn problem(error: &str) -> Response {
 mod tests {
     use super::*;
 
-    fn rule(words: &str, title_only: bool, author: &str) -> Rule {
+    fn rule(words: &str, title_only: bool) -> Rule {
         Rule {
             id: 1,
             person_id: 1,
             words: words.to_owned(),
             title_only,
-            author: author.to_owned(),
             feed_id: None,
-            folder_id: None,
             place_gone: false,
-            action: Action::Mute,
             paused: false,
         }
     }
 
-    fn article(title: &str, author: Option<&str>, content: &str) -> Candidate {
-        Candidate::new(1, 1, title, author, Some(content), None)
+    fn article(title: &str, content: &str) -> Candidate {
+        Candidate::new(1, 1, title, Some(content), None)
     }
 
     #[test]
     fn a_phrase_matches_whole_words_whatever_their_capitals() {
-        let sponsored = rule("Sponsored", true, "");
-        assert!(sponsored.matches(&article("SPONSORED: a new laptop", None, "")));
-        assert!(sponsored.matches(&article("A post (sponsored)", None, "")));
-        assert!(!sponsored.matches(&article("Unsponsored thoughts", None, "")));
-        let ai = rule("AI", true, "");
-        assert!(!ai.matches(&article("What she said", None, "")));
-        assert!(ai.matches(&article("On AI, again", None, "")));
-        let phrase = rule("open web", true, "");
-        assert!(phrase.matches(&article("Back to the Open Web.", None, "")));
-        assert!(!phrase.matches(&article("Open the web", None, "")));
+        let sponsored = rule("Sponsored", false);
+        assert!(sponsored.matches(&article("SPONSORED: a new laptop", "")));
+        assert!(sponsored.matches(&article("A post (sponsored)", "")));
+        assert!(!sponsored.matches(&article("Unsponsored thoughts", "")));
+        let ai = rule("AI", false);
+        assert!(!ai.matches(&article("What she said", "")));
+        assert!(ai.matches(&article("On AI, again", "")));
+        let phrase = rule("open web", false);
+        assert!(phrase.matches(&article("Back to the Open Web.", "")));
+        assert!(!phrase.matches(&article("Open the web", "")));
     }
 
     #[test]
-    fn title_only_leaves_the_text_alone() {
-        let in_title = rule("crypto", true, "");
-        let anywhere = rule("crypto", false, "");
-        let post = article(
-            "A quiet week",
-            None,
-            "<p>Nothing about <b>crypto</b> here.</p>",
-        );
+    fn an_old_title_only_rule_leaves_the_text_alone() {
+        let in_title = rule("crypto", true);
+        let anywhere = rule("crypto", false);
+        let post = article("A quiet week", "<p>Nothing about <b>crypto</b> here.</p>");
         assert!(!in_title.matches(&post));
         assert!(anywhere.matches(&post));
         // The HTML's own words never count.
-        assert!(!rule("class", false, "").matches(&article("A", None, "<p class=\"x\">Hi</p>")));
-    }
-
-    #[test]
-    fn every_part_filled_in_must_hold() {
-        let jane = rule("", false, "Jane Doe");
-        assert!(jane.matches(&article("Anything", Some("jane doe"), "")));
-        assert!(!jane.matches(&article("Anything", Some("Jane Smith"), "")));
-        assert!(!jane.matches(&article("Anything", None, "")));
-        let both = rule("garden", false, "Jane Doe");
-        assert!(both.matches(&article("My garden", Some("Jane Doe"), "")));
-        assert!(!both.matches(&article("My kitchen", Some("Jane Doe"), "")));
-        assert!(!rule("", false, "").matches(&article("Anything", Some("Jane"), "")));
+        assert!(!rule("class", false).matches(&article("A", "<p class=\"x\">Hi</p>")));
+        assert!(!rule("", false).matches(&article("Anything", "")));
     }
 
     #[test]
     fn hindi_words_stay_whole() {
-        let hindi = rule("किताब", false, "");
-        assert!(hindi.matches(&article("नई किताब।", None, "")));
-        assert!(!hindi.matches(&article("किताबें", None, "")));
+        let hindi = rule("किताब", false);
+        assert!(hindi.matches(&article("नई किताब।", "")));
+        assert!(!hindi.matches(&article("किताबें", "")));
     }
 
     #[test]
-    fn a_rule_covers_only_its_place_and_only_while_it_runs() {
-        let folders: HashSet<i64> = [7].into_iter().collect();
-        let mut one = rule("x", false, "");
-        assert!(one.covers(3, &folders));
-        one.folder_id = Some(7);
-        assert!(one.covers(3, &folders));
-        assert!(!one.covers(3, &HashSet::new()));
-        one.folder_id = None;
+    fn a_rule_covers_only_its_person_and_only_while_it_runs() {
+        let alpha: HashSet<i64> = [3, 4].into_iter().collect();
+        let mut one = rule("x", false);
+        assert!(one.covers(&alpha));
         one.feed_id = Some(4);
-        assert!(!one.covers(3, &folders));
-        assert!(one.covers(4, &HashSet::new()));
+        assert!(one.covers(&alpha));
+        assert!(!one.covers(&[5].into_iter().collect()));
         one.paused = true;
-        assert!(!one.covers(4, &HashSet::new()));
+        assert!(!one.covers(&alpha));
         one.paused = false;
         one.place_gone = true;
-        assert!(!one.covers(4, &HashSet::new()));
+        assert!(!one.covers(&alpha));
     }
 }

@@ -50,7 +50,7 @@
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
-  import type { Feed, Folder } from "./shapes";
+  import type { Feed } from "./shapes";
   import type { Order } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
@@ -86,8 +86,7 @@
     onYourFeeds,
     onMuted,
     onReaders,
-    feeds,
-    folders,
+    people,
     phone = false,
     ruleForFeed = $bindable(),
     besideToggle = false,
@@ -128,15 +127,15 @@
     onFeedHealth: (event: MouseEvent) => void;
     /** Opens Your feeds. */
     onYourFeeds: (event: MouseEvent) => void;
-    /** Opens the Muted articles page. */
+    /** Opens the Hidden articles page. */
     onMuted: (event: MouseEvent) => void;
     /** Opens the owner's All readers page. */
     onReaders: (event: MouseEvent) => void;
-    feeds: Feed[];
-    folders: Folder[];
+    /** Everyone the reader follows, one row each (the sidebar's rows), for Hiding. */
+    people: Feed[];
     /** On a phone the rule editor is the phone sheet, in place of Settings. */
     phone?: boolean;
-    /** A new rule for this feed opens at once (Edit feed's "Add a rule for this feed…"). */
+    /** A new rule for this person opens at once ("Hide articles about…" on an article or a person's page). */
     ruleForFeed?: number;
     /** The sidebar is hidden, so the top line starts clear of its toggle. */
     besideToggle?: boolean;
@@ -355,8 +354,7 @@
       sheet={!phone}
       rule={editing.rule}
       feedId={editing.feedId}
-      {feeds}
-      {folders}
+      {people}
       bind:heading={ruleHeading}
       onCancel={closeEditor}
       onSaved={(draft, made) => {
@@ -517,7 +515,7 @@
         <div class="inset-group">
           {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
           {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone", open("install"))}
-          {@render pageRow("rules", "/settings/rules", SETTINGS_PAGES.rules, "sliders", open("rules"))}
+          {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "sliders", open("hiding"))}
           {#if newslettersOn}
             {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newspaper", open("newsletters"))}
           {/if}
@@ -698,11 +696,10 @@
         <AddAnywhere />
       {:else if page === "install"}
         <InstallApp />
-      {:else if page === "rules"}
+      {:else if page === "hiding"}
         <Rules
           bind:this={rulesPanel}
-          {feeds}
-          {folders}
+          {people}
           {onMuted}
           onNew={() => openEditor({})}
           onEdit={(rule) => openEditor({ rule })}

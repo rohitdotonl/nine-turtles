@@ -36,7 +36,6 @@
     onSource,
     onUnsubscribe,
     onPeople,
-    onAddRule,
     onMoved,
   }: {
     /** Their row's place: the one their address and list open at. */
@@ -52,7 +51,6 @@
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** Sources were joined: their list, with "… · Undo". */
     onPeople: (done: Notice, lead: number) => void;
-    onAddRule: () => void;
     onMoved: (feed: Sick) => void;
   } = $props();
 
@@ -194,7 +192,7 @@
     {/if}
 
     {#if one}
-      <SourceFields {feed} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onAddRule} {onMoved} />
+      <SourceFields {feed} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onMoved} />
     {/if}
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">

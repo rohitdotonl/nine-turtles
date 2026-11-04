@@ -642,7 +642,7 @@
             <RowKind {article} />
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
-              <span class="row-muted">· Muted</span>
+              <span class="row-muted">· Hidden</span>
             {/if}
             {#if article.starred}
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>

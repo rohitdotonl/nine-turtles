@@ -135,7 +135,7 @@ test.describe("on a phone", () => {
     // More opens upwards, over the article, with Share (or Copy link), Mark unread and Add to collection….
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/, /^\s*Add a note/, /^\s*Write back/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/, /^\s*Add a note/, /^\s*Write back/, /^\s*Hide articles about/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);

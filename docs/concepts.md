@@ -200,7 +200,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Timestamps and UTC
 - Data export
 - Data retention and clean-up
-- Rules and mutes (filters the reader writes)
+- Hiding articles about… (rules the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
 - Collections (the reader's own shelves of articles) and tags (in JSON Feed)

@@ -1,4 +1,4 @@
-//! Rules and mutes (SPEC section 27), tested against a real running nine
+//! Hiding articles about… (SPEC section 27), tested against a real running nine
 //! turtles and a made-up blog whose posts the test writes as it goes.
 
 mod common;
@@ -150,16 +150,13 @@ impl Reader {
 }
 
 #[tokio::test]
-async fn a_mute_rule_keeps_new_matching_articles_out_of_every_list_but_search_and_muted() {
+async fn a_rule_keeps_new_matching_articles_out_of_every_list_but_search_and_hidden() {
     let reader = Reader::new().await;
     reader.write("1", "A quiet post", "Jane Doe", "Words.");
     let blog = reader.follow("blog.xml").await;
 
     let (status, made) = reader
-        .post(
-            "/api/rules",
-            json!({ "words": "Sponsored", "title_only": true, "action": "mute" }),
-        )
+        .post("/api/rules", json!({ "words": "Sponsored" }))
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
     assert_eq!(made["matching"], 0);
@@ -184,7 +181,7 @@ async fn a_mute_rule_keeps_new_matching_articles_out_of_every_list_but_search_an
             "{list}"
         );
     }
-    // Muted counts as read.
+    // Hidden counts as read.
     assert_eq!(reader.unread_count(blog).await, 2);
 
     let muted = reader.get("/api/muted").await;
@@ -193,12 +190,12 @@ async fn a_mute_rule_keeps_new_matching_articles_out_of_every_list_but_search_an
     assert_eq!(muted["articles"][0]["muted"], true);
     assert_eq!(reader.get("/api/rules").await["muted"], 1);
 
-    // Search still finds it, saying it's muted.
+    // Search still finds it, saying it's hidden.
     let found = reader.get("/api/search?q=laptop").await;
     assert_eq!(found["articles"][0]["title"], "SPONSORED: a new laptop");
     assert_eq!(found["articles"][0]["muted"], true);
 
-    // Unmuting brings it back, unread.
+    // Unhiding brings it back, unread.
     let id = muted["articles"][0]["id"].as_i64().unwrap();
     let (status, _) = reader
         .post(
@@ -218,33 +215,70 @@ async fn a_mute_rule_keeps_new_matching_articles_out_of_every_list_but_search_an
 }
 
 #[tokio::test]
-async fn star_and_read_rules_and_an_author_and_a_place() {
+async fn a_rule_from_one_person_covers_all_their_places_and_nobody_else() {
     let reader = Reader::new().await;
+    reader.write("1", "My garden", "Jane Doe", "A giveaway inside.");
     let blog = reader.follow("blog.xml").await;
     let other = reader.follow("other.xml").await;
-    let (_, folder) = reader
+    let pond = {
+        // A third place, its own person, with the same posts.
+        let posts = reader.posts.clone();
+        let app = Router::new().route(
+            "/pond.xml",
+            get(move || async move { feed("Pond", &posts) }),
+        );
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+        let (status, added) = reader
+            .post(
+                "/api/feeds",
+                json!({ "address": format!("http://{address}/pond.xml") }),
+            )
+            .await;
+        assert_eq!(status, StatusCode::CREATED, "{added}");
+        added["feed"]["id"].as_i64().unwrap()
+    };
+    // Blog and Other are one person.
+    let (status, joined) = reader
         .post(
-            "/api/folders",
-            json!({ "name": "Friends", "feeds": [blog] }),
+            "/api/writers/join",
+            json!({ "feeds": [blog, other], "name": "Alpha" }),
         )
         .await;
-    let folder = folder["folder"]["id"].as_i64().unwrap();
+    assert!(status.is_success(), "{joined}");
 
-    reader
-        .post(
-            "/api/rules",
-            json!({ "author": "jane doe", "folder_id": folder, "action": "star" }),
-        )
+    // From Alpha, by their Other: it covers Blog too, not Pond.
+    let (status, made) = reader
+        .post("/api/rules", json!({ "words": "garden", "feed_id": other }))
         .await;
-    reader
-        .post(
-            "/api/rules",
-            json!({ "words": "giveaway", "feed_id": other, "action": "read" }),
-        )
+    assert_eq!(status, StatusCode::OK, "{made}");
+    assert_eq!(made["matching"], 2);
+    let id = made["id"].as_i64().unwrap();
+    let (_, applied) = reader
+        .post(&format!("/api/rules/{id}/apply"), json!({}))
         .await;
-    // A paused rule does nothing.
+    assert_eq!(applied["ids"].as_array().unwrap().len(), 2);
+    assert_eq!(reader.unread_count(blog).await, 0);
+    assert_eq!(reader.unread_count(other).await, 0);
+    assert_eq!(reader.unread_count(pond).await, 1);
+
+    // New ones too, in every one of their places.
+    reader.write("2", "Garden, again", "Jane Doe", "Words.");
+    reader.check(blog).await;
+    reader.check(other).await;
+    reader.check(pond).await;
+    assert_eq!(reader.unread_count(blog).await, 0);
+    assert_eq!(reader.unread_count(pond).await, 2);
+    assert_eq!(reader.get("/api/muted").await["count"], 4);
+}
+
+#[tokio::test]
+async fn a_paused_rule_does_nothing_and_old_kinds_of_rule_are_kept_but_never_shown_or_run() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog.xml").await;
     let (_, paused) = reader
-        .post("/api/rules", json!({ "words": "laptop", "action": "mute" }))
+        .post("/api/rules", json!({ "words": "laptop" }))
         .await;
     let paused = paused["id"].as_i64().unwrap();
     let (status, _) = reader
@@ -254,6 +288,29 @@ async fn star_and_read_rules_and_an_author_and_a_place() {
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
+    // Rules from before (an author, a star, a folder), as the structure
+    // change leaves them.
+    sqlx::query(
+        "INSERT INTO rules (id, person_id, words, author, feed_id, folder_id, action, created_at)
+         VALUES (90, 1, '', 'Jane Doe', NULL, NULL, 'mute', 1),
+                (91, 1, 'garden', '', NULL, NULL, 'star', 1),
+                (92, 1, 'giveaway', '', ?, NULL, 'read', 1)",
+    )
+    .bind(blog)
+    .execute(&reader.state.db)
+    .await
+    .unwrap();
+    let listed = reader.get("/api/rules").await;
+    assert_eq!(listed["rules"].as_array().unwrap().len(), 1);
+    for old in [90, 91, 92] {
+        let (status, _) = reader
+            .post(
+                &format!("/api/rules/{old}/paused"),
+                json!({ "paused": true }),
+            )
+            .await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+    }
 
     reader.write(
         "1",
@@ -262,22 +319,15 @@ async fn star_and_read_rules_and_an_author_and_a_place() {
         "A big giveaway inside, and a laptop.",
     );
     reader.check(blog).await;
-    reader.check(other).await;
-
-    // Starred only in the folder's feed; read only in the other feed.
-    let starred = reader.titles("/api/articles?view=starred").await;
-    assert_eq!(starred, ["My garden"]);
-    let unread: Vec<Value> = reader.get("/api/articles?view=unread").await["articles"]
-        .as_array()
-        .unwrap()
-        .clone();
-    assert_eq!(unread.len(), 1);
-    assert_eq!(unread[0]["feed_id"], blog);
-    assert_eq!(
-        reader.titles(&format!("/api/articles?feed={other}")).await,
-        ["My garden"]
-    );
+    assert_eq!(reader.unread_count(blog).await, 1);
+    assert_eq!(reader.titles("/api/articles?view=starred").await.len(), 0);
     assert_eq!(reader.get("/api/muted").await["count"], 0);
+    // Still there, as they were.
+    let kept: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM rules WHERE id >= 90")
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(kept, 3);
 }
 
 #[tokio::test]
@@ -289,7 +339,7 @@ async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
     let blog = reader.follow("blog.xml").await;
 
     let (_, made) = reader
-        .post("/api/rules", json!({ "words": "crypto", "action": "mute" }))
+        .post("/api/rules", json!({ "words": "crypto" }))
         .await;
     // Rules act on what arrives; what's already here waits to be asked.
     assert_eq!(made["matching"], 2);
@@ -300,14 +350,13 @@ async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
         .post(&format!("/api/rules/{id}/apply"), json!({}))
         .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(applied["action"], "mute");
     assert_eq!(applied["ids"].as_array().unwrap().len(), 2);
     assert_eq!(
         reader.titles("/api/articles?view=unread").await,
         ["Gardening"]
     );
 
-    // Undo: the screen unmutes exactly those.
+    // Undo: the screen unhides exactly those.
     reader
         .post(
             "/api/articles/muted",
@@ -323,10 +372,10 @@ async fn rules_are_checked_edited_and_deleted() {
     let blog = reader.follow("blog.xml").await;
 
     for refused in [
-        json!({ "action": "mute" }),
-        json!({ "words": "  !!  ", "action": "mute" }),
-        json!({ "words": "x".repeat(201), "action": "mute" }),
-        json!({ "words": "x", "feed_id": 999, "action": "mute" }),
+        json!({ "words": "" }),
+        json!({ "words": "  !!  " }),
+        json!({ "words": "x".repeat(201) }),
+        json!({ "words": "x", "feed_id": 999 }),
     ] {
         let (status, _) = reader.post("/api/rules", refused.clone()).await;
         assert_eq!(status, StatusCode::BAD_REQUEST, "{refused}");
@@ -335,7 +384,7 @@ async fn rules_are_checked_edited_and_deleted() {
     let (_, made) = reader
         .post(
             "/api/rules",
-            json!({ "words": "  open   web ", "feed_id": blog, "action": "read" }),
+            json!({ "words": "  open   web ", "feed_id": blog }),
         )
         .await;
     let id = made["id"].as_i64().unwrap();
@@ -346,14 +395,13 @@ async fn rules_are_checked_edited_and_deleted() {
     let (status, _) = reader
         .post(
             &format!("/api/rules/{id}"),
-            json!({ "words": "closed web", "action": "star" }),
+            json!({ "words": "closed web" }),
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
     let listed = reader.get("/api/rules").await;
     assert_eq!(listed["rules"][0]["words"], "closed web");
     assert_eq!(listed["rules"][0]["feed_id"], Value::Null);
-    assert_eq!(listed["rules"][0]["action"], "star");
 
     let (status, _) = reader
         .post(&format!("/api/rules/{id}/delete"), json!({}))
@@ -363,7 +411,7 @@ async fn rules_are_checked_edited_and_deleted() {
 }
 
 #[tokio::test]
-async fn a_rule_whose_folder_goes_stays_and_matches_nothing() {
+async fn deleting_a_folder_leaves_rules_alone() {
     let reader = Reader::new().await;
     let blog = reader.follow("blog.xml").await;
     let (_, folder) = reader
@@ -371,65 +419,24 @@ async fn a_rule_whose_folder_goes_stays_and_matches_nothing() {
         .await;
     let folder = folder["folder"]["id"].as_i64().unwrap();
     reader
-        .post(
-            "/api/rules",
-            json!({ "words": "laptop", "folder_id": folder, "action": "mute" }),
-        )
+        .post("/api/rules", json!({ "words": "laptop", "feed_id": blog }))
         .await;
     reader
         .post(&format!("/api/folders/{folder}/delete"), json!({}))
         .await;
 
-    let rule = &reader.get("/api/rules").await["rules"][0];
-    assert_eq!(rule["place_gone"], true);
-    assert_eq!(rule["folder_id"], Value::Null);
-
-    reader.write("1", "A laptop", "A", "Words.");
-    reader.check(blog).await;
-    assert_eq!(reader.unread_count(blog).await, 1);
-}
-
-#[tokio::test]
-async fn undo_for_deleting_a_folder_hands_its_rules_back() {
-    let reader = Reader::new().await;
-    let blog = reader.follow("blog.xml").await;
-    let (_, folder) = reader
-        .post("/api/folders", json!({ "name": "Tech", "feeds": [blog] }))
-        .await;
-    let folder = folder["folder"]["id"].as_i64().unwrap();
-    reader
-        .post(
-            "/api/rules",
-            json!({ "words": "laptop", "folder_id": folder, "action": "mute" }),
-        )
-        .await;
-    let (status, deleted) = reader
-        .post(&format!("/api/folders/{folder}/delete"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::OK);
-
-    // Undo makes the folder again, with its feeds and its rules.
-    let (status, made) = reader
-        .post(
-            "/api/folders",
-            json!({ "name": "Tech", "feeds": [blog], "rules": deleted["rules"] }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
     let rule = &reader.get("/api/rules").await["rules"][0];
     assert_eq!(rule["place_gone"], false);
-    assert_eq!(rule["folder_id"], made["folder"]["id"]);
-
     reader.write("1", "A laptop", "A", "Words.");
     reader.check(blog).await;
     assert_eq!(reader.unread_count(blog).await, 0);
 }
 
 #[tokio::test]
-async fn marking_a_muted_article_unread_unmutes_it() {
+async fn marking_a_hidden_article_unread_unhides_it() {
     let reader = Reader::new().await;
     reader
-        .post("/api/rules", json!({ "words": "laptop", "action": "mute" }))
+        .post("/api/rules", json!({ "words": "laptop" }))
         .await;
     reader.write("1", "A laptop", "A", "Words.");
     let blog = reader.follow("blog.xml").await;
@@ -444,4 +451,41 @@ async fn marking_a_muted_article_unread_unmutes_it() {
         .await;
     assert_eq!(reader.unread_count(blog).await, 1);
     assert_eq!(reader.get("/api/muted").await["count"], 0);
+}
+
+#[tokio::test]
+async fn leaving_one_of_someones_places_keeps_their_rule_on_the_others() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog.xml").await;
+    let other = reader.follow("other.xml").await;
+    reader
+        .post(
+            "/api/writers/join",
+            json!({ "feeds": [blog, other], "name": "Alpha" }),
+        )
+        .await;
+    reader
+        .post("/api/rules", json!({ "words": "garden", "feed_id": blog }))
+        .await;
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{blog}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
+        .await
+        .unwrap();
+
+    // Still for Alpha, by the place left; once nobody's left, it says so.
+    let rule = &reader.get("/api/rules").await["rules"][0];
+    assert_eq!(rule["feed_id"], other);
+    assert_eq!(rule["place_gone"], false);
+    reader
+        .post(&format!("/api/feeds/{other}/unsubscribe"), json!({}))
+        .await;
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
+        .await
+        .unwrap();
+    let rule = &reader.get("/api/rules").await["rules"][0];
+    assert_eq!(rule["feed_id"], Value::Null);
+    assert_eq!(rule["place_gone"], true);
 }

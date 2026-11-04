@@ -1,75 +1,59 @@
 import { describe as group, expect, it } from "vitest";
-import type { Feed, Folder } from "./shapes";
-import { ACTIONS, applyQuestion, appliedMessage, blankWidth, describe, placeChoice, ruleRefused, type Rule } from "./rules";
+import type { Feed } from "./shapes";
+import { HIDING_HELP, applyQuestion, appliedMessage, blankWidth, describe, ruleRefused, whoChoice, type Rule } from "./rules";
 
-const feeds: Feed[] = [{ id: 3, title: "Garden Notes", siteUrl: null, unread: 0, folders: [7], check: "automatic", openOnSite: false }];
-const folders: Folder[] = [{ id: 7, name: "Tech" }];
+const feed = (id: number, title: string, places?: number[]): Feed => ({ id, title, siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false, places });
+/** The sidebar's rows: Alpha has two places (3 and 4), Garden Notes one. */
+const people: Feed[] = [feed(3, "Alpha", [3, 4]), feed(5, "Garden Notes")];
 
-const rule = (change: Partial<Rule>): Rule => ({
-  id: 1,
-  words: "sponsored",
-  titleOnly: true,
-  author: "",
-  feedId: null,
-  folderId: null,
-  placeGone: false,
-  action: "mute",
-  paused: false,
-  ...change,
-});
+const rule = (change: Partial<Rule>): Rule => ({ id: 1, words: "sponsored", titleOnly: false, feedId: null, placeGone: false, paused: false, ...change });
 
 group("a rule in words", () => {
-  it("says what it looks for, where, and what it does, in one sentence", () => {
-    expect(describe(rule({}), feeds, folders)).toBe("Mute articles with “sponsored” in the title, in all feeds.");
-    expect(describe(rule({ titleOnly: false, folderId: 7 }), feeds, folders)).toBe(
-      "Mute articles with “sponsored” in the title or text, in the Tech folder.",
-    );
-    expect(describe(rule({ words: "", author: "Jane Doe", action: "star", feedId: 3 }), feeds, folders)).toBe(
-      "Star articles by Jane Doe, in Garden Notes.",
-    );
-    expect(describe(rule({ words: "giveaway", author: "Jane Doe", action: "read" }), feeds, folders)).toBe(
-      "Mark as read any article with “giveaway” in the title, by Jane Doe, in all feeds.",
-    );
+  it("is one sentence: what it's about, and from whom", () => {
+    expect(describe(rule({}), people)).toBe("Hide articles about “sponsored” from everyone.");
+    expect(describe(rule({ feedId: 5 }), people)).toBe("Hide articles about “sponsored” from Garden Notes.");
+    // Any of a person's places stands for them.
+    expect(describe(rule({ feedId: 4 }), people)).toBe("Hide articles about “sponsored” from Alpha.");
   });
 
-  it("says plainly when its feed or folder is gone", () => {
-    expect(describe(rule({ placeGone: true }), feeds, folders)).toBe(
-      "Mute articles with “sponsored” in the title, in a feed or folder that's gone.",
-    );
-    expect(describe(rule({ feedId: 99 }), feeds, folders)).toContain("in a feed you no longer follow");
+  it("says when an old rule looks in titles only", () => {
+    expect(describe(rule({ titleOnly: true }), people)).toBe("Hide articles about “sponsored” (in titles) from everyone.");
+  });
+
+  it("says plainly when the person it was for is gone", () => {
+    expect(describe(rule({ placeGone: true }), people)).toBe("Hide articles about “sponsored” from someone you no longer follow.");
+    expect(describe(rule({ feedId: 99 }), people)).toContain("from someone you no longer follow");
   });
 
   it("asks before touching articles already here, with the number first", () => {
-    expect(applyQuestion("mute", 37)).toBe("Also mute the 37 unread articles that match?");
-    expect(applyQuestion("star", 1)).toBe("Also star the 1 unread article that matches?");
-    expect(applyQuestion("read", 2)).toBe("Also mark as read the 2 unread articles that match?");
-    expect(appliedMessage("mute", 37)).toBe("Muted 37 articles.");
-    expect(appliedMessage("read", 1)).toBe("Marked 1 article as read.");
+    expect(applyQuestion(12)).toBe("Also hide the 12 unread articles that match?");
+    expect(applyQuestion(1)).toBe("Also hide the 1 unread article that matches?");
+    expect(appliedMessage(12)).toBe("Hid 12 articles.");
+    expect(appliedMessage(1)).toBe("Hid 1 article.");
   });
 
   it("never shows an error code", () => {
-    expect(ruleRefused("nothing-to-match")).toBe("Write a word, a phrase or an author to look for.");
+    expect(ruleRefused("nothing-to-match")).toBe("Write a word or phrase to hide articles about.");
     expect(ruleRefused("trouble")).not.toMatch(/[0-9]/);
   });
 });
 
-group("the rule's sentence", () => {
-  it("names the chosen place in its blank", () => {
-    expect(placeChoice("all", feeds, folders)).toBe("all feeds");
-    expect(placeChoice("folder:7", feeds, folders)).toBe("Tech");
-    expect(placeChoice("feed:3", feeds, folders)).toBe("Garden Notes");
-    expect(placeChoice("", feeds, folders)).toBe("choose where…");
-    expect(placeChoice("feed:99", feeds, folders)).toBe("");
+group("the sentence's blanks", () => {
+  it("names who is chosen", () => {
+    expect(whoChoice("all", people)).toBe("everyone");
+    expect(whoChoice("3", people)).toBe("Alpha");
+    expect(whoChoice("4", people)).toBe("Alpha");
+    expect(whoChoice("", people)).toBe("choose someone…");
+    expect(whoChoice("99", people)).toBe("");
   });
 
   it("sizes a blank to its words, with room for a menu's arrow, up to 28 letters", () => {
-    expect(blankWidth("star it")).toBe("calc(3.8em + 1.25rem)");
+    expect(blankWidth("everyone")).toBe("calc(4.3em + 1.25rem)");
     expect(blankWidth("a word", 0.3)).toBe("calc(3.3em + 0.3rem)");
     expect(blankWidth("x".repeat(40))).toBe(blankWidth("x".repeat(28)));
   });
 
-  it("ends with each action's words, and says what it does", () => {
-    expect(ACTIONS.map((choice) => choice.words)).toEqual(["mute it", "star it", "mark it as read"]);
-    expect(ACTIONS.every((choice) => choice.help.endsWith("."))).toBe(true);
+  it("has one quiet line under it", () => {
+    expect(HIDING_HELP).toBe("Hidden articles are kept and marked read. Search still finds them.");
   });
 });

@@ -520,7 +520,7 @@ async fn a_folder_of_one_persons_places_becomes_that_person_with_undo() {
     let (status, _) = reader
         .post(
             "/api/folders",
-            json!({ "name": "Alpha", "feeds": [blog, letters], "rules": person["rules"], "searches": person["searches"] }),
+            json!({ "name": "Alpha", "feeds": [blog, letters], "searches": person["searches"] }),
         )
         .await;
     assert!(status.is_success());

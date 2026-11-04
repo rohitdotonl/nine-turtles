@@ -1,54 +1,45 @@
-// Rules and mutes (SPEC section 27): "when a new article matches this, do
-// that", in plain fields. This file talks to the server about them and
-// writes each rule as one plain sentence, the way Settings lists it.
+// Hiding (SPEC section 27): "Hide articles about [words] from [everyone /
+// this person]", one sentence the reader fills in. This file talks to the
+// server about rules and writes each one as that sentence, the way Settings
+// › Hiding lists it.
 
-import { toArticle, type Article, type Feed, type Folder } from "./shapes";
+import { rowFor } from "./people";
+import { toArticle, type Article, type Feed } from "./shapes";
 import { getJson, isRecord, sendChange } from "./http";
-
-/** Mute: kept, counted as read, shown only in search and on the Muted page. */
-export type RuleAction = "mute" | "star" | "read";
 
 export type Rule = {
   id: number;
-  /** A word or phrase to look for; "" for none. */
+  /** The word or phrase it hides articles about. */
   words: string;
-  /** Look only in the title, not the text. */
+  /** An old rule from before hiding looks in titles only; new ones look in the text too. */
   titleOnly: boolean;
-  /** An author's name to look for; "" for any. */
-  author: string;
-  /** One feed, one folder, or (both null) every feed. */
+  /** The person it hides from, by any of their places; null for everyone. */
   feedId: number | null;
-  folderId: number | null;
-  /** The feed or folder it applied to is gone, so it matches nothing. */
+  /** The person it applied to is no longer followed, so it matches nothing. */
   placeGone: boolean;
-  action: RuleAction;
   paused: boolean;
 };
 
-/** What the rule editor sends: a rule without its number or its state. */
-export type RuleDraft = Pick<Rule, "words" | "titleOnly" | "author" | "feedId" | "folderId" | "action"> & {
+/** What the editor sends: a rule without its number or its state. */
+export type RuleDraft = Pick<Rule, "words" | "feedId"> & {
+  titleOnly?: boolean;
   paused?: boolean;
-  /** Only when Undo makes a deleted rule again whose place had gone. */
+  /** Only when Undo makes a deleted rule again whose person had gone. */
   placeGone?: boolean;
 };
 
-/** Each action: its words at the end of the rule's sentence, and the quiet line under it saying what it does. */
-export const ACTIONS: { value: RuleAction; words: string; help: string }[] = [
-  { value: "mute", words: "mute it", help: "Kept, but out of every list and counted as read. Search still finds it." },
-  { value: "star", words: "star it", help: "It goes straight into Starred." },
-  { value: "read", words: "mark it as read", help: "It stays in its feed's list, already read." },
-];
+/** The one quiet line under the editor's sentence. */
+export const HIDING_HELP = "Hidden articles are kept and marked read. Search still finds them.";
 
 /**
- * The words a chosen place shows in the rule's sentence: "all feeds", a
- * folder's or feed's name, or "choose where…" while none is chosen. `place`
- * is the editor's menu value: "all", "folder:7", "feed:3" or "".
+ * The words the person blank shows: "everyone", a person's name, or
+ * "choose someone…" while none is chosen. `who` is the editor's menu value:
+ * "all", a place's number, or "".
  */
-export function placeChoice(place: string, feeds: Feed[], folders: Folder[]): string {
-  const [kind, id] = place.split(":");
-  if (kind === "folder") return folders.find((folder) => folder.id === Number(id))?.name ?? "";
-  if (kind === "feed") return feeds.find((feed) => feed.id === Number(id))?.title ?? "";
-  return place === "" ? "choose where…" : "all feeds";
+export function whoChoice(who: string, people: Feed[]): string {
+  if (who === "") return "choose someone…";
+  if (who === "all") return "everyone";
+  return rowFor(Number(who), people)?.title ?? "";
 }
 
 /**
@@ -101,84 +92,61 @@ export async function applyRule(id: number): Promise<number[] | RuleRefusal> {
   return Array.isArray(sent.ids) ? sent.ids.map(Number) : [];
 }
 
-/** Undoes applying a rule: the opposite mark, on exactly the articles it changed. */
-export async function unapply(action: RuleAction, ids: number[]): Promise<RuleRefusal | undefined> {
-  const [path, change] =
-    action === "mute"
-      ? ["/api/articles/muted", { ids, muted: false }]
-      : action === "star"
-        ? ["/api/articles/starred", { ids, starred: false }]
-        : ["/api/articles/read", { ids, read: false }];
-  const sent = await post(path, change);
-  return typeof sent === "string" ? sent : undefined;
+/** Undoes applying a rule: exactly the articles it hid come back. */
+export async function unapply(ids: number[]): Promise<RuleRefusal | undefined> {
+  return setMuted(ids, false);
 }
 
-/** The Muted page: the newest muted articles, and how many there are in all. */
+/** The Hidden articles page: the newest hidden articles, and how many there are in all. */
 export async function listMuted(): Promise<{ articles: Article[]; count: number }> {
   const answer = await getJson("/api/muted");
   const articles = isRecord(answer) && Array.isArray(answer.articles) ? answer.articles : [];
   return { articles: articles.filter(isRecord).map(toArticle), count: isRecord(answer) ? Number(answer.count ?? 0) : 0 };
 }
 
-/** Unmutes articles (they come back unread), or mutes them again (Undo). */
+/** Unhides articles (they come back unread), or hides them again (Undo). */
 export async function setMuted(ids: number[], muted: boolean): Promise<RuleRefusal | undefined> {
   const sent = await post("/api/articles/muted", { ids, muted });
   return typeof sent === "string" ? sent : undefined;
 }
 
 /**
- * A rule as one plain sentence: "Mute articles with “sponsored” in the
- * title, in all feeds."
+ * A rule as one plain sentence: "Hide articles about “crypto” from
+ * everyone." An old title-only rule says so: "about “x” (in titles)".
  */
-export function describe(rule: Pick<Rule, "words" | "titleOnly" | "author" | "feedId" | "folderId" | "placeGone" | "action">, feeds: Feed[], folders: Folder[]): string {
-  const words = rule.words.trim();
-  const author = rule.author.trim();
-  const parts: string[] = [];
-  if (words) parts.push(`with “${words}” in the ${rule.titleOnly ? "title" : "title or text"}`);
-  if (author) parts.push(`by ${author}`);
-  const what = parts.join(", ");
-  const doing = rule.action === "mute" ? `Mute articles ${what}` : rule.action === "star" ? `Star articles ${what}` : `Mark as read any article ${what}`;
-  return `${doing}, ${placeWords(rule, feeds, folders)}.`;
+export function describe(rule: Pick<Rule, "words" | "titleOnly" | "feedId" | "placeGone">, people: Feed[]): string {
+  const about = `about “${rule.words.trim()}”${rule.titleOnly ? " (in titles)" : ""}`;
+  return `Hide articles ${about} from ${whoWords(rule, people)}.`;
 }
 
-/** Where a rule applies, in words: "in all feeds", "in the Tech folder", "in Garden Notes". */
-export function placeWords(rule: Pick<Rule, "feedId" | "folderId" | "placeGone">, feeds: Feed[], folders: Folder[]): string {
-  if (rule.placeGone) return "in a feed or folder that's gone";
-  if (rule.feedId !== null) {
-    const feed = feeds.find((one) => one.id === rule.feedId);
-    return feed ? `in ${feed.title}` : "in a feed you no longer follow";
-  }
-  if (rule.folderId !== null) {
-    const folder = folders.find((one) => one.id === rule.folderId);
-    return folder ? `in the ${folder.name} folder` : "in a folder that's gone";
-  }
-  return "in all feeds";
+/** Who a rule hides from, in words: "everyone", "Alpha", or "someone you no longer follow". */
+export function whoWords(rule: Pick<Rule, "feedId" | "placeGone">, people: Feed[]): string {
+  if (rule.placeGone) return "someone you no longer follow";
+  if (rule.feedId === null) return "everyone";
+  return rowFor(rule.feedId, people)?.title ?? "someone you no longer follow";
 }
 
-/** The question asked once a new rule is saved, when articles already match it. */
-export function applyQuestion(action: RuleAction, count: number): string {
-  const articles = count === 1 ? "the 1 unread article that matches" : `the ${count} unread articles that match`;
-  const verb = action === "mute" ? "Also mute" : action === "star" ? "Also star" : "Also mark as read";
-  return `${verb} ${articles}?`;
+/** The question asked once a new rule is saved, when unread articles already match it. */
+export function applyQuestion(count: number): string {
+  return count === 1 ? "Also hide the 1 unread article that matches?" : `Also hide the ${count} unread articles that match?`;
 }
 
 /** What Settings says once a rule was applied to articles already here. */
-export function appliedMessage(action: RuleAction, count: number): string {
-  const articles = count === 1 ? "1 article" : `${count} articles`;
-  return action === "mute" ? `Muted ${articles}.` : action === "star" ? `Starred ${articles}.` : `Marked ${articles} as read.`;
+export function appliedMessage(count: number): string {
+  return count === 1 ? "Hid 1 article." : `Hid ${count} articles.`;
 }
 
 /** What the rule editor says when a rule wasn't saved. */
 export function ruleRefused(refusal: RuleRefusal): string {
   switch (refusal) {
     case "nothing-to-match":
-      return "Write a word, a phrase or an author to look for.";
+      return "Write a word or phrase to hide articles about.";
     case "too-long":
-      return "That's too long: keep each to 200 characters.";
+      return "That's too long: keep it to 200 characters.";
     case "no-place":
-      return "That feed or folder isn't here any more. Choose another.";
+      return "You no longer follow them. Choose someone else.";
     case "gone":
-      return "This rule isn't here any more.";
+      return "This isn't here any more.";
     case "trouble":
       return "That couldn't be saved. Try again in a moment.";
   }
@@ -187,11 +155,8 @@ export function ruleRefused(refusal: RuleRefusal): string {
 function body(draft: RuleDraft): Record<string, unknown> {
   return {
     words: draft.words,
-    title_only: draft.titleOnly,
-    author: draft.author,
     feed_id: draft.feedId,
-    folder_id: draft.folderId,
-    action: draft.action,
+    title_only: draft.titleOnly ?? false,
     paused: draft.paused ?? false,
     place_gone: draft.placeGone ?? false,
   };
@@ -203,16 +168,12 @@ async function post(path: string, change: unknown): Promise<Record<string, unkno
 }
 
 function toRule(rule: Record<string, unknown>): Rule {
-  const action = rule.action === "star" || rule.action === "read" ? rule.action : "mute";
   return {
     id: Number(rule.id),
     words: String(rule.words ?? ""),
     titleOnly: rule.title_only === true,
-    author: String(rule.author ?? ""),
     feedId: typeof rule.feed_id === "number" ? rule.feed_id : null,
-    folderId: typeof rule.folder_id === "number" ? rule.folder_id : null,
     placeGone: rule.place_gone === true,
-    action,
     paused: rule.paused === true,
   };
 }
