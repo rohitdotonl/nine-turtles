@@ -348,12 +348,12 @@ test.describe("on a wide window", () => {
     await expect.poll(measure).not.toBe(medium);
 
     // The keyboard's outline is in the text color, never the accent.
-    await panel.getByRole("radio", { name: "Light", exact: true }).focus();
+    await panel.getByRole("radio", { name: "White", exact: true }).focus();
     await page.keyboard.press("ArrowRight");
     await page.keyboard.press("ArrowLeft");
-    await expect(panel.getByRole("radio", { name: "Light", exact: true })).toBeChecked();
+    await expect(panel.getByRole("radio", { name: "White", exact: true })).toBeChecked();
     const [outline, ink] = await panel
-      .getByRole("radio", { name: "Light", exact: true })
+      .getByRole("radio", { name: "White", exact: true })
       .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
     expect(outline).toBe(ink);
 
@@ -370,7 +370,7 @@ test.describe("on a wide window", () => {
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Light", exact: true })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
     await page.getByRole("link", { name: /^Font and line width/ }).click();
     await expect(page.getByRole("radio", { name: "Wide" })).toBeChecked();

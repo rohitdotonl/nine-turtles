@@ -236,6 +236,7 @@
   /* The page's swatches sit closer, each a column 56px wide (44px or more to press): the swatch, its name under it. */
   .swatches {
     flex-wrap: nowrap;
+    align-items: flex-start;
     gap: 0.25rem;
   }
   .swatch {
