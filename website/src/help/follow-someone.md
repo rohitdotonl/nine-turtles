@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-03
+updated: 2026-11-04
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -57,10 +57,12 @@ You can follow a site you're looking at without copying its address:
 
 - **Android:** once nine turtles is <a href="/help/install-the-app/">installed</a>,
   share the page to nine turtles.
-- **iPhone and iPad:** use the Apple Shortcut in **Settings › Add from
-  anywhere**.
-- **A computer:** add the bookmark from **Settings › Add from anywhere** to
-  your browser, and press it on any site.
+- **iPhone and iPad:** a ready-made Shortcut for Safari's **Share** button is
+  on its way. Until then, copy the page's address and paste it into
+  **+ Add**.
+- **A computer:** in **Settings › Add from anywhere**, drag the **Add to
+  nine turtles** button to your bookmarks bar, then press it on any blog you
+  like. Can't drag? Press **Copy** and paste it as a new bookmark's address.
 
 nine turtles asks "Follow…?" first, and follows only when you say so.
 

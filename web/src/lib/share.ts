@@ -27,13 +27,16 @@ export function sharedAddress(search: string): string {
 /**
  * The address a bookmark in a computer's browser can hold ("bookmarklet":
  * a bookmark that runs a line of JavaScript): pressed on any page, it opens
- * this nine turtles' Add a feed with that page's address.
+ * this nine turtles' Add a feed with that page's address. `void` keeps the
+ * browser from showing the address as a page of text before it goes.
  */
 export function bookmarklet(origin: string): string {
-  return `javascript:location.href='${origin}/add-feed?url='+encodeURIComponent(location.href)`;
+  return `javascript:void(location.href='${origin}/add?url='+encodeURIComponent(location.href))`;
 }
 
-/** The address an Apple Shortcuts shortcut opens, with the shared page's address (URL-encoded) added to its end. */
-export function shortcutAddress(origin: string): string {
-  return `${origin}/add-feed?url=`;
-}
+/**
+ * The ready-made Apple Shortcut for iPhone and iPad (decision 0177): made
+ * once on the owner's iPhone and shared through iCloud, since Apple lets no
+ * one else make that link. It opens app.nineturtles.app/add?url=<the page>.
+ */
+export const SHORTCUT_LINK = "";

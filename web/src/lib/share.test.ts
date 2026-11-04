@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookmarklet, firstWebAddress, sharedAddress, shortcutAddress } from "./share";
+import { bookmarklet, firstWebAddress, sharedAddress } from "./share";
 
 describe("a shared link's address", () => {
   it("takes url when it has one", () => {
@@ -38,10 +38,9 @@ describe("a shared link's address", () => {
 });
 
 describe("the ways in from elsewhere", () => {
-  it("builds the bookmark and the shortcut's address from this nine turtles' own address", () => {
+  it("builds the bookmark from this nine turtles' own address", () => {
     expect(bookmarklet("https://app.nineturtles.app")).toBe(
-      "javascript:location.href='https://app.nineturtles.app/add-feed?url='+encodeURIComponent(location.href)",
+      "javascript:void(location.href='https://app.nineturtles.app/add?url='+encodeURIComponent(location.href))",
     );
-    expect(shortcutAddress("http://localhost:8080")).toBe("http://localhost:8080/add-feed?url=");
   });
 });

@@ -117,6 +117,10 @@ a plan; nothing is built until Rohit says go.
   notifications beside the weekly email; Pricing says "to be decided"
   while sign-up is open.
 - [ ] **Start the friction log** (above).
+- [ ] **Publish the "Add to nine turtles" Shortcut to iCloud and send the
+  link** (steps in the "Add from anywhere in one tap" thread). The iPhone
+  row in Settings › Add from anywhere, and its Help line, go in when you do
+  (decision 0177).
 
 ### Starter people, replacing the five starter feeds
 

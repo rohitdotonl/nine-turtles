@@ -1,25 +1,31 @@
 <!--
-  Add from anywhere (SPEC section 3, decision 0104), a group of Settings:
-  the ways to add a feed from a page you're on elsewhere. A bookmark for a
-  computer's browser ("bookmarklet") and the address an Apple Shortcuts
-  shortcut opens, each with a Copy button, as Other apps shows its
-  addresses; a phone's share menu needs nothing set up, so the foot only
-  says how. Both addresses are built from this nine turtles' own address.
+  Add from anywhere (SPEC section 3, decisions 0104 and 0177), a group of
+  Settings: the ways to follow someone from a page you're on elsewhere. On a
+  computer, a button to drag to the bookmarks bar (a "bookmarklet"), with
+  Copy beside it for anyone who can't drag; on iPhone and iPad, the
+  ready-made Shortcut, once its link exists; Android's share menu needs
+  nothing set up, so the foot only says how. The bookmark is built from this
+  nine turtles' own address.
 -->
 <script lang="ts">
-  import { bookmarklet, shortcutAddress } from "./share";
+  import { bookmarklet, SHORTCUT_LINK } from "./share";
 
   const bookmark = bookmarklet(location.origin);
-  const shortcut = shortcutAddress(location.origin);
   let message = $state("");
 
-  async function copy(text: string, what: string) {
+  async function copy() {
     try {
-      await navigator.clipboard.writeText(text);
-      message = `${what} copied.`;
+      await navigator.clipboard.writeText(bookmark);
+      message = "Bookmark copied.";
     } catch {
-      message = `Couldn't copy. Select the ${what.toLowerCase()} and copy it yourself.`;
+      message = "Couldn't copy. Drag the button to your bookmarks bar instead.";
     }
+  }
+
+  /** Pressed here it would do nothing useful: it works from the bookmarks bar. */
+  function pressed(event: MouseEvent) {
+    event.preventDefault();
+    message = "Drag it to your bookmarks bar: it works from there.";
   }
 </script>
 
@@ -28,35 +34,28 @@
   <div class="inset-group">
     <div class="inset-row">
       <p class="min-w-0">
-        Bookmark for your browser<br /><span class="value text-muted" translate="no">{bookmark}</span>
+        On a computer<br /><span class="text-muted">Drag this button to your bookmarks bar, then press it on any blog you like.</span>
       </p>
-      <button type="button" class="btn btn-small" onclick={() => copy(bookmark, "Bookmark")}
-        >Copy<span class="sr-only"> bookmark</span></button
-      >
+      <a class="btn btn-small" href={bookmark} draggable="true" onclick={pressed}>Add to nine turtles</a>
     </div>
     <div class="inset-row">
-      <p class="min-w-0">
-        Address for Apple Shortcuts<br /><span class="value text-muted" translate="no">{shortcut}</span>
-      </p>
-      <button type="button" class="btn btn-small" onclick={() => copy(shortcut, "Shortcut address")}
-        >Copy<span class="sr-only"> the Apple Shortcuts address</span></button
-      >
+      <p class="min-w-0 text-muted">No bookmarks bar? Copy the bookmark and paste it as a new bookmark's address.</p>
+      <button type="button" class="btn btn-small" onclick={copy}>Copy<span class="sr-only"> bookmark</span></button>
     </div>
+    {#if SHORTCUT_LINK}
+      <div class="inset-row">
+        <p class="min-w-0">
+          On iPhone and iPad<br /><span class="text-muted">Get the Shortcut once, then in Safari tap Share › Add to nine turtles.</span>
+        </p>
+        <a class="btn btn-small" href={SHORTCUT_LINK} target="_blank" rel="noopener noreferrer"
+          >Get the Shortcut<span class="sr-only"> (opens Apple's page)</span></a
+        >
+      </div>
+    {/if}
   </div>
   <p role="status" class={["inset-foot text-ink", !message && "sr-only"]}>{message}</p>
   <p class="inset-foot">
-    Add a feed from the page you're on: nine turtles opens Add a feed with the page's address and looks for its
-    feed, and you choose whether to add it. On Android, once nine turtles is on your home screen, share a page and
-    choose nine turtles. On a computer, make a new bookmark and paste the bookmark above as its address; press it
-    on any page. On iPhone and iPad, in the Shortcuts app make a shortcut that shows in the share sheet and takes
-    Safari web pages and URLs, then add “URL Encode” and “Open URLs”, with the address above followed by the
-    encoded text.
+    On Android, add nine turtles to your home screen, then share a page and choose nine turtles. Each way asks before
+    following anyone.
   </p>
 </section>
-
-<style>
-  /* The addresses: long words that may break anywhere, never off the row. */
-  .value {
-    overflow-wrap: anywhere;
-  }
-</style>
