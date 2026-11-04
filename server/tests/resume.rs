@@ -159,6 +159,28 @@ async fn the_last_article_left_partway_is_offered_on_every_device_until_let_go()
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(offer(&base, &other).await, Value::Null);
 
+    // A hidden article isn't offered.
+    call(
+        Method::PUT,
+        &base,
+        &cookie,
+        "/api/resume",
+        Some(keep(walk, 3, 0.5)),
+    )
+    .await;
+    sqlx::query("UPDATE entries SET muted = 1 WHERE article_id = ?")
+        .bind(walk)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(offer(&base, &cookie).await, Value::Null);
+    sqlx::query("UPDATE entries SET muted = 0 WHERE article_id = ?")
+        .bind(walk)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(offer(&base, &cookie).await["article"]["id"], walk);
+
     // Once the feed is left, its article isn't offered any more.
     call(
         Method::PUT,

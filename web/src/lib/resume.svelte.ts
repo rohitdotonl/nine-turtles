@@ -6,7 +6,7 @@
 // Nothing here is ever said when it fails: the line simply isn't offered.
 
 import { getJson, isRecord } from "./http";
-import { keepPlace, placeOf, type Place } from "./places";
+import { keepPlace, type Place } from "./places";
 import { toArticle, type Article } from "./shapes";
 import { api } from "./updates.svelte";
 
@@ -20,6 +20,10 @@ let held: number | undefined;
 /** The article open now, if one has opened since the page loaded. */
 let current: number | undefined;
 let asking = false;
+/** The requests to the server, one after another, so "keep" and "let go" arrive in the order they were made. */
+let queue: Promise<unknown> = Promise.resolve();
+/** How long the empty reading area waits for the answer before it shows its usual line. */
+export const WAIT = 1_500;
 
 /** The offer in the server's answer, if it's well formed. */
 export function toOffer(answer: unknown): (Offer & { place: Place }) | undefined {
@@ -38,25 +42,32 @@ export function toOffer(answer: unknown): (Offer & { place: Place }) | undefined
 export function askWhereYouLeftOff(): void {
   if (asking) return;
   asking = true;
+  const waited = setTimeout(() => (pickUp.asked = true), WAIT);
   getJson("/api/resume").then(
     (answer) => {
       const offer = toOffer(answer);
       if (offer) {
         held = offer.article.id;
-        if (!placeOf(held)) keepPlace(held, offer.place);
-        // Something else opened before the answer came: that place is let go, as below.
-        if (current === undefined) pickUp.offer = { article: offer.article, writer: offer.writer };
-        else if (current !== held) letGo(held);
+        // The server's is the newest place: every place kept on a device is sent to it.
+        keepPlace(held, offer.place);
+        // Something else opened before the answer came: that place is let go, as below. An answer
+        // after the usual line has shown never replaces it: nothing changes under the reader.
+        if (current === undefined && !pickUp.asked) pickUp.offer = { article: offer.article, writer: offer.writer };
+        else if (current !== undefined && current !== held) letGo(held);
       }
+      clearTimeout(waited);
       pickUp.asked = true;
     },
-    () => (pickUp.asked = true),
+    () => {
+      clearTimeout(waited);
+      pickUp.asked = true;
+    },
   );
 }
 
 function send(path: string, init: RequestInit): void {
   if (globalThis.navigator?.onLine === false) return;
-  void api(path, { ...init, signal: AbortSignal.timeout(15_000) }).catch(() => undefined);
+  queue = queue.then(() => api(path, { ...init, signal: AbortSignal.timeout(15_000) }).catch(() => undefined));
 }
 
 function letGo(id: number): void {

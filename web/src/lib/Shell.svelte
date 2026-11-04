@@ -873,7 +873,7 @@
   }
 
   /** Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list opens with it chosen, keyboard on it. */
-  function openEpisode(article: Article) {
+  function openFromOutside(article: Article) {
     if (selected?.id !== article.id) {
       if (!(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
       selected = article;
@@ -1307,7 +1307,7 @@
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined && (under.kind !== "search" || library.searchesLoaded) && (under.kind !== "collection" || library.collectionsLoaded)}
-              {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openEpisode} />{/if}
+              {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106). -->
                 <FailingLine
@@ -1377,7 +1377,7 @@
               {@render welcome(false)}
             </section>
           {:else}
-            <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} onOpen={openEpisode} />
+            <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
           {/if}
           </div>
         {/if}
@@ -1386,12 +1386,12 @@
   {/if}
   </div>
   {#if !(phone && reading && panes.article && selected)}
-    <NowPlaying onOpen={openEpisode} stepAside={phone} />
+    <NowPlaying onOpen={openFromOutside} stepAside={phone} />
   {/if}
 </main>
 
 {#snippet nowPlayingAboveToolbar()}
-  <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
+  <NowPlaying onOpen={openFromOutside} bottom={false} stepAside />
 {/snippet}
 
 <CheatSheet bind:open={cheatSheetOpen} {unreadOff} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />

@@ -20,8 +20,10 @@ the middle of, and a phone never knew where the laptop left off.
   never the accent. The writer is the name the reader gave the person, else
   the article's author; with neither, the title alone. With no reading area
   (a phone), the same line sits at the top of the list.
-- **It goes** once anything opens. Opening a different article, finishing
+- **It goes** once an article opens (a person's page or Settings leave it be). Opening a different article, finishing
   this one or scrolling it back to its top lets the place go for every
   device. A muted article, or one of a feed the reader left, isn't offered.
+- **The newest place wins:** every place a device keeps is also sent to the server (a moment after scrolling stops, one request after another so they arrive in order), so the server's place replaces a device's older one for that article.
+- **It never waits long:** if the server hasn't answered within 1.5 seconds, the usual line shows, and a late answer doesn't replace it.
 - **Never** a pop-up, a count or a notification, and nothing is said when
   the server can't be reached: the line simply isn't offered.

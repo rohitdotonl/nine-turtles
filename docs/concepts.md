@@ -174,6 +174,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`); the title line that shows it, with Search on a phone and More beside it (`ListHead.svelte`)
+- Pick up where you left off: the one article left partway, kept on the server and offered in one line (`resume.svelte.ts`, `PickUp.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
 - The sidebar's fixed lists: Unread, Starred, All and Recently read, which show (`SidebarViews.svelte`)

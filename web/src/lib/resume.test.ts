@@ -56,13 +56,15 @@ describe("Pick up where you left off", () => {
   it("offers the article, keeps its place on this device too, and goes once it opens", async () => {
     storage();
     const sent = server({ article: ARTICLE, writer: "Ana", block: 3, within: 0.5 });
-    const { askWhereYouLeftOff, pickUp, articleOpened, placeOf } = await load();
+    const { askWhereYouLeftOff, pickUp, articleOpened, placeOf, keepPlace } = await load();
+    keepPlace(7, { block: 1, within: 0 });
     askWhereYouLeftOff();
     askWhereYouLeftOff();
     await settle();
     expect(sent).toEqual(["GET /api/resume"]);
     expect(pickUp.asked).toBe(true);
     expect(pickUp.offer?.article.id).toBe(7);
+    // The server's place is the newest: it replaces this device's older one.
     expect(placeOf(7)).toEqual({ block: 3, within: 0.5 });
     articleOpened(7);
     expect(pickUp.offer).toBeUndefined();
@@ -77,10 +79,13 @@ describe("Pick up where you left off", () => {
     await settle();
     articleOpened(8);
     expect(pickUp.offer).toBeUndefined();
+    await settle();
     expect(sent.at(-1)).toBe("DELETE /api/resume?id=7");
     placeKept(8, { block: 2, within: 0.25 });
+    await settle();
     expect(sent.at(-1)).toBe('PUT /api/resume {"id":8,"block":2,"within":0.25}');
     placeKept(8, undefined);
+    await settle();
     expect(sent.at(-1)).toBe("DELETE /api/resume?id=8");
   });
 
@@ -91,7 +96,46 @@ describe("Pick up where you left off", () => {
     articleOpened(8);
     await settle();
     expect(pickUp.offer).toBeUndefined();
+    await settle();
     expect(sent).toEqual(["GET /api/resume", "DELETE /api/resume?id=7"]);
+  });
+
+  it("sends keep and let go one after another, in the order they were made", async () => {
+    const order: string[] = [];
+    let release: () => void = () => undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (path: string, init?: RequestInit) => {
+        order.push(`${init?.method} ${path}`);
+        // The first request is slow: the second must wait for it.
+        if (order.length === 1) await new Promise<void>((done) => (release = done));
+        return new Response(null, { status: 204 });
+      }),
+    );
+    const { placeKept } = await load();
+    placeKept(8, { block: 2, within: 0.25 });
+    placeKept(8, undefined);
+    await settle();
+    expect(order).toEqual(["PUT /api/resume"]);
+    release();
+    await settle();
+    expect(order).toEqual(["PUT /api/resume", "DELETE /api/resume?id=8"]);
+  });
+
+  it("shows the usual line if the server is slow to answer, and a late answer doesn't replace it", async () => {
+    vi.useFakeTimers();
+    storage();
+    let answer: (response: Response) => void = () => undefined;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((done) => (answer = done))));
+    const { askWhereYouLeftOff, pickUp, WAIT } = await load();
+    askWhereYouLeftOff();
+    expect(pickUp.asked).toBe(false);
+    vi.advanceTimersByTime(WAIT);
+    expect(pickUp.asked).toBe(true);
+    answer(new Response(JSON.stringify({ article: ARTICLE, writer: null, block: 3, within: 0.5 }), { status: 200 }));
+    vi.useRealTimers();
+    await settle();
+    expect(pickUp.offer).toBeUndefined();
   });
 
   it("sends nothing without a connection", async () => {
@@ -99,6 +143,7 @@ describe("Pick up where you left off", () => {
     vi.stubGlobal("navigator", { onLine: false });
     const { placeKept } = await load();
     placeKept(8, { block: 2, within: 0.25 });
+    await settle();
     expect(sent).toEqual([]);
   });
 });
