@@ -10,6 +10,8 @@ describe("addresses", () => {
     expect(parse("/settings/feed-health")).toEqual({ kind: "feed-health" });
     expect(parse("/settings/feeds")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/hidden")).toEqual({ kind: "muted" });
+    expect(parse("/settings/muted")).toEqual({ kind: "muted" });
+    expect(parse("/settings/rules")).toEqual({ kind: "settings", page: "hiding" });
     expect(parse("/settings/readers/all")).toEqual({ kind: "readers" });
     expect(parse("/settings/readers")).toEqual({ kind: "settings", page: "readers" });
     expect(parse("/settings/hiding")).toEqual({ kind: "settings", page: "hiding" });

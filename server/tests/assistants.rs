@@ -881,6 +881,26 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
     )
     .await;
     assert!(!error);
+
+    // A rule whose person is gone comes back matching nothing, never for everyone.
+    let (made, error) = tool(
+        &base,
+        key,
+        "add_rule",
+        json!({ "words": "weeds", "place_gone": true }),
+    )
+    .await;
+    assert!(!error, "{made}");
+    let (rules, _) = tool(&base, key, "list_rules", json!({})).await;
+    let weeds = rules["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|rule| rule["words"] == "weeds")
+        .unwrap()
+        .clone();
+    assert_eq!(weeds["place_gone"], true);
+    assert_eq!(weeds["feed_id"], serde_json::Value::Null);
 }
 
 #[tokio::test]

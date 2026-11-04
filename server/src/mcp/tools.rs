@@ -221,6 +221,7 @@ fn list() -> Vec<Value> {
                 "feed_id": feed_id,
                 "title_only": { "type": "boolean", "description": "Only to make an old titles-only rule again, as delete_rule answered it." },
                 "paused": { "type": "boolean", "description": "Made paused, as a removed rule was." },
+                "place_gone": { "type": "boolean", "description": "Only to make a removed rule again whose person is no longer followed, as delete_rule answered it: it matches nothing, never everyone." },
             }),
             &["words"],
             changing(false, false),

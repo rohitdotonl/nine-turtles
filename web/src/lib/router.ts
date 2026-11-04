@@ -84,7 +84,9 @@ export function parse(path: string): Route {
   if (name === "settings") return { kind: "settings" };
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
-  if (name === "settings/hidden") return { kind: "muted" };
+  // The old addresses (decision 0173) still open their pages.
+  if (name === "settings/hidden" || name === "settings/muted") return { kind: "muted" };
+  if (name === "settings/rules") return { kind: "settings", page: "hiding" };
   if (name === "settings/readers/all") return { kind: "readers" };
   const page = name.startsWith("settings/") ? settingsPage(name.slice("settings/".length)) : undefined;
   if (page) return { kind: "settings", page };
@@ -205,7 +207,7 @@ export function titleFor(route: Route, placeName?: string): string {
 
 /**
  * The page a Settings page goes back to (decision 0120): Settings itself for its own pages, Feed
- * health and Your feeds; Rules for Muted articles; Readers for All readers. Nothing elsewhere.
+ * health and Your feeds; Hiding for Hidden articles; Readers for All readers. Nothing elsewhere.
  */
 export function parentOf(route: Route): Route | undefined {
   if (route.kind === "settings") return route.page ? { kind: "settings" } : undefined;

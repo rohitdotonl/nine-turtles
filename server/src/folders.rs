@@ -573,7 +573,7 @@ pub async fn clear(
     .execute(&mut *connection)
     .await?;
     take_out_of_folders(&mut *connection, person, id).await?;
-    // Their rules for it stay, paused and saying so (SPEC section 27).
+    // Their rules for it move to another of the person's places, or stay, matching nothing (SPEC section 27).
     rules::place_gone_for(connection, person, id).await?;
     crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;
     sqlx::query(

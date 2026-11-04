@@ -22,7 +22,8 @@ and needs no explaining.
   Undo (and the assistants' `create_folder`) hands back only saved searches.
 - **Names:** Settings › **Hiding** (`/settings/hiding`), **Hidden articles**
   (`/settings/hidden`, with no count beside it), **Unhide**, "· Hidden" in
-  search. The database keeps its words (`rules`, `entries.muted`).
+  search. The old addresses (`/settings/rules`, `/settings/muted`) still
+  open those pages. The database keeps its words (`rules`, `entries.muted`).
 - **Where it starts:** an article's More menu and a quiet link on a person's
   page, both **Hide articles about…** (one name everywhere: not "like this",
   which would suggest nine turtles judges similarity). Both open Settings ›
@@ -44,5 +45,6 @@ and needs no explaining.
   shown or run (`rules::RULES` reads only the others). What any rule already
   did stays done. Rohit had no rules, so nothing changes for him.
 - **Assistants (MCP):** `add_rule` takes `words` and an optional `feed_id`
-  (any of the person's feeds), plus `title_only` and `paused` only to make a
-  removed rule again; `list_rules` and `delete_rule` answer the new shape.
+  (any of the person's feeds), plus `title_only`, `paused` and `place_gone`
+  only to make a removed rule again (so one whose person is gone never comes
+  back for everyone); `list_rules` and `delete_rule` answer the new shape.

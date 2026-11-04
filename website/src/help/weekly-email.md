@@ -27,7 +27,7 @@ the people you read**.
 
 Who wrote, A to Z, with up to three titles each and the first line of
 each, linked to the writer's own page. Only articles you haven't read, and
-never anything muted. When nothing's new, nothing is sent. No numbers, no
+never anything hidden. When nothing's new, nothing is sent. No numbers, no
 pictures, and nothing to track whether you opened it.
 
 ## Stop it

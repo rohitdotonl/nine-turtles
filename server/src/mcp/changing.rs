@@ -258,6 +258,8 @@ pub(super) struct RuleAsked {
     title_only: bool,
     #[serde(default)]
     paused: bool,
+    #[serde(default)]
+    place_gone: bool,
 }
 
 pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
@@ -266,7 +268,7 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         feed_id: asked.feed_id,
         title_only: asked.title_only,
         paused: asked.paused,
-        place_gone: false,
+        place_gone: asked.place_gone,
     };
     match rules::make(state, person, &form).await {
         Ok(Ok((id, matching))) => Ok(json!({

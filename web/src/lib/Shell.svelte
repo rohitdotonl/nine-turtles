@@ -748,7 +748,7 @@
   }
 
   /**
-   * Close a page opened from Settings (Feed health, Your feeds, Muted articles, All readers, and
+   * Close a page opened from Settings (Feed health, Your feeds, Hidden articles, All readers, and
    * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
    * step back in history when it came from there.
    */
