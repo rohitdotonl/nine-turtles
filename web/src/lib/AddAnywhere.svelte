@@ -18,7 +18,7 @@
       await navigator.clipboard.writeText(bookmark);
       message = "Bookmark copied.";
     } catch {
-      message = "Couldn't copy. Drag the button to your bookmarks bar instead.";
+      message = "Couldn't copy. Select the bookmark above and copy it yourself.";
     }
   }
 
@@ -36,10 +36,15 @@
       <p class="min-w-0">
         On a computer<br /><span class="text-muted">Drag this button to your bookmarks bar, then press it on any blog you like.</span>
       </p>
-      <a class="btn btn-small" href={bookmark} draggable="true" onclick={pressed}>Add to nine turtles</a>
+      <a class="btn btn-small" href={bookmark} onclick={pressed}>Add to nine turtles</a>
     </div>
     <div class="inset-row">
-      <p class="min-w-0 text-muted">No bookmarks bar? Copy the bookmark and paste it as a new bookmark's address.</p>
+      <p class="min-w-0 text-muted">
+        No bookmarks bar? Copy the bookmark and paste it as a new bookmark's address.<br /><span
+          class="value"
+          translate="no">{bookmark}</span
+        >
+      </p>
       <button type="button" class="btn btn-small" onclick={copy}>Copy<span class="sr-only"> bookmark</span></button>
     </div>
     {#if SHORTCUT_LINK}
@@ -55,7 +60,14 @@
   </div>
   <p role="status" class={["inset-foot text-ink", !message && "sr-only"]}>{message}</p>
   <p class="inset-foot">
-    On Android, add nine turtles to your home screen, then share a page and choose nine turtles. Each way asks before
-    following anyone.
+    On Android, add nine turtles to your home screen, then share a page and choose nine turtles.{#if !SHORTCUT_LINK}
+      On iPhone and iPad, copy the page's address and paste it into + Add.{/if} Each way asks before following anyone.
   </p>
 </section>
+
+<style>
+  /* The bookmark itself: one long word that may break anywhere, never off the row. */
+  .value {
+    overflow-wrap: anywhere;
+  }
+</style>

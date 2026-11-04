@@ -687,5 +687,9 @@ test("Settings gives a bookmark button to drag, built from this nine turtles' ow
   await expect(group.getByRole("status")).toHaveText("Drag it to your bookmarks bar: it works from there.");
   await expect(page).toHaveURL(/\/settings\/add-from-anywhere$/);
   await expect(group.getByRole("button", { name: "Copy bookmark" })).toBeVisible();
-  await expect(group.getByText("Each way asks before following anyone.")).toBeVisible();
+  // The bookmark's words are shown too, for anyone who copies it by hand.
+  await expect(group.getByText(`javascript:void(location.href='${FEEDS_APP}/add?url=`)).toBeVisible();
+  // Until the Shortcut's link exists, no button leads nowhere; the foot says what to do instead.
+  await expect(group.getByRole("link", { name: /Get the Shortcut/ })).toHaveCount(0);
+  await expect(group.getByText(/On iPhone and iPad, copy the page's address and paste it into \+ Add\. Each way asks before following anyone\./)).toBeVisible();
 });
