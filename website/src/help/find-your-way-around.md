@@ -3,8 +3,8 @@ title: Find your way around
 description: The sidebar, the list of articles and the reading pane, and how new articles arrive without moving anything under you.
 groupId: getting-started
 order: 5
-spec: 4, 5, 6 and 13
-updated: 2026-11-03
+spec: 4, 5, 6, 7 and 13
+updated: 2026-11-04
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -52,6 +52,12 @@ Choose an article and it opens on the right. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Star**
 and **More**. On a phone they're in the bar at the bottom, with Previous and
 Next. A long article opens where you stopped last time.
+
+When you come back with nothing open, the reading pane offers the article
+you last left part of the way through, in one quiet line: "You were reading
+*The long walk home*, by Ana." Press the title to carry on where you
+stopped, on any device you sign in on (on a phone, the line is at the top of
+the list). It goes once you open something else or finish it.
 
 ## New articles wait for you
 

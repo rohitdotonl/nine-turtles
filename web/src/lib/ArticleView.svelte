@@ -43,6 +43,7 @@
   import { articleNow, readArticle } from "./articles";
   import { when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
+  import { articleOpened, placeKept } from "./resume.svelte";
   import { connection } from "./connection.svelte";
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
@@ -169,7 +170,11 @@
   function writePlace() {
     clearTimeout(writing);
     writing = undefined;
-    if (latest) keepPlace(latest.id, latest.place);
+    if (latest) {
+      keepPlace(latest.id, latest.place);
+      // The latest is also where you left off, offered on every device (decision 0174).
+      placeKept(latest.id, latest.place);
+    }
     latest = undefined;
   }
 
@@ -197,6 +202,7 @@
   $effect(() => {
     const id = article.id;
     writePlace();
+    articleOpened(id);
     moved = false;
     problem = false;
     copied = "";

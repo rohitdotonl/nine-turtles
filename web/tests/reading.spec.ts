@@ -1054,4 +1054,38 @@ test.describe("your place in an article (decision 0060)", () => {
     await page.waitForTimeout(200);
     expect(await top(page)).toBe(0);
   });
+
+  test("coming back, the article you left part of the way through is offered in one quiet line, and opens where you were (decision 0174)", async ({ page }) => {
+    await openRoom(page);
+    await page.setViewportSize({ width: 1280, height: 400 });
+    await row(page, "The pleasure of a slow letter").click();
+    await expect(article(page).locator("table")).toBeAttached();
+    await scroller(page).hover();
+    await page.mouse.wheel(0, 300);
+    await expect.poll(() => top(page)).toBeGreaterThan(250);
+    await page.waitForTimeout(600);
+    const stopped = await top(page);
+    // Another device: this one's own bookmarks are gone, but the server still knows.
+    await page.evaluate(() => localStorage.removeItem("nine-turtles.places"));
+
+    await page.goto(new URL("/all", page.url()).href);
+    await appReady(page);
+    const line = article(page).locator(".reading-empty");
+    await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
+    // The title is the way in, from the keyboard too.
+    const title_ = line.getByRole("button", { name: "The pleasure of a slow letter" });
+    await title_.focus();
+    await page.keyboard.press("Enter");
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
+    expect(await top(page)).toBeLessThan(stopped + 8);
+
+    // Opening something else lets it go: next time, the usual line.
+    await row(page, "Only the first page").click();
+    await expect(title(page, "Only the first page")).toBeVisible();
+    await page.waitForTimeout(300);
+    await page.goto(new URL("/all", page.url()).href);
+    await appReady(page);
+    await expect(line).toHaveText("Time to read something beautiful.");
+  });
 });
