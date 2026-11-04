@@ -194,7 +194,7 @@ async fn visit(client: &Client, home: &Url, local: bool) -> Result<Option<String
 }
 
 /// A web page's text and where it was found; `None` for anything that isn't a web page.
-async fn page_at(
+pub(crate) async fn page_at(
     client: &Client,
     url: &Url,
     local: bool,
@@ -211,12 +211,12 @@ async fn page_at(
 }
 
 /// What one page gives: its addresses, in order, and the page to try next.
-struct Read {
-    addresses: Vec<String>,
-    next: Option<Url>,
+pub(crate) struct Read {
+    pub addresses: Vec<String>,
+    pub next: Option<Url>,
 }
 
-fn read(page: &str, at: &Url) -> Read {
+pub(crate) fn read(page: &str, at: &Url) -> Read {
     let document = Html::parse_document(page);
     Read {
         addresses: addresses_in(&document),
@@ -310,7 +310,7 @@ fn unhide(hex: &str) -> Option<String> {
 /// own on a blog it hosts, as "support@" a host's name is on
 /// "hal.host.example"); else the page's only one. Several
 /// others may be anyone's, so none is chosen.
-fn choose(addresses: &[String], site: &Url) -> Option<String> {
+pub(crate) fn choose(addresses: &[String], site: &Url) -> Option<String> {
     let host = bare(site.host_str().unwrap_or_default());
     addresses
         .iter()

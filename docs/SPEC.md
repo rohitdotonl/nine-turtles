@@ -64,6 +64,7 @@ A few words used throughout:
 | 40 | [Help (on the website)](spec/40-help.md) |
 | 41 | ["How did you hear about nine turtles?"](spec/41-how-did-you-hear.md) |
 | 42 | [Notes and highlights](spec/42-notes-and-highlights.md) |
+| 43 | [The blog checkup (on the website)](spec/43-the-blog-checkup.md) |
 
 ## Not built yet, and never
 

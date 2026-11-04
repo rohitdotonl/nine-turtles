@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 37
-updated: 2026-11-03
+updated: 2026-11-04
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -50,3 +50,8 @@ there and change **Email address**.
 - Addresses you type are yours alone: nobody else who reads that person sees
   them.
 - For a newsletter, the reply goes to the address its emails come from.
+
+## If you write a blog yourself
+
+The [blog checkup](/blog-checkup/) shows whether readers can follow you and
+write to you, and how to fix anything missing on your blog's platform.

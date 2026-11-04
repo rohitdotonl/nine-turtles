@@ -28,7 +28,7 @@ use crate::{
     refused,
 };
 
-mod site;
+pub(crate) mod site;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -117,21 +117,49 @@ fn of_person(person: &Person) -> Option<String> {
 /// The site's webmaster is never used: they run the website, they didn't
 /// write it.
 pub fn from_feed(feed: &Feed) -> Option<String> {
+    match named(feed) {
+        Named::One(found) => Some(found),
+        Named::Several => None,
+        Named::None => in_posts(feed),
+    }
+}
+
+/// What a feed's authors say about their addresses (the blog checkup tells
+/// a writer which it is).
+#[derive(Debug, PartialEq, Eq)]
+pub enum Named {
+    /// No author or editor of the feed or its articles gives one.
+    None,
+    /// One address, the writer's.
+    One(String),
+    /// Its articles name different ones (a magazine's writers).
+    Several,
+}
+
+/// The address the feed's author, editor or podcast owner gives; else the
+/// one all its articles' authors give.
+pub fn named(feed: &Feed) -> Named {
     let editors = feed
         .contributors
         .iter()
         .filter(|person| matches!(person.role.as_deref(), Some("managingEditor" | "owner")));
     if let Some(found) = feed.authors.iter().chain(editors).find_map(of_person) {
-        return Some(found);
+        return Named::One(found);
     }
     let mut named = feed
         .entries
         .iter()
         .flat_map(|entry| entry.authors.iter().filter_map(of_person))
         .peekable();
-    if named.peek().is_some() {
-        return only_one(named);
+    if named.peek().is_none() {
+        return Named::None;
     }
+    only_one(named).map_or(Named::Several, Named::One)
+}
+
+/// The one address the articles' own text gives for writing back, such as a
+/// "Reply by email" link (`in_text`).
+pub fn in_posts(feed: &Feed) -> Option<String> {
     only_one(in_text(feed).into_iter())
 }
 

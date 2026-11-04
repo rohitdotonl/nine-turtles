@@ -23,6 +23,7 @@ pub mod assistants;
 pub mod auth;
 pub mod backup;
 pub mod checking;
+pub mod checkup;
 pub mod cleanup;
 pub mod config;
 pub mod confirm_email;
@@ -232,6 +233,7 @@ pub fn router(state: AppState) -> Router {
         .merge(greader::routes())
         .merge(feeds::routes())
         .merge(finder::routes())
+        .merge(checkup::routes())
         .merge(folders::routes())
         .merge(health::routes())
         .merge(subscriptions::routes())
