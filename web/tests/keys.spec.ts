@@ -3,7 +3,7 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
 // The `?` list's foot (SPEC section 19), done with the keyboard alone, and
-// the keys Home and End, Shift+J and Shift+K, g then f and g then ,.
+// the keys Home and End, Shift+J and Shift+K, g then ,.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Keyboard shortcuts" });
@@ -46,7 +46,7 @@ test.describe("on a wide window", () => {
     await expect(sheet(page).getByRole("button", { name: /Change keys/ })).toHaveCount(0);
   });
 
-  test("Home and End choose the first and last article; Shift+J and Shift+K move between feeds; g then f and g then , go to Your feeds and Settings", async ({ page }) => {
+  test("Home and End choose the first and last article; Shift+J and Shift+K move down the sidebar, folders included; g then , goes to Settings", async ({ page }) => {
     await signedIn(page);
     // Two of this test's own, so the sidebar has a next person whatever else it holds.
     await openBlog(page);
@@ -56,24 +56,24 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Home");
     await expect(row(page, 3)).toHaveAttribute("aria-current", "true");
 
-    // From All, Shift+J goes to the first feed in the sidebar, again to the next, and Shift+K back.
+    // From All, Shift+J goes to the first row in the sidebar, again to the next, and Shift+K back.
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
     // Once the sidebar has the feeds (the blog, in no folder, among them).
     await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href="/people/${blog}"]`)).toBeVisible();
     await page.keyboard.press("Shift+J");
-    await expect(page).toHaveURL(/\/people\/\d+$/);
+    await expect(page).toHaveURL(/\/(people|publications|folders)\/\d+$/);
     const first = page.url();
     await page.keyboard.press("Shift+J");
     await expect(page).not.toHaveURL(first);
-    // The next row may be a person or a publication, whatever other tests followed meanwhile.
-    await expect(page).toHaveURL(/\/(people|publications)\/\d+$/);
+    // The next row may be a folder, a person or a publication, whatever other tests followed meanwhile.
+    await expect(page).toHaveURL(/\/(people|publications|folders)\/\d+$/);
     await page.keyboard.press("Shift+K");
     await expect(page).toHaveURL(first);
 
     await page.keyboard.press("g");
-    await page.keyboard.press("f");
-    await expect(page).toHaveURL(/\/settings\/feeds$/);
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/notes$/);
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page).toHaveURL(/\/settings$/);

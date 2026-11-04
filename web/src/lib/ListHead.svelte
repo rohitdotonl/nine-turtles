@@ -3,11 +3,12 @@
   name ends in "…", with its whole name as its tooltip and read in full by screen readers, so
   the search field below and More beside it never move. In a pane narrower than 340px it
   steps down from 24px to 22px. Beside it, one quiet More (…) button, as Apple Books has one
-  per collection (decision 0038): Mark all as read, Refresh, the sort order, and "About …" or
+  per collection (decision 0038): Mark all as read, Refresh, the sort order, and "Info about …" or
   Edit folder in a person's, publication's or folder's own list (SPEC section 6). A person's or
   publication's name is itself the way to their page, a button ending in › (decision 0163).
 -->
 <script lang="ts">
+  import { tip } from "./keyboard";
   import Icon from "./Icon.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
 
@@ -47,7 +48,7 @@
   >
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
-      <button type="button" onclick={onAbout} title="About {text} (i)" aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
+      <button type="button" onclick={onAbout} title={tip(`Info about ${text}`, "about")} aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
         ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-1.5 shrink-0 font-normal text-muted">›</span></button
       >
     {:else}

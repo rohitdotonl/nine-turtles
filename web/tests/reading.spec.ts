@@ -26,18 +26,18 @@ async function visits(page: Page, path: string): Promise<number> {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
-  test("] hides and shows the article list, and \\ both; with both hidden one button brings both back", async ({ page }) => {
+  test("the list's button hides and shows the article list, and f both; with both hidden one button brings both back", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
     const listButton = page.getByRole("button", { name: "Article list", exact: true });
     await expect(listButton).toBeVisible();
 
-    await page.keyboard.press("]");
+    await listButton.click();
     await expect(list).toBeHidden();
-    await page.keyboard.press("]");
+    await listButton.click();
     await expect(list).toBeVisible();
 
-    await page.keyboard.press("\\");
+    await page.keyboard.press("f");
     await expect(list).toBeHidden();
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
     await expect(listButton).toHaveCount(0);
@@ -94,7 +94,7 @@ test.describe("on a wide window", () => {
     const room = page.url();
     // Beside a person's list, the same quiet line as everywhere (their page opens by their name, SPEC section 36), with the first-time tip under it.
     await expect(article(page).locator(".reading-empty")).toBeVisible();
-    await expect(article(page).locator(".shortcut-tip")).toContainText("to open the first article, or");
+    await expect(article(page).locator(".shortcut-tip")).toHaveText("Press J to read. Press W to write back.");
     // Everywhere else, one quiet line in the middle of the paper (decision 0053): serif, muted grey,
     // never the accent; screen readers also hear, since the list has articles to open, how to open one.
     await page.goto(new URL("/all", room).href);
@@ -120,8 +120,8 @@ test.describe("on a wide window", () => {
     // small, in the same muted grey, its keys as key caps.
     const tip = article(page).locator(".shortcut-tip");
     await expect(tip).toBeVisible();
-    await expect(tip).toContainText("to open the first article, or");
-    await expect(tip.locator("kbd")).toHaveText(["J", "?"]);
+    await expect(tip).toHaveText("Press J to read. Press W to write back.");
+    await expect(tip.locator("kbd")).toHaveText(["J", "W"]);
     expect(await tip.evaluate((element) => getComputedStyle(element).color)).toBe(muted);
 
     await page.goto(room);
@@ -213,7 +213,7 @@ test.describe("on a wide window", () => {
     await expect(title(page, "A third, shorter note")).toBeVisible();
   });
 
-  test("a click shows an article, and Open original and v open the publisher's page in a new tab", async ({ page, context }) => {
+  test("a click shows an article, and View original and v open the publisher's page in a new tab", async ({ page, context }) => {
     await context.route("https://reading-room.example/**", (route) =>
       route.fulfill({ contentType: "text/html", body: "<title>The original</title>" }),
     );
@@ -221,17 +221,17 @@ test.describe("on a wide window", () => {
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
 
-    const original = article(page).getByRole("link", { name: "Open original" }).first();
+    const original = article(page).getByRole("link", { name: "View original" }).first();
     // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first,
     // then Aa, Star and More (decision 0038).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Open original", "Reading appearance", "Star", "More actions"]);
+    expect(order).toEqual(["View original", "Reading appearance", "Star", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
-    await expect(original).toHaveAttribute("title", "Open original (V)");
+    await expect(original).toHaveAttribute("title", "View original (V)");
     // More holds Copy link, Mark unread, Add a note, Write back and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
@@ -390,9 +390,9 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     // At rest, the field just says "Search": the list's title above already names where you are.
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
+    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
-    await page.getByRole("combobox", { name: "Search", exact: true }).focus();
+    await page.getByRole("textbox", { name: "Search", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     // Shift+Tab reaches the chip's Remove button, and the chip stays while it has the keyboard.
     await page.keyboard.press("Shift+Tab");
@@ -401,9 +401,9 @@ test.describe("on a wide window", () => {
     await page.locator("#list-heading").focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
     // A click on the word "Search" opens the search without removing its scope.
-    await page.getByRole("combobox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
+    await page.getByRole("textbox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toBeFocused();
     const box = (await page.locator(".search-box").boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(48);
     // The chip's remove button is small to look at but a full 44px to press.
@@ -478,7 +478,7 @@ test.describe("on a wide window", () => {
     // Opening an article gives its title the keyboard's place for screen
     // readers, but no ring: a title can't be pressed (decision 0047). The
     // next Tab lands on the byline's link to the publisher, which rings.
-    await page.keyboard.press("o");
+    await page.keyboard.press("Enter");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
@@ -504,9 +504,9 @@ test.describe("on a wide window", () => {
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
     // The bar is anchored to the pane, not the text column (decision 0038): its tools sit together at the
-    // right, Open original first and More near the pane's edge, all outside the text (decision 0050).
+    // right, View original first and More near the pane's edge, all outside the text (decision 0050).
     const pane = (await article(page).boundingBox())!;
-    const first = (await article(page).getByRole("link", { name: "Open original" }).first().boundingBox())!;
+    const first = (await article(page).getByRole("link", { name: "View original" }).first().boundingBox())!;
     const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
     expect(first.x).toBeGreaterThan(text.x + text.width);
     expect(last.x - (first.x + first.width)).toBeLessThan(2 * 44 + 3 * 8 + 1);

@@ -4,7 +4,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 42 (decision 0164), "How to check it", in a browser: words
 // chosen in an article are highlighted from the small menu beside them, a
-// note is written on the whole article with Shift+H, both show at the
+// note is written on the whole article with N, both show at the
 // article's end and stay after a reload; Notes appears in the sidebar and
 // lists the article with its highlight; search finds it by the note's words;
 // without a connection a highlight is still made, with the quiet line until
@@ -81,9 +81,9 @@ test("highlights and a note stay with the article, and Notes and search find the
   await page.keyboard.press("Enter");
   await expect(article(page).locator("mark.highlight")).toHaveCount(2);
 
-  // Shift+H with nothing chosen: a note on the whole article, at its end.
+  // N with nothing chosen: a note on the whole article, at its end.
   await page.getByRole("heading", { name: NEWEST }).focus();
-  await page.keyboard.press("Shift+H");
+  await page.keyboard.press("n");
   const box = page.getByRole("textbox", { name: "A note on this article" });
   await expect(box).toBeFocused();
   await page.keyboard.type("Ask about the hedgerow survey");
@@ -103,7 +103,7 @@ test("highlights and a note stay with the article, and Notes and search find the
 
   // Search finds the article by its note's words.
   await page.keyboard.press("/");
-  await page.keyboard.type("hedgerow is:noted ");
+  await page.keyboard.type("hedgerow");
   await page.keyboard.press("Enter");
   await expect(page.getByText(/Your note · .*hedgerow/).first()).toBeVisible();
 });

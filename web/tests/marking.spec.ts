@@ -182,14 +182,14 @@ test.describe("on a wide window", () => {
     // The sort order is a one-of-two choice, ticked where it is now.
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "false");
-    // Then Refresh (its key shown beside it), the sort order, and "About …" last (decision 0038).
+    // Then Refresh (its key shown beside it), the sort order, and "Info about …" last (decision 0038).
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitem", { name: "Refresh" })).toBeFocused();
     await expect(menu.getByRole("menuitem", { name: "Refresh" })).toHaveAttribute("aria-keyshortcuts", "r");
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitemradio", { name: "Newest first" })).toBeFocused();
     await page.keyboard.press("End");
-    await expect(menu.getByRole("menuitem", { name: /^About / })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: /^Info about / })).toBeFocused();
     await page.keyboard.press("ArrowUp");
     await expect(menu.getByRole("menuitemradio", { name: "Oldest first" })).toBeFocused();
     await page.keyboard.press("End");

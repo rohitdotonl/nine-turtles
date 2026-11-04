@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 15, 23, 36 and 42
-updated: 2026-11-04
+updated: 2026-11-05
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -17,7 +17,7 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 
 1. Choose them in the sidebar, and open their page: press their name at
    the top of their list, or press <kbd>I</kbd>.
-2. Press **Edit** (or press <kbd>Shift</kbd> <kbd>E</kbd>).
+2. Press **Edit**.
 3. Press **Unsubscribe from …** at the foot.
 4. If you starred, highlighted or wrote notes on any of their articles, or
    wrote a note on them, nine turtles asks what to do with it: **Keep them**

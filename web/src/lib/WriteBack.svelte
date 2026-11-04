@@ -19,6 +19,7 @@
   The More menu's "Write back" and its key (`w`) do the same (`start`).
 -->
 <script lang="ts">
+  import { tip } from "./keyboard";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { plainSourceName } from "./feeds";
@@ -162,10 +163,10 @@
         <p class="text-small text-ink-2">Sends from your own email. nine turtles never reads it.</p>
       </form>
     {:else if address}
-      <a class="btn" bind:this={written} href={writeBackLink(address, article.title)}>Write back to {name}</a>
+      <a class="btn" bind:this={written} title={tip(`Write back to ${name}`, "write-back")} href={writeBackLink(address, article.title)}>Write back to {name}</a>
       <p class="to">{address}</p>
     {:else}
-      <button type="button" class="btn" bind:this={opener} onclick={start}>Write back to {name}</button>
+      <button type="button" class="btn" bind:this={opener} title={tip(`Write back to ${name}`, "write-back")} onclick={start}>Write back to {name}</button>
     {/if}
   </div>
 {/if}

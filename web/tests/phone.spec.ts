@@ -63,7 +63,7 @@ test.describe("on a phone", () => {
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
     const listBack = (await list(page).getByRole("button", { name: "Back to Feeds" }).locator("svg").boundingBox())!;
-    // One quiet More (…) beside the list's title; Refresh and "About …" are in its menu (decision 0038).
+    // One quiet More (…) beside the list's title; Refresh and "Info about …" are in its menu (decision 0038).
     const more = list(page).getByRole("button", { name: "More", exact: true });
     await expect(more).toBeVisible();
     await expect(page.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(0);
@@ -71,7 +71,7 @@ test.describe("on a phone", () => {
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     await more.click();
     await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "About Reading Room" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Info about Reading Room" })).toBeVisible();
     await more.click();
     await expect(page.getByRole("menu")).toHaveCount(0);
 
@@ -121,7 +121,7 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("the article's toolbar sits at the bottom as quiet icons; back and open original sit at the top", async ({ page }) => {
+  test("the article's toolbar sits at the bottom as quiet icons; back and view original sit at the top", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
@@ -169,7 +169,7 @@ test.describe("on a phone", () => {
       expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
     }
     // The way to the publisher is at the top, beside the back arrow.
-    await expect(article(page).getByRole("link", { name: "Open original" })).toHaveAttribute(
+    await expect(article(page).getByRole("link", { name: "View original" })).toHaveAttribute(
       "href",
       "https://reading-room.example/slow-letter",
     );
@@ -272,7 +272,7 @@ test.describe("on a phone", () => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "About Reading Room" }).click();
+    await page.getByRole("menuitem", { name: "Info about Reading Room" }).click();
     await expect(page).toHaveURL(/\/about$/);
     // In the list's place, its back button saying where it goes.
     await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();

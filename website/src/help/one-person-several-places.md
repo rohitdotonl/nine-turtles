@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-04
+updated: 2026-11-05
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -25,7 +25,7 @@ Everyone you follow is either a **person** (someone you might write to) or a
 ## Their page
 
 Choose them in the sidebar, then press their name at the top of their list
-("Alpha ›"), or choose **More › About Alpha**, or press <kbd>I</kbd>. On a
+("Alpha ›"), or choose **More › Info about Alpha**, or press <kbd>I</kbd>. On a
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 
@@ -35,7 +35,7 @@ website, and their **Email**, once nine turtles knows it.
 
 ## Edit them
 
-Press **Edit** beside their name (or <kbd>Shift</kbd> <kbd>E</kbd>). There
+Press **Edit** beside their name. There
 you can:
 
 - change their **Name**,

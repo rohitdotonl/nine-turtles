@@ -59,6 +59,13 @@ export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "St
 export const HIDEABLE = ["starred", "notes", "all"] as const;
 export type Hideable = (typeof HIDEABLE)[number];
 
+/** The lists the sidebar shows above the folders, top to bottom. With Unread off, All always shows: it's the home. */
+export function sidebarViews(unreadOff: boolean, hidden: readonly Hideable[], anyNotes: boolean): View[] {
+  return VIEWS.filter(
+    (view) => !(unreadOff && view === "unread") && !((hidden as readonly string[]).includes(view) && !(unreadOff && view === "all")) && !(view === "notes" && !anyNotes),
+  );
+}
+
 /**
  * Whether the person or publication whose row opens at feed `id` is a publication (decision 0163):
  * their addresses start /publications/ rather than /people/. Shell answers it once the sidebar has

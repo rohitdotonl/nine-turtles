@@ -9,7 +9,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const line = (page: Page) => page.getByRole("status").filter({ hasText: /\S/ }).first();
-/** The list's More (…) button; "About …" and Edit folder are in its menu (decision 0038). */
+/** The list's More (…) button; "Info about …" and Edit folder are in its menu (decision 0038). */
 const more = (page: Page) => page.getByRole("button", { name: "More", exact: true });
 /** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
 const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
@@ -19,20 +19,20 @@ async function openEdit(page: Page, name: "Edit folder") {
   await page.getByRole("menuitem", { name }).click();
 }
 
-/** Edit for the person or publication whose list is open (decision 0163): More › About …, then Edit on their page. */
+/** Edit for the person or publication whose list is open (decision 0163): More › Info about …, then Edit on their page. */
 async function editWho(page: Page, name: string) {
   await more(page).click();
-  await page.getByRole("menuitem", { name: `About ${name}` }).click();
+  await page.getByRole("menuitem", { name: `Info about ${name}` }).click();
   await page.getByRole("button", { name: `Edit ${name}`, exact: true }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Edit ${name}` })).toBeVisible();
 }
 
-/** The same with only the keyboard: More, its last item (About …), then Tab to Edit. */
+/** The same with only the keyboard: More, its last item (Info about …), then Tab to Edit. */
 async function editWhoByKeys(page: Page, name: string) {
   await tabTo(page, more(page));
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
-  await expect(page.getByRole("menuitem", { name: `About ${name}` })).toBeFocused();
+  await expect(page.getByRole("menuitem", { name: `Info about ${name}` })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(whoPage(page, name).getByRole("heading", { level: 2, name })).toBeFocused();
   await tabTo(page, page.getByRole("button", { name: `Edit ${name}`, exact: true }));
@@ -458,7 +458,7 @@ test("their page opens in the reading area in the article's place; Escape gives 
   await menu.focus();
   await page.keyboard.press("Enter");
   await page.keyboard.press("End");
-  await expect(page.getByRole("menuitem", { name: `About Blog ${blog}` })).toBeFocused();
+  await expect(page.getByRole("menuitem", { name: `Info about Blog ${blog}` })).toBeFocused();
   await page.keyboard.press("Enter");
   const about = whoPage(page, `Blog ${blog}`);
   await expect(about.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeFocused();

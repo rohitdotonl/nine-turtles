@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-04
+updated: 2026-11-05
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -42,7 +42,7 @@ with "That's everything for now."
 
 The list's **More** menu (the three dots) holds what you can do to the whole
 list: mark it all as read, refresh it, or sort it oldest first. In a
-person's or publication's list it also has **About …**, their page, which
+person's or publication's list it also has **Info about …**, their page, which
 opens too when you press their name at the top of the list.
 
 ## Reading
@@ -66,8 +66,8 @@ on a phone, to bring them in. Opening the app always shows the latest.
 
 ## Make room to read
 
-On a computer, <kbd>[</kbd> hides or shows the sidebar, <kbd>]</kbd> the
-list, and <kbd>\</kbd> both at once, for full-screen reading. You can also
+On a computer, <kbd>F</kbd> hides or shows the sidebar and the list at once,
+for full-screen reading, and each has a small button of its own. You can also
 drag the edge between two parts to make one wider; double-click the edge to
 put it back.
 

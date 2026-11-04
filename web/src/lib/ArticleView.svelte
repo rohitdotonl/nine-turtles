@@ -4,7 +4,7 @@
   and line width. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right as Apple Books keeps its reading
-  toolbar (decision 0050): Open original, Aa (the reading panel), Star and
+  toolbar (decision 0050): View original, Aa (the reading panel), Star and
   More (…). More holds Copy
   link (Share on phones), Mark unread and Write back (SPEC
   sections 7, 8, 9, 21, 33 and 37). Write back also ends the article. The
@@ -20,7 +20,7 @@
   its own (decision 0107).
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
-  bar has the back button, labeled with the list's name, and Open original;
+  bar has the back button, labeled with the list's name, and View original;
   Previous, Next, Aa, Star and More sit as icons in a toolbar at the bottom,
   within thumb reach, above a hairline; one that can't act is faded in place.
 -->
@@ -341,14 +341,14 @@
       await navigator.clipboard.writeText(link);
       copied = "Link copied.";
     } catch {
-      copied = "The link couldn't be copied. Use Open original and copy it from there.";
+      copied = "The link couldn't be copied. Use View original and copy it from there.";
     }
   }
 
   /**
    * `w`, and Write back in More: the reader's email app, or the box asking
    * for the writer's address. `h`: the words chosen are highlighted.
-   * Shift+H, and Add a note… in More: a note on them, or on the whole article (SPEC section 42).
+   * N, and Add a note… in More: a note on them, or on the whole article (SPEC section 42).
    */
   export function act(what: "write-back" | "highlight" | "note") {
     if (what === "write-back") void writeBack?.start();
@@ -400,7 +400,7 @@
 {/snippet}
 
 {#snippet original(size: number)}
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="Open original" title={phone ? "Open original" : tip("Open original", "open-original")} class="btn-quiet btn-icon"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" title={phone ? "View original" : tip("View original", "open-original")} class="btn-quiet btn-icon"
     ><Icon name="open" {size} /></a
   >
 {/snippet}
@@ -443,7 +443,7 @@
         {/if}
         {@render aa(20, "btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Starred" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+        <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
           {@render starIcon(20)}
         </button>
         <MoreMenu id="article-menu" label="More actions" groups={more} />
@@ -527,7 +527,7 @@
         {:else if video || episode}
           <hr aria-hidden="true" class="article-end" />
         {:else}
-          <p class="mt-6" lang="en">This article has no text in its feed. Open original to read it on the publisher's site.</p>
+          <p class="mt-6" lang="en">This article has no text in its feed. View original to read it on the publisher's site.</p>
         {/if}
       {:else if problem}
         <p class="mt-6" lang="en">{connection.offline ? NOT_KEPT : "This article couldn't be loaded. Try again in a moment."}</p>

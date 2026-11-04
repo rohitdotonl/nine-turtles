@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-04
+updated: 2026-11-05
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -14,9 +14,8 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 </p>
 
 <p>
-  To press <kbd>G</kbd> then <kbd>U</kbd>, press G, let go, then press U.
-  <kbd>Tab</kbd>, <kbd>Enter</kbd> and <kbd>Esc</kbd> always work too. Keys
-  don't do anything while you're typing in a field.
+  To press <kbd>G</kbd> then <kbd>U</kbd>, press G, let go, then quickly press U.
+  Keys don't do anything while you're typing in a field.
 </p>
 
 ## Reading
@@ -24,58 +23,51 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | Key | What it does |
 |---|---|
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
-| <kbd>N</kbd> / <kbd>Shift</kbd> <kbd>N</kbd> | Next / previous unread article |
-| <kbd>Home</kbd> / <kbd>End</kbd> | First / last article in the list |
-| <kbd>Enter</kbd> or <kbd>O</kbd> | Open the article |
-| <kbd>Space</kbd> / <kbd>Shift</kbd> <kbd>Space</kbd> | Scroll down / up a screen |
-| <kbd>V</kbd> | Open the original, on the writer's website |
-| <kbd>C</kbd> | Copy the article's link |
-| <kbd>+</kbd> / <kbd>-</kbd> | Text size |
-| <kbd>S</kbd> | Star or unstar |
 | <kbd>W</kbd> | Write back |
-| <kbd>H</kbd> | Highlight the words you've chosen |
-| <kbd>Shift</kbd> <kbd>H</kbd> | Write a note on the words you've chosen, or on the whole article |
+| <kbd>Enter</kbd> | Open the article |
+| <kbd>S</kbd> | Star or unstar |
+| <kbd>H</kbd> | Highlight chosen words |
+| <kbd>N</kbd> | Add a note, on the words you've chosen or on the whole article |
+| <kbd>V</kbd> | View the original, on the writer's website |
+| <kbd>Space</kbd> / <kbd>Shift</kbd> <kbd>Space</kbd> | Scroll down / up a screen |
+| <kbd>+</kbd> / <kbd>-</kbd> | Text size |
+| <kbd>C</kbd> | Copy link |
 | <kbd>Esc</kbd> | Back, or close |
+
+## Go to: press G, then…
+
+| Key | What it does |
+|---|---|
+| <kbd>G</kbd> then <kbd>U</kbd> | Unread |
+| <kbd>G</kbd> then <kbd>S</kbd> | Starred |
+| <kbd>G</kbd> then <kbd>N</kbd> | Notes |
+| <kbd>G</kbd> then <kbd>A</kbd> | All |
+| <kbd>G</kbd> then <kbd>,</kbd> | Settings |
 
 ## Getting around
 
 | Key | What it does |
 |---|---|
-| <kbd>G</kbd> then <kbd>U</kbd> | Go to Unread |
-| <kbd>G</kbd> then <kbd>S</kbd> | Go to Starred |
-| <kbd>G</kbd> then <kbd>A</kbd> | Go to All |
-| <kbd>G</kbd> then <kbd>F</kbd> | Go to Your feeds |
-| <kbd>G</kbd> then <kbd>,</kbd> | Go to Settings |
-| <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar |
-| <kbd>I</kbd> | About this person or publication: their page |
 | <kbd>/</kbd> | Search |
-| <kbd>[</kbd> | Show or hide the sidebar |
-| <kbd>]</kbd> | Show or hide the list of articles |
-| <kbd>\</kbd> | Full-screen reading: hide both |
-| <kbd>E</kbd> | Open or close this folder |
+| <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar, every row from Unread down, top to bottom: a closed folder's people are passed over |
+| <kbd>E</kbd> | Expand or collapse this folder |
+| <kbd>I</kbd> | Info about this person or publication: their page |
+| <kbd>F</kbd> | Full-screen reading: hide the sidebar and the list |
+| <kbd>A</kbd> | Add a person or publication |
 
 ## Tidying up
 
 | Key | What it does |
 |---|---|
-| <kbd>M</kbd> | Mark unread |
 | <kbd>Shift</kbd> <kbd>A</kbd> | Mark all as read |
+| <kbd>M</kbd> | Mark unread |
 | <kbd>U</kbd> | Undo |
-| <kbd>R</kbd> | Show new articles |
-| <kbd>Shift</kbd> <kbd>E</kbd> | Edit this person, publication or folder |
-
-## Anywhere
-
-| Key | What it does |
-|---|---|
-| <kbd>A</kbd> | Add a person or publication |
-| <kbd>?</kbd> | This list of keys |
+| <kbd>R</kbd> | Refresh: show new articles |
 
 ## Good to know
 
-- The app shows Shift as ⇧.
+- <kbd>Home</kbd> and <kbd>End</kbd> go to the first and last article in the
+  list.
 - The keys are the same for everyone, and can't be changed.
-- With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for unread
-  articles and marking all as read are left out.
-- Search has its own shortcuts, such as <code>is:starred</code>: see
-  <a href="/help/search-everything/">Search everything</a>.
+- With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for Unread
+  and marking all as read are left out.

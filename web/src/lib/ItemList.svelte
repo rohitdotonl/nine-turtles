@@ -285,20 +285,6 @@
   }
 
   /**
-   * `n` and `Shift+N`: the next (1) or previous (-1) unread article listed,
-   * passing over read ones; from the top (or the foot) if none is selected
-   * yet. Returns false when there's none that way: like `j`, it never loads
-   * more on its own.
-   */
-  export function moveUnread(step: 1 | -1): boolean {
-    let index = selectedIndex === -1 ? (step === 1 ? 0 : articles.length - 1) : selectedIndex + step;
-    while (index >= 0 && index < articles.length && articles[index]!.read) index += step;
-    if (index < 0 || index >= articles.length) return false;
-    select(index);
-    return true;
-  }
-
-  /**
    * Home (-1) and End (1): the first or last article listed. End goes to
    * the last one loaded; it never loads more (decision 0110). Returns
    * false with nothing listed, or when already there.

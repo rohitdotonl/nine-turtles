@@ -61,7 +61,7 @@ describe("the list's More menu", () => {
     expect(labels(listMenu(scene({ feed: 3 }), hands().given))).toEqual([
       ["Mark all as read", "Refresh"],
       ["Newest first", "Oldest first"],
-      ["About them"],
+      ["Info about them"],
     ]);
   });
 
@@ -74,9 +74,9 @@ describe("the list's More menu", () => {
     const { given, done } = hands();
     const feed = listMenu(scene({ feed: 3, feedName: "Alpha" }), given);
     expect(rows(feed, 2)[0]?.shortcut).toBe("key:about");
-    choose(feed, "About Alpha");
+    choose(feed, "Info about Alpha");
     const folder = listMenu(scene({ folder: 5 }), given);
-    expect(rows(folder, 2)[0]?.shortcut).toBe("key:edit-place");
+    expect(rows(folder, 2)[0]?.shortcut).toBeUndefined();
     choose(folder, "Edit folder…");
     expect(done).toEqual([
       ["go", { kind: "about", id: 3 }],

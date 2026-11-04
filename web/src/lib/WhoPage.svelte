@@ -2,7 +2,7 @@
   A person's or publication's page (SPEC section 36, decision 0163): the same
   for both. On a computer it opens in the reading area, beside their list,
   where an article would; on a phone, as a screen of its own, with "‹" back
-  to their list. Opened by their name at the top of the list, "About …" in
+  to their list. Opened by their name at the top of the list, "Info about …" in
   the list's More menu, or the i key.
 
   Visiting: their name in Literata with an Edit button beside it, their

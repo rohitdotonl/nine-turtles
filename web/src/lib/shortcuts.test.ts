@@ -33,14 +33,12 @@ function hands(next?: Route) {
     };
   const handed: KeyHands = {
     openCheatSheet: note("openCheatSheet"),
-    toggleSidebar: note("toggleSidebar"),
-    toggleList: note("toggleList"),
     toggleBoth: note("toggleBoth"),
     go: note("go"),
     escape: note("escape"),
     startSearch: note("startSearch"),
     move: note("move"),
-    feedAfter: () => next,
+    rowAfter: () => next,
     open: note("open"),
     openLink: note("openLink"),
     page: note("page"),
@@ -93,8 +91,6 @@ describe("carryOut", () => {
   it("does nothing for g u with Unread off, which has no Unread", () => {
     expect(run({ kind: "go", view: "unread" }, scene({ unreadOff: true }))).toEqual([]);
     expect(run({ kind: "go", view: "starred" }, scene({ unreadOff: true }))).toEqual([["go", { kind: "view", view: "starred" }]]);
-    expect(run({ kind: "move-unread", step: 1 }, scene({ unreadOff: true }))).toEqual([]);
-    expect(run({ kind: "move-unread", step: -1 }, scene())).toEqual([["move", "moveUnread", -1]]);
   });
 
   it("goes to a place by its address", () => {
@@ -146,20 +142,16 @@ describe("carryOut", () => {
     expect(run({ kind: "write-back" }, scene({ onList: false }))).toEqual([]);
   });
 
-  it("opens the folder you're in, or the feed's first folder, with the sidebar in view", () => {
+  it("expands or folds the folder you're in, or the feed's first folder, with the sidebar in view", () => {
     expect(run({ kind: "toggle-folder" }, scene({ folder: 3, feed: 9, feedsFolder: 4 }))).toEqual([["toggleFolder", 3]]);
     expect(run({ kind: "toggle-folder" }, scene({ feed: 9, feedsFolder: 4 }))).toEqual([["toggleFolder", 4]]);
     expect(run({ kind: "toggle-folder" }, scene({ feed: 9 }))).toEqual([]);
     expect(run({ kind: "toggle-folder" }, scene({ folder: 3, sidebar: false }))).toEqual([]);
   });
 
-  it("edits the feed or folder whose list this is, but not from search results", () => {
-    expect(run({ kind: "edit-place" }, scene({ feed: 9 }))).toEqual([["go", { kind: "edit-feed", id: 9 }]]);
-    expect(run({ kind: "edit-place" }, scene({ folder: 3 }))).toEqual([["go", { kind: "edit-folder", id: 3 }]]);
-    expect(run({ kind: "edit-place" }, scene({ feed: 9, searching: true }))).toEqual([]);
-    expect(run({ kind: "edit-place" }, scene())).toEqual([]);
+  it("goes to the page of the person whose list this is, but not from a folder's", () => {
     expect(run({ kind: "about" }, scene({ feed: 9 }))).toEqual([["go", { kind: "about", id: 9 }]]);
-    expect(run({ kind: "about" }, scene({ folder: 3 }))).toEqual([]);
+    expect(run({ kind: "about" }, scene())).toEqual([]);
   });
 
   it("refreshes and undoes only on a list", () => {

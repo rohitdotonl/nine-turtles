@@ -88,13 +88,13 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 
-  // The i key, and "About …" in More, open it too.
+  // The i key, and "Info about …" in More, open it too.
   await page.locator("body").focus();
   await page.keyboard.press("i");
   await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "More", exact: true }).click();
-  await page.getByRole("menuitem", { name: `About Blog ${ana}` }).click();
+  await page.getByRole("menuitem", { name: `Info about Blog ${ana}` }).click();
   await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
 });
 
