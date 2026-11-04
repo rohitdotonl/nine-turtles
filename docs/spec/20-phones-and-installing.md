@@ -21,12 +21,7 @@
 - Without a connection, the app still opens: signed in, with the articles kept on the device for reading offline (section 32); on a device that keeps none, it says plainly that nine turtles can't be reached. The service worker keeps a copy of the app itself and its fonts, never of your articles: those are the app's own copies.
 - **Sharing a page to nine turtles** (decisions 0104 and 0138; what happens next is in section 3, "Adding from anywhere"):
   - **Android:** once nine turtles is on the home screen, share any page and choose **nine turtles**. nine turtles asks "Follow <name>?"; press Follow.
-  - **iPhone and iPad:** Safari doesn't let home-screen web apps appear in the share sheet (Apple doesn't support web share targets), so make a shortcut once in Apple's **Shortcuts** app:
-    1. Open Shortcuts, tap **+** for a new shortcut, and name it **Add to nine turtles**.
-    2. Tap the shortcut's settings (the **ⓘ** or the name at the top) and turn on **Show in Share Sheet**. Under the types it receives, keep only **URLs** and **Safari web pages**.
-    3. Add the action **URL Encode** (search for it); it encodes the **Shortcut Input**.
-    4. Add the action **Open URLs**. As its address, type `https://app.nineturtles.app/add-feed?url=` (Settings › Add from anywhere has it, with Copy) and, right after it with no space, insert the **URL Encoded Text** from the step before.
-    5. Done. In Safari, on any page, tap Share and choose **Add to nine turtles**: nine turtles opens + Add with that page.
+  - **iPhone and iPad:** Safari doesn't let home-screen web apps appear in the share sheet (Apple doesn't support web share targets), so a ready-made Apple Shortcut, **Add to nine turtles**, does it (decision 0177). Settings › Add from anywhere has **Get the Shortcut**, which opens Apple's page to add it; then in Safari, on any page, tap Share and choose **Add to nine turtles**. The Shortcut opens `https://app.nineturtles.app/add?url=` with the page's address. The owner made it once on an iPhone; until its iCloud link is in the app, that row isn't shown and the page's foot says to copy the page's address into + Add instead. How the Shortcut is made: [`docs/operations/apple-shortcut.md`](../operations/apple-shortcut.md).
 
 **How to check it**
 1. On your phone, open the app: you see your feeds. Tap a folder, a feed, an article; the back arrow says where it goes each time.
@@ -34,4 +29,4 @@
 3. In an article, press Next and Previous at the bottom: they move through the list. On the first article, Previous shows a faded arrow in its usual place and does nothing; the bar has no gap.
 4. Use "Add to Home Screen". Open it from the icon: no browser bars.
 5. Open Settings › Install the app on a phone and on a computer: each starts with the one sentence, then its own numbered steps, then the other devices. In Chrome, press Install nine turtles: the browser asks, and the page then says it's installed. Open the installed app's Settings › Install the app: it says you're using the installed app.
-6. On Android, with nine turtles on the home screen, share a blog from the browser and choose nine turtles: + Add opens with the blog's address and its feed found; nothing is added until you press Add. On an iPhone, make the shortcut above and share a blog from Safari to **Add to nine turtles**: the same happens.
+6. On Android, with nine turtles on the home screen, share a blog from the browser and choose nine turtles: "Follow <the blog's name>?" opens; nothing is followed until you press Follow. On an iPhone, press Get the Shortcut in Settings › Add from anywhere, add it, and share a blog from Safari to **Add to nine turtles**: the same happens.

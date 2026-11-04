@@ -670,18 +670,26 @@ test("Follow on someone already followed takes you to them", async ({ page, isMo
   const name = newBlog();
   await openApp(page, "/unread");
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/add-feed?url=${encodeURIComponent(`${FEED_SITE}/blog/${name}/`)}`, FEEDS_APP).href);
+  await page.goto(new URL(`/add?url=${encodeURIComponent(`${FEED_SITE}/blog/${name}/`)}`, FEEDS_APP).href);
   await appReady(page);
   const sheet = page.getByRole("dialog", { name: `Follow Blog ${name}?` });
   await sheet.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 });
 
-test("Settings gives the bookmark and the Shortcuts address, built from this nine turtles' own address", async ({ page }) => {
+test("Settings gives a bookmark button to drag, built from this nine turtles' own address, and Copy for it", async ({ page }) => {
   await openApp(page, "/settings/add-from-anywhere");
   const group = page.getByRole("region", { name: "Add from anywhere" });
-  await expect(group.getByText(`javascript:location.href='${FEEDS_APP}/add-feed?url='+encodeURIComponent(location.href)`)).toBeVisible();
-  await expect(group.getByText(`${FEEDS_APP}/add-feed?url=`, { exact: true })).toBeVisible();
+  const button = group.getByRole("link", { name: "Add to nine turtles" });
+  await expect(button).toHaveAttribute("href", `javascript:void(location.href='${FEEDS_APP}/add?url='+encodeURIComponent(location.href))`);
+  // Pressed in the app, it says where it works instead of going anywhere.
+  await button.click();
+  await expect(group.getByRole("status")).toHaveText("Drag it to your bookmarks bar: it works from there.");
+  await expect(page).toHaveURL(/\/settings\/add-from-anywhere$/);
   await expect(group.getByRole("button", { name: "Copy bookmark" })).toBeVisible();
-  await expect(group.getByRole("button", { name: "Copy the Apple Shortcuts address" })).toBeVisible();
+  // The bookmark's words are shown too, for anyone who copies it by hand.
+  await expect(group.getByText(`javascript:void(location.href='${FEEDS_APP}/add?url=`)).toBeVisible();
+  // Until the Shortcut's link exists, no button leads nowhere; the foot says what to do instead.
+  await expect(group.getByRole("link", { name: /Get the Shortcut/ })).toHaveCount(0);
+  await expect(group.getByText(/On iPhone and iPad, copy the page's address and paste it into \+ Add\. Each way asks before following anyone\./)).toBeVisible();
 });

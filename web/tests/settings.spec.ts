@@ -97,13 +97,13 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
 
   // The browser's Back and Forward.
   await page.getByRole("link", { name: "Add from anywhere", exact: true }).click();
-  await expect(page.getByText("Bookmark for your browser")).toBeVisible();
+  await expect(page.getByText("On a computer")).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("link", { name: "Add from anywhere", exact: true })).toBeFocused();
   await page.goForward();
   await expect(page).toHaveURL(/\/settings\/add-from-anywhere$/);
-  await expect(page.getByText("Bookmark for your browser")).toBeVisible();
+  await expect(page.getByText("On a computer")).toBeVisible();
 
   // An address opens its page straight away, and ‹ Settings still goes back.
   await page.goto("/settings/font");
