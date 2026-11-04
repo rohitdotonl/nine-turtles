@@ -8,8 +8,8 @@ live from 2 to 4 November 2026, is dropped. The owner asked for it.
 
 **What stays.** Everything else about the logo on the brand sheet
 (`docs/BRAND.md` → "The logo"): its sizes beside the name, its feet on the
-name's baseline, the black app icon, the one-turtle tab icon and the share
-picture's layout. The original drawing now has a box that ends at the
+name's baseline, the black app icon, the tab icon's black square (its one
+turtle is the original turtle again too) and the share picture's layout. The original drawing now has a box that ends at the
 turtles' edges, so it stands on the name's line the way D2 did.
 
 **Why.** The owner prefers the original turtles. D2's reason, that the

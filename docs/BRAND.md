@@ -60,7 +60,7 @@ what's live.
 - **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line beside the sidebar button). All nine turtles stay in the sidebar. (Live)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Live)
-- **The tab icon:** the app icon's black square, always, with one light turtle filling most of it, so it shows on any tab, light or dark. (Live)
+- **The tab icon:** the app icon's black square, always, with one light turtle filling most of it (the original turtle: a half-circle shell and a round head), so it shows on any tab, light or dark. (Live)
 - **The share picture** (the preview when someone shares a nineturtles.app link): a black tile 1200 by 630 with the nine (132px tall, the same original drawing), "Read people. Write back." in Literata 600 in light ink, and "nineturtles.app" small in grey. Its description for screen readers: "nine turtles: Read people. Write back." (Live)
 
 ## The turtles' only job

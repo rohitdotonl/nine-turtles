@@ -23,6 +23,6 @@ picture (`website/src/images/share.png`) has the same nine, 132 pixels tall.
 The browser-tab icon is a single turtle instead (decision 0078), since nine
 blur into stripes at 16 pixels: `web/public/icons/icon.svg` and `icon-32.png`,
 its 32-pixel copy for browsers that don't use the SVG. It is always a light
-turtle (#EFEFF1) filling most of a black rounded square (#141414), by day and
+turtle (#EFEFF1, the original half-circle shell and round head) filling most of a black rounded square (#141414), by day and
 by night, since a tab icon can't see the tab's color and a bare turtle could
 vanish on it (decision 0142).
