@@ -70,8 +70,11 @@ test.describe("on a wide window", () => {
     await expect.poll(() => told.seen).toBe(1);
     await page.keyboard.press("Escape");
     await expect(sheet(page)).toBeHidden();
-    await page.keyboard.press("?");
-    await expect(sheet(page)).toBeVisible();
+    // The dialog says it closed a moment after it's hidden: until then, ? is still the open list's.
+    await expect(async () => {
+      await page.keyboard.press("?");
+      await expect(sheet(page)).toBeVisible({ timeout: 500 });
+    }).toPass();
     await expect(sheet(page).getByTestId("keys-reset")).toHaveCount(0);
     // Nor on coming back.
     await page.keyboard.press("Escape");
