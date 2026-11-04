@@ -15,9 +15,8 @@ async function openSettings(page: Page, path = "/settings") {
 }
 
 
-test("Settings' first page keeps the everyday settings, and the rest are rows that open pages", async ({ page }, testInfo) => {
+test("Settings' first page keeps the everyday settings, and the rest are rows that open pages", async ({ page }) => {
   await openSettings(page);
-  const phone = testInfo.project.name === "phone";
   const groups = page.locator('section[aria-labelledby="settings-heading"] h3');
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
   // Reading and Look and feel hold their controls on the page itself.
@@ -27,7 +26,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Theme, font and line width are one page further in.
   await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "feed-health", "sidebar", "data", ...(phone ? [] : ["keyboard"]), "add-from-anywhere", "install", "rules", "newsletters", "other-apps", "assistants", "readers"];
+  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "rules", "newsletters", "other-apps", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).

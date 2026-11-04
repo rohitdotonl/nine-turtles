@@ -7,7 +7,7 @@ const server = vi.hoisted(() => ({
   saveSort: vi.fn(),
   saveLetGo: vi.fn(),
   saveHidden: vi.fn(),
-  saveKeys: vi.fn(),
+  saveKeysSeen: vi.fn(),
 }));
 
 vi.mock("./reading", async (actual) => ({
@@ -16,7 +16,6 @@ vi.mock("./reading", async (actual) => ({
 }));
 
 const { ReadingSettings } = await import("./reading-settings.svelte");
-const { keys, chooseKeys } = await import("./keys.svelte");
 
 /** A promise and the hands that settle it, for an answer that arrives when the test says. */
 function later<T>() {
@@ -29,12 +28,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", mode: "river", letGo: "month", keys: { star: "x" }, hidden: ["recent"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", mode: "river", letGo: "month", keysReset: true, hidden: ["recent"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveMode, server.saveSort, server.saveLetGo, server.saveHidden, server.saveKeys]) save.mockResolvedValue(undefined);
-  keys.chosen = {};
+  for (const save of [server.saveMode, server.saveSort, server.saveLetGo, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -44,7 +42,17 @@ describe("the reading settings", () => {
     expect(settings.sort).toBeUndefined();
     await settings.load();
     expect([settings.mode, settings.sort, settings.letGo, settings.hidden]).toEqual(["river", "oldest", "month", ["recent"]]);
-    expect(keys.chosen).toEqual({ star: "x" });
+    expect(settings.keysReset).toBe(true);
+  });
+
+  it("tell the reader once that their own keys are gone, on every device", async () => {
+    server.loadSettings.mockResolvedValue(ON_THE_SERVER);
+    const settings = new ReadingSettings();
+    await settings.load();
+    settings.keysSeen();
+    settings.keysSeen();
+    expect(settings.keysReset).toBe(false);
+    expect(server.saveKeysSeen).toHaveBeenCalledTimes(1);
   });
 
   it("keep a change the reader made while the first answer was on its way", async () => {
@@ -54,12 +62,10 @@ describe("the reading settings", () => {
     const loading = settings.load();
     await settings.changeMode("inbox");
     await settings.changeHidden(["starred"]);
-    await chooseKeys({ star: "z" });
     answer.resolve(ON_THE_SERVER);
     await loading;
     expect(settings.mode).toBe("inbox");
     expect(settings.hidden).toEqual(["starred"]);
-    expect(keys.chosen).toEqual({ star: "z" });
     // The ones left alone take the server's word.
     expect([settings.sort, settings.letGo]).toEqual(["oldest", "month"]);
   });
@@ -68,7 +74,6 @@ describe("the reading settings", () => {
     const answer = later<Reading>();
     server.loadSettings.mockReturnValue(answer.promise);
     server.saveMode.mockRejectedValue(new Error("offline"));
-    server.saveKeys.mockRejectedValue(new Error("offline"));
     const settings = new ReadingSettings();
     const loading = settings.load();
     // One fails before the answer arrives, the other after.
@@ -76,16 +81,13 @@ describe("the reading settings", () => {
     const saving = later<void>();
     server.saveHidden.mockReturnValue(saving.promise);
     const hiding = settings.changeHidden(["starred"]);
-    const choosing = chooseKeys({ star: "z" });
     answer.resolve(ON_THE_SERVER);
     await loading;
     expect(settings.hidden).toEqual(["starred"]);
-    await expect(choosing).rejects.toThrow("offline");
     saving.reject(new Error("offline"));
     await expect(hiding).rejects.toThrow("not saved");
     expect(settings.mode).toBe("river");
     expect(settings.hidden).toEqual(["recent"]);
-    expect(keys.chosen).toEqual({ star: "x" });
   });
 
   it("show a change at once, and go back to what the server has when it can't be saved", async () => {

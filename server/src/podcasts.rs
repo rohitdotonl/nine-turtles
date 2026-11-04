@@ -1,12 +1,13 @@
 //! Podcasts (SPEC section 35, decision 0113): where each reader stopped in
-//! each episode, and their Up Next. Each reader's alone, like every mark.
+//! each episode. Each reader's alone, like every mark.
 //!
 //! nine turtles never fetches, copies or passes on an episode's audio: the
 //! reader's browser plays the publisher's own file from the publisher's own
 //! address (the publisher floor). The server only keeps, per reader, a
-//! position in seconds (`episode_progress`) and an order (`up_next`), both
-//! tied to the reader's own entry for the article (structure change 24), so
-//! they go with it when the entry goes. A YouTube video's place is kept the
+//! position in seconds (`episode_progress`), tied to the reader's own entry
+//! for the article (structure change 24), so it goes with it when the entry
+//! goes. (Up Next was removed in step 5 of the owner's review; its old
+//! `up_next` table is kept, unused, until the owner says it can go.) A YouTube video's place is kept the
 //! same way (decision 0144): any article whose link is on YouTube may have
 //! one, so a video picks up where you stopped, on any device.
 //!
@@ -14,11 +15,6 @@
 //! - `POST /api/episodes/{id}/progress` `{position, duration, finished, at}`:
 //!   the latest save wins (`at`, milliseconds, as marks are; never later
 //!   than the server's own now).
-//! - `GET /api/up-next`: the episodes lined up, in order, by number.
-//! - `POST /api/up-next` `{articles}`: the whole new order (adding, moving
-//!   and removing are all this). Only the reader's own episodes are kept, at
-//!   most `MOST_UP_NEXT`.
-//! - The list itself is `GET /api/articles?view=upnext` (`list`).
 
 use axum::{
     Json, Router,
@@ -28,12 +24,11 @@ use axum::{
     routing::get,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
+use serde_json::json;
 
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    feeds::ArticleRow,
     marks::now_ms,
 };
 
@@ -49,16 +44,11 @@ macro_rules! youtube_video {
     };
 }
 
-/// The most episodes one reader's Up Next holds.
-pub const MOST_UP_NEXT: usize = 200;
-
 pub fn routes() -> Router<AppState> {
-    Router::new()
-        .route(
-            "/api/episodes/{id}/progress",
-            get(progress).post(save_progress),
-        )
-        .route("/api/up-next", get(up_next).post(set_up_next))
+    Router::new().route(
+        "/api/episodes/{id}/progress",
+        get(progress).post(save_progress),
+    )
 }
 
 #[derive(Debug, PartialEq, Serialize, sqlx::FromRow)]
@@ -170,117 +160,4 @@ async fn is_episode_of(db: &sqlx::SqlitePool, person: i64, id: i64) -> Result<bo
     .bind(id)
     .fetch_one(db)
     .await
-}
-
-/// Up Next's lines whose feed the reader still follows: a feed they left
-/// (or are leaving, during its Undo) keeps its lines out of sight, so the
-/// order, its count and what plays next agree with the list.
-/// (A macro, so the queries stay fixed strings.)
-macro_rules! followed {
-    () => {
-        "EXISTS (SELECT 1 FROM entries JOIN subscriptions
-             ON subscriptions.person_id = entries.person_id AND subscriptions.feed_id = entries.feed_id
-         WHERE entries.person_id = up_next.person_id AND entries.article_id = up_next.article_id
-             AND subscriptions.unsubscribed_at IS NULL)"
-    };
-}
-
-/// The reader's Up Next, in order, by article number: only episodes of
-/// feeds they still follow, as its list shows.
-pub async fn order_of(db: &sqlx::SqlitePool, person: i64) -> Result<Vec<i64>, sqlx::Error> {
-    sqlx::query_scalar(concat!(
-        "SELECT article_id FROM up_next WHERE person_id = ? AND ",
-        followed!(),
-        " ORDER BY place, article_id"
-    ))
-    .bind(person)
-    .fetch_all(db)
-    .await
-}
-
-async fn up_next(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    match order_of(&state.db, person).await {
-        Ok(articles) => Json(json!({ "articles": articles })).into_response(),
-        Err(error) => database_problem("reading Up Next", &error),
-    }
-}
-
-#[derive(Deserialize)]
-struct NewOrder {
-    articles: Vec<i64>,
-}
-
-/// Replaces the reader's Up Next with this order. An article named twice
-/// counts once, where it's first named; one that isn't an episode they have
-/// is left out. Lines of a feed they've left stay as they were, out of
-/// sight, so undoing the unsubscribe brings them back. Answers the order
-/// kept.
-async fn set_up_next(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Json(form): Json<NewOrder>,
-) -> Response {
-    if form.articles.len() > MOST_UP_NEXT * 2 {
-        return StatusCode::PAYLOAD_TOO_LARGE.into_response();
-    }
-    let mut seen = std::collections::HashSet::new();
-    let wanted: Vec<i64> = form
-        .articles
-        .into_iter()
-        .filter(|id| seen.insert(*id))
-        .take(MOST_UP_NEXT)
-        .collect();
-    let set = async {
-        let mut transaction = state.db.begin().await?;
-        sqlx::query(concat!(
-            "DELETE FROM up_next WHERE person_id = ? AND ",
-            followed!()
-        ))
-        .bind(person)
-        .execute(&mut *transaction)
-        .await?;
-        sqlx::query(
-            "INSERT INTO up_next (person_id, article_id, place)
-             SELECT entries.person_id, entries.article_id, wanted.key
-             FROM json_each(?2) AS wanted
-                 JOIN entries ON entries.person_id = ?1 AND entries.article_id = wanted.value
-                 JOIN articles ON articles.id = entries.article_id
-                 JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                     AND subscriptions.feed_id = entries.feed_id
-             WHERE articles.episode_url IS NOT NULL AND subscriptions.unsubscribed_at IS NULL",
-        )
-        .bind(person)
-        .bind(Value::from(wanted).to_string())
-        .execute(&mut *transaction)
-        .await?;
-        transaction.commit().await?;
-        order_of(&state.db, person).await
-    }
-    .await;
-    match set {
-        Ok(articles) => Json(json!({ "articles": articles })).into_response(),
-        Err(error) => database_problem("saving Up Next", &error),
-    }
-}
-
-/// The Up Next list, in the reader's order, as the item list shows it: only
-/// episodes of feeds they still follow (one they left leaves it with its
-/// entry). Muted ones stay: the reader lined them up themselves.
-const LIST: &str =
-    "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
-            articles.title, articles.link, entries.sort_at AS at,
-            entries.read, entries.starred, entries.muted,
-            articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
-     FROM up_next CROSS JOIN entries ON entries.person_id = up_next.person_id
-             AND entries.article_id = up_next.article_id
-         CROSS JOIN articles ON articles.id = entries.article_id
-         CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-             AND subscriptions.feed_id = entries.feed_id
-         LEFT JOIN writers ON writers.id = subscriptions.writer_id
-     WHERE up_next.person_id = ? AND subscriptions.unsubscribed_at IS NULL
-     ORDER BY up_next.place, up_next.article_id";
-
-/// The whole list: it's never longer than `MOST_UP_NEXT`, one page.
-pub async fn list(db: &sqlx::SqlitePool, person: i64) -> Result<Vec<ArticleRow>, sqlx::Error> {
-    sqlx::query_as(LIST).bind(person).fetch_all(db).await
 }

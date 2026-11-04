@@ -6,12 +6,13 @@ import { appReady, follow, signIn } from "./screens";
 // SPEC section 35 (decision 0113), "How to check it", done by a browser: a
 // made-up podcast (tests/feed-server.mjs) whose episodes are silence. An
 // episode plays in the player under its byline, where it stopped is kept on
-// the server and it carries on from there after a reload; and an episode in
-// Up Next starts by itself when the one playing ends. The player is worked
-// by the keyboard, and passes the automatic accessibility checks with the
-// Now playing bar. Where a reader stopped and their Up Next are their own,
-// shared by every test signed in as them, so those run on a wide window
-// only; the phone checks the bar sits above the article's toolbar.
+// the server and it carries on from there after a reload; and an episode
+// that ends stops there: nothing starts by itself (Up Next was removed in
+// step 5 of the owner's review). The player is worked by the keyboard, and
+// passes the automatic accessibility checks with the Now playing bar. Where
+// a reader stopped is their own, shared by every test signed in as them, so
+// those run on a wide window only; the phone checks the bar sits above the
+// article's toolbar.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
 const player = (page: Page) => article(page).getByRole("group", { name: "Episode player" });
@@ -139,40 +140,20 @@ test("on a phone, the Now playing bar steps aside for the episode's own player, 
   await expect(bar(page)).toHaveCount(0);
 });
 
-test("the episode in Up Next starts by itself when the one playing ends", async ({ page, isMobile }) => {
-  test.skip(isMobile, "Up Next is the reader's own, so one window checks it");
+test("an episode that ends stops there, and there's no Up Next to add it to", async ({ page, isMobile }) => {
+  test.skip(isMobile, "where a reader stopped is their own, so one window checks it");
   await openPodcast(page);
 
-  // The long one goes in Up Next, from its More menu; Up Next shows in the sidebar.
   await open(page, LONG);
   await article(page).getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Add to Up Next" }).click();
-  await expect(player(page)).toContainText("In Up Next, 1 of 1");
-  const sidebar = page.getByRole("navigation", { name: "Sidebar" });
-  await expect(sidebar.getByRole("link", { name: /^Up Next/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Up Next/ })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Up Next/ })).toHaveCount(0);
 
-  // At either end, Move up and Move down keep the keyboard and change nothing.
-  const moveUp = player(page).getByRole("button", { name: "Move up" });
-  await press(page, moveUp);
-  await expect(moveUp).toBeFocused();
-  await expect(moveUp).toHaveAttribute("aria-disabled", "true");
-  await checkAccessibility(page);
-  // Remove leaves Undo, with the keyboard on it; Undo puts it back, the keyboard on Remove.
-  await press(page, player(page).getByRole("button", { name: "Remove from Up Next" }));
-  await expect(player(page)).toContainText("Removed from Up Next.");
-  await expect(player(page).getByRole("button", { name: "Undo removing from Up Next" })).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(player(page)).toContainText("In Up Next, 1 of 1");
-  await expect(player(page).getByRole("button", { name: "Remove from Up Next" })).toBeFocused();
-
-  // The short one plays to its end (two seconds); then the long one starts.
+  // The short one plays to its end (two seconds), and nothing else starts.
   await open(page, SHORT);
   await player(page).getByRole("button", { name: "Play" }).click();
-  await expect(bar(page)).toContainText(`Playing next: ${LONG}`, { timeout: 15_000 });
-  await expect(bar(page).getByRole("button", { name: "Pause" })).toBeVisible();
-  // Playing it took it off Up Next; its sidebar row stays still until the reader goes somewhere, then leaves.
-  await expect(sidebar.getByRole("link", { name: /^Up Next/ })).toBeVisible();
-  await sidebar.getByRole("link", { name: /^All/ }).click();
-  await expect(sidebar.getByRole("link", { name: /^Up Next/ })).toHaveCount(0);
+  await expect(bar(page)).toContainText("Finished.", { timeout: 15_000 });
+  await expect(bar(page).getByRole("button", { name: "Play", exact: true })).toBeVisible();
   await bar(page).getByRole("button", { name: "Close the player" }).click();
 });

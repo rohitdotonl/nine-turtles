@@ -54,8 +54,8 @@ pub enum Order {
 
 impl List {
     /// A feed's, a folder's or a collection's articles if one is named,
-    /// otherwise the view's; none for Recently read and Up Next, which are
-    /// `recent`'s and `podcasts`' own lists.
+    /// otherwise the view's; none for Recently read, which is `recent`'s own
+    /// list.
     pub(crate) const fn from_query(
         feed: Option<i64>,
         folder: Option<i64>,
@@ -70,7 +70,7 @@ impl List {
             (None, None, None, View::Unread) => Some(Self::Unread),
             (None, None, None, View::Starred) => Some(Self::Starred),
             (None, None, None, View::Notes) => Some(Self::Notes),
-            (None, None, None, View::Recent | View::Upnext) => None,
+            (None, None, None, View::Recent) => None,
         }
     }
 }
@@ -86,8 +86,6 @@ pub(crate) enum View {
     Notes,
     /// Recently read: the last 50 articles the reader opened (`recent`).
     Recent,
-    /// Up Next: the episodes the reader lined up, in their order (`podcasts`).
-    Upnext,
 }
 
 #[derive(Deserialize)]
@@ -175,12 +173,6 @@ pub(super) async fn list_articles(
                 .map(|listed| (latest, listed)),
             Err(error) => Err(error),
         },
-        // Up Next is one short page, in the reader's own order, whatever the sort.
-        (Ok(latest), None) if matches!(query.view, View::Upnext) => {
-            crate::podcasts::list(&state.db, person)
-                .await
-                .map(|listed| (latest, (listed, None)))
-        }
         // Recently read is one short page, in the order opened, whatever the sort.
         (Ok(latest), None) => recent::list(&state.db, person)
             .await

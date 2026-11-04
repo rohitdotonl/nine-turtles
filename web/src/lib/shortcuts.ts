@@ -18,7 +18,7 @@ export type KeyScene = {
   onList: boolean;
   /** A search's results are showing. */
   searching: boolean;
-  /** Recently read or Up Next, each in its own order, with no search showing: their menus have no marks. */
+  /** Recently read, in its own order, with no search showing: its menu has no marks. */
   ownOrder: boolean;
   /** Which panes are in view, and whether the article has the whole screen. */
   sidebar: boolean;
@@ -85,7 +85,7 @@ export function keyIsOurs(action: Action, key: string, scene: KeyScene): boolean
 
 /**
  * Mark all as read and Shift+O work where the list's More menu offers them:
- * not in river mode, not in Recently read or Up Next, and only with the list
+ * not in river mode, not in Recently read, and only with the list
  * or its article in view.
  */
 function canMarkAll(scene: KeyScene): boolean {

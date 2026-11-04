@@ -33,7 +33,6 @@
   import { forgetLoaded } from "./lib/articles";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
-  import { forgetChosenKeys } from "./lib/keys.svelte";
   import { forgetListening } from "./lib/player.svelte";
 
   let session: Session | undefined = $state();
@@ -42,11 +41,10 @@
   let path = $state(location.pathname);
 
   /**
-   * Everything a reader left on this device: chosen keys, the player and its places in episodes (decision 0113),
+   * Everything a reader left on this device: the player and its places in episodes (decision 0113),
    * the articles fetched so far, and the copies kept for reading offline with their waiting marks.
    */
   async function forgetDevice() {
-    forgetChosenKeys();
     forgetListening();
     forgetLoaded();
     await forget();

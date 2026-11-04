@@ -2,7 +2,7 @@
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
-export const VIEWS = ["unread", "starred", "notes", "all", "recent", "upnext"] as const;
+export const VIEWS = ["unread", "starred", "notes", "all", "recent"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type Route =
@@ -38,7 +38,6 @@ export const SETTINGS_PAGES = {
   font: "Font, theme and line width",
   sidebar: "Show in the sidebar",
   data: "Your data",
-  keyboard: "Keyboard",
   "add-from-anywhere": "Add from anywhere",
   install: "Install the app",
   rules: "Rules",
@@ -55,14 +54,13 @@ function settingsPage(name: string): SettingsPage | undefined {
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All", recent: "Recently read", upnext: "Up Next" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All", recent: "Recently read" };
 
 /**
- * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105, 0108 and 0113). Unread, folders
- * and feeds always show; Up Next shows only while it holds an episode, Notes only once the reader has highlighted or
- * written a note on something (SPEC section 42).
+ * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0108). Unread, folders
+ * and feeds always show; Notes only once the reader has highlighted or written a note on something (SPEC section 42).
  */
-export const HIDEABLE = ["starred", "notes", "all", "recent", "searches", "collections", "upnext"] as const;
+export const HIDEABLE = ["starred", "notes", "all", "recent", "searches", "collections"] as const;
 export type Hideable = (typeof HIDEABLE)[number];
 
 /**

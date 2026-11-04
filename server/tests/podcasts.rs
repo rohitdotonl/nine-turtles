@@ -1,5 +1,5 @@
 //! Podcasts (SPEC section 35, decision 0113): episodes found in a feed,
-//! where each reader stopped in each, and their Up Next, tested against a
+//! and where each reader stopped in each, tested against a
 //! real running nine turtles and a made-up podcast. nine turtles keeps only
 //! the publisher's address for each audio file and never fetches it.
 
@@ -106,17 +106,6 @@ fn id_of(articles: &[Value], title: &str) -> i64 {
         .unwrap_or_else(|| panic!("{title} isn't listed"))["id"]
         .as_i64()
         .unwrap()
-}
-
-async fn up_next(base: &str, cookie: &str) -> Vec<i64> {
-    let (status, answer) = ask(base, cookie, "/api/up-next").await;
-    assert_eq!(status, StatusCode::OK);
-    answer["articles"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|id| id.as_i64().unwrap())
-        .collect()
 }
 
 #[tokio::test]
@@ -263,121 +252,12 @@ async fn where_a_reader_stopped_is_theirs_and_the_latest_save_wins() {
 }
 
 #[tokio::test]
-async fn up_next_keeps_the_readers_own_episodes_in_their_order() {
-    let (base, state) = common::start_with_state(common::config()).await;
-    let cookie = common::signed_in(&base).await;
-    let address = podcast(Arc::new(AtomicUsize::new(0))).await;
-    let (_, added) = send(&base, &cookie, "/api/feeds", json!({ "address": address })).await;
-    let feed = added["feed"]["id"].as_i64().unwrap();
-    let articles = listed(&base, &cookie, feed).await;
-    let (first, second, post) = (
-        id_of(&articles, "Episode 1"),
-        id_of(&articles, "Episode 2"),
-        id_of(&articles, "A post"),
-    );
-
-    assert!(up_next(&base, &cookie).await.is_empty());
-    // A plain post, an unknown number and a repeat are left out.
-    let (status, set) = send(
-        &base,
-        &cookie,
-        "/api/up-next",
-        json!({ "articles": [second, post, 999_999, first, second] }),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(set["articles"], json!([second, first]));
-    assert_eq!(up_next(&base, &cookie).await, [second, first]);
-
-    // The list, in that order, whatever the sort.
-    let (_, page) = ask(&base, &cookie, "/api/articles?view=upnext&order=oldest").await;
-    let titles: Vec<&str> = page["articles"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|article| article["title"].as_str().unwrap())
-        .collect();
-    assert_eq!(titles, ["Episode 2", "Episode 1"]);
-    assert_eq!(page["next"], Value::Null);
-    let (_, new) = ask(&base, &cookie, "/api/articles/new?view=upnext&since=0").await;
-    assert_eq!(new["new"], false);
-
-    // Moving one up is a new order.
-    send(
-        &base,
-        &cookie,
-        "/api/up-next",
-        json!({ "articles": [first, second] }),
-    )
-    .await;
-    assert_eq!(up_next(&base, &cookie).await, [first, second]);
-
-    // Another reader's Up Next is their own, and holds only what they have.
-    let (_, other) = common::another_reader(&state).await;
-    assert!(up_next(&base, &other).await.is_empty());
-    let (_, theirs) = send(
-        &base,
-        &other,
-        "/api/up-next",
-        json!({ "articles": [first] }),
-    )
-    .await;
-    assert_eq!(theirs["articles"], json!([]));
-    assert_eq!(up_next(&base, &cookie).await, [first, second]);
-
-    // Emptied, it's empty.
-    send(&base, &cookie, "/api/up-next", json!({ "articles": [] })).await;
-    assert!(up_next(&base, &cookie).await.is_empty());
-
-    // A feed the reader leaves takes its episodes out of the order too, not
-    // only out of the list, so "2 of 3" and what plays next agree with it;
-    // a new order kept meanwhile doesn't lose them for the unsubscribe's Undo.
-    send(
-        &base,
-        &cookie,
-        "/api/up-next",
-        json!({ "articles": [first, second] }),
-    )
-    .await;
-    let (status, _) = send(
-        &base,
-        &cookie,
-        &format!("/api/feeds/{feed}/unsubscribe"),
-        json!({}),
-    )
-    .await;
-    assert!(status.is_success());
-    assert!(up_next(&base, &cookie).await.is_empty());
-    let (_, kept) = send(
-        &base,
-        &cookie,
-        "/api/up-next",
-        json!({ "articles": [first] }),
-    )
-    .await;
-    assert_eq!(kept["articles"], json!([]));
-    let (status, _) = send(
-        &base,
-        &cookie,
-        &format!("/api/feeds/{feed}/resubscribe"),
-        json!({}),
-    )
-    .await;
-    assert!(status.is_success());
-    assert_eq!(up_next(&base, &cookie).await, [first, second]);
-}
-
-#[tokio::test]
-async fn up_next_can_be_hidden_from_the_sidebar() {
+async fn up_next_is_gone() {
+    // Removed in step 5 of the owner's review: you play the episode you opened.
     let (base, _) = common::start_with_state(common::config()).await;
     let cookie = common::signed_in(&base).await;
-    let (status, saved) = send(
-        &base,
-        &cookie,
-        "/api/settings",
-        json!({ "hidden": ["upnext", "recent"] }),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(saved["hidden"], json!(["recent", "upnext"]));
+    let (status, _) = ask(&base, &cookie, "/api/up-next").await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+    let (status, _) = ask(&base, &cookie, "/api/articles?view=upnext").await;
+    assert!(status.is_client_error());
 }

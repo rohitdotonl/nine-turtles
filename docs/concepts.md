@@ -176,7 +176,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`); the title line that shows it, with Search on a phone and More beside it (`ListHead.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
-- The sidebar's fixed lists: Unread, Starred, All, Recently read and Up Next, which show, and Up Next's row staying while it empties (`SidebarViews.svelte`)
+- The sidebar's fixed lists: Unread, Starred, All and Recently read, which show (`SidebarViews.svelte`)
 - The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 
 ## Data and the database
@@ -205,7 +205,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Subscriptions and entries (each reader's feeds and marks)
 - Collections (the reader's own shelves of articles) and tags (in JSON Feed)
 - Highlights and notes (anchoring words by their text, not a position) and Markdown
-- Episode progress and Up Next (each reader's place in an episode, and their queue)
+- Episode progress (each reader's place in an episode)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)
 
 ## Security and sign-in
@@ -312,7 +312,6 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Screen reader
 - Keyboard navigation and focus
 - Keyboard shortcuts
-- Rebinding keys (keys of your own)
 - Touch targets
 - Responsive design (desktop and phone widths)
 - Reduced motion and other system settings

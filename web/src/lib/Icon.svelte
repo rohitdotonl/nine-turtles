@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "video" | "queue" | "note"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "clock" | "history" | "shelf" | "headphones" | "video" | "note"
     // Settings' rows (decision 0120).
     | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
@@ -128,10 +128,6 @@
     <!-- A YouTube video (decision 0144): a screen with a play mark, line only, as plain signs are. -->
     <rect x="2.75" y="4.25" width="14.5" height="11.5" rx="2" />
     <path d="M8.5 7.6v4.8l4-2.4Z" />
-  {:else if name === "queue"}
-    <!-- Up Next (decision 0113): three lines of a list, the first led by a small play mark. -->
-    <path d="M3.5 5 7.5 7.5 3.5 10Z" fill="currentColor" />
-    <path d="M9.5 7.5h7M3.5 12h13M3.5 15.5h13" />
   {:else if name === "shelf"}
     <!-- A collection (decision 0108): two books upright and one solid book leaning, on a shelf. -->
     <path d="M2.75 16.25h14.5" />

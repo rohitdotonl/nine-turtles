@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { currentKey } from "./keys.svelte";
+  import { keyFor } from "./keyboard";
   import { LONGEST_NOTE } from "./notes.svelte";
   import NoteText from "./NoteText.svelte";
   import type { Note } from "./shapes";
@@ -143,7 +143,7 @@
     {/if}
     {#if !highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onHighlight}
-        >Highlight{#if !phone}<kbd>{currentKey("highlight")}</kbd>{/if}</button
+        >Highlight{#if !phone}<kbd>{keyFor("highlight")}</kbd>{/if}</button
       >
     {/if}
     <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{highlight?.note ? "Edit note" : "Add a note…"}</button>

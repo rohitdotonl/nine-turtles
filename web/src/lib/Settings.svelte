@@ -13,7 +13,7 @@
   its title; Escape goes back too, and the keyboard returns to the row:
   Font, theme and line width; Your library (Your feeds and Feed health,
   pages of their own, then Show in the sidebar and Your data); More
-  (Keyboard on a screen with keys, Add from anywhere, Install the app, Rules,
+  (Add from anywhere, Install the app, Rules,
   Newsletters while nine turtles takes them, Other apps, Connected
   assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
@@ -86,7 +86,6 @@
     onImported,
     onFeedHealth,
     onYourFeeds,
-    onKeys,
     onMuted,
     onReaders,
     feeds,
@@ -134,8 +133,6 @@
     onFeedHealth: (event: MouseEvent) => void;
     /** Opens Your feeds. */
     onYourFeeds: (event: MouseEvent) => void;
-    /** Opens the shortcut list, ready to change keys (decision 0110). */
-    onKeys: () => void;
     /** Opens the Muted articles page. */
     onMuted: (event: MouseEvent) => void;
     /** Opens the owner's All readers page. */
@@ -168,8 +165,6 @@
     { value: "recent", label: "Recently read" },
     { value: "searches", label: "Saved searches" },
     { value: "collections", label: "Collections" },
-    // Shown only while it holds an episode, unless unticked here (decision 0113).
-    { value: "upnext", label: "Up Next" },
   ];
 
   let sidebarMessage = $state("");
@@ -577,8 +572,6 @@
       <section aria-labelledby="more-heading">
         <h3 id="more-heading" class="settings-head">More</h3>
         <div class="inset-group">
-          <!-- Only on a screen with a keyboard: there's nothing to press on a touch screen (decision 0110). -->
-          {@render pageRow("keyboard", "/settings/keyboard", SETTINGS_PAGES.keyboard, "keyboard", open("keyboard"), undefined, "keyboard-hint")}
           {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
           {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone", open("install"))}
           {@render pageRow("rules", "/settings/rules", SETTINGS_PAGES.rules, "sliders", open("rules"))}
@@ -757,15 +750,6 @@
           article tagged with its collections' names. Notes and highlights are saved as one Markdown file. To bring your stars over from
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
-      </section>
-      {:else if page === "keyboard"}
-      <section aria-labelledby="settings-heading">
-        <div class="inset-group">
-          <button type="button" onclick={onKeys} aria-haspopup="dialog" class="inset-row inset-action"
-            >Change keys…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
-          >
-        </div>
-        <p class="inset-foot">Give any shortcut a key of your own, or none. Your keys follow you to every device you sign in on. Press ? anywhere to see them all.</p>
       </section>
       {:else if page === "add-from-anywhere"}
         <AddAnywhere />

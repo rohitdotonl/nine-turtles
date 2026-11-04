@@ -47,10 +47,9 @@
   import { ReadingSettings } from "./reading-settings.svelte";
   import type { Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader } from "./keyboard";
+  import { createKeyReader, keyFor, tip } from "./keyboard";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
-  import { currentKey, keys, tip } from "./keys.svelte";
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
@@ -72,7 +71,6 @@
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
-  import { loadQueue, player } from "./player.svelte";
   import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
   import { deviceText, setDeviceText } from "./device";
 
@@ -145,8 +143,6 @@
   /** Which screen this history entry shows (see steps.ts). */
   const firstStep = startingStep(history.state, currentWidth() === "narrow", location.pathname, isList(start));
   let cheatSheetOpen = $state(false);
-  /** The shortcut list opens ready to change keys: from Settings › Keyboard (decision 0110). */
-  let cheatSheetEditing = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
   /** On a phone-narrow window, the opened article takes the list's place. */
@@ -358,7 +354,7 @@
     return {
       river,
       searching: searching.shown !== undefined,
-      ownOrder: under.kind === "view" && (under.view === "recent" || under.view === "upnext"),
+      ownOrder: under.kind === "view" && under.view === "recent",
       unread: under.kind === "view" && under.view === "unread",
       selected: selected !== undefined,
       sort: settings.sort,
@@ -372,7 +368,7 @@
 
   /** What the list's More menu can ask of the screen. */
   const menuHands: MenuHands = {
-    shortcut: (kind) => (phone ? undefined : currentKey(kind)),
+    shortcut: (kind) => (phone ? undefined : keyFor(kind)),
     markAllRead: () => itemList?.markAllRead(),
     markPast: (side) => itemList?.markPast(side),
     catchUp: () => itemList?.catchUp(),
@@ -442,8 +438,7 @@
     };
     addEventListener("popstate", back);
 
-    // The reader's own keys, as they are at each press (decision 0110).
-    const readKey = createKeyReader(() => keys.chosen);
+    const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
       // A sheet keeps the keyboard to itself; its Escape is the dialog's own
       // (Settings' rule editor is a sheet of Settings' own, so it's asked of the page).
@@ -473,7 +468,6 @@
     });
     library.loadSearches();
     library.loadCollections();
-    void loadQueue();
     void settings.load().then(() => {
       keeper.now();
       // This device last saw river mode, but it's inbox now (changed on
@@ -900,15 +894,6 @@
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
-  // Up Next's list follows only the reader's own changes to it (Move, Remove, Undo, Add), never the removal when
-  // an episode starts by itself or by hand: nothing moves unless you move it (principle 5, decision 0113).
-  $effect(() => {
-    void player.changes;
-    untrack(() => {
-      if (!searching.shown && under.kind === "view" && under.view === "upnext") void itemList?.refresh();
-    });
-  });
-
   /** Back from the article to its row in the list. */
   function backToList() {
     if (reading) {
@@ -972,7 +957,7 @@
       river,
       onList: isList(route),
       searching: searching.shown !== undefined,
-      ownOrder: route.kind === "view" && (route.view === "recent" || route.view === "upnext") && !searching.shown,
+      ownOrder: route.kind === "view" && route.view === "recent" && !searching.shown,
       sidebar: panes.sidebar,
       list: panes.list,
       article: panes.article,
@@ -1190,10 +1175,6 @@
           onImported={loadFeeds}
           onFeedHealth={goHealth}
           onYourFeeds={goYourFeeds}
-          onKeys={() => {
-            cheatSheetEditing = true;
-            cheatSheetOpen = true;
-          }}
           onMuted={goMuted}
           onReaders={goReaders}
           feeds={library.feeds ?? []}
@@ -1425,7 +1406,7 @@
   <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} bind:editing={cheatSheetEditing} {river} />
+<CheatSheet bind:open={cheatSheetOpen} {river} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />
 
 {#if collectionSheets.collecting}
   <AddToCollection article={collectionSheets.collecting} collections={library.collections} onMade={(made) => library.collectionMade(made)} onClose={collectingClosed} />

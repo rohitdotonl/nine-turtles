@@ -2,13 +2,13 @@
 // answer never overwrites what a newer one put on screen.
 
 /**
- * Saves one thing the reader changes (a setting, Up Next's order) so the newest
+ * Saves one thing the reader changes (a setting) so the newest
  * change wins. The screen shows each change at once (`show`); the saves go to
  * the server one at a time, in the order they were made, so the server ends on
  * the newest. When a save fails and no newer change is on its way, the screen
  * goes back to what the server last kept; a failure with a newer change behind
- * it leaves the screen alone. A save may answer what the server kept (Up Next
- * does), which the screen then shows; otherwise what was sent counts.
+ * it leaves the screen alone. A save may answer what the server kept, which the
+ * screen then shows; otherwise what was sent counts.
  *
  * The returned function takes the new value and the one on screen before it,
  * and rejects when its own save failed and it is still the newest change (an

@@ -78,7 +78,7 @@ describe("the list's More menu", () => {
     ]);
   });
 
-  it("in Recently read or Up Next offers Refresh alone, unless a search is showing", () => {
+  it("in Recently read offers Refresh alone, unless a search is showing", () => {
     expect(labels(listMenu(scene({ ownOrder: true, unread: false }), hands().given))).toEqual([["Refresh"]]);
     expect(labels(listMenu(scene({ ownOrder: true, unread: false, searching: true }), hands().given))[0]).toEqual(["Mark all as read"]);
   });
