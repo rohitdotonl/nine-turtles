@@ -92,7 +92,7 @@ export type SidebarRow = { kind: "view"; view: View } | { kind: "feed" | "folder
  * Shift+J and Shift+K (decisions 0110, 0180): the row after (1) or before (-1)
  * the place you're in, top to bottom as the sidebar shows them: its lists
  * (Unread, Starred, Notes, All), then folders A to Z, each with its feeds while
- * it's open, then the feeds in no folder. A folded folder's feeds are passed
+ * it's open, then the people and then the publications in no folder. A folded folder's feeds are passed
  * over, as you can't see them, so the next press goes on to the next folder. A
  * feed in two folders counts once, where it's first listed. At either end
  * nothing happens: the list ends.
@@ -109,7 +109,8 @@ export function sidebarRowNextTo(library: Library, views: readonly View[], open:
       rows.push({ kind: "feed", id: feed.id });
     }
   }
-  for (const feed of library.feeds) if (feed.folders.length === 0 && !seen.has(feed.id)) rows.push({ kind: "feed", id: feed.id });
+  const loose = library.feeds.filter((feed) => feed.folders.length === 0 && !seen.has(feed.id));
+  for (const feed of [...loose.filter((each) => each.kind !== "publication"), ...loose.filter((each) => each.kind === "publication")]) rows.push({ kind: "feed", id: feed.id });
 
   let at = -1;
   if (here.kind === "view") at = rows.findIndex((row) => row.kind === "view" && row.view === here.view);

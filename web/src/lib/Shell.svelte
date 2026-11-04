@@ -730,7 +730,7 @@
   }
 
   /**
-   * j and k, n and Shift+N, Home and End: another article in the list
+   * j and k, Home and End: another article in the list
    * (`moving.ts`). The keyboard's place follows, to the article or its row.
    */
   function move(to: ArticleMove, step: 1 | -1) {

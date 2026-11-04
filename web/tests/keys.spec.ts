@@ -72,6 +72,9 @@ test.describe("on a wide window", () => {
     await expect(page).toHaveURL(first);
 
     await page.keyboard.press("g");
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/notes$/);
+    await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page).toHaveURL(/\/settings$/);
   });

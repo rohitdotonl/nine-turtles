@@ -1,7 +1,6 @@
 // Stepping through articles and feeds with the keyboard (SPEC section 19): j
-// and k go to the next or previous article, n and Shift+N to the next or
-// previous unread one (decision 0103), Home and End to the first or last
-// loaded (decision 0110), and Shift+J and Shift+K to the feed after or before
+// and k go to the next or previous article, Home and End to the first or last
+// loaded (decision 0110), and Shift+J and Shift+K to the row after or before
 // the place you're in. The screen (`Shell.svelte`) hands over its list and
 // what's on screen, and these say where a move goes and where the keyboard's
 // place follows, so the rules are in one place and can be tested without
@@ -12,7 +11,7 @@ import type { Panes } from "./layout.svelte";
 import type { Route, View } from "./router";
 import type { Feed, Folder } from "./shapes";
 
-/** Which article to go to, named by the list's own way there: the next or previous, the next or previous unread, or the first or last loaded. */
+/** Which article to go to, named by the list's own way there: the next or previous, or the first or last loaded. */
 export type ArticleMove = keyof MovingList;
 
 /** What's on screen at the moment of the move: the list and reading area, an article open on a phone (`reading`), and whether the keyboard's place is in the reading area. */

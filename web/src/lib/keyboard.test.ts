@@ -297,6 +297,13 @@ describe("moving down the sidebar with Shift+J and Shift+K (decisions 0110, 0180
     expect(sidebarRowNextTo(library, views, [], row("feed", 10), 1)).toEqual(row("folder", 2));
   });
 
+  it("goes through the people in no folder before the publications, as the sidebar shows them", () => {
+    const paper = { id: 15, folders: [], kind: "publication" } as unknown as Feed;
+    const mixed = { folders: [], feeds: [paper, feed(16)] };
+    expect(sidebarRowNextTo(mixed, [], [], lastList, 1)).toEqual(row("feed", 16));
+    expect(sidebarRowNextTo(mixed, [], [], row("feed", 16), 1)).toEqual(row("feed", 15));
+  });
+
   it("stops at either end", () => {
     expect(sidebarRowNextTo(library, views, [1, 2], row("feed", 14), 1)).toBeUndefined();
     expect(sidebarRowNextTo(library, views, [1, 2], unread, -1)).toBeUndefined();

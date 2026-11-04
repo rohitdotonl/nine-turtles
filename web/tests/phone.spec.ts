@@ -121,7 +121,7 @@ test.describe("on a phone", () => {
     await expect(sidebar(page)).toBeVisible();
   });
 
-  test("the article's toolbar sits at the bottom as quiet icons; back and open original sit at the top", async ({ page }) => {
+  test("the article's toolbar sits at the bottom as quiet icons; back and view original sit at the top", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();

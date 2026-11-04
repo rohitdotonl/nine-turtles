@@ -221,7 +221,7 @@
     <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
       {#each shownChips as chip (chip.key)}
         <span class={["chip my-1.5 flex min-w-0 shrink items-center rounded-md bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
-          <!-- Plain words, as the options menu names the filter; how it's typed is its tooltip and its description (decision 0048). -->
+          <!-- Plain words, as the options menu names the filter. -->
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={() => remove(chip)} class="-my-2.5 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />

@@ -59,7 +59,7 @@ export type KeyPress = {
  * The cheat sheet's groups, by what you're doing at the time (decision 0062):
  * reading comes first, as it's what nine turtles is for. Within a group, the
  * key that matters most comes first (decision 0180). "Anywhere" holds only `?`,
- * which the list doesn't print: whoever reads the list has already found it.
+ * which the list doesn't print: whoever reads the list has already found it; the Keys button's tooltip names it.
  */
 export const GO_TO = "Go to: press G, then…";
 export const SHORTCUT_GROUPS = ["Reading", GO_TO, "Getting around", "Tidying up", "Anywhere"] as const;
@@ -71,7 +71,7 @@ export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
  */
 export type Binding = { id: string; key: string; does: Action };
 
-/** A key that isn't printed: `=` is the + key without Shift; Home and End are the browser's own keys, so they need no row. */
+/** A key that isn't printed: `=` is the + key without Shift; Home and End are keys everyone already expects, so they need no row. */
 type Unlisted = { key: string; does: Action };
 
 export type Shortcut = {

@@ -137,5 +137,17 @@ test.describe("on a wide window", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press("e");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    // Shift+J from an expanded folder goes to the first person in it; from a collapsed one, past them.
+    const inFolder = new RegExp(`/(people|publications)/${feed}$`);
+    await page.keyboard.press("Shift+J");
+    await expect(page).toHaveURL(inFolder);
+    await page.keyboard.press("Shift+K");
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+    await page.keyboard.press("e");
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await page.keyboard.press("Shift+J");
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toHaveCount(0);
+    await expect(page).not.toHaveURL(inFolder);
   });
 });

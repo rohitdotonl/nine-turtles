@@ -25,7 +25,7 @@ Everyone you follow is either a **person** (someone you might write to) or a
 ## Their page
 
 Choose them in the sidebar, then press their name at the top of their list
-("Alpha ›"), or choose **More › About Alpha**, or press <kbd>I</kbd>. On a
+("Alpha ›"), or choose **More › Info about Alpha**, or press <kbd>I</kbd>. On a
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 

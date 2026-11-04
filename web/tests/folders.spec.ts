@@ -19,7 +19,7 @@ async function openEdit(page: Page, name: "Edit folder") {
   await page.getByRole("menuitem", { name }).click();
 }
 
-/** Edit for the person or publication whose list is open (decision 0163): More › About …, then Edit on their page. */
+/** Edit for the person or publication whose list is open (decision 0163): More › Info about …, then Edit on their page. */
 async function editWho(page: Page, name: string) {
   await more(page).click();
   await page.getByRole("menuitem", { name: `Info about ${name}` }).click();
@@ -27,7 +27,7 @@ async function editWho(page: Page, name: string) {
   await expect(page.getByRole("heading", { level: 2, name: `Edit ${name}` })).toBeVisible();
 }
 
-/** The same with only the keyboard: More, its last item (About …), then Tab to Edit. */
+/** The same with only the keyboard: More, its last item (Info about …), then Tab to Edit. */
 async function editWhoByKeys(page: Page, name: string) {
   await tabTo(page, more(page));
   await page.keyboard.press("Enter");

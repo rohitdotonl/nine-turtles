@@ -10,7 +10,7 @@ use super::*;
 #[derive(Debug)]
 pub struct ParsedFeed {
     pub title: String,
-    /// The publisher's website, for credit and "Open original".
+    /// The publisher's website, for credit and "View original".
     pub site_url: Option<String>,
     pub language: Option<String>,
     pub articles: Vec<ParsedArticle>,

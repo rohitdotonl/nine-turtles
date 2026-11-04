@@ -19,7 +19,7 @@ function moved(to: ArticleMove, step: 1 | -1, on: MoveScene, moves = true) {
 }
 
 describe("moveArticle", () => {
-  it("asks the list for the next, the next unread or the end", () => {
+  it("asks the list for the next or the end", () => {
     expect(moved("move", 1, scene()).asked).toEqual(["move 1"]);
     expect(moved("moveToEnd", 1, scene()).asked).toEqual(["end 1"]);
   });

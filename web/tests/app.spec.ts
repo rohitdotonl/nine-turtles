@@ -36,7 +36,7 @@ test("a wide window shows three areas, a medium one two, a phone-narrow one one"
   await expect(readingArea(page)).toBeHidden();
 });
 
-test("[ hides and shows the sidebar; its button sits on the sidebar, then waits at the top left", async ({ page }) => {
+test("its button hides and shows the sidebar; its button sits on the sidebar, then waits at the top left", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const shown = (await toggle(page).boundingBox())!;
@@ -244,13 +244,20 @@ test("on a desktop window the shortcut list fits without scrolling, at least 48p
   const box = (await dialog.boundingBox())!;
   expect(box.y).toBeGreaterThanOrEqual(48);
   expect(800 - (box.y + box.height)).toBeGreaterThanOrEqual(48);
-  // Three columns (decision 0110): the search filters sit in the last, under Tidying up, and the whole list shows.
-  const [everywhere, filters] = [
+  // Two columns (decision 0180): Reading and Go to on the left, Getting around and Tidying up on the right, and the whole list shows.
+  const [reading, around, tidying] = [
+    (await dialog.getByRole("region", { name: "Reading" }).boundingBox())!,
+    (await dialog.getByRole("region", { name: "Getting around" }).boundingBox())!,
     (await dialog.getByRole("region", { name: "Tidying up" }).boundingBox())!,
-    (await dialog.getByRole("region", { name: "Search filters" }).boundingBox())!,
   ];
-  expect(Math.abs(filters.x - everywhere.x)).toBeLessThan(1);
-  expect(filters.y).toBeGreaterThan(everywhere.y);
+  expect(around.x).toBeGreaterThanOrEqual(reading.x + reading.width);
+  expect(Math.abs(tidying.x - around.x)).toBeLessThan(1);
+  expect(tidying.y).toBeGreaterThan(around.y);
+  const shortcuts = dialog.getByRole("region", { name: "Shortcuts" });
+  expect(await shortcuts.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0);
+  // No row wraps: every row is one line tall.
+  const rowHeights = await dialog.getByRole("row").evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height));
+  expect(Math.max(...rowHeights)).toBeLessThan(36);
   const list = dialog.getByRole("region", { name: "Shortcuts" });
   expect(await list.evaluate((element) => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
 });
@@ -602,9 +609,9 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   expect(await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(restingFill);
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
   await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
-  await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar ( [ )");
+  await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar");
   await toggle(page).click();
-  await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar ( [ )");
+  await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar");
 });
 
 test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a full-size button", async ({ page, isMobile }) => {
