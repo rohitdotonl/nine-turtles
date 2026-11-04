@@ -5,7 +5,6 @@ const server = vi.hoisted(() => ({
   loadSettings: vi.fn(),
   saveMode: vi.fn(),
   saveSort: vi.fn(),
-  saveLetGo: vi.fn(),
   saveHidden: vi.fn(),
   saveKeysSeen: vi.fn(),
 }));
@@ -28,11 +27,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", mode: "river", letGo: "month", keysReset: true, hidden: ["recent"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", mode: "river", keysReset: true, hidden: ["recent"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveMode, server.saveSort, server.saveLetGo, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
+  for (const save of [server.saveMode, server.saveSort, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -41,7 +40,7 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     expect(settings.sort).toBeUndefined();
     await settings.load();
-    expect([settings.mode, settings.sort, settings.letGo, settings.hidden]).toEqual(["river", "oldest", "month", ["recent"]]);
+    expect([settings.mode, settings.sort, settings.hidden]).toEqual(["river", "oldest", ["recent"]]);
     expect(settings.keysReset).toBe(true);
   });
 
@@ -67,7 +66,7 @@ describe("the reading settings", () => {
     expect(settings.mode).toBe("inbox");
     expect(settings.hidden).toEqual(["starred"]);
     // The ones left alone take the server's word.
-    expect([settings.sort, settings.letGo]).toEqual(["oldest", "month"]);
+    expect(settings.sort).toBe("oldest");
   });
 
   it("show the server's answer after all when the change made while it was on its way couldn't be saved", async () => {
@@ -95,12 +94,12 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     await settings.load();
     const saving = later<void>();
-    server.saveLetGo.mockReturnValue(saving.promise);
-    const changing = settings.changeLetGo("never");
-    expect(settings.letGo).toBe("never");
+    server.saveSort.mockReturnValue(saving.promise);
+    const changing = settings.changeSort("newest");
+    expect(settings.sort).toBe("newest");
     saving.reject(new Error("offline"));
     await expect(changing).rejects.toThrow("not saved");
-    expect(settings.letGo).toBe("month");
+    expect(settings.sort).toBe("oldest");
   });
 
   it("save changes in the order made, so the newest wins", async () => {

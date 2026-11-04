@@ -186,7 +186,7 @@ impl Reader {
 
 #[tokio::test]
 async fn joined_places_are_one_person_with_one_list_until_undo() {
-    let (reader, _state) = Reader::new().await;
+    let (reader, state) = Reader::new().await;
     let blog = reader.follow("alpha.xml").await;
     let letters = reader.follow("alpha-news.xml").await;
     let beta = reader.follow("beta.xml").await;
@@ -231,15 +231,12 @@ async fn joined_places_are_one_person_with_one_list_until_undo() {
         .get(&format!("/api/search?q=Alpha&feed={blog}"))
         .await;
     assert_eq!(found["articles"].as_array().unwrap().len(), 6, "{found}");
-    // Marking the person's list read marks all six, and nobody else's.
-    let (status, marked) = reader
-        .post(
-            "/api/articles/read-past",
-            json!({ "feed": blog, "side": "older", "at": i64::MAX, "id": i64::MAX, "latest": i64::MAX }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK, "{marked}");
-    assert_eq!(marked["ids"].as_array().unwrap().len(), 6);
+    // Marking the place's list read (an assistant's mark_feed_read) marks
+    // the person's six, and nobody else's.
+    let marked = nine_turtles::marks::whole_feed(&state.db, 1, blog)
+        .await
+        .unwrap();
+    assert_eq!(marked, 6);
     assert_eq!(reader.list("view=unread").await.len(), 3);
 
     // Renaming the person (Edit person on any of their places) renames them everywhere.

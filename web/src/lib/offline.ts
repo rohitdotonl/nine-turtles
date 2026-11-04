@@ -68,8 +68,6 @@ export const END_OF_KEPT = "That's everything saved on this device.";
 export const NOT_KEPT = "This article isn't saved on this device. It opens when you're back online.";
 export const SEARCH_NEEDS_CONNECTION = "Search needs a connection. It works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is what's saved on this device.";
-export const CATCH_UP_NEEDS_CONNECTION = "Catch me up needs a connection. Try again once you're back online.";
-export const READ_PAST_NEEDS_CONNECTION = "Marking articles not yet listed needs a connection. Try again once you're back online.";
 export const RECENT_NEEDS_CONNECTION = "Recently read needs a connection. It shows once you're back online.";
 export const NOTES_NEED_CONNECTION = "Notes needs a connection. It shows once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */

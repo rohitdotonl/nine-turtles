@@ -4,7 +4,7 @@ description: nine turtles keeps your newest unread and starred articles on each 
 groupId: reading
 order: 6
 spec: 32
-updated: 2026-11-03
+updated: 2026-11-04
 related: [install-the-app, star-an-article, mark-read-or-unread]
 ---
 
@@ -33,8 +33,8 @@ undo, as usual. Everything you do is sent as soon as you're back online.
 
 ## What needs a connection
 
-Search, adding someone new, Settings, refreshing, Catch me up, Recently read
-and collections.
+Search, adding someone new, Settings, refreshing, Recently read and
+collections.
 
 ## Good to know
 

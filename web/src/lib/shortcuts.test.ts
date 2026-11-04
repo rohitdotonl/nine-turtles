@@ -46,7 +46,6 @@ function hands(next?: Route) {
     openLink: note("openLink"),
     page: note("page"),
     copyLink: note("copyLink"),
-    markOlderRead: note("markOlderRead"),
     markAllRead: note("markAllRead"),
     toggleFolder: note("toggleFolder"),
     star: note("star"),
@@ -120,14 +119,6 @@ describe("carryOut", () => {
     expect(run(all, scene({ onList: false }))).toEqual([]);
     expect(run(all, scene({ list: false, article: false }))).toEqual([]);
     expect(run(all, scene({ list: false, article: false, reading: true }))).toEqual([["markAllRead"]]);
-  });
-
-  it("marks older articles as read under the same rule, with an article chosen", () => {
-    const older: Action = { kind: "mark-older-read" };
-    expect(run(older, scene())).toEqual([["markOlderRead"]]);
-    expect(run(older, scene({ selected: false }))).toEqual([]);
-    expect(run(older, scene({ ownOrder: true }))).toEqual([]);
-    expect(run(older, scene({ river: true }))).toEqual([]);
   });
 
   it("acts on the chosen article only in a list", () => {

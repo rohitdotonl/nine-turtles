@@ -15,7 +15,6 @@ use crate::{
     folders::{self, Leaving, Renamed},
     marks::{self, Mark, now_ms},
     now, rules,
-    unread::{self, Side},
 };
 
 #[derive(Deserialize)]
@@ -88,20 +87,10 @@ pub(super) async fn mark(state: &AppState, person: i64, asked: Marking) -> Answe
 }
 
 pub(super) async fn mark_feed_read(state: &AppState, person: i64, asked: OneFeed) -> Answer {
-    // The whole feed: everything older than the newest possible place, as
-    // the screen's Mark older as read counts it.
-    let all = (i64::MAX, i64::MAX);
-    let changed = unread::mark_past(
-        &state.db,
-        person,
-        feeds::List::Feed(asked.feed_id),
-        Side::Older,
-        all,
-        i64::MAX,
-    )
-    .await
-    .map_err(|error| database(&error))?;
-    Ok(json!({ "done": true, "marked_read": changed.len() }))
+    let changed = marks::whole_feed(&state.db, person, asked.feed_id)
+        .await
+        .map_err(|error| database(&error))?;
+    Ok(json!({ "done": true, "marked_read": changed }))
 }
 
 /// Why a feed wasn't added, in words an assistant can pass on.

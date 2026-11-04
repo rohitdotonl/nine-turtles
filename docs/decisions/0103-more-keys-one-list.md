@@ -1,5 +1,7 @@
 # 0103: More keys, marking past an article, and one list of keys
 
+*Marking older, above and below as read (`Shift+O`) was replaced by 0171 (removed 4 November 2026); the other keys stay.*
+
 *27 October 2026.*
 
 **Decision.** The owner asked for these keys, and chose how each behaves:

@@ -10,9 +10,9 @@ use std::time::{Duration, Instant};
 use nine_turtles::{
     checking::DUE,
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
+    marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
     starred::{EXPORT, Starred, write},
-    unread::{CATCH_UP, LET_GO, Side, read_past_sql},
 };
 use sqlx::SqlitePool;
 
@@ -204,39 +204,14 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     // The sidebar's unread counts come from their own small index.
     let counts = plan(&db, FEEDS, &[READER]).await;
     assert!(counts.contains("INDEX entries_unread_by_feed"), "{counts}");
-    // Letting unread go and catching up read only the reader's older
-    // entries, through an index, never every entry.
-    for sql in [LET_GO, CATCH_UP] {
-        let plan = plan(&db, sql, &[READER, NOW - YEAR / 52]).await;
+    // Marking a whole place read (an assistant's mark_feed_read) reads only
+    // the reader's unread entries in it, through an index.
+    for (sql, id) in [(FEED_READ, 250), (WRITER_READ, 1)] {
+        let plan = plan(&db, sql, &[READER, id]).await;
         assert!(
-            plan.contains("SEARCH entries USING INDEX") && plan.contains("sort_at<?"),
+            plan.contains("SEARCH entries USING INDEX") && !plan.contains("SCAN entries"),
             "{plan}"
         );
-    }
-    // Marking older, above or below as read (decision 0103) reads only the
-    // reader's unread entries on that side, through an index, in every list.
-    for list in [
-        List::All,
-        List::Unread,
-        List::Starred,
-        List::Feed(250),
-        List::Folder(1),
-        List::Writer(1),
-        List::Collection(1),
-    ] {
-        for side in [Side::Older, Side::Newer] {
-            let mut binds = vec![READER, i64::MAX, NOW - YEAR / 52, i64::MAX];
-            if let List::Feed(id) | List::Folder(id) | List::Writer(id) | List::Collection(id) =
-                list
-            {
-                binds.push(id);
-            }
-            let plan = plan(&db, read_past_sql(list, side), &binds).await;
-            assert!(
-                plan.contains("SEARCH entries USING INDEX") && !plan.contains("SCAN entries"),
-                "{list:?} {side:?}: {plan}"
-            );
-        }
     }
 
     let mut timings = Vec::new();

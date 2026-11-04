@@ -51,7 +51,7 @@
   import TextSize from "./TextSize.svelte";
   import { APPEARANCES, LOOKS, THEMES } from "./themes";
   import type { Feed, Folder } from "./shapes";
-  import type { LetGo, Order, ReadingMode } from "./reading";
+  import type { Order, ReadingMode } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
@@ -69,8 +69,6 @@
     onSort,
     mode,
     onMode,
-    letGo,
-    onLetGo,
     hidden,
     onHidden,
     heading = $bindable(),
@@ -105,9 +103,6 @@
     mode: ReadingMode;
     /** Saves a new reading mode; fails if it couldn't be saved. */
     onMode: (mode: ReadingMode) => Promise<void>;
-    /** When unread lets go by itself (decision 0097); unknown until the server answers. */
-    letGo: LetGo | undefined;
-    onLetGo: (letGo: LetGo) => Promise<void>;
     /** The lists the sidebar leaves out (decision 0105). */
     hidden: Hideable[];
     onHidden: (hidden: Hideable[]) => Promise<void>;
@@ -181,13 +176,6 @@
       sidebarMessage = "That couldn't be saved. Try again in a moment.";
     }
   }
-
-  const LET_GO_CHOICES = [
-    { value: "never", label: "Never" },
-    { value: "week", label: "1 week" },
-    { value: "two-weeks", label: "2 weeks" },
-    { value: "month", label: "1 month" },
-  ] as const;
 
   /** The rule editor, while open: a rule to change, or a new one (perhaps for a feed). */
   let editing: { rule?: Rule; feedId?: number } | undefined = $state();
@@ -265,15 +253,6 @@
       await onMode(next);
     } catch {
       sortMessage = "The reading mode couldn't be saved. Try again in a moment.";
-    }
-  }
-
-  async function chooseLetGo(next: LetGo) {
-    sortMessage = "";
-    try {
-      await onLetGo(next);
-    } catch {
-      sortMessage = "That couldn't be saved. Try again in a moment.";
     }
   }
 
@@ -465,35 +444,6 @@
               {/each}
             </div>
           </div>
-          <!-- River mode has no Unread, so this steps aside there. -->
-          {#if mode === "inbox"}
-            <div class="inset-row setting has-control">
-              <div class="setting-label">
-                {@render icon("clock")}
-                <div class="setting-words">
-                  <p id="let-go-name" class="setting-name">Let unread go after</p>
-                  <p id="let-go-hint" class="setting-hint">
-                    Older unread counts as read. It stays in its feed, All and search.
-                  </p>
-                </div>
-              </div>
-              <div role="group" aria-labelledby="let-go-name" aria-describedby="let-go-hint" class="choices setting-control" style="--columns: 4">
-                {#each LET_GO_CHOICES as choice (choice.value)}
-                  <label class="choice">
-                    <input
-                      type="radio"
-                      name="let-go"
-                      value={choice.value}
-                      checked={letGo === choice.value}
-                      disabled={letGo === undefined}
-                      onchange={() => chooseLetGo(choice.value)}
-                    />
-                    {choice.label}
-                  </label>
-                {/each}
-              </div>
-            </div>
-          {/if}
           <div class="inset-row setting has-control">
             <div class="setting-label">
               {@render icon("sort")}

@@ -20,7 +20,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   const groups = page.locator('section[aria-labelledby="settings-heading"] h3');
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
   // Reading and Look and feel hold their controls on the page itself.
-  for (const name of ["Reading mode", "Let unread go after", "Sort order", "Appearance"])
+  for (const name of ["Reading mode", "Sort order", "Appearance"])
     await expect(page.getByRole("group", { name, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Smaller text" })).toBeVisible();
   // Theme, font and line width are one page further in.

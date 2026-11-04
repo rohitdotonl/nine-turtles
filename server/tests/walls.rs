@@ -260,25 +260,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "mode": "river", "let_go": "never", "hidden": [] }),
+            json!({ "sort": "oldest", "mode": "river", "hidden": [] }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "mode": "inbox", "let_go": "never", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "mode": "inbox", "keys_reset": false, "hidden": [] })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
     assert_eq!(
         changed,
-        json!({ "sort": "newest", "mode": "inbox", "let_go": "never", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "mode": "inbox", "keys_reset": false, "hidden": [] })
     );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "mode": "river", "let_go": "never", "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "mode": "river", "keys_reset": false, "hidden": [] })
     );
 }
 
@@ -2285,91 +2285,19 @@ async fn empty_library(reader: &Reader) {
 }
 
 #[tokio::test]
-async fn marking_older_as_read_touches_only_that_readers_unread() {
-    let (owner, other, _, feed, _) = two_followers().await;
-    let page = other.get(&format!("/api/articles?feed={feed}")).await;
-    let newest = &page["articles"][0];
-    let (status, marked) = other
-        .post(
-            "/api/articles/read-past",
-            json!({
-                "feed": feed,
-                "side": "older",
-                "at": newest["at"],
-                "id": newest["id"],
-                "latest": page["latest"],
-            }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(marked["ids"].as_array().unwrap().len(), 2);
-    assert_eq!(other.ids("view=unread").await.len(), 1);
-    assert_eq!(owner.ids("view=unread").await.len(), 3);
-
-    // Naming the other reader's folder marks nothing: it isn't theirs.
-    let (_, folder) = owner
-        .post("/api/folders", json!({ "name": "Mine", "feeds": [feed] }))
-        .await;
-    let folder = folder["folder"]["id"].as_i64().unwrap();
-    let (_, none) = other
-        .post(
-            "/api/articles/read-past",
-            json!({
-                "folder": folder,
-                "side": "newer",
-                "at": 0,
-                "id": 0,
-                "latest": page["latest"],
-            }),
-        )
-        .await;
-    assert_eq!(none["ids"], json!([]));
-    assert_eq!(other.ids("view=unread").await.len(), 1);
-}
-
-#[tokio::test]
-async fn catching_up_and_letting_go_touch_only_that_readers_unread() {
-    let (owner, other, state, _, _) = two_followers().await;
-    // Their three posts are three weeks old for both.
-    sqlx::query("UPDATE entries SET sort_at = ?")
-        .bind(nine_turtles::now() - 21 * 86_400)
-        .execute(&state.db)
+async fn marking_a_whole_feed_read_touches_only_that_readers_unread() {
+    // An assistant's mark_feed_read (marks::whole_feed), for the other reader.
+    let (owner, other, state, feed, _) = two_followers().await;
+    let them: i64 = sqlx::query_scalar("SELECT id FROM people WHERE id != 1")
+        .fetch_one(&state.db)
         .await
         .unwrap();
-
-    let (status, caught) = other
-        .post(
-            "/api/articles/catch-up",
-            json!({ "before": nine_turtles::now() }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(caught["ids"].as_array().unwrap().len(), 3);
+    let marked = nine_turtles::marks::whole_feed(&state.db, them, feed)
+        .await
+        .unwrap();
+    assert_eq!(marked, 3);
     assert!(other.ids("view=unread").await.is_empty());
     assert_eq!(owner.ids("view=unread").await.len(), 3);
-
-    let (status, _) = owner
-        .post("/api/settings", json!({ "let_go": "week" }))
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    nine_turtles::unread::let_go(
-        &state.db,
-        nine_turtles::now() + nine_turtles::unread::SETTLES_FOR + 1,
-    )
-    .await
-    .unwrap();
-    assert!(owner.ids("view=unread").await.is_empty());
-
-    // The other reader's Undo brings back only theirs.
-    let (status, _) = other
-        .post(
-            "/api/articles/read",
-            json!({ "ids": caught["ids"], "read": false }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(other.ids("view=unread").await.len(), 3);
-    assert!(owner.ids("view=unread").await.is_empty());
 }
 
 #[tokio::test]

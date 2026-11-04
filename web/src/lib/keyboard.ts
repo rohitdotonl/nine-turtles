@@ -38,7 +38,6 @@ export type Action =
   | { kind: "note" }
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
-  | { kind: "mark-older-read" }
   | { kind: "undo" }
   | { kind: "refresh" }
   | { kind: "toggle-folder" }
@@ -154,7 +153,6 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Fold / unfold this folder", [["toggle-folder", "e", { kind: "toggle-folder" }]]),
   shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
   shortcut("Tidying up", "Mark all as read", [["mark-all-read", "Shift+A", { kind: "mark-all-read" }]]),
-  shortcut("Tidying up", "Mark older as read", [["mark-older-read", "Shift+O", { kind: "mark-older-read" }]]),
   shortcut("Tidying up", "Undo", [["undo", "u", { kind: "undo" }]]),
   shortcut("Tidying up", "Show new articles", [["refresh", "r", { kind: "refresh" }]]),
   shortcut("Tidying up", "Edit this person, publication or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
@@ -307,7 +305,7 @@ function isTyping(target: EventTarget | null): boolean {
  * What river mode has no use for (SPEC section 10): there's no Unread view,
  * and no read state to mark or move by.
  */
-const NOT_IN_RIVER: Action["kind"][] = ["mark-all-read", "mark-older-read", "move-unread"];
+const NOT_IN_RIVER: Action["kind"][] = ["mark-all-read", "move-unread"];
 
 /** Whether a shortcut does nothing in river mode. */
 function notInRiver(each: Shortcut): boolean {

@@ -121,7 +121,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(34);
+    expect(SHORTCUTS).toHaveLength(33);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "n",
@@ -151,7 +151,6 @@ describe("keyboard shortcuts", () => {
       "e",
       "m",
       "Shift+A",
-      "Shift+O",
       "u",
       "r",
       "Shift+E",
@@ -168,15 +167,15 @@ describe("keyboard shortcuts", () => {
     expect(read(press(" ", { ctrlKey: true }), 0)).toBeUndefined();
   });
 
-  it("moves to unread articles with n and Shift+N, marks older as read with Shift+O, copies the link with c, and folds or edits with e and Shift+E", () => {
+  it("moves to unread articles with n and Shift+N, copies the link with c, and folds or edits with e and Shift+E", () => {
     const read = createKeyReader();
     expect(read(press("n"), 0)).toEqual({ kind: "move-unread", step: 1 });
     expect(read(press("N"), 0)).toEqual({ kind: "move-unread", step: -1 });
-    expect(read(press("O"), 0)).toEqual({ kind: "mark-older-read" });
+    // Shift+O marked older articles read until decision 0171: it does nothing now.
+    expect(read(press("O"), 0)).toBeUndefined();
     expect(read(press("c"), 0)).toEqual({ kind: "copy-link" });
     expect(read(press("e"), 0)).toEqual({ kind: "toggle-folder" });
     expect(read(press("E"), 0)).toEqual({ kind: "edit-place" });
-    expect(keyFor("mark-older-read")).toBe("Shift+O");
     expect(keyFor("copy-link")).toBe("c");
   });
 
@@ -350,10 +349,10 @@ describe("finding a shortcut (decision 0062)", () => {
 });
 
 describe("the cheat sheet in river mode", () => {
-  it("leaves out Go to Unread, Mark all as read, Mark older as read and the unread moves, and keeps the rest", () => {
+  it("leaves out Go to Unread, Mark all as read and the unread moves, and keeps the rest", () => {
     const inbox = shortcutsFor(false).map((each) => each.action);
     const river = shortcutsFor(true).map((each) => each.action);
-    const unreadOnly = ["Go to Unread", "Mark all as read", "Mark older as read", "Next / previous unread article"];
+    const unreadOnly = ["Go to Unread", "Mark all as read", "Next / previous unread article"];
     for (const action of unreadOnly) {
       expect(inbox).toContain(action);
       expect(river).not.toContain(action);

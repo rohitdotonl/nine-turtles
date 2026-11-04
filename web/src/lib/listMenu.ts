@@ -18,10 +18,6 @@ export type MenuScene = {
   searching: boolean;
   /** The list is Recently read (in its own order). */
   ownOrder: boolean;
-  /** The list is Unread itself. */
-  unread: boolean;
-  /** An article is chosen in the list. */
-  selected: boolean;
   /** The sort order, once known. */
   sort?: Order;
   /** The saved search, collection, feed or folder whose list this is. */
@@ -38,8 +34,6 @@ export type MenuHands = {
   /** The key that does the same, to show at the end of a row (none on a phone). */
   shortcut(kind: Action["kind"]): string | undefined;
   markAllRead(): void;
-  markPast(side: "above" | "below"): void;
-  catchUp(): void;
   refresh(): void;
   /** Saves the sort order (Settings › Reading's setting); rejects when it couldn't. */
   changeSort(next: Order): Promise<void>;
@@ -53,9 +47,8 @@ export type MenuHands = {
 };
 
 /**
- * The menu's rows: Mark all as read, with an article chosen Mark all above or
- * below as read (decision 0103), in Unread Catch me up, and Refresh (Refresh
- * steps aside while searching: results have nothing new to fetch), the sort
+ * The menu's rows: Mark all as read (the one way to set down a backlog,
+ * decision 0171) and Refresh (Refresh steps aside while searching: results have nothing new to fetch), the sort
  * order, then Save search or Edit saved search, a collection's Rename and
  * Delete, or Edit feed or Edit folder in a feed's or folder's own list.
  * Choosing Edit puts the keyboard on More first, so closing the sheet gives
@@ -66,23 +59,10 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const refresh = { label: "Refresh", shortcut: key("refresh"), onSelect: () => hands.refresh() };
   // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
   if (!scene.searching && scene.ownOrder) return [{ items: [refresh] }];
-  // Shift+O marks what's older: below the chosen article when newest first, above it when oldest first (decision 0103).
-  // In search results, ordered by how well they match, older goes by date, so neither row shows the key.
-  const olderIs = scene.searching ? undefined : scene.sort === "oldest" ? "above" : "below";
   const groups: MenuGroup[] = [
     {
       items: [
         ...(scene.river ? [] : [{ label: "Mark all as read", shortcut: key("mark-all-read"), onSelect: () => hands.markAllRead() }]),
-        // Everything on one side of the chosen article, loaded yet or not (decision 0103).
-        ...(scene.river || !scene.selected
-          ? []
-          : (["above", "below"] as const).map((side) => ({
-              label: `Mark all ${side} as read`,
-              shortcut: olderIs === side ? key("mark-older-read") : undefined,
-              onSelect: () => hands.markPast(side),
-            }))),
-        // Everything in Unread from before today, listed or not (decision 0097): only in Unread itself.
-        ...(!scene.river && !scene.searching && scene.unread ? [{ label: "Catch me up", onSelect: () => hands.catchUp() }] : []),
         ...(scene.searching ? [] : [refresh]),
       ],
     },

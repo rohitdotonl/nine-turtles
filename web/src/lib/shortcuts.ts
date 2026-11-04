@@ -57,7 +57,6 @@ export type KeyHands = {
   openLink(link: string): void;
   page(step: 1 | -1): void;
   copyLink(): void;
-  markOlderRead(): void;
   markAllRead(): void;
   toggleFolder(id: number): void;
   star(): void;
@@ -84,7 +83,7 @@ export function keyIsOurs(action: Action, key: string, scene: KeyScene): boolean
 }
 
 /**
- * Mark all as read and Shift+O work where the list's More menu offers them:
+ * Mark all as read works where the list's More menu offers it:
  * not in river mode, not in Recently read, and only with the list
  * or its article in view.
  */
@@ -148,9 +147,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       break;
     case "copy-link":
       if (scene.selected && scene.article && scene.onList) hands.copyLink();
-      break;
-    case "mark-older-read":
-      if (scene.selected && canMarkAll(scene)) hands.markOlderRead();
       break;
     case "toggle-folder": {
       // The folder you're in, or the first folder of the feed you're in.
