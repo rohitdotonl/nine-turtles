@@ -150,7 +150,7 @@
   const SIDEBAR_LISTS: { value: Hideable; label: string }[] = [
     { value: "starred", label: "Starred" },
     { value: "notes", label: "Notes" },
-    { value: "all", label: "All" },
+    { value: "all", label: "All articles" },
   ];
 
   let sidebarMessage = $state("");
@@ -503,7 +503,7 @@
           {@render pageRow("feeds", "/settings/feeds", "Your feeds", "feed", onYourFeeds)}
           {@render pageRow("feed-health", "/settings/feed-health", "Feed health", "heart-pulse", onFeedHealth)}
           {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "sidebar-check", open("sidebar"))}
-          {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "download", open("data"))}
+          {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
         </div>
       </section>
 
@@ -549,7 +549,7 @@
           <!-- The email this reader signs in with; changing it sends a link to the new one (decision 0088). -->
           <div class="inset-row setting">
             <div class="setting-label">
-              {@render icon("envelope")}
+              {@render icon("person-at")}
               <div class="setting-words">
                 <p class="setting-name">Email</p>
                 <p class="setting-hint">{email ?? "No email yet"}</p>
@@ -648,7 +648,7 @@
           {/each}
         </div>
         <p id="sidebar-help" class="inset-foot">
-          Unread, your folders and your feeds always show{unread ? "" : ", and so does All while Unread is off"}. A list you
+          Unread, your folders and your feeds always show{unread ? "" : ", and so does All articles while Unread is off"}. A list you
           hide still opens from its address and its keys. These apply on all your devices.
         </p>
         <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>

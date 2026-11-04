@@ -7,7 +7,7 @@ import { appReady, follow, markAllFromMenu, settingsSaved, signIn, tabTo } from 
 // (three articles), so tests never mark each other's articles.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const line = (page: Page) => page.getByRole("status").filter({ hasNotText: /^$/ }).first();
 const NEWEST = "On keeping a commonplace book (3)";
 const MIDDLE = "Walking the long way home (2)";
@@ -491,7 +491,7 @@ test("Settings: the sort order is saved for every device", async ({ page, isMobi
   await saved;
 });
 
-test("Unread off: no Unread view, no dots, no read styling, and it opens on All", async ({ page, isMobile }) => {
+test("Unread off: no Unread view, no dots, no read styling, and it opens on All articles", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   // The setting is shared by every test using this nine turtles, so this
   // page alone is told Unread is off, and its changes aren't saved.
@@ -504,7 +504,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All"
   );
   const name = await openBlog(page);
 
-  await expect(sidebar(page).getByRole("link", { name: "All", exact: true })).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toHaveCount(0);
   await expect(feedLink(page, name)).not.toContainText("unread");
   await expect(row(page, name, NEWEST)).not.toContainText("unread");
@@ -533,7 +533,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All"
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);
-  await expect(page.getByRole("heading", { name: "All", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "All articles", level: 2 })).toBeVisible();
 
   // Unread back on in Settings: Unread and the dots return, and what was read shows as read.
   await page.goto(new URL("/settings", FEEDS_APP).href);

@@ -5,7 +5,7 @@ import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 // The `?` list's foot (SPEC section 19), done with the keyboard alone, and
 // the keys Home and End, Shift+J and Shift+K, g then ,.
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Keyboard shortcuts" });
 
 async function signedIn(page: Page) {

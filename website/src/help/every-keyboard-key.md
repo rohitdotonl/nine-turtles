@@ -41,7 +41,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>G</kbd> then <kbd>U</kbd> | Unread |
 | <kbd>G</kbd> then <kbd>S</kbd> | Starred |
 | <kbd>G</kbd> then <kbd>N</kbd> | Notes |
-| <kbd>G</kbd> then <kbd>A</kbd> | All |
+| <kbd>G</kbd> then <kbd>A</kbd> | All articles |
 | <kbd>G</kbd> then <kbd>,</kbd> | Settings |
 
 ## Getting around

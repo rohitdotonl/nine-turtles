@@ -107,7 +107,7 @@
 {/snippet}
 
 {#snippet leadsOn()}
-  {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>{/if}
+  {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}
 {/snippet}
 
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. -->

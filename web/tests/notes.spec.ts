@@ -11,7 +11,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // it's sent; a person's page takes a note on them; and unsubscribing asks
 // whether to keep what was saved.
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const NEWEST = "On keeping a commonplace book (3)";
 

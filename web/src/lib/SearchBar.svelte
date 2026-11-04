@@ -316,7 +316,7 @@
         <span class="menu-row">
           <span class="menu-check"></span>
           <span class="min-w-0 flex-1 py-1.5 leading-snug">Other feed or folder</span>
-          <span class="shrink-0 text-muted"><Icon name="chevron-right" size={16} /></span>
+          <span class="shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>
           <select
             aria-label="Search in another feed or folder"
             value={scopeNow}

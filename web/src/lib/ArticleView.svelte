@@ -555,10 +555,10 @@
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
       <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 4 6.5 10l6 6" /></svg>
+        <Icon name="chevron-up" size={22} />
       </button>
       <button type="button" aria-label="Next" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()}>
-        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4 6 6-6 6" /></svg>
+        <Icon name="chevron-down" size={22} />
       </button>
       {@render aa(22, "")}
       <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
@@ -636,7 +636,7 @@
     cursor: default;
   }
   /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
-  .toolbar > [aria-disabled="true"] > svg {
+  .toolbar > [aria-disabled="true"] > :global(svg) {
     opacity: 0.35;
   }
   /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */

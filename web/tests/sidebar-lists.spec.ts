@@ -18,8 +18,8 @@ test("Recently read is gone, and Edit says how often a feed posts", async ({ pag
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
 
-  // Unread, Starred and All are the sidebar's lists; Recently read is gone (decision 0174).
-  await expect(sidebar(page).getByRole("link", { name: "All", exact: true })).toBeVisible();
+  // Unread, Starred and All articles are the sidebar's lists; Recently read is gone (decision 0174).
+  await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Recently read", exact: true })).toHaveCount(0);
 
   // Edit says how often the feed posts, in words, under its kind of source.
@@ -35,7 +35,7 @@ test("Recently read is gone, and Edit says how often a feed posts", async ({ pag
 // The other lists, by keyboard alone. This page's settings are answered here
 // rather than saved, so hiding Starred and All never reaches another test
 // signed in as the same reader.
-test("Starred and All can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
+test("Starred and All articles can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
   test.skip(isMobile, "the tick boxes are worked by keyboard, and g s / g a are a keyboard's");
   let hidden: string[] = [];
   let unread = true;
@@ -59,7 +59,7 @@ test("Starred and All can be hidden by keyboard, and their keys still work", asy
   // Tab reaches each tick box, Space unticks it, and the list leaves the sidebar.
   for (const [name, gone] of [
     ["Starred", nav.getByRole("link", { name: "Starred", exact: true })],
-    ["All", nav.getByRole("link", { name: "All", exact: true })],
+    ["All articles", nav.getByRole("link", { name: "All articles", exact: true })],
   ] as const) {
     const box = group.getByRole("checkbox", { name, exact: true });
     await expect(gone).toBeVisible();
@@ -85,13 +85,13 @@ test("Starred and All can be hidden by keyboard, and their keys still work", asy
   await page.keyboard.press("g");
   await page.keyboard.press("a");
   await expect(page).toHaveURL(/\/all$/);
-  await expect(page.getByRole("heading", { level: 2, name: "All" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "All articles" })).toBeVisible();
 
   // With Unread off All is home, so it shows even though it's hidden.
   unread = false;
   await page.reload();
   await appReady(page);
-  await expect(nav.getByRole("link", { name: "All", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Starred", exact: true })).toHaveCount(0);
   await expect(nav.getByRole("link", { name: "Unread", exact: true })).toHaveCount(0);
 });

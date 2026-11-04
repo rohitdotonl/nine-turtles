@@ -5,7 +5,7 @@ import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 // SPEC section 7 (and 19 and 21), "How to check it", done by a browser, on
 // the made-up Reading Room blog (tests/feed-server.mjs).
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const title = (page: Page, name: string) => article(page).getByRole("heading", { level: 2, name });
 const row = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(name) });
 
@@ -76,7 +76,7 @@ test.describe("on a wide window", () => {
     await openRoom(page, 1024);
     const list = page.locator("#list-pane");
     await expect(list).toBeVisible();
-    await expect(page.getByRole("region", { name: "Article" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Article", exact: true })).toBeVisible();
     expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(336);
     // Its titles get at least 280px of the row.
     expect((await list.locator(".item-row .title").first().boundingBox())!.width).toBeGreaterThanOrEqual(280);

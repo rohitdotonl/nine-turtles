@@ -130,7 +130,7 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut(GO_TO, "Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
   shortcut(GO_TO, "Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
   shortcut(GO_TO, "Notes", [["go-notes", "g then n", { kind: "go", view: "notes" }]]),
-  shortcut(GO_TO, "All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
+  shortcut(GO_TO, "All articles", [["go-all", "g then a", { kind: "go", view: "all" }]]),
   shortcut(GO_TO, "Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
   shortcut("Getting around", "Search", [["search", "/", { kind: "search" }]]),
   shortcut("Getting around", "Next / previous in the sidebar", [

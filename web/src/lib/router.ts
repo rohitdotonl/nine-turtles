@@ -50,7 +50,7 @@ function settingsPage(name: string): SettingsPage | undefined {
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All articles" };
 
 /**
  * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0174). Unread, folders

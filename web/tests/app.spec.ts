@@ -70,11 +70,11 @@ test("its button hides and shows the sidebar; its button sits on the sidebar, th
 });
 
 
-test("the sidebar lists Unread, Starred and All, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred and All articles, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   const links = sidebar(page).getByRole("list").getByRole("link");
-  await expect(links).toHaveText(["Unread", "Starred", "All"]);
+  await expect(links).toHaveText(["Unread", "Starred", "All articles"]);
 
   const unread = sidebar(page).getByRole("link", { name: "Unread" });
   await expect(unread).toHaveAttribute("aria-current", "page");
@@ -120,6 +120,8 @@ test("the sidebar lists Unread, Starred and All, with a grey pill marking where 
   await expect(page).toHaveURL(/\/starred$/);
   await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
   await expect(unread).not.toHaveAttribute("aria-current", "page");
+  // Where you are is the grey pill, so Starred's star stays an outline: filled only ever means starred (decision 0182).
+  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg path")).toHaveAttribute("fill", "none");
   // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
   const fact = page.getByText("Nothing starred yet.");
   const how = page.getByText("Press the star on any article to keep it here.");
@@ -149,9 +151,9 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
 
   await page.reload();
   await appReady(page);
-  await expect(page).toHaveTitle("All · nine turtles");
+  await expect(page).toHaveTitle("All articles · nine turtles");
   // With no feeds yet, a wide window shows the welcome in the list's room (decision 0048); the list keeps its place behind it.
-  await expect(page.locator("#list-heading")).toHaveText("All");
+  await expect(page.locator("#list-heading")).toHaveText("All articles");
 
   await page.goBack();
   await expect(page).toHaveURL(/\/starred$/);
@@ -577,7 +579,7 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   const add = await box(sidebar(page).getByRole("link", { name: "Add a person or publication" }));
   const keys = sidebar(page).getByRole("button", { name: "Keyboard shortcuts" });
   const settings = sidebar(page).getByRole("link", { name: "Settings" });
-  const all = await box(sidebar(page).getByRole("link", { name: "All" }));
+  const all = await box(sidebar(page).getByRole("link", { name: "All articles" }));
   // One row at the foot of the window, below everything else in the sidebar.
   const [k, set] = [await box(keys), await box(settings)];
   for (const each of [k, set]) {

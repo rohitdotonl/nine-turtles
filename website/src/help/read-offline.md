@@ -15,7 +15,7 @@ related: [install-the-app, star-an-article, mark-read-or-unread]
 
 ## What's kept
 
-- The first 200 articles in your Unread (or in All, if you've switched
+- The first 200 articles in your Unread (or in All articles, if you've switched
   <a href="/help/unread-on-or-off/">Unread off</a>).
 - Your newest 200 starred articles.
 

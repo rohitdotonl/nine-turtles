@@ -7,7 +7,7 @@ import { appReady, follow, openReadingRoom, signIn } from "./screens";
 // copy the link. Each blog here is a made-up one of
 // the test's own (tests/feed-server.mjs), so tests never mark each other's.
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const scroller = (page: Page) => article(page).locator(".reading-scroller");
 const scrolled = (page: Page) => scroller(page).evaluate((element) => element.scrollTop);

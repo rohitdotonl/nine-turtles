@@ -177,7 +177,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Pick up where you left off: the one article left partway, kept on the server and offered in one line (`resume.svelte.ts`, `PickUp.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
-- The sidebar's fixed lists: Unread, Starred, Notes and All, which show (`SidebarViews.svelte`)
+- The sidebar's fixed lists: Unread, Starred, Notes and All articles, which show (`SidebarViews.svelte`)
 - The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 
 ## Data and the database

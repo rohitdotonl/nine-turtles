@@ -10,7 +10,7 @@ import { appReady, follow, signIn } from "./screens";
 test.use({ serviceWorkers: "allow" });
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const NEWEST = "On keeping a commonplace book (3)";
 const MIDDLE = "Walking the long way home (2)";
 

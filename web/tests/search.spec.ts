@@ -247,7 +247,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   const blog = unique("nothing");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
-  const reading = page.getByRole("region", { name: "Article" });
+  const reading = page.getByRole("region", { name: "Article", exact: true });
   await expect(reading).toContainText(/press j/i);
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
@@ -264,7 +264,7 @@ test("with many filters the search box wraps, and no chip slides under the optio
   // With an article open, the list is at its narrowest.
   await heading(page).focus();
   await page.keyboard.press("j");
-  await expect(page.getByRole("region", { name: "Article" }).locator(".article-title")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Article", exact: true }).locator(".article-title")).toBeVisible();
   await page.getByRole("button", { name: "Search options" }).click();
   await page.getByRole("checkbox", { name: "Unread", exact: true }).check();
   await page.getByRole("radio", { name: "Custom" }).check();

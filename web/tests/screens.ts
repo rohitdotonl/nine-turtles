@@ -188,11 +188,11 @@ export const SCREENS: Screen[] = [
     library: true,
     open: async (page) => {
       // On a phone the field waits behind the Search button beside More until asked for (decision 0060).
-      await expect(page.getByRole("region", { name: "All" }).getByRole("listitem").first()).toBeVisible();
+      await expect(page.getByRole("region", { name: "All articles" }).getByRole("listitem").first()).toBeVisible();
       await page.keyboard.press("/");
       await expect(page.locator("#search-field")).toBeFocused();
       await page.keyboard.type("reading");
-      await expect(page.locator("#list-heading")).toHaveText("Results in All");
+      await expect(page.locator("#list-heading")).toHaveText("Results in All articles");
       // A choice in the options becomes a chip.
       await page.getByRole("button", { name: "Search options" }).click();
       await page.getByRole("checkbox", { name: "Unread", exact: true }).check();

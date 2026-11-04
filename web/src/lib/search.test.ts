@@ -24,8 +24,8 @@ const library: Library = {
 const all: Query = emptyQuery({ kind: "view", view: "all" });
 
 describe("the results' title", () => {
-  it("says where the search looks: All, or the feed, folder or view", () => {
-    expect(resultsTitle({ kind: "all" }, library)).toBe("Results in All");
+  it("says where the search looks: All articles, or the feed, folder or view", () => {
+    expect(resultsTitle({ kind: "all" }, library)).toBe("Results in All articles");
     expect(resultsTitle({ kind: "feed", id: 1 }, library)).toBe("Results in Garden Notes");
     expect(resultsTitle({ kind: "folder", id: 7 }, library)).toBe("Results in Tech");
     expect(resultsTitle({ kind: "view", view: "starred" }, library)).toBe("Results in Starred");

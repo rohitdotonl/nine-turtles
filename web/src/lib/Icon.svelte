@@ -5,9 +5,9 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -65,10 +65,11 @@
     <!-- Unread: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
     <circle cx="10" cy="10" r="2.25" fill="currentColor" stroke="none" />
-  {:else if name === "stack"}
-    <!-- All: a short stack of pages. -->
-    <rect x="3.25" y="7.25" width="13.5" height="9.5" rx="1.5" />
-    <path d="M5.25 4.75h9.5M7.25 2.5h5.5" />
+  {:else if name === "layers"}
+    <!-- All articles: layers, everything stacked. -->
+    <path d="M10 3 17 6.75 10 10.5 3 6.75Z" />
+    <path d="m3 10.25 7 3.75 7-3.75" />
+    <path d="m3 13.75 7 3.75 7-3.75" />
   {:else if name === "keyboard"}
     <!-- A keyboard: a row of keys and a space bar. -->
     <rect x="2.75" y="5.25" width="14.5" height="9.5" rx="1.5" />
@@ -85,6 +86,9 @@
     <path d="M6.5 3.5v13M3.5 13.5l3 3 3-3M13.5 16.5v-13M10.5 6.5l3-3 3 3" />
   {:else if name === "star"}
     <path d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z" fill={filled ? "currentColor" : "none"} />
+  {:else if name === "chevron-up"}
+    <!-- The phone's Previous article: the one above in the list (Next is chevron-down). -->
+    <path d="m5.5 12 4.5-4.5 4.5 4.5" />
   {:else if name === "chevron-down"}
     <path d="m5.5 8 4.5 4.5L14.5 8" />
   {:else if name === "chevron-right"}
@@ -200,6 +204,17 @@
     <!-- Settings › Account › Email: an envelope. -->
     <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />
     <path d="m3.75 5.5 6.25 5 6.25-5" />
+  {:else if name === "person-at"}
+    <!-- Settings › Account › Email: a person and an @, your address (the plain envelope is Weekly email's). -->
+    <circle cx="7.5" cy="6.75" r="3" />
+    <path d="M2.75 16.5a4.75 4.75 0 0 1 7-4.2" />
+    <circle cx="14.25" cy="14" r="1.5" />
+    <path d="M15.75 14v.5a1.25 1.25 0 0 0 2.5 0V14a4 4 0 1 0-1.6 3.2" />
+  {:else if name === "archive-box"}
+    <!-- Settings › Your data: a storage box, your things kept (the arrow onto a tray is only for saving a file). -->
+    <rect x="2.75" y="3.75" width="14.5" height="4" rx="1" />
+    <path d="M4 7.75v7.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7.5" />
+    <path d="M8 11h4" />
   {:else if name === "note"}
     <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
     <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />

@@ -20,7 +20,7 @@ it. The people with something new have a small dot in the sidebar.
 
 ## Unread off
 
-There's no Unread list and no dots. The app opens on **All**, and every
+There's no Unread list and no dots. The app opens on **All articles**, and every
 title looks the same. You read what catches your eye, and nothing piles up.
 
 ## Switch it
