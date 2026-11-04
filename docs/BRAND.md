@@ -88,7 +88,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **One shape for every empty list:** on the list's left edge, never centred. First the fact in Literata, in the second ink ("Nothing in this folder yet."). Then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."). A button only where one action is the obvious next step. No picture, no turtle, no icon.
 - **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Starred.").
 - **The end of a list:** Unread ends "That's everything for now."; every other list "That's everything."; search "No more results."
-- **The reading pane with nothing open:** one quiet line in Literata, at 40% of the pane's height.
+- **The reading pane with nothing open:** one quiet line in Literata, at 40% of the pane's height. When you left an article part of the way through, the line offers it: "You were reading *{title}*, by {writer}.", the title a link in the text color (decision 0175); on a phone, the same line at the top of the list.
 - **The welcome:** "Hello." then "Who would you like to read?"
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
 - Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".

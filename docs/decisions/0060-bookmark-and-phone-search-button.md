@@ -25,7 +25,8 @@ article on every list, though most visits never search.
   reader controls are), for the 200 most recent articles. No database change,
   so nothing can be lost; a phone and a laptop each keep their own place.
   Keeping it on the server (to follow you between devices) can come later if
-  the owner wants it.
+  the owner wants it. (Decision 0175 keeps one, the latest left partway, on
+  the server, so another device can offer it.)
 - Moving the keyboard's place to the article's title no longer scrolls the
   text, so it can't undo the bookmark.
 - **On a phone, the list's search field waits behind a Search button**
