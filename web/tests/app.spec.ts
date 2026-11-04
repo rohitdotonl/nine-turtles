@@ -99,7 +99,7 @@ test("the sidebar lists Unread, Starred and All, with a grey pill marking where 
   await page.evaluate(() => (document.documentElement.dataset.keyboard = ""));
   await wordmark.focus();
   await expect(wordmark).toHaveCSS("outline-style", "none");
-  // The redrawn nine (BRAND.md → "The logo"): 27px tall beside the 22px name, 9px apart, on one line,
+  // The nine (BRAND.md → "The logo"): 27px tall beside the 22px name, 9px apart, on one line,
   // standing on the name's baseline. An empty marker added to the line sits on that baseline.
   const logo = wordmark.locator("svg");
   await expect(logo).toHaveAttribute("height", "27");
