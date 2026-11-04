@@ -27,9 +27,12 @@
     heading = $bindable(),
     onClose,
     initial,
+    titleHidden = false,
     children,
   }: {
     title: string;
+    /** The title is said to screen readers but not drawn, where the sheet's first line already says it (the hiding editor). */
+    titleHidden?: boolean;
     heading?: HTMLHeadingElement;
     onClose: () => void;
     /** Where the keyboard starts; otherwise the title, so screen readers start there. */
@@ -86,7 +89,7 @@
   style:max-height={top === undefined ? undefined : `calc(100dvh - ${top}px - 1rem)`}
 >
   <div class="flex flex-col gap-5 p-6">
-    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class="sheet-title break-words">
+    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class={["sheet-title break-words", titleHidden && "sr-only"]}>
       {title}
     </h2>
     {@render children()}

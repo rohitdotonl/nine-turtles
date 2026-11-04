@@ -245,7 +245,8 @@
 </style>
 
 {#if sheet}
-  <Sheet {title} bind:heading onClose={onCancel}>
+  <!-- The sentence is the first thing seen; the title is for screen readers only (it would repeat the sentence). -->
+  <Sheet {title} titleHidden bind:heading onClose={onCancel}>
     {@render form()}
   </Sheet>
 {:else}
