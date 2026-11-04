@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { feedNextTo } from "./feeds";
+import { sidebarRowNextTo } from "./feeds";
 import {
   SEQUENCE_MS,
   SHORTCUTS,
@@ -9,7 +9,6 @@ import {
   keyFor,
   keyOf,
   pressName,
-  shortcutMatches,
   shortcutsFor,
   tip,
   withKey,
@@ -28,12 +27,10 @@ const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
 });
 
 describe("keyboard shortcuts", () => {
-  it("opens the cheat sheet with ?, toggles the sidebar with [ and closes with Escape", () => {
+  it("opens the cheat sheet with ?, hides both panes with f and closes with Escape", () => {
     const read = createKeyReader();
     expect(read(press("?"), 0)).toEqual({ kind: "cheat-sheet" });
-    expect(read(press("["), 0)).toEqual({ kind: "toggle-sidebar" });
-    expect(read(press("]"), 0)).toEqual({ kind: "toggle-list" });
-    expect(read(press("\\"), 0)).toEqual({ kind: "toggle-both" });
+    expect(read(press("f"), 0)).toEqual({ kind: "toggle-both" });
     expect(read(press("Escape"), 0)).toEqual({ kind: "escape" });
   });
 
@@ -76,7 +73,8 @@ describe("keyboard shortcuts", () => {
     expect(read(press("j"), 0)).toEqual({ kind: "move", step: 1 });
     expect(read(press("k"), 0)).toEqual({ kind: "move", step: -1 });
     expect(read(press("Enter"), 0)).toEqual({ kind: "open" });
-    expect(read(press("o"), 0)).toEqual({ kind: "open" });
+    // Enter opens; o did too until decision 0180.
+    expect(read(press("o"), 0)).toBeUndefined();
     expect(read(press("v"), 0)).toEqual({ kind: "open-original" });
     expect(read(press("+"), 0)).toEqual({ kind: "text-size", step: 1 });
     expect(read(press("="), 0)).toEqual({ kind: "text-size", step: 1 });
@@ -117,43 +115,39 @@ describe("keyboard shortcuts", () => {
 
   it("leaves the browser's own shortcuts alone", () => {
     const read = createKeyReader();
-    expect(read(press("[", { metaKey: true }), 0)).toBeUndefined();
+    expect(read(press("f", { metaKey: true }), 0)).toBeUndefined();
     expect(read(press("?", { ctrlKey: true }), 0)).toBeUndefined();
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(31);
+    expect(SHORTCUTS).toHaveLength(27);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
-      "n",
-      "Home",
-      "Enter",
-      "Space",
-      "v",
-      "c",
-      "+",
-      "s",
       "w",
+      "Enter",
+      "s",
       "h",
+      "n",
+      "v",
+      "Space",
+      "+",
+      "c",
       "Esc",
       "g then u",
       "g then s",
+      "g then n",
       "g then a",
-      "g then f",
       "g then ,",
-      "Shift+J",
-      "i",
       "/",
-      "[",
-      "]",
-      "\\",
+      "Shift+J",
       "e",
-      "m",
+      "i",
+      "f",
+      "a",
       "Shift+A",
+      "m",
       "u",
       "r",
-      "Shift+E",
-      "a",
       "?",
     ]);
   });
@@ -166,24 +160,21 @@ describe("keyboard shortcuts", () => {
     expect(read(press(" ", { ctrlKey: true }), 0)).toBeUndefined();
   });
 
-  it("moves to unread articles with n and Shift+N, copies the link with c, and folds or edits with e and Shift+E", () => {
+  it("copies the link with c, and answers none of the keys cut in decisions 0171 and 0180", () => {
     const read = createKeyReader();
-    expect(read(press("n"), 0)).toEqual({ kind: "move-unread", step: 1 });
-    expect(read(press("N"), 0)).toEqual({ kind: "move-unread", step: -1 });
-    // Shift+O marked older articles read until decision 0171: it does nothing now.
-    expect(read(press("O"), 0)).toBeUndefined();
+    for (const cut of ["O", "N", "H", "E", "[", "]", "\\"]) expect(read(press(cut), 0), cut).toBeUndefined();
     expect(read(press("c"), 0)).toEqual({ kind: "copy-link" });
     expect(read(press("e"), 0)).toEqual({ kind: "toggle-folder" });
-    expect(read(press("E"), 0)).toEqual({ kind: "edit-place" });
+    expect(read(press("n"), 0)).toEqual({ kind: "note" });
     expect(keyFor("copy-link")).toBe("c");
   });
 
-  it("prints keys as a Mac does: capital letters, ⇧ for Shift, a true minus sign, and plain words for screen readers", () => {
-    expect(keyCap("j")).toEqual({ cap: "J" });
-    expect(keyCap("Shift+A")).toEqual({ cap: "⇧A", spoken: "Shift A" });
-    expect(keyCap("Shift+j")).toEqual({ cap: "⇧J", spoken: "Shift J" });
-    expect(keyCap("-")).toEqual({ cap: "−" });
-    for (const key of ["Enter", "Esc", "[", "/", "?", "+"]) expect(keyCap(key)).toEqual({ cap: key });
+  it("prints keys the same on every computer: capital letters, Shift as the word, a true minus sign", () => {
+    expect(keyCap("j")).toBe("J");
+    expect(keyCap("Shift+A")).toBe("Shift A");
+    expect(keyCap("Shift+j")).toBe("Shift J");
+    expect(keyCap("-")).toBe("−");
+    for (const key of ["Enter", "Esc", "\\", "/", "?", "+"]) expect(keyCap(key)).toBe(key);
   });
 });
 
@@ -233,8 +224,8 @@ describe("the cheat sheet and the keys agree", () => {
   );
   const unlisted = sheet.flatMap((each) => each.unlisted.map((extra) => pressName(extra.key)));
 
-  it("lists every key that does something (only = stands in for +, unprinted)", () => {
-    expect(unlisted).toEqual(["="]);
+  it("lists every key that does something (only Home and End, the browser's own keys, and = for +, go unprinted)", () => {
+    expect(unlisted).toEqual(["Home", "End", "="]);
     const missing = answered().filter((each) => !listed.some((entry) => entry.keys === each.keys) && !unlisted.includes(each.keys));
     expect(missing).toEqual([]);
   });
@@ -252,8 +243,8 @@ describe("the cheat sheet and the keys agree", () => {
 
 describe("keys printed as words", () => {
   it("prints Space and Shift+Space as keys, so screen readers hear them in words", () => {
-    expect(keyCap("Space")).toEqual({ cap: "Space" });
-    expect(keyCap("Shift+Space")).toEqual({ cap: "⇧Space", spoken: "Shift Space" });
+    expect(keyCap("Space")).toBe("Space");
+    expect(keyCap("Shift+Space")).toBe("Shift Space");
   });
 
   it("gives menus and tooltips their keys", () => {
@@ -263,12 +254,12 @@ describe("keys printed as words", () => {
     expect(tip("Star", "star")).toBe("Star (S)");
     expect(withKey("Star", "s")).toBe("Star (S)");
     expect(withKey("Star", undefined)).toBe("Star");
-    expect(withKey("Hide the sidebar", "[")).toBe("Hide the sidebar ( [ )");
+    expect(withKey("Mark all as read", "Shift+A")).toBe("Mark all as read (Shift A)");
     expect(withKey("Smaller text", "-")).toBe("Smaller text (−)");
   });
 });
 
-describe("moving between feeds with Shift+J and Shift+K (decision 0110)", () => {
+describe("moving down the sidebar with Shift+J and Shift+K (decisions 0110, 0180)", () => {
   const feed = (id: number, folders: number[] = []): Feed => ({ id, folders }) as unknown as Feed;
   // Folders A (1) and B (2); feed 10 in A, 11 in A and B, 12 in B, 13 and 14 in none.
   const library = {
@@ -279,79 +270,56 @@ describe("moving between feeds with Shift+J and Shift+K (decision 0110)", () => 
     feeds: [feed(10, [1]), feed(11, [1, 2]), feed(12, [2]), feed(13), feed(14)],
   };
 
-  it("follows the sidebar: open folders' feeds, then the feeds in no folder, each once", () => {
-    const open = [1, 2];
-    const order: number[] = [];
-    let here: { kind: string; id?: number } = { kind: "view" };
+  const views = ["unread", "starred", "all"] as const;
+  const row = (kind: "feed" | "folder", id: number) => ({ kind, id });
+  const unread = { kind: "view", view: "unread" } as const;
+  const lastList = { kind: "view", view: "all" } as const;
+
+  it("follows the sidebar top to bottom: its lists, each folder, its feeds while it's open, then the feeds in no folder, each once", () => {
+    const order: string[] = [];
+    let here: Parameters<typeof sidebarRowNextTo>[3] = unread;
     for (;;) {
-      const next = feedNextTo(library, open, here, 1);
+      const next = sidebarRowNextTo(library, views, [1, 2], here, 1);
       if (next === undefined) break;
-      order.push(next);
-      here = { kind: "feed", id: next };
+      order.push(next.kind === "view" ? next.view : `${next.kind} ${next.id}`);
+      here = next;
     }
-    expect(order).toEqual([10, 11, 12, 13, 14]);
-    expect(feedNextTo(library, open, { kind: "feed", id: 13 }, -1)).toBe(12);
+    expect(order).toEqual(["starred", "all", "folder 1", "feed 10", "feed 11", "folder 2", "feed 12", "feed 13", "feed 14"]);
+    expect(sidebarRowNextTo(library, views, [1, 2], row("feed", 13), -1)).toEqual(row("feed", 12));
   });
 
-  it("passes over a folded folder's feeds, and starts from a folder's own row", () => {
-    expect(feedNextTo(library, [2], { kind: "view" }, 1)).toBe(11);
-    expect(feedNextTo(library, [], { kind: "folder", id: 2 }, 1)).toBe(13);
-    expect(feedNextTo(library, [1, 2], { kind: "folder", id: 2 }, 1)).toBe(12);
+  it("stops at a folded folder and passes over its feeds, so the next press goes to the next folder", () => {
+    expect(sidebarRowNextTo(library, views, [], lastList, 1)).toEqual(row("folder", 1));
+    expect(sidebarRowNextTo(library, views, [], row("folder", 1), 1)).toEqual(row("folder", 2));
+    expect(sidebarRowNextTo(library, views, [], row("folder", 2), 1)).toEqual(row("feed", 13));
+    expect(sidebarRowNextTo(library, views, [], row("folder", 2), -1)).toEqual(row("folder", 1));
     // In a feed whose folder is folded: from that folder's row.
-    expect(feedNextTo(library, [], { kind: "feed", id: 10 }, 1)).toBe(13);
+    expect(sidebarRowNextTo(library, views, [], row("feed", 10), 1)).toEqual(row("folder", 2));
   });
 
-  it("stops at either end, and Shift+K from Unread, Starred or All goes nowhere", () => {
-    expect(feedNextTo(library, [1, 2], { kind: "feed", id: 14 }, 1)).toBeUndefined();
-    expect(feedNextTo(library, [1, 2], { kind: "feed", id: 10 }, -1)).toBeUndefined();
-    expect(feedNextTo(library, [1, 2], { kind: "view" }, -1)).toBeUndefined();
+  it("stops at either end", () => {
+    expect(sidebarRowNextTo(library, views, [1, 2], row("feed", 14), 1)).toBeUndefined();
+    expect(sidebarRowNextTo(library, views, [1, 2], unread, -1)).toBeUndefined();
   });
 });
 
 describe("the new keys", () => {
-  it("moves to the first and last article with Home and End, between feeds with Shift+J and Shift+K, and goes places with g then f and g then ,", () => {
+  it("moves to the first and last article with Home and End, between feeds with Shift+J and Shift+K, and goes to Settings with g then ,", () => {
     const read = createKeyReader();
     expect(read(press("Home"), 0)).toEqual({ kind: "move-end", step: -1 });
     expect(read(press("End"), 0)).toEqual({ kind: "move-end", step: 1 });
     expect(read(press("J"), 0)).toEqual({ kind: "move-feed", step: 1 });
     expect(read(press("K"), 0)).toEqual({ kind: "move-feed", step: -1 });
     read(press("g"), 0);
-    expect(read(press("f"), 10)).toEqual({ kind: "go-to", path: "/settings/feeds" });
-    read(press("g"), 0);
     expect(read(press(","), 10)).toEqual({ kind: "go-to", path: "/settings" });
   });
 });
 
-describe("finding a shortcut (decision 0062)", () => {
-  const star = { keys: ["s"], action: "Star / unstar" };
-  const go = { keys: ["g then u"], action: "Go to Unread" };
-  const all = { keys: ["Shift+A"], action: "Mark all as read" };
-
-  it("finds by words, whatever their case", () => {
-    expect(shortcutMatches(star, "STAR")).toBe(true);
-    expect(shortcutMatches(go, "unread")).toBe(true);
-    expect(shortcutMatches(star, "unread")).toBe(false);
-  });
-
-  it("finds by key, as printed or with the presses spaced", () => {
-    expect(shortcutMatches(star, "s")).toBe(true);
-    expect(shortcutMatches(go, "g u")).toBe(true);
-    expect(shortcutMatches(go, "g then u")).toBe(true);
-    expect(shortcutMatches(all, "shift a")).toBe(true);
-    expect(shortcutMatches(all, "⇧a")).toBe(true);
-    expect(shortcutMatches(go, "s")).toBe(false);
-  });
-
-  it("shows everything when nothing is typed", () => {
-    expect(shortcutMatches(star, "  ")).toBe(true);
-  });
-});
-
 describe("the cheat sheet with Unread off", () => {
-  it("leaves out Go to Unread, Mark all as read and the unread moves, and keeps the rest", () => {
+  it("leaves out Go to Unread and Mark all as read, and keeps the rest", () => {
     const on = shortcutsFor(false).map((each) => each.action);
     const off = shortcutsFor(true).map((each) => each.action);
-    const unreadOnly = ["Go to Unread", "Mark all as read", "Next / previous unread article"];
+    const unreadOnly = ["Unread", "Mark all as read"];
     for (const action of unreadOnly) {
       expect(on).toContain(action);
       expect(off).not.toContain(action);

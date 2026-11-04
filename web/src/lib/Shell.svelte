@@ -51,7 +51,8 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { nameFor, parentOf, parse, pathFor, placeAddressesBy, titleFor, type Route } from "./router";
+  import { nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, type Route } from "./router";
+  import { noted } from "./notes.svelte";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
@@ -60,7 +61,7 @@
   import { emptyText, insteadOfList, missingFrom, nothingFound, type Found } from "./listWording";
   import { headingFor, placeNameOf } from "./listHeading";
   import { focusArriving, landingFor, type Headings } from "./landing";
-  import { moveArticle, nextFeed, type ArticleMove } from "./moving";
+  import { moveArticle, nextInSidebar, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
@@ -740,9 +741,9 @@
     else queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
-  /** Shift+J and Shift+K: the feed after or before the place you're in, in the sidebar's order. */
-  function feedAfter(step: 1 | -1): Route | undefined {
-    return nextFeed({ feeds: library.rows, folders: library.folders }, phone, sidebarFeeds?.openFolders(), route, step);
+  /** Shift+J and Shift+K: the row after or before the place you're in, in the sidebar's order. */
+  function rowAfter(step: 1 | -1): Route | undefined {
+    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, settings.hidden, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**
@@ -870,14 +871,12 @@
   /** What a shortcut can ask of the screen. */
   const keyHands: KeyHands = {
     openCheatSheet: () => (cheatSheetOpen = true),
-    toggleSidebar,
-    toggleList,
     toggleBoth,
     go: (place) => go(place),
     escape,
     startSearch,
     move,
-    feedAfter,
+    rowAfter,
     open,
     openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
     page: (step) => articleView?.page(step),
@@ -950,7 +949,7 @@
       aria-label={bothHidden ? "Sidebar and article list" : "Sidebar"}
       aria-expanded={panes.sidebar}
       aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
-      title={bothHidden ? tip("Show the sidebar and the article list", "toggle-both") : tip(panes.sidebar ? "Hide the sidebar" : "Show the sidebar", "toggle-sidebar")}
+      title={bothHidden ? tip("Show the sidebar and the article list", "toggle-both") : panes.sidebar ? "Hide the sidebar" : "Show the sidebar"}
       onclick={bothHidden ? toggleBoth : toggleSidebar}
       class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
     >
@@ -1131,7 +1130,7 @@
               aria-label="Article list"
               aria-expanded={panes.list}
               aria-controls="list-pane"
-              title={tip(panes.list ? "Hide the article list" : "Show the article list", "toggle-list")}
+              title={panes.list ? "Hide the article list" : "Show the article list"}
               onclick={toggleList}
               class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
             >

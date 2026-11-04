@@ -78,7 +78,7 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **One solid part only where the real object has one:** the palette (Page), the heart with a pulse (Feed health), the bookmark (Add from anywhere), Newsletters, Readers, the shelf (To read slowly), and the headphones (Field recordings). The card (Plan) stays line only, with its chip and number drawn in.
 - **Small dots stay solid** where a line would be too thin to see: the unread dot, More's three dots, the feed's dot, the alert's dot, and the keyboard's keys. These are part of the locked set, not a breach of the rule above.
 - **Never solid on plain signs** (close, back, search, plus, check and the like).
-- "Open original" is an arrow with no box. AI assistants keep the robot.
+- "View original" is an arrow with no box. AI assistants keep the robot.
 - A new icon follows the same rule. If Rohit dislikes one later, offer alternatives one at a time.
 
 ## Empty screens and the ends of lists (Live, decision 0142)

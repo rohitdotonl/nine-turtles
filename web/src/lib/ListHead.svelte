@@ -8,6 +8,7 @@
   publication's name is itself the way to their page, a button ending in › (decision 0163).
 -->
 <script lang="ts">
+  import { tip } from "./keyboard";
   import Icon from "./Icon.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
 
@@ -47,7 +48,7 @@
   >
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
-      <button type="button" onclick={onAbout} title="About {text} (i)" aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
+      <button type="button" onclick={onAbout} title={tip(`Info about ${text}`, "about")} aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
         ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-1.5 shrink-0 font-normal text-muted">›</span></button
       >
     {:else}

@@ -7,6 +7,7 @@
   the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
 -->
 <script lang="ts">
+  import { tip } from "./keyboard";
   import Icon from "./Icon.svelte";
   import { inSettings, type Route } from "./router";
 
@@ -30,7 +31,7 @@
   <a
     href="/add"
     aria-label="Add a person or publication"
-    title="Add a person or publication (a)"
+    title={tip("Add a person or publication", "add-feed")}
     onclick={(event) => follow(event, { kind: "add-feed" })}
     class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" size={16} />Add</a
   >

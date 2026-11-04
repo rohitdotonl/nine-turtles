@@ -60,7 +60,7 @@ No amount of calm or minimalism justifies text some people can't read. Everythin
 
 Publishers are the reason there's anything to read.
 
-- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "Open original." A newsletter shows only what its email holds; its web version is never fetched. (Its invisible tracking images are loaded once when it arrives, so its sender knows it reached a reader: the owner's choice, decision 0091.)
+- **Show what the publisher put in the feed.** Never scrape the full article. A summary-only feed shows the summary and "View original." A newsletter shows only what its email holds; its web version is never fetched. (Its invisible tracking images are loaded once when it arrives, so its sender knows it reached a reader: the owner's choice, decision 0091.)
 - **Always credit the source** and link to the original.
 - **Fetch politely:** on each feed's own rhythm, with ETag / Last-Modified (and WebSub, since 25 October 2026).
 - **Visit a site only when the reader asks, and never an article's page.** There are three visits: to find a feed when the reader adds one (the page they give, and if it names none, its home page and a few usual feed addresses); when they press Write back and no address is known, to look once on the writer's home page and one contact or about page it links to, never twice for the same writer; and when someone asks the website's blog checkup about a blog, to find its feed the same way and read its home page and, only if that shows no address, one contact or about page it links to, with any one site looked up at most a few times in half an hour, as the feed finder is. Never in the background. (The owner's yes to the Write back visit, 3 November 2026, decision 0168; the blog checkup, step 12 of the owner's review plan, decision 0178.)
@@ -154,7 +154,7 @@ As little design as possible: if removing something wouldn't make the task harde
 
 **Worked example: AI summaries.** They put something between the reader and the writer (2), but a power user (9) might want them to triage 500 feeds. Result: never in the reading pane; possibly an opt-in, hidden triage tool in the list. The philosophy answered *where*, not yes or no.
 
-**Worked example: fetch the full article when a feed has only a summary.** It would help reading (2) but breaks the publisher floor. Floors aren't ranked against principles, so the answer is no: show the summary and "Open original."
+**Worked example: fetch the full article when a feed has only a summary.** It would help reading (2) but breaks the publisher floor. Floors aren't ranked against principles, so the answer is no: show the summary and "View original."
 
 ### Exceptions log
 

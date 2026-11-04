@@ -41,16 +41,14 @@ export type KeyScene = {
 /** What the screen does when a shortcut applies. */
 export type KeyHands = {
   openCheatSheet(): void;
-  toggleSidebar(): void;
-  toggleList(): void;
   toggleBoth(): void;
   go(place: Route): void;
   escape(): void;
   startSearch(): void;
   /** Another article in the list (`moving.ts`). */
   move(to: ArticleMove, step: 1 | -1): void;
-  /** The feed after or before this place in the sidebar's order, if there is one. */
-  feedAfter(step: 1 | -1): Route | undefined;
+  /** The row after or before this place in the sidebar's order, if there is one. */
+  rowAfter(step: 1 | -1): Route | undefined;
   open(): void;
   openLink(link: string): void;
   page(step: 1 | -1): void;
@@ -94,12 +92,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
     case "cheat-sheet":
       hands.openCheatSheet();
       break;
-    case "toggle-sidebar":
-      hands.toggleSidebar();
-      break;
-    case "toggle-list":
-      hands.toggleList();
-      break;
     case "toggle-both":
       hands.toggleBoth();
       break;
@@ -114,7 +106,7 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       hands.move("moveToEnd", action.step);
       break;
     case "move-feed": {
-      const next = scene.onList ? hands.feedAfter(action.step) : undefined;
+      const next = scene.onList ? hands.rowAfter(action.step) : undefined;
       if (next) hands.go(next);
       break;
     }
@@ -129,9 +121,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       break;
     case "move":
       hands.move("move", action.step);
-      break;
-    case "move-unread":
-      if (!scene.unreadOff) hands.move("moveUnread", action.step);
       break;
     case "open":
       hands.open();
@@ -153,12 +142,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
     }
     case "about":
       if (scene.onList && !scene.searching && scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed });
-      break;
-    case "edit-place":
-      if (scene.onList && !scene.searching) {
-        if (scene.feed !== undefined) hands.go({ kind: "edit-feed", id: scene.feed });
-        else if (scene.folder !== undefined) hands.go({ kind: "edit-folder", id: scene.folder });
-      }
       break;
     case "star":
       if (scene.selected && scene.onList) hands.star();

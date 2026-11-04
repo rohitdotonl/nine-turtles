@@ -9,7 +9,7 @@
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
-  import { keyFor } from "./keyboard";
+  import { keyCap, keyFor } from "./keyboard";
   import { LONGEST_NOTE } from "./notes.svelte";
   import NoteText from "./NoteText.svelte";
   import type { Note } from "./shapes";
@@ -72,7 +72,7 @@
     box?.setSelectionRange(draft.length, draft.length);
   }
 
-  // Opened to write a note straight away (Shift+H, or "Add a note…" on words just chosen).
+  // Opened to write a note straight away (N, or "Add a note…" on words just chosen).
   // A highlight pressed: the keyboard goes to its first choice, as in any menu.
   onMount(() => {
     if (writing) void write();
@@ -143,7 +143,7 @@
     {/if}
     {#if !highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onHighlight}
-        >Highlight{#if !phone}<kbd>{keyFor("highlight")}</kbd>{/if}</button
+        >Highlight{#if !phone}<kbd>{keyCap(keyFor("highlight") ?? "")}</kbd>{/if}</button
       >
     {/if}
     <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{highlight?.note ? "Edit note" : "Add a note…"}</button>

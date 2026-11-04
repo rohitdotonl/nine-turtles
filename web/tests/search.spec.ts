@@ -83,28 +83,10 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page).filter({ hasText: `Blog ${loose}` })).toHaveCount(1);
   await expect(results(page).filter({ hasText: `Blog ${filed}` })).toHaveCount(1);
 
-  // A typed filter is suggested, and becomes a chip.
-  await page.keyboard.press("End");
-  const before = await results(page).first().boundingBox();
-  await page.keyboard.type(" feed:");
-  await expect(page.getByRole("option").first()).toBeVisible();
-  await page.keyboard.type(loose);
-  const suggestion = page.getByRole("option", { name: `feed:Blog ${loose}` });
-  await expect(suggestion).toBeVisible();
-  // The suggestions float over the results in a panel of their own: nothing under them moves.
-  const listbox = page.getByRole("listbox", { name: "Suggestions" });
-  await expect(listbox).toHaveCSS("position", "absolute");
-  expect(await results(page).first().boundingBox()).toEqual(before);
-  // ↓ chooses one, which the field says to screen readers; its mark is a bar in the text color, never the accent.
-  await page.keyboard.press("ArrowDown");
-  await expect(suggestion).toHaveAttribute("aria-selected", "true");
-  await expect(field(page)).toHaveAttribute("aria-activedescendant", (await suggestion.getAttribute("id"))!);
-  const [bar, ink] = await Promise.all([
-    suggestion.evaluate((element) => getComputedStyle(element).borderLeftColor),
-    page.evaluate(() => getComputedStyle(document.body).color),
-  ]);
-  expect(bar).toBe(ink);
-  await page.keyboard.press("Enter");
+  // Another feed, chosen in the options, becomes the place chip.
+  await page.getByRole("button", { name: "Search options" }).click();
+  await page.getByRole("combobox", { name: "Search in another feed or folder" }).selectOption({ label: `Blog ${loose}` });
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: `Remove in: Blog ${loose}` })).toBeVisible();
   await expect(field(page)).toHaveValue("walking");
   await expect(results(page)).toHaveCount(1);
@@ -116,14 +98,14 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("s");
   await expect(results(page).first()).toContainText("Starred");
 
-  // 3. is:starred becomes a chip; only starred articles are listed.
-  await field(page).focus();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Control+a");
-  await page.keyboard.type("is:starred ");
+  // 3. Starred, in the options, becomes a chip; only starred articles are listed, and typing a filter is gone (decision 0180).
+  await field(page).fill("is:starred");
+  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
+  await field(page).fill("");
+  await page.getByRole("button", { name: "Search options" }).click();
+  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
-  // The chip says it in plain words, as the options menu does; the typed form is its tooltip (decision 0048).
-  await expect(page.getByTitle("is:starred", { exact: true })).toHaveText("Starred");
   await expect(field(page)).toHaveValue("");
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText("Walking the long way home");
@@ -136,7 +118,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   // It floats over the list instead of pushing it down.
   await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
   // A menu of checkmark rows: the list search started from, All feeds, and the feed now
-  // searched (chosen above with feed:), which holds; Tab from the field lands on it.
+  // searched (chosen above), which holds; Tab from the field lands on it.
   await field(page).focus();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeFocused();
@@ -283,8 +265,12 @@ test("with many filters the search box wraps, and no chip slides under the optio
   await heading(page).focus();
   await page.keyboard.press("j");
   await expect(page.getByRole("region", { name: "Article" }).locator(".article-title")).toBeVisible();
-  await field(page).focus();
-  await page.keyboard.type("is:unread after:2020-01-01 before:2030-01-01 ");
+  await page.getByRole("button", { name: "Search options" }).click();
+  await page.getByRole("checkbox", { name: "Unread", exact: true }).check();
+  await page.getByRole("radio", { name: "Custom" }).check();
+  await page.getByLabel("Published after").fill("2020-01-01");
+  await page.getByLabel("Published before").fill("2030-01-01");
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(4);
   const options = (await page.getByRole("button", { name: "Search options" }).boundingBox())!;
   for (const chip of await page.getByRole("button", { name: /^Remove / }).all()) {

@@ -12,20 +12,17 @@ import type { View } from "./router";
 
 export type Action =
   | { kind: "cheat-sheet" }
-  | { kind: "toggle-sidebar" }
-  | { kind: "toggle-list" }
   | { kind: "toggle-both" }
   | { kind: "escape" }
   | { kind: "add-feed" }
   | { kind: "search" }
   | { kind: "go"; view: View }
-  /** A place by its address: Your feeds, Settings. */
+  /** A place by its address: Settings. */
   | { kind: "go-to"; path: string }
   | { kind: "move"; step: 1 | -1 }
-  | { kind: "move-unread"; step: 1 | -1 }
   /** Home and End: the first (-1) or last (1) article loaded in the list. */
   | { kind: "move-end"; step: 1 | -1 }
-  /** Shift+J and Shift+K: the next or previous feed, in the sidebar's order. */
+  /** Shift+J and Shift+K: the next or previous row, in the sidebar's order. */
   | { kind: "move-feed"; step: 1 | -1 }
   | { kind: "open" }
   | { kind: "open-original" }
@@ -38,9 +35,8 @@ export type Action =
   | { kind: "mark-unread" }
   | { kind: "mark-all-read" }
   | { kind: "undo" }
-  | { kind: "refresh" }
   | { kind: "toggle-folder" }
-  | { kind: "edit-place" }
+  | { kind: "refresh" }
   | { kind: "about" }
   | { kind: "text-size"; step: 1 | -1 };
 
@@ -61,9 +57,12 @@ export type KeyPress = {
 
 /**
  * The cheat sheet's groups, by what you're doing at the time (decision 0062):
- * reading comes first, as it's what nine turtles is for.
+ * reading comes first, as it's what nine turtles is for. Within a group, the
+ * key that matters most comes first (decision 0180). "Anywhere" holds only `?`,
+ * which the list doesn't print: whoever reads the list has already found it.
  */
-export const SHORTCUT_GROUPS = ["Reading", "Getting around", "Tidying up", "Anywhere"] as const;
+export const GO_TO = "Go to: press G, then…";
+export const SHORTCUT_GROUPS = ["Reading", GO_TO, "Getting around", "Tidying up", "Anywhere"] as const;
 export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
 
 /**
@@ -72,7 +71,7 @@ export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number];
  */
 export type Binding = { id: string; key: string; does: Action };
 
-/** A key that does the same as another and isn't printed (`=` is the + key without Shift). */
+/** A key that isn't printed: `=` is the + key without Shift; Home and End are the browser's own keys, so they need no row. */
 type Unlisted = { key: string; does: Action };
 
 export type Shortcut = {
@@ -95,28 +94,28 @@ function shortcut(group: ShortcutGroup, action: string, entries: Entry[], unlist
 
 /** Every shortcut, in the cheat sheet's order. */
 export const SHORTCUTS: Shortcut[] = [
-  shortcut("Reading", "Next / previous article", [
-    ["next-article", "j", { kind: "move", step: 1 }],
-    ["previous-article", "k", { kind: "move", step: -1 }],
-  ]),
-  shortcut("Reading", "Next / previous unread article", [
-    ["next-unread", "n", { kind: "move-unread", step: 1 }],
-    ["previous-unread", "Shift+N", { kind: "move-unread", step: -1 }],
-  ]),
-  shortcut("Reading", "First / last article in the list", [
-    ["first-article", "Home", { kind: "move-end", step: -1 }],
-    ["last-article", "End", { kind: "move-end", step: 1 }],
-  ]),
-  shortcut("Reading", "Open article", [
-    ["open-enter", "Enter", { kind: "open" }],
-    ["open", "o", { kind: "open" }],
-  ]),
+  shortcut(
+    "Reading",
+    "Next / previous article",
+    [
+      ["next-article", "j", { kind: "move", step: 1 }],
+      ["previous-article", "k", { kind: "move", step: -1 }],
+    ],
+    [
+      { key: "Home", does: { kind: "move-end", step: -1 } },
+      { key: "End", does: { kind: "move-end", step: 1 } },
+    ],
+  ),
+  shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
+  shortcut("Reading", "Open article", [["open-enter", "Enter", { kind: "open" }]]),
+  shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
+  shortcut("Reading", "Highlight chosen words", [["highlight", "h", { kind: "highlight" }]]),
+  shortcut("Reading", "Add a note", [["note", "n", { kind: "note" }]]),
+  shortcut("Reading", "View original", [["open-original", "v", { kind: "open-original" }]]),
   shortcut("Reading", "Scroll down / up a screen", [
     ["page-down", "Space", { kind: "page", step: 1 }],
     ["page-up", "Shift+Space", { kind: "page", step: -1 }],
   ]),
-  shortcut("Reading", "Open original", [["open-original", "v", { kind: "open-original" }]]),
-  shortcut("Reading", "Copy the article's link", [["copy-link", "c", { kind: "copy-link" }]]),
   shortcut(
     "Reading",
     "Text size",
@@ -126,34 +125,26 @@ export const SHORTCUTS: Shortcut[] = [
     ],
     [{ key: "=", does: { kind: "text-size", step: 1 } }],
   ),
-  shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
-  shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
-  shortcut("Reading", "Highlight the words chosen / write a note", [
-    ["highlight", "h", { kind: "highlight" }],
-    ["note", "Shift+H", { kind: "note" }],
-  ]),
+  shortcut("Reading", "Copy link", [["copy-link", "c", { kind: "copy-link" }]]),
   shortcut("Reading", "Back / close", [["escape", "Esc", { kind: "escape" }]]),
-  shortcut("Getting around", "Go to Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
-  shortcut("Getting around", "Go to Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
-  shortcut("Getting around", "Go to All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
-  shortcut("Getting around", "Go to Your feeds", [["go-feeds", "g then f", { kind: "go-to", path: "/settings/feeds" }]]),
-  shortcut("Getting around", "Go to Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
+  shortcut(GO_TO, "Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
+  shortcut(GO_TO, "Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
+  shortcut(GO_TO, "Notes", [["go-notes", "g then n", { kind: "go", view: "notes" }]]),
+  shortcut(GO_TO, "All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
+  shortcut(GO_TO, "Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
+  shortcut("Getting around", "Search", [["search", "/", { kind: "search" }]]),
   shortcut("Getting around", "Next / previous in the sidebar", [
     ["next-feed", "Shift+J", { kind: "move-feed", step: 1 }],
     ["previous-feed", "Shift+K", { kind: "move-feed", step: -1 }],
   ]),
-  shortcut("Getting around", "About this person or publication", [["about", "i", { kind: "about" }]]),
-  shortcut("Getting around", "Search", [["search", "/", { kind: "search" }]]),
-  shortcut("Getting around", "Show / hide sidebar", [["toggle-sidebar", "[", { kind: "toggle-sidebar" }]]),
-  shortcut("Getting around", "Show / hide article list", [["toggle-list", "]", { kind: "toggle-list" }]]),
-  shortcut("Getting around", "Full-screen reading (hide sidebar and list)", [["toggle-both", "\\", { kind: "toggle-both" }]]),
-  shortcut("Getting around", "Fold / unfold this folder", [["toggle-folder", "e", { kind: "toggle-folder" }]]),
-  shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
+  shortcut("Getting around", "Expand / collapse this folder", [["toggle-folder", "e", { kind: "toggle-folder" }]]),
+  shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
+  shortcut("Getting around", "Full-screen reading", [["toggle-both", "f", { kind: "toggle-both" }]]),
+  shortcut("Getting around", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Tidying up", "Mark all as read", [["mark-all-read", "Shift+A", { kind: "mark-all-read" }]]),
+  shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
   shortcut("Tidying up", "Undo", [["undo", "u", { kind: "undo" }]]),
-  shortcut("Tidying up", "Show new articles", [["refresh", "r", { kind: "refresh" }]]),
-  shortcut("Tidying up", "Edit this person, publication or folder", [["edit-place", "Shift+E", { kind: "edit-place" }]]),
-  shortcut("Anywhere", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
+  shortcut("Tidying up", "Refresh (show new articles)", [["refresh", "r", { kind: "refresh" }]]),
   shortcut("Anywhere", "This list of shortcuts", [["cheat-sheet", "?", { kind: "cheat-sheet" }]]),
 ];
 
@@ -300,9 +291,9 @@ function isTyping(target: EventTarget | null): boolean {
 
 /**
  * What has no use with Unread off (SPEC section 10): there's no Unread view,
- * and no read state to mark or move by.
+ * and no read state to mark.
  */
-const NEEDS_UNREAD: Action["kind"][] = ["mark-all-read", "move-unread"];
+const NEEDS_UNREAD: Action["kind"][] = ["mark-all-read"];
 
 /** Whether a shortcut does nothing with Unread off. */
 function needsUnread(each: Shortcut): boolean {
@@ -315,44 +306,25 @@ export function shortcutsFor(unreadOff: boolean): Shortcut[] {
 }
 
 /**
- * Whether a shortcut fits what was typed in the list's find field: its
- * words contain it ("star"), or one of its keys is it ("s", "g u", "shift a").
+ * A key as nine turtles prints it, the same on every computer (decision 0180):
+ * a letter in capitals, Shift as the word ("Shift+A" is "Shift A", which is
+ * what screen readers hear too), and the - key as a true minus sign (U+2212).
+ * The key pressed stays the same.
  */
-export function shortcutMatches(shortcut: { keys: string[]; action: string }, typed: string): boolean {
-  const wanted = typed.trim().toLowerCase().replace(/\s+/g, " ");
-  if (wanted === "") return true;
-  if (shortcut.action.toLowerCase().includes(wanted)) return true;
-  return shortcut.keys.some((key) => {
-    const spelled = key.toLowerCase();
-    const forms = [spelled, spelled.replace(" then ", " "), spelled.replace("shift+", "shift "), spelled.replace("shift+", "⇧")];
-    return forms.includes(wanted);
-  });
-}
-
-/**
- * What a key's cap shows, as macOS and Apple Books print keys (decision 0055):
- * a letter in capitals, Shift as ⇧ ("Shift+A" shows ⇧A) and the - key as a
- * true minus sign (U+2212). `spoken` is what screen readers hear instead,
- * when the cap's symbol wouldn't read well ("Shift A"). The key pressed
- * stays the same.
- */
-export function keyCap(press: string): { cap: string; spoken?: string } {
-  if (press === "-") return { cap: "−" };
+export function keyCap(press: string): string {
+  if (press === "-") return "−";
   const shifted = /^Shift\+(Space|.)$/.exec(press);
-  if (shifted) {
-    const key = shifted[1] === "Space" ? "Space" : shifted[1]!.toUpperCase();
-    return { cap: `⇧${key}`, spoken: `Shift ${key}` };
-  }
-  if (/^[a-z]$/.test(press)) return { cap: press.toUpperCase() };
-  return { cap: press };
+  if (shifted) return `Shift ${shifted[1] === "Space" ? "Space" : shifted[1]!.toUpperCase()}`;
+  if (/^[a-z]$/.test(press)) return press.toUpperCase();
+  return press;
 }
 
 /**
  * A button's tooltip with its key, as SPEC section 19 has it (decision
- * 0064): "Star (S)", "Hide the sidebar ( [ )"; with no key, the name alone.
+ * 0064): "Star (S)", "Mark all as read (Shift A)";
+ * with no key, the name alone.
  */
 export function withKey(label: string, key: string | undefined): string {
   if (!key) return label;
-  const cap = keyCap(key).cap;
-  return /^[[\]\\]$/.test(cap) ? `${label} ( ${cap} )` : `${label} (${cap})`;
+  return `${label} (${keyCap(key)})`;
 }

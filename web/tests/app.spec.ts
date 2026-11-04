@@ -45,10 +45,10 @@ test("[ hides and shows the sidebar; its button sits on the sidebar, then waits 
   expect(shown.x + shown.width).toBeLessThanOrEqual(pane.x + pane.width);
   expect(shown.x).toBeGreaterThan(pane.x + pane.width / 2);
 
-  // With the keyboard in the sidebar (here, on the wordmark), hiding the sidebar moves it to the
-  // list itself, or with no articles to the sidebar button, never to the list's title (decision 0038).
-  await page.locator("#sidebar h1").focus();
-  await page.keyboard.press("[");
+  // Hiding the sidebar with the keyboard leaves it on the sidebar button or the list itself,
+  // never on the list's title (decision 0038).
+  await toggle(page).focus();
+  await page.keyboard.press("Enter");
   await expect(sidebar(page)).toBeHidden();
   await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
   expect((await toggle(page).boundingBox())!.x).toBeLessThan(20);
@@ -60,7 +60,7 @@ test("[ hides and shows the sidebar; its button sits on the sidebar, then waits 
     }),
   ).toBe(true);
 
-  await page.keyboard.press("[");
+  await toggle(page).click();
   await expect(sidebar(page)).toBeVisible();
   expect(await toggle(page).boundingBox()).toEqual(shown);
 
@@ -176,42 +176,42 @@ test("? opens the shortcut list, Escape closes it and returns the keyboard's pla
   await expect(heading).toBeFocused();
   await expect(heading).toHaveCSS("outline-style", "none");
   expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
-  await expect(dialog.getByText("Go to Starred")).toBeVisible();
-  // A two-press shortcut shows a key cap for each press, with "then" between, in capitals as a Mac prints keys (decision 0055).
-  const goTo = dialog.getByRole("row", { name: /Go to Unread/ });
-  await expect(goTo.locator("kbd")).toHaveText(["G", "U"]);
-  // Shift shows as ⇧ on the cap, and screen readers hear "Shift A".
+  // "G, then" is said once, in its group's heading; screen readers still hear G on each row (decision 0180).
+  const goTo = dialog.getByRole("row", { name: /^Unread/ });
+  await expect(goTo.locator("kbd")).toHaveText(["U"]);
+  await expect(goTo).toHaveAccessibleName(/G then U/);
+  // Shift is the word, on a cap of its own: "Shift" and "A" (decision 0180).
   const markAll = dialog.getByRole("row", { name: /Mark all as read/ });
-  await expect(markAll.locator("kbd")).toHaveText(["⇧A"]);
+  await expect(markAll.locator("kbd")).toHaveText(["Shift", "A"]);
   await expect(markAll).toHaveAccessibleName(/Shift A/);
   // Four named groups, each a region a screen reader can jump to.
-  for (const group of ["Reading", "Getting around", "Tidying up", "Anywhere"]) {
+  for (const group of ["Reading", "Go to: press G, then…", "Getting around", "Tidying up"]) {
     await expect(dialog.getByRole("region", { name: group })).toBeVisible();
+    // The headings are in the text's own color, so they lead what's under them.
+    await expect(dialog.getByRole("heading", { level: 3, name: group })).toHaveCSS("font-weight", "600");
   }
+  // Spacing alone parts the rows, and the foot holds only Help.
+  await expect(dialog.getByRole("row").first()).toHaveCSS("border-bottom-style", "none");
+  await expect(dialog.getByText("Tab, Enter and Escape")).toHaveCount(0);
+  await expect(dialog.getByRole("searchbox")).toHaveCount(0);
+  await expect(dialog.getByText("is:unread")).toHaveCount(0);
   // The list scrolls from the keyboard too: it's a Tab stop of its own, and a real one rings.
   const list = dialog.getByRole("region", { name: "Shortcuts" });
   await expect(list).toHaveAttribute("tabindex", "0");
-  // Tab goes on to the find field, then Close, then the list.
-  await page.keyboard.press("Tab");
-  await expect(dialog.getByRole("searchbox", { name: "Find a shortcut" })).toBeFocused();
+  // Tab goes on to Close, then the list.
   await page.keyboard.press("Tab");
   await expect(dialog.getByRole("button", { name: "Close" })).toBeFocused();
   await expect(dialog.getByRole("button", { name: "Close" })).toHaveCSS("outline-style", "solid");
   await page.keyboard.press("Tab");
   await expect(list).toBeFocused();
   await expect(list).toHaveCSS("outline-style", "solid");
-  await expect(dialog.getByText("Go to Starred")).toBeVisible();
-  await expect(dialog.getByText("is:unread")).toBeVisible();
 
-  // Shortcuts don't fire behind the open list: a key typed there finds itself in the list instead (decision 0062).
-  await page.keyboard.press("[");
+  // Shortcuts don't fire behind the open list.
+  await page.keyboard.press("f");
   if (sidebarShown) await expect(sidebar(page)).toBeVisible();
   else await expect(sidebar(page)).toBeHidden();
-  await expect(dialog.getByRole("searchbox", { name: "Find a shortcut" })).toHaveValue("[");
-  await expect(dialog.getByRole("row")).toHaveText([/Show \/ hide sidebar/]);
 
-  // Escape empties the find field first, then closes the list.
-  await page.keyboard.press("Escape");
+  // Escape closes the list.
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
   expect(await page.evaluate(() => document.activeElement?.textContent?.trim())).toBe(before);
@@ -232,15 +232,6 @@ test("the shortcut list fits a small phone without scrolling sideways", async ({
   expect(box.width).toBe(320);
   expect(box.height).toBe(640);
   await expect(dialog).toHaveCSS("border-top-left-radius", "0px");
-  // The find field takes a line of its own under the title and the X, the screen's full width less its margins (decision 0062).
-  const [heading, field, close] = await Promise.all([
-    dialog.getByRole("heading", { name: "Keyboard shortcuts" }).boundingBox(),
-    dialog.getByRole("searchbox", { name: "Find a shortcut" }).boundingBox(),
-    dialog.getByRole("button", { name: "Close" }).boundingBox(),
-  ]);
-  expect(field!.y).toBeGreaterThanOrEqual(heading!.y + heading!.height);
-  expect(field!.y).toBeGreaterThanOrEqual(close!.y + close!.height - 1);
-  expect(field!.width).toBeGreaterThan(260);
 });
 
 test("on a desktop window the shortcut list fits without scrolling, at least 48px clear of the window's top and foot", async ({ page, isMobile }) => {
@@ -562,42 +553,6 @@ test("the chrome never advertises shortcuts: no hint under the list, with the si
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
-test("the shortcut list finds a shortcut by its words or its key, and a letter typed anywhere in it starts the find (decision 0062)", async ({ page, isMobile }) => {
-  test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page);
-  await page.keyboard.press("?");
-  const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts" });
-  const field = dialog.getByRole("searchbox", { name: "Find a shortcut" });
-  await expect(field).toBeVisible();
-  // The keyboard starts on the title; typing a letter takes it to the field, letter and all.
-  await page.keyboard.type("star");
-  await expect(field).toBeFocused();
-  await expect(field).toHaveValue("star");
-  await expect(dialog.getByRole("row")).toHaveText([/Star \/ unstar/, /Go to Starred/, /is:starred/]);
-  await expect(dialog.getByRole("region", { name: "Tidying up" })).toHaveCount(0);
-  // By its key, as printed or with a space between two presses.
-  await field.fill("g u");
-  await expect(dialog.getByRole("row")).toHaveText([/Go to Unread/]);
-  await field.fill("shift a");
-  await expect(dialog.getByRole("row")).toHaveText([/Mark all as read/]);
-  await field.fill("zebra");
-  await expect(dialog.getByText("No shortcut matches “zebra”.")).toBeVisible();
-  await expect(dialog.getByRole("row")).toHaveCount(0);
-  // Escape empties the field first, even with the keyboard elsewhere in the list, then closes the list; opened again, it starts whole.
-  await field.fill("star");
-  await dialog.getByRole("button", { name: "Close" }).focus();
-  await page.keyboard.press("Escape");
-  await expect(field).toBeFocused();
-  await expect(field).toHaveValue("");
-  await field.fill("zebra");
-  await page.keyboard.press("Escape");
-  await expect(field).toHaveValue("");
-  await expect(dialog.getByRole("region", { name: "Tidying up" })).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-});
-
 test("on a computer a 1px line parts the sidebar, the list and the reading pane (decision 0054)", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone shows one pane at a time, with no line.");
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -859,7 +814,7 @@ test("a tab left open across an update opens the new version at the next place i
 
   // The screen stays as the reader arranged it: the hidden list stays hidden,
   // and closing Settings goes back to the list they came from.
-  await page.keyboard.press("]");
+  await page.getByRole("button", { name: "Article list", exact: true }).click();
   await expect(list(page)).toBeHidden();
   samePage = await markPage(page);
   await newerVersionLive(page);
@@ -869,7 +824,7 @@ test("a tab left open across an update opens the new version at the next place i
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(page).toHaveURL(/\/starred$/);
   await expect(list(page)).toBeHidden();
-  await page.keyboard.press("]");
+  await page.getByRole("button", { name: "Article list", exact: true }).click();
   await expect(list(page)).toBeVisible();
 
   // Back switches too: the address has already changed, so that's the page that loads.

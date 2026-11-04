@@ -26,7 +26,7 @@ to other apps (section 22) or counted anywhere.
   until something else is done.
 - A note is written in a box in place, with **Save** and **Not now**. An
   empty note takes the note off, never the highlight.
-- **Shift+H** writes a note on the words chosen; with none chosen, a note
+- **`n`** writes a note on the words chosen; with none chosen, a note
   on the whole article.
 - A highlight keeps its words and a little of the text either side, never a
   position: if the publisher changes the article, the words are found again
@@ -39,7 +39,7 @@ to other apps (section 22) or counted anywhere.
   note…**), **Copy** and **Remove**; pressing a quote shows it in the text.
   Remove puts the keyboard on Undo. Then
   **Your note**, the reader's note on the whole article, with **Edit note**.
-- The More menu's **Add a note…** (and Shift+H) opens the note box there:
+- The More menu's **Add a note…** (and `n`) opens the note box there:
   "A note on this article", "Only you see it. Search finds it, and Your
   data exports it."
 
@@ -78,7 +78,7 @@ to other apps (section 22) or counted anywhere.
 - Search finds articles by the words of their highlights and notes as well
   as their own. A result found that way says so: "Highlighted · …" or "Your
   note · …".
-- **With notes** in the search options (typed `is:noted`) shows only marked
+- **With notes** in the search options shows only marked
   articles. Limited to a feed, it's that person's.
 
 **Unsubscribing** (section 15)
@@ -109,7 +109,7 @@ to other apps (section 22) or counted anywhere.
    in soft pencil, and listed under Your highlights at the end.
 2. Press the highlight, **Add a note…**, type and Save: a small page shows
    after it. Reload: both are still there.
-3. Press Shift+H with nothing chosen: write a note on the article. Notes
+3. Press `n` with nothing chosen: write a note on the article. Notes
    appears in the sidebar and lists the article.
 4. Search for a word of the note: the article is found, "Your note · …".
 5. Turn the connection off and highlight something: the quiet offline line

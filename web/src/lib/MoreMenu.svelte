@@ -171,8 +171,8 @@
               {/if}
               <span class="min-w-0 flex-1">{item.label}</span>
               {#if item.shortcut}
-                <!-- Printed as a Mac prints it (⇧A, M); screen readers hear the key from aria-keyshortcuts instead (decision 0055). -->
-                <kbd aria-hidden="true" class="text-meta text-muted">{keyCap(item.shortcut).cap}</kbd>
+                <!-- Printed the same on every computer (Shift A, M); screen readers hear the key from aria-keyshortcuts instead (decision 0180). -->
+                <kbd aria-hidden="true" class="text-meta text-muted">{keyCap(item.shortcut)}</kbd>
               {/if}
             </button>
           {/each}

@@ -9,7 +9,7 @@
   At the article's end, above Write back: "Your highlights", each quote with
   its note, Edit note, Copy and Remove (a quote no longer in the article says so, and stays), then "Your
   note", the reader's note on the whole article, written in a box in place.
-  The More menu's "Add a note…" and Shift+H open that box; h highlights the
+  The More menu's "Add a note…" and N open that box; h highlights the
   words chosen. On a video or a podcast's episode a new note starts with the
   time it's playing at, and each time in a note takes the player back there.
 
@@ -197,7 +197,7 @@
   /** Where the keyboard was before the note box opened, for when Edit note is gone (the note emptied). */
   let noteFrom: Element | null = null;
 
-  /** "Add a note…" (More, Shift+H with nothing chosen): the box at the article's end, ready to type in. */
+  /** "Add a note…" (More, N with nothing chosen): the box at the article's end, ready to type in. */
   export async function writeArticleNote() {
     draft = marks.articleNote?.note ?? startTime() ?? "";
     noteFrom = document.activeElement;
@@ -213,7 +213,7 @@
     void highlightChosen();
   }
 
-  /** Shift+H: a note on the words chosen, or, with none, on the whole article. */
+  /** N: a note on the words chosen, or, with none, on the whole article. */
   export function note() {
     const now = menu?.quote ? { quote: menu.quote, anchor: menu.anchor } : chosen();
     if (now) menu = { ...now, writing: true, from: document.activeElement };
