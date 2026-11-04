@@ -8,7 +8,7 @@ import { appReady, follow, signIn } from "./screens";
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the list beside the sidebar");
 
-const field = (page: Page) => page.getByRole("combobox", { name: "Search", exact: true });
+const field = (page: Page) => page.getByRole("textbox", { name: "Search", exact: true });
 const heading = (page: Page) => page.locator("#list-heading");
 const results = (page: Page) => page.getByRole("region", { name: /^Results in / }).getByRole("listitem");
 

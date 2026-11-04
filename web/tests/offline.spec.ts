@@ -247,7 +247,7 @@ test("search and adding a feed say plainly that they need a connection", async (
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await context.setOffline(true);
-  const search = page.getByRole("combobox", { name: "Search", exact: true });
+  const search = page.getByRole("textbox", { name: "Search", exact: true });
   await search.fill("letters");
   await search.press("Enter");
   await expect(page.getByText("Search needs a connection. It works again once you're back online.")).toBeVisible();

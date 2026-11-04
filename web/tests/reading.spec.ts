@@ -390,9 +390,9 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     // At rest, the field just says "Search": the list's title above already names where you are.
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
+    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
-    await page.getByRole("combobox", { name: "Search", exact: true }).focus();
+    await page.getByRole("textbox", { name: "Search", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     // Shift+Tab reaches the chip's Remove button, and the chip stays while it has the keyboard.
     await page.keyboard.press("Shift+Tab");
@@ -401,9 +401,9 @@ test.describe("on a wide window", () => {
     await page.locator("#list-heading").focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
     // A click on the word "Search" opens the search without removing its scope.
-    await page.getByRole("combobox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
+    await page.getByRole("textbox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
-    await expect(page.getByRole("combobox", { name: "Search", exact: true })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toBeFocused();
     const box = (await page.locator(".search-box").boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(48);
     // The chip's remove button is small to look at but a full 44px to press.
