@@ -7,7 +7,7 @@ import { appReady, follow, markAllFromMenu, settingsSaved, signIn, tabTo } from 
 // (three articles), so tests never mark each other's articles.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const line = (page: Page) => page.getByRole("status").filter({ hasNotText: /^$/ }).first();
 const NEWEST = "On keeping a commonplace book (3)";
 const MIDDLE = "Walking the long way home (2)";

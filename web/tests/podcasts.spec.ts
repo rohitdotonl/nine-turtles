@@ -14,7 +14,7 @@ import { appReady, follow, signIn } from "./screens";
 // those run on a wide window only; the phone checks the bar sits above the
 // article's toolbar.
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const player = (page: Page) => article(page).getByRole("group", { name: "Episode player" });
 const bar = (page: Page) => page.getByRole("region", { name: "Now playing" });
 const LONG = "A long walk";

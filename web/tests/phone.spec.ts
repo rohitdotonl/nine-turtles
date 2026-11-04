@@ -7,7 +7,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: "Reading Room" });
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const title = (page: Page, name: string) => article(page).getByRole("heading", { level: 2, name });
 const row = (page: Page, name: string) => list(page).getByRole("button", { name: new RegExp(name) });
 const toolbar = (page: Page) => article(page).getByRole("group", { name: "Article actions" });
@@ -611,7 +611,7 @@ test("a tab left open across an update is told to reload, switches on the next m
     route.fulfill({ status: 400, headers: { "x-nine-turtles-version": "a-newer-version" }, body: "" }),
   );
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
-  await page.getByRole("region", { name: "Article" }).getByRole("button", { name: "Star" }).click();
+  await page.getByRole("region", { name: "Article", exact: true }).getByRole("button", { name: "Star" }).click();
   await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 

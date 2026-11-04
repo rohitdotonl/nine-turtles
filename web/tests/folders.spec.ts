@@ -415,8 +415,10 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
   await page.keyboard.press("Enter");
   await expect(line(page)).toHaveText(`Deleted the folder ${folder}`);
 
-  // Unsubscribe, and u brings the feed back.
-  await tabTo(page, sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) }));
+  // Unsubscribe, and u brings the feed back. The feed leaves the deleted folder for the sidebar's top level; wait for it there before tabbing.
+  const feedLink = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
+  await expect(feedLink).toBeVisible();
+  await tabTo(page, feedLink);
   await page.keyboard.press("Enter");
   await editWhoByKeys(page, `Blog ${blog}`);
   await tabTo(page, page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }));
@@ -452,7 +454,7 @@ test("their page opens in the reading area in the article's place; Escape gives 
   await openBlogs(page, [blog]);
   await page.locator("#list-heading").focus();
   await page.keyboard.press("j");
-  const title = page.getByRole("region", { name: "Article" }).locator(".article-title");
+  const title = page.getByRole("region", { name: "Article", exact: true }).locator(".article-title");
   await expect(title).toBeVisible();
   const menu = more(page);
   await menu.focus();

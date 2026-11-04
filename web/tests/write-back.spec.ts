@@ -8,7 +8,7 @@ import { appReady, follow, signIn } from "./screens";
 // with the address and "Re: the title". Uses a blog of its own, since every
 // test shares the one nine turtles that has feeds.
 
-const pane = (page: Page) => page.getByRole("region", { name: "Article" });
+const pane = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 /** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
 const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
 

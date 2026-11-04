@@ -7,7 +7,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // meet. The test nine turtles checks every feed every two seconds, so a rule
 // can be seen acting on an article as it arrives.
 
-const article = (page: Page) => page.getByRole("region", { name: "Article" });
+const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const editor = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name }));
 
 test("Hide articles about… from someone's page hides what matches, asks first, and Hidden articles brings it back", async ({ page }) => {
