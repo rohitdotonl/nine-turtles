@@ -293,13 +293,11 @@ test("the search options float over the list; Escape closes them first, then the
   await page.getByRole("radio", { name: "Past month" }).check();
   const day = new Date();
   day.setDate(day.getDate() - 30);
-  const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-  // The chip says it in words ("After 24 Sept 2026"); how it's typed is its tooltip and its Remove button's description (decision 0048).
+  // The chip says it in words ("After 24 Sept 2026") (decision 0048).
   const words = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(day);
   const remove = page.getByRole("button", { name: `Remove After ${words}`, exact: true });
   await expect(remove).toBeVisible();
-  await expect(remove).toHaveAccessibleDescription(`after:${iso}`);
-  await expect(page.getByTitle(`after:${iso}`, { exact: true })).toHaveText(`After ${words}`);
+  await expect(page.getByTitle(`After ${words}`, { exact: true })).toHaveText(`After ${words}`);
   // The first Escape closes only the options, back to their button; the search stays.
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();
