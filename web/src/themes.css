@@ -1,10 +1,10 @@
 /*
-  The themes' colors, each with a day and a night version: Original
-  (decision 0056), Plain (decision 0063) and five after Braun's colors.
-  app.css imports this file. preferences.ts writes the theme to <html data-theme="…"> and the resolved
-  Appearance (light or dark, following the device unless the reader chose
-  one) to data-mode. Before the script runs there are neither, so the page is
-  Original, by day or by night as the device is set.
+  The pages' colors (decision 0176): each theme is named by the page it
+  gives. White and Paper are day pages, Night the night page; Match device
+  shows White by day and Night by night. app.css imports this file.
+  preferences.ts writes the page showing to <html data-theme="…"> and
+  whether it is a day or a night page to data-mode. Before the script runs
+  there are neither, so the page is White, or Night on a dark device.
 
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
   grey, the text color mixed into the list or sidebar (8% by day, 12% by
@@ -15,14 +15,16 @@
   list, the menus and popovers, and the note at the list's foot (decision
   0052). By day it's the page itself. By night it's a small lift above the
   page (#28282a), with a 1px edge of 8% white (--raised-edge) and grouped rows
-  inside it at 4% white over it (--raised-group); each theme sets its own
-  lift, and the shared night block below the rest. contrast.test.ts checks
-  every text color on it.
+  inside it at 4% white over it (--raised-group), from the shared night
+  block below. contrast.test.ts checks every text color on it.
+
+  Each page has one color, its accent: the unread dot and a search's faint
+  tone. White's is ink blue, Paper's old-ink brown, Night's pale blue.
 */
 
-/* Original: Apple Books' plain white page and its near-black night. */
+/* White: a plain white page. */
 :root,
-:root[data-theme="original"][data-mode="light"] {
+:root[data-theme="white"][data-mode="light"] {
   color-scheme: light;
   --paper: #ffffff;
   --list: #f7f7f7;
@@ -39,7 +41,25 @@
   --surface-raised: #ffffff;
 }
 
-:root[data-theme="original"][data-mode="dark"] {
+/* Paper: a warm cream page with warm-black ink. */
+:root[data-theme="paper"][data-mode="light"] {
+  color-scheme: light;
+  --paper: #f7f3ea;
+  --list: #efeadf;
+  --sidebar: #e5dfd2;
+  --ink: #1f1a14;
+  --ink-2: #3d362c;
+  --muted: #5c5345;
+  --faint: #5c5345;
+  --danger: #8c2f39;
+  --accent: #8c5500;
+  --tint-list: #ded9cf;
+  --tint-sidebar: #d5cfc3;
+  --surface-raised: #f7f3ea;
+}
+
+/* Night: near-black, with soft white words. */
+:root[data-theme="night"][data-mode="dark"] {
   color-scheme: dark;
   --paper: #121212;
   --list: #1a1a1a;
@@ -56,123 +76,8 @@
 }
 
 /*
-  Plain (decision 0063): rohit.onl's bare, plain-HTML look. Black words on
-  white, every area all but white, and the one color the early web had: links
-  in articles in the browser's own blue, purple once visited, always
-  underlined. Its accent (the unread dot, search matches) is the text color,
-  so blue still means only "a link". By night: the colors a browser gives a
-  plain page in dark mode.
-*/
-:root[data-theme="plain"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #ffffff;
-  --list: #fbfbfb;
-  --sidebar: #f5f5f5;
-  --ink: #000000;
-  --ink-2: #333333;
-  --muted: #595959;
-  --faint: #666666;
-  --danger: #8c2f39;
-  --accent: #000000;
-  --tint-list: #e7e7e7;
-  --tint-sidebar: #e1e1e1;
-  --surface-raised: #ffffff;
-  --link: #0000ee;
-  --link-visited: #551a8b;
-}
-
-:root[data-theme="plain"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #121212;
-  --list: #161616;
-  --sidebar: #1c1c1c;
-  --ink: #ffffff;
-  --ink-2: #cccccc;
-  --muted: #a6a6a6;
-  --faint: #999999;
-  --danger: #e39aa4;
-  --accent: #ffffff;
-  --tint-list: #323232;
-  --tint-sidebar: #373737;
-  --surface-raised: #262626;
-  --link: #9e9eff;
-  --link-visited: #d0adf0;
-}
-
-/*
-  Two themes after Dieter Rams' Braun products (decision 0136; the five were
-  cut to these two, decision 0145): Fountain pen, the warm one, and Signal.
-  Each is a neutral body whose one color is its accent, the
-  unread dot, like the single colored control on a Braun radio. Muted grey
-  and the star were nudged only where a check needed it.
-*/
-:root[data-theme="fountain-pen"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #fafaf8;
-  --list: #f2f1ed;
-  --sidebar: #e6e6e1;
-  --ink: #152039;
-  --ink-2: #2e374e;
-  --muted: #4c5468;
-  --faint: #4c5468;
-  --danger: #8c2f39;
-  --accent: #8c5500;
-  --tint-list: #e0e0df;
-  --tint-sidebar: #d5d6d4;
-  --surface-raised: #fafaf8;
-}
-
-:root[data-theme="fountain-pen"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #171b24;
-  --list: #1c212b;
-  --sidebar: #232937;
-  --ink: #e6eaf3;
-  --ink-2: #c6cbd8;
-  --muted: #a5adbe;
-  --faint: #a5adbe;
-  --danger: #e39aa4;
-  --accent: #dcaa6a;
-  --tint-list: #343943;
-  --tint-sidebar: #3a404e;
-  --surface-raised: #272b33;
-}
-
-:root[data-theme="signal"][data-mode="light"] {
-  color-scheme: light;
-  --paper: #ffffff;
-  --list: #f5f5f4;
-  --sidebar: #ebebea;
-  --ink: #111111;
-  --ink-2: #303030;
-  --muted: #555555;
-  --faint: #555555;
-  --danger: #8c2f39;
-  --accent: #6953a0;
-  --tint-list: #e3e3e2;
-  --tint-sidebar: #dadad9;
-  --surface-raised: #ffffff;
-}
-
-:root[data-theme="signal"][data-mode="dark"] {
-  color-scheme: dark;
-  --paper: #181818;
-  --list: #1e1e1e;
-  --sidebar: #262626;
-  --ink: #eeeeee;
-  --ink-2: #cccccc;
-  --muted: #aaaaaa;
-  --faint: #aaaaaa;
-  --danger: #e39aa4;
-  --accent: #b8a8ee;
-  --tint-list: #373737;
-  --tint-sidebar: #3e3e3e;
-  --surface-raised: #282828;
-}
-
-/*
-  Every theme's night version shares these: what floats over the page (a
-  small lift, a 1px edge of 8% white, grouped rows 4% whiter), a grouped
+  The night page also has these (as does the page a dark device gets before
+  the script runs, app.css): what floats over the page (a small lift, a 1px edge of 8% white, grouped rows 4% whiter), a grouped
   list's ground, a segmented control's chosen side and the dimming behind
   a sheet.
 */

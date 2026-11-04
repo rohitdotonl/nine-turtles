@@ -289,10 +289,11 @@ test.describe("on a wide window", () => {
     await panel.getByRole("button", { name: "Smaller text" }).click();
     await expect.poll(size).toBe(before);
 
-    // Appearance: day, night or as the device is set, applied at once (decision 0056).
-    await expect(panel.getByRole("group", { name: "Appearance" }).getByRole("radio")).toHaveCount(3);
+    // Page: White, Paper, Night or Match device, applied at once (decision 0176).
+    const pages = panel.getByRole("group", { name: "Page" });
+    await expect(pages.getByRole("radio")).toHaveCount(4);
     // One line per setting (decision 0123): every choice 44px to press; the chosen word
-    // semibold and underlined, so it shows without color; Appearance as named swatches.
+    // semibold and underlined, so it shows without color; the pages as swatches named under them.
     for (const choice of await panel.locator("label").all()) {
       const box = (await choice.boundingBox())!;
       expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
@@ -300,31 +301,28 @@ test.describe("on a wide window", () => {
     const chosenWidth = panel.locator("label", { has: page.getByRole("radio", { name: "Medium" }) });
     await expect(chosenWidth).toHaveCSS("font-weight", "600");
     await expect(chosenWidth).toHaveCSS("text-decoration-line", "underline");
-    await expect(panel.locator("label", { has: page.getByRole("radio", { name: "Match device" }) })).toHaveAttribute("title", "Match device");
-    await expect(panel.getByRole("radio", { name: "Match device" })).toBeChecked();
-    // Theme: Original or Plain, whose article links are the browser's blue (decision 0063).
-    const themes = panel.getByRole("group", { name: "Theme" });
-    await expect(themes.getByRole("radio")).toHaveCount(4);
-    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
+    for (const name of ["White", "Paper", "Night", "Match device"]) await expect(pages.getByText(name, { exact: true })).toBeVisible();
+    await expect(pages.getByRole("radio", { name: "Match device" })).toBeChecked();
+    await expect(panel.locator(".swatch-name", { hasText: "Match device" })).toHaveCSS("font-weight", "600");
+    await expect(panel.getByRole("group", { name: "Theme" })).toHaveCount(0);
+    // Links in articles are the text's own color on every page, underlined.
     const link = article(page).locator(".article-text a").first();
-    const textColor = await article(page).locator(".article-text").first().evaluate((el) => getComputedStyle(el).color);
-    await expect(link).toHaveCSS("color", textColor);
-    await themes.getByRole("radio", { name: "Plain" }).check();
-    await expect(root).toHaveAttribute("data-theme", "plain");
-    await expect(link).toHaveCSS("color", "rgb(0, 0, 238)");
-    await expect(link).toHaveCSS("text-decoration-line", "underline");
-    // With the keyboard, as any radio buttons: the arrow key goes back to Original.
-    await themes.getByRole("radio", { name: "Plain" }).focus();
-    await page.keyboard.press("ArrowLeft");
-    await expect(themes.getByRole("radio", { name: "Original" })).toBeChecked();
-    await expect(root).toHaveAttribute("data-theme", "original");
-    await expect(link).toHaveCSS("color", textColor);
-    await panel.getByRole("radio", { name: "Light", exact: true }).check();
-    await expect(root).toHaveAttribute("data-theme", "original");
+    const textColor = () => article(page).locator(".article-text").first().evaluate((el) => getComputedStyle(el).color);
+    await expect(link).toHaveCSS("color", await textColor());
+    await pages.getByRole("radio", { name: "Paper" }).check();
+    await expect(root).toHaveAttribute("data-theme", "paper");
     await expect(root).toHaveAttribute("data-mode", "light");
-    await panel.getByRole("radio", { name: "Dark", exact: true }).check();
+    await expect(link).toHaveCSS("color", await textColor());
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+    // With the keyboard, as any radio buttons: the arrow key moves on to Night.
+    await pages.getByRole("radio", { name: "Paper" }).focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(pages.getByRole("radio", { name: "Night" })).toBeChecked();
+    await expect(root).toHaveAttribute("data-theme", "night");
     await expect(root).toHaveAttribute("data-mode", "dark");
-    await panel.getByRole("radio", { name: "Match device" }).check();
+    await pages.getByRole("radio", { name: "White" }).check();
+    await expect(root).toHaveAttribute("data-theme", "white");
+    await pages.getByRole("radio", { name: "Match device" }).check();
     // The article text is regular; a publisher's bold words are semibold.
     const text = article(page).locator(".article-text").first();
     await expect(text).toHaveCSS("font-weight", "400");
@@ -374,7 +372,7 @@ test.describe("on a wide window", () => {
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Light", exact: true })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
-    await page.getByRole("link", { name: /^Font, theme and line width/ }).click();
+    await page.getByRole("link", { name: /^Font and line width/ }).click();
     await expect(page.getByRole("radio", { name: "Wide" })).toBeChecked();
   });
 

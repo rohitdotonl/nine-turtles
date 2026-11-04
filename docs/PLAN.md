@@ -36,7 +36,7 @@ thread, in this order:
 
 1. **Typefaces** ✅ (decision 0141)
 2. **Colours:** the star in ink, oxblood for delete and errors ✅
-3. **Four themes,** moving readers' saved theme over safely ❌ Dropped (the owner, 3 November 2026): replaced by themes named by the page they give, such as White, Paper and Night, step 10 of the owner's review plan, built when he says go. The four themes that went live (decision 0145) stay until then.
+3. **Four themes,** moving readers' saved theme over safely ❌ Dropped (the owner, 3 November 2026): replaced by themes named by the page they give, such as White, Paper and Night, step 10 of the owner's review plan. Now live: White, Paper, Night and Match device (decision 0176).
 4. **Logo and icons:** the heavier sidebar logo, the black app icon, the tab icon 🔨
 5. **The final icon set** 🔨
 6. **People** (V1 item 1 below) ✅

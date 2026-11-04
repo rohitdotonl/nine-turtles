@@ -1,7 +1,7 @@
 <!--
   The "Aa" reading panel (SPEC section 7; decision 0034): the reader's own
   controls, one press from the text, as in Apple Books. Text size (the same
-  steps as `+` and `-`), the Appearance (day, night or as the device is set), the reading font and the line width, all
+  steps as `+` and `-`), the page (White, Paper, Night or Match device), the reading font and the line width, all
   the same preferences as Settings › Look and feel, applied at once to the
   article behind it.
 
@@ -15,7 +15,7 @@
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
-  import { APPEARANCES, LOOKS, THEMES } from "./themes";
+  import { LOOKS, PAGES, type Page } from "./themes";
   import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
 
   let {
@@ -32,6 +32,11 @@
     /** `giveBack`: put the keyboard back on the Aa button. */
     onClose: (giveBack: boolean) => void;
   } = $props();
+
+  /** Each swatch is the page it gives; Match device is half White, half Night. */
+  function swatch(page: Page): string {
+    return page === "auto" ? `linear-gradient(90deg, ${LOOKS.white.page} 50%, ${LOOKS.night.page} 50%)` : LOOKS[page].page;
+  }
 
   let panel: HTMLDivElement | undefined = $state();
   let first: HTMLButtonElement | undefined = $state();
@@ -90,8 +95,8 @@
 
   <!--
     One quiet line per setting (decision 0123): its name in small spaced
-    capitals at the left, its choices as plain words (or, for Appearance,
-    three small swatches) at the right. The chosen word is semibold in full
+    capitals at the left, its choices as plain words (or, for Page, four
+    small swatches with their names under them) at the right. The chosen word is semibold in full
     ink and underlined, so it shows without color; the rest are in the
     second ink. Radio buttons underneath, so the arrow keys move along a line.
   -->
@@ -100,27 +105,15 @@
     <div class="min-w-0 flex-1"><TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first /></div>
   </div>
 
-  <!-- Day, night or as the device is set (decision 0056): a white swatch, a black one and one half of each. -->
+  <!-- The page itself (decision 0176): a swatch of each page, and one half White, half Night for Match device, each named under it. -->
   <fieldset class="aa-line">
-    <legend class="aa-name">Appearance</legend>
-    <div class="aa-choices">
-      {#each APPEARANCES as choice (choice.value)}
-        <label class="swatch" title={choice.label}>
-          <input type="radio" name="aa-appearance" value={choice.value} bind:group={preferences.appearance} />
-          <span aria-hidden="true" class={["dot", choice.value]}></span>
-          <span class="sr-only">{choice.label}</span>
-        </label>
-      {/each}
-    </div>
-  </fieldset>
-
-  <fieldset class="aa-line">
-    <legend class="aa-name">Theme</legend>
-    <div class="aa-choices">
-      {#each THEMES as theme (theme)}
-        <label class="word">
-          <input type="radio" name="aa-theme" value={theme} bind:group={preferences.theme} />
-          {LOOKS[theme].label}
+    <legend class="aa-name">Page</legend>
+    <div class="aa-choices swatches">
+      {#each PAGES as choice (choice.value)}
+        <label class="swatch">
+          <input type="radio" name="aa-page" value={choice.value} bind:group={preferences.page} />
+          <span aria-hidden="true" class="dot" style:background={swatch(choice.value)}></span>
+          <span class="swatch-name">{choice.label}</span>
         </label>
       {/each}
     </div>
@@ -240,24 +233,35 @@
     outline-offset: 2px;
     border-radius: 6px;
   }
-  .swatch {
-    width: 2.75rem;
+  /* The page's swatches sit closer, each a column 56px wide (44px or more to press): the swatch, its name under it. */
+  .swatches {
+    flex-wrap: nowrap;
+    gap: 0.25rem;
   }
-  /* A swatch: 24px, with a faint edge so the white one shows on white; the chosen one has a ring of the text color around it. */
+  .swatch {
+    width: 3.5rem;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.375rem;
+    padding-top: 0.25rem;
+  }
+  .swatch-name {
+    font-size: var(--text-meta);
+    line-height: 1.2;
+    text-align: center;
+    color: var(--ink-2);
+  }
+  .swatch:has(input:checked) .swatch-name {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  /* A swatch: 24px, with a faint edge so the white one shows on white; the chosen one has a ring of the text color around it, and its name is semibold. */
   .dot {
     width: 1.5rem;
     height: 1.5rem;
+    flex: none;
     border-radius: 999px;
     border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
-  }
-  .dot.light {
-    background: #ffffff;
-  }
-  .dot.dark {
-    background: #141414;
-  }
-  .dot.auto {
-    background: linear-gradient(90deg, #ffffff 50%, #141414 50%);
   }
   .swatch:has(input:checked) .dot {
     box-shadow:

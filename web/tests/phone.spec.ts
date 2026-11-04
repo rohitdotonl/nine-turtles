@@ -217,7 +217,7 @@ test.describe("on a phone", () => {
       expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
 
-    await panel.getByRole("radio", { name: "Dark", exact: true }).check();
+    await panel.getByRole("radio", { name: "Night", exact: true }).check();
     await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
     await panel.getByRole("button", { name: "Close" }).click();
     await expect(panel).toHaveCount(0);
@@ -456,7 +456,7 @@ test.describe("on a phone", () => {
     // The preview passage is the group's first row: its words start on the rows' words, 16px in from the group's edge (decision 0055).
     await page.goto(new URL("/settings/font", FEEDS_APP).href);
     await appReady(page);
-    const font = page.getByRole("heading", { level: 2, name: "Font, theme and line width" });
+    const font = page.getByRole("heading", { level: 2, name: "Font and line width" });
     await expect(font).toBeVisible();
     near20(await textStart(font));
     expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);

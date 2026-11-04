@@ -322,9 +322,9 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Principle | Check |
 |---|---|
 | The computer checks the work | Rust: format, lint and tests. Frontend: type check and tests. Every pull request except documents-only changes and tiny fixes also gets a second-agent review. A test never depends on how fast the computer is; one that fails now and then is fixed, never retried until it passes (no automatic retries, decision 0114). |
-| Owner can see the change | Screenshots of every screen in Original, by day and by night (the other themes on the list, article, Settings and Edit screens), at desktop and phone width, attached to each pull request |
+| Owner can see the change | Screenshots of every screen on White and Night (Paper on the list, article, Settings and Edit screens), at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
-| First floor (accessibility) | Automated accessibility and contrast tests on every screen, in every theme by day and by night |
+| First floor (accessibility) | Automated accessibility and contrast tests on every screen, on every page (White, Paper and Night) |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
 | Written for the next agent | Fails if a file of the app's own code grows past 800 lines (a few older, longer files may only shrink), or if a file, an export or a server `pub` item is unused (decision 0126) |
 | Fast by design | Fails if the frontend download grows past its size budget |

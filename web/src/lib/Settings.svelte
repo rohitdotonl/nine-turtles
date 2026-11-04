@@ -7,11 +7,11 @@
 
   Its first page keeps only the everyday settings (decision 0120): Reading
   (Unread on or off and sort order, shared across
-  the reader's devices) and Look and feel (Appearance and Text size, for this
+  the reader's devices) and Look and feel (Page and Text size, for this
   device). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
-  Font, theme and line width; Your library (Your feeds and Feed health,
+  Font and line width; Your library (Your feeds and Feed health,
   pages of their own, then Show in the sidebar and Your data); More
   (Add from anywhere, Install the app, Rules,
   Newsletters while nine turtles takes them, Other apps, Connected
@@ -49,7 +49,7 @@
   import type { Rule } from "./rules";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
-  import { APPEARANCES, LOOKS, THEMES } from "./themes";
+  import { PAGES } from "./themes";
   import type { Feed } from "./shapes";
   import type { Order } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
@@ -463,16 +463,16 @@
       <section aria-labelledby="reader-heading">
         <h3 id="reader-heading" class="settings-head">Look and feel</h3>
         <div class="inset-group">
-          <!-- Day, night or as the device is set: the theme's day or night version (decision 0056). -->
+          <!-- The page itself: White, Paper, Night, or Match device, White by day and Night by night (decision 0176). -->
           <div class="inset-row setting has-control">
             <div class="setting-label">
               {@render icon("palette")}
-              <div class="setting-words"><p id="appearance-name" class="setting-name">Appearance</p></div>
+              <div class="setting-words"><p id="page-name" class="setting-name">Page</p></div>
             </div>
-            <div role="group" aria-labelledby="appearance-name" class="choices setting-control" style="--columns: 3">
-              {#each APPEARANCES as choice (choice.value)}
+            <div role="group" aria-labelledby="page-name" class="choices setting-control" style="--columns: 4">
+              {#each PAGES as choice (choice.value)}
                 <label class="choice">
-                  <input type="radio" name="appearance" value={choice.value} bind:group={preferences.appearance} />
+                  <input type="radio" name="page" value={choice.value} bind:group={preferences.page} />
                   {choice.label}
                 </label>
               {/each}
@@ -602,18 +602,6 @@
               there, and then it lets you go.
             </p>
           </figure>
-          <!-- Original, Plain (rohit.onl's bare look, decision 0063), Fountain pen or Signal (decisions 0136, 0145). -->
-          <div class="inset-row setting has-control">
-            <p id="theme-name" class="setting-name">Theme</p>
-            <div role="group" aria-labelledby="theme-name" class="choices setting-control" style="--columns: 2">
-              {#each THEMES as theme (theme)}
-                <label class="choice">
-                  <input type="radio" name="theme" value={theme} bind:group={preferences.theme} />
-                  {LOOKS[theme].label}
-                </label>
-              {/each}
-            </div>
-          </div>
           <div class="inset-row setting has-control">
             <p id="reading-font-name" class="setting-name">Reading font</p>
             <div role="group" aria-labelledby="reading-font-name" class="choices setting-control" style="--columns: 3">

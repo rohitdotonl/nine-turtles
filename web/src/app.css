@@ -8,7 +8,7 @@
   area uses the theme's background, the list and sidebar are a step and two
   steps deeper). The greys are the owner's choice from Milestone 4. The
   accessibility checks and src/lib/contrast.test.ts verify every pair against
-  WCAG on all three themes (the minimums are in docs/decisions/0013-look-and-feel.md).
+  WCAG on every page (the minimums are in docs/decisions/0013-look-and-feel.md).
 
   The text sizes are DESIGN.md's fixed type scale. Tailwind's own sizes are
   switched off, so nothing else can be used by accident.
@@ -56,7 +56,7 @@
   --color-tint-list: var(--tint-list);
   --color-tint-sidebar: var(--tint-sidebar);
 }
-/* Before nine turtles' script has run, a dark device gets Original's night. */
+/* Before nine turtles' script has run, a dark device gets the Night page. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode]) {
     color-scheme: dark;
@@ -1258,7 +1258,7 @@ input {
   window it sits in the middle of the reading area, like a page in a book,
   while the bar above it keeps to the pane's edges (decision 0038). Sizes
   inside are relative to the reader's text size, so + and - scale
-  everything together. Links are underlined in the text color, never blue, except in Plain (below).
+  everything together. Links are underlined in the text color, never blue.
   Images never overflow.
 */
 .article {
@@ -1424,7 +1424,6 @@ input {
   font-size: 1em;
 }
 
-/* In the text color, except in Plain, whose links are the browser's own blue and purple (decision 0063). */
 /*
   In a copy kept for reading offline, each image is this short note instead
   (SPEC section 32): its own quiet line in the interface font and the second
@@ -1440,14 +1439,11 @@ input {
   color: var(--ink-2);
 }
 
+/* Links in the text color, underlined, never blue. */
 .article-text a {
-  color: var(--link, currentColor);
+  color: currentColor;
   text-decoration: underline;
   text-underline-offset: 0.2em;
-}
-
-.article-text a:visited {
-  color: var(--link-visited, var(--link, currentColor));
 }
 
 .article-text :where(ul, ol) {

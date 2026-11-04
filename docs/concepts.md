@@ -151,7 +151,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Maskable icon
 - Service worker
 - Web fonts
-- Themes, by day and by night, and Appearance (light, dark, match device)
+- Pages: White, Paper, Night and Match device
 - Browser storage (`localStorage`)
 - The browser's database (IndexedDB), and reading offline
 - Routing (addresses inside a single-page app) and browser history

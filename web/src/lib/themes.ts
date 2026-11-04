@@ -1,80 +1,43 @@
-// The four themes from DESIGN.md → "Themes": Original (decision 0056), Plain
-// (decision 0063), Fountain pen and Signal (decisions 0136, 0145), each with a
-// day ("light") and a night ("dark") version. It is written to
-// <html data-theme="…"> and the version in use to data-mode (see
-// preferences.ts; themes.css holds both versions' colors).
-export const THEMES = ["original", "plain", "fountain-pen", "signal"] as const;
+// The pages from DESIGN.md → "Themes" (decision 0176): each theme is named by
+// the page it gives, White, Paper or Night, and the reader picks the page
+// itself, or Match device (the default), which shows White by day and Night
+// by night as the device is set. The page showing is written to
+// <html data-theme="…">, and whether it is a day or a night page to
+// data-mode (see preferences.ts; themes.css holds each page's colors).
+export const THEMES = ["white", "paper", "night"] as const;
 
+/** A page nine turtles can show. */
 export type Theme = (typeof THEMES)[number];
 
-/** Day or night: which version of a theme is showing. */
+/** A day page or a night page: other styles (the night's lift, dimmed pictures) follow it. */
 export type Mode = "light" | "dark";
 
-/** The reader's Appearance choice: always day, always night, or as the device is set. */
-export type Appearance = Mode | "auto";
+/** The reader's choice: one of the pages, or Match device. */
+export type Page = Theme | "auto";
 
-export const APPEARANCES: { value: Appearance; label: string }[] = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
+/** The choices, in the order the Aa panel and Settings show them. */
+export const PAGES: { value: Page; label: string }[] = [
+  { value: "white", label: "White" },
+  { value: "paper", label: "Paper" },
+  { value: "night", label: "Night" },
   { value: "auto", label: "Match device" },
 ];
 
-type Look = { page: string };
-
 /**
- * Each theme's name, and per version its page color for
- * the browser's bar. contrast.test.ts checks they match themes.css.
+ * Each page's name, whether it is a day or a night page, and its color for
+ * the browser's bar. contrast.test.ts checks the colors match themes.css.
  */
-export const LOOKS: Record<Theme, { label: string } & Record<Mode, Look>> = {
-  original: {
-    label: "Original",
-    light: { page: "#ffffff" },
-    dark: { page: "#121212" },
-  },
-  plain: {
-    label: "Plain",
-    light: { page: "#ffffff" },
-    dark: { page: "#121212" },
-  },
-  "fountain-pen": {
-    label: "Fountain pen",
-    light: { page: "#fafaf8" },
-    dark: { page: "#171b24" },
-  },
-  signal: {
-    label: "Signal",
-    light: { page: "#ffffff" },
-    dark: { page: "#181818" },
-  },
+export const LOOKS: Record<Theme, { label: string; mode: Mode; page: string }> = {
+  white: { label: "White", mode: "light", page: "#ffffff" },
+  paper: { label: "Paper", mode: "light", page: "#f7f3ea" },
+  night: { label: "Night", mode: "dark", page: "#121212" },
 };
 
-export function isTheme(value: unknown): value is Theme {
-  return typeof value === "string" && (THEMES as readonly string[]).includes(value);
+export function isPage(value: unknown): value is Page {
+  return typeof value === "string" && PAGES.some((choice) => choice.value === value);
 }
 
-/**
- * Themes that were retired, and the theme a reader who chose one now sees
- * (decision 0145): Brushed was closest to Original, Anodised and Heather to
- * Fountain pen. Saved choices are kept on the device, so this is read every
- * time preferences load, not run once.
- */
-const RETIRED: Record<string, Theme> = {
-  brushed: "original",
-  anodised: "fountain-pen",
-  heather: "fountain-pen",
-};
-
-/** A saved theme as a theme nine turtles still has: a retired one becomes its successor, anything unknown Original. */
-export function savedTheme(value: unknown): Theme {
-  if (isTheme(value)) return value;
-  return typeof value === "string" && Object.hasOwn(RETIRED, value) ? RETIRED[value]! : "original";
-}
-
-export function isAppearance(value: unknown): value is Appearance {
-  return value === "light" || value === "dark" || value === "auto";
-}
-
-/** The version showing: the reader's choice, or the device's setting for "Match device". */
-export function resolveMode(appearance: Appearance, deviceDark: boolean): Mode {
-  return appearance === "auto" ? (deviceDark ? "dark" : "light") : appearance;
+/** The page showing: the reader's, or for Match device White by day and Night by night. */
+export function showing(page: Page, deviceDark: boolean): Theme {
+  return page === "auto" ? (deviceDark ? "night" : "white") : page;
 }

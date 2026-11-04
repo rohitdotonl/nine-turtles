@@ -1,10 +1,10 @@
 ---
-title: "Change how it looks: light and dark, text size, typeface"
-description: Choose day or night, a theme, the size of the text, the reading typeface and the width of a line.
+title: "Change how it looks: the page, text size, typeface"
+description: Choose a white, warm or dark page, the size of the text, the reading typeface and the width of a line.
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-03
+updated: 2026-11-04
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -16,20 +16,21 @@ related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ## While you read
 
 Open any article and press **Aa** at its top. The panel holds everything on
-this page: text size, light or dark, theme, font and line width. To change
+this page: text size, the page, font and line width. To change
 only the size, press <kbd>+</kbd> or <kbd>-</kbd>.
 
 ## In Settings
 
 Open **Settings**. Under **Look and feel**:
 
-- **Appearance:** **Light**, **Dark**, or **Match device**, which follows
-  your device's own day and night.
+- **Page:** the page you read on.
+  - **White:** a plain white page.
+  - **Paper:** a warm cream page, easier on some eyes.
+  - **Night:** a near-black page with soft white words.
+  - **Match device** (where you start): White by day and Night by night,
+    following your device's own setting.
 - **Text size:** six steps, from Smaller to Largest.
-- **Font, theme and line width:** a page with a sample to try them on:
-  - **Theme:** **Original** (ink blue), **Plain** (black and white),
-    **Fountain pen** (warm brown) or **Signal** (violet). Each has a day and
-    a night version.
+- **Font and line width:** a page with a sample to try them on:
   - **Reading font:** **Literata**, **Atkinson** (made to be easy to read),
     or your device's own serif.
   - **Line width:** **Narrow**, **Medium** or **Wide**.
@@ -37,6 +38,7 @@ Open **Settings**. Under **Look and feel**:
 ## Good to know
 
 - These are kept on each device, so your phone and your computer can differ.
-- A theme's one color marks only what's yours to look at: the dot beside an
-  unread article, and what a search found.
+- Each page has one color, and it marks only what's yours to look at: the
+  dot beside an unread article, and what a search found. It's blue on White
+  and Night, and brown on Paper.
 - To choose what's in the sidebar, see **Settings › Show in the sidebar**.

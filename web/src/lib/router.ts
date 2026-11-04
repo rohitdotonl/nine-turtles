@@ -31,7 +31,7 @@ export const helpPage = (name: string) => `${HELP_URL}${name}/`;
  * /settings/<its name>, with "‹ Settings" to go back. The values are their titles.
  */
 export const SETTINGS_PAGES = {
-  font: "Font, theme and line width",
+  font: "Font and line width",
   sidebar: "Show in the sidebar",
   data: "Your data",
   "add-from-anywhere": "Add from anywhere",

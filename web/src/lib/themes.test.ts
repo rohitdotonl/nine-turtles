@@ -1,37 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { APPEARANCES, LOOKS, THEMES, isAppearance, isTheme, resolveMode, savedTheme } from "./themes";
+import { LOOKS, PAGES, THEMES, isPage, showing } from "./themes";
 
-describe("themes", () => {
-  it("has the four themes from DESIGN.md: Original, Plain, Fountain pen and Signal (decision 0145)", () => {
-    expect(THEMES).toEqual(["original", "plain", "fountain-pen", "signal"]);
-    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["Original", "Plain", "Fountain pen", "Signal"]);
+describe("pages", () => {
+  it("has the three pages from DESIGN.md, White, Paper and Night, and Match device (decision 0176)", () => {
+    expect(THEMES).toEqual(["white", "paper", "night"]);
+    expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["White", "Paper", "Night"]);
+    expect(PAGES.map((choice) => choice.label)).toEqual(["White", "Paper", "Night", "Match device"]);
+    expect(THEMES.map((theme) => LOOKS[theme].mode)).toEqual(["light", "light", "dark"]);
   });
 
-  it("moves a reader on a retired theme to its successor, so nobody lands on a missing theme", () => {
-    expect(savedTheme("brushed")).toBe("original");
-    expect(savedTheme("anodised")).toBe("fountain-pen");
-    expect(savedTheme("heather")).toBe("fountain-pen");
-    for (const theme of THEMES) expect(savedTheme(theme)).toBe(theme);
-    expect(savedTheme("calm")).toBe("original");
-    expect(savedTheme("constructor")).toBe("original");
-    expect(savedTheme(undefined)).toBe("original");
+  it("recognises only the choices it offers", () => {
+    for (const choice of PAGES) expect(isPage(choice.value)).toBe(true);
+    for (const old of ["original", "plain", "fountain-pen", "signal", "light", "dark", "constructor", undefined]) expect(isPage(old)).toBe(false);
   });
 
-  it("recognises only known theme names and Appearance choices", () => {
-    expect(isTheme("original")).toBe(true);
-    expect(isTheme("calm")).toBe(false);
-    expect(isTheme("sepia")).toBe(false);
-    expect(isTheme(undefined)).toBe(false);
-    expect(APPEARANCES.map((choice) => choice.value)).toEqual(["light", "dark", "auto"]);
-    expect(APPEARANCES.map((choice) => choice.label)).toEqual(["Light", "Dark", "Match device"]);
-    expect(isAppearance("auto")).toBe(true);
-    expect(isAppearance("system")).toBe(false);
-  });
-
-  it("shows the day or night version as chosen, and the device's for Match device", () => {
-    expect(resolveMode("light", true)).toBe("light");
-    expect(resolveMode("dark", false)).toBe("dark");
-    expect(resolveMode("auto", true)).toBe("dark");
-    expect(resolveMode("auto", false)).toBe("light");
+  it("shows the page chosen, and for Match device White by day and Night by night", () => {
+    expect(showing("paper", true)).toBe("paper");
+    expect(showing("night", false)).toBe("night");
+    expect(showing("auto", true)).toBe("night");
+    expect(showing("auto", false)).toBe("white");
   });
 });
