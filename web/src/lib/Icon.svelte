@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "history" | "shelf" | "headphones" | "video" | "note"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
     // Settings' rows (decision 0120).
     | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
@@ -61,11 +61,6 @@
     <!-- A cog: eight teeth round a hole. -->
     <path d="M8.65 4.46 L8.89 2.68 A7.4 7.4 0 0 1 11.11 2.68 L11.35 4.46 A5.7 5.7 0 0 1 12.96 5.13 L14.39 4.04 A7.4 7.4 0 0 1 15.96 5.61 L14.87 7.04 A5.7 5.7 0 0 1 15.54 8.65 L17.32 8.89 A7.4 7.4 0 0 1 17.32 11.11 L15.54 11.35 A5.7 5.7 0 0 1 14.87 12.96 L15.96 14.39 A7.4 7.4 0 0 1 14.39 15.96 L12.96 14.87 A5.7 5.7 0 0 1 11.35 15.54 L11.11 17.32 A7.4 7.4 0 0 1 8.89 17.32 L8.65 15.54 A5.7 5.7 0 0 1 7.04 14.87 L5.61 15.96 A7.4 7.4 0 0 1 4.04 14.39 L5.13 12.96 A5.7 5.7 0 0 1 4.46 11.35 L2.68 11.11 A7.4 7.4 0 0 1 2.68 8.89 L4.46 8.65 A5.7 5.7 0 0 1 5.13 7.04 L4.04 5.61 A7.4 7.4 0 0 1 5.61 4.04 L7.04 5.13 A5.7 5.7 0 0 1 8.65 4.46Z" />
     <circle cx="10" cy="10" r="2.25" />
-  {:else if name === "history"}
-    <!-- Recently read: a clock face whose rim turns back, as a history. -->
-    <path d="M3.75 10a6.25 6.25 0 1 0 1.83-4.42" />
-    <path d="M3.75 3.25v3.5h3.5" />
-    <path d="M10 6.75V10l2.25 1.5" />
   {:else if name === "dot"}
     <!-- Unread: a ring with a filled centre. -->
     <circle cx="10" cy="10" r="6.75" />
@@ -124,12 +119,6 @@
     <!-- A YouTube video (decision 0144): a screen with a play mark, line only, as plain signs are. -->
     <rect x="2.75" y="4.25" width="14.5" height="11.5" rx="2" />
     <path d="M8.5 7.6v4.8l4-2.4Z" />
-  {:else if name === "shelf"}
-    <!-- A collection (decision 0108): two books upright and one solid book leaning, on a shelf. -->
-    <path d="M2.75 16.25h14.5" />
-    <path d="M4 16.25V5a.75.75 0 0 1 .75-.75h1.5A.75.75 0 0 1 7 5v11.25" />
-    <path d="M7 16.25V7.5a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v8.75" />
-    <path d="m11 6.2 2.9-.8 2.85 10.25-2.9.8Z" fill="currentColor" stroke="none" />
   {:else if name === "more"}
     <!-- More: three dots in a row. -->
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />

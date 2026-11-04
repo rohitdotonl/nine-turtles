@@ -4,7 +4,7 @@
 //! screen and other apps use. Every try finds nothing, or leaves the first
 //! reader's things exactly as they were.
 //!
-//! This covers settings, the app password, folders, saved searches and
+//! This covers settings, the app password, folders and
 //! rules (structure change 11), and following feeds, each feed's name and
 //! settings, and the read, starred and muted marks (structure change 12).
 //! A feed both readers follow is stored and fetched once. Undo buttons,
@@ -387,49 +387,6 @@ async fn folders_stay_with_the_reader_who_made_them() {
 }
 
 #[tokio::test]
-async fn saved_searches_stay_with_the_reader_who_saved_them() {
-    let (owner, other, _, _) = two_readers().await;
-    let (status, saved) = owner
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "Tomatoes", "query": { "q": "tomatoes" } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-    let id = saved["search"]["id"].as_i64().unwrap();
-
-    assert_eq!(
-        other.get("/api/saved-searches").await["searches"],
-        json!([])
-    );
-    let (status, _) = other
-        .post(
-            &format!("/api/saved-searches/{id}"),
-            json!({ "name": "Mine now", "query": {} }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
-    let (status, _) = other
-        .post(&format!("/api/saved-searches/{id}/delete"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
-    // The same name is free for them.
-    let (status, _) = other
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "tomatoes", "query": {} }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-
-    let mine = owner.get("/api/saved-searches").await["searches"].clone();
-    assert_eq!(
-        mine,
-        json!([{ "id": id, "name": "Tomatoes", "query": { "q": "tomatoes" } }])
-    );
-}
-
-#[tokio::test]
 async fn rules_stay_with_the_reader_who_made_them() {
     let (owner, other, _, feed) = two_readers().await;
     let (status, made) = owner
@@ -549,48 +506,6 @@ async fn signing_out_signs_out_only_that_device() {
         .await
         .unwrap();
     assert_eq!(owners, 1);
-}
-
-#[tokio::test]
-async fn deleting_a_folder_from_an_app_leaves_its_searches_as_the_screen_does() {
-    let (owner, _, _, _) = two_readers().await;
-    let (status, folder) = owner
-        .post("/api/folders", json!({ "name": "Garden" }))
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-    let folder = folder["folder"]["id"].as_i64().unwrap();
-    let (status, _) = owner
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "In the garden", "query": { "scope": { "kind": "folder", "id": folder } } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-
-    let password = made_for(&owner).await;
-    let response = Client::new()
-        .post(format!(
-            "{}/api/greader/reader/api/0/disable-tag",
-            owner.base
-        ))
-        .header("authorization", format!("GoogleLogin auth={password}"))
-        .header("content-type", "application/x-www-form-urlencoded")
-        .body("s=user/-/label/Garden")
-        .send()
-        .await
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::OK);
-
-    assert_eq!(owner.get("/api/feeds").await["folders"], json!([]));
-    let searches = owner.get("/api/saved-searches").await["searches"].clone();
-    assert_eq!(searches[0]["query"]["scope"]["id"], json!(0));
-}
-
-/// A fresh app password for this reader.
-async fn made_for(reader: &Reader) -> String {
-    let (status, made) = reader.post("/api/apps/password", json!({})).await;
-    assert_eq!(status, StatusCode::OK);
-    made["password"].as_str().unwrap().to_owned()
 }
 
 /// Two readers who both follow the made-up blog. Answers them, nine
@@ -1464,14 +1379,6 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
         )
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
-    let (status, _) = other
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "Garden tomatoes",
-                    "query": { "words": "tomatoes", "scope": { "kind": "feed", "id": feed } } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
     let owners_before = owner.marks(&format!("feed={feed}")).await;
 
     let old_address = address_of(&state, feed).await;
@@ -1499,13 +1406,9 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     assert_eq!(theirs["folders"], json!([folder]));
     let listed = other.get(&format!("/api/articles?folder={folder}")).await;
     assert_eq!(listed["articles"].as_array().unwrap().len(), 3);
-    // So did their rule and saved search.
+    // So did their rule.
     assert_eq!(
         other.get("/api/rules").await["rules"][0]["feed_id"],
-        new_feed
-    );
-    assert_eq!(
-        other.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
         new_feed
     );
 
@@ -1584,15 +1487,22 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     let posts = owner.ids(&format!("feed={feed}")).await;
     mark(&owner, "starred", &[posts[0], older]).await;
     mark(&owner, "read", &[posts[1]]).await;
-    // A collection of the owner's holds one post (decision 0108).
-    let (status, made) = owner
-        .post(
-            "/api/collections",
-            json!({ "name": "Tomatoes", "articles": [posts[1]] }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED, "{made}");
-    let shelf = made["collection"]["id"].as_i64().unwrap();
+    // A collection of the owner's, kept for its export, holds one post
+    // (decisions 0108 and 0174).
+    sqlx::query(
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Tomatoes', 0)",
+    )
+    .execute(&state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, ?, 0)",
+    )
+    .bind(posts[1])
+    .execute(&state.db)
+    .await
+    .unwrap();
     let theirs_before = other.marks(&format!("feed={new_feed}")).await;
 
     let (status, moved) = owner
@@ -1614,9 +1524,14 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     let list = format!("feed={new_feed}");
     assert_eq!(marks_by_title(&owner, &list).await, expected);
     // The collection holds the new address's copy of that post.
-    let shelved = marks_by_title(&owner, &format!("collection={shelf}")).await;
-    assert_eq!(shelved.len(), 1);
-    assert_eq!(shelved[0].0, "Post 2 about tomatoes");
+    let shelved: Vec<(String, i64)> = sqlx::query_as(
+        "SELECT articles.title, articles.feed_id FROM collection_articles
+         JOIN articles ON articles.id = collection_articles.article_id",
+    )
+    .fetch_all(&state.db)
+    .await
+    .unwrap();
+    assert_eq!(shelved, [("Post 2 about tomatoes".to_owned(), new_feed)]);
     // Nobody follows the old address now: its copies of the three posts
     // went (everyone's are the new address's), but the older post stays,
     // and so does the old feed's line under it, no longer checked.
@@ -1780,14 +1695,6 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
         )
         .await;
     let in_garden = in_garden["id"].as_i64().unwrap();
-    let (status, _) = owner
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "In the garden",
-                    "query": { "scope": { "kind": "folder", "id": garden } } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
     // The other reader's own rule can't be pointed at someone only the
     // owner follows.
     let (_, theirs) = other.post("/api/rules", json!({ "words": "beans" })).await;
@@ -1818,7 +1725,7 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
         0
     );
     // Their own folder named like the owner's, filled and deleted, leaves
-    // the owner's folder, its rule and its saved search alone.
+    // the owner's folder and its rule alone.
     let (status, _) = other
         .post(&format!("/api/folders/{made}"), json!({ "name": "Garden" }))
         .await;
@@ -1849,8 +1756,6 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
     };
     assert_eq!(rule(in_garden)["feed_id"], shared);
     assert_eq!(rule(in_garden)["place_gone"], false);
-    let searches = owner.get("/api/saved-searches").await["searches"].clone();
-    assert_eq!(searches[0]["query"]["scope"]["id"], garden);
     assert_eq!(
         owner.get(&format!("/api/articles?folder={garden}")).await["articles"]
             .as_array()
@@ -1864,7 +1769,7 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
 }
 
 #[tokio::test]
-async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules_and_searches() {
+async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules() {
     let (owner, other, state, feed, _) = two_followers().await;
     for reader in [&owner, &other] {
         let (status, _) = reader
@@ -1874,13 +1779,6 @@ async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules_and_searches()
             )
             .await;
         assert_eq!(status, StatusCode::OK);
-        let (status, _) = reader
-            .post(
-                "/api/saved-searches",
-                json!({ "name": "Garden", "query": { "scope": { "kind": "feed", "id": feed } } }),
-            )
-            .await;
-        assert_eq!(status, StatusCode::CREATED);
     }
     let (status, _) = owner
         .post(&format!("/api/feeds/{feed}/unsubscribe"), json!({}))
@@ -1890,21 +1788,13 @@ async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules_and_searches()
         .await
         .unwrap();
 
-    // The owner's rule and search no longer point at it; the other
-    // reader's still do, and their articles are all there.
+    // The owner's rule no longer points at it; the other reader's still
+    // does, and their articles are all there.
     let mine = owner.get("/api/rules").await["rules"][0].clone();
     assert_eq!(mine["place_gone"], true);
-    assert_eq!(
-        owner.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
-        0
-    );
     let theirs = other.get("/api/rules").await["rules"][0].clone();
     assert_eq!(theirs["place_gone"], false);
     assert_eq!(theirs["feed_id"], feed);
-    assert_eq!(
-        other.get("/api/saved-searches").await["searches"][0]["query"]["scope"]["id"],
-        feed
-    );
     assert_eq!(other.ids("view=unread").await.len(), 3);
 }
 
@@ -2066,7 +1956,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
     );
 }
 
-/// A reader who signs up (decision 0115) starts with an empty library: no feeds, folders, saved searches, rules,
+/// A reader who signs up (decision 0115) starts with an empty library: no feeds, folders, rules,
 /// entries or marks of the owner's, now or when the owner's feeds bring new
 /// articles. The owner's library is left exactly as it was.
 #[tokio::test]
@@ -2099,18 +1989,10 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
-    let (status, _) = owner
-        .post(
-            "/api/saved-searches",
-            json!({ "name": "Tomatoes", "query": { "q": "tomatoes" } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
     let (status, _) = owner.post("/api/rules", json!({ "words": "beans" })).await;
     assert_eq!(status, StatusCode::OK);
     let owners_marks = owner.marks("view=all").await;
     let owners_feeds = owner.get("/api/feeds").await;
-    let owners_searches = owner.get("/api/saved-searches").await;
     let owners_rules = owner.get("/api/rules").await;
 
     // Someone joins, as the sign-up page does it.
@@ -2141,13 +2023,7 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
     assert_ne!(number, 1);
 
     empty_library(&newcomer).await;
-    for table in [
-        "subscriptions",
-        "entries",
-        "folders",
-        "saved_searches",
-        "rules",
-    ] {
+    for table in ["subscriptions", "entries", "folders", "rules"] {
         let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
             "SELECT COUNT(*) FROM {table} WHERE person_id = ?"
         )))
@@ -2191,7 +2067,6 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
     let feeds = owner.get("/api/feeds").await;
     assert_eq!(feeds["folders"], owners_feeds["folders"]);
     assert_eq!(feeds["feeds"][0]["folders"], json!([folder]));
-    assert_eq!(owner.get("/api/saved-searches").await, owners_searches);
     assert_eq!(owner.get("/api/rules").await, owners_rules);
 }
 
@@ -2205,10 +2080,6 @@ async fn empty_library(reader: &Reader) {
     }
     assert_eq!(
         reader.get("/api/search?q=tomatoes").await["articles"],
-        json!([])
-    );
-    assert_eq!(
-        reader.get("/api/saved-searches").await["searches"],
         json!([])
     );
     assert_eq!(reader.get("/api/rules").await["rules"], json!([]));

@@ -805,14 +805,12 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
             .unwrap();
         }
     }
-    let made = post(
-        &base,
-        "/api/collections",
-        Some(&cookie),
-        json!({ "name": "Keep" }),
-    )
-    .await;
-    assert!(made.status().is_success(), "{}", made.status());
+    // A collection, as the database still keeps them (decision 0174).
+    sqlx::query("INSERT INTO collections (person_id, name, created_at) VALUES (?, 'Keep', 1)")
+        .bind(person)
+        .execute(db)
+        .await
+        .unwrap();
 
     // Two of their newsletters: one they follow, and one they stopped,
     // whose feed's line keeps its sender away (decision 0091).

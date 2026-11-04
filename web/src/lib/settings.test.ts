@@ -27,7 +27,7 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, keysReset: true, hidden: ["recent"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, keysReset: true, hidden: ["all"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -40,7 +40,7 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     expect(settings.sort).toBeUndefined();
     await settings.load();
-    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["recent"]]);
+    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["all"]]);
     expect(settings.keysReset).toBe(true);
   });
 
@@ -86,7 +86,7 @@ describe("the reading settings", () => {
     saving.reject(new Error("offline"));
     await expect(hiding).rejects.toThrow("not saved");
     expect(settings.unread).toBe(false);
-    expect(settings.hidden).toEqual(["recent"]);
+    expect(settings.hidden).toEqual(["all"]);
   });
 
   it("show a change at once, and go back to what the server has when it can't be saved", async () => {

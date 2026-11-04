@@ -132,10 +132,10 @@ test.describe("on a phone", () => {
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "More actions"]);
     expect((await toolbar(page).innerText()).trim()).toBe("");
-    // More opens upwards, over the article, with Share (or Copy link), Mark unread and Add to collection….
+    // More opens upwards, over the article, with Share (or Copy link), Mark unread, Add a note, Write back and Hide articles about….
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add to collection/, /^\s*Add a note/, /^\s*Write back/, /^\s*Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add a note/, /^\s*Write back/, /^\s*Hide articles about/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);

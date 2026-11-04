@@ -157,11 +157,10 @@ export async function separate(feed: number): Promise<{ refusal?: string; before
 }
 
 /** "This is one person": a folder's places become one person, and the folder goes. */
-export async function folderToPerson(folder: number): Promise<{ refusal?: string; before: Before[]; searches: number[] }> {
+export async function folderToPerson(folder: number): Promise<{ refusal?: string; before: Before[] }> {
   const { refusal, answer } = await change(`/api/folders/${folder}/person`, {});
-  const numbers = (list: unknown) => (Array.isArray(list) ? list.map(Number) : []);
-  if (refusal) return { refusal: refused(refusal, "folder"), before: [], searches: [] };
-  return { before: befores(answer?.before), searches: numbers(answer?.searches) };
+  if (refusal) return { refusal: refused(refusal, "folder"), before: [] };
+  return { before: befores(answer?.before) };
 }
 
 function befores(list: unknown): Before[] {

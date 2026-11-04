@@ -15,7 +15,6 @@ use super::stored_link;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    recent,
 };
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
@@ -35,9 +34,6 @@ pub enum List {
     /// section 36), read or not; asked for as one of their places' lists
     /// (`writers::widen`).
     Writer(i64),
-    /// The articles on one of the reader's collections (`collections`),
-    /// muted ones and those of feeds since left included, as in Starred.
-    Collection(i64),
     /// The articles the reader highlighted or wrote a note on (SPEC section
     /// 42), muted ones and those of feeds since left included, as in Starred.
     Notes,
@@ -53,24 +49,15 @@ pub enum Order {
 }
 
 impl List {
-    /// A feed's, a folder's or a collection's articles if one is named,
-    /// otherwise the view's; none for Recently read, which is `recent`'s own
-    /// list.
-    pub(crate) const fn from_query(
-        feed: Option<i64>,
-        folder: Option<i64>,
-        collection: Option<i64>,
-        view: View,
-    ) -> Option<Self> {
-        match (feed, folder, collection, view) {
-            (Some(feed), _, _, _) => Some(Self::Feed(feed)),
-            (None, Some(folder), _, _) => Some(Self::Folder(folder)),
-            (None, None, Some(collection), _) => Some(Self::Collection(collection)),
-            (None, None, None, View::All) => Some(Self::All),
-            (None, None, None, View::Unread) => Some(Self::Unread),
-            (None, None, None, View::Starred) => Some(Self::Starred),
-            (None, None, None, View::Notes) => Some(Self::Notes),
-            (None, None, None, View::Recent) => None,
+    /// A feed's or a folder's articles if one is named, otherwise the view's.
+    pub(crate) const fn from_query(feed: Option<i64>, folder: Option<i64>, view: View) -> Self {
+        match (feed, folder, view) {
+            (Some(feed), _, _) => Self::Feed(feed),
+            (None, Some(folder), _) => Self::Folder(folder),
+            (None, None, View::All) => Self::All,
+            (None, None, View::Unread) => Self::Unread,
+            (None, None, View::Starred) => Self::Starred,
+            (None, None, View::Notes) => Self::Notes,
         }
     }
 }
@@ -84,8 +71,6 @@ pub(crate) enum View {
     Starred,
     /// Notes: the articles the reader highlighted or wrote a note on.
     Notes,
-    /// Recently read: the last 50 articles the reader opened (`recent`).
-    Recent,
 }
 
 #[derive(Deserialize)]
@@ -94,7 +79,6 @@ pub(super) struct ArticlesQuery {
     /// `view`, decides.
     feed: Option<i64>,
     folder: Option<i64>,
-    collection: Option<i64>,
     #[serde(default)]
     view: View,
     #[serde(default)]
@@ -126,12 +110,6 @@ pub struct ArticleRow {
     pub episode: bool,
     /// How long the episode plays, in seconds, if its feed says.
     pub episode_seconds: Option<i64>,
-    /// When the reader last opened it, in seconds since 1970 (UTC): only in
-    /// Recently read, whose list is grouped by day on screen (SPEC section
-    /// 5). Left out of every other list.
-    #[sqlx(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub opened: Option<i64>,
     /// Only in Notes: the reader's first highlight on it, and their note on
     /// the whole article, which the list shows under the title.
     #[sqlx(default)]
@@ -162,23 +140,16 @@ pub(super) async fn list_articles(
         Some(Some(cursor)) => Some(cursor),
         Some(None) => return StatusCode::BAD_REQUEST.into_response(),
     };
-    let list = List::from_query(query.feed, query.folder, query.collection, query.view);
+    let list = List::from_query(query.feed, query.folder, query.view);
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
-    let latest: Result<i64, sqlx::Error> = sqlx::query_scalar(LATEST).fetch_one(&state.db).await;
-    let listed = match (latest, list) {
-        (Ok(latest), Some(list)) => match crate::writers::widen(&state.db, person, list).await {
-            Ok(list) => page(&state.db, person, list, query.order, after)
-                .await
-                .map(|listed| (latest, listed)),
-            Err(error) => Err(error),
-        },
-        // Recently read is one short page, in the order opened, whatever the sort.
-        (Ok(latest), None) => recent::list(&state.db, person)
-            .await
-            .map(|listed| (latest, (listed, None))),
-        (Err(error), _) => Err(error),
-    };
+    let listed = async {
+        let latest: i64 = sqlx::query_scalar(LATEST).fetch_one(&state.db).await?;
+        let list = crate::writers::widen(&state.db, person, list).await?;
+        let listed = page(&state.db, person, list, query.order, after).await?;
+        Ok::<_, sqlx::Error>((latest, listed))
+    }
+    .await;
     match listed {
         Ok((latest, (articles, next))) => {
             let next = next.map(|(at, id)| format!("{at}:{id}"));
@@ -226,8 +197,8 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
             "+entries.muted = 0 AND +entries.feed_id IN (SELECT feed_id FROM subscriptions
                   WHERE writer_id = ? AND person_id = ?)"
         )),
-        // Nothing arrives starred, on a collection or with a note.
-        List::Starred | List::Collection(_) | List::Notes => None,
+        // Nothing arrives starred or with a note.
+        List::Starred | List::Notes => None,
     }
 }
 
@@ -235,7 +206,6 @@ pub const fn new_sql(list: List) -> Option<&'static str> {
 pub(super) struct NewQuery {
     feed: Option<i64>,
     folder: Option<i64>,
-    collection: Option<i64>,
     #[serde(default)]
     view: View,
     /// The `latest` the list was loaded with.
@@ -249,12 +219,7 @@ pub(super) async fn new_articles(
     State(state): State<AppState>,
     Query(query): Query<NewQuery>,
 ) -> Response {
-    // Nothing arrives already opened, or lined up, so Recently read and Up
-    // Next never have new items.
-    let Some(list) = List::from_query(query.feed, query.folder, query.collection, query.view)
-    else {
-        return Json(json!({ "new": false })).into_response();
-    };
+    let list = List::from_query(query.feed, query.folder, query.view);
     let list = match crate::writers::widen(&state.db, person, list).await {
         Ok(list) => list,
         Err(error) => return database_problem("looking for new articles", &error),
@@ -319,42 +284,8 @@ macro_rules! list_query {
     };
 }
 
-/// A collection's list: its own lines, read through their primary key, then
-/// each one's entry, sorted on the spot. A collection is the reader's own
-/// short shelf, so the sort is small, and walking every entry in order to
-/// find a few would be slower. Takes the reader, then the collection's
-/// number (only lines of the reader's own count), then the cursor and the
-/// limit, as `list_sql`'s questions do. The `+` keeps SQLite from reading
-/// every line of the reader's through `collection_articles_by_entry` instead.
-macro_rules! collection_query {
-    ($past:literal, $order:literal) => {
-        concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
-                    articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
-             FROM collection_articles
-                 CROSS JOIN entries ON entries.person_id = collection_articles.person_id
-                     AND entries.article_id = collection_articles.article_id
-                 CROSS JOIN articles ON articles.id = entries.article_id
-                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                     AND subscriptions.feed_id = entries.feed_id
-                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
-             WHERE +collection_articles.person_id = ? AND collection_articles.collection_id = ?
-                 AND (entries.sort_at, entries.article_id) ",
-            $past,
-            " (?, ?)
-             ORDER BY entries.sort_at ",
-            $order,
-            ", entries.article_id ",
-            $order,
-            " LIMIT ?"
-        )
-    };
-}
-
 /// The Notes list: the reader's highlighted or noted articles, read through
-/// their notes (a short list, like a collection's), then each one's entry,
+/// their notes (a short list), then each one's entry,
 /// sorted on the spot. Takes the reader, then the cursor and the limit.
 macro_rules! notes_query {
     ($past:literal, $order:literal) => {
@@ -449,8 +380,6 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
             ">",
             "ASC"
         ),
-        (List::Collection(_), Order::Newest) => collection_query!("<", "DESC"),
-        (List::Collection(_), Order::Oldest) => collection_query!(">", "ASC"),
         (List::Notes, Order::Newest) => notes_query!("<", "DESC"),
         (List::Notes, Order::Oldest) => notes_query!(">", "ASC"),
     }
@@ -472,7 +401,7 @@ pub async fn page(
     };
     let (after_at, after_id) = after.unwrap_or(start);
     let mut query = sqlx::query_as(list_sql(list, order)).bind(person);
-    if let List::Feed(id) | List::Folder(id) | List::Writer(id) | List::Collection(id) = list {
+    if let List::Feed(id) | List::Folder(id) | List::Writer(id) = list {
         query = query.bind(id);
     }
     if let List::Folder(_) | List::Writer(_) = list {

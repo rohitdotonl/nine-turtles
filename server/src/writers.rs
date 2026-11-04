@@ -530,8 +530,7 @@ async fn separate_place(
 
 /// "This is one person", on a folder that holds one person's places: its
 /// places become one person, named as the folder was, and the folder goes.
-/// Answers what Undo needs: the places as they were, and the folder's saved
-/// searches (as deleting a folder does).
+/// Answers what Undo needs: the places as they were.
 async fn folder_to_person(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -566,15 +565,14 @@ async fn folder_to_person(
         else {
             return Ok(None);
         };
-        let Some(deleted) = folders::delete(&mut transaction, person, id).await? else {
+        if folders::delete(&mut transaction, person, id)
+            .await?
+            .is_none()
+        {
             return Ok(None);
-        };
+        }
         transaction.commit().await?;
-        Ok::<_, sqlx::Error>(Some(json!({
-            "writer": writer,
-            "before": before,
-            "searches": deleted.searches,
-        })))
+        Ok::<_, sqlx::Error>(Some(json!({ "writer": writer, "before": before })))
     }
     .await;
     match made {

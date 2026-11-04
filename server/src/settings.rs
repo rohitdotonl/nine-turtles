@@ -34,34 +34,26 @@ pub fn routes() -> Router<AppState> {
 #[serde(rename_all = "lowercase")]
 enum Hideable {
     Starred,
+    Notes,
     All,
-    Recent,
-    Searches,
-    Collections,
 }
 
 impl Hideable {
-    const EVERY: [Self; 5] = [
-        Self::Starred,
-        Self::All,
-        Self::Recent,
-        Self::Searches,
-        Self::Collections,
-    ];
+    const EVERY: [Self; 3] = [Self::Starred, Self::Notes, Self::All];
 
     const fn stored(self) -> &'static str {
         match self {
             Self::Starred => "starred",
+            Self::Notes => "notes",
             Self::All => "all",
-            Self::Recent => "recent",
-            Self::Searches => "searches",
-            Self::Collections => "collections",
         }
     }
 }
 
 /// The hidden lists as stored: their words, separated by commas, in one
-/// order. Anything not understood is left out.
+/// order. Anything not understood is left out, such as the lists nine
+/// turtles no longer has (Recently read, saved searches and collections,
+/// decision 0174).
 fn hidden_from(stored: Option<&str>) -> Vec<Hideable> {
     let words: Vec<&str> = stored.unwrap_or("").split(',').collect();
     Hideable::EVERY
@@ -196,13 +188,13 @@ mod tests {
     #[test]
     fn hidden_lists_are_kept_in_one_order_and_unknown_words_are_left_out() {
         assert_eq!(
-            hidden_stored(&[Hideable::Searches, Hideable::Starred]),
-            "starred,searches"
+            hidden_stored(&[Hideable::All, Hideable::Starred]),
+            "starred,all"
         );
         assert_eq!(hidden_stored(&[]), "");
         assert_eq!(
-            hidden_from(Some("recent,later,starred")),
-            [Hideable::Starred, Hideable::Recent]
+            hidden_from(Some("recent,later,notes,starred,collections")),
+            [Hideable::Starred, Hideable::Notes]
         );
         assert!(hidden_from(None).is_empty());
         assert!(hidden_from(Some("")).is_empty());

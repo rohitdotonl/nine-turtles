@@ -517,7 +517,7 @@ pub async fn clear_unsubscribed(
 
 /// Removes, for one reader, a feed they unsubscribed from: their unstarred
 /// entries (their read history) that aren't on any of their collections, their folder pairs for it, and their
-/// rules' and saved searches' hold on it. Their subscription's line goes
+/// rules' hold on it. Their subscription's line goes
 /// too, unless their starred or collected articles still need its name. Other readers'
 /// things are untouched. Once nobody follows or waits on the feed, its
 /// articles nobody has go, its hub subscription goes, and the feed's line
@@ -575,7 +575,6 @@ pub async fn clear(
     take_out_of_folders(&mut *connection, person, id).await?;
     // Their rules for it move to another of the person's places, or stay, matching nothing (SPEC section 27).
     rules::place_gone_for(connection, person, id).await?;
-    crate::saved_searches::forget(&mut *connection, person, "feed", id).await?;
     sqlx::query(
         "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND note IS NULL
          AND NOT EXISTS (SELECT 1 FROM entries WHERE person_id = ?1 AND feed_id = ?2)",
@@ -661,9 +660,6 @@ struct NewFolder {
     /// Feeds to put in it straight away (Undo for deleting a folder).
     #[serde(default)]
     feeds: Vec<i64>,
-    /// Saved searches that looked in it, to look in it again (Undo too).
-    #[serde(default)]
-    searches: Vec<i64>,
 }
 
 async fn create_folder(
@@ -680,7 +676,7 @@ async fn create_folder(
         if !new {
             return Ok(Err(id));
         }
-        put_back(&mut transaction, person, id, &form.feeds, &form.searches).await?;
+        put_back(&mut transaction, person, id, &form.feeds).await?;
         transaction.commit().await?;
         Ok(Ok(id))
     }
@@ -738,12 +734,9 @@ async fn delete_folder(
         Ok(deleted)
     }
     .await;
-    // The screen keeps the name and feeds itself; it needs back only the
-    // saved searches, for Undo.
     match deleted {
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Ok(Some(deleted)) if deleted.searches.is_empty() => StatusCode::NO_CONTENT.into_response(),
-        Ok(Some(deleted)) => Json(json!({ "searches": deleted.searches })).into_response(),
+        Ok(Some(_)) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => database_problem("deleting a folder", &error),
     }
 }

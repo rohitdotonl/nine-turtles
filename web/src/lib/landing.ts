@@ -45,8 +45,7 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
   if (place.kind === "add-feed") return headings.add;
   if (place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source") return headings.who;
   if (place.kind === "new-to-feeds") return scene.phone ? headings.list : headings.sheet;
-  // "Save search" starts in its name field, which the sheet gives the keyboard itself.
-  if (scene.sheetShown) return place.kind === "save-search" ? undefined : headings.sheet;
+  if (scene.sheetShown) return headings.sheet;
   if (scene.welcome) return headings.welcome;
   return headings.list;
 }

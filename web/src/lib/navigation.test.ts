@@ -18,10 +18,10 @@ function here(route: Route, lastPlace: Route = unread, phone = false): Here {
 
 describe("places", () => {
   it("knows which places are lists and which open over another", () => {
-    const lists: Route[] = [unread, feed, { kind: "folder", id: 1 }, { kind: "search", id: 2 }, { kind: "collection", id: 3 }];
+    const lists: Route[] = [unread, feed, { kind: "folder", id: 1 }];
     expect(lists.every(isList)).toBe(true);
     expect(isList(settings) || isList(addFeed)).toBe(false);
-    expect(isOver(addFeed) && isOver({ kind: "edit-folder", id: 2 }) && isOver({ kind: "save-search" })).toBe(true);
+    expect(isOver(addFeed) && isOver({ kind: "edit-folder", id: 2 })).toBe(true);
     expect(isOver(settings) || isOver(feed) || isOver(editFeed)).toBe(false);
     expect(isWho(about) && isWho(editFeed) && isWho({ kind: "edit-source", id: 7, source: 8 })).toBe(true);
     expect(isWho(feed) || isWho(addFeed)).toBe(false);
@@ -39,7 +39,6 @@ describe("places", () => {
     expect(underSheet(about, unread, false)).toEqual(feed);
     expect(underSheet(about, unread, true)).toBe(about);
     expect(underSheet({ kind: "edit-folder", id: 2 }, unread, false)).toEqual({ kind: "folder", id: 2 });
-    expect(underSheet({ kind: "edit-search", id: 3 }, unread, false)).toEqual({ kind: "search", id: 3 });
     expect(underSheet(addFeed, feed, false)).toBe(feed);
     // On a phone a sheet is a screen of its own, with nothing under it.
     expect(underSheet(addFeed, feed, true)).toBe(addFeed);

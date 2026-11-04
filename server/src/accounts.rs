@@ -858,7 +858,7 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
 
 /// Empties the signed-in reader's account, the owner's too, at once and for
 /// good (decision 0117: one "Are you sure?" in the page, no undo). Their
-/// feeds, folders, articles, stars, collections, saved searches and rules
+/// feeds, folders, articles, stars, notes and rules
 /// go; they stay signed in, with their email, password and plan.
 async fn delete_my_data(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     match people::delete_data(&state.db, person).await {

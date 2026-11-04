@@ -163,20 +163,19 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Race condition (an older answer arriving after a newer one), saves in order and the newest answer (`inorder.ts`)
 - Clipboard and the system share sheet
 - Container query (styling by a pane's width, not the window's)
-- The reader's library on screen: feeds, folders, saved searches and collections, loaded and removed with Undo (`library.svelte.ts`)
+- The reader's library on screen: feeds and folders, loaded and removed with Undo (`library.svelte.ts`)
 - The reading settings on screen: mode, sort order and hidden lists, each saved in order; a saved change made before the server first answers stays (`reading-settings.svelte.ts`, keys in `keys.svelte.ts`)
 - When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
 - Moving between places: lists, sheets that open over a place (`underSheet`), what a move keeps (`moveTo`), giving the keyboard back when a sheet closes (`Opener`) and the browser's history steps (`Steps`), in `navigation.ts`
 - The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar and list toggles and their dragged widths, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
 - The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
-- The collection sheets on screen: Add to collection and Rename, giving the keyboard back when they close, and the Undo line when an article came off a collection (`CollectionSheets`, in `collecting.svelte.ts`)
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`); the title line that shows it, with Search on a phone and More beside it (`ListHead.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
-- The sidebar's fixed lists: Unread, Starred, All and Recently read, which show (`SidebarViews.svelte`)
+- The sidebar's fixed lists: Unread, Starred, Notes and All, which show (`SidebarViews.svelte`)
 - The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 
 ## Data and the database
@@ -203,7 +202,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Hiding articles about… (rules the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
-- Collections (the reader's own shelves of articles) and tags (in JSON Feed)
+- Collections (the reader's old shelves of articles, retired for Starred, decision 0174) and tags (in JSON Feed)
 - Highlights and notes (anchoring words by their text, not a position) and Markdown
 - Episode progress (each reader's place in an episode)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)

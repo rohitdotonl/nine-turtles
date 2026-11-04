@@ -1,5 +1,7 @@
 # 0108: Collections, the reader's own shelves for articles
 
+*Replaced by [0174](0174-keep-starred.md): collections are gone, every collected article was starred, and only their export stays.*
+
 *27 October 2026.*
 
 **Decision.** Readers can put articles on **collections**: named shelves of

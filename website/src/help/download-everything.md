@@ -1,10 +1,10 @@
 ---
 title: Download everything you've saved
-description: Save what you follow, your starred articles and your collections as files you can keep or take to another app.
+description: Save what you follow, your starred articles and your notes as files you can keep or take to another app.
 groupId: you-and-your-account
 order: 3
 spec: 23
-updated: 2026-11-03
+updated: 2026-11-04
 related: [bring-your-feeds, star-an-article, delete-your-account]
 ---
 
@@ -22,8 +22,9 @@ Open **Settings › Your data** and press any of these:
 - **Export starred articles:** every starred article, with its text and a
   link to the original, as a JSON Feed file. This includes stars from people
   you've since unfollowed.
-- **Export collections:** every article in your collections, each marked
-  with its collections' names, as a JSON Feed file.
+- **Export collections:** if you had collections before they went, every
+  article that was on one, each marked with its collections' names, as a
+  JSON Feed file. Those articles are all in Starred too.
 - **Export notes and highlights:** your notes on people, and every article
   you highlighted or wrote a note on, with a link to the original, as one
   Markdown file any notes app can open.

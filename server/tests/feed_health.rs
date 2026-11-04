@@ -314,16 +314,23 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert!(status.is_success(), "{status}");
-    // And puts the first on a collection of theirs (decision 0108).
+    // And had the first on a collection, which the database still keeps
+    // for its export (decisions 0108 and 0174).
     let first_title = articles["articles"][0]["title"].clone();
-    let (status, made) = reader
-        .post(
-            "/api/collections",
-            json!({ "name": "Kept", "articles": [first] }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::CREATED, "{made}");
-    let kept = made["collection"]["id"].as_i64().unwrap();
+    sqlx::query(
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Kept', 0)",
+    )
+    .execute(&reader.state.db)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, ?, 0)",
+    )
+    .bind(first)
+    .execute(&reader.state.db)
+    .await
+    .unwrap();
 
     reader.change(|site| site.old_gone = true);
     let now = nine_turtles::now();
@@ -370,12 +377,14 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .collect();
     assert_eq!(starred, [second]);
     // The collected article is still on its collection.
-    let collected = reader
-        .get(&format!("/api/articles?collection={kept}"))
-        .await;
-    let collected = collected["articles"].as_array().unwrap();
-    assert_eq!(collected.len(), 1);
-    assert_eq!(collected[0]["title"], first_title);
+    let collected: Vec<String> = sqlx::query_scalar(
+        "SELECT articles.title FROM collection_articles
+         JOIN articles ON articles.id = collection_articles.article_id",
+    )
+    .fetch_all(&reader.state.db)
+    .await
+    .unwrap();
+    assert_eq!(json!(collected), json!([first_title]));
     let library = reader.get("/api/feeds").await;
     let moved_feed = library["feeds"]
         .as_array()
@@ -440,11 +449,6 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
         )
         .await;
     assert!(status.is_success(), "{status}");
-    // They opened it too, so it's in Recently read.
-    let (status, _) = reader
-        .post("/api/articles/opened", json!({ "id": two }))
-        .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
     // As if stored before tracking tags were taken off on arrival (decision 0112).
     sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
         .bind(old)
@@ -474,16 +478,8 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
     assert_eq!(starred[0]["title"], "two");
     assert_ne!(starred[0]["id"], two);
     assert_eq!(starred[0]["link"], "https://blog.example/two");
-    // It stays in Recently read, and the times of its marks go with it, so a
-    // late offline mark made before the move can't undo the star (survey A9.3).
-    let recent = reader.get("/api/articles?view=recent").await;
-    let recent: Vec<&str> = recent["articles"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|article| article["title"].as_str().unwrap())
-        .collect();
-    assert_eq!(recent, ["two"]);
+    // The times of its marks go with it, so a late offline mark made
+    // before the move can't undo the star (survey A9.3).
     let copy = starred[0]["id"].as_i64().unwrap();
     let (marked,): (i64,) =
         sqlx::query_as("SELECT starred_marked_at FROM entries WHERE article_id = ?")

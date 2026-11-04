@@ -19,7 +19,7 @@ export type Action =
   | { kind: "add-feed" }
   | { kind: "search" }
   | { kind: "go"; view: View }
-  /** A place by its address: Recently read, Your feeds, Settings. */
+  /** A place by its address: Your feeds, Settings. */
   | { kind: "go-to"; path: string }
   | { kind: "move"; step: 1 | -1 }
   | { kind: "move-unread"; step: 1 | -1 }
@@ -32,7 +32,6 @@ export type Action =
   | { kind: "page"; step: 1 | -1 }
   | { kind: "copy-link" }
   | { kind: "star" }
-  | { kind: "collect" }
   | { kind: "write-back" }
   | { kind: "highlight" }
   | { kind: "note" }
@@ -128,7 +127,6 @@ export const SHORTCUTS: Shortcut[] = [
     [{ key: "=", does: { kind: "text-size", step: 1 } }],
   ),
   shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
-  shortcut("Reading", "Add to collection", [["collect", "l", { kind: "collect" }]]),
   shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
   shortcut("Reading", "Highlight the words chosen / write a note", [
     ["highlight", "h", { kind: "highlight" }],
@@ -138,7 +136,6 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Go to Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
   shortcut("Getting around", "Go to Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
   shortcut("Getting around", "Go to All", [["go-all", "g then a", { kind: "go", view: "all" }]]),
-  shortcut("Getting around", "Go to Recently read", [["go-recent", "g then r", { kind: "go-to", path: "/recent" }]]),
   shortcut("Getting around", "Go to Your feeds", [["go-feeds", "g then f", { kind: "go-to", path: "/settings/feeds" }]]),
   shortcut("Getting around", "Go to Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
   shortcut("Getting around", "Next / previous in the sidebar", [

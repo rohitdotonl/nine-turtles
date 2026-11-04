@@ -61,8 +61,8 @@ PLAN.md → V1, item 1.*
   (or as the reader sorts), one list across all their sources (`/people/12`
   or `/publications/7`). With two or more sources, each row says which source
   it came from in place of their name: **Blog**, **Video**, **Newsletter**,
-  or **Podcast**. Everywhere else (Unread, All, Starred, search, Recently
-  read, the article's own line) an article is credited by their name. Mark
+  or **Podcast**. Everywhere else (Unread, All, Starred, search, Notes,
+  the article's own line) an article is credited by their name. Mark
   all as read, "new articles", search in their list and reading offline all
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.
@@ -119,10 +119,10 @@ PLAN.md → V1, item 1.*
   is one person** ("Everything in it becomes one row, "Alpha", with one page.
   The folder goes; you can undo it straight afterwards."). Saving with it
   ticked joins everything in the folder into one person named as the folder
-  (renamed first, if the name changed), deletes the folder (its rules and
-  saved searches wait, as when a folder is deleted, section 15), and opens
+  (renamed first, if the name changed), deletes the folder (its rules
+  wait, as when a folder is deleted, section 15), and opens
   the person's list with "Alpha is one person now · Undo", which makes the
-  folder again with everything in it, its rules and its saved searches.
+  folder again with everything in it, and its rules.
 - **Addresses:** `/people/12` and `/publications/7` for a list, `…/about`
   for the page, `…/edit` for Edit, `/people/12/sources/34` for a source's
   settings. Old `/feeds/12` and `/feeds/12/edit` addresses still open, and

@@ -74,11 +74,10 @@ export function toPerson(person: Record<string, unknown>): Person {
 }
 
 /**
- * Everything the sidebar lists: feeds and folders, each A to Z; the people
- * places were joined into (SPEC section 36); and, where search needs them,
- * the reader's collections (decision 0108).
+ * Everything the sidebar lists: feeds and folders, each A to Z, and the
+ * people places were joined into (SPEC section 36).
  */
-export type Library = { feeds: Feed[]; folders: Folder[]; people?: Person[]; collections?: { id: number; name: string }[] };
+export type Library = { feeds: Feed[]; folders: Folder[]; people?: Person[] };
 
 export type Article = {
   id: number;
@@ -102,8 +101,6 @@ export type Article = {
   episode?: boolean;
   /** How long the episode plays, in seconds, if its feed says. */
   episodeSeconds?: number | null;
-  /** Only in Recently read: when the reader last opened it (seconds since 1970), for its day headings. */
-  opened?: number;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -161,7 +158,7 @@ export type Page = {
  * Which articles a list shows: one of the views, one feed's or folder's (all
  * of them), or a search's results (`search.ts` → `searchParams`).
  */
-export type Source = { view: View } | { feed: number } | { folder: number } | { collection: number } | { search: Record<string, string> };
+export type Source = { view: View } | { feed: number } | { folder: number } | { search: Record<string, string> };
 
 export function toArticle(article: Record<string, unknown>): Article {
   return {
@@ -175,7 +172,6 @@ export function toArticle(article: Record<string, unknown>): Article {
     starred: article.starred === true,
     muted: article.muted === true,
     ...excerptOf(article),
-    ...(typeof article.opened === "number" ? { opened: article.opened } : {}),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
       : {}),

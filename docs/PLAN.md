@@ -9,7 +9,7 @@ owner asks about past work.*
 
 V1 (the reader for one person) is finished, and so is most of V2: many
 readers in one app with sign-up open to anyone, river mode, WebSub, feed
-health, backups, rules and mutes, collections, podcasts, newsletters as
+health, backups, rules and mutes, podcasts, newsletters as
 feeds, AI assistants over MCP, passkeys, syncing with other apps, offline
 reading, the website at nineturtles.app and payments in test mode. What
 each feature does is in [`SPEC.md`](SPEC.md); why, in
@@ -136,8 +136,8 @@ milestone order above.
 **Decided with the owner (2 November 2026):**
 
 - **No tags: folders stay folders.** They already work like Feedbin's tags
-  (a person can be in several folders), and collections already label
-  articles. Pictures: https://claude.ai/artifact/8jqmkxsTabDuKAUWmq9RKY
+  (a person can be in several folders); Starred keeps articles (collections
+  went, decision 0174). Pictures: https://claude.ai/artifact/8jqmkxsTabDuKAUWmq9RKY
 - **The note to bloggers whose feed breaks is written by hand**
   ([`RnD/marketing.md`](RnD/marketing.md), items 3 and 8). nine turtles
   never emails bloggers by itself.

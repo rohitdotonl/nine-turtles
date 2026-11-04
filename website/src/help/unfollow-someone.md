@@ -4,14 +4,13 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 15, 23, 36 and 42
-updated: 2026-11-03
-related: [put-people-in-folders, star-an-article, keep-articles-in-collections]
+updated: 2026-11-04
+related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
 <p class="lede">
   Unfollowing takes someone out of your sidebar and their articles out of
-  your lists. Anything you starred, highlighted or put in a collection can
-  stay.
+  your lists. Anything you starred or highlighted can stay.
 </p>
 
 ## Unfollow
@@ -39,8 +38,7 @@ let go, and press **Unsubscribe**.
 
 ## Good to know
 
-- Starred articles, articles in collections and articles you highlighted or
-  wrote a note on are kept for good, unless you chose **Remove them too**.
+- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose **Remove them too**.
 - Following someone again later starts afresh, with their articles unread.
 - For a newsletter, nine turtles also asks the sender to stop, once the ten
   minutes to undo have passed. See

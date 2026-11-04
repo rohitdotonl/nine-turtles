@@ -2686,3 +2686,78 @@ async fn hiding_articles_about_keeps_every_rule_and_spreads_a_folders_rule_to_it
         .unwrap();
     assert_eq!(pairs, 3);
 }
+
+#[tokio::test]
+async fn keeping_starred_stars_every_collected_article_and_deletes_nothing() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after "Hide articles about…" (structure change 39).
+    // Reader 1 has three articles: one on the collection Soup, one starred
+    // and on Soup too, and one on no collection. Reader 2 has the first
+    // article too, on no collection of theirs. Reader 1 has a saved search.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(39, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, owner, email, created_at) VALUES (2, 0, 'kai@example.com', 1)",
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Radio', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at)
+         VALUES (1, 1, 'Radio', 1), (2, 1, 'Radio', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'A', 1, 1), (2, 1, 'b', 'B', 2, 2), (3, 1, 'c', 'C', 3, 3)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred,
+             starred_marked_at)
+         VALUES (1, 1, 1, 1, 1, 0, 0), (1, 2, 1, 2, 0, 1, 7), (1, 3, 1, 3, 0, 0, 0),
+                (2, 1, 1, 1, 0, 0, 0)",
+        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Soup', 0)",
+        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
+         VALUES (1, 1, 1, 0), (1, 1, 2, 0)",
+        "INSERT INTO saved_searches (person_id, name, query, created_at)
+         VALUES (1, 'Walks', '{\"words\":\"walking\"}', 0)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, i64, bool, bool, bool)> = sqlx::query_as(
+        "SELECT person_id, article_id, read, starred, starred_marked_at > 1000000000000
+         FROM entries ORDER BY person_id, article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [
+            // On Soup: starred now, still read, its star's time now.
+            (1, 1, true, true, true),
+            // Already starred: as it was, its star's time too.
+            (1, 2, false, true, false),
+            // On no collection: unstarred, as it was.
+            (1, 3, false, false, false),
+            // Another reader's line for it: theirs, unstarred.
+            (2, 1, false, false, false),
+        ]
+    );
+    // The collection, its lines and the saved search are all still there.
+    let kept: (i64, i64, i64) = sqlx::query_as(
+        "SELECT (SELECT COUNT(*) FROM collections), (SELECT COUNT(*) FROM collection_articles),
+                (SELECT COUNT(*) FROM saved_searches)",
+    )
+    .fetch_one(&db)
+    .await
+    .unwrap();
+    assert_eq!(kept, (1, 2, 1));
+}

@@ -4,7 +4,6 @@
 // do (`MenuHands`), so every rule about which rows show is here, in one
 // place, and can be tested without drawing anything. `MoreMenu.svelte` draws
 // the groups this answers.
-import type { Collection } from "./collections";
 import type { Action } from "./keyboard";
 import type { MenuGroup } from "./MoreMenu.svelte";
 import type { Order } from "./reading";
@@ -16,13 +15,9 @@ export type MenuScene = {
   unreadOff: boolean;
   /** A search's results are showing. */
   searching: boolean;
-  /** The list is Recently read (in its own order). */
-  ownOrder: boolean;
   /** The sort order, once known. */
   sort?: Order;
-  /** The saved search, collection, feed or folder whose list this is. */
-  savedSearch?: number;
-  collection?: Collection;
+  /** The feed or folder whose list this is. */
   feed?: number;
   /** The person's or publication's name, for "About Alpha". */
   feedName?: string;
@@ -39,26 +34,19 @@ export type MenuHands = {
   changeSort(next: Order): Promise<void>;
   /** A line in the list, for when something didn't work. */
   say(message: string): void;
-  /** Keeps the search showing now, for "Save search" or "Edit saved search" to start from. */
-  holdSearch(): void;
   go(place: Route): void;
-  renameCollection(collection: Collection): void;
-  deleteCollection(collection: Collection): void;
 };
 
 /**
  * The menu's rows: Mark all as read (the one way to set down a backlog,
  * decision 0171) and Refresh (Refresh steps aside while searching: results have nothing new to fetch), the sort
- * order, then Save search or Edit saved search, a collection's Rename and
- * Delete, or Edit feed or Edit folder in a feed's or folder's own list.
- * Choosing Edit puts the keyboard on More first, so closing the sheet gives
+ * order, then About in a person's or publication's own list, or Edit folder
+ * in a folder's. Choosing Edit puts the keyboard on More first, so closing the sheet gives
  * it back there.
  */
 export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const key = hands.shortcut;
   const refresh = { label: "Refresh", shortcut: key("refresh"), onSelect: () => hands.refresh() };
-  // Recently read is in the order opened, and what's in it was read already: only Refresh applies.
-  if (!scene.searching && scene.ownOrder) return [{ items: [refresh] }];
   const groups: MenuGroup[] = [
     {
       items: [
@@ -75,41 +63,12 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
       ],
     },
   ];
-  // On a saved search, even with everything taken out of its field, it can still be edited or deleted.
-  const search = scene.savedSearch;
-  if (scene.searching || search !== undefined) {
-    // A search can be saved, to come back to from the sidebar; a saved one renamed, changed or deleted.
-    groups.push({
-      items: [
-        search !== undefined
-          ? { label: "Edit saved search…", onSelect: () => openSaving({ kind: "edit-search", id: search }, hands) }
-          : { label: "Save search…", onSelect: () => openSaving({ kind: "save-search" }, hands) },
-      ],
-    });
-    return groups;
-  }
-  // A collection's own list: renaming it, and deleting it (never its articles), with Undo (decision 0108).
-  const collection = scene.collection;
-  if (collection) {
-    groups.push({
-      items: [
-        { label: "Rename…", onSelect: () => hands.renameCollection(collection) },
-        { label: "Delete", onSelect: () => hands.deleteCollection(collection) },
-      ],
-    });
-    return groups;
-  }
+  if (scene.searching) return groups;
   const { feed, folder } = scene;
   // The way to their page (and from it, Edit), the same words for a person and a publication (decision 0163).
   if (feed !== undefined) groups.push({ items: [{ label: `About ${scene.feedName ?? "them"}`, shortcut: key("about"), onSelect: () => hands.go({ kind: "about", id: feed }) }] });
   else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit-place"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
   return groups;
-}
-
-/** Opens "Save search" or "Edit saved search" with the search showing now. */
-function openSaving(next: Route, hands: MenuHands) {
-  hands.holdSearch();
-  hands.go(next);
 }
 
 /**

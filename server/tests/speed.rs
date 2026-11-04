@@ -185,22 +185,6 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             assert!(!plan.contains("TEMP B-TREE"), "{list:?} {order:?}: {plan}");
         }
     }
-    // A collection's list reads only its own lines, by their key, then each
-    // one's entry by its key: never every entry. Its few lines are sorted on
-    // the spot (decision 0108).
-    for order in [Order::Newest, Order::Oldest] {
-        let plan = plan(
-            &db,
-            list_sql(List::Collection(1), order),
-            &[READER, 1, i64::MAX, i64::MAX, 51],
-        )
-        .await;
-        assert!(
-            plan.contains("SEARCH collection_articles USING PRIMARY KEY")
-                && plan.contains("SEARCH entries USING PRIMARY KEY"),
-            "{order:?}: {plan}"
-        );
-    }
     // The sidebar's unread counts come from their own small index.
     let counts = plan(&db, FEEDS, &[READER]).await;
     assert!(counts.contains("INDEX entries_unread_by_feed"), "{counts}");

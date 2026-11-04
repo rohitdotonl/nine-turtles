@@ -51,12 +51,9 @@ describe("where the keyboard lands", () => {
     expect(landing({ kind: "view", view: "unread" }, { ...computer, welcome: true })).toBe("welcome");
   });
 
-  it("lands on a sheet's heading, except Save search, which starts in its name field", () => {
-    const sheet = { ...computer, sheetShown: true };
-    expect(landing({ kind: "edit-folder", id: 7 }, sheet)).toBe("sheet");
-    expect(landing({ kind: "save-search" }, sheet)).toBeUndefined();
-    // On a phone it's a page, with the list's heading.
-    expect(landing({ kind: "save-search" })).toBe("list");
+  it("lands on a sheet's heading; on a phone, where it's a page, on the list's", () => {
+    expect(landing({ kind: "edit-folder", id: 7 }, { ...computer, sheetShown: true })).toBe("sheet");
+    expect(landing({ kind: "edit-folder", id: 7 }, { ...computer, phone: true })).toBe("list");
   });
 
   it("lands on a person's page, Edit or source settings heading (decision 0163)", () => {

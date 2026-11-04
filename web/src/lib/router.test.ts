@@ -28,10 +28,6 @@ describe("addresses", () => {
     expect(parse("/publications/7/edit")).toEqual({ kind: "edit-feed", id: 7 });
     expect(parse("/people/12/sources/34")).toEqual({ kind: "edit-source", id: 12, source: 34 });
     expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
-    expect(parse("/searches/7")).toEqual({ kind: "search", id: 7 });
-    expect(parse("/searches/7/edit")).toEqual({ kind: "edit-search", id: 7 });
-    expect(parse("/searches/new")).toEqual({ kind: "save-search" });
-    expect(parse("/searches/0")).toEqual({ kind: "view", view: "unread" });
   });
 
   it("only reads well-formed feed addresses", () => {
@@ -49,9 +45,10 @@ describe("addresses", () => {
   });
 
   it("knows its own places, so any other address is a wrong turn", () => {
-    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/settings/feeds", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/searches/7", "/searches/new"])
+    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/settings/feeds", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/notes"])
       expect(knownPath(path), path).toBe(true);
-    for (const path of ["/nowhere", "/feeds/0", "/feeds/abc", "/feeds/12/more", "/searches/0", "/blog", "/settings/nothing", "/settings/toString", "/settings/readers/none"])
+    // Recently read, saved searches and collections are gone (decision 0174): their old addresses too.
+    for (const path of ["/nowhere", "/feeds/0", "/feeds/abc", "/feeds/12/more", "/recent", "/searches/7", "/searches/new", "/collections/3", "/blog", "/settings/nothing", "/settings/toString", "/settings/readers/none"])
       expect(knownPath(path), path).toBe(false);
   });
 
@@ -80,11 +77,6 @@ describe("addresses", () => {
     expect(parse("/add")).toEqual({ kind: "add-feed" });
     expect(titleFor({ kind: "new-to-feeds" })).toBe("New to feeds? · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
-    expect(pathFor({ kind: "search", id: 7 })).toBe("/searches/7");
-    expect(pathFor({ kind: "edit-search", id: 7 })).toBe("/searches/7/edit");
-    expect(pathFor({ kind: "save-search" })).toBe("/searches/new");
-    expect(titleFor({ kind: "search", id: 7 }, "Climate")).toBe("Climate · nine turtles");
-    expect(titleFor({ kind: "save-search" })).toBe("Save search · nine turtles");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
     expect(titleFor({ kind: "edit-feed", id: 3 }, "Alpha")).toBe("Edit Alpha · nine turtles");
   });

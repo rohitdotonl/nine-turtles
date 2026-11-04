@@ -1,16 +1,8 @@
 // The article lists (SPEC sections 6, 8, 9 and 13): pages from the server,
 // or from this device's copies without a connection; whether new articles
 // wait; and the words a list ends with and says after Mark all as read.
-import { api } from "./updates.svelte";
 import { noConnection } from "./connection.svelte";
-import {
-  COLLECTIONS_NEED_CONNECTION,
-  NeedsConnection,
-  RECENT_NEEDS_CONNECTION,
-  keptPage,
-  markSent,
-  useFetchers,
-} from "./offline";
+import { keptPage, markSent, useFetchers } from "./offline";
 import { getJson, isRecord } from "./http";
 import { saved, send, worthRetrying } from "./saving";
 import { toArticle, toFullArticle, type Page, type Source } from "./shapes";
@@ -21,7 +13,6 @@ function sourceQuery(source: Source): URLSearchParams {
   if ("search" in source) for (const [name, value] of Object.entries(source.search)) query.set(name, value);
   else if ("feed" in source) query.set("feed", String(source.feed));
   else if ("folder" in source) query.set("folder", String(source.folder));
-  else if ("collection" in source) query.set("collection", String(source.collection));
   else query.set("view", source.view);
   return query;
 }
@@ -31,10 +22,6 @@ export async function listArticles(source: Source, order: Order, after: string |
   try {
     return await listFromServer(source, order, after);
   } catch (problem) {
-    // Recently read isn't kept on the device: it says plainly that it needs a connection.
-    if (noConnection(problem) && "view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
-    // Nor are collections (decision 0108).
-    if (noConnection(problem) && "collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
     // A kept list comes whole, so there's never a next page of it to add.
     if (!noConnection(problem) || after !== null) throw problem;
     const kept = await keptPage(source, order);
@@ -48,9 +35,6 @@ async function listFromServer(source: Source, order: Order, after: string | null
   query.set("order", order);
   if (after !== null) query.set("after", after);
   await saved();
-  // Recently read lists the article just opened too, waiting a moment for
-  // its note, never long: on a slow connection the list comes without it.
-  if ("view" in source && source.view === "recent") await Promise.race([opening, new Promise((done) => setTimeout(done, OPENING_WAIT))]);
   const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   return {
@@ -87,26 +71,6 @@ export function endOfList(source: Source): string {
 /** What the note at the foot of the list says when new items are waiting: no number. On a touch screen a Show button follows it. */
 export function newItemsMessage(touch: boolean): string {
   return touch ? "New articles" : "New articles · press r";
-}
-
-/** The last "opened" note on its way, so Recently read waits for it. */
-let opening: Promise<unknown> = Promise.resolve();
-/** The longest Recently read waits for that note, in milliseconds. */
-const OPENING_WAIT = 2_000;
-
-/**
- * Tells the server the reading area showed an article, for Recently read
- * (decision 0105). Not a mark: without a connection it isn't sent or kept
- * for later, and a failure is never said.
- */
-export function noteOpened(id: number): void {
-  if (globalThis.navigator?.onLine === false) return;
-  opening = api("/api/articles/opened", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ id }),
-    signal: AbortSignal.timeout(15_000),
-  }).catch(() => undefined);
 }
 
 /** What the line above the list says after "Mark all as read". */
