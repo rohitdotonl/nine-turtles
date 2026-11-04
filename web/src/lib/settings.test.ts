@@ -6,7 +6,6 @@ const server = vi.hoisted(() => ({
   saveUnread: vi.fn(),
   saveSort: vi.fn(),
   saveHidden: vi.fn(),
-  saveKeysSeen: vi.fn(),
 }));
 
 vi.mock("./reading", async (actual) => ({
@@ -27,11 +26,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, keysReset: true, hidden: ["all"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, hidden: ["all"] };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveUnread, server.saveSort, server.saveHidden, server.saveKeysSeen]) save.mockResolvedValue(undefined);
+  for (const save of [server.saveUnread, server.saveSort, server.saveHidden]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -41,17 +40,6 @@ describe("the reading settings", () => {
     expect(settings.sort).toBeUndefined();
     await settings.load();
     expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["all"]]);
-    expect(settings.keysReset).toBe(true);
-  });
-
-  it("tell the reader once that their own keys are gone, on every device", async () => {
-    server.loadSettings.mockResolvedValue(ON_THE_SERVER);
-    const settings = new ReadingSettings();
-    await settings.load();
-    settings.keysSeen();
-    settings.keysSeen();
-    expect(settings.keysReset).toBe(false);
-    expect(server.saveKeysSeen).toHaveBeenCalledTimes(1);
   });
 
   it("keep a change the reader made while the first answer was on its way", async () => {

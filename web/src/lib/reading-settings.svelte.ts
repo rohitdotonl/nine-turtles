@@ -7,7 +7,7 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { lastHidden, lastUnread, loadSettings, saveHidden, saveKeysSeen, saveSort, saveUnread, type Order, type Reading } from "./reading";
+import { lastHidden, lastUnread, loadSettings, saveHidden, saveSort, saveUnread, type Order, type Reading } from "./reading";
 import { savedInOrder } from "./inorder";
 import type { Hideable } from "./router";
 
@@ -21,8 +21,6 @@ export class ReadingSettings {
   sort: Order | undefined = $state();
   /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
   hidden: Hideable[] = $state(lastHidden());
-  /** The reader had keys of their own, now back to nine turtles' (step 5 of the owner's review), and hasn't been told. */
-  keysReset = $state(false);
 
   // The server's first answer, and what the reader did while it was on its
   // way. Settings › Reading waits for that answer (its choices are disabled
@@ -51,14 +49,6 @@ export class ReadingSettings {
     const answer = await loadSettings();
     this.#answer = answer;
     for (const setting of SETTINGS) if (!this.#changed.has(setting)) this.#show(setting, answer);
-    this.keysReset = answer.keysReset;
-  }
-
-  /** The `?` list has told the reader their own keys are gone: not again, on any device. */
-  keysSeen(): void {
-    if (!this.keysReset) return;
-    this.keysReset = false;
-    void saveKeysSeen().catch(() => undefined);
   }
 
   // Each change shows at once; its promise rejects with "not saved" when the

@@ -314,24 +314,6 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert!(status.is_success(), "{status}");
-    // And had the first on a collection, which the database still keeps
-    // for its export (decisions 0108 and 0174).
-    let first_title = articles["articles"][0]["title"].clone();
-    sqlx::query(
-        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Kept', 0)",
-    )
-    .execute(&reader.state.db)
-    .await
-    .unwrap();
-    sqlx::query(
-        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
-         VALUES (1, 1, ?, 0)",
-    )
-    .bind(first)
-    .execute(&reader.state.db)
-    .await
-    .unwrap();
-
     reader.change(|site| site.old_gone = true);
     let now = nine_turtles::now();
     reader.check(old, now).await;
@@ -376,15 +358,6 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .map(|article| article["id"].as_i64().unwrap())
         .collect();
     assert_eq!(starred, [second]);
-    // The collected article is still on its collection.
-    let collected: Vec<String> = sqlx::query_scalar(
-        "SELECT articles.title FROM collection_articles
-         JOIN articles ON articles.id = collection_articles.article_id",
-    )
-    .fetch_all(&reader.state.db)
-    .await
-    .unwrap();
-    assert_eq!(json!(collected), json!([first_title]));
     let library = reader.get("/api/feeds").await;
     let moved_feed = library["feeds"]
         .as_array()

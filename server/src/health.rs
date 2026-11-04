@@ -647,22 +647,6 @@ async fn carry_entries_over(
             _ => false,
         };
         if merged {
-            // Its collections go with its marks to the copy (decision 0108);
-            // a collection already holding the copy keeps the one line.
-            sqlx::query(
-                "UPDATE OR IGNORE collection_articles SET article_id = ?3
-                 WHERE person_id = ?1 AND article_id = ?2",
-            )
-            .bind(person)
-            .bind(article)
-            .bind(copy)
-            .execute(&mut *connection)
-            .await?;
-            sqlx::query("DELETE FROM collection_articles WHERE person_id = ? AND article_id = ?")
-                .bind(person)
-                .bind(article)
-                .execute(&mut *connection)
-                .await?;
             // Their highlights and notes go with it too (decision 0164).
             sqlx::query(
                 "UPDATE OR IGNORE notes SET article_id = ?3 WHERE person_id = ?1 AND article_id = ?2",
@@ -672,20 +656,16 @@ async fn carry_entries_over(
             .bind(copy)
             .execute(&mut *connection)
             .await?;
-            // Where they stopped in an episode goes with it too (decision 0113),
-            // and so do the unused Up Next lines (decision 0170), so the old
-            // table stays consistent; what the old line keeps goes with it.
-            for table in ["episode_progress", "up_next"] {
-                sqlx::query(sqlx::AssertSqlSafe(format!(
-                    "UPDATE OR IGNORE {table} SET article_id = ?3
-                     WHERE person_id = ?1 AND article_id = ?2"
-                )))
-                .bind(person)
-                .bind(article)
-                .bind(copy)
-                .execute(&mut *connection)
-                .await?;
-            }
+            // Where they stopped in an episode goes with it too (decision 0113).
+            sqlx::query(
+                "UPDATE OR IGNORE episode_progress SET article_id = ?3
+                 WHERE person_id = ?1 AND article_id = ?2",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
             sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
                 .bind(person)
                 .bind(article)

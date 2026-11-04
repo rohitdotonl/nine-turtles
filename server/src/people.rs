@@ -72,23 +72,15 @@ where
 /// Tables that hang off these (a folder's `feed_folders` pairs) go with them.
 /// Entries come before subscriptions, which they point at.
 pub const PER_READER_TABLES: &[(&str, &str)] = &[
-    // A collection's lines point at entries, so they go first (`delete`
-    // empties them before anything else, too).
-    (
-        "collection_articles",
-        "DELETE FROM collection_articles WHERE person_id = ?",
-    ),
-    ("collections", "DELETE FROM collections WHERE person_id = ?"),
-    // Their highlights and notes point at entries too (decision 0164).
+    // Their highlights and notes point at entries, so they go first
+    // (`delete` empties them before anything else, too; decision 0164).
     ("notes", "DELETE FROM notes WHERE person_id = ?"),
-    // Where they stopped in episodes, and their Up Next (decision 0113):
-    // they'd go with the entries anyway, but are named, like every table
-    // with a reader's lines.
+    // Where they stopped in episodes (decision 0113): it would go with the
+    // entries anyway, but is named, like every table with a reader's lines.
     (
         "episode_progress",
         "DELETE FROM episode_progress WHERE person_id = ?",
     ),
-    ("up_next", "DELETE FROM up_next WHERE person_id = ?"),
     ("entries", "DELETE FROM entries WHERE person_id = ?"),
     (
         "subscriptions",
@@ -100,10 +92,6 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     (
         "newsletter_addresses",
         "DELETE FROM newsletter_addresses WHERE person_id = ?",
-    ),
-    (
-        "saved_searches",
-        "DELETE FROM saved_searches WHERE person_id = ?",
     ),
     ("folders", "DELETE FROM folders WHERE person_id = ?"),
     (
@@ -171,16 +159,12 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
 /// and `ACCOUNT_TABLES`**, so a new table is a choice, not an accident; a
 /// test (`server/tests/accounts.rs`) fails otherwise.
 pub const DATA_TABLES: &[&str] = &[
-    "collection_articles",
-    "collections",
     "notes",
     "episode_progress",
-    "up_next",
     "entries",
     "subscriptions",
     "writers",
     "rules",
-    "saved_searches",
     "folders",
 ];
 
@@ -199,8 +183,8 @@ pub const ACCOUNT_TABLES: &[&str] = &[
 ];
 
 /// Empties reader `person`'s account, in one step: all or nothing. Every
-/// feed they follow is let go as unsubscribing lets it go, stars and
-/// collections included, then the `DATA_TABLES` are emptied of their lines.
+/// feed they follow is let go as unsubscribing lets it go, stars
+/// included, then the `DATA_TABLES` are emptied of their lines.
 /// Their answer to "How did you hear about nine turtles?" goes too. They
 /// stay signed in, with everything else of their account. Works for the
 /// owner too (decision 0117).
@@ -234,15 +218,11 @@ async fn let_go(
     .bind(keep_account)
     .fetch_all(&mut *connection)
     .await?;
-    // Nothing of theirs is kept now: no star, no collection and no note holds an entry back.
-    for kept in ["collection_articles", "notes"] {
-        sqlx::query(sqlx::AssertSqlSafe(format!(
-            "DELETE FROM {kept} WHERE person_id = ?"
-        )))
+    // Nothing of theirs is kept now: no star and no note holds an entry back.
+    sqlx::query("DELETE FROM notes WHERE person_id = ?")
         .bind(person)
         .execute(&mut *connection)
         .await?;
-    }
     sqlx::query("UPDATE entries SET starred = 0 WHERE person_id = ?")
         .bind(person)
         .execute(&mut *connection)

@@ -2,11 +2,9 @@
   The `?` shortcut list (SPEC section 19). A native dialog: it keeps the
   keyboard inside while open, and Escape closes it. Shortcuts for features
   that don't exist yet aren't listed. It only lists: choosing keys of your
-  own (decision 0110) was removed in step 5 of the owner's review. A reader
-  who had chosen some is told once, at its foot, that they're back to these.
+  own (decision 0110) was removed in step 5 of the owner's review.
 -->
 <script lang="ts">
-  import { untrack } from "svelte";
   import Icon from "./Icon.svelte";
   import { helpPage } from "./router";
   import { SHORTCUT_GROUPS, keyCap, shortcutMatches, shortcutsFor } from "./keyboard";
@@ -14,23 +12,15 @@
   let {
     open = $bindable(),
     unreadOff = false,
-    keysReset = false,
-    onKeysSeen,
   }: {
     open: boolean;
     /** Unread off: Go to Unread and Mark all as read aren't listed. */
     unreadOff?: boolean;
-    /** The reader had keys of their own, now back to these, and hasn't been told. */
-    keysReset?: boolean;
-    /** The foot has told them: it isn't said again. */
-    onKeysSeen?: () => void;
   } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
   let heading: HTMLHeadingElement | undefined = $state();
   let list: HTMLDivElement | undefined = $state();
-  /** Said at the foot while this list is open, once told. */
-  let telling = $state(false);
   /** The list has scrolled under the title: a hairline parts them. */
   let scrolled = $state(false);
   /** More of the list lies below what's shown: a hairline marks the foot's edge, so a row cut there reads as scrolling, not clipping. */
@@ -98,15 +88,6 @@
     if (!open && dialog?.open) dialog.close();
     if (!open) {
       find = "";
-      telling = false;
-    }
-  });
-
-  // Told while the list is open, even if the reader's settings arrive after it opened.
-  $effect(() => {
-    if (open && keysReset) {
-      telling = true;
-      untrack(() => onKeysSeen?.());
     }
   });
 </script>
@@ -232,13 +213,6 @@
       <div class="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p class="text-meta text-muted">Tab, Enter and Escape always work too. Shortcuts don't fire while you're typing in a field.</p>
         <a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website)</span></a>
-        {#if telling}
-          <!-- Said once, to a reader who had chosen keys of their own (step 5 of the owner's review). -->
-          <p class="w-full text-meta text-ink-2" data-testid="keys-reset">
-            You can't choose your own keys any more, so every shortcut is back to the key shown here. If you miss it, write to
-            <a href="mailto:hello@nineturtles.app" class="text-link">hello@nineturtles.app</a>.
-          </p>
-        {/if}
       </div>
     </div>
   </div>

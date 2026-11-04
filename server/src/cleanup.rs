@@ -1,13 +1,12 @@
 //! The yearly clean-up (SPEC section 23, decision 0089): an article nobody
 //! has starred is removed a year after nine turtles first received it, read
-//! or not. A starred one stays forever, and so does one on any of the
-//! reader's collections (decision 0108) or one they highlighted or wrote a
-//! note on (decision 0164).
+//! or not. A starred one stays forever, and so does one they highlighted or
+//! wrote a note on (decision 0164).
 //!
 //! It runs just after each night's backup is safely stored (`backup::run`),
 //! so whatever it removes is still in that night's copy; without backups it
 //! never runs. Each reader's own entries go first: an entry the reader
-//! hasn't starred (or put on a collection) is removed even if someone else
+//! hasn't starred is removed even if someone else
 //! starred the article, so what one reader sees never depends on another's
 //! stars. An article goes
 //! once no reader has it any more, and its fingerprint is remembered in
@@ -46,9 +45,6 @@ pub async fn run(db: &SqlitePool, at: i64) -> Result<Removed, sqlx::Error> {
                  SELECT entries.person_id, entries.article_id
                  FROM articles JOIN entries ON entries.article_id = articles.id
                  WHERE articles.received_at < ? AND entries.starred = 0
-                     AND NOT EXISTS (SELECT 1 FROM collection_articles AS kept
-                         WHERE kept.person_id = entries.person_id
-                             AND kept.article_id = entries.article_id)
                      AND NOT EXISTS (SELECT 1 FROM notes
                          WHERE notes.person_id = entries.person_id
                              AND notes.article_id = entries.article_id)

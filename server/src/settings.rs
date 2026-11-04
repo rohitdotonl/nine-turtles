@@ -2,11 +2,6 @@
 //! sort order, whether Unread is on (SPEC section 10), and
 //! which lists the sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
 //! belong to each device and stay in its browser.
-//!
-//! Readers could once give shortcuts keys of their own (decision 0110, removed
-//! in step 5 of the owner's review). A reader who had is told once, at the
-//! foot of the `?` list, that the keys are back to nine turtles' own
-//! (`keys_reset`); seeing it removes the old keys (`keys_seen`).
 
 use axum::{
     Json, Router,
@@ -79,9 +74,6 @@ struct Settings {
     /// off (none of those). Read state is recorded either way. Nothing
     /// stored means on.
     unread: bool,
-    /// The reader had given shortcuts keys of their own, which are back to
-    /// nine turtles' own now, and hasn't been told yet.
-    keys_reset: bool,
     /// The lists the sidebar leaves out; none by default.
     hidden: Vec<Hideable>,
 }
@@ -92,16 +84,13 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     unread: Option<bool>,
-    /// The reader has been told their own keys are gone: the old ones are removed.
-    #[serde(default)]
-    keys_seen: bool,
     hidden: Option<Vec<Hideable>>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'unread', 'keys', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'unread', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -117,13 +106,10 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         _ => Order::Newest,
     };
     let unread = value("unread") != Some("off");
-    // `{}` was what Reset all keys left: nothing changed, nothing to tell.
-    let keys_reset = value("keys").is_some_and(|saved| saved.trim() != "{}");
     let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
         unread,
-        keys_reset,
         hidden,
     })
 }
@@ -164,12 +150,6 @@ async fn change(
                 .execute(&mut *transaction)
                 .await?;
             }
-        }
-        if change.keys_seen {
-            sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'keys'")
-                .bind(person)
-                .execute(&mut *transaction)
-                .await?;
         }
         transaction.commit().await?;
         load(&state.db, person).await

@@ -24,7 +24,6 @@ pub mod auth;
 pub mod backup;
 pub mod checking;
 pub mod cleanup;
-pub mod collections;
 pub mod config;
 pub mod confirm_email;
 pub mod dates;
@@ -245,7 +244,6 @@ pub fn router(state: AppState) -> Router {
         .merge(payments::routes())
         .merge(rules::routes())
         .merge(search::routes())
-        .merge(collections::routes())
         .merge(settings::routes())
         .merge(starred::routes())
         .merge(star_import::routes())

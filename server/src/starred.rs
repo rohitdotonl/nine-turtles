@@ -45,7 +45,7 @@ pub struct Starred {
 }
 
 /// The columns a `Starred` is read from, after `SELECT` and before
-/// `feeds::from_entries!()` (the collections export uses them too).
+/// `feeds::from_entries!()`.
 macro_rules! columns {
     () => {
         "articles.fingerprint, articles.title, articles.link, articles.author,
@@ -55,7 +55,6 @@ macro_rules! columns {
          feeds.url AS feed_url, feeds.site_url"
     };
 }
-pub(crate) use columns;
 
 /// Every article the reader starred, newest first, from the
 /// `entries_starred` index, with their name for its feed. Takes the reader.
@@ -99,7 +98,7 @@ pub fn write(starred: &[Starred]) -> Value {
     })
 }
 
-/// One article as a JSON Feed item (the collections export uses it too).
+/// One article as a JSON Feed item.
 pub fn item(article: &Starred) -> Value {
     let mut item = Map::new();
     // An ID unique across feeds: the feed's address with the feed's own ID

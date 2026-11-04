@@ -267,18 +267,18 @@ async fn settings_are_each_readers_own() {
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": true, "hidden": [] })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
     assert_eq!(
         changed,
-        json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": true, "hidden": [] })
     );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": false, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": false, "hidden": [] })
     );
 }
 
@@ -1487,22 +1487,6 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     let posts = owner.ids(&format!("feed={feed}")).await;
     mark(&owner, "starred", &[posts[0], older]).await;
     mark(&owner, "read", &[posts[1]]).await;
-    // A collection of the owner's, kept for its export, holds one post
-    // (decisions 0108 and 0174).
-    sqlx::query(
-        "INSERT INTO collections (id, person_id, name, created_at) VALUES (1, 1, 'Tomatoes', 0)",
-    )
-    .execute(&state.db)
-    .await
-    .unwrap();
-    sqlx::query(
-        "INSERT INTO collection_articles (collection_id, person_id, article_id, added_at)
-         VALUES (1, 1, ?, 0)",
-    )
-    .bind(posts[1])
-    .execute(&state.db)
-    .await
-    .unwrap();
     let theirs_before = other.marks(&format!("feed={new_feed}")).await;
 
     let (status, moved) = owner
@@ -1523,15 +1507,6 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
     .to_vec();
     let list = format!("feed={new_feed}");
     assert_eq!(marks_by_title(&owner, &list).await, expected);
-    // The collection holds the new address's copy of that post.
-    let shelved: Vec<(String, i64)> = sqlx::query_as(
-        "SELECT articles.title, articles.feed_id FROM collection_articles
-         JOIN articles ON articles.id = collection_articles.article_id",
-    )
-    .fetch_all(&state.db)
-    .await
-    .unwrap();
-    assert_eq!(shelved, [("Post 2 about tomatoes".to_owned(), new_feed)]);
     // Nobody follows the old address now: its copies of the three posts
     // went (everyone's are the new address's), but the older post stays,
     // and so does the old feed's line under it, no longer checked.

@@ -1293,7 +1293,7 @@
   <NowPlaying onOpen={openEpisode} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {unreadOff} keysReset={settings.keysReset} onKeysSeen={() => settings.keysSeen()} />
+<CheatSheet bind:open={cheatSheetOpen} {unreadOff} />
 
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->

@@ -102,12 +102,9 @@
         <a href="/api/starred/export" download class="inset-row inset-action"
           >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
         >
-        <a href="/api/collections/export" download class="inset-row inset-action"
-          >Export collections<span class="row-glyph"><Icon name="download" size={18} /></span></a
-        >
       </div>
       <p class="field-help">
-        Your feeds and folders as an OPML file, and your starred articles and collections as JSON Feed files.
+        Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.
       </p>
     </div>
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
