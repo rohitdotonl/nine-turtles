@@ -2749,7 +2749,8 @@ async fn keeping_starred_deletes_what_is_gone_and_leaves_every_mark() {
         "UPDATE entries SET opened_at = 5 WHERE person_id = 1 AND article_id = 3",
         "INSERT INTO up_next (person_id, article_id, place) VALUES (1, 3, 1)",
         "INSERT INTO person_settings (person_id, name, value)
-         VALUES (1, 'keys', '{\"star\":\"x\"}'), (1, 'mode', 'river'), (1, 'sort', 'oldest')",
+         VALUES (1, 'keys', '{\"star\":\"x\"}'), (1, 'mode', 'river'), (1, 'counts', 'off'),
+                (1, 'sort', 'oldest')",
         "INSERT INTO rules (id, person_id, words, author, folder_id, action, created_at)
          VALUES (1, 1, 'Sponsored', '', NULL, 'mute', 0), (2, 1, '', 'Ann', NULL, 'mute', 0),
                 (3, 1, 'Soup', '', 9, 'mute', 0), (4, 1, 'Soup', '', NULL, 'star', 0)",
@@ -2806,9 +2807,5 @@ async fn keeping_starred_deletes_what_is_gone_and_leaves_every_mark() {
             .fetch_all(&db)
             .await
             .unwrap();
-    assert!(
-        !settings.iter().any(|name| name == "keys" || name == "mode"),
-        "{settings:?}"
-    );
-    assert!(settings.iter().any(|name| name == "sort"), "{settings:?}");
+    assert_eq!(settings, ["sort"]);
 }

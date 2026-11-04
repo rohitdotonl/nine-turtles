@@ -26,7 +26,6 @@ Choose **Starred** in the sidebar, or press <kbd>G</kbd> then <kbd>S</kbd>.
 ## Good to know
 
 - Took a star off by mistake? Press <kbd>U</kbd> or **Undo**.
-- Starred is the one place to keep articles. If you had collections, every
-  article on them is starred now.
+- Starred is the one place to keep articles.
 - Starred articles can be read without a connection: each device keeps the
   newest 200.

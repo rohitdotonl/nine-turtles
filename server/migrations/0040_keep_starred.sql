@@ -20,6 +20,7 @@ DROP TABLE up_next;
 DELETE FROM rules
 WHERE NOT (action = 'mute' AND author = '' AND words != '' AND folder_id IS NULL);
 
--- Readers' own keys (decision 0170), and the backlog and reading-mode
--- settings steps 6 and 7 replaced (decisions 0171, 0172), if any are left.
-DELETE FROM person_settings WHERE name IN ('keys', 'let_go', 'let_go_at', 'mode');
+-- Readers' own keys (decision 0170), the old unread counts setting
+-- (decision 0148), and the backlog and reading-mode settings steps 6 and 7
+-- replaced (decisions 0171, 0172), if any are left.
+DELETE FROM person_settings WHERE name IN ('keys', 'counts', 'let_go', 'let_go_at', 'mode');
