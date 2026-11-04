@@ -1,7 +1,6 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order, the reading mode, inbox or river (SPEC section 10), when
-//! unread lets go by itself (`unread`, decision 0097) and which lists the
-//! sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
+//! sort order, the reading mode, inbox or river (SPEC section 10), and
+//! which lists the sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
 //! belong to each device and stay in its browser.
 //!
 //! Readers could once give shortcuts keys of their own (decision 0110, removed
@@ -36,29 +35,6 @@ enum Mode {
     #[default]
     Inbox,
     River,
-}
-
-/// How long unread waits before it lets go by itself: never (the default),
-/// a week, two weeks or a month (`unread::waits_for`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Deserialize, Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum LetGo {
-    #[default]
-    Never,
-    Week,
-    TwoWeeks,
-    Month,
-}
-
-impl LetGo {
-    const fn stored(self) -> &'static str {
-        match self {
-            Self::Never => "never",
-            Self::Week => "week",
-            Self::TwoWeeks => "two-weeks",
-            Self::Month => "month",
-        }
-    }
 }
 
 /// A list the reader can hide from the sidebar (Settings › Show in the sidebar). Unread,
@@ -118,7 +94,6 @@ struct Settings {
     /// Newest or oldest first.
     sort: Order,
     mode: Mode,
-    let_go: LetGo,
     /// The reader had given shortcuts keys of their own, which are back to
     /// nine turtles' own now, and hasn't been told yet.
     keys_reset: bool,
@@ -132,7 +107,6 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     mode: Option<Mode>,
-    let_go: Option<LetGo>,
     /// The reader has been told their own keys are gone: the old ones are removed.
     #[serde(default)]
     keys_seen: bool,
@@ -142,7 +116,7 @@ struct Change {
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'mode', 'let_go', 'keys', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'mode', 'keys', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -161,19 +135,12 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         Some("river") => Mode::River,
         _ => Mode::Inbox,
     };
-    let let_go = match value("let_go") {
-        Some("week") => LetGo::Week,
-        Some("two-weeks") => LetGo::TwoWeeks,
-        Some("month") => LetGo::Month,
-        _ => LetGo::Never,
-    };
     // `{}` was what Reset all keys left: nothing changed, nothing to tell.
     let keys_reset = value("keys").is_some_and(|saved| saved.trim() != "{}");
     let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
         mode,
-        let_go,
         keys_reset,
         hidden,
     })
@@ -199,14 +166,12 @@ async fn change(
         Mode::Inbox => "inbox",
         Mode::River => "river",
     });
-    let let_go = change.let_go.map(LetGo::stored);
     let hidden = change.hidden.as_deref().map(hidden_stored);
     let saved = async {
         let mut transaction = state.db.begin().await?;
         for (name, value) in [
             ("sort", sort),
             ("mode", mode),
-            ("let_go", let_go),
             ("hidden", hidden.as_deref()),
         ] {
             if let Some(value) = value {
@@ -226,19 +191,6 @@ async fn change(
                 .bind(person)
                 .execute(&mut *transaction)
                 .await?;
-        }
-        // When the wait was chosen: nothing lets go until it has stood a
-        // minute (`unread::let_go`), so passing a shorter one on the way
-        // with the arrow keys marks nothing.
-        if let_go.is_some() {
-            sqlx::query(
-                "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'let_go_at', ?)
-                 ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
-            )
-            .bind(person)
-            .bind(crate::now().to_string())
-            .execute(&mut *transaction)
-            .await?;
         }
         transaction.commit().await?;
         load(&state.db, person).await

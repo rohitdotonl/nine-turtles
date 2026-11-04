@@ -42,7 +42,7 @@
   let place = $derived(move ? move.from : feed.id);
 
   // Another feed: the line starts afresh. A new copy of the same feed (after
-  // Refresh or Catch me up) changes nothing, so an open question stays alone.
+  // Refresh) changes nothing, so an open question stays alone.
   let shownFor = untrack(() => feed.id);
   $effect.pre(() => {
     const id = feed.id;

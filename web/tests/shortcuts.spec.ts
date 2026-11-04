@@ -3,8 +3,8 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, openReadingRoom, signIn } from "./screens";
 
 // The shortcuts of decision 0103 (SPEC sections 8 and 19), done by a
-// browser: Space through an article, n to the next unread one, Shift+O
-// with Undo, and c to copy the link. Each blog here is a made-up one of
+// browser: Space through an article, n to the next unread one, and c to
+// copy the link. Each blog here is a made-up one of
 // the test's own (tests/feed-server.mjs), so tests never mark each other's.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article" });
@@ -39,7 +39,7 @@ function row(page: Page, number: number) {
 }
 
 test.describe("on a wide window", () => {
-  test.skip(({ isMobile }) => isMobile, "Space, n, Shift+O and c are for a keyboard");
+  test.skip(({ isMobile }) => isMobile, "Space, n and c are for a keyboard");
 
   test("Space scrolls the open article a screen at a time and stops at its end; Shift+Space goes back; a button keeps its Space", async ({ page }) => {
     await signedIn(page, 420);
@@ -114,90 +114,21 @@ test.describe("on a wide window", () => {
     await expect(row(page, 1)).toHaveAttribute("aria-current", "true");
   });
 
-  test("Shift+O marks everything older as read, the rows not loaded yet too, and u undoes it; More offers above and below", async ({ page }) => {
+  test("Shift+O does nothing, and More marks only all as read (decision 0171)", async ({ page }) => {
     await signedIn(page);
-    // 55 articles: the list loads 50, so the five oldest aren't listed yet.
     const blog = await openBlog(page, true);
     const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
-    await expect(count).toHaveAttribute("data-unread", `55`);
     const rows = page.locator("#list-pane li button[data-space-reads]");
     await expect(rows).toHaveCount(50);
-
-    // The tenth row, chosen with a click: read. Shift+O marks the 45 below it, listed or not.
     await rows.nth(9).click();
-    await expect(rows.nth(9)).toHaveAttribute("aria-current", "true");
     await expect(count).toHaveAttribute("data-unread", `54`);
     await page.keyboard.press("Shift+O");
-    await expect(page.getByRole("status").filter({ hasText: "Marked 45 articles as read" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
-    await expect(count).toHaveAttribute("data-unread", `9`);
-    // Nothing moved: the rows below turned grey where they are; those above stay unread.
-    await expect(rows).toHaveCount(50);
-    await expect(rows.nth(10)).not.toHaveAccessibleName(/, unread/);
-    await expect(rows.nth(49)).not.toHaveAccessibleName(/, unread/);
-    await expect(rows.nth(8)).toHaveAccessibleName(/, unread/);
-
-    await page.keyboard.press("u");
-    await expect(page.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
-    await expect(count).toHaveAttribute("data-unread", `54`);
     await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
+    await expect(count).toHaveAttribute("data-unread", `54`);
 
-    // The list's More menu: above and below the chosen article, Shift+O beside the older side.
     await page.getByRole("button", { name: "More", exact: true }).click();
-    await expect(page.getByRole("menuitem", { name: "Mark all below as read" })).toHaveAttribute("aria-keyshortcuts", "Shift+O");
-    await expect(page.getByRole("menuitem", { name: "Mark all above as read" })).not.toHaveAttribute("aria-keyshortcuts");
-    await page.getByRole("menuitem", { name: "Mark all above as read" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Marked 9 articles as read" })).toBeVisible();
-    await expect(count).toHaveAttribute("data-unread", `45`);
-    await expect(rows.nth(0)).not.toHaveAccessibleName(/, unread/);
-    await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
-  });
-  test("Shift+O in search results marks the older results as read, those not loaded yet too", async ({ page }) => {
-    await signedIn(page);
-    const blog = await openBlog(page, true);
-    const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
-    await expect(count).toHaveAttribute("data-unread", `55`);
-    // A search in this blog only: all 55 match, and 50 are listed at first.
-    await page.locator("#list-heading").focus();
-    await page.keyboard.press("/");
-    await expect(page.getByRole("button", { name: `Remove in: Blog ${blog}` })).toBeVisible();
-    await page.keyboard.type("summary");
-    const results = page.getByRole("region", { name: /^Results in / }).locator("li button[data-space-reads]");
-    await expect(results).toHaveCount(50);
-
-    // Older goes by date: articles numbered below the chosen one, one of them perhaps not listed yet.
-    await results.nth(9).click();
-    await expect(results.nth(9)).toHaveAttribute("aria-current", "true");
-    const chosen = Number((await results.nth(9).innerText()).match(/\((\d+)\)/)![1]);
-    await expect(count).toHaveAttribute("data-unread", `54`);
-    await page.keyboard.press("Shift+O");
-    await expect(page.getByRole("status").filter({ hasText: `Marked ${chosen - 1} ${chosen === 2 ? "article" : "articles"} as read` })).toBeVisible();
-    await expect(count).toHaveAttribute("data-unread", `${55 - chosen}`);
-    await page.keyboard.press("u");
-    await expect(page.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
-    await expect(count).toHaveAttribute("data-unread", `54`);
-  });
-
-  test("without a connection, Shift+O says marking articles not yet listed needs one, and marks nothing", async ({ page, context }) => {
-    await signedIn(page);
-    const blog = await openBlog(page, true);
-    const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
-    const rows = page.locator("#list-pane li button[data-space-reads]");
-    await expect(rows).toHaveCount(50);
-    await rows.nth(9).click();
-    await expect(count).toHaveAttribute("data-unread", `54`);
-
-    await context.setOffline(true);
-    await page.keyboard.press("Shift+O");
-    await expect(page.getByText("Marking articles not yet listed needs a connection. Try again once you're back online.")).toBeVisible();
-    await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
-    await expect(rows.nth(49)).toHaveAccessibleName(/, unread/);
-    await expect(count).toHaveAttribute("data-unread", `54`);
-    await context.setOffline(false);
-    await page.evaluate(() => dispatchEvent(new Event("online")));
-    // On the server too, only the chosen one is read.
-    const unread = async () => (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()).feeds.find((each: { title: string }) => each.title === `Blog ${blog}`).unread;
-    await expect.poll(unread).toBe(54);
+    await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /above as read|below as read|Catch me up/ })).toHaveCount(0);
   });
 
   test("e folds and unfolds the folder you're in, or your feed's; Shift+E edits the feed or folder", async ({ page }) => {

@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-03
+updated: 2026-11-04
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -62,7 +62,6 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>M</kbd> | Mark unread |
 | <kbd>Shift</kbd> <kbd>A</kbd> | Mark all as read |
-| <kbd>Shift</kbd> <kbd>O</kbd> | Mark older as read |
 | <kbd>U</kbd> | Undo |
 | <kbd>R</kbd> | Show new articles |
 | <kbd>Shift</kbd> <kbd>E</kbd> | Edit this person, publication or folder |

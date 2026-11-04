@@ -34,7 +34,6 @@
   | `e` | Fold / unfold the folder you're in, in the sidebar |
   | `m` | Mark current item unread |
   | `Shift+A` | Mark all as read |
-  | `Shift+O` | Mark older as read |
   | `u` | Undo |
   | `r` | Show new articles |
   | `Shift+E` | Edit this person, publication or folder |
@@ -43,8 +42,8 @@
 
 - **Space** (decision 0103) moves the open article on by one screen, at once, never gliding, keeping a few lines of the last screen in view; `Shift+Space` moves it back. It works wherever the keyboard's place is (the article, its row in the list, a link in the sidebar) while an article is open, except on a control that takes Space itself (a button, a tick box, a switch, a menu, a field), where Space presses that control as always. At the end of the article it simply stops: it never opens the next one. With no article open, Space is the browser's own.
 - **`n` / `Shift+N`** (decision 0103) choose the next / previous unread article listed, passing over read ones, and show it as `j` / `k` do; with none left that way, nothing happens. Like `j`, they never load more of the list on their own.
-- **`Shift+O`** marks every article older than the chosen one as read, with Undo (section 8). **`e`** folds or unfolds, in the sidebar, the folder you're viewing (or the first folder of the person or publication you're viewing). **`Shift+E`** opens Edit for the person or publication you're viewing (on their page, section 36), or Edit folder for the folder. **`i`** (decision 0163, in Getting around after `Shift+J` / `Shift+K`) opens the page of the person or publication whose list you're in. **`c`** copies the open article's link to the original, as More › Copy link does, and the top bar says "Link copied.".
-- `n`, `Shift+N` and `Shift+O` (like Go to Unread and Mark all as read) do nothing in river mode, and the cheat sheet leaves them out there.
+- **`e`** folds or unfolds, in the sidebar, the folder you're viewing (or the first folder of the person or publication you're viewing). **`Shift+E`** opens Edit for the person or publication you're viewing (on their page, section 36), or Edit folder for the folder. **`i`** (decision 0163, in Getting around after `Shift+J` / `Shift+K`) opens the page of the person or publication whose list you're in. **`c`** copies the open article's link to the original, as More › Copy link does, and the top bar says "Link copied.".
+- `n` and `Shift+N` (like Go to Unread and Mark all as read) do nothing in river mode, and the cheat sheet leaves them out there.
 - **`Shift+J` / `Shift+K`** (decision 0110; "Next / previous in the sidebar") go to the next / previous person or publication in the sidebar's order: folders A to Z, each with what's in it while it's open, then People, then Publications. A folded folder's feeds are passed over; a feed in two folders counts once, where it's first listed. Folders, saved searches and Unread, Starred and All aren't stops: from a folder, `Shift+J` goes to the first feed after the folder's row; from Unread, Starred, All or a saved search, `Shift+J` goes to the first feed and `Shift+K` does nothing. At either end nothing happens. On a phone every folder counts as open. They work from a list, not from Settings or a sheet.
 - **`Home` / `End`** (decision 0110) choose the first / last article listed and show it, as `j` / `k` do. `End` goes to the last article loaded so far; it never loads more itself. They work only while a list is in view: in the open article (the keyboard anywhere in it, or the list hidden with `]`, or on a phone) they scroll the article to its top or end as usual, and on a page that isn't a list (Settings, Your feeds, Feed health, Muted, Readers) they scroll that page. On a field, a row of choices or a menu, Home and End stay that control's own.
 - **`g` then `f`** opens Your feeds and **`g` then `,`** opens Settings, from anywhere outside a field. **`g` then `r`** opens Recently read.
@@ -66,7 +65,7 @@
 4. Press `?`: the cheat sheet opens; Escape closes it. `\` is listed as "Full-screen reading (hide sidebar and list)".
 5. Open a long article and press Space a few times: it moves down a screen each time and stops at the end, staying on the same article. `Shift+Space` moves it back up. With the keyboard on the article's More button, Space opens its menu instead.
 6. In a feed, read the first two articles with `j` `j`, go back with `k` and press `n`: the third is chosen, the read one passed over.
-7. Choose an article halfway down a long list and press `Shift+O`: everything below it turns grey and the note says "Marked … articles as read" with Undo. Press `u`: they're unread again.
+7. Press `Shift+A` in a feed: what's listed turns grey and the note says "Marked … articles as read" with Undo. Press `u`: they're unread again. `Shift+O` does nothing (decision 0171).
 8. With an article open, press `c`: "Link copied." shows in the top bar, and pasting gives the publisher's address.
 9. In a feed inside a folder, press `e`: the folder folds in the sidebar; again, it unfolds. Press `Shift+E`: their page opens in Edit. Press `i`: their page opens.
 10. In All, press `Shift+J`: the first feed in the sidebar opens; again, the next; `Shift+K` goes back. Fold a folder and its feeds are passed over. In a feed, `End` chooses the last article loaded and `Home` the first. Open an article and press `End`: it scrolls to the article's end, and the same article stays chosen. On Settings, `End` scrolls the page. `g` then `f` opens Your feeds; `g` then `,` opens Settings.

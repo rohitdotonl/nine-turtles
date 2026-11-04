@@ -157,8 +157,8 @@ Each would be written by Rohit, to help people first (the plan above).
   [RSS tricks](https://george.hotell.ing/2025/01/07/rss-tricks/). For
   example: three folders, *every day* (never miss), *leisure* (when there's
   time to explore) and *binge* (read everything when there's lots of time);
-  and letting news go after a few days but never a person's writing
-  ("Let unread go after", SPEC section 18).
+  and setting news down after a few days but never a person's writing
+  (Mark all as read, SPEC section 8).
 - **A far better [aboutfeeds.com](https://aboutfeeds.com/):** what feeds
   are, for people who've never heard of them. nine turtles named at the
   end, or not at all.

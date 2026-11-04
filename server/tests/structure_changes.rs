@@ -2422,3 +2422,84 @@ async fn looking_on_writers_sites_keeps_every_feed_and_address_and_has_looked_no
             .unwrap();
     assert_eq!(typed, [None, Some("ivy@example.org".to_owned())]);
 }
+
+#[tokio::test]
+async fn ending_let_unread_go_marks_only_what_it_was_already_letting_go() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after looking on writers' sites (structure change
+    // 36): reader 1 let unread go after a week, reader 2 never chose. Each
+    // has an old unread article, a recent one, and a starred old one; reader
+    // 1 also has an old one in a feed left (in its Undo time).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(36, &old)
+        .await
+        .unwrap();
+    // ?1 is two months ago, ?2 yesterday.
+    let now = nine_turtles::now();
+    for sql in [
+        "INSERT INTO people (id, owner, email, created_at) VALUES (2, 0, 'kai@example.com', 1)",
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'u', 'u', 'Garden', 1), (2, 'v', 'v', 'Shed', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, unsubscribed_at)
+         VALUES (1, 1, 'Garden', 1, NULL), (1, 2, 'Shed', 1, ?2), (2, 1, 'Garden', 1, NULL)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'Old', 1, ?1), (2, 1, 'b', 'New', 1, ?2),
+                (3, 1, 'c', 'Kept', 1, ?1), (4, 2, 'd', 'Left', 1, ?1)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, ?1, 0, 0), (1, 2, 1, ?2, 0, 0), (1, 3, 1, ?1, 0, 1), (1, 4, 2, ?1, 0, 0),
+                (2, 1, 1, ?1, 0, 0), (2, 2, 1, ?2, 0, 0), (2, 3, 1, ?1, 0, 1)",
+        "INSERT INTO person_settings (person_id, name, value)
+         VALUES (1, 'let_go', 'week'), (1, 'let_go_at', '1'), (1, 'sort', 'oldest'),
+                (2, 'let_go', 'never'), (2, 'let_go_at', '1')",
+    ] {
+        sqlx::query(sql)
+            .bind(now - 60 * 86_400)
+            .bind(now - 86_400)
+            .execute(&old)
+            .await
+            .unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let entries: Vec<(i64, i64, bool, bool)> = sqlx::query_as(
+        "SELECT person_id, article_id, read, starred FROM entries ORDER BY person_id, article_id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        entries,
+        [
+            // Reader 1: what the week had let go stays read (starred too), as the
+            // background round did; yesterday's and the feed left are untouched.
+            (1, 1, true, false),
+            (1, 2, false, false),
+            (1, 3, true, true),
+            (1, 4, false, false),
+            // Reader 2 never chose: nothing changes.
+            (2, 1, false, false),
+            (2, 2, false, false),
+            (2, 3, false, true),
+        ]
+    );
+    // The setting is gone; every other setting stays.
+    let settings: Vec<(i64, String, String)> = sqlx::query_as(
+        "SELECT person_id, name, value FROM person_settings ORDER BY person_id, name",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(settings, [(1, "sort".to_owned(), "oldest".to_owned())]);
+}

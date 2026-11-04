@@ -18,7 +18,7 @@ async function keysWereChanged(page: Page): Promise<{ seen: number }> {
       const body = JSON.parse(route.request().postData() ?? "{}") as { keys_seen?: boolean };
       if (body.keys_seen) told.seen++;
     }
-    return route.fulfill({ json: { sort: "newest", mode: "inbox", let_go: "never", keys_reset: told.seen === 0, hidden: [] } });
+    return route.fulfill({ json: { sort: "newest", mode: "inbox", keys_reset: told.seen === 0, hidden: [] } });
   });
   return told;
 }

@@ -63,7 +63,7 @@ describe("lists hidden from the sidebar", () => {
   it("are read in one order, leaving out anything not understood", async () => {
     const stored = new Map<string, string>();
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value) });
-    server({ sort: "newest", mode: "inbox", let_go: "never", hidden: ["searches", "unread", "recent", "later"] });
+    server({ sort: "newest", mode: "inbox", hidden: ["searches", "unread", "recent", "later"] });
     const { loadSettings, lastHidden } = await load();
     expect((await loadSettings()).hidden).toEqual(["recent", "searches"]);
     // This device remembers, so the lists don't flash before the server answers.

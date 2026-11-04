@@ -191,3 +191,35 @@ pub async fn set<'c>(
         .await?;
     Ok(done.rows_affected())
 }
+
+/// Every unread article in one place's list marked read, as the list shows
+/// it: an assistant's `mark_feed_read`. Muted articles are read already and
+/// aren't listed. Takes the reader, then the place.
+pub const FEED_READ: &str =
+    "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+     WHERE person_id = ?1 AND read = 0 AND feed_id = ?2 AND muted = 0";
+
+/// The same for a person's list, when the place is one of two or more the
+/// reader follows from them (`writers::widen`). Takes the reader, then the
+/// person.
+pub const WRITER_READ: &str =
+    "UPDATE entries SET read = 1, read_marked_at = CAST(unixepoch('subsec') * 1000 AS INTEGER)
+     WHERE person_id = ?1 AND read = 0 AND muted = 0 AND feed_id IN (
+         SELECT feed_id FROM subscriptions
+         WHERE writer_id = ?2 AND person_id = ?1 AND unsubscribed_at IS NULL)";
+
+/// Marks everything in a place's list read: the place's own, or its
+/// person's when the reader follows them in more than one place, as the
+/// list on screen shows. Answers how many articles changed.
+pub async fn whole_feed(db: &sqlx::SqlitePool, person: i64, feed: i64) -> Result<u64, sqlx::Error> {
+    let (sql, id) = match crate::writers::widen(db, person, crate::feeds::List::Feed(feed)).await? {
+        crate::feeds::List::Writer(writer) => (WRITER_READ, writer),
+        _ => (FEED_READ, feed),
+    };
+    Ok(sqlx::query(sql)
+        .bind(person)
+        .bind(id)
+        .execute(db)
+        .await?
+        .rows_affected())
+}

@@ -355,8 +355,6 @@
       river,
       searching: searching.shown !== undefined,
       ownOrder: under.kind === "view" && under.view === "recent",
-      unread: under.kind === "view" && under.view === "unread",
-      selected: selected !== undefined,
       sort: settings.sort,
       savedSearch: under.kind === "search" ? currentSearch?.id : undefined,
       collection: currentCollection,
@@ -370,8 +368,6 @@
   const menuHands: MenuHands = {
     shortcut: (kind) => (phone ? undefined : keyFor(kind)),
     markAllRead: () => itemList?.markAllRead(),
-    markPast: (side) => itemList?.markPast(side),
-    catchUp: () => itemList?.catchUp(),
     refresh: () => itemList?.refresh(),
     changeSort: (next) => settings.changeSort(next),
     say: (message) => itemList?.say(message),
@@ -988,7 +984,6 @@
     openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
     page: (step) => articleView?.page(step),
     copyLink: () => articleView?.copyLink(),
-    markOlderRead: () => itemList?.markPast("older"),
     markAllRead: () => itemList?.markAllRead(),
     toggleFolder: (id) => sidebarFeeds?.toggleFolder(id),
     star: () => itemList?.toggleStar(),
@@ -1160,8 +1155,6 @@
           onSort={(next) => settings.changeSort(next)}
           mode={settings.mode}
           onMode={(next) => settings.changeMode(next)}
-          letGo={settings.letGo}
-          onLetGo={(next) => settings.changeLetGo(next)}
           hidden={settings.hidden}
           onHidden={(next) => settings.changeHidden(next)}
           bind:heading={headings.settings}
@@ -1344,7 +1337,6 @@
                     loadFeeds();
                     keeper.refreshed();
                   }}
-                  onCounts={loadFeeds}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {river}

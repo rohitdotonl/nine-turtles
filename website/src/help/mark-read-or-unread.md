@@ -4,7 +4,7 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-03
+updated: 2026-11-04
 related: [inbox-or-river, star-an-article, find-your-way-around]
 ---
 
@@ -27,13 +27,6 @@ its dot back and waits in Unread again.
 It happens at once, with no question first. Only the articles in the list
 you're looking at are marked: anything that arrived since stays unread.
 
-The same menu also has:
-
-- **Mark all above as read** and **Mark all below as read**, while an
-  article is chosen. The chosen article stays as it is.
-- **Catch me up**, in Unread: marks everything from before today as read,
-  and leaves today's articles waiting.
-
 ## Undo
 
 After any of these, a note at the bottom of the list says what happened,
@@ -46,9 +39,9 @@ deleting a folder.
 
 ## Let old articles go
 
-If unread articles from long ago weigh on you, open **Settings › Reading**
-and set **Let unread go after** to a week, two weeks or a month. Older
-unread articles then count as read. Nothing is deleted.
+nine turtles shows no unread counts, so a long list isn't a debt. If it
+still weighs on you, **Mark all as read** is the one way to set it down:
+nothing is deleted, and everything stays in its feed and in search.
 
 ## Good to know
 

@@ -1,5 +1,7 @@
 # 0097: Easing unread guilt
 
+*Catch me up and letting unread go were replaced by 0171 (removed 4 November 2026); the counts part was already replaced by 0148.*
+
 *October 2026.*
 
 **Decision.** Three ways to keep Unread from turning into a debt, chosen by
