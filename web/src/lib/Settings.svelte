@@ -411,7 +411,7 @@
           <!-- One switch (decision 0172): Unread on is the Unread list, read styling and dots; off, none of them. -->
           <div class="inset-row setting">
             <div class="setting-label">
-              {@render icon("book")}
+              {@render icon("page-new")}
               <div class="setting-words">
                 <p id="unread-name" class="setting-name" aria-hidden="true">Unread</p>
                 <p id="unread-hint" class="setting-hint">
@@ -488,7 +488,7 @@
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>
           </div>
-          {@render pageRow("font", "/settings/font", SETTINGS_PAGES.font, "pen-nib", open("font"), READING_FONTS[preferences.readingFont].label)}
+          {@render pageRow("font", "/settings/font", SETTINGS_PAGES.font, "text-width", open("font"), READING_FONTS[preferences.readingFont].label)}
         </div>
         <!-- The same preferences as the Aa panel above an article (decision 0034). -->
         <p class="inset-foot">
@@ -502,7 +502,7 @@
         <div class="inset-group">
           {@render pageRow("feeds", "/settings/feeds", "Your feeds", "feed", onYourFeeds)}
           {@render pageRow("feed-health", "/settings/feed-health", "Feed health", "heart-pulse", onFeedHealth)}
-          {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "panel-dots", open("sidebar"))}
+          {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "sidebar-check", open("sidebar"))}
           {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "download", open("data"))}
         </div>
       </section>
@@ -511,10 +511,10 @@
         <h3 id="more-heading" class="settings-head">More</h3>
         <div class="inset-group">
           {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
-          {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone", open("install"))}
-          {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "sliders", open("hiding"))}
+          {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone-download", open("install"))}
+          {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "eye-off", open("hiding"))}
           {#if newslettersOn}
-            {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newspaper", open("newsletters"))}
+            {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newsletter", open("newsletters"))}
           {/if}
           {@render pageRow("other-apps", "/settings/other-apps", SETTINGS_PAGES["other-apps"], "plug", open("other-apps"))}
           {@render pageRow("assistants", "/settings/assistants", SETTINGS_PAGES.assistants, "robot", open("assistants"))}

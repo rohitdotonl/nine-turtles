@@ -1,13 +1,13 @@
 <!--
   nine turtles' few icons, drawn on one 20px grid with the same 1.5px line, so
-  they look like one set. One solid part only where the real object has one
-  (docs/BRAND.md → Icons); never on plain signs. Screen readers skip them: the
+  they look like one set. Outlines for shapes, solid only for marks too small
+  to outline; one idea each, named at a glance (docs/BRAND.md → Icons). Screen readers skip them: the
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "stack" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
     // Settings' rows (decision 0120).
-    | "book" | "palette" | "a-plus" | "pen-nib" | "feed" | "heart-pulse" | "panel-dots" | "bookmark-plus" | "phone" | "newspaper" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
 </script>
 
 <script lang="ts">
@@ -124,75 +124,78 @@
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
     <circle cx="10" cy="10" r="1.25" fill="currentColor" stroke="none" />
     <circle cx="15.5" cy="10" r="1.25" fill="currentColor" stroke="none" />
-  {:else if name === "book"}
-    <!-- Settings › Reading › Unread: an open book. -->
-    <path d="M10 5.5c-1.5-1.2-3.5-1.75-6.25-1.75v11c2.75 0 4.75.55 6.25 1.75 1.5-1.2 3.5-1.75 6.25-1.75v-11C13.5 3.75 11.5 4.3 10 5.5Z" />
-    <path d="M10 5.5v11" />
+  {:else if name === "page-new"}
+    <!-- Settings › Reading › Unread: a page with a new dot at its corner. -->
+    <path d="M12 3.25H5.25a1.5 1.5 0 0 0-1.5 1.5v10.5a1.5 1.5 0 0 0 1.5 1.5h9.5a1.5 1.5 0 0 0 1.5-1.5V8" />
+    <circle cx="15.5" cy="4.5" r="2" fill="currentColor" stroke="none" />
+    <path d="M6.75 9.5h6.5M6.75 12.75h4" />
   {:else if name === "palette"}
     <!-- Settings › Page: a painter's palette with three solid dabs of paint. -->
     <path d="M10.25 3.5C5.9 3.5 2.75 6.3 2.75 9.9c0 3.7 3.1 6.6 7 6.6 1.3 0 1.9-.75 1.7-1.65-.25-1.25.55-2.1 1.85-2.1h1.45c1.85 0 3-1.15 3-3.05 0-3.6-3.1-6.2-7.5-6.2Z" />
     <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
-  {:else if name === "pen-nib"}
-    <!-- Settings › Font and line width: a pen's nib. -->
-    <path d="M10 16.25 5.25 11.5 7 4.75h6l1.75 6.75Z" />
-    <path d="M10 16.25V10" />
-    <circle cx="10" cy="9.25" r="1" />
+  {:else if name === "text-width"}
+    <!-- Settings › Font and line width: lines of text under a two-way arrow. -->
+    <path d="M3.25 9.5h13.5M3.25 12.75h13.5M3.25 16h8" />
+    <path d="M3.25 4.5h13.5M5.5 2.5 3.25 4.5 5.5 6.5M14.5 2.5l2.25 2-2.25 2" />
   {:else if name === "feed"}
     <!-- Settings › Your feeds: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
   {:else if name === "heart-pulse"}
-    <!-- Settings › Feed health: a solid heart and a pulse line. -->
-    <path d="M6.25 14.5S2.5 12.2 2.5 9.4a2.1 2.1 0 0 1 3.75-1.3A2.1 2.1 0 0 1 10 9.4c0 2.8-3.75 5.1-3.75 5.1Z" fill="currentColor" stroke="none" />
-    <path d="M10.75 11.5h1.5l1-3.75 1.5 6 1-2.25h1.5" />
-  {:else if name === "panel-dots"}
-    <!-- Settings › Show in the sidebar: a window with a sidebar of rows. -->
-    <rect x="3.25" y="4.25" width="13.5" height="11.5" rx="1.5" />
-    <path d="M8.25 4.25v11.5" />
-    <path d="M5.25 7.25h1M5.25 10h1M5.25 12.75h1" />
+    <!-- Settings › Feed health: a heart with its beat running through it. -->
+    <path d="M10 16.25S2.75 12.4 2.75 7.6A3.35 3.35 0 0 1 10 5.9a3.35 3.35 0 0 1 7.25 1.7c0 4.8-7.25 8.65-7.25 8.65Z" />
+    <path d="M4.5 10.25h2.75l1.25-2 2 4 1.25-2h3.75" />
+  {:else if name === "sidebar-check"}
+    <!-- Settings › Show in the sidebar: the sidebar's window with a check, choosing what shows. -->
+    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
+    <path d="M7.75 3.75v12.5" />
+    <path d="m10.25 10.25 1.75 1.75 3-3.5" />
   {:else if name === "bookmark-plus"}
-    <!-- Settings › Add from anywhere: a solid bookmark and a plus. -->
-    <path d="M4 3.25h6.5v13.25L7.25 14 4 16.5Z" fill="currentColor" stroke="none" />
-    <path d="M14.25 7.25v5.5M11.5 10h5.5" />
-  {:else if name === "phone"}
-    <!-- Settings › Install the app: a phone, line only, with its home bar. -->
+    <!-- Settings › Add from anywhere: a bookmark and a plus. -->
+    <path d="M4.25 3.75h6v12.5l-3-2.5-3 2.5Z" />
+    <path d="M14.5 7.25v5.5M11.75 10h5.5" />
+  {:else if name === "phone-download"}
+    <!-- Settings › Install the app: a phone with an arrow down onto its screen. -->
     <rect x="5.5" y="2.75" width="9" height="14.5" rx="2" />
-    <path d="M8.75 14.5h2.5" />
-  {:else if name === "newspaper"}
-    <!-- Settings › Newsletters: a newspaper page with a solid picture. -->
-    <rect x="3" y="3.25" width="14" height="13.5" rx="1" />
-    <path d="M5.25 6h9.5" />
-    <path d="M5.25 9.25h3M5.25 11.75h3M5.25 14.25h3" />
-    <rect x="10.5" y="8.75" width="4.5" height="5.5" rx=".4" fill="currentColor" stroke="none" />
+    <path d="M10 6v5.5M7.75 9.25 10 11.5l2.25-2.25" />
+    <path d="M8.75 14.75h2.5" />
+  {:else if name === "newsletter"}
+    <!-- Settings › Newsletters: an envelope with a feed's sign at its corner, an email that becomes a feed (the plain envelope is Weekly email's). -->
+    <path d="M9 14.25H4.25a1.5 1.5 0 0 1-1.5-1.5v-7.5a1.5 1.5 0 0 1 1.5-1.5h11.5a1.5 1.5 0 0 1 1.5 1.5V8" />
+    <path d="m3.25 4.5 6.75 5 6.75-5" />
+    <path d="M11.75 13.25a4 4 0 0 1 4 4M11.75 10a7.25 7.25 0 0 1 7.25 7.25" />
+    <circle cx="12.25" cy="16.75" r=".9" fill="currentColor" stroke="none" />
+  {:else if name === "eye-off"}
+    <!-- Settings › Hiding: an eye, its pupil kept, with a line through it. -->
+    <path d="M2.75 10s2.75-5.25 7.25-5.25S17.25 10 17.25 10 14.5 15.25 10 15.25 2.75 10 2.75 10Z" />
+    <circle cx="10" cy="10" r="2.25" />
+    <path d="M3.75 3.75l12.5 12.5" />
   {:else if name === "plug"}
     <!-- Settings › Other apps: a plug. -->
     <path d="M7.25 3.5v3M12.75 3.5v3" />
     <path d="M5.25 6.5h9.5v2.75a4.75 4.75 0 0 1-9.5 0Z" />
     <path d="M10 14v2.75" />
   {:else if name === "robot"}
-    <!-- Settings › Connected assistants: a robot's head. -->
-    <rect x="4.25" y="6.75" width="11.5" height="8.5" rx="2" />
-    <path d="M10 3.75v3M7.75 10.25v.75M12.25 10.25v.75M8 13.25h4" />
+    <!-- Settings › Connected assistants: a robot's head, its antenna and eyes. -->
+    <rect x="3.75" y="6.75" width="12.5" height="9" rx="2.5" />
+    <path d="M10 3.75v3M7.75 10.75v.5M12.25 10.75v.5" />
   {:else if name === "key"}
-    <!-- Settings › Passkeys: a key. -->
-    <circle cx="7" cy="12.5" r="3.25" />
-    <path d="M9.5 10.25 16.25 3.5" />
-    <path d="m13.5 6.25 2 2" />
-    <path d="m15 4.75 1.5 1.5" />
+    <!-- Settings › Passkeys: a key with one tooth. -->
+    <circle cx="7" cy="13" r="3.5" />
+    <path d="M9.5 10.5 16.5 3.5M14 6l2 2" />
   {:else if name === "people"}
-    <!-- Settings › Readers: two people, the nearer one's head solid. -->
-    <circle cx="7.5" cy="7.25" r="3" fill="currentColor" stroke="none" />
+    <!-- Settings › Readers: two people. -->
+    <circle cx="7.5" cy="7.25" r="3" />
     <path d="M2.75 16.5a4.75 4.75 0 0 1 9.5 0" />
     <path d="M12.5 4.75a2.6 2.6 0 0 1 0 5" />
     <path d="M14.5 11.9a4.75 4.75 0 0 1 2.75 4.6" />
   {:else if name === "card"}
-    <!-- Settings › Your plan: a payment card with its chip and number, line only. -->
-    <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="1.5" />
-    <rect x="5" y="7.25" width="3.25" height="2.5" rx=".5" />
-    <path d="M5 12.5h1.5M8.5 12.5h1.5M12 12.5h1.5" />
+    <!-- Settings › Your plan: a payment card with one stripe. -->
+    <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="2" />
+    <path d="M2.75 8.5h14.5" />
   {:else if name === "envelope"}
     <!-- Settings › Account › Email: an envelope. -->
     <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />

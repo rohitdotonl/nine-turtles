@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176).*
+*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176, 0180).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -72,14 +72,19 @@ sleeps, celebrates or stands for a feeling. No mascot.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
-## Icons (Live)
+## Icons (Live, decision 0180)
 
-- **A thin line everywhere** (1.5px on a 20px grid): today's set, tidied.
-- **One solid part only where the real object has one:** the palette (Page), the heart with a pulse (Feed health), the bookmark (Add from anywhere), Newsletters, Readers, the shelf (To read slowly), and the headphones (Field recordings). The card (Plan) stays line only, with its chip and number drawn in.
-- **Small dots stay solid** where a line would be too thin to see: the unread dot, More's three dots, the feed's dot, the alert's dot, and the keyboard's keys. These are part of the locked set, not a breach of the rule above.
-- **Never solid on plain signs** (close, back, search, plus, check and the like).
-- "Open original" is an arrow with no box. AI assistants keep the robot.
-- A new icon follows the same rule. If Rohit dislikes one later, offer alternatives one at a time.
+A glance at an icon tells the reader, without doubt, what it's for.
+
+1. **Clear at a glance.** An icon names its feature, not a mood. *A heart with a beat is health; a heart alone could be "like".*
+2. **One icon, one meaning.** No two features share a drawing. *Weekly email is the envelope, so Newsletters is the envelope with a feed's sign; the sliders open search options, so Hiding is the eye with a line through it.* A list's own mark is the one exception: the unread dot in the list is the colored dot, and Settings' Unread row is a page with a new dot.
+3. **Familiar signs first.** Use the sign people already know (the eye with a line through it, a card, a key, a robot, the unread dot). Invent only when none exists, and then join two known signs. *An envelope and a feed's sign: an email that becomes a feed.*
+4. **Simple, not empty.** One object, plus at most one sign that pins down its meaning. Drop decoration, keep meaning. *The card loses its chip and digits; the heart keeps its beat; the keyboard keeps its keys; the eye keeps its pupil, or it stops being an eye.*
+5. **Outlines for shapes, solid only for tiny marks.** A shape big enough for its inside to show is an outline; a mark too small to outline stays solid. *The heart, the bookmark and the readers' heads are outlines; the palette's paint, the unread dot, More's three dots, the feed's dot, the alert's dot, the keyboard's keys and the headphones' ear cups are solid.* Plain signs (close, back, search, plus, check) are never solid.
+6. **Judged at real size.** Every icon is chosen at 18px on White, Paper and Night, never only enlarged.
+7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners.
+
+"Open original" is an arrow with no box. A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
 
 ## Empty screens and the ends of lists (Live, decision 0142)
 
