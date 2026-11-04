@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -204,6 +204,17 @@
     <!-- Settings › Account › Email: an envelope. -->
     <rect x="3.25" y="4.75" width="13.5" height="10.5" rx="1.5" />
     <path d="m3.75 5.5 6.25 5 6.25-5" />
+  {:else if name === "person-at"}
+    <!-- Settings › Account › Email: a person and an @, your address (the plain envelope is Weekly email's). -->
+    <circle cx="7.5" cy="6.75" r="3" />
+    <path d="M2.75 16.5a4.75 4.75 0 0 1 7-4.2" />
+    <circle cx="14.25" cy="14" r="1.5" />
+    <path d="M15.75 14v.5a1.25 1.25 0 0 0 2.5 0V14a4 4 0 1 0-1.6 3.2" />
+  {:else if name === "archive-box"}
+    <!-- Settings › Your data: a storage box, your things kept (the arrow onto a tray is only for saving a file). -->
+    <rect x="2.75" y="3.75" width="14.5" height="4" rx="1" />
+    <path d="M4 7.75v7.5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7.5" />
+    <path d="M8 11h4" />
   {:else if name === "note"}
     <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
     <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />
