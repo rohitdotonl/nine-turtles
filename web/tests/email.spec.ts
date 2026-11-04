@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { MAILBOX, MAIL_APP, OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
+import { settingsSaved } from "./screens";
 
 // SPEC sections 1 and 18 (decision 0088): what email makes possible, against
 // a nine turtles that sends its emails to a made-up mail server on this
@@ -441,7 +442,7 @@ test("the weekly email is off until chosen in Settings, and its stop page is hon
   await expect(weekly.getByRole("radio", { name: "Off" })).toBeChecked();
   // With only the keyboard: the arrow keys move along the choices, as in any segmented control.
   await weekly.getByRole("radio", { name: "Off" }).focus();
-  const savedWeekly = weeklySaved(page);
+  const savedWeekly = settingsSaved(page, "/api/weekly-email");
   await page.keyboard.press("ArrowRight");
   await expect(weekly.getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
   await expect(page.getByText("Saturday mornings:")).toBeVisible();
@@ -461,15 +462,10 @@ test("the weekly email is off until chosen in Settings, and its stop page is hon
 
   // Off from Settings.
   await page.goto("/settings");
-  const savedOff = weeklySaved(page);
+  const savedOff = settingsSaved(page, "/api/weekly-email");
   await page.getByRole("group", { name: "Weekly email" }).getByText("Off", { exact: true }).click();
   await savedOff;
   await page.reload();
   await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Off" })).toBeChecked();
   await page.context().close();
 });
-
-/** Waits for a weekly email choice to reach the server; start waiting before the choice, await it before a reload. */
-function weeklySaved(page: Page): Promise<unknown> {
-  return page.waitForResponse((response) => response.url().endsWith("/api/weekly-email") && response.request().method() === "POST" && response.ok());
-}

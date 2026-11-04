@@ -285,6 +285,15 @@ async fn worked(
     if !feeds::still_followed(&mut transaction, feed_id).await? {
         return transaction.commit().await;
     }
+    // Moved to a new address while the old one was being fetched (Find new
+    // address): what the old address said is not this feed's any more.
+    let url: String = sqlx::query_scalar("SELECT url FROM feeds WHERE id = ?")
+        .bind(feed_id)
+        .fetch_one(&mut *transaction)
+        .await?;
+    if url != feed.url {
+        return transaction.commit().await;
+    }
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
