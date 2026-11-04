@@ -57,11 +57,11 @@ what's live.
 ## The logo
 
 - **The drawing:** nine small turtles seen from the side, in three rows of three, the middle row a little to the right. One ink, the page's text color, never colored, never cut off, never moving. (Live)
-- **The redrawn nine (D2)** is the logo wherever the name is: heavier, so the turtles stay turtles at small sizes. Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, the most that fits on one line beside the sidebar button; the mockup's 28 and 23 wrapped the name). All nine turtles stay in the sidebar. (Live)
+- **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line beside the sidebar button). All nine turtles stay in the sidebar. (Live)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Live)
 - **The tab icon:** the app icon's black square, always, with one light turtle filling most of it, so it shows on any tab, light or dark. (Live)
-- **The share picture** (the preview when someone shares a nineturtles.app link): a black tile 1200 by 630 with the nine (132px tall), "Read people. Write back." in Literata 600 in light ink, and "nineturtles.app" small in grey. Its description for screen readers: "nine turtles: Read people. Write back." (Live)
+- **The share picture** (the preview when someone shares a nineturtles.app link): a black tile 1200 by 630 with the nine (132px tall, the same original drawing), "Read people. Write back." in Literata 600 in light ink, and "nineturtles.app" small in grey. Its description for screen readers: "nine turtles: Read people. Write back." (Live)
 
 ## The turtles' only job
 
