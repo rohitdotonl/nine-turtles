@@ -1,5 +1,7 @@
 # 0105: Recently read, hiding sidebar lists, and how often a feed posts
 
+*Recently read is replaced by [0174](0174-keep-starred.md); hiding lists and how often a feed posts stay.*
+
 *27 October 2026.*
 
 **Decision.** Three small things the owner asked for, built together (SPEC

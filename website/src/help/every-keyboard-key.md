@@ -32,7 +32,6 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>C</kbd> | Copy the article's link |
 | <kbd>+</kbd> / <kbd>-</kbd> | Text size |
 | <kbd>S</kbd> | Star or unstar |
-| <kbd>L</kbd> | Add to collection |
 | <kbd>W</kbd> | Write back |
 | <kbd>H</kbd> | Highlight the words you've chosen |
 | <kbd>Shift</kbd> <kbd>H</kbd> | Write a note on the words you've chosen, or on the whole article |
@@ -45,7 +44,6 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>G</kbd> then <kbd>U</kbd> | Go to Unread |
 | <kbd>G</kbd> then <kbd>S</kbd> | Go to Starred |
 | <kbd>G</kbd> then <kbd>A</kbd> | Go to All |
-| <kbd>G</kbd> then <kbd>R</kbd> | Go to Recently read |
 | <kbd>G</kbd> then <kbd>F</kbd> | Go to Your feeds |
 | <kbd>G</kbd> then <kbd>,</kbd> | Go to Settings |
 | <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar |

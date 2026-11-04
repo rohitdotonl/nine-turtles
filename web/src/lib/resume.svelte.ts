@@ -1,4 +1,4 @@
-// Pick up where you left off (SPEC section 7, decision 0174): when you come
+// Pick up where you left off (SPEC section 7, decision 0175): when you come
 // back to nine turtles, the one article you last left part of the way
 // through is offered in one quiet line, on whichever device you sign in on.
 // Each device keeps its own places for every article (places.ts); the server

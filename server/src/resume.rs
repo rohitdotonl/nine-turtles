@@ -1,4 +1,4 @@
-//! Pick up where you left off (SPEC section 7, decision 0174): the one
+//! Pick up where you left off (SPEC section 7, decision 0175): the one
 //! article the reader last left part of the way through, and their place in
 //! it, kept on the server so every device they sign in on can offer it. Each
 //! device still keeps its own places for every article (decision 0060);

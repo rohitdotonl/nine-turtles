@@ -2,11 +2,6 @@
 //! sort order, whether Unread is on (SPEC section 10), and
 //! which lists the sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
 //! belong to each device and stay in its browser.
-//!
-//! Readers could once give shortcuts keys of their own (decision 0110, removed
-//! in step 5 of the owner's review). A reader who had is told once, at the
-//! foot of the `?` list, that the keys are back to nine turtles' own
-//! (`keys_reset`); seeing it removes the old keys (`keys_seen`).
 
 use axum::{
     Json, Router,
@@ -34,34 +29,26 @@ pub fn routes() -> Router<AppState> {
 #[serde(rename_all = "lowercase")]
 enum Hideable {
     Starred,
+    Notes,
     All,
-    Recent,
-    Searches,
-    Collections,
 }
 
 impl Hideable {
-    const EVERY: [Self; 5] = [
-        Self::Starred,
-        Self::All,
-        Self::Recent,
-        Self::Searches,
-        Self::Collections,
-    ];
+    const EVERY: [Self; 3] = [Self::Starred, Self::Notes, Self::All];
 
     const fn stored(self) -> &'static str {
         match self {
             Self::Starred => "starred",
+            Self::Notes => "notes",
             Self::All => "all",
-            Self::Recent => "recent",
-            Self::Searches => "searches",
-            Self::Collections => "collections",
         }
     }
 }
 
 /// The hidden lists as stored: their words, separated by commas, in one
-/// order. Anything not understood is left out.
+/// order. Anything not understood is left out, such as the lists nine
+/// turtles no longer has (Recently read, saved searches and collections,
+/// decision 0174).
 fn hidden_from(stored: Option<&str>) -> Vec<Hideable> {
     let words: Vec<&str> = stored.unwrap_or("").split(',').collect();
     Hideable::EVERY
@@ -87,9 +74,6 @@ struct Settings {
     /// off (none of those). Read state is recorded either way. Nothing
     /// stored means on.
     unread: bool,
-    /// The reader had given shortcuts keys of their own, which are back to
-    /// nine turtles' own now, and hasn't been told yet.
-    keys_reset: bool,
     /// The lists the sidebar leaves out; none by default.
     hidden: Vec<Hideable>,
 }
@@ -100,16 +84,13 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     unread: Option<bool>,
-    /// The reader has been told their own keys are gone: the old ones are removed.
-    #[serde(default)]
-    keys_seen: bool,
     hidden: Option<Vec<Hideable>>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'unread', 'keys', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'unread', 'hidden')",
     )
     .bind(person)
     .fetch_all(db)
@@ -125,13 +106,10 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         _ => Order::Newest,
     };
     let unread = value("unread") != Some("off");
-    // `{}` was what Reset all keys left: nothing changed, nothing to tell.
-    let keys_reset = value("keys").is_some_and(|saved| saved.trim() != "{}");
     let hidden = hidden_from(value("hidden"));
     Ok(Settings {
         sort,
         unread,
-        keys_reset,
         hidden,
     })
 }
@@ -173,12 +151,6 @@ async fn change(
                 .await?;
             }
         }
-        if change.keys_seen {
-            sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'keys'")
-                .bind(person)
-                .execute(&mut *transaction)
-                .await?;
-        }
         transaction.commit().await?;
         load(&state.db, person).await
     }
@@ -196,13 +168,13 @@ mod tests {
     #[test]
     fn hidden_lists_are_kept_in_one_order_and_unknown_words_are_left_out() {
         assert_eq!(
-            hidden_stored(&[Hideable::Searches, Hideable::Starred]),
-            "starred,searches"
+            hidden_stored(&[Hideable::All, Hideable::Starred]),
+            "starred,all"
         );
         assert_eq!(hidden_stored(&[]), "");
         assert_eq!(
-            hidden_from(Some("recent,later,starred")),
-            [Hideable::Starred, Hideable::Recent]
+            hidden_from(Some("recent,later,notes,starred,collections")),
+            [Hideable::Starred, Hideable::Notes]
         );
         assert!(hidden_from(None).is_empty());
         assert!(hidden_from(Some("")).is_empty());

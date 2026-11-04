@@ -6,7 +6,7 @@
   to screen readers, together at the right as Apple Books keeps its reading
   toolbar (decision 0050): Open original, Aa (the reading panel), Star and
   More (…). More holds Copy
-  link (Share on phones), Mark unread, Add to collection… and Write back (SPEC
+  link (Share on phones), Mark unread and Write back (SPEC
   sections 7, 8, 9, 21, 33 and 37). Write back also ends the article. The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
@@ -58,7 +58,6 @@
     toggles = 0,
     onStar,
     onMarkUnread,
-    onCollect,
     onHide,
     beforeToolbar,
     library,
@@ -81,8 +80,6 @@
     toggles?: number;
     onStar: () => void;
     onMarkUnread: () => void;
-    /** "Add to collection…" (or l): the sheet of the reader's collections (decision 0108). */
-    onCollect: () => void;
     /** "Hide articles about…": Settings › Hiding, with a new rule for whoever wrote it (SPEC section 27). */
     onHide: (feed: number) => void;
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
@@ -144,13 +141,12 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, its collections, and hiding others like it. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, writing back, and hiding others like it. */
   let more: MenuGroup[] = $derived([
     {
       items: [
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
-        { label: "Add to collection…", shortcut: phone ? undefined : keyFor("collect"), onSelect: onCollect },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
         ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
@@ -172,7 +168,7 @@
     writing = undefined;
     if (latest) {
       keepPlace(latest.id, latest.place);
-      // The latest is also where you left off, offered on every device (decision 0174).
+      // The latest is also where you left off, offered on every device (decision 0175).
       placeKept(latest.id, latest.place);
     }
     latest = undefined;

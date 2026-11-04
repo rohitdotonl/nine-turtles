@@ -18,26 +18,6 @@ export function when(at: number, now: Date = new Date()): string {
   return DAY_AND_YEAR.format(date);
 }
 
-const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
-const LONG_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
-const LONG_DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-/**
- * Recently read's quiet day headings (SPEC section 5), by the device's own
- * calendar: "Today", "Yesterday", then the weekday for the rest of the last
- * week ("Monday"), then the date ("12 October", with the year when it isn't
- * this one). Never a count.
- */
-export function dayHeading(at: number, now: Date = new Date()): string {
-  const date = new Date(at * 1000);
-  const day = (moment: Date) => Date.UTC(moment.getFullYear(), moment.getMonth(), moment.getDate()) / 86_400_000;
-  const ago = day(now) - day(date);
-  if (ago <= 0) return "Today";
-  if (ago === 1) return "Yesterday";
-  if (ago < 7) return WEEKDAY.format(date);
-  return (date.getFullYear() === now.getFullYear() ? LONG_DAY : LONG_DAY_AND_YEAR).format(date);
-}
-
 /** When a paused feed was paused, for Edit feed: "Paused today.", "Paused on 23 Oct." (SPEC section 15). */
 export function pausedSince(at: number, now: Date = new Date()): string {
   const date = new Date(at * 1000);

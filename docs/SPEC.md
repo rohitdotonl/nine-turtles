@@ -55,7 +55,7 @@ A few words used throughout:
 | 31 | *Retired: starter packs, removed from the website (decision 0158)* |
 | 32 | [Reading offline](spec/32-reading-offline.md) |
 | 33 | [Connecting your own AI assistant (MCP)](spec/33-ai-assistants-mcp.md) |
-| 34 | [Collections](spec/34-collections.md) |
+| 34 | *Retired: collections, removed in favour of Starred (decision 0174)* |
 | 35 | [Podcasts](spec/35-podcasts.md) |
 | 36 | [People and publications](spec/36-people.md) |
 | 37 | [Writing back](spec/37-writing-back.md) |

@@ -339,7 +339,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": true, "hidden": [] })
     );
 
     let (status, _) = reader
@@ -348,7 +348,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": true, "hidden": [] })
     );
 
     // Another device, signed in separately, sees the same.
@@ -361,7 +361,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
     assert_eq!(
         other,
-        json!({ "sort": "oldest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": true, "hidden": [] })
     );
 
     let (status, _) = reader
@@ -370,7 +370,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": true, "hidden": [] })
     );
 }
 
@@ -385,7 +385,7 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         body,
-        json!({ "sort": "newest", "unread": false, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "newest", "unread": false, "hidden": [] })
     );
 
     // Changing the sort order alone leaves Unread as it was.
@@ -394,7 +394,7 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
         .await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": false, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": false, "hidden": [] })
     );
 
     // Read state is still recorded quietly with Unread off, and shows again
@@ -415,13 +415,25 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
             .any(|article| article.1 == id)
     );
 
+    // Hiding Notes from the sidebar is saved, and comes back (decision 0174).
+    let (status, _) = reader
+        .post("/api/settings", json!({ "hidden": ["notes"] }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        reader.get("/api/settings").await["hidden"],
+        json!(["notes"])
+    );
+    let (status, _) = reader.post("/api/settings", json!({ "hidden": [] })).await;
+    assert_eq!(status, StatusCode::OK);
+
     let (status, _) = reader
         .post("/api/settings", json!({ "unread": "sideways" }))
         .await;
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true, "keys_reset": false, "hidden": [] })
+        json!({ "sort": "oldest", "unread": true, "hidden": [] })
     );
 }
 
@@ -478,7 +490,7 @@ async fn a_tab_from_before_saving_settings_now_gone_changes_nothing() {
         assert_eq!(status, StatusCode::OK);
         assert_eq!(
             body,
-            json!({ "sort": "newest", "unread": true, "keys_reset": false, "hidden": [] })
+            json!({ "sort": "newest", "unread": true, "hidden": [] })
         );
     }
     let kept: i64 =
@@ -488,46 +500,6 @@ async fn a_tab_from_before_saving_settings_now_gone_changes_nothing() {
             .unwrap();
     assert_eq!(kept, 0);
     assert_eq!(reader.list("view=unread").await.len(), 120);
-}
-
-#[tokio::test]
-async fn a_reader_who_had_keys_of_their_own_is_told_once_and_they_go() {
-    let reader = Reader::new().await;
-    assert_eq!(reader.get("/api/settings").await["keys_reset"], false);
-
-    // Keys from before step 5 of the owner's review; "{}" (Reset all keys) had none.
-    for (saved, told) in [("{}", false), (r#"{"star":"x"}"#, true)] {
-        sqlx::query(
-            "INSERT INTO person_settings (person_id, name, value) VALUES (1, 'keys', ?)
-             ON CONFLICT (person_id, name) DO UPDATE SET value = excluded.value",
-        )
-        .bind(saved)
-        .execute(&reader.state.db)
-        .await
-        .unwrap();
-        assert_eq!(reader.get("/api/settings").await["keys_reset"], told);
-    }
-
-    // New keys can't be saved; the old ones stay until the reader has been told.
-    let (status, _) = reader
-        .post(
-            "/api/settings",
-            json!({ "sort": "oldest", "keys": { "star": "z" } }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(reader.get("/api/settings").await["keys_reset"], true);
-
-    let (status, body) = reader
-        .post("/api/settings", json!({ "keys_seen": true }))
-        .await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["keys_reset"], false);
-    let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM person_settings WHERE name = 'keys'")
-        .fetch_one(&reader.state.db)
-        .await
-        .unwrap();
-    assert_eq!(left, 0);
 }
 
 /// Milliseconds since 1970, as a device's clock says.

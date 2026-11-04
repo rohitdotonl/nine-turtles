@@ -1,5 +1,7 @@
 # 0170: Fewer settings in the way: no Change keys, no Up Next
 
+*Up Next's table and readers' old keys were deleted by [0174](0174-keep-starred.md).*
+
 *3 November 2026. Step 5 of the owner's review plan. Rohit said go on the
 whole plan and permitted removing these features and their data; the owner's
 critique thread, deciding for him, approved the removal and the one new line.*

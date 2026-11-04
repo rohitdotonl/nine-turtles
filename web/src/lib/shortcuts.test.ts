@@ -10,7 +10,6 @@ function scene(changes: Partial<KeyScene> = {}): KeyScene {
     unreadOff: false,
     onList: true,
     searching: false,
-    ownOrder: false,
     sidebar: true,
     list: true,
     article: true,
@@ -49,7 +48,6 @@ function hands(next?: Route) {
     markAllRead: note("markAllRead"),
     toggleFolder: note("toggleFolder"),
     star: note("star"),
-    collect: note("collect"),
     inArticle: note("inArticle"),
     markUnread: note("markUnread"),
     undo: note("undo"),
@@ -100,7 +98,7 @@ describe("carryOut", () => {
   });
 
   it("goes to a place by its address", () => {
-    expect(run({ kind: "go-to", path: "/recent" }, scene())).toEqual([["go", { kind: "view", view: "recent" }]]);
+    expect(run({ kind: "go-to", path: "/settings/feeds" }, scene())).toEqual([["go", { kind: "your-feeds" }]]);
   });
 
   it("goes to the next feed only from a list, and only when there is one", () => {
@@ -115,7 +113,6 @@ describe("carryOut", () => {
     expect(run(all, scene())).toEqual([["markAllRead"]]);
     expect(run(all, scene({ selected: false }))).toEqual([["markAllRead"]]);
     expect(run(all, scene({ unreadOff: true }))).toEqual([]);
-    expect(run(all, scene({ ownOrder: true }))).toEqual([]);
     expect(run(all, scene({ onList: false }))).toEqual([]);
     expect(run(all, scene({ list: false, article: false }))).toEqual([]);
     expect(run(all, scene({ list: false, article: false, reading: true }))).toEqual([["markAllRead"]]);
@@ -124,7 +121,6 @@ describe("carryOut", () => {
   it("acts on the chosen article only in a list", () => {
     for (const [kind, did] of [
       ["star", "star"],
-      ["collect", "collect"],
       ["mark-unread", "markUnread"],
     ] as const) {
       expect(run({ kind }, scene())).toEqual([[did]]);

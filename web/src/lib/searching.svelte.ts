@@ -9,7 +9,6 @@
 // moving: going to the place, giving the field the keyboard.
 
 import { emptyQuery, isSearching, type Query } from "./search";
-import type { SavedSearch } from "./saved";
 import type { Route } from "./router";
 
 /** How long typing must stop before the list searches. */
@@ -28,12 +27,6 @@ export class Searching {
    * finger moves.
    */
   phoneField = $state(false);
-  /**
-   * What "Save search" or "Edit saved search" will save: the search showing
-   * when it was opened (`holdForSaving`). Shell clears it once used, so Back
-   * to "Save search" finds nothing to save. Going to a place keeps it.
-   */
-  saving: Query | undefined = $state();
   /** Where the keyboard's place was before `/`, to go back to on Escape. */
   #before: Element | null = null;
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -47,12 +40,12 @@ export class Searching {
     return this.shown !== undefined || isSearching(this.query) || this.phoneField;
   }
 
-  /** Starts afresh, limited to `place`; on a saved search, as it was saved. */
-  reset(place: Route, saved?: SavedSearch) {
+  /** Starts afresh, limited to `place`. */
+  reset(place: Route) {
     this.stop();
     this.phoneField = false;
-    this.query = saved ? $state.snapshot(saved.query) : emptyQuery(place);
-    this.shown = saved && isSearching(saved.query) ? $state.snapshot(saved.query) : undefined;
+    this.query = emptyQuery(place);
+    this.shown = undefined;
   }
 
   /** The field is asked for (`/` or the phone's button); `from` had the keyboard, to give it back on Escape (left out: keep the last). */
@@ -78,21 +71,11 @@ export class Searching {
   }
 
   /** Escape: back to `place`'s own list; answers what had the keyboard before `/`, if anything. */
-  close(place: Route, saved?: SavedSearch): Element | null {
-    this.reset(place, saved);
+  close(place: Route): Element | null {
+    this.reset(place);
     const back = this.#before;
     this.#before = null;
     return back;
-  }
-
-  /** What "Save search" or "Edit saved search" would save: the search showing, or else what's typed. */
-  toSave(): Query {
-    return $state.snapshot(this.shown ?? this.query);
-  }
-
-  /** "Save search" or "Edit saved search" opens: holds what it will save. */
-  holdForSaving() {
-    this.saving = this.toSave();
   }
 
   /** Forgets a search still waiting for typing to stop. */

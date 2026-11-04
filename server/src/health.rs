@@ -17,8 +17,8 @@
 //! - **Use this address** moves the feed to an address the reader chose:
 //!   it keeps its name, folders, articles, read marks and stars. A feed
 //!   other readers follow too isn't moved under them: the reader follows
-//!   the new address instead, with their name, settings, folders, rules and
-//!   saved searches, and every article they had and every mark comes along
+//!   the new address instead, with their name, settings, folders and
+//!   rules, and every article they had and every mark comes along
 //!   (`follow_elsewhere`): nothing of theirs is cleared later.
 //! - **Unsubscribe** is the usual one, with Undo (`folders`).
 //!
@@ -453,8 +453,7 @@ async fn move_to(
 
 /// Use this address, for a feed others follow too: the reader follows the
 /// feed at the new address (stored once, like any other), under their name
-/// for the old one and with its settings, folders, rules and saved
-/// searches. Every article they had and every mark comes along, as moving
+/// for the old one and with its settings, folders and rules. Every article they had and every mark comes along, as moving
 /// in place keeps them (`carry_entries_over`), and their old subscription
 /// goes outright: nothing is left to clear later, so nothing of theirs is
 /// lost. Answers the feed they follow now, and whether it was stored from
@@ -546,16 +545,6 @@ async fn follow_elsewhere(
         .bind(old)
         .execute(&mut *transaction)
         .await?;
-    sqlx::query(
-        "UPDATE saved_searches SET query = json_set(query, '$.scope.id', ?1)
-         WHERE person_id = ?2 AND json_extract(query, '$.scope.kind') = 'feed'
-             AND json_extract(query, '$.scope.id') = ?3",
-    )
-    .bind(new)
-    .bind(person)
-    .bind(old)
-    .execute(&mut *transaction)
-    .await?;
     carry_entries_over(&mut *transaction, person, old, new).await?;
     folders::take_out_of_folders(&mut *transaction, person, old).await?;
     // No entry points at it any more (the foreign key would refuse
@@ -633,17 +622,15 @@ async fn carry_entries_over(
         let merged = match copy {
             Some(copy) if copy != article && taken.insert(copy) => {
                 sqlx::query(
-                    // The times go with the marks, so the article stays in
-                    // Recently read and a late offline mark from before the
-                    // move can't undo a newer one (survey A9.3).
+                    // The times go with the marks, so a late offline mark
+                    // from before the move can't undo a newer one (survey
+                    // A9.3).
                     "UPDATE entries SET
                          read = old.read, muted = old.muted,
                          read_marked_at = old.read_marked_at,
                          starred = MAX(entries.starred, old.starred),
-                         starred_marked_at = MAX(entries.starred_marked_at, old.starred_marked_at),
-                         opened_at = COALESCE(MAX(entries.opened_at, old.opened_at),
-                                              entries.opened_at, old.opened_at)
-                     FROM (SELECT read, starred, muted, read_marked_at, starred_marked_at, opened_at
+                         starred_marked_at = MAX(entries.starred_marked_at, old.starred_marked_at)
+                     FROM (SELECT read, starred, muted, read_marked_at, starred_marked_at
                            FROM entries WHERE person_id = ?1 AND article_id = ?2) AS old
                      WHERE entries.person_id = ?1 AND entries.article_id = ?3
                          AND entries.feed_id = ?4",
@@ -660,22 +647,6 @@ async fn carry_entries_over(
             _ => false,
         };
         if merged {
-            // Its collections go with its marks to the copy (decision 0108);
-            // a collection already holding the copy keeps the one line.
-            sqlx::query(
-                "UPDATE OR IGNORE collection_articles SET article_id = ?3
-                 WHERE person_id = ?1 AND article_id = ?2",
-            )
-            .bind(person)
-            .bind(article)
-            .bind(copy)
-            .execute(&mut *connection)
-            .await?;
-            sqlx::query("DELETE FROM collection_articles WHERE person_id = ? AND article_id = ?")
-                .bind(person)
-                .bind(article)
-                .execute(&mut *connection)
-                .await?;
             // Their highlights and notes go with it too (decision 0164).
             sqlx::query(
                 "UPDATE OR IGNORE notes SET article_id = ?3 WHERE person_id = ?1 AND article_id = ?2",
@@ -685,20 +656,16 @@ async fn carry_entries_over(
             .bind(copy)
             .execute(&mut *connection)
             .await?;
-            // Where they stopped in an episode goes with it too (decision 0113),
-            // and so do the unused Up Next lines (decision 0170), so the old
-            // table stays consistent; what the old line keeps goes with it.
-            for table in ["episode_progress", "up_next"] {
-                sqlx::query(sqlx::AssertSqlSafe(format!(
-                    "UPDATE OR IGNORE {table} SET article_id = ?3
-                     WHERE person_id = ?1 AND article_id = ?2"
-                )))
-                .bind(person)
-                .bind(article)
-                .bind(copy)
-                .execute(&mut *connection)
-                .await?;
-            }
+            // Where they stopped in an episode goes with it too (decision 0113).
+            sqlx::query(
+                "UPDATE OR IGNORE episode_progress SET article_id = ?3
+                 WHERE person_id = ?1 AND article_id = ?2",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
             sqlx::query("DELETE FROM entries WHERE person_id = ? AND article_id = ?")
                 .bind(person)
                 .bind(article)

@@ -1,5 +1,7 @@
 # 0173: Rules become one sentence, "Hide articles about…"
 
+*The switched-off rules were deleted by [0174](0174-keep-starred.md).*
+
 *4 November 2026. Step 8 of the owner's review plan. Rohit said go on the
 whole plan and permitted removing these features and their data, including
 the data path below. The words were agreed in the owner's review thread.*

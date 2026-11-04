@@ -7,5 +7,6 @@
   { "from": "/blog/four-days-in-the-open/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
   { "from": "/blog/being-polite-to-publishers/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
   { "from": "/blog/what-we-left-out/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
-  { "from": "/help/inbox-or-river/", "to": "/help/unread-on-or-off/", "title": "Unread, on or off", "why": "Inbox and River became one switch, Unread on or off (decision 0172)." }
+  { "from": "/help/inbox-or-river/", "to": "/help/unread-on-or-off/", "title": "Unread, on or off", "why": "Inbox and River became one switch, Unread on or off (decision 0172)." },
+  { "from": "/help/keep-articles-in-collections/", "to": "/help/star-an-article/", "title": "Star an article", "why": "Collections went; Starred is the one place to keep articles (decision 0174)." }
 ]

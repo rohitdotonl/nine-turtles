@@ -7,12 +7,6 @@ const server = vi.hoisted(() => ({
   resubscribe: vi.fn(),
   deleteFolder: vi.fn(),
   createFolder: vi.fn(),
-  listSaved: vi.fn(),
-  deleteSaved: vi.fn(),
-  saveSearch: vi.fn(),
-  listCollections: vi.fn(),
-  deleteCollection: vi.fn(),
-  makeCollection: vi.fn(),
   unsubscribeAll: vi.fn(),
 }));
 
@@ -28,19 +22,6 @@ vi.mock("./people", async (actual) => ({
   ...(await actual<typeof import("./people")>()),
   unsubscribeAll: server.unsubscribeAll,
 }));
-vi.mock("./saved", async (actual) => ({
-  ...(await actual<typeof import("./saved")>()),
-  listSaved: server.listSaved,
-  deleteSaved: server.deleteSaved,
-  saveSearch: server.saveSearch,
-}));
-vi.mock("./collections", async (actual) => ({
-  ...(await actual<typeof import("./collections")>()),
-  listCollections: server.listCollections,
-  deleteCollection: server.deleteCollection,
-  makeCollection: server.makeCollection,
-}));
-
 const { LoadedLibrary } = await import("./library.svelte");
 
 function feed(id: number, unread = 0, folders: number[] = []): Feed {
@@ -53,8 +34,6 @@ function later<T>() {
   const promise = new Promise<T>((resolve) => (give = resolve));
   return { promise, give };
 }
-
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
   for (const each of Object.values(server)) each.mockReset();
@@ -91,11 +70,10 @@ describe("the reader's library", () => {
     expect(library.feeds?.[0]?.unread).toBe(4);
   });
 
-  it("puts a deleted folder back with its feeds and saved searches on Undo", async () => {
+  it("puts a deleted folder back with its feeds on Undo", async () => {
     server.listFeeds.mockResolvedValue({ feeds: [feed(1, 0, [7]), feed(2)], folders: [{ id: 7, name: "News" }] });
-    server.deleteFolder.mockResolvedValue({ searches: [9] });
+    server.deleteFolder.mockResolvedValue(undefined);
     server.createFolder.mockResolvedValue(undefined);
-    server.listSaved.mockResolvedValue([]);
     const library = new LoadedLibrary();
     await library.loadFeeds();
 
@@ -104,8 +82,7 @@ describe("the reader's library", () => {
     expect(done.message).toBe("Deleted the folder News");
     expect(await done.undo?.()).toBeUndefined();
 
-    expect(server.createFolder).toHaveBeenCalledWith("News", [1], [9]);
-    expect(server.listSaved).toHaveBeenCalled();
+    expect(server.createFolder).toHaveBeenCalledWith("News", [1]);
   });
 
   it("says why a removal or its Undo wasn't made", async () => {
@@ -119,34 +96,5 @@ describe("the reader's library", () => {
     const done = await library.unsubscribe(feed(1));
     if (typeof done === "string") throw new Error(done);
     expect(typeof (await done.undo?.())).toBe("string");
-  });
-
-  it("takes a deleted saved search off at once, and tells the screen each time searches arrive", async () => {
-    const arrived = vi.fn();
-    server.listSaved.mockResolvedValue([{ id: 1, name: "a", query: {} }]);
-    server.deleteSaved.mockResolvedValue(undefined);
-    const library = new LoadedLibrary(arrived);
-    await library.loadSearches();
-    expect(arrived).toHaveBeenCalledTimes(1);
-
-    server.listSaved.mockResolvedValue([]);
-    const done = await library.deleteSearch({ id: 1, name: "a", query: {} as never });
-    expect(typeof done).toBe("object");
-    expect(library.searches).toEqual([]);
-    await settle();
-    expect(arrived).toHaveBeenCalledTimes(2);
-  });
-
-  it("keeps saved searches and collections A to Z as they're made and renamed", () => {
-    const library = new LoadedLibrary();
-    library.searchSaved({ id: 2, name: "beta", query: {} as never });
-    library.searchSaved({ id: 1, name: "Alpha", query: {} as never });
-    expect(library.searches.map((each) => each.name)).toEqual(["Alpha", "beta"]);
-
-    library.collectionMade({ id: 1, name: "Later" });
-    library.collectionMade({ id: 2, name: "Keep" });
-    library.collectionRenamed(2, "Zoo");
-    expect(library.collections.map((each) => each.name)).toEqual(["Later", "Zoo"]);
-    expect(library.names.collections).toBe(library.collections);
   });
 });

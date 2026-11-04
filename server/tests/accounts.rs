@@ -560,10 +560,6 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
             "a folder",
         ),
         (
-            "INSERT INTO saved_searches (person_id, name, query, created_at) VALUES (?, 'Gardens', '{\"words\":\"garden\"}', 0)",
-            "a saved search",
-        ),
-        (
             "INSERT INTO rules (person_id, words, action, created_at) VALUES (?, 'Sponsored', 'mute', 0)",
             "a rule",
         ),
@@ -750,7 +746,6 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
     // Some of their data, and the owner's, and two things of their account.
     for statement in [
         "INSERT INTO folders (person_id, name) VALUES (?, 'Essays')",
-        "INSERT INTO saved_searches (person_id, name, query, created_at) VALUES (?, 'Gardens', '{\"words\":\"garden\"}', 0)",
         "INSERT INTO rules (person_id, words, action, created_at) VALUES (?, 'Sponsored', 'mute', 0)",
         "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'sort', 'oldest')",
         "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
@@ -763,7 +758,7 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
                 .unwrap();
         }
     }
-    // A feed only they follow, with a starred article on a collection, and
+    // A feed only they follow, with a starred article, and
     // one the owner follows too.
     for (id, url, followers) in [
         (901, "https://only.example/feed", vec![person]),
@@ -805,15 +800,6 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
             .unwrap();
         }
     }
-    let made = post(
-        &base,
-        "/api/collections",
-        Some(&cookie),
-        json!({ "name": "Keep" }),
-    )
-    .await;
-    assert!(made.status().is_success(), "{}", made.status());
-
     // Two of their newsletters: one they follow, and one they stopped,
     // whose feed's line keeps its sender away (decision 0091).
     for (id, stopped) in [(903, None), (904, Some(1))] {

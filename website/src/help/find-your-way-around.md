@@ -20,9 +20,8 @@ From the top:
 
 - **Find a person or folder**: type a few letters of a name to narrow the
   sidebar. <kbd>Esc</kbd> empties it.
-- **Unread**, **Starred**, **All** and **Recently read** (the last 50
-  articles you opened).
-- Your **Saved searches** and **Collections**.
+- **Unread**, **Starred**, **Notes** (once you've highlighted something)
+  and **All**.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, **Keys** and **Settings**.

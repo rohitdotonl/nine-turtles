@@ -1,5 +1,5 @@
 <!--
-  Pick up where you left off (SPEC section 7, decision 0174): one quiet line offering the article you
+  Pick up where you left off (SPEC section 7, decision 0175): one quiet line offering the article you
   last left part of the way through, "You were reading {title}, by {writer}.", the title a link in
   the text color (never the accent). In the empty reading area it takes the place of "Time to read
   something beautiful."; with no reading area (a phone), it sits at the top of the list. It goes

@@ -1,5 +1,7 @@
 # 0081: Saved searches in the sidebar
 
+*Replaced by [0174](0174-keep-starred.md): saved searches are gone; the database keeps them unused.*
+
 *25 October 2026. Built in V2 at the owner's request (planning thread of 25 October 2026).*
 
 **Decision.** A search can be saved under a name and opened again from the

@@ -1,5 +1,7 @@
 # 0108: Collections, the reader's own shelves for articles
 
+*Replaced by [0174](0174-keep-starred.md): collections are gone, with their data.*
+
 *27 October 2026.*
 
 **Decision.** Readers can put articles on **collections**: named shelves of
@@ -12,8 +14,8 @@ wording in AGENTS.md.
 1. **What they are.** A name and a set of the reader's articles. An article
    can be on several. Each reader's collections are theirs alone (decision
    0086): names are unique per reader whatever their capitals, and every
-   request reads and changes only the signed-in reader's lines (tested in
-   `server/tests/collections.rs`). **Stars stay separate**: starring and
+   request reads and changes only the signed-in reader's lines
+   (tested at the time). **Stars stay separate**: starring and
    collecting are two different things, and neither changes the other.
 2. **Putting an article on one.** The article's More menu has **Add to
    collection…**, and the key **l** does the same for the open or selected

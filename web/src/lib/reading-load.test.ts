@@ -23,28 +23,27 @@ describe("the reading settings", () => {
   it("read the sort order, with calm defaults for anything not understood", async () => {
     const stored = new Map<string, string>();
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value), removeItem: (key: string) => stored.delete(key) });
-    server({ sort: "oldest", unread: true, keys_reset: true });
+    server({ sort: "oldest", unread: true });
     let { loadSettings } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", unread: true, keysReset: true, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "oldest", unread: true, hidden: [] });
 
     server({ sort: "sideways", unread: false });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", unread: false, keysReset: false, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "newest", unread: false, hidden: [] });
 
-    // Unreachable: newest first, nothing is said about keys, and Unread is as this device last saw it.
+    // Unreachable: newest first, and Unread is as this device last saw it.
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
     ({ loadSettings } = await load());
     const offline = await loadSettings();
     expect(offline.sort).toBe("newest");
-    expect(offline.keysReset).toBe(false);
     expect(offline.unread).toBe(false);
   });
 
   it("save each setting on its own", async () => {
     const sent = server({});
-    const { saveSort, saveKeysSeen } = await load();
+    const { saveSort, saveUnread } = await load();
     await saveSort("oldest");
-    await saveKeysSeen();
-    expect(sent.map((each) => each.body)).toEqual([{ sort: "oldest" }, { keys_seen: true }]);
+    await saveUnread(false);
+    expect(sent.map((each) => each.body)).toEqual([{ sort: "oldest" }, { unread: false }]);
   });
 });

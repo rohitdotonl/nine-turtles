@@ -1,9 +1,5 @@
 <!--
-  The sidebar's saved searches, collections, folders and feeds (SPEC section
-  5). Saved searches come first, A to Z, under their own small heading, only
-  once there is one; each has a small search icon in the icon column, where
-  Unread, Starred and All have theirs, and no dot. Collections follow the
-  same way, each with a small shelf of books (SPEC section 34). Then folders A to Z, each
+  The sidebar's folders and feeds (SPEC section 5): folders A to Z, each
   with a small dot when any of its feeds has something unread, and a button that
   shows or hides the people and publications in it, then those in no
   folder, A to Z, under two headings: People, then Publications (decision
@@ -24,8 +20,7 @@
   in, and a tap on its name opens its list (decision 0043).
 
   While the sidebar search holds text, a flat list of the folders and feeds
-  whose name contains it takes their place (saved searches and collections aren't in it:
-  the find field is for feeds and folders, DESIGN.md → Exceptions log).
+  whose name contains it takes their place.
 
   With Unread off (SPEC section 10) there are no dots.
 -->
@@ -34,14 +29,10 @@
   import type { Feed, Folder } from "./shapes";
   import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders } from "./feeds";
   import { pathFor, type Route } from "./router";
-  import type { SavedSearch } from "./saved";
-  import type { Collection } from "./collections";
 
   let {
     feeds,
     folders,
-    searches,
-    collections = [],
     route,
     search,
     follow,
@@ -50,10 +41,6 @@
   }: {
     feeds: Feed[];
     folders: Folder[];
-    /** Saved searches, alphabetically (SPEC section 14). */
-    searches: SavedSearch[];
-    /** The reader's collections, A to Z (SPEC section 34); none when hidden in Settings. */
-    collections?: Collection[];
     route: Route;
     /** What's typed in the sidebar search. */
     search: string;
@@ -145,42 +132,6 @@
   </li>
 {/snippet}
 
-{#snippet searchRow(saved: SavedSearch)}
-  {@const place: Route = { kind: "search", id: saved.id }}
-  <li>
-    <a
-      href={pathFor(place)}
-      aria-current={isHere(place) ? "page" : undefined}
-      onclick={(event) => follow(event, place)}
-      title={saved.name}
-      class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
-        isHere(place) ? "font-semibold text-ink" : "text-ink",
-      ]}
-      ><span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="search" size={16} /></span
-      >{@render name(saved.name)}<span class="sr-only"> (saved search)</span>{@render leadsOn()}</a
-    >
-  </li>
-{/snippet}
-
-{#snippet collectionRow(collection: Collection)}
-  {@const place: Route = { kind: "collection", id: collection.id }}
-  <li>
-    <a
-      href={pathFor(place)}
-      aria-current={isHere(place) ? "page" : undefined}
-      onclick={(event) => follow(event, place)}
-      title={collection.name}
-      class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
-        isHere(place) ? "font-semibold text-ink" : "text-ink",
-      ]}
-      ><span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="shelf" size={16} /></span
-      >{@render name(collection.name)}<span class="sr-only"> (collection)</span>{@render leadsOn()}</a
-    >
-  </li>
-{/snippet}
-
 <!--
   A folder's name: a link to its articles. On the folder you're in it is also
   the fold (decision 0123), so there it says whether the feeds show, for
@@ -225,22 +176,6 @@
     </ul>
   {/if}
 {:else}
-  {#if searches.length > 0}
-    <h2 class="sidebar-section">Saved searches</h2>
-    <ul>
-      {#each searches as saved (saved.id)}
-        {@render searchRow(saved)}
-      {/each}
-    </ul>
-  {/if}
-  {#if collections.length > 0}
-    <h2 class="sidebar-section">Collections</h2>
-    <ul>
-      {#each collections as collection (collection.id)}
-        {@render collectionRow(collection)}
-      {/each}
-    </ul>
-  {/if}
   {#if folders.length > 0}
     <h2 class="sidebar-section">Folders</h2>
     <ul>

@@ -67,14 +67,12 @@ pub struct Deleted {
     pub name: String,
     /// The feeds that were in it.
     pub feeds: Vec<i64>,
-    /// Saved searches that looked in it, now looking in no folder.
-    pub searches: Vec<i64>,
 }
 
 /// Deletes one of the reader's folders, the one way every door does it (the
 /// screen, sync apps, assistants). Its feeds stay followed; they just leave
-/// it. Saved searches for it stay, finding nothing (decision 0081). Answers what Undo needs, or `None` when the
-/// reader has no such folder.
+/// it. Answers what Undo needs, or `None` when the reader has no
+/// such folder.
 pub async fn delete(
     connection: &mut SqliteConnection,
     person: i64,
@@ -97,22 +95,16 @@ pub async fn delete(
     let Some(name) = name else {
         return Ok(None);
     };
-    let searches = crate::saved_searches::forget(&mut *connection, person, "folder", id).await?;
-    Ok(Some(Deleted {
-        name,
-        feeds,
-        searches,
-    }))
+    Ok(Some(Deleted { name, feeds }))
 }
 
 /// Undo for `delete`: fills the folder made again, numbered `id`, with the
-/// feeds the reader still follows, and hands back its saved searches.
+/// feeds the reader still follows.
 pub async fn put_back(
     connection: &mut SqliteConnection,
     person: i64,
     id: i64,
     feeds: &[i64],
-    searches: &[i64],
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
@@ -125,6 +117,5 @@ pub async fn put_back(
     .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
     .execute(&mut *connection)
     .await?;
-    crate::saved_searches::back_in(&mut *connection, person, "folder", id, searches).await?;
     Ok(())
 }

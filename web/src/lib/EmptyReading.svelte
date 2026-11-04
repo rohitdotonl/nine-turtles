@@ -2,7 +2,7 @@
   The reading area with nothing open (decision 0053): one quiet line in the middle of the paper, as
   a Mac app shows when nothing is chosen: Literata, muted, never the accent, no picture, 40% down
   (decision 0142). Where you left off part of the way through an article, the line offers it instead
-  (`PickUp`, decision 0174). Under it, when the list has something to open, how to open one (`ReadingTip`).
+  (`PickUp`, decision 0175). Under it, when the list has something to open, how to open one (`ReadingTip`).
 -->
 <script lang="ts">
   import PickUp from "./PickUp.svelte";

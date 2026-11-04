@@ -4,7 +4,7 @@
 //! listing and reading their articles, marking them read and starring them,
 //! the shared settings, checking feeds in the background (`checking`),
 //! folders and unsubscribing (`folders`), tidying many feeds at once
-//! (`tidy`), saved searches (`saved_searches`), OPML files (`subscriptions`),
+//! (`tidy`), OPML files (`subscriptions`),
 //! instant updates from WebSub hubs (`websub`), syncing with other feed
 //! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
 //! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
@@ -24,7 +24,6 @@ pub mod auth;
 pub mod backup;
 pub mod checking;
 pub mod cleanup;
-pub mod collections;
 pub mod config;
 pub mod confirm_email;
 pub mod dates;
@@ -53,10 +52,8 @@ pub mod password;
 pub mod payments;
 pub mod people;
 pub mod podcasts;
-pub mod recent;
 pub mod resume;
 pub mod rules;
-pub mod saved_searches;
 pub mod search;
 pub mod security;
 pub mod settings;
@@ -240,7 +237,6 @@ pub fn router(state: AppState) -> Router {
         .merge(subscriptions::routes())
         .merge(tidy::routes())
         .merge(marks::routes())
-        .merge(recent::routes())
         .merge(resume::routes())
         .merge(podcasts::routes())
         .merge(frequency::routes())
@@ -250,8 +246,6 @@ pub fn router(state: AppState) -> Router {
         .merge(payments::routes())
         .merge(rules::routes())
         .merge(search::routes())
-        .merge(saved_searches::routes())
-        .merge(collections::routes())
         .merge(settings::routes())
         .merge(starred::routes())
         .merge(star_import::routes())

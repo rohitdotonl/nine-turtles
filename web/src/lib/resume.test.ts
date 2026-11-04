@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// Pick up where you left off (SPEC section 7, decision 0174). Each test loads
+// Pick up where you left off (SPEC section 7, decision 0175). Each test loads
 // the file afresh, as a page load would.
 async function load() {
   vi.resetModules();

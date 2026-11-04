@@ -184,11 +184,10 @@ fn list() -> Vec<Value> {
             "create_folder",
             "Create a folder",
             "Makes a folder (or finds the one with that name), optionally with feeds in it. \
-             To undo delete_folder, pass the name, feed_ids and search_ids it answered.",
+             To undo delete_folder, pass the name and feed_ids it answered.",
             json!({
                 "name": { "type": "string", "maxLength": folders::LONGEST_NAME },
                 "feed_ids": { "type": "array", "items": { "type": "integer" } },
-                "search_ids": { "type": "array", "items": { "type": "integer" }, "description": "Saved searches that looked in a removed folder." },
             }),
             &["name"],
             changing(false, true),
@@ -205,7 +204,7 @@ fn list() -> Vec<Value> {
             "delete_folder",
             "Remove a folder",
             "Removes a folder. Its feeds stay followed; they just leave it. \
-             Answers its feeds and saved searches, so create_folder can put it back (its undo).",
+             Answers its feeds, so create_folder can put it back (its undo).",
             json!({ "folder_id": folder_id }),
             &["folder_id"],
             changing(true, true),

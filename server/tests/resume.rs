@@ -1,4 +1,4 @@
-//! Pick up where you left off (SPEC section 7, decision 0174), tested against
+//! Pick up where you left off (SPEC section 7, decision 0175), tested against
 //! a real running nine turtles and a made-up publisher.
 
 mod common;

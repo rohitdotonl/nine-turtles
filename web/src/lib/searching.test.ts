@@ -1,11 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { emptyQuery, type Query } from "./search";
 import { SEARCH_AFTER, Searching } from "./searching.svelte";
-import type { SavedSearch } from "./saved";
 
 const FEED = { kind: "feed", id: 4 } as const;
 const typed = (words: string): Query => ({ ...emptyQuery(FEED), words });
-const SAVED: SavedSearch = { id: 9, name: "Rust", query: { ...emptyQuery({ kind: "view", view: "unread" }), words: "rust" } };
 
 describe("searching", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -47,30 +45,6 @@ describe("searching", () => {
     expect(searching.query).toEqual(emptyQuery({ kind: "view", view: "starred" }));
   });
 
-  it("on a saved search, starts as it was saved", () => {
-    const searching = new Searching(FEED);
-    searching.reset({ kind: "search", id: 9 }, SAVED);
-    expect(searching.query).toEqual(SAVED.query);
-    expect(searching.shown).toEqual(SAVED.query);
-  });
-
-  it("a saved search with nothing to search for shows the place's own list", () => {
-    const searching = new Searching(FEED);
-    const empty = { ...SAVED, query: emptyQuery({ kind: "view", view: "unread" }) };
-    searching.reset({ kind: "search", id: 9 }, empty);
-    expect(searching.query).toEqual(empty.query);
-    expect(searching.shown).toBeUndefined();
-  });
-
-  it("Escape on a saved search puts back what was saved", () => {
-    const searching = new Searching(FEED);
-    searching.reset({ kind: "search", id: 9 }, SAVED);
-    searching.changed({ ...SAVED.query, words: "rust lang" }, true);
-    searching.close({ kind: "search", id: 9 }, SAVED);
-    expect(searching.query).toEqual(SAVED.query);
-    expect(searching.shown).toEqual(SAVED.query);
-  });
-
   it("puts the phone's field away only when nothing is searched", () => {
     const searching = new Searching(FEED);
     expect(searching.putAway()).toBe(false);
@@ -91,25 +65,5 @@ describe("searching", () => {
     expect(searching.close(FEED)).toBe(before);
     expect(searching.open).toBe(false);
     expect(searching.close(FEED)).toBeNull();
-  });
-
-  it("saves the search showing, or else what's typed", () => {
-    const searching = new Searching(FEED);
-    searching.changed(typed("rust"), true);
-    searching.changed(typed("rust lang"), false);
-    expect(searching.toSave().words).toBe("rust");
-    searching.reset(FEED);
-    searching.changed(typed("go"), false);
-    expect(searching.toSave().words).toBe("go");
-  });
-
-  it("holds what Save search will save, through a move to another place, until it's used", () => {
-    const searching = new Searching(FEED);
-    searching.changed(typed("rust"), true);
-    searching.holdForSaving();
-    searching.reset({ kind: "save-search" });
-    expect(searching.saving?.words).toBe("rust");
-    searching.saving = undefined;
-    expect(searching.saving).toBeUndefined();
   });
 });

@@ -57,7 +57,7 @@ to other apps (section 22) or counted anywhere.
   then one quiet line stays at the article's foot: "You're offline. This is
   saved on this device only, and reaches your account once you're back
   online."
-- The Notes list needs a connection; it says so, as Recently read does.
+- The Notes list needs a connection; it says so, as search does.
 
 **Notes**
 - **Notes** in the sidebar, under Starred, lists every article the reader

@@ -248,20 +248,6 @@ body {
   article from the next, as Tufte's "erase non-data ink" asks.
 */
 /*
-  Recently read's day headings (SPEC section 5): quiet, as the sidebar's
-  section names are, small, semibold and in the muted grey, on the titles'
-  edge, with room above to part one day from the next. Never a count.
-*/
-.list-day {
-  padding: 1.25rem var(--list-end, 1.5rem) 0.375rem var(--list-start, 2rem);
-  font-size: var(--text-meta);
-  font-weight: 600;
-  color: var(--muted);
-}
-.item-list > li:first-child > .list-day {
-  padding-top: 0.25rem;
-}
-/*
   A row in the list, like a line of a book's contents (decisions 0123, 0128):
   the list's own pill tint; 22px above, 28px below, the title in the reading
   serif at 1.35 line height (the --row-* values, which ItemList's titles and

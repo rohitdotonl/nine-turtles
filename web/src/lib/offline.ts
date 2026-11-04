@@ -68,11 +68,9 @@ export const END_OF_KEPT = "That's everything saved on this device.";
 export const NOT_KEPT = "This article isn't saved on this device. It opens when you're back online.";
 export const SEARCH_NEEDS_CONNECTION = "Search needs a connection. It works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is what's saved on this device.";
-export const RECENT_NEEDS_CONNECTION = "Recently read needs a connection. It shows once you're back online.";
 export const NOTES_NEED_CONNECTION = "Notes needs a connection. It shows once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
 export const EPISODE_OFFLINE = "The episode plays here when you're back online.";
-export const COLLECTIONS_NEED_CONNECTION = "Collections need a connection. They show once you're back online.";
 export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */
@@ -120,12 +118,8 @@ function feedsOf(source: Source, library: Library | undefined): Set<number> | un
  */
 export function keptList(kept: Kept[], source: Source, order: Order, library?: Library): Article[] {
   if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
-  // Recently read isn't kept on the device (decision 0105).
-  if ("view" in source && source.view === "recent") throw new NeedsConnection(RECENT_NEEDS_CONNECTION);
-  // Nor is Notes (SPEC section 42).
+  // Notes isn't kept on the device (SPEC section 42).
   if ("view" in source && source.view === "notes") throw new NeedsConnection(NOTES_NEED_CONNECTION);
-  // Nor are collections (decision 0108).
-  if ("collection" in source) throw new NeedsConnection(COLLECTIONS_NEED_CONNECTION);
   const feeds = feedsOf(source, library);
   const view = "view" in source ? source.view : undefined;
   const shown = kept.filter((article) => {
@@ -274,15 +268,6 @@ export function keepLibrary(library: Library): void {
 
 export async function keptLibrary(): Promise<Library | undefined> {
   return keeping() ? about<Library>("library") : undefined;
-}
-
-/** Keeps the reader's collections' names, so the sidebar lists them without a connection (decision 0108). */
-export function keepCollections(collections: { id: number; name: string }[]): void {
-  if (keeping()) void remember("collections", collections);
-}
-
-export async function keptCollections(): Promise<unknown> {
-  return keeping() ? about<unknown>("collections") : undefined;
 }
 
 /** A list from the copies on this device, or undefined when there are none to show from. */

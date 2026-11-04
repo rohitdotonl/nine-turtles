@@ -6,8 +6,8 @@
 //! address (the publisher floor). The server only keeps, per reader, a
 //! position in seconds (`episode_progress`), tied to the reader's own entry
 //! for the article (structure change 24), so it goes with it when the entry
-//! goes. (Up Next was removed in step 5 of the owner's review; its old
-//! `up_next` table is kept, unused, until the owner says it can go.) A YouTube video's place is kept the
+//! goes. (Up Next was removed in step 5 of the owner's review, and its table
+//! in step 9, decision 0174.) A YouTube video's place is kept the
 //! same way (decision 0144): any article whose link is on YouTube may have
 //! one, so a video picks up where you stopped, on any device.
 //!

@@ -1,16 +1,13 @@
 // The reader's library as the signed-in screen holds it: the feeds they
-// follow and their folders, their saved searches and their collections, each
-// loaded from the server and kept in order (A to Z), and the four ways to
-// remove one (unsubscribe, delete a folder, a saved search or a collection),
-// each answering with the list's "… · Undo" line.
+// follow and their folders, loaded from the server and kept in order (A to
+// Z), and the ways to remove one (unsubscribe, delete a folder), each
+// answering with the list's "… · Undo" line.
 //
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
 import { createFolder, deleteFolder, listFeeds, refused, resubscribe, type Notice } from "./feeds";
 import { newestAnswer } from "./inorder";
-import { deleteSaved, listSaved, refusedSaving, saveSearch, type SavedSearch } from "./saved";
-import { byName as collectionOrder, deleteCollection, listCollections, makeCollection, refusedCollection, type Collection } from "./collections";
 import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person } from "./shapes";
 
@@ -28,20 +25,9 @@ export class LoadedLibrary {
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
-  /** Your saved searches, alphabetically (SPEC section 14); `searchesLoaded` once the server answered. */
-  searches: SavedSearch[] = $state([]);
-  searchesLoaded = $state(false);
-  /** The saved searches couldn't be loaded, so a saved search's address can't be told from a deleted one. */
-  searchesFailed = $state(false);
-  /** Your collections, A to Z (SPEC section 34); `collectionsLoaded` once the server (or this device) answered. */
-  collections: Collection[] = $state([]);
-  collectionsLoaded = $state(false);
-  /** The collections couldn't be loaded, so a collection's address can't be told from a deleted one. */
-  collectionsFailed = $state(false);
-
-  /** People, folders and collections together, as search and saved searches name them: a person by their row. */
+  /** People and folders together, as search names them: a person by their row. */
   get names(): Library {
-    return { feeds: this.rows ?? [], folders: this.folders, collections: this.collections };
+    return { feeds: this.rows ?? [], folders: this.folders };
   }
 
   /** The place a person's row opens, for any of their places: the place itself, for one on its own. */
@@ -60,14 +46,6 @@ export class LoadedLibrary {
   // A list asked for again before it arrives answers with the newest ask, so a
   // slow answer from before an unsubscribe can't put the feed back.
   #newestFeeds = newestAnswer(listFeeds);
-  #newestSearches = newestAnswer(listSaved);
-  #newestCollections = newestAnswer(listCollections);
-  #searchesArrived: () => void;
-
-  /** `searchesArrived` runs each time the saved searches have loaded (or failed to). */
-  constructor(searchesArrived: () => void = () => {}) {
-    this.#searchesArrived = searchesArrived;
-  }
 
   /** Loads the feeds and folders; `then` runs in the same step as they arrive, so nothing shows in between. */
   async loadFeeds(then?: () => void) {
@@ -91,49 +69,11 @@ export class LoadedLibrary {
     }
   }
 
-  async loadSearches() {
-    try {
-      this.searches = await this.#newestSearches();
-      this.searchesFailed = false;
-    } catch {
-      // The sidebar shows no saved searches until the next try; a saved search's own address says so plainly.
-      this.searchesFailed = true;
-    }
-    this.searchesLoaded = true;
-    this.#searchesArrived();
-  }
-
-  async loadCollections() {
-    try {
-      this.collections = await this.#newestCollections();
-      this.collectionsFailed = false;
-    } catch {
-      // The sidebar lists none until the next try; a collection's own address says so plainly.
-      this.collectionsFailed = true;
-    }
-    this.collectionsLoaded = true;
-  }
-
   /** A mark on this screen changed a feed's unread count. */
   unreadChanged(feedId: number, change: number) {
     this.#countChanges++;
     const feed = this.feeds?.find((each) => each.id === feedId);
     if (feed) feed.unread = Math.max(0, feed.unread + change);
-  }
-
-  /** A saved search was made or changed: it takes its place A to Z. */
-  searchSaved(saved: SavedSearch) {
-    this.searches = [...this.searches.filter((each) => each.id !== saved.id), saved].sort(byName);
-  }
-
-  /** A collection made in the sheet joins the sidebar at once, in its place A to Z. */
-  collectionMade(made: Collection) {
-    this.collections = [...this.collections.filter((each) => each.id !== made.id), made].sort(collectionOrder);
-  }
-
-  /** A collection was renamed: it moves to its new place A to Z. */
-  collectionRenamed(id: number, name: string) {
-    this.collections = this.collections.map((each) => (each.id === id ? { ...each, name } : each)).sort(collectionOrder);
   }
 
   /** Unsubscribes from a person or publication: every source of theirs at once, with Undo bringing them all back. */
@@ -157,19 +97,18 @@ export class LoadedLibrary {
     };
   }
 
-  /** Deletes a folder (never its feeds): "Deleted the folder … · Undo", which puts its feeds and saved searches back. */
+  /** Deletes a folder (never its feeds): "Deleted the folder … · Undo", which puts its feeds back. */
   async deleteFolder(folder: Folder): Promise<Removed> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, searches } = await deleteFolder(folder.id);
+    const refusal = await deleteFolder(folder.id);
     if (refusal) return refused(refusal, "folder");
     await this.loadFeeds();
     return {
       message: `Deleted the folder ${folder.name}`,
       undo: async () => {
-        const problem = await createFolder(folder.name, inside, searches);
+        const problem = await createFolder(folder.name, inside);
         if (problem) return refused(problem, "folder");
         await this.loadFeeds();
-        if (searches.length > 0) await this.loadSearches();
         return undefined;
       },
     };
@@ -178,12 +117,11 @@ export class LoadedLibrary {
   /**
    * "This is one person" on a folder (SPEC section 36): its places become one person named as the
    * folder was, and the folder goes. "… is one person now · Undo" puts the places back on their
-   * own and makes the folder again, with its saved searches. Answers the place the
-   * person's row opens.
+   * own and makes the folder again. Answers the place the person's row opens.
    */
   async folderToPerson(folder: Folder): Promise<(Notice & { lead: number }) | string> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);
-    const { refusal, before, searches } = await folderToPerson(folder.id);
+    const { refusal, before } = await folderToPerson(folder.id);
     // Either way the sidebar catches up: a rename saved in the same press stays saved.
     await this.loadFeeds();
     if (refusal) return refusal;
@@ -194,52 +132,10 @@ export class LoadedLibrary {
       undo: async () => {
         const back = await putBack(before);
         if (back) return back;
-        const refusal = await createFolder(folder.name, inside, searches);
+        const refusal = await createFolder(folder.name, inside);
         await this.loadFeeds();
-        if (searches.length > 0) await this.loadSearches();
         return refusal ? refused(refusal, "folder") : undefined;
       },
     };
   }
-
-  /** Deletes a saved search (never an article): "Deleted the saved search … · Undo". */
-  async deleteSearch(saved: SavedSearch): Promise<Removed> {
-    const refusal = await deleteSaved(saved.id);
-    if (refusal) return refusedSaving(refusal);
-    this.searches = this.searches.filter((each) => each.id !== saved.id);
-    // Asking again outranks a list already on its way from before the delete.
-    void this.loadSearches();
-    return {
-      message: `Deleted the saved search ${saved.name}`,
-      undo: async () => {
-        const back = await saveSearch(saved.name, saved.query);
-        if (typeof back === "string") return refusedSaving(back);
-        await this.loadSearches();
-        return undefined;
-      },
-    };
-  }
-
-  /** Deletes a collection (never an article): "Deleted the collection … · Undo", which limits its saved searches to it again. */
-  async deleteCollection(collection: Collection): Promise<Removed> {
-    const held = await deleteCollection(collection.id);
-    if (typeof held === "string") return refusedCollection(held);
-    this.collections = this.collections.filter((each) => each.id !== collection.id);
-    // Asking again outranks a list already on its way from before the delete.
-    void this.loadCollections();
-    return {
-      message: `Deleted the collection ${collection.name}`,
-      undo: async () => {
-        const back = await makeCollection(collection.name, held);
-        if (typeof back === "string") return refusedCollection(back);
-        // Its saved searches are limited to it again.
-        await Promise.all([this.loadCollections(), held.searches.length > 0 ? this.loadSearches() : undefined]);
-        return undefined;
-      },
-    };
-  }
-}
-
-function byName(one: SavedSearch, other: SavedSearch): number {
-  return one.name.localeCompare(other.name, undefined, { sensitivity: "base" }) || one.id - other.id;
 }

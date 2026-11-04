@@ -232,12 +232,12 @@ test.describe("on a wide window", () => {
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "Open original (V)");
-    // More holds Copy link, Mark unread and Add to collection…, their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note, Write back and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add to collection/, /Add a note/, /Write back/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Write back/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -1055,7 +1055,7 @@ test.describe("your place in an article (decision 0060)", () => {
     expect(await top(page)).toBe(0);
   });
 
-  test("coming back, the article you left part of the way through is offered in one quiet line, and opens where you were (decision 0174)", async ({ page }) => {
+  test("coming back, the article you left part of the way through is offered in one quiet line, and opens where you were (decision 0175)", async ({ page }) => {
     await openRoom(page);
     await page.setViewportSize({ width: 1280, height: 400 });
     await row(page, "The pleasure of a slow letter").click();

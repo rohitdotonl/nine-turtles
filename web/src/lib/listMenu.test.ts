@@ -4,7 +4,7 @@ import type { MenuGroup } from "./MoreMenu.svelte";
 
 /** A list with Unread on, newest first. */
 function scene(changes: Partial<MenuScene> = {}): MenuScene {
-  return { unreadOff: false, searching: false, ownOrder: false, sort: "newest", ...changes };
+  return { unreadOff: false, searching: false, sort: "newest", ...changes };
 }
 
 /** Hands that write down what they were asked to do; `failSort` makes saving the sort order fail. */
@@ -24,10 +24,7 @@ function hands(failSort = false) {
       if (failSort) throw new Error("not saved");
     },
     say: note("say"),
-    holdSearch: note("holdSearch"),
     go: note("go"),
-    renameCollection: note("renameCollection"),
-    deleteCollection: note("deleteCollection"),
   };
   return { given, done };
 }
@@ -68,42 +65,9 @@ describe("the list's More menu", () => {
     ]);
   });
 
-  it("in Recently read offers Refresh alone, unless a search is showing", () => {
-    expect(labels(listMenu(scene({ ownOrder: true }), hands().given))).toEqual([["Refresh"]]);
-    expect(labels(listMenu(scene({ ownOrder: true, searching: true }), hands().given))[0]).toEqual(["Mark all as read"]);
-  });
-
-  it("in search results drops Refresh, and offers Save search, holding the search first", () => {
-    const { given, done } = hands();
-    const groups = listMenu(scene({ searching: true }), given);
-    expect(labels(groups)).toEqual([
-      ["Mark all as read"],
-      ["Newest first", "Oldest first"],
-      ["Save search…"],
-    ]);
-    choose(groups, "Save search…");
-    expect(done).toEqual([["holdSearch"], ["go", { kind: "save-search" }]]);
-  });
-
-  it("on a saved search offers Edit saved search, even with its field emptied", () => {
-    const { given, done } = hands();
-    const groups = listMenu(scene({ savedSearch: 7 }), given);
-    expect(labels(groups)[2]).toEqual(["Edit saved search…"]);
-    choose(groups, "Edit saved search…");
-    expect(done).toEqual([["holdSearch"], ["go", { kind: "edit-search", id: 7 }]]);
-  });
-
-  it("in a collection offers Rename and Delete", () => {
-    const { given, done } = hands();
-    const collection = { id: 4, name: "Essays" };
-    const groups = listMenu(scene({ collection }), given);
-    expect(labels(groups)[2]).toEqual(["Rename…", "Delete"]);
-    choose(groups, "Rename…");
-    choose(groups, "Delete");
-    expect(done).toEqual([
-      ["renameCollection", collection],
-      ["deleteCollection", collection],
-    ]);
+  it("in search results drops Refresh, and offers no place's own rows", () => {
+    const groups = listMenu(scene({ searching: true, feed: 3, feedName: "Alpha" }), hands().given);
+    expect(labels(groups)).toEqual([["Mark all as read"], ["Newest first", "Oldest first"]]);
   });
 
   it("in a person's or publication's list offers their page, and in a folder's Edit, each with its key", () => {
