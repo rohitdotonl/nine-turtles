@@ -424,13 +424,7 @@ async fn the_reader_approves_and_the_assistant_works() {
         json!([{ "id": folder, "name": "Outside" }])
     );
 
-    let (rule, error) = tool(
-        &base,
-        &access,
-        "add_rule",
-        json!({ "words": "gardens", "action": "star" }),
-    )
-    .await;
+    let (rule, error) = tool(&base, &access, "add_rule", json!({ "words": "gardens" })).await;
     assert!(!error, "{rule}");
     let (rules, _) = tool(&base, &access, "list_rules", json!({})).await;
     assert_eq!(rules["rules"][0]["words"], "gardens");
@@ -442,7 +436,7 @@ async fn the_reader_approves_and_the_assistant_works() {
     )
     .await;
     assert!(!error);
-    let (_, error) = tool(&base, &access, "add_rule", json!({ "action": "mute" })).await;
+    let (_, error) = tool(&base, &access, "add_rule", json!({ "words": "" })).await;
     assert!(error, "a rule needs something to match");
 
     let (opml, _) = tool(&base, &access, "export_feed_list", json!({})).await;
@@ -835,7 +829,7 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
         &base,
         key,
         "add_rule",
-        json!({ "words": "gardens", "folder_id": folder, "action": "star" }),
+        json!({ "words": "gardens", "feed_id": feed }),
     )
     .await;
 
@@ -850,13 +844,12 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
     let (removed, error) = tool(&base, key, "delete_folder", json!({ "folder_id": folder })).await;
     assert!(!error);
     assert_eq!(removed["feed_ids"], json!([feed]));
-    assert_eq!(removed["rule_ids"], json!([rule["rule_id"]]));
     assert_eq!(removed["search_ids"], json!([saved["search"]["id"]]));
     let (back, error) = tool(
         &base,
         key,
         "create_folder",
-        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "rule_ids": removed["rule_ids"], "search_ids": removed["search_ids"] }),
+        json!({ "name": removed["removed"], "feed_ids": removed["feed_ids"], "search_ids": removed["search_ids"] }),
     )
     .await;
     assert!(!error);
@@ -868,7 +861,8 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
     let (feeds, _) = tool(&base, key, "list_feeds", json!({})).await;
     assert_eq!(feeds["feeds"][0]["folders"], json!(["Reading"]));
     let (rules, _) = tool(&base, key, "list_rules", json!({})).await;
-    assert_eq!(rules["rules"][0]["folder_id"], back["folder_id"]);
+    // The rule is for someone, not a folder, so the folder leaves it alone.
+    assert_eq!(rules["rules"][0]["feed_id"], feed);
     assert_eq!(rules["rules"][0]["place_gone"], false);
 
     let (gone, _) = tool(
@@ -883,7 +877,7 @@ async fn removing_a_folder_or_rule_can_be_undone_by_the_assistant() {
         &base,
         key,
         "add_rule",
-        json!({ "words": removed["words"], "folder_id": back["folder_id"], "action": removed["action"], "paused": removed["paused"] }),
+        json!({ "words": removed["words"], "feed_id": removed["feed_id"], "paused": removed["paused"] }),
     )
     .await;
     assert!(!error);

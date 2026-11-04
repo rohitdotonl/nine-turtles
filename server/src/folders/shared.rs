@@ -4,8 +4,6 @@
 
 use sqlx::SqliteConnection;
 
-use crate::rules;
-
 /// The number of the reader's folder called `name`, if they have one.
 pub async fn named(
     connection: &mut SqliteConnection,
@@ -69,16 +67,13 @@ pub struct Deleted {
     pub name: String,
     /// The feeds that were in it.
     pub feeds: Vec<i64>,
-    /// Rules for it, now paused and saying so (SPEC section 27).
-    pub rules: Vec<i64>,
     /// Saved searches that looked in it, now looking in no folder.
     pub searches: Vec<i64>,
 }
 
 /// Deletes one of the reader's folders, the one way every door does it (the
 /// screen, sync apps, assistants). Its feeds stay followed; they just leave
-/// it. Rules and saved searches for it stay, matching and finding nothing
-/// (decisions 0077 and 0081). Answers what Undo needs, or `None` when the
+/// it. Saved searches for it stay, finding nothing (decision 0081). Answers what Undo needs, or `None` when the
 /// reader has no such folder.
 pub async fn delete(
     connection: &mut SqliteConnection,
@@ -103,24 +98,20 @@ pub async fn delete(
         return Ok(None);
     };
     let searches = crate::saved_searches::forget(&mut *connection, person, "folder", id).await?;
-    let rules = rules::place_gone(connection, id).await?;
     Ok(Some(Deleted {
         name,
         feeds,
-        rules,
         searches,
     }))
 }
 
 /// Undo for `delete`: fills the folder made again, numbered `id`, with the
-/// feeds the reader still follows, and hands back its rules and saved
-/// searches.
+/// feeds the reader still follows, and hands back its saved searches.
 pub async fn put_back(
     connection: &mut SqliteConnection,
     person: i64,
     id: i64,
     feeds: &[i64],
-    rules: &[i64],
     searches: &[i64],
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
@@ -134,7 +125,6 @@ pub async fn put_back(
     .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
     .execute(&mut *connection)
     .await?;
-    rules::back_in_folder(connection, person, id, rules).await?;
     crate::saved_searches::back_in(&mut *connection, person, "folder", id, searches).await?;
     Ok(())
 }

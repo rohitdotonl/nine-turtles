@@ -128,8 +128,8 @@ fn list() -> Vec<Value> {
         ),
         tool(
             "list_rules",
-            "List rules and mutes",
-            "The reader's rules (\"when a new article matches this, mute, star or mark it read\") and how many articles are muted.",
+            "List what's hidden",
+            "The reader's rules (\"hide articles about these words, from everyone or from one person\") and how many articles are hidden.",
             json!({}),
             &[],
             reading(),
@@ -184,11 +184,10 @@ fn list() -> Vec<Value> {
             "create_folder",
             "Create a folder",
             "Makes a folder (or finds the one with that name), optionally with feeds in it. \
-             To undo delete_folder, pass the name, feed_ids, rule_ids and search_ids it answered.",
+             To undo delete_folder, pass the name, feed_ids and search_ids it answered.",
             json!({
                 "name": { "type": "string", "maxLength": folders::LONGEST_NAME },
                 "feed_ids": { "type": "array", "items": { "type": "integer" } },
-                "rule_ids": { "type": "array", "items": { "type": "integer" }, "description": "Rules that pointed at a removed folder." },
                 "search_ids": { "type": "array", "items": { "type": "integer" }, "description": "Saved searches that looked in a removed folder." },
             }),
             &["name"],
@@ -205,28 +204,25 @@ fn list() -> Vec<Value> {
         tool(
             "delete_folder",
             "Remove a folder",
-            "Removes a folder. Its feeds stay followed; they just leave it. Rules for that folder stay, matching nothing. \
-             Answers its feeds, rules and saved searches, so create_folder can put it back (its undo).",
+            "Removes a folder. Its feeds stay followed; they just leave it. \
+             Answers its feeds and saved searches, so create_folder can put it back (its undo).",
             json!({ "folder_id": folder_id }),
             &["folder_id"],
             changing(true, true),
         ),
         tool(
             "add_rule",
-            "Add a rule or mute",
-            "Makes a rule: when a new article matches the words (in the title, or title and text) and/or author, \
-             in every feed or one feed or folder, it's muted (hidden from lists, counted as read), starred, or marked read. \
-             It acts on articles arriving from now on.",
+            "Hide articles about…",
+            "Hides articles about a word or phrase (found whole, in the title or text) from everyone, or from one \
+             person: give the feed_id of any of their feeds and it covers all of them. A hidden article is kept and \
+             counted as read, out of every list; search still finds it. It acts on articles arriving from now on.",
             json!({
                 "words": { "type": "string", "maxLength": rules::LONGEST },
-                "title_only": { "type": "boolean", "description": "Look in titles only (otherwise title and text)." },
-                "author": { "type": "string", "maxLength": rules::LONGEST },
                 "feed_id": feed_id,
-                "folder_id": folder_id,
-                "action": { "type": "string", "enum": ["mute", "star", "read"] },
+                "title_only": { "type": "boolean", "description": "Only to make an old titles-only rule again, as delete_rule answered it." },
                 "paused": { "type": "boolean", "description": "Made paused, as a removed rule was." },
             }),
-            &["action"],
+            &["words"],
             changing(false, false),
         ),
         tool(

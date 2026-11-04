@@ -332,43 +332,31 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Settings › Rules with two rules, one paused, and the rule editor open over it. The
+    // Settings › Hiding with two rules, one paused, and the editor open over it. The
     // rules are as the server would send them, so the library the screenshots follow stays as it is.
-    name: "rules",
-    path: "/settings/rules",
+    name: "hiding",
+    path: "/settings/hiding",
     signedIn: true,
     library: true,
     open: async (page) => {
-      const rule = (id: number, words: string, author: string, action: string, paused: boolean) => ({
-        id,
-        words,
-        title_only: true,
-        author,
-        feed_id: null,
-        folder_id: null,
-        place_gone: false,
-        action,
-        paused,
-      });
+      const rule = (id: number, words: string, paused: boolean) => ({ id, words, title_only: false, feed_id: null, place_gone: false, paused });
       await page.route("**/api/rules", (route) =>
         route.request().method() === "GET"
-          ? route.fulfill({
-              json: { rules: [rule(901, "sponsored", "", "mute", false), rule(902, "", "Jane Doe", "star", true)], muted: 12 },
-            })
+          ? route.fulfill({ json: { rules: [rule(901, "sponsored", false), rule(902, "crypto", true)], muted: 12 } })
           : route.continue(),
       );
       await page.reload();
       await appReady(page);
-      await expect(page.getByText("Mute articles with “sponsored” in the title, in all feeds.")).toBeVisible();
-      await page.getByRole("button", { name: "New rule…" }).click();
-      await expect(page.getByRole("heading", { level: 2, name: "New rule" })).toBeVisible();
-      await page.getByRole("textbox", { name: "Word or phrase" }).fill("giveaway");
+      await expect(page.getByText("Hide articles about “sponsored” from everyone.")).toBeVisible();
+      await page.getByRole("button", { name: "Hide articles about…" }).click();
+      await expect(page.getByRole("heading", { level: 2, name: "Hide articles" })).toBeVisible();
+      await page.getByRole("textbox", { name: "About" }).fill("giveaway");
     },
   },
   {
-    // Muted articles, as the server would list them.
-    name: "muted",
-    path: "/settings/muted",
+    // Hidden articles, as the server would list them.
+    name: "hidden",
+    path: "/settings/hidden",
     signedIn: true,
     open: async (page) => {
       const day = 24 * 60 * 60;
@@ -397,7 +385,7 @@ export const SCREENS: Screen[] = [
       );
       await page.reload();
       await appReady(page);
-      await expect(page.getByRole("heading", { name: "2 muted articles" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "2 hidden articles" })).toBeVisible();
     },
   },
   {

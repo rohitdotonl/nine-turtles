@@ -2582,3 +2582,107 @@ async fn unread_on_or_off_keeps_every_choice_and_marks_only_what_flowed_past() {
     .unwrap();
     assert_eq!(open, [(1, 1, true), (1, 2, false), (2, 2, false)]);
 }
+
+#[tokio::test]
+async fn hiding_articles_about_keeps_every_rule_and_spreads_a_folders_rule_to_its_people() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after "Unread, on or off" (structure change 38).
+    // Reader 1 follows Garden and Shed (one person, Alpha) and Pond (on its
+    // own), all in the folder Home, and Barn outside it. Their rules: a mute
+    // for one feed and one for everyone (these fit); a mute for Home (one
+    // rule per person in it, after); a mute for an empty folder; a star
+    // rule, a mark-read rule and a mute with an author (switched off, kept).
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(38, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at)
+         VALUES (1, 'u', 'u', 'Garden', 1), (2, 'v', 'v', 'Shed', 1), (3, 'w', 'w', 'Pond', 1),
+                (4, 'x', 'x', 'Barn', 1)",
+        "INSERT INTO writers (id, person_id, name, created_at) VALUES (1, 1, 'Alpha', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, writer_id)
+         VALUES (1, 1, 'Garden', 1, 1), (1, 2, 'Shed', 1, 1), (1, 3, 'Pond', 1, NULL),
+                (1, 4, 'Barn', 1, NULL)",
+        "INSERT INTO folders (id, person_id, name) VALUES (5, 1, 'Home'), (6, 1, 'Empty')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (5, 1), (5, 2), (5, 3)",
+        "INSERT INTO rules (id, person_id, words, title_only, author, feed_id, folder_id, action,
+             paused, created_at)
+         VALUES (1, 1, 'crypto', 0, '', 4, NULL, 'mute', 0, 1),
+                (2, 1, 'sponsored', 1, '', NULL, NULL, 'mute', 0, 2),
+                (3, 1, 'football', 0, '', NULL, 5, 'mute', 1, 3),
+                (4, 1, 'golf', 0, '', NULL, 6, 'mute', 0, 4),
+                (5, 1, 'garden', 0, '', NULL, NULL, 'star', 0, 5),
+                (6, 1, 'news', 0, '', 4, NULL, 'read', 0, 6),
+                (7, 1, '', 0, 'Jane', NULL, 5, 'mute', 0, 7)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    type Line = (
+        String,
+        bool,
+        String,
+        Option<i64>,
+        Option<i64>,
+        bool,
+        String,
+        bool,
+    );
+    let rules: Vec<Line> = sqlx::query_as(
+        "SELECT words, title_only, author, feed_id, folder_id, place_gone, action, paused
+         FROM rules ORDER BY id",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    let line = |words: &str, title_only, author: &str, feed, folder, gone, action: &str, paused| {
+        (
+            words.to_owned(),
+            title_only,
+            author.to_owned(),
+            feed,
+            folder,
+            gone,
+            action.to_owned(),
+            paused,
+        )
+    };
+    assert_eq!(
+        rules,
+        [
+            // The two that fit, as they were.
+            line("crypto", false, "", Some(4), None, false, "mute", false),
+            line("sponsored", true, "", None, None, false, "mute", false),
+            // The empty folder's rule matches nothing, as before.
+            line("golf", false, "", None, None, true, "mute", false),
+            // Kept, untouched; nine turtles no longer shows or runs them.
+            line("garden", false, "", None, None, false, "star", false),
+            line("news", false, "", Some(4), None, false, "read", false),
+            line("", false, "Jane", None, Some(5), false, "mute", false),
+            // Home's rule became one per person in it, paused as it was:
+            // Alpha (by Garden, standing for Shed too), then Pond.
+            line("football", false, "", Some(1), None, false, "mute", true),
+            line("football", false, "", Some(3), None, false, "mute", true),
+        ]
+    );
+    // Every feed is still followed, in its folder.
+    let pairs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(pairs, 3);
+}

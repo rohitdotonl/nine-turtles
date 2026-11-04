@@ -661,9 +661,6 @@ struct NewFolder {
     /// Feeds to put in it straight away (Undo for deleting a folder).
     #[serde(default)]
     feeds: Vec<i64>,
-    /// Rules that were in it, to hand back (Undo for deleting a folder).
-    #[serde(default)]
-    rules: Vec<i64>,
     /// Saved searches that looked in it, to look in it again (Undo too).
     #[serde(default)]
     searches: Vec<i64>,
@@ -683,15 +680,7 @@ async fn create_folder(
         if !new {
             return Ok(Err(id));
         }
-        put_back(
-            &mut transaction,
-            person,
-            id,
-            &form.feeds,
-            &form.rules,
-            &form.searches,
-        )
-        .await?;
+        put_back(&mut transaction, person, id, &form.feeds, &form.searches).await?;
         transaction.commit().await?;
         Ok(Ok(id))
     }
@@ -750,15 +739,11 @@ async fn delete_folder(
     }
     .await;
     // The screen keeps the name and feeds itself; it needs back only the
-    // rules and saved searches, for Undo.
+    // saved searches, for Undo.
     match deleted {
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Ok(Some(deleted)) if deleted.rules.is_empty() && deleted.searches.is_empty() => {
-            StatusCode::NO_CONTENT.into_response()
-        }
-        Ok(Some(deleted)) => {
-            Json(json!({ "rules": deleted.rules, "searches": deleted.searches })).into_response()
-        }
+        Ok(Some(deleted)) if deleted.searches.is_empty() => StatusCode::NO_CONTENT.into_response(),
+        Ok(Some(deleted)) => Json(json!({ "searches": deleted.searches })).into_response(),
         Err(error) => database_problem("deleting a folder", &error),
     }
 }

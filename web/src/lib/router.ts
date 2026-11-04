@@ -40,7 +40,7 @@ export const SETTINGS_PAGES = {
   data: "Your data",
   "add-from-anywhere": "Add from anywhere",
   install: "Install the app",
-  rules: "Rules",
+  hiding: "Hiding",
   newsletters: "Newsletters",
   "other-apps": "Other apps",
   assistants: "Connected assistants",
@@ -84,7 +84,7 @@ export function parse(path: string): Route {
   if (name === "settings") return { kind: "settings" };
   if (name === "settings/feed-health") return { kind: "feed-health" };
   if (name === "settings/feeds") return { kind: "your-feeds" };
-  if (name === "settings/muted") return { kind: "muted" };
+  if (name === "settings/hidden") return { kind: "muted" };
   if (name === "settings/readers/all") return { kind: "readers" };
   const page = name.startsWith("settings/") ? settingsPage(name.slice("settings/".length)) : undefined;
   if (page) return { kind: "settings", page };
@@ -125,7 +125,7 @@ export function pathFor(route: Route): string {
     case "your-feeds":
       return "/settings/feeds";
     case "muted":
-      return "/settings/muted";
+      return "/settings/hidden";
     case "readers":
       return "/settings/readers/all";
     case "add-feed":
@@ -167,7 +167,7 @@ export function nameFor(route: Route, placeName?: string): string {
     case "your-feeds":
       return "Your feeds";
     case "muted":
-      return "Muted articles";
+      return "Hidden articles";
     case "readers":
       return "All readers";
     case "add-feed":
@@ -210,7 +210,7 @@ export function titleFor(route: Route, placeName?: string): string {
 export function parentOf(route: Route): Route | undefined {
   if (route.kind === "settings") return route.page ? { kind: "settings" } : undefined;
   if (route.kind === "feed-health" || route.kind === "your-feeds") return { kind: "settings" };
-  if (route.kind === "muted") return { kind: "settings", page: "rules" };
+  if (route.kind === "muted") return { kind: "settings", page: "hiding" };
   if (route.kind === "readers") return { kind: "settings", page: "readers" };
   return undefined;
 }

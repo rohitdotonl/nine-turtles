@@ -431,23 +431,15 @@ async fn saved_searches_stay_with_the_reader_who_saved_them() {
 
 #[tokio::test]
 async fn rules_stay_with_the_reader_who_made_them() {
-    let (owner, other, _, _) = two_readers().await;
+    let (owner, other, _, feed) = two_readers().await;
     let (status, made) = owner
-        .post(
-            "/api/rules",
-            json!({ "words": "tomatoes", "action": "star" }),
-        )
+        .post("/api/rules", json!({ "words": "tomatoes" }))
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
     let id = made["id"].as_i64().unwrap();
-    let (status, folder) = owner
-        .post("/api/folders", json!({ "name": "Garden" }))
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-    let folder = folder["folder"]["id"].as_i64().unwrap();
 
     assert_eq!(other.get("/api/rules").await["rules"], json!([]));
-    let edit = json!({ "words": "potatoes", "action": "mute" });
+    let edit = json!({ "words": "potatoes" });
     let (status, _) = other.post(&format!("/api/rules/{id}"), edit).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     let (status, _) = other
@@ -465,11 +457,11 @@ async fn rules_stay_with_the_reader_who_made_them() {
         .post(&format!("/api/rules/{id}/delete"), json!({}))
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
-    // A rule can't be pointed at someone else's folder.
+    // A rule can't be pointed at someone the other reader follows.
     let (status, refused) = other
         .post(
             "/api/rules",
-            json!({ "words": "potatoes", "action": "mute", "folder_id": folder }),
+            json!({ "words": "potatoes", "feed_id": feed }),
         )
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
@@ -478,7 +470,6 @@ async fn rules_stay_with_the_reader_who_made_them() {
     let mine = owner.get("/api/rules").await["rules"].clone();
     assert_eq!(mine.as_array().unwrap().len(), 1);
     assert_eq!(mine[0]["words"], "tomatoes");
-    assert_eq!(mine[0]["action"], "star");
     assert_eq!(mine[0]["paused"], false);
 }
 
@@ -561,20 +552,13 @@ async fn signing_out_signs_out_only_that_device() {
 }
 
 #[tokio::test]
-async fn deleting_a_folder_from_an_app_pauses_its_rules_as_the_screen_does() {
+async fn deleting_a_folder_from_an_app_leaves_its_searches_as_the_screen_does() {
     let (owner, _, _, _) = two_readers().await;
     let (status, folder) = owner
         .post("/api/folders", json!({ "name": "Garden" }))
         .await;
     assert_eq!(status, StatusCode::CREATED);
     let folder = folder["folder"]["id"].as_i64().unwrap();
-    let (status, _) = owner
-        .post(
-            "/api/rules",
-            json!({ "words": "tomatoes", "action": "star", "folder_id": folder }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::OK);
     let (status, _) = owner
         .post(
             "/api/saved-searches",
@@ -598,9 +582,6 @@ async fn deleting_a_folder_from_an_app_pauses_its_rules_as_the_screen_does() {
     assert_eq!(response.status(), StatusCode::OK);
 
     assert_eq!(owner.get("/api/feeds").await["folders"], json!([]));
-    let rules = owner.get("/api/rules").await["rules"].clone();
-    assert_eq!(rules[0]["place_gone"], json!(true));
-    assert_eq!(rules[0]["folder_id"], Value::Null);
     let searches = owner.get("/api/saved-searches").await["searches"].clone();
     assert_eq!(searches[0]["query"]["scope"]["id"], json!(0));
 }
@@ -949,7 +930,7 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     let (status, refused) = other
         .post(
             "/api/rules",
-            json!({ "words": "tomatoes", "action": "mute", "feed_id": feed }),
+            json!({ "words": "tomatoes", "feed_id": feed }),
         )
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
@@ -1149,38 +1130,14 @@ async fn unsubscribing_removes_only_that_readers_marks_and_the_last_keeps_only_s
 #[tokio::test]
 async fn each_readers_rules_act_only_on_their_own_marks() {
     let (owner, other, state, feed, _) = two_followers().await;
-    // The owner's folder holds the feed; the other reader's doesn't.
-    let (_, garden) = owner
-        .post("/api/folders", json!({ "name": "Garden" }))
-        .await;
-    let garden = garden["folder"]["id"].as_i64().unwrap();
-    owner
-        .post(
-            &format!("/api/feeds/{feed}"),
-            json!({ "title": "Garden notes", "folders": [garden] }),
-        )
-        .await;
-    let (_, theirs) = other
-        .post("/api/folders", json!({ "name": "Elsewhere" }))
-        .await;
-    let theirs = theirs["folder"]["id"].as_i64().unwrap();
     for (reader, rule) in [
-        // Fires: the feed is in the owner's Garden.
-        (
-            &owner,
-            json!({ "words": "tomatoes", "action": "mute", "folder_id": garden }),
-        ),
+        // Fires: from the one who writes the feed.
+        (&owner, json!({ "words": "tomatoes", "feed_id": feed })),
         // Paused: never fires, and never stops the other reader's.
-        (
-            &owner,
-            json!({ "words": "potatoes", "action": "star", "paused": true }),
-        ),
-        // Never fires: the feed isn't in their Elsewhere.
-        (
-            &other,
-            json!({ "words": "tomatoes", "action": "mute", "folder_id": theirs }),
-        ),
-        (&other, json!({ "words": "potatoes", "action": "star" })),
+        (&owner, json!({ "words": "potatoes", "paused": true })),
+        // Never fires: no post is about beans.
+        (&other, json!({ "words": "beans" })),
+        (&other, json!({ "words": "potatoes", "paused": true })),
     ] {
         let (status, made) = reader.post("/api/rules", rule).await;
         assert_eq!(status, StatusCode::OK, "{made}");
@@ -1216,10 +1173,10 @@ async fn each_readers_rules_act_only_on_their_own_marks() {
         .bind(id)
         .fetch_one(&state.db)
     };
-    // The owner's is muted (so read), not starred; the other reader's is
-    // starred, unread and not muted.
+    // The owner's is hidden (so read); the other reader's is unread and
+    // not hidden.
     assert_eq!(marks(1).await.unwrap(), (true, false, true));
-    assert_eq!(marks(2).await.unwrap(), (false, true, false));
+    assert_eq!(marks(2).await.unwrap(), (false, false, false));
 
     // Applying a rule to what's there now changes only its reader's marks.
     let rules = owner.get("/api/rules").await["rules"].clone();
@@ -1503,7 +1460,7 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     let (status, made) = other
         .post(
             "/api/rules",
-            json!({ "words": "potatoes", "feed_id": feed, "action": "mute" }),
+            json!({ "words": "potatoes", "feed_id": feed }),
         )
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
@@ -1819,7 +1776,7 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
     let (_, in_garden) = owner
         .post(
             "/api/rules",
-            json!({ "words": "tomatoes", "action": "star", "folder_id": garden }),
+            json!({ "words": "tomatoes", "feed_id": shared }),
         )
         .await;
     let in_garden = in_garden["id"].as_i64().unwrap();
@@ -1831,31 +1788,11 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
         )
         .await;
     assert_eq!(status, StatusCode::CREATED);
-    // A rule of the owner's whose folder is gone, waiting for Undo.
-    let (_, old) = owner.post("/api/folders", json!({ "name": "Old" })).await;
-    let old = old["folder"]["id"].as_i64().unwrap();
-    let (_, waiting) = owner
-        .post(
-            "/api/rules",
-            json!({ "words": "potatoes", "action": "mute", "folder_id": old }),
-        )
-        .await;
-    let waiting = waiting["id"].as_i64().unwrap();
-    let (_, gone) = owner
-        .post(&format!("/api/folders/{old}/delete"), json!({}))
-        .await;
-    assert_eq!(gone["rules"], json!([waiting]));
-
-    // The other reader's own rule can't be pointed at the owner's folder,
-    // or at a feed only the owner follows.
-    let (_, theirs) = other
-        .post("/api/rules", json!({ "words": "beans", "action": "star" }))
-        .await;
+    // The other reader's own rule can't be pointed at someone only the
+    // owner follows.
+    let (_, theirs) = other.post("/api/rules", json!({ "words": "beans" })).await;
     let theirs = theirs["id"].as_i64().unwrap();
-    for place in [
-        json!({ "words": "beans", "action": "star", "folder_id": garden }),
-        json!({ "words": "beans", "action": "star", "feed_id": only_mine }),
-    ] {
+    for place in [json!({ "words": "beans", "feed_id": only_mine })] {
         let (status, refused) = other
             .post(&format!("/api/rules/{theirs}"), place.clone())
             .await;
@@ -1863,12 +1800,11 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
         assert_eq!(refused["error"], "no-place");
     }
 
-    // Making a folder "back" with the owner's feed and waiting rule takes
-    // neither.
+    // Making a folder "back" with the owner's feed doesn't take it.
     let (status, made) = other
         .post(
             "/api/folders",
-            json!({ "name": "Old", "feeds": [only_mine], "rules": [waiting] }),
+            json!({ "name": "Old", "feeds": [only_mine] }),
         )
         .await;
     assert_eq!(status, StatusCode::CREATED, "{made}");
@@ -1911,10 +1847,8 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
             .unwrap()
             .clone()
     };
-    assert_eq!(rule(in_garden)["folder_id"], garden);
+    assert_eq!(rule(in_garden)["feed_id"], shared);
     assert_eq!(rule(in_garden)["place_gone"], false);
-    assert_eq!(rule(waiting)["folder_id"], Value::Null);
-    assert_eq!(rule(waiting)["place_gone"], true);
     let searches = owner.get("/api/saved-searches").await["searches"].clone();
     assert_eq!(searches[0]["query"]["scope"]["id"], garden);
     assert_eq!(
@@ -1926,7 +1860,6 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
     );
     let theirs = other.get("/api/rules").await["rules"].clone();
     assert_eq!(theirs.as_array().unwrap().len(), 1);
-    assert_eq!(theirs[0]["folder_id"], Value::Null);
     assert_eq!(theirs[0]["feed_id"], Value::Null);
 }
 
@@ -1937,7 +1870,7 @@ async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules_and_searches()
         let (status, _) = reader
             .post(
                 "/api/rules",
-                json!({ "words": "tomatoes", "action": "star", "feed_id": feed }),
+                json!({ "words": "tomatoes", "feed_id": feed }),
             )
             .await;
         assert_eq!(status, StatusCode::OK);
@@ -2066,7 +1999,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
     let (_, rule) = owner
         .post(
             "/api/rules",
-            json!({ "words": "tomatoes", "action": "mute", "feed_id": feed }),
+            json!({ "words": "tomatoes", "feed_id": feed }),
         )
         .await;
     let rule = rule["id"].as_i64().unwrap();
@@ -2173,12 +2106,7 @@ async fn a_reader_who_signs_up_starts_with_an_empty_library() {
         )
         .await;
     assert_eq!(status, StatusCode::CREATED);
-    let (status, _) = owner
-        .post(
-            "/api/rules",
-            json!({ "words": "tomatoes", "action": "star" }),
-        )
-        .await;
+    let (status, _) = owner.post("/api/rules", json!({ "words": "beans" })).await;
     assert_eq!(status, StatusCode::OK);
     let owners_marks = owner.marks("view=all").await;
     let owners_feeds = owner.get("/api/feeds").await;

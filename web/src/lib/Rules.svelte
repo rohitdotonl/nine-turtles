@@ -1,8 +1,9 @@
 <!--
-  Settings › Rules (SPEC section 27): each rule as one plain sentence, with a
-  switch to pause it and an Edit button; "New rule…" at the group's foot;
-  and, once anything is muted, "Muted articles ›". The editor itself opens
-  from Settings (RuleEditor). After a new rule is saved, the line under the
+  Settings › Hiding (SPEC section 27): each rule as its sentence ("Hide
+  articles about “crypto” from everyone."), with a switch to pause it and an
+  Edit button; "Hide articles about…" at the group's foot; and, once
+  anything is hidden, "Hidden articles ›". The editor itself opens from
+  Settings (RuleEditor). After a new rule is saved, the line under the
   group asks once whether to apply it to the unread articles that already
   match, with the number first; whatever it did, or deleting a rule, can be
   undone from the same line until the next action there.
@@ -10,7 +11,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import type { Feed, Folder } from "./shapes";
+  import type { Feed } from "./shapes";
   import {
     appliedMessage,
     applyQuestion,
@@ -23,22 +24,20 @@
     ruleRefused,
     unapply,
     type Rule,
-    type RuleAction,
     type RuleDraft,
   } from "./rules";
 
   let {
-    feeds,
-    folders,
+    people,
     onNew,
     onEdit,
     onMuted,
   }: {
-    feeds: Feed[];
-    folders: Folder[];
+    /** Everyone the reader follows, one row each (the sidebar's rows). */
+    people: Feed[];
     onNew: () => void;
     onEdit: (rule: Rule) => void;
-    /** Opens the Muted articles page. */
+    /** Opens the Hidden articles page. */
     onMuted: (event: MouseEvent) => void;
   } = $props();
 
@@ -47,7 +46,7 @@
   let failed = $state(false);
   /** The line under the group: what just happened, and what can be done about it. */
   let message = $state("");
-  let question: { id: number; action: RuleAction; count: number } | undefined = $state();
+  let question: { id: number; count: number } | undefined = $state();
   let undo: (() => Promise<void>) | undefined = $state();
   let busy = $state(false);
   let line: HTMLElement | undefined = $state();
@@ -74,15 +73,15 @@
   }
 
   /** The editor saved a rule: list it, and for a new one ask about articles already here. */
-  export async function saved(draft: RuleDraft, made?: { id: number; matching: number }) {
+  export async function saved(_draft: RuleDraft, made?: { id: number; matching: number }) {
     clear();
     await reload();
     if (made && made.matching > 0) {
-      question = { id: made.id, action: draft.action, count: made.matching };
+      question = { id: made.id, count: made.matching };
       await tick();
       line?.querySelector<HTMLElement>("[data-focus=yes]")?.focus();
     } else {
-      message = made ? "Rule saved. It acts on new articles as they arrive." : "Rule saved.";
+      message = made ? "Saved. New articles about it are hidden as they arrive." : "Saved.";
     }
   }
 
@@ -95,16 +94,15 @@
       return;
     }
     await reload();
-    message = "Deleted the rule.";
-    // Made again under a new number, so it now runs after the others: harmless,
-    // as each rule only adds a mark, and the order never decides what's kept.
+    message = "Deleted.";
+    // Made again under a new number: harmless, as the order never decides what's hidden.
     undo = async () => {
       const made = await createRule({ ...rule, paused: rule.paused });
       if (typeof made === "string") {
         message = ruleRefused(made);
         return;
       }
-      message = "The rule is back.";
+      message = "It's back.";
       await reload();
     };
     await focusLine();
@@ -117,7 +115,7 @@
 
   async function apply() {
     if (!question || busy) return;
-    const { id, action } = question;
+    const { id } = question;
     busy = true;
     const ids = await applyRule(id);
     busy = false;
@@ -126,10 +124,10 @@
       message = ruleRefused(ids);
       return;
     }
-    message = appliedMessage(action, ids.length);
+    message = appliedMessage(ids.length);
     undo = async () => {
-      const refusal = await unapply(action, ids);
-      message = refusal ? ruleRefused(refusal) : "Undone: those articles are as they were.";
+      const refusal = await unapply(ids);
+      message = refusal ? ruleRefused(refusal) : "Undone: those articles are back, unread.";
       await reload();
     };
     await reload();
@@ -144,7 +142,7 @@
 
   async function notNow() {
     question = undefined;
-    message = "Rule saved. It acts on new articles as they arrive.";
+    message = "Saved. New articles about it are hidden as they arrive.";
     await keepPlace();
   }
 
@@ -180,16 +178,16 @@
 </script>
 
 <section aria-labelledby="rules-heading">
-  <h3 id="rules-heading" tabindex="-1" class="inset-head">Rules</h3>
+  <h3 id="rules-heading" tabindex="-1" class="inset-head">Hiding</h3>
   <div class="inset-group">
     {#each rules ?? [] as rule (rule.id)}
-      {@const sentence = describe(rule, feeds, folders)}
+      {@const sentence = describe(rule, people)}
       <div class="inset-row rule-row">
         <p id={`rule-${rule.id}`} class={["min-w-0 flex-1 break-words", rule.paused && "text-ink-2"]}>
           {sentence}{#if rule.paused}{" "}<span class="text-muted">Paused.</span>{/if}
         </p>
         <span class="flex shrink-0 items-center gap-2">
-          <button type="button" class="btn btn-small" aria-label={`Edit rule: ${sentence}`} onclick={() => edit(rule)}>Edit</button>
+          <button type="button" class="btn btn-small" aria-label={`Edit: ${sentence}`} onclick={() => edit(rule)}>Edit</button>
           <!-- A switch, as Apple draws one: on is filled in the text color, off is an empty track; its knob's side says which too. -->
           <label class="switch-target" title={rule.paused ? "Paused: press to start it again" : "On: press to pause it"}>
             <input
@@ -204,19 +202,19 @@
         </span>
       </div>
     {/each}
-    <button type="button" class="inset-row inset-action" onclick={startNew}>New rule…</button>
+    <button type="button" class="inset-row inset-action" onclick={startNew}>Hide articles about…</button>
     {#if muted > 0}
-      <a href="/settings/muted" onclick={onMuted} data-settings-row="muted" class="inset-row inset-action"
-        >Muted articles<span class="row-glyph flex items-center gap-1"><span class="text-meta">{muted}</span><Icon name="chevron-right" size={18} /></span></a
+      <a href="/settings/hidden" onclick={onMuted} data-settings-row="muted" class="inset-row inset-action"
+        >Hidden articles<span class="row-glyph flex items-center"><Icon name="chevron-right" size={18} /></span></a
       >
     {/if}
   </div>
   <div bind:this={line} role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && !question && "sr-only"]}>
     {#if question}
-      <p>{applyQuestion(question.action, question.count)}</p>
+      <p>{applyQuestion(question.count)}</p>
       <span class="flex gap-2">
         <button type="button" class="btn btn-small" data-focus="yes" aria-disabled={busy} onclick={apply}
-          >{question.action === "mute" ? "Mute them" : question.action === "star" ? "Star them" : "Mark them read"}</button
+          >Hide them</button
         >
         <button type="button" class="btn btn-small" onclick={notNow}>Not now</button>
       </span>
@@ -228,11 +226,11 @@
     {/if}
   </div>
   {#if failed}
-    <p role="status" class="inset-foot text-danger">The rules couldn't be loaded. Try again in a moment.</p>
+    <p role="status" class="inset-foot text-danger">What's hidden couldn't be loaded. Try again in a moment.</p>
   {/if}
   <p class="inset-foot">
-    When a new article matches a rule, it's muted, starred or marked as read as it arrives. Muted articles are kept, never
-    deleted: search still finds them, and other apps see them as read.
+    New articles about these words are hidden as they arrive. Hidden articles are kept and marked read: search still finds
+    them, and other apps see them as read.
   </p>
 </section>
 

@@ -78,7 +78,9 @@ PLAN.md → V1, item 1.*
   each by its kind (Blog, Video, Newsletter, Podcast) with a link to the
   publisher's own site (a blog by its website, "alpha.example"; a channel or
   newsletter by its own name), and, once nine turtles knows where to write
-  to them, an **Email** line (section 37).
+  to them, an **Email** line (section 37). At its foot, a quiet link,
+  **Hide articles about…**, opens Settings › Hiding with a new rule for
+  them (section 27).
 - **Edit** (`/people/12/edit`; `Shift+E` opens it directly) turns the same
   page into their settings. **Done** saves and turns it back; **Cancel** or
   Escape turns it back unchanged. Top to bottom:
@@ -97,7 +99,7 @@ PLAN.md → V1, item 1.*
   feed with any episode is Podcast, anything else Blog; the reader can
   correct it), how often to check, open on the website,
   YouTube's Include Shorts and Include live streams (section 38), Pause for a
-  while, **Add a rule…** (section 27), **Find new address** while it's
+  while, **Find new address** while it's
   failing (section 17), and at the foot **Take out of Alpha**: it becomes a
   person or publication of its own, guessed afresh, with Undo. Done saves
   and goes back to Edit.

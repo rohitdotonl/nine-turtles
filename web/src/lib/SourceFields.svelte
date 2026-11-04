@@ -6,7 +6,7 @@
   feed, and the reader corrects it), then the settings a grouped list as in
   Settings: how often it's checked, opening on the website, a
   YouTube channel's Shorts and live streams (both off, decision 0144), and
-  pausing; then a shortcut to add a rule for it (SPEC section 27).
+  pausing.
 
   The values belong to the form around it, which saves them with the rest.
 -->
@@ -27,7 +27,6 @@
     paused = $bindable(),
     shorts = $bindable(),
     liveStreams = $bindable(),
-    onAddRule,
     onMoved,
   }: {
     feed: Feed;
@@ -37,8 +36,6 @@
     paused: boolean;
     shorts: boolean;
     liveStreams: boolean;
-    /** "Add a rule…": Settings, with a new rule for it (SPEC section 27). */
-    onAddRule: () => void;
     /** Find new address moved it (decision 0106). */
     onMoved: (feed: Sick) => void;
   } = $props();
@@ -127,10 +124,6 @@
       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
     </label>
   </div>
-  <!-- A shortcut to Settings › Rules, already set to this source. -->
-  <p class="mt-1.5 text-small">
-    <button type="button" class="text-link" onclick={onAddRule}>Add a rule…</button>
-  </p>
 </div>
 
 <style>

@@ -27,13 +27,13 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Theme, font and line width are one page further in.
   await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "rules", "newsletters", "other-apps", "assistants", "readers"];
+  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "other-apps", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
   await expect(page.getByText("Sign-up", { exact: true })).toHaveCount(0);
   // Screen readers hear that each row opens a page.
-  const rules = page.getByRole("link", { name: "Rules", exact: true });
+  const rules = page.getByRole("link", { name: "Hiding", exact: true });
   await expect(rules).toHaveAccessibleDescription("Opens its own page.");
   // Account: Email, then Sign out, then Delete data…; the owner has no Delete account….
   await expect(page.getByText("Email", { exact: true })).toBeVisible();
@@ -74,13 +74,13 @@ test("each row's icon sits on the centre of its name's first line", async ({ pag
 
 test("a row opens its own page at its own address; ‹ Settings, Escape and Back go back to the row", async ({ page }, testInfo) => {
   await openSettings(page);
-  const rules = page.getByRole("link", { name: "Rules", exact: true });
+  const rules = page.getByRole("link", { name: "Hiding", exact: true });
   await tabTo(page, rules);
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/settings\/rules$/);
-  await expect(page).toHaveTitle("Rules · nine turtles");
-  await expect(page.getByRole("heading", { level: 2, name: "Rules" })).toBeFocused();
-  await expect(page.getByRole("button", { name: "New rule…" })).toBeVisible();
+  await expect(page).toHaveURL(/\/settings\/hiding$/);
+  await expect(page).toHaveTitle("Hiding · nine turtles");
+  await expect(page.getByRole("heading", { level: 2, name: "Hiding" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Hide articles about…" })).toBeVisible();
   const back = page.getByRole("button", { name: "Back to Settings" });
   await expect(back).toHaveText("Settings");
   // Escape goes back to Settings, with the keyboard on the row that opened the page.

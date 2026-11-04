@@ -9,10 +9,10 @@ describe("addresses", () => {
     expect(parse("/settings")).toEqual({ kind: "settings" });
     expect(parse("/settings/feed-health")).toEqual({ kind: "feed-health" });
     expect(parse("/settings/feeds")).toEqual({ kind: "your-feeds" });
-    expect(parse("/settings/muted")).toEqual({ kind: "muted" });
+    expect(parse("/settings/hidden")).toEqual({ kind: "muted" });
     expect(parse("/settings/readers/all")).toEqual({ kind: "readers" });
     expect(parse("/settings/readers")).toEqual({ kind: "settings", page: "readers" });
-    expect(parse("/settings/rules")).toEqual({ kind: "settings", page: "rules" });
+    expect(parse("/settings/hiding")).toEqual({ kind: "settings", page: "hiding" });
     expect(parse("/settings/add-from-anywhere/")).toEqual({ kind: "settings", page: "add-from-anywhere" });
     expect(parse("/settings/install")).toEqual({ kind: "settings", page: "install" });
     expect(parse("/add-feed")).toEqual({ kind: "add-feed" });
@@ -62,8 +62,8 @@ describe("addresses", () => {
     expect(titleFor({ kind: "feed-health" })).toBe("Feed health · nine turtles");
     expect(pathFor({ kind: "your-feeds" })).toBe("/settings/feeds");
     expect(titleFor({ kind: "your-feeds" })).toBe("Your feeds · nine turtles");
-    expect(pathFor({ kind: "muted" })).toBe("/settings/muted");
-    expect(titleFor({ kind: "muted" })).toBe("Muted articles · nine turtles");
+    expect(pathFor({ kind: "muted" })).toBe("/settings/hidden");
+    expect(titleFor({ kind: "muted" })).toBe("Hidden articles · nine turtles");
     expect(pathFor({ kind: "readers" })).toBe("/settings/readers/all");
     expect(pathFor({ kind: "settings", page: "font" })).toBe("/settings/font");
     expect(titleFor({ kind: "settings", page: "font" })).toBe("Font, theme and line width · nine turtles");
@@ -108,13 +108,13 @@ describe("addresses", () => {
 
 describe("Settings' pages", () => {
   it("go back to the page that opened them, and to the row that did", () => {
-    expect(parentOf({ kind: "settings", page: "rules" })).toEqual({ kind: "settings" });
-    expect(rowFor({ kind: "settings", page: "rules" })).toBe("rules");
+    expect(parentOf({ kind: "settings", page: "hiding" })).toEqual({ kind: "settings" });
+    expect(rowFor({ kind: "settings", page: "hiding" })).toBe("hiding");
     expect(parentOf({ kind: "feed-health" })).toEqual({ kind: "settings" });
     expect(rowFor({ kind: "feed-health" })).toBe("feed-health");
     expect(parentOf({ kind: "your-feeds" })).toEqual({ kind: "settings" });
     expect(rowFor({ kind: "your-feeds" })).toBe("feeds");
-    expect(parentOf({ kind: "muted" })).toEqual({ kind: "settings", page: "rules" });
+    expect(parentOf({ kind: "muted" })).toEqual({ kind: "settings", page: "hiding" });
     expect(rowFor({ kind: "muted" })).toBe("muted");
     expect(parentOf({ kind: "readers" })).toEqual({ kind: "settings", page: "readers" });
     expect(rowFor({ kind: "readers" })).toBe("all-readers");

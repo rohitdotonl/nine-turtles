@@ -53,7 +53,7 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
 
 /**
  * Moves the keyboard's place on arriving back: the row that opened the page, when it's drawn. A
- * row shown only once its page has loaded (Rules' "Muted articles") is waited for a moment;
+ * row shown only once its page has loaded (Hiding's "Hidden articles") is waited for a moment;
  * meanwhile the keyboard rests on the heading, and stays wherever the reader moves it.
  * `landing` is `landingFor` with the screen's headings; `returnRow` answers the row now, as
  * another move can change it while this waits.

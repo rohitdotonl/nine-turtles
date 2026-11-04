@@ -11,7 +11,8 @@
   when the reader follows them, then their sources, each by what it is (Blog,
   Video, Newsletter, Podcast) with a link to the publisher's own site, and
   the email address Write back writes to, once nine turtles knows it, and
-  the reader's private note on them (SPEC section 42). No
+  the reader's private note on them (SPEC section 42), then a quiet
+  "Hide articles about…" (SPEC section 27). No
   picture and no color. Edit turns the same page into its settings
   (WhoEdit), and a person's source opens its own settings (SourcePage).
 -->
@@ -36,7 +37,7 @@
     heading = $bindable(),
     go,
     onUnsubscribe,
-    onAddRule,
+    onHide,
     onMoved,
     onSaved,
   }: {
@@ -49,8 +50,8 @@
     go: (next: Route, notice?: Notice) => void;
     /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
-    /** "Add a rule…" for one source. */
-    onAddRule: (source: Feed) => void;
+    /** "Hide articles about…": Settings › Hiding, with a new rule for them. */
+    onHide: () => void;
     /** Find new address moved a source. */
     onMoved: (source: Feed, after: Sick) => void;
     /** Edit or a source's settings were saved: their list refreshes (an unpaused source's newest come back). */
@@ -90,7 +91,6 @@
         onSource={(id) => go({ kind: "edit-source", id: feed.id, source: id })}
         {onUnsubscribe}
         onPeople={joined}
-        onAddRule={() => onAddRule(feed)}
         onMoved={(after) => onMoved(feed, after)}
       />
     {:else if route.kind === "edit-source" && source}
@@ -102,7 +102,6 @@
           bind:heading
           onDone={(saved) => (saved && onSaved(), go({ kind: "edit-feed", id: feed.id }))}
           onPeople={(done, lead) => joined(done, library.rowOf(lead))}
-          onAddRule={() => onAddRule(source!)}
           onMoved={(after) => onMoved(source!, after)}
         />
       {/key}
@@ -138,6 +137,7 @@
       </div>
       <!-- The reader's private note on them (SPEC section 42). -->
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
+      <p class="text-small"><button type="button" class="text-link" onclick={onHide}>Hide articles about…</button></p>
     {/if}
   </div>
 </section>

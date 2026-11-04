@@ -58,6 +58,7 @@
     onStar,
     onMarkUnread,
     onCollect,
+    onHide,
     beforeToolbar,
     library,
   }: {
@@ -81,6 +82,8 @@
     onMarkUnread: () => void;
     /** "Add to collection…" (or l): the sheet of the reader's collections (decision 0108). */
     onCollect: () => void;
+    /** "Hide articles about…": Settings › Hiding, with a new rule for whoever wrote it (SPEC section 27). */
+    onHide: (feed: number) => void;
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
@@ -140,7 +143,7 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, and its collections. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, its collections, and hiding others like it. */
   let more: MenuGroup[] = $derived([
     {
       items: [
@@ -149,6 +152,7 @@
         { label: "Add to collection…", shortcut: phone ? undefined : keyFor("collect"), onSelect: onCollect },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
         ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
+        ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
       ],
     },
   ]);

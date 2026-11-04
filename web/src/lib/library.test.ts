@@ -91,9 +91,9 @@ describe("the reader's library", () => {
     expect(library.feeds?.[0]?.unread).toBe(4);
   });
 
-  it("puts a deleted folder back with its feeds, rules and saved searches on Undo", async () => {
+  it("puts a deleted folder back with its feeds and saved searches on Undo", async () => {
     server.listFeeds.mockResolvedValue({ feeds: [feed(1, 0, [7]), feed(2)], folders: [{ id: 7, name: "News" }] });
-    server.deleteFolder.mockResolvedValue({ rules: [3], searches: [9] });
+    server.deleteFolder.mockResolvedValue({ searches: [9] });
     server.createFolder.mockResolvedValue(undefined);
     server.listSaved.mockResolvedValue([]);
     const library = new LoadedLibrary();
@@ -104,7 +104,7 @@ describe("the reader's library", () => {
     expect(done.message).toBe("Deleted the folder News");
     expect(await done.undo?.()).toBeUndefined();
 
-    expect(server.createFolder).toHaveBeenCalledWith("News", [1], [3], [9]);
+    expect(server.createFolder).toHaveBeenCalledWith("News", [1], [9]);
     expect(server.listSaved).toHaveBeenCalled();
   });
 
