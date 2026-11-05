@@ -389,12 +389,15 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
   await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
   await expect(page.getByRole("heading", { level: 2, name: `Edit Blog ${blog}` })).toHaveCount(0);
 
-  // The folder's button shows its feeds; Space or Enter works it.
+  // The folder just made opens (the core path); its button closes and opens it, by Enter.
   const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
-  await tabTo(page, toggle);
-  await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+  await tabTo(page, toggle);
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
   // Untick the folder in Edit: Space on the checkbox, then Done.
   await tabTo(page, page.getByRole("button", { name: `Edit Blog ${blog}`, exact: true }));

@@ -110,7 +110,8 @@ test("Edit makes someone a publication: listed under Publications, at its own ad
   await page.getByRole("radio", { name: "A publication" }).check();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
-  await expect(page_(page, `Blog ${ben}`)).toContainText("A publication");
+  // Their page no longer says what they are (the core path); the address and the sidebar do.
+  await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication");
   const publications = sidebar(page).getByRole("heading", {
     name: "Publications",
   });
