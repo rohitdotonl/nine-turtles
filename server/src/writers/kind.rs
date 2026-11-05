@@ -29,32 +29,11 @@ pub enum Kind {
     Publication,
 }
 
-/// What kind of source a place is, as the reader corrects it.
-#[derive(Clone, Copy, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Place {
-    Blog,
-    Video,
-    Newsletter,
-    Podcast,
-}
-
 impl Kind {
     pub const fn name(self) -> &'static str {
         match self {
             Self::Person => "person",
             Self::Publication => "publication",
-        }
-    }
-}
-
-impl Place {
-    pub const fn name(self) -> &'static str {
-        match self {
-            Self::Blog => "blog",
-            Self::Video => "video",
-            Self::Newsletter => "newsletter",
-            Self::Podcast => "podcast",
         }
     }
 }

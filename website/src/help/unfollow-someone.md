@@ -25,7 +25,8 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
 back exactly as they were, with what you'd read and their folders. It lasts
-ten minutes, or until you do something else.
+ten minutes, or until you do something else. If they were the last one in a
+folder, the folder goes too, and Undo brings it back.
 
 If they have several sources (a blog and a channel, say), Unsubscribe leaves
 them all. To let go of one source only, press › beside it in Edit, then

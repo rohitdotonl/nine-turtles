@@ -48,9 +48,7 @@ pub async fn follow_again(
 
 /// Works out again what a feed's followers share, after any change to who
 /// follows it or how: `feeds.unsubscribed_at` is null while anyone follows
-/// it (so background checks and WebSub carry on), and `feeds.check_at_most`
-/// is the shortest wait any follower allows (0, its own rhythm, if any
-/// says so).
+/// it (so background checks and WebSub carry on).
 pub async fn refresh_shared(
     connection: &mut sqlx::SqliteConnection,
     feed_id: i64,
@@ -63,9 +61,7 @@ pub async fn refresh_shared(
                  ELSE COALESCE((SELECT MAX(unsubscribed_at) FROM subscriptions
                                 WHERE feed_id = feeds.id),
                                feeds.unsubscribed_at, unixepoch())
-             END,
-             check_at_most = COALESCE((SELECT MIN(check_at_most) FROM subscriptions
-                                       WHERE feed_id = feeds.id AND unsubscribed_at IS NULL), 0)
+             END
          WHERE id = ?",
     )
     .bind(feed_id)
@@ -89,8 +85,7 @@ pub async fn subscribe(
         "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (?, ?, ?, ?)
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
-             cleared = 0, check_at_most = 0, open_on_site = 0,
-             paused_at = NULL, writer_id = NULL, kind = NULL, place = NULL, write_to = NULL,
+             cleared = 0, paused_at = NULL, writer_id = NULL, kind = NULL, place = NULL, write_to = NULL,
              shorts = 0, live_streams = 0, drop_kept = 0",
     )
     .bind(person)

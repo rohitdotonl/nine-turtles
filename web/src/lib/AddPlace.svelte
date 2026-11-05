@@ -6,7 +6,9 @@
   When the two are in different folders it asks which folders they should
   be in, every one ticked to start with. Either way the sources become one
   person, with Undo on the line that follows. It opens in place, under its
-  button, and never inside a form of its own, so it can sit in Edit's.
+  button, and never inside a form of its own, so it can sit in Edit's. For
+  someone with one source it opens from a quiet line near Edit's foot
+  instead (`invite`), ending in the link "+ Add another place".
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -20,11 +22,14 @@
     feed,
     name,
     library,
+    invite = false,
     onJoined,
   }: {
     feed: Feed;
     name: string;
     library: LoadedLibrary;
+    /** Someone with one source: a line saying why, and a link rather than a button. */
+    invite?: boolean;
     /** Joined: the line with Undo, and the place the person's row now opens. */
     onJoined: (done: Notice, lead: number) => void;
   } = $props();
@@ -157,7 +162,12 @@
   }
 </script>
 
-{#if !open}
+{#if !open && invite}
+  <div class="flex flex-col items-start gap-1">
+    <p class="text-ink-2">Does {name} also write a newsletter, make videos or host a podcast? Add it, and everything {name} makes shows in one place.</p>
+    <button type="button" class="text-link" bind:this={opener} onclick={show}>+ Add another place</button>
+  </div>
+{:else if !open}
   <button
     type="button"
     class="btn self-start"

@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
@@ -219,6 +219,19 @@
     <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
     <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />
     <path d="M7.5 10h5M7.5 13h3.5" />
+  {:else if name === "person"}
+    <!-- A person (Add's question, the owner's core path, point 1): one head and shoulders, the Readers icon's single figure. -->
+    <circle cx="10" cy="6.75" r="3" />
+    <path d="M4.5 16.5a5.5 5.5 0 0 1 11 0" />
+  {:else if name === "newspaper"}
+    <!-- A publication (Add's question): a newspaper page, its masthead, three lines and one solid picture. -->
+    <rect x="3" y="3.25" width="14" height="13.5" rx="1" />
+    <path d="M5.25 6h9.5M5.25 9.25h3M5.25 11.75h3M5.25 14.25h3" />
+    <rect x="10.5" y="8.75" width="4.5" height="5.5" rx=".4" fill="currentColor" stroke="none" />
+  {:else if name === "send"}
+    <!-- Write back and Write to (the owner's core path, points 6 and 9): a paper plane. -->
+    <path d="M17.25 2.75 2.75 8.75l5.5 3 3 5.5Z" />
+    <path d="M8.25 11.75 17.25 2.75" />
   {:else if name === "trash"}
     <!-- Settings › Account › Delete data and Delete account: a bin. -->
     <path d="M3.75 5.75h12.5M8 5.75V4.25a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1.5" />

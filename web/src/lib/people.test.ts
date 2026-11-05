@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { firstNameOf, followingSince, placeLabels, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
-  return { id, title, siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false, person: null, place: "blog", addedAt: id, ...more };
+  return { id, title, siteUrl: null, unread: 0, folders: [], person: null, place: "blog", addedAt: id, ...more };
 }
 
 function article(feedId: number, more: Partial<Article> = {}): Article {
@@ -46,14 +46,6 @@ describe("a person's page", () => {
     expect(placeShownAs(place(1, "Alpha's blog"))).toBe("Alpha's blog");
     expect(placeShownAs(place(2, "Alpha on YouTube", { place: "video", siteUrl: "https://www.youtube.com/channel/x" }))).toBe("Alpha on YouTube");
   });
-
-  it("says since when, by the month their first place was followed", () => {
-    const march = Date.UTC(2026, 2, 14) / 1000;
-    const now = new Date(Date.UTC(2026, 10, 2));
-    expect(followingSince([place(1, "a", { addedAt: march + 999 }), place(2, "b", { addedAt: march })], now)).toBe("since March 2026");
-    expect(followingSince([place(1, "a", { addedAt: now.getTime() / 1000 })], now)).toBe("since this month");
-    expect(followingSince([], now)).toBeUndefined();
-  });
 });
 
 describe("the rows of a person's list", () => {
@@ -81,19 +73,10 @@ describe("a person's list on screen", () => {
   });
 });
 
-describe("what Write back calls someone", () => {
-  const tomas = place(1, "Tomas Berg", { siteTitle: "Notes from Tomas", kind: "person" });
-
-  it("is a person's first name, when their name is their own", () => {
-    expect(firstNameOf("Tomas Berg", [tomas])).toBe("Tomas");
-    expect(firstNameOf("Ana María López-Ruiz", [tomas])).toBe("Ana");
-  });
-
-  it("is the whole name when it's a blog's title, a publication's, one word or not a name", () => {
-    expect(firstNameOf("Notes From Tomas", [place(2, "Notes From Tomas", { siteTitle: "Notes From Tomas" })])).toBe("Notes From Tomas");
-    expect(firstNameOf("Tomas Berg", [{ ...tomas, kind: "publication" }])).toBe("Tomas Berg");
-    expect(firstNameOf("Alpha", [tomas])).toBe("Alpha");
-    expect(firstNameOf("the morning paper", [tomas])).toBe("the morning paper");
-    expect(firstNameOf("Field Notes 2026", [tomas])).toBe("Field Notes 2026");
+describe("a publication's writer in a list", () => {
+  it("is named first, unless the publication is named for them", () => {
+    expect(writerOf(article(3, { feedTitle: "Garden Letters", writer: "Lena Fischer" }))).toBe("Lena Fischer");
+    expect(writerOf(article(3, { feedTitle: "Lena Fischer", writer: "lena fischer" }))).toBeUndefined();
+    expect(writerOf(article(3))).toBeUndefined();
   });
 });

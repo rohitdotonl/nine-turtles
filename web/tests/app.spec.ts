@@ -500,7 +500,7 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
   await expect(sheet).toBeVisible();
-  await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
+  await expect(sheet.getByLabel("Their website's address")).toBeFocused();
   // Every title speaks in one voice: the sheet's is the same serif, size and weight as the list's (decision 0042).
   const heading = sheet.getByRole("heading", { level: 2, name: "Add a person or publication" });
   expect(await heading.evaluate((element) => getComputedStyle(element).fontFamily)).toContain("Literata");
@@ -508,7 +508,7 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
   await expect(heading).toHaveCSS("font-weight", "600");
   // The field takes the full width; Cancel, then Add at the right end, in one row at the foot.
   const [field, cancel, add, card] = await Promise.all([
-    sheet.getByLabel("Paste a website or feed URL").boundingBox(),
+    sheet.getByLabel("Their website's address").boundingBox(),
     sheet.getByRole("button", { name: "Cancel" }).boundingBox(),
     sheet.getByRole("button", { name: "Add", exact: true }).boundingBox(),
     sheet.boundingBox(),
@@ -535,7 +535,7 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
   // Cancel closes it too, and a message appearing in it doesn't move it.
   await page.keyboard.press("a");
   const top = (await sheet.boundingBox())!.y;
-  await sheet.getByLabel("Paste a website or feed URL").fill("nonsense");
+  await sheet.getByLabel("Their website's address").fill("nonsense");
   await page.keyboard.press("Enter");
   await expect(sheet.locator("#feed-address-status")).not.toBeEmpty();
   expect((await sheet.boundingBox())!.y).toBe(top);

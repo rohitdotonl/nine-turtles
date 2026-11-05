@@ -352,7 +352,19 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     let gazette = added["feed"]["id"].as_i64().unwrap();
     let blog = reader.follow("alpha.xml").await;
     assert_eq!(reader.feed(blog).await["kind"], "person");
-    // The reader changes their minds, and corrects what kind of source it is, without touching its name or folders.
+    // A publication's articles name their writers in its list (the core path, point 4); a person's don't.
+    let listed = reader.get(&format!("/api/articles?feed={gazette}")).await;
+    assert!(
+        listed["articles"][0]["writer"]
+            .as_str()
+            .unwrap()
+            .starts_with("Writer "),
+        "{listed}"
+    );
+    let listed = reader.get(&format!("/api/articles?feed={blog}")).await;
+    assert!(listed["articles"][0].get("writer").is_none(), "{listed}");
+    // The reader changes their mind without touching its name or folders. What kind of source it
+    // is stays what nine turtles read from the feed: a correction is no longer taken (decision 0183).
     let (status, _) = reader
         .post(
             &format!("/api/feeds/{gazette}"),
@@ -362,7 +374,7 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     assert_eq!(status, StatusCode::NO_CONTENT);
     let changed = reader.feed(gazette).await;
     assert_eq!(changed["kind"], "person");
-    assert_eq!(changed["place"], "newsletter");
+    assert_eq!(changed["place"], "blog");
     assert_eq!(changed["title"], "The Gazette");
     // A place joined to someone is always a person's; taken out, it's guessed afresh.
     let (_, _) = reader

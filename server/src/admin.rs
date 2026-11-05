@@ -111,9 +111,8 @@ pub async fn following(
 
 /// Reader `person` is here (signed in, a device of theirs opened nine
 /// turtles, or another app synced), noted at most once a day. If they were
-/// away, the feeds they follow that are working are due at once, unless a
-/// follower asked for fewer checks (Edit feed), the feed was checked in the
-/// last hour, or a WebSub hub delivers its new articles (its checks are
+/// away, the feeds they follow that are working are due at once, unless the
+/// feed was checked in the last hour, or a WebSub hub delivers its new articles (its checks are
 /// only the twice-a-day backup, decision 0069): the background checks then take them a few at a
 /// time, as always.
 pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Error> {
@@ -150,8 +149,7 @@ pub async fn here(db: &SqlitePool, person: i64, now: i64) -> Result<(), sqlx::Er
 
 /// Reader `person`'s feeds that are working are due again soon, as when
 /// they come back after being away (`here`) or their plan starts again
-/// (`payments`), unless a follower asked for fewer checks, the feed was
-/// checked in the last hour, or a WebSub hub delivers its articles.
+/// (`payments`), unless the feed was checked in the last hour, or a WebSub hub delivers its articles.
 pub(crate) async fn due_again(
     connection: &mut sqlx::SqliteConnection,
     person: i64,
@@ -159,7 +157,7 @@ pub(crate) async fn due_again(
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE feeds SET next_check_at = MIN(next_check_at,
-             MAX(COALESCE(fetched_at, 0) + MAX(check_at_most, ?2), ?3))
+             MAX(COALESCE(fetched_at, 0) + ?2, ?3))
          WHERE next_check_at > ?3 AND failures = 0 AND unsubscribed_at IS NULL
              AND id NOT IN (SELECT feed_id FROM websub WHERE active_until > ?3)
              AND id IN (SELECT feed_id FROM subscriptions

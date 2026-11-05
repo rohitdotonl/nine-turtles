@@ -345,6 +345,16 @@ async fn follow(
     .bind(feed_id)
     .fetch_one(&mut *transaction)
     .await?;
+    // Their newest title, for "Maya Chen is…" (the owner's core path, point 1).
+    let latest = sqlx::query_scalar(
+        "SELECT articles.title FROM entries JOIN articles ON articles.id = entries.article_id
+         WHERE entries.person_id = ? AND entries.feed_id = ?
+         ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT 1",
+    )
+    .bind(person)
+    .bind(feed_id)
+    .fetch_optional(&mut *transaction)
+    .await?;
     transaction.commit().await?;
     // Signing up with the feed's hub, if it has one, needn't hold up adding
     // it. A feed others already follow has its checks and its hub.
@@ -358,8 +368,6 @@ async fn follow(
         site_title: parsed.title,
         site_url: parsed.site_url,
         unread,
-        check_at_most: 0,
-        open_on_site: false,
         paused_at: None,
         failing_since: None,
         checked_at: Some(now),
@@ -374,6 +382,7 @@ async fn follow(
         email: parsed.email,
         note: None,
         folders: Vec::new(),
+        latest,
     })
 }
 

@@ -241,7 +241,6 @@ pub fn router(state: AppState) -> Router {
         .merge(marks::routes())
         .merge(resume::routes())
         .merge(podcasts::routes())
-        .merge(frequency::routes())
         .merge(people::routes())
         .merge(sign_up::routes())
         .merge(confirm_email::routes())

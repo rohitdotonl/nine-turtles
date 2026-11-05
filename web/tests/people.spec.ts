@@ -71,7 +71,9 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
-  await expect(about).toContainText("A person");
+  // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
+  await expect(about).not.toContainText("A person");
+  await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();
   await expect(
     about.getByRole("link", { name: `${ana}.example` }),
   ).toBeVisible();
@@ -108,7 +110,8 @@ test("Edit makes someone a publication: listed under Publications, at its own ad
   await page.getByRole("radio", { name: "A publication" }).check();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
-  await expect(page_(page, `Blog ${ben}`)).toContainText("A publication");
+  // Their page no longer says what they are (the core path); the address and the sidebar do.
+  await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication");
   const publications = sidebar(page).getByRole("heading", {
     name: "Publications",
   });
@@ -139,7 +142,8 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
   await page.goto(new URL(`/people/${ids[0]}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  const add = page.getByRole("button", { name: "Add a source" });
+  // One source: the quiet line's link near Edit's foot (the owner's core path, point 12).
+  const add = page.getByRole("button", { name: "+ Add another place" });
   await add.click();
   const who = page.getByRole("combobox", {
     name: "Someone you already follow",
@@ -208,9 +212,10 @@ test("a source's own settings: Take out of the person, and Undo puts it back", a
   await expect(page).toHaveURL(
     new RegExp(`/people/${first}/sources/${second}$`),
   );
+  // What kind of source it is isn't a setting any more (decision 0183).
   await expect(
     page.getByRole("combobox", { name: "Kind of source" }),
-  ).toHaveValue("blog");
+  ).toHaveCount(0);
   await page.getByRole("button", { name: `Take out of Eli ${eli}` }).click();
   await expect(line(page)).toHaveText(`${fay}.example is on its own now`);
   await expect(rowsNamed(page, `Blog ${fay}`)).toHaveCount(1);
@@ -307,7 +312,7 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  await page.getByRole("button", { name: "Add a source" }).click();
+  await page.getByRole("button", { name: "+ Add another place" }).click();
   await page
     .getByRole("textbox", {
       name: /address of their blog, channel or newsletter/,

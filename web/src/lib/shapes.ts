@@ -30,7 +30,7 @@ export type Feed = {
   place?: PlaceKind;
   /** Someone or something (decision 0163): a place joined to others is always a person's. */
   kind?: WhoKind;
-  /** When the reader followed it (seconds since 1970), for "Following since". */
+  /** When the reader followed it (seconds since 1970), which orders a person's places. */
   addedAt?: number;
   /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
   places?: number[];
@@ -41,21 +41,10 @@ export type Feed = {
   note?: string | null;
   /** A YouTube channel's feed, whose Shorts and live streams are sorted out (decision 0144). */
   sortsVideos?: boolean;
-} & FeedSettings &
-  VideoSettings;
+} & VideoSettings;
 
 /** A YouTube channel's own switches (decision 0144): Shorts and live streams are left out unless switched on. */
 export type VideoSettings = { shorts?: boolean; liveStreams?: boolean };
-
-/**
- * A feed's own settings, chosen in Edit feed (SPEC section 15): how often it
- * may be checked, and whether opening one of its articles opens the
- * publisher's page.
- */
-export type FeedSettings = { check: Check; openOnSite: boolean };
-
-/** How often a feed is checked in the background: on its own rhythm, or at most daily. */
-export type Check = "automatic" | "daily";
 
 export type Folder = { id: number; name: string };
 
@@ -101,6 +90,8 @@ export type Article = {
   episode?: boolean;
   /** How long the episode plays, in seconds, if its feed says. */
   episodeSeconds?: number | null;
+  /** Who wrote it, for a publication's article whose feed names someone (the owner's core path, point 4). */
+  writer?: string;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -171,6 +162,7 @@ export function toArticle(article: Record<string, unknown>): Article {
     read: article.read === true,
     starred: article.starred === true,
     muted: article.muted === true,
+    ...(typeof article.writer === "string" && article.writer.trim() ? { writer: article.writer.trim() } : {}),
     ...excerptOf(article),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
@@ -222,8 +214,6 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     siteUrl: text(feed.site_url),
     unread: Number(feed.unread ?? 0),
     folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
-    check: checkFrom(Number(feed.check_at_most ?? 0)),
-    openOnSite: feed.open_on_site === true,
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
     failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
     checkedAt: typeof feed.checked_at === "number" ? feed.checked_at : null,
@@ -240,9 +230,3 @@ export function toFeed(feed: Record<string, unknown>): Feed {
   };
 }
 
-/** The server keeps the shortest wait in seconds: 0 or a day. An hour,
- * from when Edit feed offered "Hourly" (decision 0162), is Automatic now. */
-export function checkFrom(seconds: number): Check {
-  if (seconds >= 24 * 60 * 60) return "daily";
-  return "automatic";
-}

@@ -37,7 +37,7 @@
   import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
-  import { sourceOf, type OneSource } from "./people";
+  import { sourceOf, writerOf, type OneSource } from "./people";
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
@@ -586,6 +586,8 @@
             (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
           -->
           <span class={["row-meta mt-2 text-[0.75rem] tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
+            <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
+            {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>&nbsp;·</span>{/if}
             <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
             <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->

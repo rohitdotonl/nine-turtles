@@ -26,11 +26,15 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   // Nothing known yet: their page has no address.
   await expect(whoPage(page, `Blog ${name}`).getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(whoPage(page, `Blog ${name}`)).not.toContainText("Email");
+  // "Write to", the solid button under their name, opens the same box as Write back (the owner's core path, point 9).
+  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Write to Blog ${name}` })).toHaveClass(/btn-primary/);
+  await expect(whoPage(page, `Blog ${name}`)).not.toContainText("A person ·");
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   await page.locator(".item-row").first().click();
   const start = pane(page).getByRole("button", { name: `Write back to Blog ${name}` });
+  await expect(start).toHaveClass(/btn-primary/);
   await start.focus();
   await page.keyboard.press("Enter");
   const field = pane(page).getByRole("textbox", { name: "Their email address" });
@@ -71,14 +75,16 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const about = whoPage(page, `Blog ${name}`);
-  await expect(about.getByRole("link", { name: "ivy@ivy.example" })).toHaveAttribute("href", "mailto:ivy@ivy.example");
+  // Write to opens the email app with the address only and an empty subject.
+  await expect(about.getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", "mailto:ivy@ivy.example");
+  await expect(about).toContainText("ivy@ivy.example");
   await about.getByRole("button", { name: `Edit Blog ${name}` }).click();
   const edit = page.getByRole("textbox", { name: "Email address" });
   await expect(edit).toHaveValue("ivy@ivy.example");
   await edit.fill("ivy@letters.example");
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
-  await expect(about.getByRole("link", { name: "ivy@letters.example" })).toBeVisible();
+  await expect(about.getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", "mailto:ivy@letters.example");
 });
 
 test("Write back fills in the address it finds on their site, for the reader to check", async ({ page }) => {

@@ -520,7 +520,7 @@
             (decision 0044).
           -->
           <p class="article-note" lang="en">
-            <span>This feed shares only a summary.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
+            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
                 >{episode ? "Read the episode page on" : "Read on"} {site}<span aria-hidden="true">&nbsp;›</span></a
               >{/if}
           </p>

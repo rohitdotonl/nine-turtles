@@ -87,29 +87,9 @@ export function siteName(address: string | null): string | undefined {
   }
 }
 
-/** "since March 2026" (or "since this month"): when the reader followed the person's first place. */
-export function followingSince(places: Feed[], now = new Date()): string | undefined {
-  const first = Math.min(...places.map((place) => place.addedAt ?? Infinity));
-  if (!Number.isFinite(first)) return undefined;
-  const date = new Date(first * 1000);
-  if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) return "since this month";
-  return `since ${date.toLocaleDateString("en-GB", { month: "long" })} ${date.getFullYear()}`;
-}
-
 /** How a place is named on its person's page: a blog by its website, a channel or newsletter by its own name. */
 export function placeShownAs(place: Feed): string {
   return (place.place === "blog" || place.place === undefined ? siteName(place.siteUrl) : undefined) ?? plainSourceName(place.title);
-}
-
-/**
- * What Write back calls someone (owner's plan, step 2): a person by their first name ("Tomas" for
- * Tomas Berg), when their name is their own rather than a blog's title; anyone else by their whole name.
- */
-export function firstNameOf(name: string, places: Feed[]): string {
-  const words = name.trim().split(/\s+/);
-  const theirOwn = places.every((place) => place.kind !== "publication" && place.siteTitle?.toLowerCase() !== name.trim().toLowerCase());
-  const aName = words.length >= 2 && words.length <= 4 && words.every((word) => /^\p{Lu}[\p{L}'’-]*$/u.test(word));
-  return theirOwn && aName && words[0] ? words[0] : name;
 }
 
 /**
@@ -121,6 +101,12 @@ export type OneSource = boolean | ((article: Article) => string);
 
 export function sourceOf(article: Article, one: OneSource | undefined): string {
   return typeof one === "function" ? one(article) : plainSourceName(article.feedTitle);
+}
+
+/** A publication's writer, as a list's row names them first ("Lena Fischer · Garden Letters"), unless the publication is named for them. */
+export function writerOf(article: Article): string | undefined {
+  const writer = article.writer;
+  return writer && writer.toLowerCase() !== plainSourceName(article.feedTitle).toLowerCase() ? writer : undefined;
 }
 
 /** The labels in the list of a person with several places: what each article's place is. */

@@ -9,23 +9,18 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 
-test("Recently read is gone, and Edit says how often a feed posts", async ({ page, isMobile }) => {
+test("Recently read is gone", async ({ page, isMobile }) => {
   test.skip(isMobile, "the sidebar is the computer's");
   const blog = `often-${test.info().workerIndex}-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
+  await follow(page, `${FEED_SITE}/blog/${blog}/`);
 
   // Unread, Starred and All articles are the sidebar's lists; Recently read is gone (decision 0174).
   await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Recently read", exact: true })).toHaveCount(0);
-
-  // Edit says how often the feed posts, in words, under its kind of source.
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
-  await appReady(page);
-  await expect(page.getByText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/)).toBeVisible();
 
   // Its old address leads nowhere now.
   await page.goto(new URL("/recent", FEEDS_APP).href);

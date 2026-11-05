@@ -183,8 +183,9 @@ struct Due {
     etag: Option<String>,
     last_modified: Option<String>,
     check_every: i64,
-    /// The shortest wait the reader allows this feed (Edit feed): 0, an
-    /// hour or a day; a day while every follower is away.
+    /// The shortest wait between checks: a day while every follower is
+    /// away, else none of its own (0).
+    #[sqlx(skip)]
     check_at_most: i64,
     failures: i64,
     /// Every follower is away (`admin::AWAY_AFTER`).
@@ -211,7 +212,7 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         return Ok(());
     }
     let mut feed: Due = sqlx::query_as(concat!(
-        "SELECT url, etag, last_modified, check_every, check_at_most, failures, ",
+        "SELECT url, etag, last_modified, check_every, failures, ",
         admin::everyone_away!("?1"),
         " AS away FROM feeds WHERE id = ?2"
     ))
@@ -226,7 +227,7 @@ pub async fn check(state: &AppState, feed_id: i64, now: i64) -> Result<(), sqlx:
         feed.away = true;
     }
     if feed.away {
-        feed.check_at_most = feed.check_at_most.max(admin::AWAY_WAIT);
+        feed.check_at_most = admin::AWAY_WAIT;
     }
     let Ok(url) = Url::parse(&feed.url) else {
         return failed(state, feed_id, &feed, Failure::NotAnAddress, now).await;
@@ -320,11 +321,9 @@ async fn worked(
     };
     // While a hub delivers new articles, this check is only the backup:
     // at most twice a day (decision 0069).
-    // "Check at most daily", chosen in Edit feed (or an hour stored from
-    // the old "Hourly", decision 0162, the same as Automatic now), is the
-    // shortest rhythm, nudged only upwards so it's never sooner. A day is
-    // also the longest wait, so a daily feed waits exactly a day: daily
-    // feeds still drift apart, since each was last checked at its own time.
+    // A day while every follower is away is the shortest rhythm, nudged
+    // only upwards so it's never sooner. A day is also the longest wait, so
+    // such a feed waits exactly a day.
     let mut next = if state.config.test_check_seconds.is_some() {
         wait(state, every)
     } else {

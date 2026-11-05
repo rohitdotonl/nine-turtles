@@ -43,7 +43,7 @@
   import type { Article, Feed, Folder, Source } from "./shapes";
   import { homeView } from "./reading";
   import { ReadingSettings } from "./reading-settings.svelte";
-  import type { Notice } from "./feeds";
+  import { saveOpenFolders, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyFor, tip } from "./keyboard";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
@@ -159,6 +159,8 @@
   let itemList: ItemList | undefined = $state();
   let articleView: ArticleView | undefined = $state();
   let sidebarFeeds: SidebarFeeds | undefined = $state();
+  /** Edit put someone in folders just made or chosen: they open in the sidebar, or stay open for when it shows (point 14). */
+  const showFolders = (ids: number[]) => (sidebarFeeds ? sidebarFeeds.openFolder(ids) : saveOpenFolders([...new Set([...savedOpenFolders(), ...ids])]));
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
   /**
@@ -269,7 +271,9 @@
   let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
-  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : "Add a person or publication") : "New to feeds?");
+  /** Who Add just found, while it asks whether they're a person or a publication: the sheet's title asks about them. */
+  let foundName = $state("");
+  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : foundName ? `${foundName} is…` : "Add a person or publication") : "New to feeds?");
   /** The list's heading (`listHeading.ts`). */
   let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
@@ -748,19 +752,11 @@
 
   /**
    * Enter and o: open the selected article (the first, if none is selected
-   * yet) to read. An article from a feed set to open on the website opens
-   * the publisher's page in a new tab instead, and counts as read (SPEC
-   * section 15); on a computer its summary stays beside the list.
+   * yet) to read.
    */
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
-    const article = selected;
-    if (article?.link && !reading && !inArticle() && library.feeds?.find((feed) => feed.id === article.feedId)?.openOnSite) {
-      window.open(article.link, "_blank", "noopener,noreferrer");
-      itemList.shown(article);
-      return;
-    }
     if (phone && !reading) {
       // On a phone the article is a screen of its own, one step on.
       steps.openArticle();
@@ -1310,8 +1306,7 @@
   {#if route.kind === "add-feed" && shared}
     <FollowPerson address={shared} bind:name={sharedName} onFollowed={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else if route.kind === "add-feed"}
-    <p>nine turtles finds the feed on any website you like, and lists its articles.</p>
-    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
+    <AddFeed bind:field={headings.add} bind:asked={foundName} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else}
     <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
   {/if}
@@ -1321,7 +1316,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} />
     {/key}
   {/if}
 {/snippet}

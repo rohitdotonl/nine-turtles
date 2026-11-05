@@ -7,7 +7,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // (playwright.config.ts), each with a blog of its own.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const field = (page: Page) => page.getByLabel("Paste a website or feed URL");
+const field = (page: Page) => page.getByLabel("Their website's address");
 // The made-up publisher asked for as localhost: a site with no feed anywhere (tests/feed-server.mjs).
 const NO_FEED_SITE = FEED_SITE.replace("127.0.0.1", "localhost");
 
@@ -52,7 +52,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // beside it says nothing, and the sidebar has no find field while there's nothing to find.
   const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
   await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
-  await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
+  await expect(reading.getByLabel("Their website's address")).toBeVisible();
   await expect(reading.getByRole("button", { name: "Add", exact: true })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(sidebar(page).getByRole("searchbox", { name: "Find a person or folder" })).toHaveCount(0);
@@ -68,7 +68,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   expect((await field(page).boundingBox())!.width).toBeGreaterThan(280);
   // One alignment (decision 0048): the field's name is its placeholder (and its label for screen
   // readers), so no line sits left-aligned under the centred title.
-  await expect(field(page)).toHaveAttribute("placeholder", "Paste a website or feed URL");
+  await expect(field(page)).toHaveAttribute("placeholder", "Their website's address");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
   // "Bring your list from another app…", an underlined link in the text color just under the field and
   // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
@@ -109,13 +109,13 @@ test("the welcome stays still under the Add sheet", async ({ page, isMobile }) =
   // Nothing behind the sheet moves as it opens or closes (decision 0048): the welcome keeps its shape under the dim.
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
-  await expect(sheet.getByLabel("Paste a website or feed URL")).toBeFocused();
+  await expect(sheet.getByLabel("Their website's address")).toBeFocused();
   expect(await shape()).toEqual(before);
   // The page has one field of that name: the sheet's.
-  await expect(page.getByLabel("Paste a website or feed URL")).toHaveCount(1);
+  await expect(page.getByLabel("Their website's address")).toHaveCount(1);
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
-  await expect(reading.getByLabel("Paste a website or feed URL")).toBeVisible();
+  await expect(reading.getByLabel("Their website's address")).toBeVisible();
   expect(await shape()).toEqual(before);
 });
 
@@ -126,7 +126,7 @@ test("on a phone-narrow window, a fresh nine turtles shows the welcome in the li
   await signIn(page);
   const list = page.getByRole("region", { name: "Unread" });
   await expect(list.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
-  await expect(list.getByLabel("Paste a website or feed URL")).toBeVisible();
+  await expect(list.getByLabel("Their website's address")).toBeVisible();
   await expect(list.getByRole("button", { name: "Bring your list from another app…" })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
 });
@@ -163,7 +163,7 @@ test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  const hint = page.getByRole("region", { name: "Unread" }).getByLabel("Paste a website or feed URL");
+  const hint = page.getByRole("region", { name: "Unread" }).getByLabel("Their website's address");
   await expect(hint).toBeVisible();
   // The hint's own width, in the hint's own type, against the room inside the field.
   const fits = () =>
@@ -195,7 +195,7 @@ test("on a small phone, the welcome's hint fits its field, at 320 and 375 pixels
   await page.setViewportSize({ width: 1280, height: 800 });
   // The welcome moves into the reading area as the window widens: asked again until it has.
   await expect
-    .poll(() => page.getByLabel("Paste a website or feed URL").evaluate((input) => getComputedStyle(input, "::placeholder").fontSize))
+    .poll(() => page.getByLabel("Their website's address").evaluate((input) => getComputedStyle(input, "::placeholder").fontSize))
     .toBe("16px");
 });
 
@@ -316,10 +316,14 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await page.keyboard.press("Enter");
 
   // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0163).
-  const asked = page.getByRole("group", { name: `Is Blog ${name} someone you might write to?` });
+  // The field goes; the sheet's title finishes the sentence (the owner's core path, point 1).
+  const asked = page.getByRole("group", { name: `Blog ${name} is…` });
   await expect(asked).toBeVisible();
-  await expect(asked.getByRole("radio", { name: /^Yes, a person/ })).toBeChecked();
-  await expect(asked.getByRole("radio", { name: /^Yes, a person/ })).toBeFocused();
+  await expect(page.getByRole("heading", { name: `Blog ${name} is…` })).toBeVisible();
+  await expect(field(page)).toHaveCount(0);
+  await expect(asked.getByText("You can change this later in Edit.")).toBeVisible();
+  await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeChecked();
+  await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
   // Its list opens only once Done is pressed.
@@ -350,7 +354,7 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await field(page).fill(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.getByRole("button", { name: "Add", exact: true }).click();
   // A publication, this time: it opens at a publication's address, under Publications.
-  await page.getByRole("radio", { name: /^No, a publication/ }).check();
+  await page.getByRole("radio", { name: "A publication", exact: true }).check();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
@@ -396,7 +400,7 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
   await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.");
+  await expect(page.locator("#feed-address-status")).toHaveText("nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.");
   // The field is marked as refused, for screen readers and by its red edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   // While the keyboard is in it, the focus line takes the edge's place: one line, never a red edge inside a ring (decision 0042).
@@ -432,7 +436,7 @@ test("changing the address after a choice of feeds takes the old choices away", 
   await expect(page.locator("#feed-address-status")).toHaveText("");
   await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.");
+  await expect(page.locator("#feed-address-status")).toHaveText("nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.");
 });
 
 test("without a connection, adding says so without marking the address as wrong", async ({ page, context }) => {
@@ -517,9 +521,9 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await tabTo(page, page.getByRole("button", { name: "Add", exact: true }));
   await page.keyboard.press("Enter");
   // A person or a publication: an arrow key changes the answer, and Done opens it.
-  await expect(page.getByRole("radio", { name: /^Yes, a person/ })).toBeFocused();
+  await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("radio", { name: /^No, a publication/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "A publication", exact: true })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
@@ -612,7 +616,7 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
   // Screen readers hear the question with the name once it's known, and no word of feeds or RSS anywhere.
   await expect(question(page).getByRole("status")).toHaveText(`Follow Blog ${name}?`);
   await expect(question(page)).not.toContainText(/feed|rss/i);
-  await expect(page.getByLabel("Paste a website or feed URL")).toHaveCount(0);
+  await expect(page.getByLabel("Their website's address")).toHaveCount(0);
   // What they wrote lately, so the reader knows who they're saying yes to.
   await expect(page.getByRole("region", { name: "Lately" }).getByRole("listitem")).toHaveCount(3);
   // Nothing is followed yet: not in the sidebar, not on the server.

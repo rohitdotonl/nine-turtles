@@ -125,10 +125,13 @@ test("a feed put in two folders appears under both, with its unread dot in each"
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.locator("#list-heading")).toContainText(`Renamed ${blog}`);
 
-  // Folders are listed with their dots; their feeds show when opened.
+  // Folders are listed with their dots. Each one Edit made or chose opened, to show them in it
+  // (the owner's core path, point 14); its arrow closes and opens it again.
   for (const folder of [first, second]) {
     await expect(sidebar(page).getByRole("link", { name: `${folder} unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -386,12 +389,15 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
   await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
   await expect(page.getByRole("heading", { level: 2, name: `Edit Blog ${blog}` })).toHaveCount(0);
 
-  // The folder's button shows its feeds; Space or Enter works it.
+  // The folder just made opens (the core path); its button closes and opens it, by Enter.
   const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
-  await tabTo(page, toggle);
-  await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+  await tabTo(page, toggle);
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
   // Untick the folder in Edit: Space on the checkbox, then Done.
   await tabTo(page, page.getByRole("button", { name: `Edit Blog ${blog}`, exact: true }));
@@ -495,45 +501,29 @@ test.describe("on a touch screen beside the list", () => {
   });
 });
 
-test("with only the keyboard: a feed set to daily and the website opens on its site", async ({ page }) => {
-  const blog = unique("flow");
-  const flowingName = `Blog ${blog}`;
-  const [flowing] = await openBlogs(page, [blog, unique("stay")]);
-  // Opening an article on its website is noted instead of opening a tab.
-  await page.evaluate(() => {
-    window.open = ((url?: string | URL) => {
-      document.body.dataset.opened = String(url);
-      return null;
-    }) as typeof window.open;
-  });
-
-  await editWhoByKeys(page, flowingName);
-  const sheet = whoPage(page, flowingName);
-  // Every setting starts as every feed behaves, and there's no reading mode of its own (decision 0172).
-  await expect(sheet.getByRole("radio", { name: "Inbox" })).toHaveCount(0);
-  await expect(sheet.getByRole("radio", { name: "River" })).toHaveCount(0);
-  await expect(sheet.getByRole("radio", { name: "Automatic" })).toBeChecked();
-  await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).not.toBeChecked();
-  await tabTo(page, sheet.getByRole("radio", { name: "Automatic" }));
-  // Two choices since "Hourly" went (decision 0162): one step to Daily.
-  await page.keyboard.press("ArrowRight");
-  await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
-  await tabTo(page, sheet.getByRole("checkbox", { name: "Open articles on the website" }));
-  await page.keyboard.press("Space");
-  await tabTo(page, sheet.getByRole("button", { name: "Done" }));
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
-
-  // Enter on one of its articles opens the publisher's page; the summary stays beside the list.
-  await page.keyboard.press("j");
-  await page.keyboard.press("Enter");
-  await expect(page.locator("body")).toHaveAttribute("data-opened", /^https?:\/\//);
-
-  // Edit remembers both.
-  await page.goto(new URL(`/people/${flowing}/edit`, FEEDS_APP).href);
-  await appReady(page);
-  await expect(sheet.getByRole("radio", { name: "Daily" })).toBeChecked();
-  await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).toBeChecked();
+test("Edit keeps only Name, Email address, This is, Folders and Pause, then Unsubscribe", async ({ page }) => {
+  const blog = unique("fewer");
+  await openBlogs(page, [blog]);
+  await editWhoByKeys(page, `Blog ${blog}`);
+  const sheet = whoPage(page, `Blog ${blog}`);
+  // The four settings that went (the owner's core path, point 11, decision 0183).
+  await expect(sheet.getByRole("combobox", { name: "Kind of source" })).toHaveCount(0);
+  await expect(sheet.getByRole("radio", { name: "Automatic" })).toHaveCount(0);
+  await expect(sheet.getByRole("checkbox", { name: "Open articles on the website" })).toHaveCount(0);
+  await expect(sheet.getByText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/)).toHaveCount(0);
+  // One source: no Sources heading, and a quiet line near the foot to add another place (point 12).
+  await expect(sheet.getByText("Sources", { exact: true })).toHaveCount(0);
+  await expect(sheet.getByText(`Does Blog ${blog} also write a newsletter, make videos or host a podcast?`, { exact: false })).toBeVisible();
+  await expect(sheet.getByRole("button", { name: "+ Add another place" })).toBeVisible();
+  await expect(sheet.getByText("Type a name to make a folder.")).toBeVisible();
+  await expect(sheet.getByRole("checkbox", { name: "Pause for a while" })).toBeVisible();
+  // In that order, top to bottom.
+  const tops = await Promise.all(
+    [sheet.getByLabel("Name"), sheet.getByLabel("Email address"), sheet.getByRole("group", { name: "This is" }), sheet.getByRole("group", { name: "Folders" }), sheet.getByRole("checkbox", { name: "Pause for a while" }), sheet.getByRole("button", { name: `Unsubscribe from Blog ${blog}` })].map(
+      async (each) => (await each.boundingBox())!.y,
+    ),
+  );
+  expect([...tops].sort((one, other) => one - other)).toEqual(tops);
 });
 
 test("with only the keyboard: pausing a feed in Edit is remembered, with since when", async ({ page }) => {

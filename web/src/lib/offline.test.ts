@@ -47,7 +47,7 @@ describe("lists without a connection", () => {
     expect(ids(keptList(all, { view: "all" }, "newest"))).toEqual([4, 3, 2, 1]);
     expect(ids(keptList(all, { feed: 2 }, "newest"))).toEqual([4]);
     const library: Library = {
-      feeds: [{ id: 2, title: "Notes", siteUrl: null, unread: 1, folders: [7], check: "automatic", openOnSite: false }],
+      feeds: [{ id: 2, title: "Notes", siteUrl: null, unread: 1, folders: [7] }],
       folders: [{ id: 7, name: "Friends" }],
     };
     expect(ids(keptList(all, { folder: 7 }, "newest", library))).toEqual([4]);
@@ -86,8 +86,8 @@ describe("marks made without a connection", () => {
   it("move the kept sidebar counts, never below nothing", () => {
     const library: Library = {
       feeds: [
-        { id: 1, title: "Garden", siteUrl: null, unread: 1, folders: [], check: "automatic", openOnSite: false },
-        { id: 2, title: "Shed", siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false },
+        { id: 1, title: "Garden", siteUrl: null, unread: 1, folders: [] },
+        { id: 2, title: "Shed", siteUrl: null, unread: 0, folders: [] },
       ],
       folders: [],
     };

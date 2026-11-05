@@ -9,7 +9,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type PlaceKind, type VideoSettings, type WhoKind } from "./shapes";
+import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
  * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, how
@@ -18,7 +18,8 @@ import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Libra
 export type Choice = { title: string; url: string; place?: string; posting?: string; latest?: string };
 
 export type AddResult =
-  | { kind: "added"; feed: Feed }
+  /** `latest`: their newest article's title, for Add's question ("Maya Chen is…"). */
+  | { kind: "added"; feed: Feed; latest?: string }
   /** Several feeds to choose from; for a YouTube video or playlist, `asks` which and `maker` names its channel (decision 0144). */
   | { kind: "choose"; choices: Choice[]; asks?: "video" | "playlist"; maker?: string }
   | { kind: "already"; feedId: number }
@@ -151,16 +152,6 @@ export function folderChoice(here: boolean, open: boolean, plain: boolean): "fol
   return open ? "go" : "open-and-go";
 }
 
-/** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
-export async function feedFrequency(id: number): Promise<string | undefined> {
-  try {
-    const body = await getJson(`/api/feeds/${id}/frequency`);
-    return isRecord(body) && typeof body.words === "string" ? body.words : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /**
  * A source's name as the article list shows it: a newsletter's name without
  * the sender's address that its feed title carries ("Every (hi@every.to)"
@@ -194,7 +185,7 @@ export async function addFeed(address: string): Promise<AddResult> {
   }
   const body: unknown = await response.json().catch(() => null);
   if (!isRecord(body)) return { kind: "problem", reason: "trouble" };
-  if (isRecord(body.feed)) return { kind: "added", feed: toFeed(body.feed) };
+  if (isRecord(body.feed)) return { kind: "added", feed: toFeed(body.feed), ...(typeof body.feed.latest === "string" ? { latest: body.feed.latest } : {}) };
   if (Array.isArray(body.choices)) {
     const choices = body.choices.filter(isRecord).map((choice) => ({
       title: String(choice.title ?? ""),
@@ -237,20 +228,19 @@ export async function change(path: string, body: unknown): Promise<{ refusal?: R
 }
 
 /** What Edit and a source's settings change (decision 0163); anything left out stays as it is. */
-export type FeedChanges = Partial<FeedSettings & VideoSettings> & {
+export type FeedChanges = Partial<VideoSettings> & {
   title?: string;
   folders?: number[];
   /** A folder to make and choose too. */
   newFolder?: string;
   paused?: boolean;
   kind?: WhoKind;
-  place?: PlaceKind;
 };
 
 /** Saves Edit's or a source's settings: only what's given changes. */
 export async function editFeed(id: number, changes: FeedChanges): Promise<Refusal | undefined> {
-  const { newFolder, openOnSite, liveStreams, ...rest } = changes;
-  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, open_on_site: openOnSite, live_streams: liveStreams })).refusal;
+  const { newFolder, liveStreams, ...rest } = changes;
+  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, live_streams: liveStreams })).refusal;
 }
 
 export async function unsubscribe(id: number): Promise<Refusal | undefined> {
@@ -309,7 +299,7 @@ export function explain(reason: Problem): string {
     case "too-big":
       return "That file is too big to be a feed.";
     case "no-feed":
-      return "This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.";
+      return "nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.";
     case "too-many":
       return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
     case "plan-ended":

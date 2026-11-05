@@ -471,22 +471,19 @@ async fn follow_elsewhere(
     // or publication, and the kind of source.
     type Kept = (
         String,
-        i64,
-        bool,
         Option<i64>,
         Option<i64>,
         Option<String>,
         Option<String>,
     );
-    let (title, check_at_most, open_on_site, paused_at, writer, kind, place): Kept =
-        sqlx::query_as(
-            "SELECT title, check_at_most, open_on_site, paused_at, writer_id, kind, place
+    let (title, paused_at, writer, kind, place): Kept = sqlx::query_as(
+        "SELECT title, paused_at, writer_id, kind, place
              FROM subscriptions WHERE person_id = ? AND feed_id = ?",
-        )
-        .bind(person)
-        .bind(old)
-        .fetch_one(&mut *transaction)
-        .await?;
+    )
+    .bind(person)
+    .bind(old)
+    .fetch_one(&mut *transaction)
+    .await?;
     let (new, fresh) = match follow_in(
         &mut *transaction,
         state,
@@ -502,12 +499,9 @@ async fn follow_elsewhere(
         Followed::Already(_) => return Ok(Err(refused(StatusCode::CONFLICT, "already"))),
     };
     sqlx::query(
-        "UPDATE subscriptions SET check_at_most = ?, open_on_site = ?, paused_at = ?,
-             writer_id = ?, kind = ?, place = ?
+        "UPDATE subscriptions SET paused_at = ?, writer_id = ?, kind = ?, place = ?
          WHERE person_id = ? AND feed_id = ?",
     )
-    .bind(check_at_most)
-    .bind(open_on_site)
     .bind(paused_at)
     .bind(writer)
     .bind(kind)

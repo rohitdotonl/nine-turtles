@@ -622,17 +622,20 @@ pub(crate) const MUTED_COUNT: &str =
 /// The Hidden articles page: the reader's newest hidden articles, and how many there are.
 async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<ArticleRow>, i64), sqlx::Error> = async {
-        let articles = sqlx::query_as(
+        let articles = sqlx::query_as(concat!(
             "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
                     entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,",
+            crate::feeds::publication_writer!(),
+            "
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
                  LEFT JOIN writers ON writers.id = subscriptions.writer_id
              WHERE entries.person_id = ? AND entries.muted = 1
-             ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ?",
+             ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ?"
+        ),
         )
         .bind(person)
         .bind(MUTED_SHOWN)

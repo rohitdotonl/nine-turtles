@@ -65,7 +65,7 @@ const ARTICLE: &str = "SELECT entries.article_id AS id, entries.feed_id,
             articles.title, articles.link, entries.sort_at AS at,
             entries.read, entries.starred, entries.muted,
             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
-            NULLIF(TRIM(COALESCE(writers.name, articles.author, '')), '') AS writer
+            NULLIF(TRIM(COALESCE(writers.name, articles.author, '')), '') AS signed_by
      FROM entries CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id
@@ -77,7 +77,7 @@ const ARTICLE: &str = "SELECT entries.article_id AS id, entries.feed_id,
 struct Offered {
     #[sqlx(flatten)]
     article: ArticleRow,
-    writer: Option<String>,
+    signed_by: Option<String>,
 }
 
 /// What to offer the reader, if anything: the article, its writer and the place.
@@ -102,7 +102,7 @@ pub async fn offered(
     Ok(found.map(|found| {
         json!({
             "article": found.article,
-            "writer": found.writer,
+            "writer": found.signed_by,
             "block": place.block,
             "within": place.within,
         })

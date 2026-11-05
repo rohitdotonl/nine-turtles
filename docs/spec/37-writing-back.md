@@ -7,13 +7,21 @@ V1, item 2). Its look gets a refinement round.*
 **What it does**
 - **Write back on every article** of someone you follow: at the article's
   end, under its closing rule (and under "Read on …" for a summary), one
-  centred button, **Write back to Tomas** (a person by their first name
-  when their name is their own, as "Tomas Berg" is, rather than a blog's
-  title, which is said whole: "Write back to Notes from Tomas"; section 36),
-  with the address it writes to under it in small muted type. It's also in
+  centred button, **Write back to Tomas Berg**: the solid ink button with a
+  paper-plane icon, the only solid button in the reading pane, naming them
+  in full, by the name in the sidebar ("Write back to Maya Chen"; a
+  publication stays "Write back to Garden Letters"; the owner's core path,
+  points 6 and 7, decision 0183; the first-name rule went), with the address
+  it writes to under it in small muted type. It's also in
   the article's More menu (**Write back**) and on the keyboard, **`w`**
   (section 19). An article of a place you no longer follow (one kept only
   in Starred) has none: there's no person to write to.
+- **Write to, on their page** (the owner's core path, point 9): the same
+  solid button with the paper plane, **Write to Tomas Berg**, sits under
+  their name on their page (section 36), with the address under it. It
+  opens your email app with the address only and an empty subject. When no
+  address is known, it opens the same box as Write back (below), whose
+  button then says **Write**.
 - **It opens your own email app,** with their address and the subject
   "Re: " and the article's title filled in (a title that already starts
   "Re:" keeps its own). nine turtles never sends that email and never sees
@@ -44,18 +52,17 @@ V1, item 2). Its look gets a refinement round.*
   finds an address, it fills it into the field and says "Found on their
   site. Check it, then press Write back."; the reader checks it and presses
   Write back to keep it (a page can show someone else's address too). When
-  it finds none, "nine turtles looked on their site and didn't find an
-  address. Paste it here once and it's kept." When it couldn't look (their
-  site didn't answer, or nine turtles can't be reached), "nine turtles
-  couldn't look on their site just now. Paste it here once and it's kept."
+  it finds none, "No email address on their site. Paste it here and it's
+  saved." (point 8). When it couldn't look (their site didn't answer, or
+  nine turtles can't be reached), "nine turtles couldn't look on their site
+  just now. Paste it here and it's saved."
   Once the reader changes a found address, the box is as before. With no website known it
   doesn't look, and says "nine turtles doesn't have their address yet.
-  Paste it here once and it's kept."; then **Find it on their site** (an everyday button that opens their
+  Paste it here and it's saved."; then **Find it on their site** (an everyday button that opens their
   website, the one their feed names or else their article's home page, in a
   new tab; left out when nine turtles knows
   neither, and once an address found there is filled in), **Their email address**, **Write back** and **Not now**, and
-  under them, quietly, "Sends from your own email. nine turtles never reads
-  it." The
+  under them, quietly, "It sends from your own email." only (point 8). The
   keyboard starts on the field; Not now puts it back on the button.
   Something that isn't one address ("ivy at home", two addresses) is refused
   in oxblood words, keeping what you typed. Write back opens your email app
@@ -78,9 +85,8 @@ V1, item 2). Its look gets a refinement round.*
   found, or not found, without visiting. A site that didn't answer isn't
   counted, so a later press tries again; one that answered with an error
   or asked nine turtles to slow down is counted, and never asked again.
-- **Their page** (section 36) shows it as **Email**, under their sources,
-  as a link that opens your email app; it's left out while
-  nine turtles doesn't know it. Edit (on their page) has an **Email address**
+- **Their page** (section 36) shows it under **Write to …**, once nine
+  turtles knows it. Edit (on their page) has an **Email address**
   field under the name ("Write back opens your own email app with this
   address."): change it and press Done to write somewhere else; empty it to go
   back to what their feed gives, if anything.
@@ -97,9 +103,10 @@ V1, item 2). Its look gets a refinement round.*
    and "Re: " and the title. Back in nine turtles, the button now shows the
    address under it; open another of their articles and press it: the email
    app opens straight away.
-3. Open their page (press their name at the top of their list): **Email**
-   shows the address. Press Edit: the field has it; change it and press
-   Done; the page shows the new one.
+3. Open their page (press their name at the top of their list): **Write to
+   …** with the address under it; pressing it opens your email app with no
+   subject. Press Edit: the field has it; change it and press Done; the page
+   shows the new one.
 4. Press **Find it on their site** in that box: their website opens in a
    new tab, and the box is still there to paste the address into.
 5. Follow a blog whose articles end with a "Reply by email" link: after its

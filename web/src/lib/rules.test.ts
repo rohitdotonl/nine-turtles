@@ -2,7 +2,7 @@ import { describe as group, expect, it } from "vitest";
 import type { Feed } from "./shapes";
 import { HIDING_HELP, applyQuestion, appliedMessage, blankWidth, describe, ruleRefused, whoChoice, type Rule } from "./rules";
 
-const feed = (id: number, title: string, places?: number[]): Feed => ({ id, title, siteUrl: null, unread: 0, folders: [], check: "automatic", openOnSite: false, places });
+const feed = (id: number, title: string, places?: number[]): Feed => ({ id, title, siteUrl: null, unread: 0, folders: [], places });
 /** The sidebar's rows: Alpha has two places (3 and 4), Garden Notes one. */
 const people: Feed[] = [feed(3, "Alpha", [3, 4]), feed(5, "Garden Notes")];
 

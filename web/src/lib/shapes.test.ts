@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkFrom, toExcerpt } from "./shapes";
+import { toExcerpt } from "./shapes";
 
 describe("search excerpts", () => {
   it("keep only text pieces, each a searched word or not, never HTML", () => {
@@ -17,14 +17,5 @@ describe("search excerpts", () => {
       // Text stays text: Svelte shows it as written, tags and all.
       { text: "<b>notes</b>", match: false },
     ]);
-  });
-});
-
-describe("each feed's own settings", () => {
-  it("reads how often a feed may be checked from the server's shortest wait", () => {
-    expect(checkFrom(0)).toBe("automatic");
-    // "Hourly", no longer offered, does what Automatic does (decision 0162).
-    expect(checkFrom(60 * 60)).toBe("automatic");
-    expect(checkFrom(24 * 60 * 60)).toBe("daily");
   });
 });
