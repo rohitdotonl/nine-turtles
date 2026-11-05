@@ -586,7 +586,7 @@ async fn adding_feed_settings_keeps_every_feed_as_it_was() {
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 40).await;
     let count = |sql: &'static str| sqlx::query_scalar::<_, i64>(sql).fetch_one(&db);
     assert_eq!(count("SELECT COUNT(*) FROM feeds").await.unwrap(), 10);
     assert_eq!(count("SELECT COUNT(*) FROM articles").await.unwrap(), 200);
@@ -1044,9 +1044,10 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     // Every feed line is the owner's subscription, with its name, settings
     // and unsubscribing exactly as they were.
     // (Feed 1 flowed past, which went in structure change 38.)
-    type Subscription = (i64, String, i64, Option<i64>, bool, i64, bool);
+    // (Their check and website settings went in structure change 41.)
+    type Subscription = (i64, String, i64, Option<i64>, bool);
     let subscriptions: Vec<Subscription> = sqlx::query_as(
-        "SELECT feed_id, title, added_at, unsubscribed_at, cleared, check_at_most, open_on_site
+        "SELECT feed_id, title, added_at, unsubscribed_at, cleared
          FROM subscriptions WHERE person_id = 1 ORDER BY feed_id",
     )
     .fetch_all(db)
@@ -1055,25 +1056,17 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     assert_eq!(
         subscriptions,
         [
-            (1, "My renamed blog".into(), 10, None, false, 3600, true),
-            (2, "Blog 2".into(), 20, None, false, 0, false),
-            (3, "Blog 3".into(), 30, None, false, 86_400, false),
-            (4, "Just left".into(), 40, Some(now - 60), false, 0, true),
-            (
-                5,
-                "Cleared, stars kept".into(),
-                50,
-                Some(now - 86_400),
-                true,
-                0,
-                false
-            ),
-            (6, "Nothing yet".into(), 60, None, false, 0, false),
+            (1, "My renamed blog".into(), 10, None, false),
+            (2, "Blog 2".into(), 20, None, false),
+            (3, "Blog 3".into(), 30, None, false),
+            (4, "Just left".into(), 40, Some(now - 60), false),
+            (5, "Cleared, stars kept".into(), 50, Some(now - 86_400), true),
+            (6, "Nothing yet".into(), 60, None, false),
         ]
     );
     // What background checking reads stays as it was.
-    let shared: Vec<(i64, Option<i64>, i64, i64, i64)> = sqlx::query_as(
-        "SELECT id, unsubscribed_at, check_at_most, next_check_at, check_every FROM feeds
+    let shared: Vec<(i64, Option<i64>, i64, i64)> = sqlx::query_as(
+        "SELECT id, unsubscribed_at, next_check_at, check_every FROM feeds
          ORDER BY id",
     )
     .fetch_all(db)
@@ -1082,12 +1075,12 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     assert_eq!(
         shared,
         [
-            (1, None, 3600, 99, 3600),
-            (2, None, 0, 99, 3600),
-            (3, None, 86_400, 99, 3600),
-            (4, Some(now - 60), 0, 99, 3600),
-            (5, Some(now - 86_400), 0, 99, 3600),
-            (6, None, 0, 99, 3600),
+            (1, None, 99, 3600),
+            (2, None, 99, 3600),
+            (3, None, 99, 3600),
+            (4, Some(now - 60), 99, 3600),
+            (5, Some(now - 86_400), 99, 3600),
+            (6, None, 99, 3600),
         ]
     );
     for (sql, expected) in [
@@ -1194,7 +1187,6 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
     assert_eq!(feeds.as_array().unwrap().len(), 5);
     assert_eq!(feeds[2]["title"], "Just left");
     assert_eq!(feeds[2]["folders"], serde_json::json!([1]));
-    assert_eq!(feeds[2]["open_on_site"], true);
     let unsubscribed: Option<i64> =
         sqlx::query_scalar("SELECT unsubscribed_at FROM feeds WHERE id = 4")
             .fetch_one(db)
@@ -2552,7 +2544,7 @@ async fn unread_on_or_off_keeps_every_choice_and_marks_only_what_flowed_past() {
     }
     old.close().await;
 
-    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let db = upgraded_to(&data_dir, 40).await;
     let entries: Vec<(i64, i64, bool, bool)> = sqlx::query_as(
         "SELECT person_id, article_id, read, starred FROM entries ORDER BY person_id, article_id",
     )
@@ -2808,4 +2800,72 @@ async fn keeping_starred_deletes_what_is_gone_and_leaves_every_mark() {
             .await
             .unwrap();
     assert_eq!(settings, ["sort"]);
+}
+
+#[tokio::test]
+async fn fewer_settings_drops_two_settings_and_keeps_every_feed_and_folder() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after Keep Starred (structure change 40): reader 1
+    // follows two feeds, one checked at most daily and opened on its
+    // website, in the folder Garden.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(40, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at, check_at_most)
+         VALUES (1, 'u', 'u', 'Roses', 1, 86400), (2, 'v', 'v', 'Spades', 1, 0)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, check_at_most,
+             open_on_site, place)
+         VALUES (1, 1, 'Roses', 1, 86400, 1, 'newsletter'), (1, 2, 'Spades', 1, 0, 0, NULL)",
+        "INSERT INTO folders (id, person_id, name) VALUES (1, 1, 'Garden')",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let kept: Vec<(i64, String, Option<String>)> =
+        sqlx::query_as("SELECT feed_id, title, place FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        kept,
+        [
+            (1, "Roses".to_owned(), Some("newsletter".to_owned())),
+            (2, "Spades".to_owned(), None)
+        ]
+    );
+    let pairs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(pairs, 1);
+    for (table, column) in [
+        ("subscriptions", "check_at_most"),
+        ("subscriptions", "open_on_site"),
+        ("feeds", "check_at_most"),
+    ] {
+        let left: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?")
+                .bind(table)
+                .bind(column)
+                .fetch_one(&db)
+                .await
+                .unwrap();
+        assert_eq!(left, 0, "{table}.{column}");
+    }
 }

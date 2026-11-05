@@ -118,7 +118,22 @@ pub struct ArticleRow {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub noted: Option<String>,
+    /// Who wrote it, for a publication's article (`publication_writer!`).
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub writer: Option<String>,
 }
+
+/// Who wrote an article of a publication, when its feed names someone, so a
+/// list says "Lena Fischer · Garden Letters" (the owner's core path, point
+/// 4). None for a person's article: the person's name already says who.
+macro_rules! publication_writer {
+    () => {
+        "CASE WHEN subscriptions.writer_id IS NULL AND subscriptions.kind = 'publication'
+             THEN NULLIF(TRIM(articles.author), '') END AS writer"
+    };
+}
+pub(crate) use publication_writer;
 
 /// Writes an article's link without its tracking tags (`ArticleRow`).
 fn link_without_tracking<S: serde::Serializer>(
@@ -265,7 +280,10 @@ macro_rules! list_query {
             "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
                     entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
+                    ",
+            publication_writer!(),
+            "
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
                      AND subscriptions.feed_id = entries.feed_id
@@ -293,7 +311,9 @@ macro_rules! notes_query {
             "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
                     articles.title, articles.link, entries.sort_at AS at,
                     entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
+            publication_writer!(),
+            ",
                     (SELECT quote FROM notes AS first WHERE first.person_id = entries.person_id
                          AND first.article_id = entries.article_id AND first.quote IS NOT NULL
                      ORDER BY first.made_at, first.id LIMIT 1) AS highlighted,

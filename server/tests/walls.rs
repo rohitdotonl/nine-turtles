@@ -598,7 +598,7 @@ async fn a_feed_two_readers_follow_is_stored_and_fetched_once() {
 
 #[tokio::test]
 async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
-    let (owner, other, state, feed, _) = two_followers().await;
+    let (owner, other, _, feed, _) = two_followers().await;
     let ids = owner.ids("view=all").await;
     let (first, second, third) = (ids[0], ids[1], ids[2]);
 
@@ -673,20 +673,16 @@ async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Their garden", "folders": [],
-                    "check": "daily", "open_on_site": true }),
+            json!({ "title": "Their garden", "folders": [], "paused": true }),
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
     let mine = &owner.get("/api/feeds").await["feeds"][0];
     assert_eq!(mine["title"], "Garden notes");
-    assert_eq!(mine["check_at_most"], 0);
-    assert_eq!(mine["open_on_site"], false);
+    assert_eq!(mine["paused_at"], Value::Null);
     let theirs = &other.get("/api/feeds").await["feeds"][0];
     assert_eq!(theirs["title"], "Their garden");
-    assert_eq!(theirs["check_at_most"], 86_400);
-    // The feed is checked as often as the owner allows: its own rhythm.
-    assert_eq!(count(&state, "SELECT check_at_most FROM feeds").await, 0);
+    assert!(theirs["paused_at"].is_i64());
     // Each list says each reader's name for it.
     assert_eq!(
         owner.get("/api/articles?view=all").await["articles"][0]["feed_title"],
@@ -813,7 +809,7 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Mine", "folders": [], "open_on_site": true }),
+            json!({ "title": "Mine", "folders": [], "paused": true }),
         )
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
@@ -910,7 +906,7 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     assert_eq!(mine["title"], "Garden notes");
     assert_eq!(mine["unread"], 3);
     assert_eq!(mine["folders"], json!([]));
-    assert_eq!(mine["open_on_site"], false);
+    assert_eq!(mine["paused_at"], Value::Null);
     assert_eq!(
         owner.marks("view=all").await,
         [
@@ -1367,8 +1363,7 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     let (status, _) = other
         .post(
             &format!("/api/feeds/{feed}"),
-            json!({ "title": "Their garden", "folders": [folder],
-                    "check": "daily", "open_on_site": true }),
+            json!({ "title": "Their garden", "folders": [folder], "paused": true }),
         )
         .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
@@ -1401,8 +1396,7 @@ async fn a_new_address_for_a_shared_feed_moves_only_the_reader_who_chose_it() {
     assert_eq!(theirs["id"], new_feed);
     // Their name, settings and folder came along.
     assert_eq!(theirs["title"], "Their garden");
-    assert_eq!(theirs["check_at_most"], 86_400);
-    assert_eq!(theirs["open_on_site"], true);
+    assert!(theirs["paused_at"].is_i64());
     assert_eq!(theirs["folders"], json!([folder]));
     let listed = other.get(&format!("/api/articles?folder={folder}")).await;
     assert_eq!(listed["articles"].as_array().unwrap().len(), 3);

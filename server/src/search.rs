@@ -471,14 +471,16 @@ pub async fn find(
     // only, so a word found in thousands of articles sorts small rows; the
     // outer one then fetches what the list shows for just those 51.
     // Only the reader's own entries are searched, with their marks.
-    let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(
+    let mut query: QueryBuilder<Sqlite> = QueryBuilder::new(concat!(
         "SELECT entries.article_id AS id, entries.feed_id,
                 COALESCE(writers.name, subscriptions.title) AS feed_title,
                 articles.title, articles.link, entries.sort_at AS at, entries.read,
                 entries.starred, entries.muted, articles.episode_url IS NOT NULL AS episode,
-                articles.episode_seconds, page.in_title, articles.content, articles.summary
+                articles.episode_seconds, page.in_title, articles.content, articles.summary, ",
+        crate::feeds::publication_writer!(),
+        "
          FROM (SELECT * FROM (SELECT entries.article_id AS id, entries.sort_at AS at, ",
-    );
+    ));
     if let Some(words) = &words {
         // Every word in the title. FTS5's `{title}:` looks in that column only.
         query.push(

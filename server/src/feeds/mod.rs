@@ -54,11 +54,6 @@ struct FeedRow {
     site_url: Option<String>,
     /// How many of its articles are unread, for the sidebar's dots.
     unread: i64,
-    /// Its settings from Edit feed (SPEC section 15): the shortest wait
-    /// between checks (seconds, 0 for its own rhythm), and whether its
-    /// articles open on the publisher's site.
-    check_at_most: i64,
-    open_on_site: bool,
     /// When the reader paused it, if it's paused.
     paused_at: Option<i64>,
     /// When its checks began failing, while the feed health page lists it
@@ -101,7 +96,7 @@ struct FeedRow {
 /// (tests/speed.rs checks this). Takes the reader.
 pub const FEEDS: &str =
     "SELECT feeds.id, subscriptions.title, feeds.title AS site_title, feeds.site_url,
-        subscriptions.check_at_most, subscriptions.open_on_site, subscriptions.paused_at,
+        subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,

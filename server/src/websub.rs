@@ -382,13 +382,12 @@ async fn store_delivery(
         .ok()
         .and_then(|topic| feed::parse(body, &topic));
     let Some(mut parsed) = parsed.filter(|parsed| !parsed.articles.is_empty()) else {
-        // Never sooner than an hour after the last check (or the longer
-        // wait the reader chose in Edit feed), however often a hub says so:
-        // the publisher is still asked politely.
+        // Never sooner than an hour after the last check, however often a
+        // hub says so: the publisher is still asked politely.
         // A feed that is failing, or was told to slow down, keeps its wait.
         sqlx::query(
             "UPDATE feeds SET next_check_at =
-                 MIN(next_check_at, MAX(?, COALESCE(fetched_at, 0) + MAX(?, check_at_most)))
+                 MIN(next_check_at, MAX(?, COALESCE(fetched_at, 0) + ?))
              WHERE id = ? AND unsubscribed_at IS NULL AND failures = 0",
         )
         .bind(now)

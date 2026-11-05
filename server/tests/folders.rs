@@ -359,6 +359,8 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
             .all(|t| t.starts_with("Beta"))
     );
     assert!(reader.titles(&format!("folder={tech}")).await.is_empty());
+    // Alpha was the last one in Tech, so Tech leaves the sidebar with it.
+    assert!(reader.sidebar().await.1.is_empty());
     assert_eq!(reader.titles("view=starred").await, ["Alpha blog post 3"]);
     // And no longer checked in the background.
     let due: Vec<i64> = sqlx::query_scalar(checking::DUE)
@@ -378,6 +380,7 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
         reader.sidebar().await.0,
         [row("Alpha blog", 2, &["Tech"]), row("Beta blog", 3, &[])]
     );
+    assert_eq!(reader.sidebar().await.1, ["Tech".to_owned()]);
     assert_eq!(reader.titles(&format!("folder={tech}")).await.len(), 3);
 
     // Unsubscribed again, and then (minutes later) cleared for good.
@@ -411,8 +414,13 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
         .await
         .unwrap();
     assert_eq!(left, 1);
-    // The folder itself stays, empty.
-    assert_eq!(reader.sidebar().await.1, ["Tech".to_owned()]);
+    // The folder went with the last one in it, for good.
+    assert!(reader.sidebar().await.1.is_empty());
+    let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM folders")
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(left, 0);
 
     // Following it again starts afresh: the starred article is joined by
     // the others, unread again, and no copy is made.
@@ -622,94 +630,6 @@ async fn article_numbers_freed_by_unsubscribing_are_never_given_again() {
         .get(&format!("/api/articles/new?view=all&since={latest}"))
         .await;
     assert_eq!(waiting["new"], true);
-}
-
-#[tokio::test]
-async fn each_feed_keeps_its_own_check_and_website_settings() {
-    let reader = Reader::new().await;
-    reader.follow("beta").await;
-    let alpha = reader.follow("alpha").await;
-
-    // Every feed starts as every feed behaves.
-    let listed = reader.get("/api/feeds").await;
-    for feed in listed["feeds"].as_array().unwrap() {
-        assert!(feed.get("river").is_none());
-        assert_eq!(feed["check_at_most"], 0);
-        assert_eq!(feed["open_on_site"], false);
-    }
-
-    // Alpha is checked at most daily, and opens on its website.
-    let (status, _) = reader
-        .post(
-            &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [], "check": "daily",
-                    "open_on_site": true }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
-    let settings = |listed: &Value| {
-        let feed = listed["feeds"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|feed| feed["id"] == alpha)
-            .unwrap()
-            .clone();
-        (feed["check_at_most"].clone(), feed["open_on_site"].clone())
-    };
-    let listed = reader.get("/api/feeds").await;
-    assert_eq!(settings(&listed), (json!(checking::DAY), json!(true)));
-    // "At most daily" moves its next check to a day after the last, and
-    // keeps it there after a check.
-    let schedule = || {
-        sqlx::query_as::<_, (i64, i64)>("SELECT fetched_at, next_check_at FROM feeds WHERE id = ?")
-            .bind(alpha)
-            .fetch_one(&reader.state.db)
-    };
-    let (fetched, next) = schedule().await.unwrap();
-    assert!(next >= fetched + checking::DAY);
-    let now = nine_turtles::now();
-    checking::check(&reader.state, alpha, now).await.unwrap();
-    let (_, next) = schedule().await.unwrap();
-    assert!(next >= now + checking::DAY, "{next} {now}");
-
-    // A save that doesn't name the settings (a tab opened before they
-    // existed) keeps them.
-    reader
-        .post(
-            &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [] }),
-        )
-        .await;
-    assert_eq!(
-        settings(&reader.get("/api/feeds").await),
-        (json!(checking::DAY), json!(true))
-    );
-
-    // Back to automatic, and opening in nine turtles.
-    reader
-        .post(
-            &format!("/api/feeds/{alpha}"),
-            json!({ "title": "Alpha blog", "folders": [], "check": "automatic",
-                    "open_on_site": false }),
-        )
-        .await;
-    assert_eq!(
-        settings(&reader.get("/api/feeds").await),
-        (json!(0), json!(false))
-    );
-    assert_eq!(reader.titles("view=unread").await.len(), 6);
-    // An unknown choice is refused, and so is "hourly", no longer offered
-    // (decision 0162).
-    for choice in ["weekly", "hourly"] {
-        let (status, _) = reader
-            .post(
-                &format!("/api/feeds/{alpha}"),
-                json!({ "title": "Alpha blog", "folders": [], "check": choice }),
-            )
-            .await;
-        assert!(status.is_client_error(), "{choice}");
-    }
 }
 
 #[tokio::test]

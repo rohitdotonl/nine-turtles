@@ -7,7 +7,8 @@
 //! minutes, so Undo can bring it back whole, read history included. After
 //! that (or as soon as the reader unsubscribes from another feed, since Undo
 //! only ever reverses the last action) the reader's unstarred entries and
-//! folder pairs for it are removed for good. Their starred articles stay in
+//! folder pairs for it are removed for good, and a folder it was the last
+//! one in goes with it. Their starred articles stay in
 //! Starred, so their subscription's line stays too, hidden, for its name.
 //! Other readers who follow the feed keep it exactly as it was; when nobody
 //! follows it any more, its articles nobody starred go too
@@ -27,7 +28,6 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    checking::DAY,
     feeds::{follow_again, follows, refresh_shared},
     now, rules,
 };
@@ -60,8 +60,18 @@ pub struct Folder {
 }
 
 /// A reader's folders, alphabetically (SPEC section 5). Takes the reader.
-pub const FOLDERS: &str =
-    "SELECT id, name FROM folders WHERE person_id = ? ORDER BY name COLLATE NOCASE, id";
+/// A folder whose every person the reader just unsubscribed from is left
+/// out: it goes with the last of them once Undo's time is up (`clear`), and
+/// Undo brings both back (the owner's core path, point 15). A folder with
+/// nobody in it at all, made on its own, stays.
+pub const FOLDERS: &str = "SELECT id, name FROM folders WHERE person_id = ?
+         AND (NOT EXISTS (SELECT 1 FROM feed_folders WHERE folder_id = folders.id)
+              OR EXISTS (SELECT 1 FROM feed_folders JOIN subscriptions
+                             ON subscriptions.person_id = folders.person_id
+                                 AND subscriptions.feed_id = feed_folders.feed_id
+                         WHERE feed_folders.folder_id = folders.id
+                             AND subscriptions.unsubscribed_at IS NULL))
+     ORDER BY name COLLATE NOCASE, id";
 
 /// Which feed the reader follows is in which of their folders, for the
 /// sidebar. Takes the reader.
@@ -115,34 +125,13 @@ struct EditFeed {
     /// Its settings (SPEC section 15). Each, like everything here, is left as
     /// it is when absent (serde reads a missing `Option` as `None`), so a tab
     /// opened before they existed can't reset them.
-    check: Option<Check>,
-    open_on_site: Option<bool>,
     paused: Option<bool>,
     /// A YouTube channel's Shorts and live streams (decision 0144).
     shorts: Option<bool>,
     live_streams: Option<bool>,
-    /// Person or publication, and what kind of source it is (decision 0163).
+    /// Person or publication (decision 0163). What kind of source a place
+    /// is, nine turtles reads from the feed alone (decision 0183).
     kind: Option<crate::writers::kind::Kind>,
-    place: Option<crate::writers::kind::Place>,
-}
-
-/// How often the reader allows a feed to be checked in the background.
-#[derive(Clone, Copy, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum Check {
-    /// On its own rhythm, as every feed is by default.
-    Automatic,
-    Daily,
-}
-
-impl Check {
-    /// The shortest wait between checks, in seconds (0: none of its own).
-    const fn at_most(self) -> i64 {
-        match self {
-            Self::Automatic => 0,
-            Self::Daily => DAY,
-        }
-    }
 }
 
 /// How many of the articles a feed brought while it was paused go back to
@@ -191,19 +180,14 @@ async fn edit_feed(
         .fetch_one(&mut *transaction)
         .await?;
         sqlx::query(
-            "UPDATE subscriptions SET open_on_site = COALESCE(?, open_on_site),
-                 check_at_most = COALESCE(?, check_at_most),
-                 shorts = COALESCE(?, shorts),
+            "UPDATE subscriptions SET shorts = COALESCE(?, shorts),
                  live_streams = COALESCE(?, live_streams),
-                 kind = COALESCE(?, kind), place = COALESCE(?, place)
+                 kind = COALESCE(?, kind)
              WHERE person_id = ? AND feed_id = ?",
         )
-        .bind(form.open_on_site)
-        .bind(form.check.map(Check::at_most))
         .bind(form.shorts)
         .bind(form.live_streams)
         .bind(form.kind.map(crate::writers::kind::Kind::name))
-        .bind(form.place.map(crate::writers::kind::Place::name))
         .bind(person)
         .bind(id)
         .execute(&mut *transaction)
@@ -230,20 +214,6 @@ async fn edit_feed(
         .bind(before.1)
         .execute(&mut *transaction)
         .await?;
-        if form.check.is_some() {
-            // The feed is checked as often as its most eager follower
-            // allows. A longer wait applies at once: the next check moves
-            // to no sooner than that long after the last one.
-            refresh_shared(&mut transaction, id).await?;
-            sqlx::query(
-                "UPDATE feeds SET
-                     next_check_at = MAX(next_check_at, COALESCE(fetched_at, 0) + check_at_most)
-                 WHERE id = ?",
-            )
-            .bind(id)
-            .execute(&mut *transaction)
-            .await?;
-        }
         if let Some(mut folders) = form.folders.clone() {
             if let Some(name) = &new_folder {
                 folders.push(folder_named(&mut transaction, person, name).await?.0);
@@ -568,7 +538,24 @@ pub async fn clear(
     .bind(id)
     .execute(&mut *connection)
     .await?;
+    // The folders it was in: one it was the last in goes with it (`FOLDERS`).
+    let folders: Vec<i64> = sqlx::query_scalar(
+        "SELECT folder_id FROM feed_folders WHERE feed_id = ?
+         AND folder_id IN (SELECT id FROM folders WHERE person_id = ?)",
+    )
+    .bind(id)
+    .bind(person)
+    .fetch_all(&mut *connection)
+    .await?;
     take_out_of_folders(&mut *connection, person, id).await?;
+    sqlx::query(
+        "DELETE FROM folders WHERE person_id = ? AND id IN (SELECT value FROM json_each(?))
+         AND NOT EXISTS (SELECT 1 FROM feed_folders WHERE folder_id = folders.id)",
+    )
+    .bind(person)
+    .bind(serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_owned()))
+    .execute(&mut *connection)
+    .await?;
     // Their rules for it move to another of the person's places, or stay, matching nothing (SPEC section 27).
     rules::place_gone_for(connection, person, id).await?;
     sqlx::query(
