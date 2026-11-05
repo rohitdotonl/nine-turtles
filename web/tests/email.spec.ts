@@ -433,23 +433,24 @@ test("choosing a password after the hour has run out says so, and the keyboard g
   await context.close();
 });
 
-test("the weekly email is off until chosen in Settings, and its stop page is honest", async ({ browser }, testInfo) => {
-  // SPEC section 39 (decision 0150).
+test("the weekly email is off until switched on in Settings, and its stop page is honest", async ({ browser }, testInfo) => {
+  // SPEC section 39 (decisions 0150 and 0184): once a week, or off.
   const email = `weekly-${testInfo.project.name}-${Date.now()}@example.com`;
   const page = await newReader(browser, email);
   await page.goto("/settings");
-  const weekly = page.getByRole("group", { name: "Weekly email" });
-  await expect(weekly.getByRole("radio", { name: "Off" })).toBeChecked();
-  // With only the keyboard: the arrow keys move along the choices, as in any segmented control.
-  await weekly.getByRole("radio", { name: "Off" }).focus();
+  const weekly = page.getByRole("switch", { name: "Weekly email" });
+  await expect(weekly).not.toBeChecked();
+  await expect(weekly).toBeEnabled();
+  // With only the keyboard: Space switches it, as any switch.
+  await weekly.focus();
   const savedWeekly = settingsSaved(page, "/api/weekly-email");
-  await page.keyboard.press("ArrowRight");
-  await expect(weekly.getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
+  await page.keyboard.press("Space");
+  await expect(weekly).toBeChecked();
   await expect(page.getByText("Saturday mornings:")).toBeVisible();
   // It follows the reader: the server keeps it.
   await savedWeekly;
   await page.reload();
-  await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Weekly", exact: true })).toBeChecked();
+  await expect(page.getByRole("switch", { name: "Weekly email" })).toBeChecked();
 
   // A stop link that isn't one (or no longer is) says so, and changes nothing.
   await page.goto("/weekly-email#ticket=not-a-real-one");
@@ -463,9 +464,9 @@ test("the weekly email is off until chosen in Settings, and its stop page is hon
   // Off from Settings.
   await page.goto("/settings");
   const savedOff = settingsSaved(page, "/api/weekly-email");
-  await page.getByRole("group", { name: "Weekly email" }).getByText("Off", { exact: true }).click();
+  await page.getByRole("switch", { name: "Weekly email" }).click();
   await savedOff;
   await page.reload();
-  await expect(page.getByRole("group", { name: "Weekly email" }).getByRole("radio", { name: "Off" })).toBeChecked();
+  await expect(page.getByRole("switch", { name: "Weekly email" })).not.toBeChecked();
   await page.context().close();
 });

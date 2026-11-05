@@ -2875,3 +2875,59 @@ async fn fewer_settings_drops_two_settings_and_keeps_every_feed_and_folder() {
         assert_eq!(left, 0, "{table}.{column}");
     }
 }
+
+#[tokio::test]
+async fn other_apps_go_and_twice_a_week_becomes_weekly_once_said() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just after Fewer settings (structure change 41): reader 1
+    // has an app password and the weekly email twice a week; reader 2 has it
+    // weekly.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(41, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, created_at) VALUES (2, 1)",
+        "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (1, 'abc', 1)",
+        "INSERT INTO person_settings (person_id, name, value)
+         VALUES (1, 'weekly', 'twice'), (1, 'weekly_offset', '330'), (2, 'weekly', 'weekly')",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let tables: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM sqlite_master WHERE name = 'app_passwords'")
+            .fetch_one(&db)
+            .await
+            .unwrap();
+    assert_eq!(tables, 0);
+    let settings: Vec<(i64, String, String)> = sqlx::query_as(
+        "SELECT person_id, name, value FROM person_settings WHERE name LIKE 'weekly%'
+         ORDER BY person_id, name",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        settings,
+        [
+            (1, "weekly".to_owned(), "weekly".to_owned()),
+            (1, "weekly_moved".to_owned(), "1".to_owned()),
+            (1, "weekly_offset".to_owned(), "330".to_owned()),
+            (2, "weekly".to_owned(), "weekly".to_owned()),
+        ]
+    );
+}

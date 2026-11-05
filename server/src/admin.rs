@@ -9,11 +9,11 @@
 //!   here (the owner said yes, 26 October 2026; decision 0093). Never which
 //!   feeds, nothing about what anyone reads.
 //! - **At most `MOST_FEEDS` feeds per reader**, the owner too. Adding one
-//!   more, from the Add field, the welcome, another app or an OPML file, is
+//!   more, from the Add field, the welcome, an assistant or an OPML file, is
 //!   refused; Undo for unsubscribing always works.
 //! - **Feeds nobody opens are checked once a day.** A reader is *away* when
 //!   nine turtles hasn't seen them for `AWAY_AFTER`: no device of theirs
-//!   opened it and no other app synced. A feed whose every follower is away
+//!   opened it. A feed whose every follower is away
 //!   is checked at most once a day (`checking`); when one of them comes back,
 //!   their feeds that are working are checked again straight away (`here`),
 //!   a few at a time as always.
@@ -109,8 +109,8 @@ pub async fn following(
     .await
 }
 
-/// Reader `person` is here (signed in, a device of theirs opened nine
-/// turtles, or another app synced), noted at most once a day. If they were
+/// Reader `person` is here (signed in, or a device of theirs opened nine
+/// turtles), noted at most once a day. If they were
 /// away, the feeds they follow that are working are due at once, unless the
 /// feed was checked in the last hour, or a WebSub hub delivers its new articles (its checks are
 /// only the twice-a-day backup, decision 0069): the background checks then take them a few at a

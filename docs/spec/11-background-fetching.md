@@ -14,7 +14,7 @@
 - If a feed has moved permanently, nine turtles updates its stored address.
 - A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
 - It never visits article pages.
-- **Feeds nobody opens are checked once a day** (decision 0090): a reader is *away* once nine turtles hasn't seen them for 30 days (no device of theirs opened it, no other app synced). A feed whose every follower is away is checked at most once a day. When one of them comes back (opens nine turtles, signs in or syncs), their feeds that are working are checked again straight away, a few at a time as always, unless a feed was checked in the last hour.
+- **Feeds nobody opens are checked once a day** (decision 0090): a reader is *away* once nine turtles hasn't seen them for 30 days (no device of theirs opened it). A feed whose every follower is away is checked at most once a day. When one of them comes back (opens nine turtles or signs in), their feeds that are working are checked again straight away, a few at a time as always, unless a feed was checked in the last hour.
 - **Every feed is checked on its own rhythm** (decision 0183): Edit's "Check for new articles: Automatic · Daily" went in the owner's core path (point 11), with what readers had chosen.
 - If a publisher edits an article you've already seen, the text is updated quietly and it stays read.
 - The same article published in two different feeds appears in both.

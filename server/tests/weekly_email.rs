@@ -248,7 +248,7 @@ async fn it_needs_email_to_be_turned_on_and_turns_off_from_settings() {
         &base,
         Some(&cookie),
         "/api/weekly-email",
-        json!({ "often": "twice" }),
+        json!({ "often": "weekly" }),
     )
     .await;
     assert_eq!(status, StatusCode::CONFLICT);
@@ -268,8 +268,17 @@ async fn it_needs_email_to_be_turned_on_and_turns_off_from_settings() {
     assert_eq!(status, StatusCode::CONFLICT);
     assert_eq!(answer["error"], "no-address");
 
-    choose(&base, &cookie, "twice").await;
-    assert_eq!(often(&base, &cookie).await, "twice");
+    // Twice a week is gone (decision 0184): once a week, or off.
+    let (status, _) = post(
+        &base,
+        Some(&cookie),
+        "/api/weekly-email",
+        json!({ "often": "twice" }),
+    )
+    .await;
+    assert!(status.is_client_error(), "{status}");
+    choose(&base, &cookie, "weekly").await;
+    assert_eq!(often(&base, &cookie).await, "weekly");
     choose(&base, &cookie, "off").await;
     assert_eq!(often(&base, &cookie).await, "off");
     let left: i64 =
@@ -300,11 +309,40 @@ async fn it_goes_only_to_a_confirmed_address() {
         &base,
         Some(&cookie),
         "/api/weekly-email",
-        json!({ "often": "twice" }),
+        json!({ "often": "weekly" }),
     )
     .await;
     assert_eq!(status, StatusCode::CONFLICT);
     assert_eq!(answer["error"], "unconfirmed");
     assert_eq!(send(&state, at).await, 0);
     assert!(common::emails_to(&outbox, common::OWNER_EMAIL).is_empty());
+}
+
+#[tokio::test]
+async fn a_reader_who_had_chosen_twice_a_week_is_told_once_that_it_is_weekly_now() {
+    let (base, state, outbox) = common::start_with_mail(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    confirmed(&state).await;
+    let db = &state.db;
+    let mail = || common::emails_to(&outbox, common::OWNER_EMAIL);
+    let at = nine_turtles::now() + 8 * 86_400;
+    let alpha = follows(db, 1, "Alpha").await;
+    choose(&base, &cookie, "weekly").await;
+    // As structure change 43 leaves a reader who had chosen twice a week.
+    sqlx::query(
+        "INSERT INTO person_settings (person_id, name, value) VALUES (1, 'weekly_moved', '1')",
+    )
+    .execute(db)
+    .await
+    .unwrap();
+    let moved = "This email now comes once a week, on Saturday mornings, instead of twice.";
+
+    arrives(db, 1, alpha, "On walking", at - 86_400, false).await;
+    assert_eq!(send(&state, at).await, 1);
+    assert!(mail()[0].body.contains(moved), "{}", mail()[0].body);
+
+    arrives(db, 1, alpha, "On running", at + WEEK - 86_400, false).await;
+    assert_eq!(send(&state, at + WEEK).await, 1);
+    assert_eq!(mail().len(), 2);
+    assert!(!mail()[1].body.contains(moved), "{}", mail()[1].body);
 }

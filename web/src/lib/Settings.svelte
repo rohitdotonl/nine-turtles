@@ -14,8 +14,7 @@
   Font and line width; Your library (Your feeds and Feed health,
   pages of their own, then Show in the sidebar and Your data); More
   (Add from anywhere, Install the app, Rules,
-  Newsletters while nine turtles takes them, Other apps, Connected
-  assistants, Passkeys where they work); Your nine turtles (Readers, the
+  Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
   (Your plan while nine turtles takes payments, Email with Change…, Weekly
   email, Sign out, Delete data… and, for everyone but the owner, Delete account…).
@@ -25,7 +24,7 @@
   sits straight under its name (S1, decision 0120).
 
   The groups' own components, each saying where it's described: AddAnywhere,
-  InstallApp, Rules and RuleEditor, Newsletters, OtherApps, Assistants,
+  InstallApp, Rules and RuleEditor, Newsletters, Assistants,
   Readers, Plan, Passkeys, ChangeEmail and DeleteAccount.
 -->
 <script lang="ts">
@@ -39,7 +38,6 @@
   import InstallApp from "./InstallApp.svelte";
   import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
-  import OtherApps from "./OtherApps.svelte";
   import Assistants from "./Assistants.svelte";
   import PasskeysGroup from "./Passkeys.svelte";
   import Plan from "./Plan.svelte";
@@ -516,7 +514,6 @@
           {#if newslettersOn}
             {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newsletter", open("newsletters"))}
           {/if}
-          {@render pageRow("other-apps", "/settings/other-apps", SETTINGS_PAGES["other-apps"], "plug", open("other-apps"))}
           {@render pageRow("assistants", "/settings/assistants", SETTINGS_PAGES.assistants, "robot", open("assistants"))}
           {#if passkeysShown}
             {@render pageRow("passkeys", "/settings/passkeys", SETTINGS_PAGES.passkeys, "key", open("passkeys"))}
@@ -690,8 +687,6 @@
         />
       {:else if page === "newsletters"}
         <Newsletters />
-      {:else if page === "other-apps"}
-        <OtherApps />
       {:else if page === "assistants"}
         <Assistants onFeedsChanged={onImported} />
       {:else if page === "passkeys"}

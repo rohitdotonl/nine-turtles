@@ -4,7 +4,7 @@ description: Delete your account and everything in it, or delete only what you f
 groupId: you-and-your-account
 order: 5
 spec: 23
-updated: 2026-11-04
+updated: 2026-11-05
 related: [download-everything, your-plan, unfollow-someone]
 ---
 
@@ -21,8 +21,7 @@ related: [download-everything, your-plan, unfollow-someone]
 3. Press **Delete account**.
 
 Everything goes at once: who you follow, your folders, your read and starred
-articles, notes, rules, passkeys, app password, email
-and password. If you're on a plan, it's cancelled first. You're signed out.
+articles, notes, rules, passkeys, email and password. If you're on a plan, it's cancelled first. You're signed out.
 
 ## Start afresh, and keep the account
 

@@ -47,7 +47,7 @@ A few words used throughout:
 | 23 | [Your data: keeping and exporting](spec/23-your-data.md) |
 | 24 | [Languages](spec/24-languages.md) |
 | 25 | [Speed](spec/25-speed.md) |
-| 26 | [Other apps: syncing with Reeder and NetNewsWire](spec/26-other-apps.md) |
+| 26 | *Retired: syncing with Reeder and NetNewsWire, removed (decision 0184)* |
 | 27 | [Rules and mutes](spec/27-rules-and-mutes.md) |
 | 28 | [Newsletters as feeds](spec/28-newsletters-as-feeds.md) |
 | 29 | [Paying for nine turtles](spec/29-paying-for-nine-turtles.md) |

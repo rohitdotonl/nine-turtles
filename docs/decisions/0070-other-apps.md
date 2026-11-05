@@ -2,13 +2,15 @@
 
 *25 October 2026. Asked for by the owner ("working with other apps").*
 
+*Removed on 5 November 2026 (decision 0184).*
+
 **Decision.** nine turtles offers the **Google Reader API**, the sync
 language FreshRSS and Miniflux speak, at `/api/greader` (and
 `/api/greader.php`, FreshRSS's address). Reeder, NetNewsWire and other
 feed readers can then use nine turtles as their sync service: they see the
 feeds, folders and articles, and read, unread and starred stay in step both
-ways (SPEC section 26). Code: `server/src/greader.rs` and
-`server/src/apps.rs`; no new library.
+ways (SPEC section 26). Code: `greader.rs` and `apps.rs` in the server,
+both since removed; no new library.
 
 **What apps may change.** The owner chose (25 October 2026, asked first
 because unfollowing deletes articles) that apps may do what they do with

@@ -5,7 +5,7 @@ groupId: getting-started
 order: 3
 spec: 16
 updated: 2026-11-03
-related: [follow-someone, download-everything, other-apps]
+related: [follow-someone, download-everything, questions]
 ---
 
 <p class="lede">

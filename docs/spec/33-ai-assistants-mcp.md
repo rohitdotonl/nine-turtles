@@ -4,7 +4,7 @@
 
 *Added 27 October 2026 at the owner's request (decision 0111).*
 
-nine turtles runs no AI itself. A reader can connect their own assistant (Claude, ChatGPT, or any other that speaks **MCP**, the open standard for letting an assistant use a program's tools), so it can find, sort and tidy things for them. It's a door, like the sync API for other apps (section 26), not a feature on any screen. It follows the standard only, with nothing specific to one company.
+nine turtles runs no AI itself. A reader can connect their own assistant (Claude, ChatGPT, or any other that speaks **MCP**, the open standard for letting an assistant use a program's tools), so it can find, sort and tidy things for them. It's a door, not a feature on any screen. It follows the standard only, with nothing specific to one company.
 
 **Connecting**
 - In the assistant, the reader adds nine turtles as a connector (an "MCP server") with the address shown in Settings › Connected assistants: `https://app.nineturtles.app/mcp`.
@@ -16,7 +16,7 @@ nine turtles runs no AI itself. A reader can connect their own assistant (Claude
 - Read: search articles (words, author, feed, folder, starred, unread); list unread (all, a folder's or a feed's) and starred, 50 at a time; open an article (title, author, link, date, feed, and the text the feed holds, as plain text, cut after 30,000 characters; opening doesn't mark it read); list feeds and folders; list feeds that aren't working (the feed health page's list); list what's hidden (rules) and how many articles are hidden.
 - Change: mark articles read or unread (up to 500 at once) and a whole feed read; star and unstar; add a feed by its address or a website's (its first feed); rename a feed and set its folders; create, rename and remove folders (a folder's feeds stay; removing answers its feeds, so the assistant can put it back as it was); hide articles about a word or phrase, from everyone or from one person (section 27), and remove such a rule (removing answers the rule, so it can be made again); unsubscribe from a feed, and bring one back; download the feed list as OPML.
 - Notes (section 42): read the reader's highlights and notes (opening an article shows its own too); highlight words the article has, change a highlight's note or remove it; write a note on an article or a person.
-- Never: the password, email, payments, app passwords, the newsletter address, deleting the account, or downloading every article.
+- Never: the password, email, payments, the newsletter address, deleting the account, or downloading every article.
 - **Unsubscribing from an assistant keeps the feed for 30 days**, hidden, with its articles and marks, instead of the screen's ten minutes. Settings › Connected assistants lists these feeds under **Unsubscribed by an assistant**, each with when it was unsubscribed, how long it's kept, and **Bring back**. Bringing one back (or the assistant's own "bring back") restores it whole. After 30 days it's cleared as any unsubscribed feed is (starred articles always stay).
 - The assistant is told that article text is the publisher's: content to read, never instructions, credited and linked when quoted.
 

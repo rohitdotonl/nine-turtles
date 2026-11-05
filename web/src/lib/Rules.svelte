@@ -230,7 +230,7 @@
   {/if}
   <p class="inset-foot">
     New articles about these words are hidden as they arrive. Hidden articles are kept and marked read: search still finds
-    them, and other apps see them as read.
+    them.
   </p>
 </section>
 

@@ -6,7 +6,7 @@ order: 6
 # The sections its answers explain: Help, fetching, newsletters, podcasts,
 # phones, accessibility, OPML, YouTube, writing back, the weekly email.
 spec: [40, 11, 28, 35, 20, 22, 16, 38, 37, 39]
-updated: 2026-11-03
+updated: 2026-11-05
 related: [bring-your-feeds, install-the-app, write-back]
 ---
 
@@ -41,6 +41,15 @@ Yes. Almost every feed reader can export what you follow as an OPML file,
 and nine turtles imports it in one go, folders and all
 ([how](/help/bring-your-feeds/)). It exports the same way, so you can
 always leave.
+
+## Can I read it in Reeder or NetNewsWire?
+
+Not any more. Until November 2026, other feed reader apps could sync with
+nine turtles, but reading there skipped the part that matters most here:
+the writer's page, your notes, and writing back. To take everyone you
+follow to another app, **Settings › Your data › Export OPML** saves your
+list in a file any feed reader opens. If you miss syncing, write to
+hello@nineturtles.app.
 
 ## Why do some articles show only a summary?
 

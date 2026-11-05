@@ -1,5 +1,5 @@
-// The weekly email (SPEC section 39, decision 0150): how often it comes,
-// chosen in Settings › Account, and the page its stop link opens, which turns
+// The weekly email (SPEC section 39, decisions 0150 and 0184): on or off,
+// a switch in Settings › Account, and the page its stop link opens, which turns
 // it off in one press, signed in or not. It goes only to a confirmed address
 // (decision 0154).
 
@@ -8,24 +8,18 @@ import { getJson, isRecord, sendChange } from "./http";
 /** The page the email's stop link opens (`/weekly-email#ticket=…`). */
 export const WEEKLY_PAGE = "/weekly-email";
 
-export type Often = "off" | "weekly" | "twice";
+/** Once a week, or not at all (twice a week went, decision 0184). */
+export type Often = "off" | "weekly";
 
-export const OFTEN_CHOICES: { value: Often; label: string }[] = [
-  { value: "off", label: "Off" },
-  { value: "weekly", label: "Weekly" },
-  { value: "twice", label: "Twice a week" },
-];
-
-/** What the row says under its name, for each choice. */
+/** What the row says under its name, on or off. */
 export function oftenHint(often: Often | undefined): string {
   if (often === "weekly") return "Saturday mornings: who wrote, their titles and a line each. Plain text.";
-  if (often === "twice") return "Wednesday and Saturday mornings: who wrote, their titles and a line each. Plain text.";
-  return "The people you read, their titles and a line each, in one plain email.";
+  return "Once a week: the people you read, their titles and a line each, in one plain email.";
 }
 
 function oftenFrom(answer: unknown): Often {
   const often = isRecord(answer) ? answer.often : undefined;
-  return often === "weekly" || often === "twice" ? often : "off";
+  return often === "weekly" ? often : "off";
 }
 
 /** How often it comes now. */
