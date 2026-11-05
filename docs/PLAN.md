@@ -27,7 +27,7 @@ until the owner says so.
 |---|---|---|
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
 | The milestones to launch, below | 🔨 Brand steps being built (the owner's yes for steps 1 to 5, 2 November 2026) | This file, `docs/BRAND.md` |
-| The core path: adding, reading, writing back, their page, Edit, folders (points 1 to 15), then the keys (16 and 17) | 🔨 Points 1 to 15 being shipped; keys next | Decision 0183, SPEC sections 3, 6, 7, 15, 36, 37 |
+| The core path: adding, reading, writing back, their page, Edit, folders (points 1 to 15), then the keys (16 and 17) | 🔨 Points 1 to 15 shipped; keys being shipped | Decision 0183, SPEC sections 3, 6, 7, 15, 36, 37 |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
 
 ## Milestones to launch

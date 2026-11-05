@@ -4,8 +4,8 @@
 
 **Decision.** Fifteen changes to the path every reader walks (adding
 someone, reading, writing back, their page, Edit, folders), agreed with the
-owner over three rounds (the owner's core path, points 1 to 15; the keys,
-points 16 and 17, follow in their own change):
+owner over three rounds (the owner's core path, points 1 to 15, and the
+keys, points 16 and 17, in a second change the same day):
 
 - **Adding someone** asks one question once they're found: the field goes,
   the title reads "Maya Chen is…", their site and newest title show, and two
@@ -39,6 +39,14 @@ points 16 and 17, follow in their own change):
 - **Folders:** one made or chosen in Edit opens in the sidebar; unsubscribing
   from the last person in a folder removes the folder too, and Undo brings
   both back.
+- **Keys:** `e` opens Edit for the person, publication or folder whose list
+  you're in ("Edit this person or publication"); opening and closing a
+  folder moved to `o` ("Open / close this folder"). `←` and `→` move the
+  keyboard between the sidebar, the list and the article ("Move between
+  panes"); `↑` and `↓` move inside the one you're in: the sidebar's rows,
+  the list's articles, or scrolling the article. In a field, a menu, a row
+  of choices or the podcast player, the arrows keep their usual job. This
+  ends decision 0180's "no keys for moving between panes".
 
 **Why.** Each step should say what it means for the reader, in their words,
 and nothing more: a person is someone you might write back to, so the

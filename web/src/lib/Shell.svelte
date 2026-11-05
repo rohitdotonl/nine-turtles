@@ -46,6 +46,7 @@
   import { saveOpenFolders, savedOpenFolders, type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyFor, tip } from "./keyboard";
+  import { movePane, moveRow } from "./panes";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
@@ -869,11 +870,7 @@
     openCheatSheet: () => (cheatSheetOpen = true),
     toggleBoth,
     go: (place) => go(place),
-    escape,
-    startSearch,
-    move,
-    rowAfter,
-    open,
+    escape, startSearch, move, rowAfter, open, movePane, moveRow,
     openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
     page: (step) => articleView?.page(step),
     copyLink: () => articleView?.copyLink(),

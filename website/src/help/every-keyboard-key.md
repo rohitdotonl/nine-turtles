@@ -50,7 +50,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>/</kbd> | Search |
 | <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar, every row from Unread down, top to bottom: a closed folder's people are passed over |
-| <kbd>E</kbd> | Expand or collapse this folder |
+| <kbd>←</kbd> / <kbd>→</kbd> | Move between the sidebar, the list and the article |
+| <kbd>E</kbd> | Edit this person, publication or folder |
+| <kbd>O</kbd> | Open or close this folder |
 | <kbd>I</kbd> | Info about this person or publication: their page |
 | <kbd>F</kbd> | Full-screen reading: hide the sidebar and the list |
 | <kbd>A</kbd> | Add a person or publication |
@@ -68,6 +70,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 
 - <kbd>Home</kbd> and <kbd>End</kbd> go to the first and last article in the
   list.
+- <kbd>↑</kbd> and <kbd>↓</kbd> move inside the part you're in: along the
+  sidebar, along the list, or scrolling the article. In a text field or a
+  menu, the arrow keys work as they always do.
 - The keys are the same for everyone, and can't be changed.
 - With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for Unread
   and marking all as read are left out.

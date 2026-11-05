@@ -8,6 +8,7 @@
 // working. Tooltips and menus read their keys from it too. The keys are the
 // same for every reader: choosing keys of your own (decision 0110) was
 // removed in step 5 of the owner's review.
+import { inSidebar } from "./panes";
 import type { View } from "./router";
 
 export type Action =
@@ -36,6 +37,12 @@ export type Action =
   | { kind: "mark-all-read" }
   | { kind: "undo" }
   | { kind: "toggle-folder" }
+  /** Edit for the person, publication or folder whose list this is. */
+  | { kind: "edit" }
+  /** ← and →: the pane before or after (`panes.ts`). */
+  | { kind: "pane"; step: 1 | -1 }
+  /** ↑ and ↓ in the sidebar: the row above or below. */
+  | { kind: "row"; step: 1 | -1 }
   | { kind: "refresh" }
   | { kind: "about" }
   | { kind: "text-size"; step: 1 | -1 };
@@ -137,7 +144,20 @@ export const SHORTCUTS: Shortcut[] = [
     ["next-feed", "Shift+J", { kind: "move-feed", step: 1 }],
     ["previous-feed", "Shift+K", { kind: "move-feed", step: -1 }],
   ]),
-  shortcut("Getting around", "Expand / collapse this folder", [["toggle-folder", "e", { kind: "toggle-folder" }]]),
+  shortcut(
+    "Getting around",
+    "Move between panes",
+    [
+      ["pane-left", "←", { kind: "pane", step: -1 }],
+      ["pane-right", "→", { kind: "pane", step: 1 }],
+    ],
+    [
+      { key: "ArrowDown", does: { kind: "row", step: 1 } },
+      { key: "ArrowUp", does: { kind: "row", step: -1 } },
+    ],
+  ),
+  shortcut("Getting around", "Edit this person or publication", [["edit", "e", { kind: "edit" }]]),
+  shortcut("Getting around", "Open / close this folder", [["toggle-folder", "o", { kind: "toggle-folder" }]]),
   shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
   shortcut("Getting around", "Full-screen reading", [["toggle-both", "f", { kind: "toggle-both" }]]),
   shortcut("Getting around", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
@@ -175,6 +195,8 @@ export function pressName(key: string): string {
   if (key === "Esc") return "Escape";
   if (key === "Space") return " ";
   if (key === "Shift+Space") return "Shift+ ";
+  if (key === "←") return "ArrowLeft";
+  if (key === "→") return "ArrowRight";
   const shifted = /^Shift\+([a-z])$/i.exec(key);
   if (shifted) return shifted[1]!.toUpperCase();
   return key;
@@ -248,6 +270,10 @@ export function createKeyReader() {
     if ((name === " " || name === "Shift+ ") && takesSpace(press.target)) return undefined;
     // Home and End stay with a control that moves by them: a menu, a row of choices, a list that scrolls.
     if ((name === "Home" || name === "End") && takesHome(press.target)) return undefined;
+    // ← and → stay with what moves by them: a field, a menu, a row of choices, the podcast player.
+    if ((name === "ArrowLeft" || name === "ArrowRight") && takesArrows(press.target)) return undefined;
+    // ↑ and ↓ are nine turtles' only in the sidebar: the list moves by them itself, and the article scrolls.
+    if ((name === "ArrowUp" || name === "ArrowDown") && (!inSidebar(press.target) || takesArrows(press.target))) return undefined;
     return single.get(name);
   };
 }
@@ -277,6 +303,16 @@ function takesSpace(target: EventTarget | null): boolean {
 function takesHome(target: EventTarget | null): boolean {
   if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
   return target.closest("input, select, textarea, [contenteditable], iframe, [role^='menuitem'], [role='tab'], [role='option'], [role='slider'], [role='radio']") !== null;
+}
+
+/** Whether the arrow keys belong to what has the keyboard's place: a field, a menu, a row of choices, a slider, a player, the pane's resizer. */
+function takesArrows(target: EventTarget | null): boolean {
+  if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
+  return (
+    target.closest(
+      "input, select, textarea, [contenteditable], iframe, audio, video, [role^='menu'], [role='tab'], [role='option'], [role='listbox'], [role='slider'], [role='radio'], [role='radiogroup'], [role='separator']",
+    ) !== null
+  );
 }
 
 function isTyping(target: EventTarget | null): boolean {

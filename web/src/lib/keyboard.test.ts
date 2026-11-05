@@ -68,13 +68,13 @@ describe("keyboard shortcuts", () => {
     expect(read(press("u"), 20)).toEqual({ kind: "undo" });
   });
 
-  it("moves with j and k, opens with Enter or o, the original with v, and sizes text with + and -", () => {
+  it("moves with j and k, opens with Enter, the original with v, and sizes text with + and -", () => {
     const read = createKeyReader();
     expect(read(press("j"), 0)).toEqual({ kind: "move", step: 1 });
     expect(read(press("k"), 0)).toEqual({ kind: "move", step: -1 });
     expect(read(press("Enter"), 0)).toEqual({ kind: "open" });
-    // Enter opens; o did too until decision 0180.
-    expect(read(press("o"), 0)).toBeUndefined();
+    // Enter opens; o did too until decision 0180, and now opens and closes a folder (decision 0183).
+    expect(read(press("o"), 0)).toEqual({ kind: "toggle-folder" });
     expect(read(press("v"), 0)).toEqual({ kind: "open-original" });
     expect(read(press("+"), 0)).toEqual({ kind: "text-size", step: 1 });
     expect(read(press("="), 0)).toEqual({ kind: "text-size", step: 1 });
@@ -120,7 +120,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(27);
+    expect(SHORTCUTS).toHaveLength(29);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "w",
@@ -140,7 +140,9 @@ describe("keyboard shortcuts", () => {
       "g then ,",
       "/",
       "Shift+J",
+      "←",
       "e",
+      "o",
       "i",
       "f",
       "a",
@@ -164,7 +166,7 @@ describe("keyboard shortcuts", () => {
     const read = createKeyReader();
     for (const cut of ["O", "N", "H", "E", "[", "]", "\\"]) expect(read(press(cut), 0), cut).toBeUndefined();
     expect(read(press("c"), 0)).toEqual({ kind: "copy-link" });
-    expect(read(press("e"), 0)).toEqual({ kind: "toggle-folder" });
+    expect(read(press("e"), 0)).toEqual({ kind: "edit" });
     expect(read(press("n"), 0)).toEqual({ kind: "note" });
     expect(keyFor("copy-link")).toBe("c");
   });
@@ -224,8 +226,8 @@ describe("the cheat sheet and the keys agree", () => {
   );
   const unlisted = sheet.flatMap((each) => each.unlisted.map((extra) => pressName(extra.key)));
 
-  it("lists every key that does something (only Home and End, the browser's own keys, and = for +, go unprinted)", () => {
-    expect(unlisted).toEqual(["Home", "End", "="]);
+  it("lists every key that does something (only Home and End, the browser's own keys, = for +, and ↑ ↓ in the sidebar go unprinted)", () => {
+    expect(unlisted).toEqual(["Home", "End", "=", "ArrowDown", "ArrowUp"]);
     const missing = answered().filter((each) => !listed.some((entry) => entry.keys === each.keys) && !unlisted.includes(each.keys));
     expect(missing).toEqual([]);
   });
