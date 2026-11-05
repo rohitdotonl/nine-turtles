@@ -790,3 +790,18 @@ async fn undo_new_address(
         Err(error) => database_problem("bringing back a newsletter address", &error),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn addresses_are_turtle_and_eight_unmistakable_letters() {
+        let name = new_name().unwrap();
+        let letters = name.strip_prefix("turtle-").unwrap();
+        assert_eq!(letters.len(), LENGTH);
+        assert!(letters.bytes().all(|letter| ALPHABET.contains(&letter)));
+        assert!(!letters.contains(['0', '1', 'i', 'l', 'o']));
+        assert_ne!(new_name().unwrap(), name);
+    }
+}

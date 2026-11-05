@@ -46,7 +46,9 @@ always leave.
 
 Not any more. Until November 2026, other feed reader apps could sync with
 nine turtles, but reading there skipped the part that matters most here:
-the writer's page, your notes, and writing back. If you miss it, write to
+the writer's page, your notes, and writing back. To take everyone you
+follow to another app, **Settings › Your data › Export OPML** saves your
+list in a file any feed reader opens. If you miss syncing, write to
 hello@nineturtles.app.
 
 ## Why do some articles show only a summary?

@@ -354,6 +354,9 @@ async fn send_one(
         &mailer.home(),
         &mailer.link(STOP_PAGE, &ticket),
     );
+    // The one-time line is spent once the email is handed to the mailer:
+    // a delivery that later fails loses it, which is fine for a courtesy
+    // note (the switch in Settings says when it comes).
     if chosen.moved {
         sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'weekly_moved'")
             .bind(chosen.person)

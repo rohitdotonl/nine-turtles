@@ -1,5 +1,5 @@
-//! The folder actions every door shares (the screen and assistants), so each is written once (ENGINEERING.md → "Keeping the code
-//! tidy").
+//! The folder actions every door shares (the screen and assistants), so
+//! each is written once (ENGINEERING.md → "Keeping the code tidy").
 
 use sqlx::SqliteConnection;
 
