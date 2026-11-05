@@ -6,8 +6,7 @@
   with Copy, lists each connection with when it was made and last used, and
   disconnects one with a press (no Undo: only the connection goes, and
   connecting again is easy). For an assistant that can't show the connect
-  page, "Make an assistant key" makes a key, shown once with Copy, as the
-  app password in Other apps is. Feeds an assistant unsubscribed from are
+  page, "Make an assistant key" makes a key, shown once with Copy. Feeds an assistant unsubscribed from are
   kept for 30 days and listed below, each with Bring back.
 -->
 <script lang="ts">

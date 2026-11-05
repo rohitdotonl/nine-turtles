@@ -6,7 +6,7 @@ V1 item 8 (`docs/PLAN.md`), decision 0164.*
 Private marks of the reader's own: words highlighted in an article, a note
 on a highlight, a note on the whole article, and a note on each person.
 Only the reader ever sees them. Nothing about them is public, shared, sent
-to other apps (section 22) or counted anywhere.
+anywhere or counted.
 
 **Highlighting words in an article**
 - Choosing words in an article's text (with the mouse, a finger, or the
@@ -101,8 +101,7 @@ to other apps (section 22) or counted anywhere.
 **AI assistants** (section 33)
 - A connected assistant can read the reader's notes and highlights, add a
   highlight (only on words the article has), change or remove one, and
-  write a note on an article or a person. Other apps (section 22) never see
-  them.
+  write a note on an article or a person.
 
 **How to check it**
 1. Open an article, choose a few words, press **Highlight**: they're drawn

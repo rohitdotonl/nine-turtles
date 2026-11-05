@@ -4,6 +4,8 @@
 under his "Go on V1. Ship each one." The smaller choices below are for the
 refinement round.*
 
+*Twice a week removed on 5 November 2026 (decision 0184): once a week or off.*
+
 ## Decision
 
 - Off by default; **Off / Weekly / Twice a week** in Settings › Account,

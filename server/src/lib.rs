@@ -5,8 +5,8 @@
 //! the shared settings, checking feeds in the background (`checking`),
 //! folders and unsubscribing (`folders`), tidying many feeds at once
 //! (`tidy`), OPML files (`subscriptions`),
-//! instant updates from WebSub hubs (`websub`), syncing with other feed
-//! readers (`apps`, `greader`), backups (`backup`, `storage`), and the
+//! instant updates from WebSub hubs (`websub`), backups (`backup`,
+//! `storage`), and the
 //! reader's rules and mutes (`rules`), the readers and sign-up (`people`),
 //! and what email makes possible (`email`, `accounts`): confirming an
 //! address, a new password, a changed email, and deleting an account,
@@ -17,7 +17,6 @@
 
 pub mod accounts;
 pub mod admin;
-pub mod apps;
 pub mod assets;
 pub mod assistants;
 pub mod auth;
@@ -38,7 +37,6 @@ pub mod fetch;
 pub mod finder;
 pub mod folders;
 pub mod frequency;
-pub mod greader;
 pub mod health;
 pub mod log;
 pub mod lookup;
@@ -227,10 +225,8 @@ pub fn router(state: AppState) -> Router {
         .merge(accounts::routes())
         .merge(passkeys::routes())
         .merge(admin::routes())
-        .merge(apps::routes())
         .merge(assistants::routes())
         .merge(mcp::routes())
-        .merge(greader::routes())
         .merge(feeds::routes())
         .merge(finder::routes())
         .merge(checkup::routes())

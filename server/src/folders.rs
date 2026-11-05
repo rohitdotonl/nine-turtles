@@ -357,8 +357,6 @@ pub enum Leaving {
     /// before is cleared for good first, since Undo only reverses the last
     /// action.
     Screen,
-    /// Ten minutes too, but earlier feeds keep theirs (SPEC section 26).
-    App,
     /// 30 days (`mcp::KEPT_FOR`), with Bring back in Settings (SPEC
     /// section 33). Only a feed this hides: one the reader unsubscribed from
     /// elsewhere keeps its own time.

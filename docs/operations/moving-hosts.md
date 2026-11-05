@@ -38,9 +38,6 @@ DigitalOcean, or a computer at home.
 8. **Stop the old service** once the new one has run happily for a few days.
    Keep the backups: the storage is separate from both hosts.
 
-Other apps (Reeder, NetNewsWire) keep working once the address points to the
-new host; their app passwords are in the database, so they move too.
-
 ## If backups aren't working
 
 Your feeds and folders can always leave as an OPML file, and your stars as a

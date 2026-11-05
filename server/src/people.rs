@@ -95,10 +95,6 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     ),
     ("folders", "DELETE FROM folders WHERE person_id = ?"),
     (
-        "app_passwords",
-        "DELETE FROM app_passwords WHERE person_id = ?",
-    ),
-    (
         "person_settings",
         "DELETE FROM person_settings WHERE person_id = ?",
     ),
@@ -172,7 +168,6 @@ pub const DATA_TABLES: &[&str] = &[
 /// sign-in, settings, plan and newsletter address (decision 0117).
 pub const ACCOUNT_TABLES: &[&str] = &[
     "newsletter_addresses",
-    "app_passwords",
     "person_settings",
     "email_links",
     "sessions",

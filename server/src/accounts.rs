@@ -350,8 +350,7 @@ struct Reset {
 }
 
 /// Sets a new password from a password link: once, within the hour. Every
-/// device signed in as that reader is signed out (and this one signed in),
-/// and their app password stops working.
+/// device signed in as that reader is signed out (and this one signed in).
 async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Response {
     if let Some(problem) = password_problem(&form.password) {
         return problem;
@@ -452,8 +451,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
                 .await?
                 .flatten();
         // Any other password link or sign-in link for them stops working,
-        // every device signed in as them is signed out, and their app
-        // password (for other feed reader apps) stops working too.
+        // and every device signed in as them is signed out.
         sqlx::query(
             "UPDATE email_links SET used = 1
              WHERE person_id = ? AND purpose IN ('reset', 'sign-in')",
@@ -462,10 +460,6 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         .execute(&mut *transaction)
         .await?;
         sqlx::query("DELETE FROM sessions WHERE person_id = ?")
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
-        sqlx::query("DELETE FROM app_passwords WHERE person_id = ?")
             .bind(person)
             .execute(&mut *transaction)
             .await?;

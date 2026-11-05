@@ -38,7 +38,6 @@ export const SETTINGS_PAGES = {
   install: "Install the app",
   hiding: "Hiding",
   newsletters: "Newsletters",
-  "other-apps": "Other apps",
   assistants: "Connected assistants",
   passkeys: "Passkeys",
   readers: "Readers",

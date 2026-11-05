@@ -397,29 +397,3 @@ async fn signing_in_again_after_a_month_brings_the_feeds_back() {
         .unwrap();
     only_the_working_feed_is_due(&state, feeds).await;
 }
-
-#[tokio::test]
-async fn syncing_from_another_app_after_a_month_brings_the_feeds_back() {
-    let (base, state) = common::start_with_state(common::config()).await;
-    let (reader, cookie) = common::another_reader(&state).await;
-    let feeds = resting_feeds(&base, &cookie, &state).await;
-    let (status, made) = send(
-        &base,
-        &cookie,
-        "/api/apps/password",
-        "application/json",
-        "{}".into(),
-    )
-    .await;
-    assert_eq!(status, StatusCode::OK);
-    let password = made["password"].as_str().unwrap().to_owned();
-    last_seen(&state, reader, 40 * DAY).await;
-    let response = Client::new()
-        .get(format!("{base}/api/greader/reader/api/0/user-info"))
-        .header("authorization", format!("GoogleLogin auth={password}"))
-        .send()
-        .await
-        .unwrap();
-    assert_eq!(response.status(), StatusCode::OK);
-    only_the_working_feed_is_due(&state, feeds).await;
-}

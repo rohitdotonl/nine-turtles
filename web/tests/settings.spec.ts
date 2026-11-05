@@ -27,7 +27,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Font and line width are one page further in.
   await expect(page.getByRole("group", { name: "Reading font" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "other-apps", "assistants", "readers"];
+  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
@@ -89,11 +89,11 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await expect(rules).toBeFocused();
 
   // ‹ Settings does the same.
-  await page.getByRole("link", { name: "Other apps", exact: true }).click();
-  await expect(page).toHaveURL(/\/settings\/other-apps$/);
+  await page.getByRole("link", { name: "Connected assistants", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings\/assistants$/);
   await back.click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("link", { name: "Other apps", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Connected assistants", exact: true })).toBeFocused();
 
   // The browser's Back and Forward.
   await page.getByRole("link", { name: "Add from anywhere", exact: true }).click();

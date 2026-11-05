@@ -152,7 +152,7 @@ enum Added {
 }
 
 /// With `inside`, a site's several feeds are each looked at (`lookup`), for
-/// the reader to choose; other apps follow the first without looking.
+/// the reader to choose; an assistant follows the first without looking.
 async fn add(
     state: &AppState,
     person: i64,
@@ -218,7 +218,7 @@ async fn add(
     }
 }
 
-/// Following a feed from another app (`greader`, SPEC section 26): as the
+/// Following a feed from an assistant (`mcp`, SPEC section 33): as the
 /// Add field does, except that a page naming several feeds follows the
 /// first, a feed already followed is simply answered, and a feed unfollowed
 /// in the last few minutes (not yet cleared) comes back as it was, with its

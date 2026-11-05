@@ -59,7 +59,7 @@ struct Starred {
 }
 
 /// One of a reader's marks on an article. Every way of marking (the screen,
-/// other apps, assistants) sets them with `set`, so they all behave alike.
+/// assistants) sets them with `set`, so they all behave alike.
 #[derive(Clone, Copy)]
 pub enum Mark {
     /// Marking a muted article unread unmutes it, so it waits in Unread again.
