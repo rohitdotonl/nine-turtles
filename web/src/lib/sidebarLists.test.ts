@@ -40,15 +40,3 @@ describe("lists hidden from the sidebar", () => {
     expect(sent.map((each) => each.body)).toEqual([{ hidden: ["starred"] }]);
   });
 });
-
-describe("how often a feed posts", () => {
-  it("is the server's words, or nothing if it can't say", async () => {
-    server({ words: "Posts about 3 times a week" });
-    let { feedFrequency } = await load();
-    expect(await feedFrequency(3)).toBe("Posts about 3 times a week");
-
-    vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 404 })));
-    ({ feedFrequency } = await load());
-    expect(await feedFrequency(3)).toBeUndefined();
-  });
-});

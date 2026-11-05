@@ -3,12 +3,14 @@
   turned into its settings in place by its Edit button, the same for both.
   Done saves and turns it back; Cancel or Escape turns it back unchanged.
 
-  Top to bottom: their name; the email address Write back writes to (SPEC
-  section 37); for one source, whether they're a person or a publication;
-  then a person's sources, each a row whose › opens that source's own
-  settings, with "+ Add a source" under them; or, for one source, that
-  source's settings right here, as it has no other. Then the folders (one
-  list for all their sources), and Unsubscribe in red words at the foot,
+  Top to bottom (the owner's core path, points 11 to 13): their name; the
+  email address Write back writes to (SPEC section 37); for one source,
+  whether they're a person or a publication; the folders (one list for all
+  their sources); for one source, its settings right here (Pause for a
+  while), as it has no other. Then a person's sources, each a row whose ›
+  opens that source's own settings, with "+ Add a source" under them; for a
+  person with one source, no Sources heading, only a line near the foot
+  inviting another place. Then Unsubscribe in red words at the foot,
   which leaves every source of theirs at once, with Undo on the next screen;
   when the reader kept something of theirs, it first asks whether that stays
   (KeepOrRemove, SPEC section 42).
@@ -24,7 +26,7 @@
   import { keptAny, keptFrom, type Kept } from "./keeping";
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf } from "./people";
-  import type { Check, Feed, Folder, PlaceKind, WhoKind } from "./shapes";
+  import type { Feed, Folder, WhoKind } from "./shapes";
   import { addressFor, keepAddress, looksLikeAddress } from "./writeBack";
 
   let {
@@ -37,6 +39,7 @@
     onUnsubscribe,
     onPeople,
     onMoved,
+    onFolders,
   }: {
     /** Their row's place: the one their address and list open at. */
     feed: Feed;
@@ -52,6 +55,8 @@
     /** Sources were joined: their list, with "… · Undo". */
     onPeople: (done: Notice, lead: number) => void;
     onMoved: (feed: Sick) => void;
+    /** Saved with a folder made or newly chosen: the sidebar opens them to show the person there (point 14). */
+    onFolders?: (folders: number[]) => void;
   } = $props();
 
   const formId = $props.id();
@@ -68,9 +73,6 @@
   let who: WhoKind = $state(start.kind ?? "person");
   let chosen: number[] = $state((() => [...new Set(placesOf(start, library.feeds ?? []).flatMap((place) => place.folders))])());
   let newFolder = $state("");
-  let place: PlaceKind = $state(start.place ?? "blog");
-  let check: Check = $state(start.check);
-  let openOnSite = $state(start.openOnSite);
   let paused = $state(start.pausedAt != null);
   let shorts = $state(start.shorts === true);
   let liveStreams = $state(start.liveStreams === true);
@@ -94,12 +96,18 @@
       newFolder,
       // Kept only when changed, so a stand-in shown before the first check is never stored as their choice.
       ...(chooses && who !== start.kind ? { kind: who } : {}),
-      ...(one && place !== start.place ? { place } : {}),
-      ...(one ? { check, openOnSite, paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
+      ...(one ? { paused, ...(feed.sortsVideos ? { shorts, liveStreams } : {}) } : {}),
     });
+    const before = new Set(placesOf(start, library.feeds ?? []).flatMap((place) => place.folders));
+    const madeName = newFolder.trim().toLowerCase();
     const problem = refusal ? refused(refusal, "feed") : newAddress ? await keepAddress(feed.id, address) : undefined;
     // Saved even if the address then failed: the sidebar shows what was kept.
-    if (!refusal) await library.loadFeeds();
+    if (!refusal) {
+      await library.loadFeeds();
+      // A folder just made, or newly chosen, opens in the sidebar to show them in it.
+      const shown = library.folders.filter((folder) => (!before.has(folder.id) && chosen.includes(folder.id)) || (madeName && folder.name.toLowerCase() === madeName)).map((folder) => folder.id);
+      if (shown.length > 0) onFolders?.(shown);
+    }
     busy = false;
     if (problem) message = problem;
     else onDone(true);
@@ -168,33 +176,6 @@
       </fieldset>
     {/if}
 
-    {#if !one || who === "person"}
-      <div class="flex min-w-0 flex-col gap-1.5">
-        <span class="text-small text-ink-2" id="{formId}-sources">Sources</span>
-        {#if !one}
-          <!-- Each source a row; its › opens that source's own settings. -->
-          <ul class="inset-group" aria-labelledby="{formId}-sources">
-            {#each places as each (each.id)}
-              <li>
-                <button type="button" class="inset-row w-full gap-3 text-left" aria-label="{PLACE_NAMES[each.place ?? "blog"]} {placeShownAs(each)}: its settings" onclick={() => onSource(each.id)}>
-                  <span class="w-24 shrink-0 text-muted">{PLACE_NAMES[each.place ?? "blog"]}</span>
-                  <span class="min-w-0 flex-1 break-words">{placeShownAs(each)}</span>
-                  <span aria-hidden="true" class="shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>
-                </button>
-              </li>
-            {/each}
-          </ul>
-        {/if}
-        <div class={!one ? "mt-2" : ""}>
-          <AddPlace {feed} name={title.trim() || name} {library} onJoined={onPeople} />
-        </div>
-      </div>
-    {/if}
-
-    {#if one}
-      <SourceFields {feed} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onMoved} />
-    {/if}
-
     <fieldset class="flex min-w-0 flex-col gap-1.5">
       <legend class="mb-1.5 text-small text-ink-2">Folders</legend>
       <!-- A checklist (decision 0045): square tick boxes, as they can be in several; "New folder…" is the last row. -->
@@ -211,8 +192,36 @@
           <input bind:value={newFolder} type="text" autocomplete="off" placeholder="New folder…" class="inset-input" aria-describedby="{formId}-new-folder" />
         </label>
       </div>
-      <span id="{formId}-new-folder" class="field-help mt-0">{folders.length === 0 ? "No folders yet. " : ""}Optional: a new folder is made when you save, with them in it.</span>
+      <span id="{formId}-new-folder" class="field-help mt-0">Type a name to make a folder.</span>
     </fieldset>
+
+    {#if one}
+      <SourceFields {feed} bind:paused bind:shorts bind:liveStreams {onMoved} />
+    {/if}
+
+    {#if !one}
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <span class="text-small text-ink-2" id="{formId}-sources">Sources</span>
+        <!-- Each source a row; its › opens that source's own settings. -->
+        <ul class="inset-group" aria-labelledby="{formId}-sources">
+          {#each places as each (each.id)}
+            <li>
+              <button type="button" class="inset-row w-full gap-3 text-left" aria-label="{PLACE_NAMES[each.place ?? "blog"]} {placeShownAs(each)}: its settings" onclick={() => onSource(each.id)}>
+                <span class="w-24 shrink-0 text-muted">{PLACE_NAMES[each.place ?? "blog"]}</span>
+                <span class="min-w-0 flex-1 break-words">{placeShownAs(each)}</span>
+                <span aria-hidden="true" class="shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+        <div class="mt-2">
+          <AddPlace {feed} name={title.trim() || name} {library} onJoined={onPeople} />
+        </div>
+      </div>
+    {:else if who === "person"}
+      <!-- One source: no Sources heading, only a line near the foot inviting another place (point 12). -->
+      <AddPlace {feed} name={title.trim() || name} {library} invite onJoined={onPeople} />
+    {/if}
 
     <!-- A problem, in red words with an icon, only once there is one. -->
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>

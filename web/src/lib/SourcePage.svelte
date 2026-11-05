@@ -1,7 +1,6 @@
 <!--
   One source's own settings (SPEC section 36, decision 0163), opened from a
-  person's Edit by the source's ›: what kind of source it is, its settings
-  (SourceFields), and, at the foot, "Take out of Alpha", which makes it a
+  person's Edit by the source's ›: its settings (SourceFields), and, at the foot, "Take out of Alpha", which makes it a
   person or publication of its own, with Undo on the next screen. Done saves
   and goes back to Edit; "‹ Edit Alpha" or Escape goes back unchanged.
 -->
@@ -12,7 +11,7 @@
   import type { Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, putBack, separate } from "./people";
-  import type { Check, Feed, PlaceKind } from "./shapes";
+  import type { Feed } from "./shapes";
 
   let {
     source,
@@ -37,9 +36,6 @@
 
   const formId = $props.id();
   const start = (() => source)();
-  let place: PlaceKind = $state(start.place ?? "blog");
-  let check: Check = $state(start.check);
-  let openOnSite = $state(start.openOnSite);
   let paused = $state(start.pausedAt != null);
   let shorts = $state(start.shorts === true);
   let liveStreams = $state(start.liveStreams === true);
@@ -51,7 +47,7 @@
     if (busy) return;
     busy = true;
     message = "";
-    const refusal = await editFeed(source.id, { ...(place !== start.place ? { place } : {}), check, openOnSite, paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
+    const refusal = await editFeed(source.id, { paused, ...(source.sortsVideos ? { shorts, liveStreams } : {}) });
     if (!refusal) await library.loadFeeds();
     busy = false;
     if (refusal) message = refused(refusal, "feed");
@@ -94,7 +90,7 @@
   </div>
 
   <form id={formId} onsubmit={save} class="flex flex-col gap-5">
-    <SourceFields feed={source} bind:place bind:check bind:openOnSite bind:paused bind:shorts bind:liveStreams {onMoved} />
+    <SourceFields feed={source} bind:paused bind:shorts bind:liveStreams {onMoved} />
 
     <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}

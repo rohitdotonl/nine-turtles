@@ -33,8 +33,6 @@ describe("folders and the sidebar search", () => {
     unread,
     folders,
    
-    check: "automatic",
-    openOnSite: false,
   });
   const feeds = [feed(1, "Café notes", 3, [1, 2]), feed(2, "Garden Letters", 5, [1]), feed(3, "Quiet Notes", 7, [])];
   const folders = [

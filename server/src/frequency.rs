@@ -1,7 +1,7 @@
 //! How often a feed posts, in plain words (SPEC sections 15 and 17,
 //! decision 0105): "Posts about 3 times a week", "Posts about once a
-//! month", "Hasn't posted in 4 months", "Too new to tell". Shown quietly in
-//! Edit feed and on the feed health page. Rounded words only: no chart, no
+//! month", "Hasn't posted in 4 months", "Too new to tell". Shown quietly on
+//! the feed health page and, as a feed is chosen, in Add. Rounded words only: no chart, no
 //! decimals, no judgement.
 //!
 //! Counted from the feed's articles of the last 90 days by the time the list
@@ -16,20 +16,7 @@
 //! year", and a feed with no articles is counted from when nine turtles
 //! started fetching it.
 
-use axum::{
-    Json, Router,
-    extract::{Path, State},
-    http::StatusCode,
-    response::{IntoResponse, Response},
-    routing::get,
-};
-use serde_json::json;
-
-use crate::{
-    AppState,
-    auth::{SignedIn, database_problem},
-    cleanup, now,
-};
+use crate::cleanup;
 
 const DAY: i64 = 86_400;
 /// How far back the counting looks.
@@ -39,10 +26,6 @@ const SHORTEST_DAYS: i64 = 14;
 const FEWEST: i64 = 3;
 /// How many dated posts tell a feed's pace from less than two weeks.
 const SHORT_SPAN_FEWEST: usize = 5;
-
-pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/feeds/{id}/frequency", get(read))
-}
 
 /// What the words are worked out from.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, sqlx::FromRow)]
@@ -72,39 +55,6 @@ pub async fn posting(db: &sqlx::SqlitePool, feed: i64, now: i64) -> Result<Posti
     .bind(FEWEST)
     .fetch_one(db)
     .await
-}
-
-/// The words for a feed, for reader `person`; `None` if they don't follow it.
-pub async fn for_reader(
-    db: &sqlx::SqlitePool,
-    person: i64,
-    feed: i64,
-    now: i64,
-) -> Result<Option<String>, sqlx::Error> {
-    let follows: bool = sqlx::query_scalar(
-        "SELECT EXISTS (SELECT 1 FROM subscriptions
-             WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NULL)",
-    )
-    .bind(person)
-    .bind(feed)
-    .fetch_one(db)
-    .await?;
-    if !follows {
-        return Ok(None);
-    }
-    Ok(Some(words(posting(db, feed, now).await?, now)))
-}
-
-async fn read(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Response {
-    match for_reader(&state.db, person, id, now()).await {
-        Ok(Some(words)) => Json(json!({ "words": words })).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(error) => database_problem("working out how often a feed posts", &error),
-    }
 }
 
 /// "2 months", "3 weeks", "a day": a quiet span under a year, rounded down.

@@ -25,7 +25,7 @@ vi.mock("./people", async (actual) => ({
 const { LoadedLibrary } = await import("./library.svelte");
 
 function feed(id: number, unread = 0, folders: number[] = []): Feed {
-  return { id, title: `Feed ${id}`, siteUrl: null, unread, folders, check: "automatic", openOnSite: false };
+  return { id, title: `Feed ${id}`, siteUrl: null, unread, folders };
 }
 
 /** An answer the test hands back when it chooses. */

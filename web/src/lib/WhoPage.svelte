@@ -40,6 +40,7 @@
     onHide,
     onMoved,
     onSaved,
+    onFolders,
   }: {
     route: Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }>;
     /** Their row's place: the one their address and list open at. */
@@ -56,6 +57,8 @@
     onMoved: (source: Feed, after: Sick) => void;
     /** Edit or a source's settings were saved: their list refreshes (an unpaused source's newest come back). */
     onSaved: () => void;
+    /** Edit put them in a folder just made or chosen: the sidebar opens it. */
+    onFolders?: (folders: number[]) => void;
   } = $props();
 
   let places = $derived(placesOf(feed, library.feeds ?? []));
@@ -92,6 +95,7 @@
         {onUnsubscribe}
         onPeople={joined}
         onMoved={(after) => onMoved(feed, after)}
+        {onFolders}
       />
     {:else if route.kind === "edit-source" && source}
       {#key source.id}

@@ -9,7 +9,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
-import { toFeed, toPerson, type Feed, type FeedSettings, type Folder, type Library, type PlaceKind, type VideoSettings, type WhoKind } from "./shapes";
+import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
  * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, how
@@ -151,16 +151,6 @@ export function folderChoice(here: boolean, open: boolean, plain: boolean): "fol
   return open ? "go" : "open-and-go";
 }
 
-/** How often a feed posts, in plain words ("Posts about 3 times a week"), or nothing if it can't be said just now (decision 0105). */
-export async function feedFrequency(id: number): Promise<string | undefined> {
-  try {
-    const body = await getJson(`/api/feeds/${id}/frequency`);
-    return isRecord(body) && typeof body.words === "string" ? body.words : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /**
  * A source's name as the article list shows it: a newsletter's name without
  * the sender's address that its feed title carries ("Every (hi@every.to)"
@@ -237,20 +227,19 @@ export async function change(path: string, body: unknown): Promise<{ refusal?: R
 }
 
 /** What Edit and a source's settings change (decision 0163); anything left out stays as it is. */
-export type FeedChanges = Partial<FeedSettings & VideoSettings> & {
+export type FeedChanges = Partial<VideoSettings> & {
   title?: string;
   folders?: number[];
   /** A folder to make and choose too. */
   newFolder?: string;
   paused?: boolean;
   kind?: WhoKind;
-  place?: PlaceKind;
 };
 
 /** Saves Edit's or a source's settings: only what's given changes. */
 export async function editFeed(id: number, changes: FeedChanges): Promise<Refusal | undefined> {
-  const { newFolder, openOnSite, liveStreams, ...rest } = changes;
-  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, open_on_site: openOnSite, live_streams: liveStreams })).refusal;
+  const { newFolder, liveStreams, ...rest } = changes;
+  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, live_streams: liveStreams })).refusal;
 }
 
 export async function unsubscribe(id: number): Promise<Refusal | undefined> {

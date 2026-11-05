@@ -58,6 +58,12 @@
     return open;
   }
 
+  /** Edit put the person in these folders: they open, to show them there (the owner's core path, point 14). */
+  export function openFolder(ids: number[]) {
+    open = [...new Set([...open, ...ids])];
+    saveOpenFolders(open);
+  }
+
   function toggle(id: number) {
     open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
     saveOpenFolders(open);
