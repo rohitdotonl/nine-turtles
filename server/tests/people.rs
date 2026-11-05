@@ -354,7 +354,13 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     assert_eq!(reader.feed(blog).await["kind"], "person");
     // A publication's articles name their writers in its list (the core path, point 4); a person's don't.
     let listed = reader.get(&format!("/api/articles?feed={gazette}")).await;
-    assert!(listed["articles"][0]["writer"].as_str().unwrap().starts_with("Writer "), "{listed}");
+    assert!(
+        listed["articles"][0]["writer"]
+            .as_str()
+            .unwrap()
+            .starts_with("Writer "),
+        "{listed}"
+    );
     let listed = reader.get(&format!("/api/articles?feed={blog}")).await;
     assert!(listed["articles"][0].get("writer").is_none(), "{listed}");
     // The reader changes their mind without touching its name or folders. What kind of source it

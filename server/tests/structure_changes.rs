@@ -1060,7 +1060,13 @@ async fn giving_each_reader_their_own_feeds_and_marks_keeps_every_one_as_the_own
             (2, "Blog 2".into(), 20, None, false),
             (3, "Blog 3".into(), 30, None, false),
             (4, "Just left".into(), 40, Some(now - 60), false),
-            (5, "Cleared, stars kept".into(), 50, Some(now - 86_400), true),
+            (
+                5,
+                "Cleared, stars kept".into(),
+                50,
+                Some(now - 86_400),
+                true
+            ),
             (6, "Nothing yet".into(), 60, None, false),
         ]
     );

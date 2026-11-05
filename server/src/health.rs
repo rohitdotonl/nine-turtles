@@ -476,15 +476,14 @@ async fn follow_elsewhere(
         Option<String>,
         Option<String>,
     );
-    let (title, paused_at, writer, kind, place): Kept =
-        sqlx::query_as(
-            "SELECT title, paused_at, writer_id, kind, place
+    let (title, paused_at, writer, kind, place): Kept = sqlx::query_as(
+        "SELECT title, paused_at, writer_id, kind, place
              FROM subscriptions WHERE person_id = ? AND feed_id = ?",
-        )
-        .bind(person)
-        .bind(old)
-        .fetch_one(&mut *transaction)
-        .await?;
+    )
+    .bind(person)
+    .bind(old)
+    .fetch_one(&mut *transaction)
+    .await?;
     let (new, fresh) = match follow_in(
         &mut *transaction,
         state,
