@@ -134,7 +134,7 @@ Every page is a plain text file in `website/src/`: the home page
 contact, accessibility, privacy, terms, pricing and refunds, and the blog's posts in
 `website/src/blog/`, one file each. The blog is hidden for now (one line in
 `website/eleventy.config.js` leaves it out of the build, and its links are
-gone from the band and footer) until Rohit writes in it at least once a
+gone from the top and footer) until Rohit writes in it at least once a
 month; its posts stay, ready to return. Old addresses (the tour, Questions, the
 blog and its posts, `/docs`) send readers on to their new places, from one
 list in `website/src/_data/redirects.json` (decision 0166); add a line there

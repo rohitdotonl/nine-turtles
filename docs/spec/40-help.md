@@ -22,7 +22,7 @@ Decision 0157.*
   not right, or not what you needed? Tell me and I'll fix it." Buttons and
   places are named in bold, exactly as the app names them; keys are drawn as
   keys. No screenshots.
-- **Where it's linked from:** the website's band (Help, Open the app) and its
+- **Where it's linked from:** the website's top (Help, Open the app) and its
   footer; the foot of Settings ("Help", opening a new
   tab); the keyboard shortcuts sheet's foot ("Help", to the keys page).
 - **Old addresses** send readers on (`website/src/_data/redirects.json`):

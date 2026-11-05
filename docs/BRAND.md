@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 4 November 2026 (decisions 0141, 0148, 0153, 0176, 0181).*
+*Every brand decision on one page. Last updated: 5 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0184).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -68,7 +68,7 @@ what's live.
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
 sleeps, celebrates or stands for a feeling. No mascot.
 
-- **May appear:** the logo (sidebar, sign-in, the website's band, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
+- **May appear:** the logo (sidebar, sign-in, the website's top, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
@@ -106,7 +106,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 
 ## The website
 
-- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. The app's grey sidebar band on every page but the front page (the direction Rohit chose, "G set as C"), with the logo beside the name at the app sidebar's sizes; a grey bar across the top on a tablet or phone. (Live, decision 0153.) The front page is a letter: one centred column with the name and places along its top, and its own larger sizes ("Hello," large, the letter at 21px, one line set large) in place of 0153's one 20px size there. (Live, decision 0169; sizes in DESIGN.md Part 2.)
+- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. Every page wears the front page's look: one centred 640px column with the logo, name and places along its top, the letter's 21px text, and no grey band (Rohit's ask on 5 November 2026; live, decision 0184, replacing the grey sidebar band of 0153). The front page is a letter, with its own larger sizes ("Hello," large, one line set large, the signature; decision 0169; sizes in DESIGN.md Part 2).
 - **Copy:** the settled positioning copy, word for word (above, under "Name and words"); the front page is Rohit's letter, a draft he edits himself (decision 0169).
 
 ## Where the details live
