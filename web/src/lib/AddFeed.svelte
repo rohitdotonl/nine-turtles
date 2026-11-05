@@ -308,15 +308,15 @@
         {/if}
         <div class="tiles">
           <label class="tile">
-            <input type="radio" name="feed-who" value="person" bind:group={who} aria-describedby="feed-who-person" />
+            <input type="radio" name="feed-who" value="person" bind:group={who} aria-labelledby="feed-who-person-name" aria-describedby="feed-who-person" />
             <Icon name="person" size={36} />
-            <span class="font-semibold text-ink">A person</span>
+            <span id="feed-who-person-name" class="font-semibold text-ink">A person</span>
             <span id="feed-who-person" class="text-small text-ink-2">Someone you might write back to.</span>
           </label>
           <label class="tile">
-            <input type="radio" name="feed-who" value="publication" bind:group={who} aria-describedby="feed-who-publication" />
+            <input type="radio" name="feed-who" value="publication" bind:group={who} aria-labelledby="feed-who-publication-name" aria-describedby="feed-who-publication" />
             <Icon name="newspaper" size={36} />
-            <span class="font-semibold text-ink">A publication</span>
+            <span id="feed-who-publication-name" class="font-semibold text-ink">A publication</span>
             <span id="feed-who-publication" class="text-small text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>

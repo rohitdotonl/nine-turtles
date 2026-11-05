@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 37
-updated: 2026-11-04
+updated: 2026-11-05
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -15,9 +15,8 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 ## Write back
 
-1. Read to the end of the article and press **Write back to Tomas** (with
-   their first name, or the blog's whole name when nine turtles doesn't know
-   theirs). You can also choose **More › Write back**, or press
+1. Read to the end of the article and press **Write back to Tomas Berg**
+   (their name as it is in your sidebar). You can also choose **More › Write back**, or press
    <kbd>W</kbd>.
 2. Your own email app opens with their address, and a subject line of
    "Re:" and the article's title.
@@ -37,8 +36,9 @@ about page, while the box says "Looking on their site…".
   Then press **Write back**.
 
 nine turtles remembers it for that person, so you're asked only once. Their
-page shows it under **Email**; to change it, press **Edit**
-there and change **Email address**.
+page shows it under **Write to Tomas Berg**, which opens your email app to
+write to them about anything, with no subject. To change it, press
+**Edit** there and change **Email address**.
 
 ## Good to know
 

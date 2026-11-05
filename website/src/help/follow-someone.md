@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-04
+updated: 2026-11-05
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -16,12 +16,13 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ## Follow someone
 
 1. Press **+ Add** at the foot of the sidebar (or press <kbd>A</kbd>).
-2. Paste the address of their website, such as <code>example.com</code>.
+2. Paste their website's address, such as <code>example.com</code>.
    You can leave off the <code>https://</code>.
 3. Press **Add**.
-4. nine turtles asks whether they're someone you might write to: **Yes, a
-   person** or **No, a publication** (such as a magazine), with its guess
-   already chosen. Press **Done**.
+4. nine turtles asks what they are: "Maya Chen is…", with their site
+   and newest title. Choose **A person** (someone you might write back to)
+   or **A publication** (anything you only read or watch, such as a
+   magazine). Its guess is already chosen. Press **Done**.
 
 When a blog signs every article with one writer's name, nine turtles calls
 them by that name, with the blog's title under it on their page. Want a
@@ -37,7 +38,7 @@ it posts, so you can tell them apart: choose one and press **Add**. A feed
 that only repeats another in a different format isn't listed.
 
 Already follow their blog, and now want their channel too? Add it from
-their page instead, with **+ Add a source**: see
+their page instead, with **+ Add another place** in Edit: see
 <a href="/help/one-person-several-places/">See everything one person makes
 in one place</a>.
 

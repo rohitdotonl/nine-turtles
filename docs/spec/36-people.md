@@ -32,9 +32,10 @@ PLAN.md → V1, item 1.*
     together (janedoe.com, "Jane Doe");
   - still unclear: a person.
 
-  When adding through **+ Add** (section 3), the reader is asked "Is Tomas
-  Berg someone you might write to?" (**Yes, a person** or **No, a
-  publication**), with the guess already chosen. They can change it later in
+  When adding through **+ Add** (section 3), the reader is asked to finish
+  "Tomas Berg is…" with one of two tiles (**A person**, "Someone you might
+  write back to."; **A publication**, "Anything you only read or watch, and
+  won't write back to."), with the guess already chosen. They can change it later in
   Edit (for one source only, and not for the last source left of someone
   joined, who stays a person). Feeds followed before this change get their
   guess the next time the sidebar loads; an imported feed gets it once
@@ -73,32 +74,40 @@ PLAN.md → V1, item 1.*
   where an article would; on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with an **Edit** button beside it; for one
   source whose own title isn't their name, that title under it, in the
-  reading serif ("Notes from Tomas" under Tomas Berg); a muted
-  line ("A person · in Friends · following since March 2026"), their sources,
-  each by its kind (Blog, Video, Newsletter, Podcast) with a link to the
-  publisher's own site (a blog by its website, "alpha.example"; a channel or
-  newsletter by its own name), and, once nine turtles knows where to write
-  to them, an **Email** line (section 37). At its foot, a quiet link,
+  reading serif ("Notes from Tomas" under Tomas Berg); under that, **Write
+  to Tomas Berg**, the solid ink button with the paper plane, with the
+  address under it once nine turtles knows it (section 37; the owner's core
+  path, point 9); then their sources, each by its kind (Blog, Video,
+  Newsletter, Podcast) with a link to the publisher's own site (a blog by its
+  website, "alpha.example"; a channel or newsletter by its own name). The
+  muted line that said what they are, their folders and since when ("A
+  person · in Friends · following since March 2026") and the separate Email
+  line went (point 10). At its foot, a quiet link,
   **Hide articles about…**, opens Settings › Hiding with a new rule for
   them (section 27).
 - **Edit** (`/people/12/edit`) turns the same
   page into their settings. **Done** saves and turns it back; **Cancel** or
-  Escape turns it back unchanged. Top to bottom:
+  Escape turns it back unchanged. Top to bottom (the owner's core path,
+  points 11 and 12):
   - **Name** and **Email address** (where Write back writes to them,
     section 37);
   - for one source, **This is: A person / A publication**;
-  - for a person, their **Sources**, each a row whose › opens that source's
-    own settings, and **+ Add a source** under them;
-  - for one source, its settings right here in Edit (as below);
   - **Folders** (one list for all their sources: Done puts every source in
     exactly those);
+  - for one source, its settings right here in Edit: **Pause for a while**
+    (and a YouTube channel's two switches);
+  - for someone with two or more sources, their **Sources**, each a row
+    whose › opens that source's own settings, and **+ Add a source** under
+    them; for a person with one source, no Sources heading, only a line near
+    the foot: "Does Tomas Berg also write a newsletter, make videos or host a
+    podcast? Add it, and everything Tomas Berg makes shows in one place." and
+    a link, **+ Add another place**, which opens the same box;
   - at the foot, **Unsubscribe from Alpha** in red words, which leaves every
     source of theirs at once, with Undo.
-- **A source's settings** (`/people/12/sources/34`, from Edit's ›): its
-  **kind** (read from the feed: a newsletter, a YouTube channel is Video, a
-  feed with any episode is Podcast, anything else Blog; the reader can
-  correct it), how often to check, open on the website,
-  YouTube's Include Shorts and Include live streams (section 38), Pause for a
+- **A source's settings** (`/people/12/sources/34`, from Edit's ›), titled
+  by its **kind** (read from the feed: a newsletter, a YouTube channel is
+  Video, a feed with any episode is Podcast, anything else Blog; no longer
+  the reader's to correct, decision 0183): YouTube's Include Shorts and Include live streams (section 38), Pause for a
   while, **Find new address** while it's
   failing (section 17), and at the foot **Take out of Alpha**: it becomes a
   person or publication of its own, guessed afresh, with Undo. Done saves
@@ -139,10 +148,10 @@ PLAN.md → V1, item 1.*
    under **People**, the site under **Publications**. A blog that signs every
    article with one author's name is called by that name, and its page shows
    the blog's title under it; Write back at an article's end says "Write
-   back to" and their first name.
+   back to" and their full name, as in the sidebar.
 2. Press a person's name at the top of their list: their page opens beside
-   the list (on a phone, as its own screen), with the muted line and their
-   sources.
+   the list (on a phone, as its own screen), with **Write to …** under
+   their name and their sources, and no muted line.
 3. Press **Edit**, change **This is** to A publication, press **Done**: the
    row moves under Publications.
 4. In Edit, press **+ Add a source** and choose someone in another folder:

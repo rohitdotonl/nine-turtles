@@ -98,7 +98,7 @@ export const SCREENS: Screen[] = [
     signedIn: true,
     library: true,
     open: async (page) => {
-      await page.getByLabel("Paste a website or feed URL").fill(`${FEED_SITE}/two/`);
+      await page.getByLabel("Their website's address").fill(`${FEED_SITE}/two/`);
       await page.keyboard.press("Enter");
       await expect(page.getByText("This site offers more than one feed. Choose one:")).toBeVisible();
     },

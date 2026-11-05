@@ -255,7 +255,7 @@ test("search and adding a feed say plainly that they need a connection", async (
   await page.locator("body").click({ position: { x: 1, y: 1 } });
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
-  await sheet.getByLabel("Paste a website or feed URL").fill("https://quiet.example/");
+  await sheet.getByLabel("Their website's address").fill("https://quiet.example/");
   await sheet.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page.getByText("Adding a feed needs a connection. Try again once you're back online.")).toBeVisible();
   await context.setOffline(false);

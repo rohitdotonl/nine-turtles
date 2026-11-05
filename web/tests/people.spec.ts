@@ -139,7 +139,8 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
   await page.goto(new URL(`/people/${ids[0]}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  const add = page.getByRole("button", { name: "Add a source" });
+  // One source: the quiet line's link near Edit's foot (the owner's core path, point 12).
+  const add = page.getByRole("button", { name: "+ Add another place" });
   await add.click();
   const who = page.getByRole("combobox", {
     name: "Someone you already follow",
@@ -208,9 +209,10 @@ test("a source's own settings: Take out of the person, and Undo puts it back", a
   await expect(page).toHaveURL(
     new RegExp(`/people/${first}/sources/${second}$`),
   );
+  // What kind of source it is isn't a setting any more (decision 0183).
   await expect(
     page.getByRole("combobox", { name: "Kind of source" }),
-  ).toHaveValue("blog");
+  ).toHaveCount(0);
   await page.getByRole("button", { name: `Take out of Eli ${eli}` }).click();
   await expect(line(page)).toHaveText(`${fay}.example is on its own now`);
   await expect(rowsNamed(page, `Blog ${fay}`)).toHaveCount(1);
@@ -307,7 +309,7 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  await page.getByRole("button", { name: "Add a source" }).click();
+  await page.getByRole("button", { name: "+ Add another place" }).click();
   await page
     .getByRole("textbox", {
       name: /address of their blog, channel or newsletter/,

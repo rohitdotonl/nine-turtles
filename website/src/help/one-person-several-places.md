@@ -16,10 +16,11 @@ related: [put-people-in-folders, write-back, unfollow-someone]
 
 ## A person or a publication
 
-Everyone you follow is either a **person** (someone you might write to) or a
-**publication** (such as a magazine). The sidebar lists them under **People** and
-**Publications**. nine turtles makes a guess when you follow them, and asks
-"Is … someone you might write to?" with its guess already chosen. Got it wrong? Change
+Everyone you follow is either a **person** (someone you might write back
+to) or a **publication** (anything you only read or watch, such as a
+magazine). The sidebar lists them under **People** and **Publications**.
+nine turtles makes a guess when you follow them, and asks you to finish
+"Maya Chen is…" with its guess already chosen. Got it wrong? Change
 **This is** in Edit (below).
 
 ## Their page
@@ -29,9 +30,10 @@ Choose them in the sidebar, then press their name at the top of their list
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 
-It shows whether they're a person or a publication, their folders, when you
-started following them, each of their sources with a link to its own
-website, and their **Email**, once nine turtles knows it.
+Under their name is **Write to Maya Chen**, which opens your own email app
+to write to them (with their address under it, once nine turtles knows it;
+see <a href="/help/write-back/">Write back to a writer</a>). Then each of
+their sources, with a link to its own website.
 
 ## Edit them
 
@@ -43,16 +45,21 @@ you can:
   <a href="/help/write-back/">writing back</a>,
 - choose whether **This is** a person or a publication (while they have one
   source),
-- see their **Sources**, and press › beside one for its own settings,
-- choose their **Folders**,
-- and, at the foot, **Unsubscribe from Alpha**.
+- choose their **Folders** (type a name to make a new one; it opens in the
+  sidebar when you press Done),
+- **Pause for a while**, while they have one source,
+- see their **Sources**, when they have two or more, and press › beside
+  one for its own settings,
+- and, at the foot, **Unsubscribe from Alpha**. If they were the last one
+  in a folder, the folder goes too; **Undo** brings both back.
 
 Press **Done** to save, or **Cancel** to leave everything as it was.
 
 ## Join someone's sources
 
 1. Open their page and press **Edit**.
-2. Press **+ Add a source**.
+2. Press **+ Add another place** (or, for someone with two or more
+   sources already, **+ Add a source**).
 3. Choose someone you already follow, or paste the address of their blog,
    channel or newsletter.
 

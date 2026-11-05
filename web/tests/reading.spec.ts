@@ -171,7 +171,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await expect(title(page, "Only the first page")).toBeVisible({ timeout: 100 });
     await expect(article(page).getByText("This feed shares just the opening paragraph")).toBeVisible({ timeout: 100 });
-    await expect(article(page).getByText("This feed shares only a summary.")).toBeVisible();
+    await expect(article(page).getByText("Only the beginning is shared here.")).toBeVisible();
 
     await page.keyboard.press("k");
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible({ timeout: 100 });
@@ -610,7 +610,7 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("This feed shares only a summary. Read on Reading Room");
+    await expect(note).toContainText("Only the beginning is shared here. Read on Reading Room");
     // End matter, as in a book: small upright interface type, centred (decision 0040).
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
