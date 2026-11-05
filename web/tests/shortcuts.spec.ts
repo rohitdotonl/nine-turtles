@@ -110,7 +110,7 @@ test.describe("on a wide window", () => {
   });
 
 
-  test("e expands and folds the folder you're in, or your feed's", async ({ page }) => {
+  test("o opens and closes the folder you're in, or your feed's; e opens Edit for it", async ({ page }) => {
     await signedIn(page);
     const blog = await openBlog(page);
     const folder = `Keys-${test.info().workerIndex}-${Date.now()}`;
@@ -122,20 +122,20 @@ test.describe("on a wide window", () => {
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
-    // In the feed: e expands its folder, and folds it again.
+    // In the feed: o opens its folder, and folds it again.
     await page.locator("#list-heading").focus();
-    await page.keyboard.press("e");
+    await page.keyboard.press("o");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await page.keyboard.press("e");
+    await page.keyboard.press("o");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 
     // In the folder: the same. Choosing a closed folder opens it (decision 0123).
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await page.keyboard.press("e");
+    await page.keyboard.press("o");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
-    await page.keyboard.press("e");
+    await page.keyboard.press("o");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
     // Shift+J from an expanded folder goes to the first person in it; from a collapsed one, past them.
@@ -144,10 +144,86 @@ test.describe("on a wide window", () => {
     await expect(page).toHaveURL(inFolder);
     await page.keyboard.press("Shift+K");
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
-    await page.keyboard.press("e");
+    await page.keyboard.press("o");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press("Shift+J");
     await expect(page.getByRole("heading", { level: 2, name: folder })).toHaveCount(0);
     await expect(page).not.toHaveURL(inFolder);
+
+    // From a folder's open/close button, ↓ goes to the row under it, ↑ to the folder's own row.
+    await toggle.focus();
+    await page.keyboard.press("ArrowUp");
+    await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toBeFocused();
+    await toggle.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).not.toBeFocused();
+    await expect(sidebar(page).locator("a[href]:focus")).toHaveCount(1);
+
+    // e opens Edit: in their list, theirs; in the folder's, Edit folder (the owner's core path, point 16).
+    await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+    await appReady(page);
+    await page.keyboard.press("e");
+    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/edit$`));
+    await page.keyboard.press("Escape");
+    await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+    await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
+    await page.keyboard.press("e");
+    await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
+  });
+
+  test("← and → move between the sidebar, the list and the article; ↑ and ↓ along the sidebar; a field keeps its arrows", async ({ page }) => {
+    // The owner's core path, point 17.
+    await signedIn(page);
+    await openBlog(page);
+    const rows = page.locator("#list-pane li button[data-space-reads]");
+    await rows.first().click();
+    const title = page.getByRole("region", { name: "Article", exact: true }).locator(".article-title");
+    await page.keyboard.press("Enter");
+    await expect(title).toBeFocused();
+    // ← goes to the chosen article in the list, then to your row in the sidebar.
+    await page.keyboard.press("ArrowLeft");
+    await expect(rows.first()).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    const here = sidebar(page).locator("a[aria-current]");
+    await expect(here).toBeFocused();
+    // At the left end nothing happens.
+    await page.keyboard.press("ArrowLeft");
+    await expect(here).toBeFocused();
+    // ↑ and ↓ go along the sidebar's rows.
+    const name = await here.getAttribute("href");
+    await page.keyboard.press("ArrowUp");
+    await expect(sidebar(page).locator("a[href]:focus")).not.toHaveAttribute("href", name ?? "");
+    await page.keyboard.press("ArrowDown");
+    await expect(here).toBeFocused();
+    // → goes back to the list and to the article.
+    await page.keyboard.press("ArrowRight");
+    await expect(rows.first()).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(title).toBeFocused();
+    // Something in the article wider than the page (a code block, a table) keeps ← and → to scroll it sideways.
+    const wide = await title.evaluate((heading) => {
+      const pre = document.createElement("pre");
+      pre.tabIndex = 0;
+      pre.style.cssText = "overflow-x: auto; white-space: pre; max-width: 100%";
+      pre.textContent = "x".repeat(2000);
+      heading.after(pre);
+      pre.focus();
+      return pre.scrollLeft;
+    });
+    expect(wide).toBe(0);
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator(".article pre")).toBeFocused();
+    await expect.poll(() => page.locator(".article pre").evaluate((pre) => pre.scrollLeft)).toBeGreaterThan(0);
+    // At the right end, → is the browser's own: the keyboard stays on the title.
+    await title.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(title).toBeFocused();
+    // In a field (the sidebar's), the arrows are the field's.
+    const field = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
+    await field.fill("words");
+    await expect(field).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(field).toBeFocused();
+    expect(await field.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(4);
   });
 });

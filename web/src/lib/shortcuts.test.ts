@@ -45,6 +45,8 @@ function hands(next?: Route) {
     copyLink: note("copyLink"),
     markAllRead: note("markAllRead"),
     toggleFolder: note("toggleFolder"),
+    movePane: note("movePane"),
+    moveRow: note("moveRow"),
     star: note("star"),
     inArticle: note("inArticle"),
     markUnread: note("markUnread"),
@@ -142,11 +144,23 @@ describe("carryOut", () => {
     expect(run({ kind: "write-back" }, scene({ onList: false }))).toEqual([]);
   });
 
-  it("expands or folds the folder you're in, or the feed's first folder, with the sidebar in view", () => {
+  it("o opens or closes the folder you're in, or the feed's first folder, with the sidebar in view", () => {
     expect(run({ kind: "toggle-folder" }, scene({ folder: 3, feed: 9, feedsFolder: 4 }))).toEqual([["toggleFolder", 3]]);
     expect(run({ kind: "toggle-folder" }, scene({ feed: 9, feedsFolder: 4 }))).toEqual([["toggleFolder", 4]]);
     expect(run({ kind: "toggle-folder" }, scene({ feed: 9 }))).toEqual([]);
     expect(run({ kind: "toggle-folder" }, scene({ folder: 3, sidebar: false }))).toEqual([]);
+  });
+
+  it("e opens Edit for the folder or the person whose list this is; ← → move between panes, ↑ ↓ along the sidebar", () => {
+    expect(run({ kind: "edit" }, scene({ folder: 3, feed: 9 }))).toEqual([["go", { kind: "edit-folder", id: 3 }]]);
+    expect(run({ kind: "edit" }, scene({ feed: 9 }))).toEqual([["go", { kind: "edit-feed", id: 9 }]]);
+    expect(run({ kind: "edit" }, scene({ feed: 9, searching: true }))).toEqual([]);
+    expect(run({ kind: "edit" }, scene({ feed: 9, onList: false }))).toEqual([]);
+    expect(run({ kind: "edit" }, scene({}))).toEqual([]);
+    expect(run({ kind: "pane", step: -1 }, scene({}))).toEqual([["movePane", -1]]);
+    expect(run({ kind: "pane", step: 1 }, scene({ reading: true }))).toEqual([]);
+    expect(run({ kind: "row", step: 1 }, scene({}))).toEqual([["moveRow", 1]]);
+    expect(run({ kind: "row", step: 1 }, scene({ sidebar: false }))).toEqual([]);
   });
 
   it("goes to the page of the person whose list this is, but not from a folder's", () => {

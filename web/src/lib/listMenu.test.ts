@@ -76,7 +76,7 @@ describe("the list's More menu", () => {
     expect(rows(feed, 2)[0]?.shortcut).toBe("key:about");
     choose(feed, "Info about Alpha");
     const folder = listMenu(scene({ folder: 5 }), given);
-    expect(rows(folder, 2)[0]?.shortcut).toBeUndefined();
+    expect(rows(folder, 2)[0]?.shortcut).toBe("key:edit");
     choose(folder, "Edit folder…");
     expect(done).toEqual([
       ["go", { kind: "about", id: 3 }],

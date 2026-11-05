@@ -55,6 +55,9 @@ export type KeyHands = {
   copyLink(): void;
   markAllRead(): void;
   toggleFolder(id: number): void;
+  /** ← and →, and ↑ and ↓ in the sidebar (`panes.ts`). */
+  movePane(step: 1 | -1): void;
+  moveRow(step: 1 | -1): void;
   star(): void;
   /** In the open article: write back to whoever wrote it (SPEC section 37), highlight the words chosen, or write a note (SPEC section 42). */
   inArticle(what: "write-back" | "highlight" | "note"): void;
@@ -140,6 +143,18 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       if (scene.onList && scene.sidebar && folder !== undefined) hands.toggleFolder(folder);
       break;
     }
+    case "edit":
+      // The folder whose list this is, else the person or publication.
+      if (!scene.onList || scene.searching) break;
+      if (scene.folder !== undefined) hands.go({ kind: "edit-folder", id: scene.folder });
+      else if (scene.feed !== undefined) hands.go({ kind: "edit-feed", id: scene.feed });
+      break;
+    case "pane":
+      if (!scene.reading) hands.movePane(action.step);
+      break;
+    case "row":
+      if (scene.sidebar) hands.moveRow(action.step);
+      break;
     case "about":
       if (scene.onList && !scene.searching && scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed });
       break;

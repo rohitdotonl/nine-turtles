@@ -67,7 +67,7 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const { feed, folder } = scene;
   // The way to their page (and from it, Edit), the same words for a person and a publication (decision 0163).
   if (feed !== undefined) groups.push({ items: [{ label: `Info about ${scene.feedName ?? "them"}`, shortcut: key("about"), onSelect: () => hands.go({ kind: "about", id: feed }) }] });
-  else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
+  else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
   return groups;
 }
 
