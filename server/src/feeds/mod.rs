@@ -89,6 +89,10 @@ struct FeedRow {
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
+    /// Only just after Add: its newest article's title, which Add's question shows.
+    #[sqlx(skip)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    latest: Option<String>,
 }
 
 /// Each feed a reader follows, with their name for it, their settings and

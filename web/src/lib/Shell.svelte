@@ -271,7 +271,9 @@
   let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
-  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : "Add a person or publication") : "New to feeds?");
+  /** Who Add just found, while it asks whether they're a person or a publication: the sheet's title asks about them. */
+  let foundName = $state("");
+  let taskTitle = $derived(route.kind === "add-feed" ? (shared ? followTitle(sharedName) : foundName ? `${foundName} is…` : "Add a person or publication") : "New to feeds?");
   /** The list's heading (`listHeading.ts`). */
   let headingText = $derived(headingFor({ under, placeName, missing, results: searching.shown?.scope, names: library.names }));
 
@@ -1304,8 +1306,7 @@
   {#if route.kind === "add-feed" && shared}
     <FollowPerson address={shared} bind:name={sharedName} onFollowed={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else if route.kind === "add-feed"}
-    <p>nine turtles finds the feed on any website you like, and lists its articles.</p>
-    <AddFeed bind:field={headings.add} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
+    <AddFeed bind:field={headings.add} bind:asked={foundName} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else}
     <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
   {/if}

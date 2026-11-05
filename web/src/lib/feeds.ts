@@ -18,7 +18,8 @@ import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSetti
 export type Choice = { title: string; url: string; place?: string; posting?: string; latest?: string };
 
 export type AddResult =
-  | { kind: "added"; feed: Feed }
+  /** `latest`: their newest article's title, for Add's question ("Maya Chen is…"). */
+  | { kind: "added"; feed: Feed; latest?: string }
   /** Several feeds to choose from; for a YouTube video or playlist, `asks` which and `maker` names its channel (decision 0144). */
   | { kind: "choose"; choices: Choice[]; asks?: "video" | "playlist"; maker?: string }
   | { kind: "already"; feedId: number }
@@ -184,7 +185,7 @@ export async function addFeed(address: string): Promise<AddResult> {
   }
   const body: unknown = await response.json().catch(() => null);
   if (!isRecord(body)) return { kind: "problem", reason: "trouble" };
-  if (isRecord(body.feed)) return { kind: "added", feed: toFeed(body.feed) };
+  if (isRecord(body.feed)) return { kind: "added", feed: toFeed(body.feed), ...(typeof body.feed.latest === "string" ? { latest: body.feed.latest } : {}) };
   if (Array.isArray(body.choices)) {
     const choices = body.choices.filter(isRecord).map((choice) => ({
       title: String(choice.title ?? ""),
@@ -298,7 +299,7 @@ export function explain(reason: Problem): string {
     case "too-big":
       return "That file is too big to be a feed.";
     case "no-feed":
-      return "This site doesn't seem to offer a feed, on this page or in the usual places. If you know the feed's own address, paste that.";
+      return "nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.";
     case "too-many":
       return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
     case "plan-ended":

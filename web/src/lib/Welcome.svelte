@@ -41,7 +41,7 @@
 <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
   <div class={start ? "text-left" : "text-center"}>
     <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
-    <p class="mt-3 text-ink-2">Follow the websites you like, and read what they publish here, at your own pace.</p>
+    <p class="mt-3 text-ink-2">Paste the address of someone's blog, newsletter or channel.</p>
     <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
     <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
   </div>
@@ -70,7 +70,7 @@
     -->
     <div inert aria-hidden="true" class="flex flex-col gap-1.5">
       <div class="welcome-row flex gap-2">
-        <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Paste a website or feed URL</span></span>
+        <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Their website's address</span></span>
         <span class="btn-primary rounded-lg">Add</span>
       </div>
       <div class="flex min-h-[5.8rem] flex-col items-center">

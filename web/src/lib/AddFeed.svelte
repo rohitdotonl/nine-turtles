@@ -13,6 +13,13 @@
   the full width at the screen's foot. In the welcome, with no Cancel, "Add
   feed" sits beside the field.
 
+  Once someone is found, the field gives way to one question (the owner's
+  core path, point 1): "Maya Chen is…" (the sheet's title, or in the welcome
+  the question's own heading), what was found (their site, and their newest
+  title in the reading serif), and two tiles side by side, A person and A
+  publication, each with its icon, nine turtles' guess chosen; then "You can
+  change this later in Edit." and Done.
+
   A shared page's address opens "Follow this person?" instead
   (FollowPerson.svelte, decision 0138). A YouTube video's address asks
   whether to follow its channel, and a playlist's whether to follow the
@@ -26,9 +33,11 @@
   import { addFeed, editFeed, explain, type Choice } from "./feeds";
   import type { WhoKind } from "./shapes";
   import { question } from "./youtube";
+  import { siteName } from "./people";
 
   let {
     field = $bindable(),
+    asked = $bindable(""),
     feeds,
     onAdded,
     onOpen,
@@ -38,6 +47,8 @@
     alternative,
   }: {
     field?: HTMLInputElement;
+    /** Who was just found, while the question asks about them: a sheet's title becomes "{asked} is…". */
+    asked?: string;
     /** The feeds already followed, to name one that's added twice. */
     feeds: Feed[];
     onAdded: (feed: Feed) => void;
@@ -70,6 +81,8 @@
   let alreadyId: number | undefined = $state();
   /** Just added: "someone you might write to?", with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
+  /** Their newest title, shown with their site above the question. */
+  let latest: string | undefined = $state();
   let who: WhoKind = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
   /** Closed (Escape, Cancel, a press outside) while still looking or before Done: the feed is followed all the same. */
@@ -78,6 +91,7 @@
   let answering = false;
   onDestroy(() => {
     closed = true;
+    asked = "";
     // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which Edit can change.
     if (asking && !answering) onAdded(asking);
   });
@@ -130,6 +144,8 @@
         address = "";
         choices = [];
         asking = result.feed;
+        asked = result.feed.title;
+        latest = result.latest;
         who = result.feed.kind ?? "person";
         await tick();
         whoGroup?.querySelector<HTMLInputElement>("input:checked")?.focus();
@@ -164,6 +180,7 @@
     const refusal = await editFeed(feed.id, { kind: who, ...(title ? { title } : {}) });
     busy = false;
     asking = undefined;
+    asked = "";
     // The guess stands if the answer couldn't be kept; Edit can change it later.
     onAdded(refusal ? feed : { ...feed, kind: who, ...(title ? { title } : {}) });
   }
@@ -190,7 +207,8 @@
   no line of it sits left-aligned. In a sheet its name stands above it.
 -->
 <form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
-  <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Paste a website or feed URL</label>
+  {#if !asking}
+  <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Their website's address</label>
   <!-- In the welcome, a container, so its hint can step down a size on a small phone (welcome-field in app.css). -->
   <div class={["flex gap-2", !framed && "welcome-row"]}>
     <input
@@ -202,7 +220,7 @@
       autocomplete="off"
       autocapitalize="none"
       spellcheck="false"
-      placeholder={framed ? "example.com" : "Paste a website or feed URL"}
+      placeholder={framed ? "example.com" : "Their website's address"}
       aria-describedby="feed-address-status"
       aria-invalid={badAddress ? "true" : undefined}
       oninput={edited}
@@ -210,9 +228,10 @@
     />
     {#if !framed}
       <!-- Beside the field, its corners match the field's. -->
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">{asking ? "Done" : "Add"}</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Add</button>
     {/if}
   </div>
+  {/if}
   <!--
     In the welcome, everything under the field sits in a block that keeps
     room for a two-line message and the line after it (the page is centred,
@@ -274,24 +293,38 @@
 
     {#if asking}
       <!--
-        A person or a publication (decision 0163, owner's plan step 2), asked as what it means here:
-        someone you might write to. A choice of one, drawn as the choice among feeds is, with the guess chosen.
+        A person or a publication (decision 0163, the owner's core path, point 1), asked as a sentence
+        to finish: "Maya Chen is…". Two tiles side by side, each a real radio button under its icon,
+        name and meaning, the guess chosen; the chosen one has a 2px ink edge, so it shows by its
+        shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
-      <fieldset bind:this={whoGroup} class="mb-2 flex flex-col gap-1.5 self-stretch text-left">
-        <legend class="mb-1.5 text-ink">Is {asking.title} someone you might write to?</legend>
-        <div class="inset-group">
-          <label class="inset-row check-row flex-nowrap">
-            <input type="radio" name="feed-who" value="person" bind:group={who} />
-            <span class="flex min-w-0 flex-col py-1"><span>Yes, a person</span><span class="text-small text-muted">Listed under People</span></span>
-            <span aria-hidden="true" class="radio-mark shrink-0"></span>
+      <fieldset bind:this={whoGroup} class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
+        <legend class={framed ? "sr-only" : "mb-4 font-serif text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
+        {#if siteName(asking.siteUrl) || latest}
+          <div class="found flex flex-col gap-1">
+            {#if siteName(asking.siteUrl)}<span class="text-small break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
+            {#if latest}<span class="font-serif break-words text-ink">{latest}</span>{/if}
+          </div>
+        {/if}
+        <div class="tiles">
+          <label class="tile">
+            <input type="radio" name="feed-who" value="person" bind:group={who} aria-describedby="feed-who-person" />
+            <Icon name="person" size={36} />
+            <span class="font-semibold text-ink">A person</span>
+            <span id="feed-who-person" class="text-small text-ink-2">Someone you might write back to.</span>
           </label>
-          <label class="inset-row check-row flex-nowrap">
-            <input type="radio" name="feed-who" value="publication" bind:group={who} />
-            <span class="flex min-w-0 flex-col py-1"><span>No, a publication</span><span class="text-small text-muted">Listed under Publications</span></span>
-            <span aria-hidden="true" class="radio-mark shrink-0"></span>
+          <label class="tile">
+            <input type="radio" name="feed-who" value="publication" bind:group={who} aria-describedby="feed-who-publication" />
+            <Icon name="newspaper" size={36} />
+            <span class="font-semibold text-ink">A publication</span>
+            <span id="feed-who-publication" class="text-small text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>
         <span class="field-help mt-0">You can change this later in Edit.</span>
+        {#if !framed}
+          <!-- In the welcome, Done under the question, at its right, as in a sheet. -->
+          <button type="submit" aria-disabled={busy} class="btn-primary self-end">Done</button>
+        {/if}
       </fieldset>
     {/if}
 
@@ -327,6 +360,61 @@
 </form>
 
 <style>
+  /* What was found, quietly, on the grouped rows' grey. */
+  .found {
+    padding: 0.875rem 1rem;
+    border-radius: 0.625rem;
+    background-color: var(--group, var(--list));
+  }
+  /* Two tiles side by side, each the same size, whatever their words. */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.25rem 0.875rem;
+    border: 2px solid transparent;
+    border-radius: 0.75rem;
+    background-color: var(--group, var(--list));
+    color: var(--ink);
+    text-align: center;
+    cursor: pointer;
+  }
+  .tile input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .tile:has(input:checked) {
+    border-color: var(--ink);
+  }
+  .tile:has(input:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+  @media (hover: hover) {
+    .tile:hover {
+      background-color: var(--hover);
+    }
+  }
+  @media (forced-colors: active) {
+    .tile:has(input:checked) {
+      border-color: Highlight;
+    }
+    .tile:has(input:focus-visible) {
+      outline-color: CanvasText;
+    }
+  }
   /* What's above the list (title, words, field) takes about 37rem; the list keeps at least two rows. */
   .choices-scroll {
     max-height: max(10rem, calc(100dvh - 37rem));

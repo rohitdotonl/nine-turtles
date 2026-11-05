@@ -1,10 +1,15 @@
 <!--
   Write back (SPEC section 37, decision 0147): at the end of every article of
-  someone the reader follows, under its closing rule, one button, "Write back
-  to Tomas" (a person by their first name, `firstNameOf`), with the address
-  it writes to under it. It opens the reader's own
-  email app with the address and "Re: the title" filled in; nine turtles never
-  sends or reads that email.
+  someone the reader follows, under its closing rule, one solid ink button
+  with a paper plane, "Write back to Tomas Berg" (their full name, the one in
+  the sidebar; the owner's core path, points 6 and 7), with the address it
+  writes to under it. It's the only solid button in the reading pane. It opens
+  the reader's own email app with the address and "Re: the title" filled in;
+  nine turtles never sends or reads that email.
+
+  On their page (no article), the same button says "Write to Tomas Berg",
+  under their name, and opens the email app with the address only and an
+  empty subject (point 9).
 
   When nine turtles doesn't know their address (neither their feed nor its
   articles' text gives one), the button opens a small box in place, as Add a
@@ -24,16 +29,28 @@
   import Icon from "./Icon.svelte";
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
-  import { firstNameOf, placesOf } from "./people";
   import type { Article } from "./shapes";
   import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, siteOf, writeBackLink } from "./writeBack";
 
-  let { article, library }: { article: Article; library: LoadedLibrary } = $props();
+  let {
+    article,
+    feedId,
+    library,
+  }: {
+    /** The article it writes back about; none on their page, where it writes to them. */
+    article?: Article;
+    /** On their page: their row's place. */
+    feedId?: number;
+    library: LoadedLibrary;
+  } = $props();
 
-  let place = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
-  let name = $derived(firstNameOf(plainSourceName(library.shownAs(place)?.title ?? article.feedTitle), place ? placesOf(place, library.feeds ?? []) : []));
+  let place = $derived(library.feeds?.find((feed) => feed.id === (article?.feedId ?? feedId)));
+  let name = $derived(plainSourceName(library.shownAs(place)?.title ?? article?.feedTitle ?? ""));
   let address = $derived(place && addressFor(place, library.feeds ?? []));
-  let site = $derived(siteOf(place, article.link));
+  let site = $derived(siteOf(place, article?.link));
+  /** On their page: "Write to", an empty subject, under their name on the page's left edge. */
+  let verb = $derived(article ? "Write back to" : "Write to");
+  let subject = $derived(article?.title ?? "");
 
   let asking = $state(false);
   /** Looking on their site for the address, what it found, that it found none, or couldn't look. */
@@ -50,7 +67,7 @@
 
   // Another article starts with the button, not a half-typed address.
   $effect(() => {
-    void article.id;
+    void (article?.id ?? feedId);
     asking = false;
     looked = undefined;
     typed = "";
@@ -61,7 +78,7 @@
   export async function start() {
     if (!place) return;
     if (address) {
-      window.location.href = writeBackLink(address, article.title);
+      window.location.href = writeBackLink(address, subject);
       return;
     }
     asking = true;
@@ -69,10 +86,10 @@
     field?.focus();
     if (!site) return;
     looked = "looking";
-    const asked = article.id;
+    const asked = place.id;
     const answer = await lookOnTheirSite(place.id);
     // The reader may have moved on or closed the box meanwhile.
-    if (asked !== article.id || !asking) return;
+    if (asked !== place?.id || !asking) return;
     if (!answer.looked) {
       looked = "couldn't";
     } else if (!answer.address) {
@@ -104,7 +121,7 @@
       return;
     }
     // The email app opens while the press still counts as the reader's own; the address is kept meanwhile.
-    window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), article.title);
+    window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), subject);
     busy = true;
     const problem = await keepAddress(place.id, typed);
     if (problem) {
@@ -124,13 +141,13 @@
 </script>
 
 {#if place}
-  <div class="write-back" lang="en">
+  <div class={["write-back", !article && "on-page"]} lang="en">
     {#if asking}
       <form class="ask flex flex-col gap-4" aria-labelledby="write-back-title" onsubmit={write}>
         <div class="flex flex-col gap-1">
-          <p id="write-back-title" class="text-base font-semibold text-ink">Write back to {name}</p>
+          <p id="write-back-title" class="text-base font-semibold text-ink">{verb} {name}</p>
           <p class="text-small text-ink-2" aria-live="polite">
-            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press Write back.{:else if looked === "none"}nine turtles looked on their site and didn't find an address. Paste it here once and it's kept.{:else if looked === "couldn't"}nine turtles couldn't look on their site just now. Paste it here once and it's kept.{:else}nine turtles doesn't have their address yet. Paste it here once and it's kept.{/if}
+            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {article ? "Write back" : "Write"}.{:else if looked === "none"}No email address on their site. Paste it here and it's saved.{:else if looked === "couldn't"}nine turtles couldn't look on their site just now. Paste it here and it's saved.{:else}nine turtles doesn't have their address yet. Paste it here and it's saved.{/if}
           </p>
         </div>
         {#if site && !showingFound}
@@ -157,16 +174,16 @@
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
         <div class="flex flex-wrap gap-2">
-          <button type="submit" class="btn-primary" aria-disabled={busy}>Write back</button>
+          <button type="submit" class="btn-primary" aria-disabled={busy}>{article ? "Write back" : "Write"}</button>
           <button type="button" class="btn-quiet" onclick={notNow}>Not now</button>
         </div>
-        <p class="text-small text-ink-2">Sends from your own email. nine turtles never reads it.</p>
+        <p class="text-small text-ink-2">It sends from your own email.</p>
       </form>
     {:else if address}
-      <a class="btn" bind:this={written} title={tip(`Write back to ${name}`, "write-back")} href={writeBackLink(address, article.title)}>Write back to {name}</a>
+      <a class="btn-primary" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject)}><Icon name="send" size={18} />{verb} {name}</a>
       <p class="to">{address}</p>
     {:else}
-      <button type="button" class="btn" bind:this={opener} title={tip(`Write back to ${name}`, "write-back")} onclick={start}>Write back to {name}</button>
+      <button type="button" class="btn-primary" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={start}><Icon name="send" size={18} />{verb} {name}</button>
     {/if}
   </div>
 {/if}
@@ -183,8 +200,13 @@
     font-size: var(--text-base);
     line-height: 1.5;
   }
+  /* On their page: under their name, on the page's left edge, a little closer. */
+  .write-back.on-page {
+    align-items: flex-start;
+    margin-top: 0;
+  }
   /* A long name wraps rather than running off a phone. */
-  .write-back > .btn {
+  .write-back > .btn-primary {
     max-width: 100%;
     white-space: normal;
     text-align: center;
