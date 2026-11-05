@@ -106,9 +106,13 @@ pub const DOMAIN: &str = "in.nineturtles.app";
 /// How long Undo after New address can bring the old address back.
 const UNDO_FOR: i64 = 60 * 60;
 
-/// After `turtle-`: 8 letters of the app-password alphabet
-/// (`apps::ALPHABET`), about 40 bits, so addresses can't be guessed.
+/// After `turtle-`: 8 letters of `ALPHABET`, about 40 bits, so addresses
+/// can't be guessed.
 const LENGTH: usize = 8;
+
+/// The letters and digits an address is made of: no 0, 1, i, l or o,
+/// which are easy to mistake for one another when typed on a phone.
+const ALPHABET: &[u8] = b"abcdefghjkmnpqrstuvwxyz23456789";
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -552,8 +556,29 @@ fn domain(state: &AppState) -> &str {
 fn new_name() -> Result<String, getrandom::Error> {
     Ok(format!(
         "turtle-{}",
-        String::from_utf8_lossy(&crate::apps::random_letters(LENGTH)?)
+        String::from_utf8_lossy(&random_letters(LENGTH)?)
     ))
+}
+
+/// `count` random letters from `ALPHABET`, each equally likely. Newsletter
+/// addresses are made of them.
+fn random_letters(count: usize) -> Result<Vec<u8>, getrandom::Error> {
+    let mut letters = Vec::with_capacity(count);
+    while letters.len() < count {
+        let mut bytes = [0u8; 32];
+        getrandom::fill(&mut bytes)?;
+        // 248 is the largest multiple of 31 under 256: bytes at or above it
+        // are skipped, so every letter is equally likely.
+        let limit = u8::try_from(256 / ALPHABET.len() * ALPHABET.len()).unwrap_or(u8::MAX);
+        letters.extend(
+            bytes
+                .iter()
+                .filter(|byte| **byte < limit)
+                .map(|byte| ALPHABET[usize::from(*byte) % ALPHABET.len()]),
+        );
+    }
+    letters.truncate(count);
+    Ok(letters)
 }
 
 /// Gives the reader a new current address, retiring the one they had.
@@ -763,5 +788,20 @@ async fn undo_new_address(
         .into_response(),
         Ok(false) => (StatusCode::CONFLICT, Json(json!({ "error": "too-late" }))).into_response(),
         Err(error) => database_problem("bringing back a newsletter address", &error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn addresses_are_turtle_and_eight_unmistakable_letters() {
+        let name = new_name().unwrap();
+        let letters = name.strip_prefix("turtle-").unwrap();
+        assert_eq!(letters.len(), LENGTH);
+        assert!(letters.bytes().all(|letter| ALPHABET.contains(&letter)));
+        assert!(!letters.contains(['0', '1', 'i', 'l', 'o']));
+        assert_ne!(new_name().unwrap(), name);
     }
 }

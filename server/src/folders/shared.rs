@@ -1,6 +1,5 @@
-//! The folder actions every door shares (the screen, sync apps,
-//! assistants), so each is written once (ENGINEERING.md → "Keeping the code
-//! tidy").
+//! The folder actions every door shares (the screen and assistants), so
+//! each is written once (ENGINEERING.md → "Keeping the code tidy").
 
 use sqlx::SqliteConnection;
 
@@ -28,7 +27,7 @@ pub enum Renamed {
 }
 
 /// Renames one of the reader's folders to `name` (already through
-/// `clean_name`), the one way every door does it (the screen, sync apps,
+/// `clean_name`), the one way every door does it (the screen and
 /// assistants).
 pub async fn rename(
     connection: &mut SqliteConnection,
@@ -70,7 +69,7 @@ pub struct Deleted {
 }
 
 /// Deletes one of the reader's folders, the one way every door does it (the
-/// screen, sync apps, assistants). Its feeds stay followed; they just leave
+/// screen and assistants). Its feeds stay followed; they just leave
 /// it. Answers what Undo needs, or `None` when the reader has no
 /// such folder.
 pub async fn delete(

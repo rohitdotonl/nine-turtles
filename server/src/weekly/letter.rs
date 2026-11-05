@@ -30,11 +30,19 @@ pub struct Article {
 /// The subject every weekly email has.
 pub const SUBJECT: &str = "New from the people you read";
 
-/// The email's words. `since` finishes "Here's what the people you read
-/// wrote …" ("this week", "since Wednesday"); `home` opens nine turtles;
+/// The line, said once, to a reader who had chosen twice a week before it
+/// became once a week (decision 0184).
+pub const MOVED: &str = "This email now comes once a week, on Saturday mornings, instead of twice.";
+
+/// The email's words. `moved` adds `MOVED`; `home` opens nine turtles;
 /// `stop` is the link that turns the email off.
-pub fn compose(people: &[Person], since: &str, home: &str, stop: &str) -> String {
-    let mut body = format!("Here's what the people you read wrote {since}.\n");
+pub fn compose(people: &[Person], moved: bool, home: &str, stop: &str) -> String {
+    let mut body = String::from("Here's what the people you read wrote this week.\n");
+    if moved {
+        body.push('\n');
+        body.push_str(MOVED);
+        body.push('\n');
+    }
     for person in people.iter().take(MOST_PEOPLE) {
         body.push('\n');
         body.push_str(&one_line(&person.name));
@@ -127,7 +135,7 @@ mod tests {
         }];
         let body = compose(
             &people,
-            "this week",
+            false,
             "https://app.test/",
             "https://app.test/weekly-email#ticket=ab",
         );
@@ -145,12 +153,24 @@ mod tests {
     }
 
     #[test]
+    fn a_reader_who_had_chosen_twice_a_week_is_told_once() {
+        let body = compose(&[], true, "h", "s");
+        assert!(
+            body.starts_with(&format!(
+                "Here's what the people you read wrote this week.\n\n{MOVED}\n"
+            )),
+            "{body}"
+        );
+        assert!(!compose(&[], false, "h", "s").contains(MOVED));
+    }
+
+    #[test]
     fn a_long_list_is_cut_without_a_count() {
         let many = Person {
             name: "Busy".to_owned(),
             articles: (1..=9).map(|n| article(&format!("Post {n}"))).collect(),
         };
-        let body = compose(&[many], "this week", "h", "s");
+        let body = compose(&[many], false, "h", "s");
         assert!(
             body.contains("Post 3") && !body.contains("Post 4"),
             "{body}"

@@ -83,7 +83,7 @@ it qualifies.
 >    note in `docs/decisions/`.
 > 8. Untidy code (`docs/ENGINEERING.md` → "Keeping the code tidy"): a
 >    second copy of something that already exists, the same reader action
->    written again for another way in (web, sync API, MCP), a screen drawn
+>    written again for another way in (web, MCP), a screen drawn
 >    twice for phone and computer, old code the change replaced but left
 >    behind, a file growing toward its size limit that should be split
 >    first, or new code that one of the six "before writing code"

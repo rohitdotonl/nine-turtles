@@ -72,7 +72,7 @@ body {
 }
 
 /* One column for reading, 640px wide, centred on the page, as the front
-   page's letter (decision 0184): the top, the page and the footer share its
+   page's letter (decision 0185): the top, the page and the footer share its
    left edge. The text inside is the letter's: 21px on a 1.65 line (19px on
    a phone). */
 main {
@@ -113,7 +113,7 @@ a:focus-visible {
   padding: 8px 12px;
 }
 
-/* The top (decision 0184; decision 0169 first gave it to the front page):
+/* The top (decision 0185; decision 0169 first gave it to the front page):
    along the top of the centred column, the logo and name on the left and
    the website's places on the right, in quiet text. */
 .top {

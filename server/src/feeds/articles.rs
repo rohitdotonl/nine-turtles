@@ -1,6 +1,6 @@
 //! Reading articles (SPEC sections 7 and 32): one for the reading area, or
 //! several at once for reading offline, and the one way every reader of an
-//! article (screen, sync apps, assistants, exports) gets its text.
+//! article (screen, assistants, exports) gets its text.
 
 use axum::{
     Json,
@@ -117,8 +117,8 @@ pub(super) async fn read_several(
 /// Where a reader's articles come from: their own entries, each with its
 /// article, its feed and the reader's subscription to it (whose title is
 /// their name for the feed). Followed by the reader. Every list that shows
-/// articles with their text uses it: the reading area, sync apps
-/// (`greader`) and the starred export.
+/// articles with their text uses it: the reading area and the
+/// starred export.
 macro_rules! from_entries {
     () => {
         " FROM entries CROSS JOIN articles ON articles.id = entries.article_id
@@ -131,8 +131,8 @@ macro_rules! from_entries {
 }
 pub(crate) use from_entries;
 
-/// A stored article's text as every reader of it gets it: on screen, in
-/// sync apps, to assistants and in exports. Articles stored before trackers
+/// A stored article's text as every reader of it gets it: on screen, to
+/// assistants and in exports. Articles stored before trackers
 /// were taken out on arrival (Milestone 5, decision 0112) lose them here
 /// instead, and their pictures load as the reader reaches them. Newer
 /// articles come through unchanged.

@@ -150,16 +150,6 @@ async fn forgot_your_password_always_answers_the_same() {
     let email = "noor@example.com";
     let laptop = open_reader(&base, &outbox, email).await;
     let before = emails_to(&outbox, email).len();
-    let reader: i64 = sqlx::query_scalar("SELECT id FROM people WHERE email = ?")
-        .bind(email)
-        .fetch_one(&state.db)
-        .await
-        .unwrap();
-    sqlx::query("INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?, 'x', 0)")
-        .bind(reader)
-        .execute(&state.db)
-        .await
-        .unwrap();
 
     let forgot = |address: &'static str| {
         let base = base.clone();
@@ -216,16 +206,8 @@ async fn forgot_your_password_always_answers_the_same() {
     assert_eq!(reset.status(), StatusCode::OK);
     let phone = cookie_from(&reset);
     assert_eq!(session(&base, Some(&phone)).await["signed_in"], true);
-    // The other device is signed out, the app password (for other feed
-    // reader apps) is turned off, and the old password no longer works.
+    // The other device is signed out, and the old password no longer works.
     assert_eq!(session(&base, Some(&laptop)).await["signed_in"], false);
-    let app_passwords: i64 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM app_passwords WHERE person_id = ?")
-            .bind(reader)
-            .fetch_one(&state.db)
-            .await
-            .unwrap();
-    assert_eq!(app_passwords, 0);
     assert_eq!(
         sign_in(&base, email, READER_PASSWORD).await.status(),
         StatusCode::UNAUTHORIZED
@@ -568,10 +550,6 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
             "a setting",
         ),
         (
-            "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
-            "an app password",
-        ),
-        (
             "INSERT INTO plans (person_id, subscription_id, customer_id, status, access_until, updated_at)
              VALUES (?1, 'sub_' || ?1, 'cus_' || ?1, 'cancelled', 0, 0)",
             "a plan",
@@ -743,12 +721,11 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
         .unwrap();
     let db = &state.db;
 
-    // Some of their data, and the owner's, and two things of their account.
+    // Some of their data, and the owner's, and a setting of their account.
     for statement in [
         "INSERT INTO folders (person_id, name) VALUES (?, 'Essays')",
         "INSERT INTO rules (person_id, words, action, created_at) VALUES (?, 'Sponsored', 'mute', 0)",
         "INSERT INTO person_settings (person_id, name, value) VALUES (?, 'sort', 'oldest')",
-        "INSERT INTO app_passwords (person_id, password_hash, made_at) VALUES (?1, 'x' || ?1, 0)",
     ] {
         for whose in [person, 1] {
             sqlx::query(statement)

@@ -1,10 +1,10 @@
 //! Each reader's things are theirs alone (decision 0086): two readers share
 //! one running nine turtles, and the second tries on purpose to see, change
 //! or delete what belongs to the first, by number, through every door the
-//! screen and other apps use. Every try finds nothing, or leaves the first
+//! screen uses. Every try finds nothing, or leaves the first
 //! reader's things exactly as they were.
 //!
-//! This covers settings, the app password, folders and
+//! This covers settings, folders and
 //! rules (structure change 11), and following feeds, each feed's name and
 //! settings, and the read, starred and muted marks (structure change 12).
 //! A feed both readers follow is stored and fetched once. Undo buttons,
@@ -141,82 +141,6 @@ impl Reader {
     async fn ids(&self, list: &str) -> Vec<i64> {
         self.marks(list).await.iter().map(|marks| marks.0).collect()
     }
-
-    /// A fresh app password, and the app that uses it.
-    async fn app(&self) -> App {
-        let (status, made) = self.post("/api/apps/password", json!({})).await;
-        assert_eq!(status, StatusCode::OK);
-        App {
-            base: self.base.clone(),
-            password: made["password"].as_str().unwrap().to_owned(),
-        }
-    }
-}
-
-/// Another feed reader, signed in with a reader's app password.
-struct App {
-    base: String,
-    password: String,
-}
-
-impl App {
-    async fn get(&self, path: &str) -> Value {
-        let response = Client::new()
-            .get(format!("{}/api/greader/reader/api/0/{path}", self.base))
-            .header(
-                "authorization",
-                format!("GoogleLogin auth={}", self.password),
-            )
-            .send()
-            .await
-            .unwrap();
-        assert_eq!(response.status(), StatusCode::OK, "{path}");
-        serde_json::from_str(&response.text().await.unwrap()).unwrap()
-    }
-
-    async fn post(&self, path: &str, body: &str) -> StatusCode {
-        Client::new()
-            .post(format!("{}/api/greader/reader/api/0/{path}", self.base))
-            .header(
-                "authorization",
-                format!("GoogleLogin auth={}", self.password),
-            )
-            .header("content-type", "application/x-www-form-urlencoded")
-            .body(body.to_owned())
-            .send()
-            .await
-            .unwrap()
-            .status()
-    }
-
-    /// A list's articles, as (number, categories), from `stream/contents`.
-    async fn stream(&self, stream: &str) -> Vec<(i64, Vec<String>)> {
-        items(
-            &self
-                .get(&format!("stream/contents/{stream}?output=json"))
-                .await,
-        )
-    }
-}
-
-/// The articles in an app's answer, as (number, categories).
-fn items(answer: &Value) -> Vec<(i64, Vec<String>)> {
-    answer["items"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|item| {
-            let id = item["id"].as_str().unwrap();
-            let hex = id.rsplit('/').next().unwrap();
-            let categories = item["categories"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .map(|category| category.as_str().unwrap().to_owned())
-                .collect();
-            (i64::from_str_radix(hex, 16).unwrap(), categories)
-        })
-        .collect()
 }
 
 /// The address a feed is stored under.
@@ -428,70 +352,6 @@ async fn rules_stay_with_the_reader_who_made_them() {
     assert_eq!(mine.as_array().unwrap().len(), 1);
     assert_eq!(mine[0]["words"], "tomatoes");
     assert_eq!(mine[0]["paused"], false);
-}
-
-#[tokio::test]
-async fn an_app_password_says_whose_it_is() {
-    let (owner, other, _, _) = two_readers().await;
-    let (status, made) = owner.post("/api/apps/password", json!({})).await;
-    assert_eq!(status, StatusCode::OK);
-    let password = made["password"].as_str().unwrap().to_owned();
-    let (status, _) = owner
-        .post("/api/folders", json!({ "name": "Garden" }))
-        .await;
-    assert_eq!(status, StatusCode::CREATED);
-
-    // The second reader has none, and turning theirs off leaves the owner's.
-    assert_eq!(other.get("/api/apps").await["on"], json!(false));
-    let (status, _) = other.post("/api/apps/off", json!({})).await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
-    assert_eq!(owner.get("/api/apps").await["on"], json!(true));
-
-    // An app with the owner's password sees the owner's folders; one with
-    // the second reader's sees only theirs.
-    let (status, theirs) = other.post("/api/apps/password", json!({})).await;
-    assert_eq!(status, StatusCode::OK);
-    let theirs = theirs["password"].as_str().unwrap().to_owned();
-    assert_ne!(theirs, password);
-    let tags = |password: String| {
-        let base = owner.base.clone();
-        async move {
-            let response = Client::new()
-                .get(format!(
-                    "{base}/api/greader/reader/api/0/tag/list?output=json"
-                ))
-                .header("authorization", format!("GoogleLogin auth={password}"))
-                .send()
-                .await
-                .unwrap();
-            assert_eq!(response.status(), StatusCode::OK);
-            serde_json::from_str::<Value>(&response.text().await.unwrap()).unwrap()["tags"].clone()
-        }
-    };
-    let owners = tags(password.clone()).await;
-    assert!(owners.to_string().contains("label/Garden"), "{owners}");
-    let others = tags(theirs.clone()).await;
-    assert!(!others.to_string().contains("Garden"), "{others}");
-
-    // Through the app, the second reader can't rename or remove the
-    // owner's folder either.
-    for (path, body) in [
-        ("rename-tag", "s=user/-/label/Garden&dest=user/-/label/Mine"),
-        ("disable-tag", "s=user/-/label/Garden"),
-    ] {
-        Client::new()
-            .post(format!("{}/api/greader/reader/api/0/{path}", owner.base))
-            .header("authorization", format!("GoogleLogin auth={theirs}"))
-            .header("content-type", "application/x-www-form-urlencoded")
-            .body(body)
-            .send()
-            .await
-            .unwrap();
-    }
-    assert_eq!(
-        owner.get("/api/feeds").await["folders"][0]["name"],
-        json!("Garden")
-    );
 }
 
 #[tokio::test]
@@ -847,60 +707,6 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(refused["error"], "no-place");
 
-    // Through an app with their password, likewise.
-    let app = other.app().await;
-    assert_eq!(
-        app.get("subscription/list?output=json").await["subscriptions"],
-        json!([])
-    );
-    let counts = app.get("unread-count?output=json").await;
-    assert_eq!(counts["max"], 0);
-    assert!(
-        app.stream("user/-/state/com.google/reading-list")
-            .await
-            .is_empty()
-    );
-    assert!(app.stream(&format!("feed/{feed}")).await.is_empty());
-    assert!(
-        app.stream("user/-/state/com.google/starred")
-            .await
-            .is_empty()
-    );
-    let refs = app.get("stream/items/ids?output=json&n=100").await;
-    assert_eq!(refs["itemRefs"], json!([]));
-    let named: String = ids.iter().map(|id| format!("&i={id}")).collect();
-    let contents = app
-        .get(&format!("stream/items/contents?output=json{named}"))
-        .await;
-    assert!(items(&contents).is_empty());
-    for body in [
-        format!("a=user/-/state/com.google/read{named}"),
-        format!("r=user/-/state/com.google/starred{named}"),
-    ] {
-        assert_eq!(app.post("edit-tag", &body).await, StatusCode::OK);
-    }
-    assert_eq!(
-        app.post("mark-all-as-read", "s=user/-/state/com.google/reading-list")
-            .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        app.post(
-            "subscription/edit",
-            &format!("ac=edit&s=feed/{feed}&t=Mine&a=user/-/label/Theirs")
-        )
-        .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        app.post(
-            "subscription/edit",
-            &format!("ac=unsubscribe&s=feed/{feed}")
-        )
-        .await,
-        StatusCode::OK
-    );
-
     // The owner's feed, marks and name are exactly as they were.
     let mine = &owner.get("/api/feeds").await["feeds"][0];
     assert_eq!(mine["title"], "Garden notes");
@@ -1102,132 +908,6 @@ async fn each_readers_rules_act_only_on_their_own_marks() {
     assert_eq!(applied["ids"].as_array().unwrap().len(), 3);
     assert_eq!(other.get("/api/muted").await["count"], 0);
     assert_eq!(other.ids("view=unread").await.len(), 4);
-}
-
-#[tokio::test]
-async fn apps_see_and_change_only_their_readers_feeds_and_marks() {
-    let (owner, other, state, feed, _) = two_followers().await;
-    let (owners_app, others_app) = (owner.app().await, other.app().await);
-    let ids = owner.ids("view=all").await;
-
-    // Filing and renaming through the app is each reader's own.
-    assert_eq!(
-        owners_app
-            .post(
-                "subscription/edit",
-                &format!("ac=edit&s=feed/{feed}&a=user/-/label/Garden")
-            )
-            .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        others_app
-            .post(
-                "subscription/edit",
-                &format!("ac=edit&s=feed/{feed}&t=Theirs&a=user/-/label/Elsewhere")
-            )
-            .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        others_app
-            .post(
-                "subscription/edit",
-                &format!("ac=edit&s=feed/{feed}&r=user/-/label/Garden")
-            )
-            .await,
-        StatusCode::OK
-    );
-    let mine = owners_app.get("subscription/list?output=json").await["subscriptions"].clone();
-    assert_eq!(mine[0]["title"], "Garden notes");
-    assert_eq!(mine[0]["categories"][0]["label"], "Garden");
-    let theirs = others_app.get("subscription/list?output=json").await["subscriptions"].clone();
-    assert_eq!(theirs[0]["title"], "Theirs");
-    assert_eq!(theirs[0]["categories"][0]["label"], "Elsewhere");
-    assert_eq!(theirs[0]["categories"].as_array().unwrap().len(), 1);
-
-    // A folder's stream holds the feed only for the reader whose folder it is.
-    assert_eq!(owners_app.stream("user/-/label/Garden").await.len(), 3);
-    assert!(others_app.stream("user/-/label/Garden").await.is_empty());
-    assert_eq!(others_app.stream("user/-/label/Elsewhere").await.len(), 3);
-
-    // Marks through the app are the reader's own.
-    assert_eq!(
-        others_app
-            .post(
-                "edit-tag",
-                &format!("i={}&a=user/-/state/com.google/starred", ids[0])
-            )
-            .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        others_app
-            .post("mark-all-as-read", "s=user/-/label/Elsewhere")
-            .await,
-        StatusCode::OK
-    );
-    let others = others_app.stream(&format!("feed/{feed}")).await;
-    assert!(
-        others
-            .iter()
-            .all(|(_, tags)| tags.iter().any(|tag| tag.ends_with("/read")))
-    );
-    assert!(others[0].1.iter().any(|tag| tag.ends_with("/starred")));
-    let owners = owners_app.stream(&format!("feed/{feed}")).await;
-    assert!(owners.iter().all(|(_, tags)| {
-        !tags
-            .iter()
-            .any(|tag| tag.ends_with("/read") || tag.ends_with("/starred"))
-    }));
-    let counts = owners_app.get("unread-count?output=json").await;
-    assert_eq!(counts["max"], 3);
-    assert_eq!(others_app.get("unread-count?output=json").await["max"], 0);
-    let named: String = ids.iter().map(|id| format!("&i={id}")).collect();
-    let contents = items(
-        &owners_app
-            .get(&format!("stream/items/contents?output=json{named}"))
-            .await,
-    );
-    assert_eq!(contents.len(), 3);
-    assert!(
-        contents
-            .iter()
-            .all(|(_, tags)| !tags.iter().any(|tag| tag.ends_with("/read")))
-    );
-    assert_eq!(owner.get("/api/feeds").await["feeds"][0]["unread"], 3);
-    let user = others_app.get("user-info?output=json").await;
-    assert_eq!(user["userId"], "2");
-
-    // Unfollowing through the app leaves the owner's feed.
-    assert_eq!(
-        others_app
-            .post(
-                "subscription/edit",
-                &format!("ac=unsubscribe&s=feed/{feed}")
-            )
-            .await,
-        StatusCode::OK
-    );
-    assert_eq!(
-        others_app.get("subscription/list?output=json").await["subscriptions"],
-        json!([])
-    );
-    assert_eq!(
-        owner.get("/api/feeds").await["feeds"]
-            .as_array()
-            .unwrap()
-            .len(),
-        1
-    );
-    assert_eq!(
-        count(
-            &state,
-            "SELECT COUNT(*) FROM feeds WHERE unsubscribed_at IS NULL"
-        )
-        .await,
-        1
-    );
 }
 
 #[tokio::test]
@@ -1557,35 +1237,14 @@ async fn moving_to_an_address_someone_else_follows_keeps_everything_and_lets_go_
 async fn undo_buttons_never_bring_back_another_readers_feed() {
     let (owner, other, state, feed) = two_readers().await;
     let ids = owner.ids("view=all").await;
-    let app = other.app().await;
 
-    // While the owner follows it: searching that feed, asking an app for it
-    // or marking it all read finds and changes nothing of theirs.
+    // While the owner follows it: searching that feed finds nothing of theirs.
     assert_eq!(
         other
             .get(&format!("/api/search?q=tomatoes&feed={feed}"))
             .await["articles"],
         json!([])
     );
-    let refs = app
-        .get(&format!("stream/items/ids?output=json&n=100&s=feed/{feed}"))
-        .await;
-    assert_eq!(refs["itemRefs"], json!([]));
-    assert_eq!(
-        app.post("mark-all-as-read", &format!("s=feed/{feed}"))
-            .await,
-        StatusCode::OK
-    );
-    // "Subscribe" by its number only brings back a feed they followed.
-    assert_eq!(
-        app.post(
-            "subscription/edit",
-            &format!("ac=subscribe&s=feed/{feed}&t=Mine")
-        )
-        .await,
-        StatusCode::OK
-    );
-    assert_eq!(other.get("/api/feeds").await["feeds"], json!([]));
     // Putting it back in their own folder (Undo for moving) does nothing.
     let (_, theirs) = other
         .post("/api/folders", json!({ "name": "Theirs" }))
@@ -1615,11 +1274,6 @@ async fn undo_buttons_never_bring_back_another_readers_feed() {
         .await;
     assert_eq!(status, StatusCode::CONFLICT);
     assert_eq!(refused["error"], "too-late");
-    assert_eq!(
-        app.post("subscription/edit", &format!("ac=subscribe&s=feed/{feed}"))
-            .await,
-        StatusCode::OK
-    );
     assert_eq!(owner.get("/api/feeds").await["feeds"], json!([]));
     assert_eq!(other.get("/api/feeds").await["feeds"], json!([]));
     assert_eq!(

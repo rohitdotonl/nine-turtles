@@ -89,4 +89,3 @@ folder back.
 ## Good to know
 
 - Joining puts all their sources in the folders you chose.
-- Other feed reader apps, such as Reeder, still show each source on its own.

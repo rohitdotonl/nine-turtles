@@ -1,8 +1,8 @@
 //! The weekly email (SPEC section 39, decision 0150): the one thing nine
 //! turtles sends that the reader didn't just ask for, so it's theirs to
-//! choose. Off until they turn it on in Settings: once a week (Saturday
-//! morning) or twice (Wednesday and Saturday mornings), at 08:00 where they
-//! are; off in one press from the link at its foot.
+//! choose. Off until they turn it on in Settings: once a week, Saturday
+//! morning at 08:00 where they are (twice a week went, decision 0184); off
+//! in one press from the link at its foot.
 //!
 //! It names the people the reader follows who wrote something they haven't
 //! read since the last one, their titles and a line each (`letter`), never a
@@ -12,11 +12,13 @@
 //! decision 0154), so nobody can have it sent to a stranger.
 //!
 //! Its state is a few `person_settings` rows, which turning it off removes:
-//! `weekly` ("weekly" or "twice"), `weekly_offset` (the reader's minutes
+//! `weekly` ("weekly"), `weekly_offset` (the reader's minutes
 //! ahead of UTC, from their browser when they chose), `weekly_since` (when
 //! they chose), `weekly_sent_at` (the last time nine turtles looked for
 //! them) and `weekly_stop` (the BLAKE2s scrambles of the last few stop
-//! links' tickets, as hex; a ticket itself is only ever in its email).
+//! links' tickets, as hex; a ticket itself is only ever in its email), and
+//! `weekly_moved` for a reader who had chosen twice a week, until their next
+//! email tells them it's weekly now (structure change 43).
 
 use std::{collections::HashMap, time::Duration};
 
@@ -49,8 +51,7 @@ const LOOK_EVERY: Duration = Duration::from_secs(10 * 60);
 const HOUR: i64 = 8;
 const DAY: i64 = 86_400;
 const WEEK: i64 = 7 * DAY;
-/// Wednesday and Saturday, counting Monday as 0.
-const WEDNESDAY: i64 = 2;
+/// Saturday, counting Monday as 0.
 const SATURDAY: i64 = 5;
 /// How many emails back a stop link still works.
 const STOP_LINKS_KEPT: usize = 10;
@@ -63,13 +64,12 @@ pub fn routes() -> Router<AppState> {
         .route("/api/weekly-email/stop", post(stop))
 }
 
-/// How often the email comes.
+/// Whether the email comes: once a week, or not at all.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Often {
     Off,
     Weekly,
-    Twice,
 }
 
 impl Often {
@@ -77,14 +77,12 @@ impl Often {
         match self {
             Self::Off => "off",
             Self::Weekly => "weekly",
-            Self::Twice => "twice",
         }
     }
 
     fn from_stored(text: Option<&str>) -> Self {
         match text {
             Some("weekly") => Self::Weekly,
-            Some("twice") => Self::Twice,
             _ => Self::Off,
         }
     }
@@ -94,7 +92,6 @@ impl Often {
         match self {
             Self::Off => &[],
             Self::Weekly => &[SATURDAY],
-            Self::Twice => &[WEDNESDAY, SATURDAY],
         }
     }
 }
@@ -112,21 +109,6 @@ pub fn latest_due(often: Often, offset: i64, at: i64) -> Option<i64> {
         let due = day * DAY + HOUR * 3600;
         (often.days().contains(&weekday) && due <= local).then_some(due - shift)
     })
-}
-
-/// Words for the time the email covers: "this week", or for twice a week
-/// "since Wednesday" or "since Saturday".
-fn since_words(often: Often, offset: i64, due: i64) -> &'static str {
-    if often != Often::Twice {
-        return "this week";
-    }
-    match latest_due(often, offset, due - 1)
-        .map(|before| (before + offset * 60).div_euclid(DAY))
-        .map(|day| (day + 3).rem_euclid(7))
-    {
-        Some(WEDNESDAY) => "since Wednesday",
-        _ => "since Saturday",
-    }
 }
 
 async fn setting(db: &SqlitePool, person: i64, name: &str) -> Result<Option<String>, sqlx::Error> {
@@ -221,7 +203,8 @@ async fn turn_on(
 async fn turn_off(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
     sqlx::query(
         "DELETE FROM person_settings WHERE person_id = ?
-         AND name IN ('weekly', 'weekly_offset', 'weekly_since', 'weekly_sent_at', 'weekly_stop')",
+         AND name IN ('weekly', 'weekly_offset', 'weekly_since', 'weekly_sent_at', 'weekly_stop',
+             'weekly_moved')",
     )
     .bind(person)
     .execute(db)
@@ -287,6 +270,8 @@ struct Chosen {
     since: i64,
     sent_at: Option<i64>,
     stop: String,
+    /// Had chosen twice a week: the next email says it's weekly now.
+    moved: bool,
 }
 
 /// Sends the email to each reader it's due for at `at`, and answers how
@@ -319,6 +304,7 @@ pub async fn send_due(db: &SqlitePool, mailer: &Mailer, at: i64) -> Result<usize
             since: number("weekly_since").unwrap_or(at),
             sent_at: number("weekly_sent_at"),
             stop: values.get("weekly_stop").cloned().unwrap_or_default(),
+            moved: values.contains_key("weekly_moved"),
             address,
         };
         // One reader's trouble never keeps the others' emails back.
@@ -364,10 +350,19 @@ async fn send_one(
     keep_stop(db, chosen, &ticket).await?;
     let body = letter::compose(
         &people,
-        since_words(chosen.often, chosen.offset, due),
+        chosen.moved,
         &mailer.home(),
         &mailer.link(STOP_PAGE, &ticket),
     );
+    // The one-time line is spent once the email is handed to the mailer:
+    // a delivery that later fails loses it, which is fine for a courtesy
+    // note (the switch in Settings says when it comes).
+    if chosen.moved {
+        sqlx::query("DELETE FROM person_settings WHERE person_id = ? AND name = 'weekly_moved'")
+            .bind(chosen.person)
+            .execute(db)
+            .await?;
+    }
     mailer.send_later(&chosen.address, letter::SUBJECT, body, "a weekly email");
     Ok(true)
 }
@@ -489,24 +484,5 @@ mod tests {
             Some(SATURDAY_EIGHT - WEEK + 300 * 60)
         );
         assert_eq!(latest_due(Often::Off, 0, SATURDAY_EIGHT), None);
-    }
-
-    #[test]
-    fn twice_a_week_is_wednesday_and_saturday() {
-        let wednesday = SATURDAY_EIGHT - 3 * DAY;
-        assert_eq!(
-            latest_due(Often::Twice, 0, SATURDAY_EIGHT - 1),
-            Some(wednesday)
-        );
-        assert_eq!(
-            latest_due(Often::Twice, 0, SATURDAY_EIGHT + DAY),
-            Some(SATURDAY_EIGHT)
-        );
-        assert_eq!(
-            since_words(Often::Twice, 0, SATURDAY_EIGHT),
-            "since Wednesday"
-        );
-        assert_eq!(since_words(Often::Twice, 0, wednesday), "since Saturday");
-        assert_eq!(since_words(Often::Weekly, 0, SATURDAY_EIGHT), "this week");
     }
 }

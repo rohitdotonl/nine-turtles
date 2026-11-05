@@ -1,7 +1,7 @@
 //! Notes and highlights (SPEC section 42, decision 0164): the reader's
 //! highlights on articles, each with an optional note; one note on a whole
-//! article; and one note on each person. Each reader's alone: other readers,
-//! other apps and the weekly email never see them; the reader's own AI
+//! article; and one note on each person. Each reader's alone: other readers
+//! and the weekly email never see them; the reader's own AI
 //! assistant can (SPEC section 33).
 //!
 //! A highlighted or noted article is kept forever, like a starred one: the

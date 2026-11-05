@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "plug" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -177,11 +177,6 @@
     <path d="M2.75 10s2.75-5.25 7.25-5.25S17.25 10 17.25 10 14.5 15.25 10 15.25 2.75 10 2.75 10Z" />
     <circle cx="10" cy="10" r="2.25" />
     <path d="M3.75 3.75l12.5 12.5" />
-  {:else if name === "plug"}
-    <!-- Settings › Other apps: a plug. -->
-    <path d="M7.25 3.5v3M12.75 3.5v3" />
-    <path d="M5.25 6.5h9.5v2.75a4.75 4.75 0 0 1-9.5 0Z" />
-    <path d="M10 14v2.75" />
   {:else if name === "robot"}
     <!-- Settings › Connected assistants: a robot's head, its antenna and eyes. -->
     <rect x="3.75" y="6.75" width="12.5" height="9" rx="2.5" />

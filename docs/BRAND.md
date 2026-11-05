@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 5 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0184).*
+*Every brand decision on one page. Last updated: 5 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -106,7 +106,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 
 ## The website
 
-- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. Every page wears the front page's look: one centred 640px column with the logo, name and places along its top, the letter's 21px text, and no grey band (Rohit's ask on 5 November 2026; live, decision 0184, replacing the grey sidebar band of 0153). The front page is a letter, with its own larger sizes ("Hello," large, one line set large, the signature; decision 0169; sizes in DESIGN.md Part 2).
+- **Look:** the same as the app: ink only, Literata and Atkinson, one left edge, generous space. Every page wears the front page's look: one centred 640px column with the logo, name and places along its top, the letter's 21px text, and no grey band (Rohit's ask on 5 November 2026; live, decision 0185, replacing the grey sidebar band of 0153). The front page is a letter, with its own larger sizes ("Hello," large, one line set large, the signature; decision 0169; sizes in DESIGN.md Part 2).
 - **Copy:** the settled positioning copy, word for word (above, under "Name and words"); the front page is Rohit's letter, a draft he edits himself (decision 0169).
 
 ## Where the details live
