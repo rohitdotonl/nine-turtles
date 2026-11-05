@@ -72,9 +72,9 @@ nine turtles never joins anyone by itself, and never asks: only you do.
 
 ## A source's own settings
 
-In Edit, press › beside a source. There you choose its kind,
-how often to check, whether articles open on their website, and pausing for
-a while. With one source, these settings are in Edit itself.
+In Edit, press › beside a source. There you can pause it for a while, and,
+for a YouTube channel, choose whether Shorts and live streams show. With one
+source, these settings are in Edit itself.
 
 To split a source off again, press **Take out of Alpha** at the foot. It
 becomes a person or publication of its own, with **Undo**.

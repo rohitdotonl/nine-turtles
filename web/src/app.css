@@ -598,7 +598,7 @@ textarea {
     line-height: 1.4;
   }
   /*
-    A field's helper line (Edit feed's "Optional: a new folder…"): 13px in
+    A field's helper line (Edit's "Type a name to make a folder."): 13px in
     the muted grey, 6px under its field, starting on the field's own left
     edge, the label column, never indented past it (decision 0052).
   */

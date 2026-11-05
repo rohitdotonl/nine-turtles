@@ -100,6 +100,8 @@ async fn the_last_article_left_partway_is_offered_on_every_device_until_let_go()
     let offered = offer(&base, &cookie).await;
     assert_eq!(offered["article"]["title"], "The long walk home");
     assert_eq!(offered["writer"], "Ana");
+    // The writer is the offer's own; a person's article in it carries none of its own (the core path, point 4).
+    assert!(offered["article"].get("writer").is_none(), "{offered}");
     assert_eq!(offered["block"], 3);
     assert_eq!(offered["within"], 0.5);
 

@@ -30,7 +30,7 @@ export type Feed = {
   place?: PlaceKind;
   /** Someone or something (decision 0163): a place joined to others is always a person's. */
   kind?: WhoKind;
-  /** When the reader followed it (seconds since 1970), for "Following since". */
+  /** When the reader followed it (seconds since 1970), which orders a person's places. */
   addedAt?: number;
   /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
   places?: number[];

@@ -73,7 +73,7 @@ struct FeedRow {
     /// "person" or "publication" (decision 0163): always a person for a
     /// place joined to others.
     kind: String,
-    /// When the reader followed it, for the person's page's "Following since".
+    /// When the reader followed it, which orders a person's places.
     added_at: i64,
     /// A YouTube channel's feed, whose Shorts and live streams are sorted
     /// out (decision 0144), and whether the reader switched each on.

@@ -79,7 +79,7 @@
   /** The address the choices were found at: Add adds the chosen one while the field still holds it. */
   let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
-  /** Just added: "someone you might write to?", with nine turtles' guess chosen (decision 0163), before it opens. */
+  /** Just added: "{title} is…" a person or a publication, with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
   /** Their newest title, shown with their site above the question. */
   let latest: string | undefined = $state();
