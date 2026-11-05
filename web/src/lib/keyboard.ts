@@ -8,7 +8,7 @@
 // working. Tooltips and menus read their keys from it too. The keys are the
 // same for every reader: choosing keys of your own (decision 0110) was
 // removed in step 5 of the owner's review.
-import { inSidebar } from "./panes";
+import { inSidebar, paneTo } from "./panes";
 import type { View } from "./router";
 
 export type Action =
@@ -271,7 +271,8 @@ export function createKeyReader() {
     // Home and End stay with a control that moves by them: a menu, a row of choices, a list that scrolls.
     if ((name === "Home" || name === "End") && takesHome(press.target)) return undefined;
     // ← and → stay with what moves by them: a field, a menu, a row of choices, the podcast player.
-    if ((name === "ArrowLeft" || name === "ArrowRight") && takesArrows(press.target)) return undefined;
+    // Where there's no pane that way (at either end, or on a phone), they stay the browser's.
+    if ((name === "ArrowLeft" || name === "ArrowRight") && (takesArrows(press.target) || (typeof document !== "undefined" && !paneTo(name === "ArrowRight" ? 1 : -1)))) return undefined;
     // ↑ and ↓ are nine turtles' only in the sidebar: the list moves by them itself, and the article scrolls.
     if ((name === "ArrowUp" || name === "ArrowDown") && (!inSidebar(press.target) || takesArrows(press.target))) return undefined;
     return single.get(name);
@@ -305,14 +306,25 @@ function takesHome(target: EventTarget | null): boolean {
   return target.closest("input, select, textarea, [contenteditable], iframe, [role^='menuitem'], [role='tab'], [role='option'], [role='slider'], [role='radio']") !== null;
 }
 
-/** Whether the arrow keys belong to what has the keyboard's place: a field, a menu, a row of choices, a slider, a player, the pane's resizer. */
+/**
+ * Whether the arrow keys belong to what has the keyboard's place: a field, a
+ * menu, a row of choices, a slider, the podcast player (and its bar), the
+ * pane's resizer, or something in the article wider than the page, such as a
+ * code block or a table, which ← and → scroll sideways.
+ */
 function takesArrows(target: EventTarget | null): boolean {
   if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
-  return (
+  if (
     target.closest(
-      "input, select, textarea, [contenteditable], iframe, audio, video, [role^='menu'], [role='tab'], [role='option'], [role='listbox'], [role='slider'], [role='radio'], [role='radiogroup'], [role='separator']",
+      "input, select, textarea, [contenteditable], iframe, audio, video, [role^='menu'], [role='tab'], [role='option'], [role='listbox'], [role='slider'], [role='radio'], [role='radiogroup'], [role='separator'], [aria-label='Episode player'], [aria-label='Now playing']",
     ) !== null
-  );
+  )
+    return true;
+  const article = target.closest(".reading-scroller");
+  for (let at: HTMLElement | null = article ? target : null; at && at !== article; at = at.parentElement) {
+    if (at.scrollWidth > at.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(at).overflowX)) return true;
+  }
+  return false;
 }
 
 function isTyping(target: EventTarget | null): boolean {

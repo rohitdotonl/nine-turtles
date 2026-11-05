@@ -45,7 +45,7 @@ keys, points 16 and 17, in a second change the same day):
   keyboard between the sidebar, the list and the article ("Move between
   panes"); `↑` and `↓` move inside the one you're in: the sidebar's rows,
   the list's articles, or scrolling the article. In a field, a menu, a row
-  of choices or the podcast player, the arrows keep their usual job. This
+  of choices or the podcast player, the arrows keep their usual job, as they do in a code block or table wider than the page. This
   ends decision 0180's "no keys for moving between panes".
 
 **Why.** Each step should say what it means for the reader, in their words,

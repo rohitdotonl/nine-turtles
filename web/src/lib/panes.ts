@@ -24,16 +24,22 @@ function landingIn(pane: HTMLElement): HTMLElement | null {
   return pane.querySelector<HTMLElement>("h2[tabindex='-1']") ?? pane.querySelector<HTMLElement>("h2");
 }
 
-/** ← and →: the pane before or after the one the keyboard is in. Outside every pane, → starts at the list. */
-export function movePane(step: 1 | -1): void {
+/** The pane before or after the one the keyboard is in, and where in it the keyboard lands; outside every pane, the list. */
+export function paneTo(step: 1 | -1): { pane: HTMLElement; landing: HTMLElement } | undefined {
+  if (typeof document === "undefined") return undefined;
   const panes = panesShown();
   const at = document.activeElement;
   const here = panes.findIndex((pane) => pane.contains(at));
-  const next = here === -1 ? panes.findIndex((pane) => pane.id === "list-pane") : here + step;
-  const pane = panes[next];
-  if (!pane) return;
-  const landing = landingIn(pane);
-  if (!landing) return;
+  const pane = panes[here === -1 ? panes.findIndex((each) => each.id === "list-pane") : here + step];
+  const landing = pane ? landingIn(pane) : null;
+  return pane && landing ? { pane, landing } : undefined;
+}
+
+/** ← and →: the pane before or after the one the keyboard is in. */
+export function movePane(step: 1 | -1): void {
+  const found = paneTo(step);
+  if (!found) return;
+  const { pane, landing } = found;
   if (!landing.hasAttribute("tabindex") && !landing.matches("a[href], button")) landing.setAttribute("tabindex", "-1");
   landing.focus({ preventScroll: !pane.matches(SIDEBAR) && pane.id !== "list-pane" });
 }

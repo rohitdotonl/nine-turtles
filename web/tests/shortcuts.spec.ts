@@ -150,6 +150,15 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("heading", { level: 2, name: folder })).toHaveCount(0);
     await expect(page).not.toHaveURL(inFolder);
 
+    // From a folder's open/close button, ↓ goes to the row under it, ↑ to the folder's own row.
+    await toggle.focus();
+    await page.keyboard.press("ArrowUp");
+    await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toBeFocused();
+    await toggle.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).not.toBeFocused();
+    await expect(sidebar(page).locator("a[href]:focus")).toHaveCount(1);
+
     // e opens Edit: in their list, theirs; in the folder's, Edit folder (the owner's core path, point 16).
     await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
     await appReady(page);
@@ -189,6 +198,24 @@ test.describe("on a wide window", () => {
     // → goes back to the list and to the article.
     await page.keyboard.press("ArrowRight");
     await expect(rows.first()).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(title).toBeFocused();
+    // Something in the article wider than the page (a code block, a table) keeps ← and → to scroll it sideways.
+    const wide = await title.evaluate((heading) => {
+      const pre = document.createElement("pre");
+      pre.tabIndex = 0;
+      pre.style.cssText = "overflow-x: auto; white-space: pre; max-width: 100%";
+      pre.textContent = "x".repeat(2000);
+      heading.after(pre);
+      pre.focus();
+      return pre.scrollLeft;
+    });
+    expect(wide).toBe(0);
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator(".article pre")).toBeFocused();
+    await expect.poll(() => page.locator(".article pre").evaluate((pre) => pre.scrollLeft)).toBeGreaterThan(0);
+    // At the right end, → is the browser's own: the keyboard stays on the title.
+    await title.focus();
     await page.keyboard.press("ArrowRight");
     await expect(title).toBeFocused();
     // In a field (the sidebar's), the arrows are the field's.
