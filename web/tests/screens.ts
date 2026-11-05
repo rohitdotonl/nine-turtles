@@ -104,6 +104,18 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // Once someone is found: "… is…", with two tiles (the owner's core path, point 1).
+    name: "add-feed-question",
+    path: "/add",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/maya-${Date.now()}-${Math.floor(Math.random() * 1e6)}/`);
+      await page.keyboard.press("Enter");
+      await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
+    },
+  },
+  {
     name: "article",
     path: "/all",
     signedIn: true,
@@ -179,6 +191,19 @@ export const SCREENS: Screen[] = [
       await page.goto(new URL(`/people/${id}/edit`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("heading", { level: 2, name: /^Edit / })).toBeVisible();
+    },
+  },
+  {
+    // Their page: Write to under their name (point 9).
+    name: "who-page",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const id = await follow(page, shelf("garden-letters"));
+      await page.goto(new URL(`/people/${id}/about`, page.url()).href);
+      await appReady(page);
+      await expect(page.getByRole("button", { name: /^Write to / }).or(page.getByRole("link", { name: /^Write to / }))).toBeVisible();
     },
   },
   {

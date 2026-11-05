@@ -71,7 +71,9 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
-  await expect(about).toContainText("A person");
+  // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
+  await expect(about).not.toContainText("A person");
+  await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();
   await expect(
     about.getByRole("link", { name: `${ana}.example` }),
   ).toBeVisible();

@@ -462,13 +462,13 @@ test.describe("on a phone", () => {
     expect(Math.abs((await textStart(page.locator(".reading-sample p"))) - 36)).toBeLessThan(1.5);
     near20((await page.locator(".inset-group").first().boundingBox())!.x);
 
-    // Add: its title and the line under it.
+    // Add: its title and the field's name under it.
     await page.goto(new URL("/add", FEEDS_APP).href);
     await appReady(page);
     const add = page.getByRole("heading", { level: 2, name: "Add a person or publication" });
     await expect(add).toBeVisible();
     near20(await textStart(add));
-    near20(await textStart(page.getByText(/finds the feed/).first()));
+    near20(await textStart(page.getByText("Their website's address", { exact: true }).first()));
   });
 
   test("the search field waits behind a Search button beside More, so the list starts under its title (decision 0060)", async ({ page }) => {

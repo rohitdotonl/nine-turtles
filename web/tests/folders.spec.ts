@@ -125,10 +125,13 @@ test("a feed put in two folders appears under both, with its unread dot in each"
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.locator("#list-heading")).toContainText(`Renamed ${blog}`);
 
-  // Folders are listed with their dots; their feeds show when opened.
+  // Folders are listed with their dots. Each one Edit made or chose opened, to show them in it
+  // (the owner's core path, point 14); its arrow closes and opens it again.
   for (const folder of [first, second]) {
     await expect(sidebar(page).getByRole("link", { name: `${folder} unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
