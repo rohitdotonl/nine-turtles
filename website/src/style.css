@@ -37,7 +37,6 @@
   --muted: #5f5f64;
   --line: #dddddf;
   --tone: #f7f7f7;
-  --tone-2: #efeff1;
   --pill: #ececec;
   --serif: "Literata", Georgia, serif;
   --sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
@@ -51,7 +50,6 @@
     --muted: #a4a4a8;
     --line: #3b3b3b;
     --tone: #1a1a1a;
-    --tone-2: #232323;
     --pill: #2c2c2c;
   }
 }
@@ -77,13 +75,16 @@ body {
    page's letter (decision 0184): the top, the page and the footer share its
    left edge. The text inside is the letter's: 21px on a 1.65 line (19px on
    a phone). */
-main,
-footer {
+main {
   max-width: calc(40rem + 40px);
   margin: 0 auto;
   padding: 0 20px;
 }
-main {
+footer {
+  width: min(40rem, 100% - 40px);
+  margin: 0 auto;
+}
+main:not(.front) {
   font-size: 1.3125rem;
   line-height: 1.65;
 }
@@ -134,8 +135,7 @@ a:focus-visible {
   padding: 0;
   list-style: none;
 }
-.top li + li,
-.top .places {
+.top li + li {
   margin-top: 0;
 }
 .top a {
@@ -199,7 +199,7 @@ h2 {
 
 h3 {
   margin: 2rem 0 0.5rem;
-  font-size: 1.3125rem;
+  font-size: 1.5rem;
 }
 
 p {
@@ -243,7 +243,10 @@ code {
   font-size: 0.875rem;
 }
 .kicker {
-  margin: 5rem 0 -1.25rem;
+  margin: 5rem 0 0;
+}
+.kicker + h1 {
+  margin-top: 1rem;
 }
 .kicker a {
   display: inline-flex;
@@ -559,7 +562,7 @@ h1 + .byline {
    ends with its related pages, under a hairline, in the interface face. */
 .help-group h2 {
   margin: 2.5rem 0 0.5rem;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
 }
 .help-list {
   margin: 0;
@@ -770,7 +773,7 @@ footer .links.small a {
 /* Smaller text and headings on a phone, as the front page's letter, so a
    title fits in two or three lines. */
 @media (max-width: 760px) {
-  main {
+  main:not(.front) {
     font-size: 1.1875rem;
   }
   h1 {
@@ -781,7 +784,7 @@ footer .links.small a {
     font-size: 1.5rem;
   }
   h3 {
-    font-size: 1.1875rem;
+    font-size: 1.3125rem;
   }
   .lede {
     font-size: 1.3125rem;
