@@ -1,7 +1,9 @@
 # 0153: The website wears the brand
 
 *Partly replaced by [0169](0169-front-page-letter.md): the front page is
-Rohit's letter, with no band and its own sizes. The rest stands.*
+Rohit's letter, with no band and its own sizes. Then replaced by
+[0185](0185-website-pages-match-the-front-page.md): every page has the front
+page's top and the letter's text, so the band and the one 20px size are gone.*
 
 *3 November 2026. Rohit chose the direction ("G set as C") on 2 November
 while trying mockups on his Mac, and said yes to building the full front

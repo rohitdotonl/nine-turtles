@@ -10,7 +10,7 @@ One drawing at every size. Its box ends at the turtles' edges and the
 shells' feet, so beside the name it stands on the name's baseline:
 
 - the logo beside the name, in the app (`web/src/lib/Logo.svelte`) and the
-  website's band (`website/src/_includes/base.njk`);
+  website's top (`website/src/_includes/base.njk`);
 - `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink.
 
 `nine-turtles-icon.svg` is the app icon: a black tile `#141414` with the

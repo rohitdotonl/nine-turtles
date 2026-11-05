@@ -18,8 +18,8 @@ letter you can answer shows what nine turtles is about before anyone signs up.
   "P.S. Write back to me". The words are a draft he edits himself.
 - **For this page only,** decision 0153's one 20px text size and the grey
   band go: the page has the name and the website's places along its top, one
-  centred column 640px wide, and its own sizes. 0153 stays for every other
-  page. "On this page" goes with the band.
+  centred column 640px wide, and its own sizes. 0153 stayed for every other
+  page until 0185 gave them all the front page's look. "On this page" goes with the band.
 - **The brand sheet's "no stories or metaphors (letters, fountain pens)"**
   stays, with one exception: this page is Rohit's own letter, his true story
   in his voice. Nothing else takes a letter's form.
