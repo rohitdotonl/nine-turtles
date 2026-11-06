@@ -55,7 +55,7 @@ test("new items wait for r, and mark all as read never touches them", async ({ p
 
   // Mark all as read without pressing r: only the three on screen.
   await page.keyboard.press("Shift+A");
-  await expect(page.getByRole("status").filter({ hasText: "Marked 3 articles as read" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Marked 3 articles as read." })).toBeVisible();
 
   // r: the new article appears at once, still unread; the line is quiet again.
   await page.keyboard.press("r");

@@ -3,6 +3,7 @@
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { UNREACHABLE } from "./messages";
 import { deviceText, setDeviceText } from "./device";
 
 /**
@@ -116,9 +117,9 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
     case "password-missing":
       return "No password has been set yet. The setup guide explains how to set one.";
     case "password-invalid":
-      return "The password setting isn't valid. Run nine-turtles set-password again and paste the whole line.";
+      return "The password setting isn't valid. The setup guide explains how to set it again.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 

@@ -137,7 +137,7 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await expect(question).toContainText("You highlighted or noted 1 of their articles and wrote a note on them.");
   await expect(question.getByRole("button", { name: "Keep them" })).toBeFocused();
   await question.getByRole("button", { name: "Keep them" }).click();
-  await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();
+  await expect(page.getByText(`Unsubscribed from Blog ${blog}.`)).toBeVisible();
 });
 
 test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
@@ -158,6 +158,6 @@ test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
   const asked = page.waitForRequest((request) => request.url().endsWith("/api/writers/unsubscribe") && request.postDataJSON()?.remove_kept === true);
   await question.getByRole("button", { name: "Remove them too" }).click();
   await asked;
-  await expect(page.getByText(`Unsubscribed from Blog ${blog}`)).toBeVisible();
+  await expect(page.getByText(`Unsubscribed from Blog ${blog}.`)).toBeVisible();
   await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
 });

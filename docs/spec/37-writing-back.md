@@ -74,8 +74,8 @@ V1, item 2). Its look gets a refinement round.*
   Write back to keep it (a page can show someone else's address too). When
   it finds none, "No email address on their site. Paste it here and it's
   saved." (point 8). When it couldn't look (their site didn't answer, or
-  nine turtles can't be reached), "nine turtles couldn't look on their site
-  just now. Paste it here and it's saved."
+  nine turtles can't be reached), "Their site couldn't be checked for an
+  address. Paste it here and it's saved."
   Once the reader changes a found address, the box is as before. With no website known it
   doesn't look, and says "nine turtles doesn't have their address yet.
   Paste it here and it's saved."; then **Find it on their site** (an everyday button that opens their

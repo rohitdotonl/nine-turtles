@@ -88,7 +88,7 @@ test.describe("on a wide window", () => {
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     // A screen reader hears it, though the line above the list stays quiet.
-    await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read" })).toBeAttached();
+    await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read." })).toBeAttached();
     const title = row(page, blog, NEWEST).locator("span:not([aria-hidden])").first();
     await expect(title).toHaveCSS("font-weight", "400");
     await expect(row(page, blog, MIDDLE).locator("span:not([aria-hidden])").first()).toHaveCSS("font-weight", "600");
@@ -126,7 +126,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("m");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
-    await expect(line(page)).toHaveText("Marked as unread");
+    await expect(line(page)).toHaveText("Marked as unread.");
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
     expect((await row(page, blog, NEWEST).boundingBox())!.y).toBe(before);
     const undo = (await page.getByRole("button", { name: "Undo" }).boundingBox())!;
@@ -162,7 +162,7 @@ test.describe("on a wide window", () => {
     for (const title of [NEWEST, MIDDLE, OLDEST]) {
       await expect(row(page, blog, title)).not.toHaveAccessibleName(/, unread/);
     }
-    await expect(line(page)).toHaveText("Marked 3 articles as read");
+    await expect(line(page)).toHaveText("Marked 3 articles as read.");
     // No unread articles: no number at all.
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog}`);
 
@@ -185,7 +185,7 @@ test.describe("on a wide window", () => {
     await expect(markAll).toBeFocused();
     await expect(markAll).toHaveAttribute("aria-keyshortcuts", "Shift+A");
     await page.keyboard.press("Enter");
-    await expect(line(page)).toHaveText("Marked 3 articles as read");
+    await expect(line(page)).toHaveText("Marked 3 articles as read.");
     // The menu closes, and the keyboard goes back to its button.
     await expect(page.getByRole("menu")).toHaveCount(0);
     await expect(more).toBeFocused();
@@ -201,7 +201,7 @@ test.describe("on a wide window", () => {
   test("the note goes once you move on or close it, never on a timer, and u still undoes", async ({ page }) => {
     const blog = await openBlog(page);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 3 articles as read");
+    await expect(line(page)).toHaveText("Marked 3 articles as read.");
     const undo = page.getByRole("button", { name: "Undo" });
     const close = page.getByRole("button", { name: "Close the note" });
     // The words on the left, Undo and × on the right, side by side, centred on one another.
@@ -241,12 +241,12 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 2 articles as read");
+    await expect(line(page)).toHaveText("Marked 2 articles as read.");
     // Opening another article puts the note away; then the first save fails.
     await page.keyboard.press("j");
     await expect(page.getByRole("button", { name: "Close the note" })).toHaveCount(0);
     releases[0]?.();
-    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(line(page)).toHaveText("The article couldn't be marked as read. It's still unread.");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     // The note itself is back on screen, not only heard: its × shows again.
     await expect(page.getByRole("button", { name: "Close the note" })).toBeVisible();
@@ -331,7 +331,7 @@ test.describe("on a wide window", () => {
     await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Starred/);
     await expect(row(page, blog, MIDDLE).locator("svg")).toBeVisible();
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
-    await expect(line(page)).toHaveText("Starred");
+    await expect(line(page)).toHaveText("Starred.");
 
     await page.keyboard.press("g");
     await page.keyboard.press("s");
@@ -376,7 +376,7 @@ test.describe("when saving fails", () => {
     const refused = page.waitForResponse((response) => response.url().endsWith("/api/articles/read"));
     await page.keyboard.press("j");
     await refused;
-    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(line(page)).toHaveText("The article couldn't be marked as read. It's still unread.");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
@@ -391,13 +391,13 @@ test.describe("when saving fails", () => {
     await page.keyboard.press("k");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `1`);
-    await expect(page.getByText("An article couldn't be marked as read. It's still unread.")).toHaveCount(0);
+    await expect(page.getByText("The article couldn't be marked as read. It's still unread.")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     // Both saves (j and k) must reach the server before saving fails again.
     await expect.poll(() => saved).toBe(2);
     failing = true;
     await page.keyboard.press("m");
-    await expect(line(page)).toHaveText("That couldn't be saved, so it was taken back.");
+    await expect(line(page)).toHaveText("The article couldn't be marked as unread.");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `1`);
 
@@ -407,7 +407,7 @@ test.describe("when saving fails", () => {
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
-    await expect(page.getByText("That couldn't be saved, so it was taken back.")).toHaveCount(0);
+    await expect(page.getByText("The article couldn't be marked as unread.")).toHaveCount(0);
   });
 
   test("with only the keyboard: Try again saves a star that couldn't be saved", async ({ page }) => {
@@ -443,18 +443,18 @@ test.describe("when saving fails", () => {
     // The article is marked read once the reading area shows it: that's the first save.
     await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 2 articles as read");
+    await expect(line(page)).toHaveText("Marked 2 articles as read.");
 
     // The first fails: taken back and said, with Try again, and Mark all as read's Undo stays.
     releases[0]?.();
-    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(line(page)).toHaveText("The article couldn't be marked as read. It's still unread.");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
 
     // Mark all as read is saved: the connection is back, so the line returns to it, Undo included.
     releases[1]?.();
-    await expect(line(page)).toHaveText("Marked 2 articles as read");
+    await expect(line(page)).toHaveText("Marked 2 articles as read.");
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
   });

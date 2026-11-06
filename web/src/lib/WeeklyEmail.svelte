@@ -17,7 +17,7 @@
 
   loadOften().then(
     (answer) => (often = answer),
-    () => onProblem("The weekly email's setting couldn't be read. Check your connection and try again."),
+    () => onProblem("The weekly email's setting couldn't be loaded. Try again in a moment."),
   );
 
   async function choose(next: Often) {

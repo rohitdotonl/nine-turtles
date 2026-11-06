@@ -21,7 +21,7 @@
 
   listPeople().then(
     (found) => (people = found),
-    () => (message = "Couldn't load the readers. Try again in a moment."),
+    () => (message = "The readers couldn't be loaded. Try again in a moment."),
   );
 </script>
 
@@ -34,7 +34,7 @@
       ></a
     >
   </div>
-  <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
+  <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
   <p class="inset-foot">
     All readers lists everyone with an account here and how this nine turtles is doing; nobody sees what anyone else
     reads.

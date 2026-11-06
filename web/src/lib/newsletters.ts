@@ -70,3 +70,13 @@ export async function switchLabel(label: string, on: boolean): Promise<void> {
   });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
 }
+
+/** Copies the reader's address, answering what to say. */
+export async function copyAddress(address: string): Promise<string> {
+  try {
+    await navigator.clipboard.writeText(address);
+    return "Address copied.";
+  } catch {
+    return "The address couldn't be copied. Select it and copy it yourself.";
+  }
+}

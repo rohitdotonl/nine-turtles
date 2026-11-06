@@ -235,7 +235,7 @@
       await signOut();
       onSignedOut();
     } catch {
-      message = "Couldn't sign out. Try again in a moment.";
+      message = "This device couldn't be signed out. Try again in a moment.";
     }
   }
 
@@ -388,7 +388,7 @@
           </div>
         </div>
         <p class="inset-foot">These apply on all your devices.</p>
-        <p role="status" class={["inset-foot text-danger", !sortMessage && "sr-only"]}>{sortMessage}</p>
+        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !sortMessage && "sr-only"]}>{#if sortMessage}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{sortMessage}</p>
       </section>
 
       <section aria-labelledby="reader-heading">
@@ -515,7 +515,7 @@
           {/if}
         </div>
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
-        <p role="status" class={["inset-foot text-danger", !message && "sr-only"]}>{message}</p>
+        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
         {#if email && !emailSending}
           <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
         {/if}

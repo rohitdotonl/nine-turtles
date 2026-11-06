@@ -8,6 +8,7 @@
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { UNREACHABLE } from "./messages";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
 export type PasskeyRow = { id: number; name: string | null; createdAt: number; lastUsedAt: number | null };
@@ -226,7 +227,7 @@ export function explainAdd(result: Exclude<AddResult, { ok: true }>): string {
       return "That took too long. Try again.";
     case "off":
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 
@@ -309,7 +310,7 @@ export function explainPasskeySignIn(result: PasskeySignIn): string {
     case "expired":
       return "That took too long. Try again.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 

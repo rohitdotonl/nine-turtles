@@ -12,7 +12,7 @@ describe("the weekly email's words", () => {
     expect(explainOften("no-email")).toMatch(/send email/);
     expect(explainOften("no-address")).toMatch(/email address/);
     expect(explainOften("unconfirmed")).toMatch(/confirmed address/);
-    expect(explainOften("trouble")).toMatch(/try again/);
+    expect(explainOften("trouble")).toMatch(/Try again in a moment/);
   });
 
   it("send the reader's clock as minutes ahead of UTC", () => {

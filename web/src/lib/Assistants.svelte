@@ -10,6 +10,7 @@
   kept for 30 days and listed below, each with Bring back.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { tick } from "svelte";
   import { date } from "./admin";
   import { resubscribe } from "./feeds";
@@ -55,7 +56,7 @@
       await navigator.clipboard.writeText(text);
       message = `${what} copied.`;
     } catch {
-      message = `Couldn't copy. Select the ${what.toLowerCase()} and copy it yourself.`;
+      message = `The ${what.toLowerCase()} couldn't be copied. Select it and copy it yourself.`;
     }
   }
 
@@ -79,7 +80,7 @@
       busy = false;
       await refocus("assistant", index);
     } catch {
-      message = "Couldn't disconnect it. Try again in a moment.";
+      message = `${shortName(assistant.name)} couldn't be disconnected. Try again in a moment.`;
     }
     busy = false;
   }
@@ -99,7 +100,7 @@
       await tick();
       copyKey?.focus();
     } catch {
-      message = "Couldn't make an assistant key. Try again in a moment.";
+      message = "The assistant key couldn't be made. Try again in a moment.";
     }
     busy = false;
   }
@@ -121,7 +122,7 @@
       await refocus("unsubscribed", index);
       return;
     }
-    message = `Couldn't bring ${name} back. Try again in a moment.`;
+    message = `${name} couldn't be brought back. Try again in a moment.`;
   }
 </script>
 
@@ -190,7 +191,7 @@
     </p>
   {/if}
   {#if failed}
-    <p role="status" class="inset-foot text-danger">The connected assistants couldn't be loaded. Try again in a moment.</p>
+    <p role="status" class="inset-foot flex items-start gap-1.5 text-danger"><span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>The connected assistants couldn't be loaded. Try again in a moment.</p>
   {/if}
   <p class="inset-foot">
     Connect an AI assistant such as Claude or ChatGPT to your nine turtles, so it can find, sort and tidy things for

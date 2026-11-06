@@ -148,6 +148,7 @@ test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, 
   const undo = feed.getByRole("button", { name: `Undo unsubscribing from ${title}` });
   await expect(undo).toBeFocused();
   await page.keyboard.press("Enter");
+  await expect(status).toHaveText("Undone.");
   await expect(feed.getByRole("button", { name: `Unsubscribe from ${title}` })).toBeFocused();
   const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
   expect(library.feeds.map((followed: { title: string }) => followed.title)).toContain(title);

@@ -63,7 +63,7 @@ test("articles kept on the device open, mark and star offline, and the marks are
 
   await context.setOffline(true);
   await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
-  await expect(page.getByText("Offline. Showing the articles saved on this device.")).toBeVisible();
+  await expect(page.getByText("You're offline. Showing the articles saved on this device.")).toBeVisible();
   const row = (title: string) => page.getByRole("button", { name: new RegExp(`${title.replace(/[()]/g, "\\$&")}.*Blog ${name}`) });
   await row(NEWEST).click();
   await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();
@@ -77,13 +77,13 @@ test("articles kept on the device open, mark and star offline, and the marks are
   // What needs a connection says so.
   await page.getByRole("button", { name: /^More/ }).first().click();
   await page.getByRole("menuitem", { name: "Refresh" }).click();
-  await expect(page.getByText("Refresh needs a connection. This is what's saved on this device.")).toBeVisible();
+  await expect(page.getByText("You're offline. This is what's saved on this device.")).toBeVisible();
   await sidebar(page).getByRole("link", { name: "Settings" }).click();
-  await expect(page.getByText("Settings need a connection. They open once you're back online.")).toBeVisible();
+  await expect(page.getByText("You're offline. Settings open once you're back online.")).toBeVisible();
 
   // Opened again without a connection: the app and its kept articles are still here.
   await page.goto(new URL("/starred", FEEDS_APP).href);
-  await expect(page.getByText("Offline. Showing the articles saved on this device.")).toBeVisible();
+  await expect(page.getByText("You're offline. Showing the articles saved on this device.")).toBeVisible();
   await expect(row(NEWEST)).toBeVisible();
   await expect(row(MIDDLE)).toHaveCount(0);
 
@@ -250,14 +250,14 @@ test("search and adding a feed say plainly that they need a connection", async (
   const search = page.getByRole("textbox", { name: "Search", exact: true });
   await search.fill("letters");
   await search.press("Enter");
-  await expect(page.getByText("Search needs a connection. It works again once you're back online.")).toBeVisible();
+  await expect(page.getByText("You're offline. Search works again once you're back online.")).toBeVisible();
   await page.keyboard.press("Escape");
   await page.locator("body").click({ position: { x: 1, y: 1 } });
   await page.keyboard.press("a");
   const sheet = page.getByRole("dialog", { name: "Add a person or publication" });
   await sheet.getByLabel("Their website's address").fill("https://quiet.example/");
   await sheet.getByRole("button", { name: "Add", exact: true }).click();
-  await expect(page.getByText("Adding a feed needs a connection. Try again once you're back online.")).toBeVisible();
+  await expect(page.getByText("You're offline. Adding a feed works again once you're back online.")).toBeVisible();
   await context.setOffline(false);
 });
 

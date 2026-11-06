@@ -74,7 +74,7 @@
       await library.loadFeeds();
       return problem;
     };
-    onPeople({ message: `${placeShownAs(taken)} is on its own now`, undo }, taken.id);
+    onPeople({ message: `${placeShownAs(taken)} is on its own now.`, undo }, taken.id);
   }
 </script>
 

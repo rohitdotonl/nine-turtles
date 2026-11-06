@@ -46,7 +46,7 @@ export function explainOften(refusal: OftenRefusal): string {
   if (refusal === "no-address") return "The weekly email needs an email address on your account.";
   if (refusal === "unconfirmed")
     return "The weekly email goes only to a confirmed address. Signing in once with an emailed link (Forgot? on the sign-in page) confirms yours.";
-  return "That wasn't saved. Check your connection and try again.";
+  return "The weekly email's setting couldn't be saved. Try again in a moment.";
 }
 
 export type Pressed = "done" | "unknown" | "trouble";

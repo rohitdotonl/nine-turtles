@@ -3,8 +3,8 @@ import { endOfList, markedAllMessage, newItemsMessage } from "./lists";
 
 describe("mark all as read", () => {
   it("says how many items it marked, in plain words", () => {
-    expect(markedAllMessage(1)).toBe("Marked 1 article as read");
-    expect(markedAllMessage(23)).toBe("Marked 23 articles as read");
+    expect(markedAllMessage(1)).toBe("Marked 1 article as read.");
+    expect(markedAllMessage(23)).toBe("Marked 23 articles as read.");
     expect(markedAllMessage(0)).toBe("Everything here is already read.");
   });
 });

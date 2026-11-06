@@ -63,6 +63,7 @@
   import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextInSidebar, type ArticleMove } from "./moving";
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
+  import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
@@ -111,8 +112,7 @@
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
 
-  // Switching to Unread off (here, or on another device before this one
-  // heard) while on Unread moves you to All, in place: no new history step.
+  // Switching Unread off (here, or on another device) while on Unread moves you to All, in place.
   $effect(() => {
     const next = homeFor(route, settings.unread);
     if (next === route) return;
@@ -249,7 +249,7 @@
   let listInstead = $derived(insteadOfList(under, found));
   /** No feeds yet: Unread and All show the welcome instead (`firstVisit.ts`). */
   let firstVisit = $derived(isFirstVisit(library.feeds));
-  let whereWelcome = $derived(welcomeFor({ firstVisit, under, article: panes.article, phone, missing: missing !== undefined }));
+  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, article: panes.article, phone, missing: missing !== undefined }));
   let welcoming = $derived(whereWelcome.shown);
   /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
   let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
@@ -294,10 +294,9 @@
     document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName);
   });
 
-  // Where you are is always in sight in the sidebar (SPEC section 5): when the
-  // place changes, its row scrolls just far enough to show, at once, never
-  // smoothly (decision 0051). Not when the feeds' counts change, so nothing
-  // moves unless you move it. The phone's feeds screen marks no place.
+  // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes,
+  // its row scrolls just far enough to show, at once, never smoothly (decision 0051). Not when
+  // the feeds' counts change, so nothing moves unless you move it. The phone's feeds screen marks no place.
   let sidebarPlace = $derived(!phone && panes.sidebar && library.feeds !== undefined ? pathFor(route) : "");
   $effect(() => {
     if (sidebarPlace === "") return;
@@ -347,9 +346,8 @@
     // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
-    // Arriving here by switching to a new version: the screen is as the
-    // reader left it, and the keyboard's place goes to the heading, as going
-    // here without the switch would have done.
+    // Arriving here by switching to a new version: the screen is as the reader left it, and the
+    // keyboard's place goes to the heading, as going here without the switch would have done.
     const switched = arrivedBySwitching();
     if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
@@ -385,6 +383,7 @@
         steps.sheetOpenedByBrowser();
       }
       route = next;
+      stopTrying(); // Back and Forward end the welcome's "Or try one" too (decision 0198).
       if (isList(route)) lastPlace = route;
       if (!move.keepsArticle) {
         selected = undefined;
@@ -525,6 +524,7 @@
       return;
     }
     const from = screenNow();
+    stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
@@ -553,7 +553,7 @@
   }
 
   async function added(feed: Feed) {
-    const stay = route.kind !== "add-feed" && !firstVisit; // Add a feed closed while still looking: the feed only joins the sidebar.
+    const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
     if (!stay) openFeed(feed.id);
   }
@@ -881,7 +881,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} />
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
 {/snippet}
 
 {#snippet listHead()}
@@ -1004,7 +1004,7 @@
         />
       {/if}
       {#if library.feedsFailed}
-        <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
+        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-small">Your feeds couldn't be loaded.<button type="button" onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button></p>
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />

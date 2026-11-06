@@ -90,7 +90,7 @@ describe("the reader's library", () => {
 
     const done = await library.deleteFolder({ id: 7, name: "News" });
     if (typeof done === "string") throw new Error(done);
-    expect(done.message).toBe("Deleted the folder News");
+    expect(done.message).toBe("Deleted the folder News.");
     expect(await done.undo?.()).toBeUndefined();
 
     expect(server.createFolder).toHaveBeenCalledWith("News", [1]);
