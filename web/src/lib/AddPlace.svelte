@@ -13,7 +13,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import { addFeed, explain, plainSourceName, refused, unsubscribe, type Choice, type Notice } from "./feeds";
+  import { addFeed, explain, plainSourceName, undoRefused, unsubscribe, type Choice, type Notice } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import { join, joinedNotice, placesOf } from "./people";
   import type { Feed } from "./shapes";
@@ -91,7 +91,7 @@
               if (problem) return problem;
               const refusal = await unsubscribe(other);
               await library.loadFeeds();
-              return refusal ? refused(refusal, "feed") : undefined;
+              return refusal ? undoRefused(refusal, "feed") : undefined;
             },
           }
         : done,

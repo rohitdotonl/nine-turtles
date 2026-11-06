@@ -12,6 +12,7 @@
   import { untitledOpening, type Article } from "./shapes";
   import { when } from "./times";
   import { listMuted, ruleRefused, setMuted } from "./rules";
+  import { UNDONE, UNDO_FAILED } from "./messages";
 
   let {
     heading = $bindable(),
@@ -47,11 +48,12 @@
     const refusal = await setMuted([row.article.id], muted);
     row.busy = false;
     if (refusal) {
-      row.message = ruleRefused(refusal);
+      // Hiding again is Undo for Unhide (BRAND.md → "Messages").
+      row.message = muted && refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal, "The article couldn't be unhidden.");
       return;
     }
     row.unmuted = !muted;
-    row.message = muted ? "" : "Unhidden. It's back in your lists, unread.";
+    row.message = muted ? UNDONE : "Unhidden. It's back in your lists, unread.";
     onChanged();
     await tick();
     document.querySelector<HTMLElement>(`#muted-${row.article.id} button`)?.focus();

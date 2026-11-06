@@ -61,7 +61,7 @@
     }
     busy = false;
     if (deleted) onDeleted();
-    else message = `Couldn't delete your ${data ? "data" : "account"}. Nothing was deleted; try again in a moment.`;
+    else message = `Your ${data ? "data" : "account"} couldn't be deleted. Nothing has changed. Try again in a moment.`;
   }
 
   const WHAT = $derived(

@@ -27,8 +27,8 @@ connection comes back, and when you refresh.
 
 ## Reading offline
 
-Just open nine turtles. The list says **Offline. Showing the articles saved
-on this device.** You can read, mark articles read or unread, star them and
+Just open nine turtles. The list says **You're offline. Showing the articles
+saved on this device.** You can read, mark articles read or unread, star them and
 undo, as usual. Everything you do is sent as soon as you're back online.
 
 ## What needs a connection

@@ -60,6 +60,6 @@ group("the reader's plan", () => {
     expect(label({ standing: "paid", until: 1, renewsAt: null, ending: true, period: "monthly" })).toBe("Plan cancelled");
     expect(label({ standing: "ended" })).toBe("Plan ended");
     expect(refusal("no-email")).toBe("Your account needs an email before you can choose a plan.");
-    expect(refusal("something else")).toBe("Payments can't be reached just now. Try again in a moment.");
+    expect(refusal("something else")).toBe("Payments can't be reached right now. Try again in a moment.");
   });
 });

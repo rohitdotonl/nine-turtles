@@ -176,3 +176,4 @@ repository's history.
 | [0196](0196-untitled-posts-show-their-opening.md) | A post with no title shows its opening words once in every list: the reading serif, regular weight, two lines then "…", no line of text under it; "Untitled" only when it has no words |
 | [0197](0197-starters-are-people.md) | "New to feeds?" offers five people's own blogs (James, Derek Sivers, Herman Martinus, Jeff Kaufman, Ava), each filed as a person |
 | [0198](0198-or-try-one.md) | The welcome's "Or try one": three fixed example addresses followed in one press, their newest post shown in place with Start reading; a site with no feed offers your own newsletter address |
+| [0199](0199-one-house-style-for-messages.md) | One house style for messages (BRAND.md → "Messages"): what you did is a full sentence; a failure names the thing and what to do; "You're offline." first; Undo always says "Undone."; no technical words |

@@ -12,7 +12,8 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
-  import { refused, resubscribe, unsubscribe } from "./feeds";
+  import { refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
+  import { UNDONE } from "./messages";
   import { headline, listSick, reason, type Sick } from "./health";
 
   let {
@@ -105,11 +106,11 @@
     const refusal = await resubscribe(row.feed.id);
     row.busy = false;
     if (refusal) {
-      row.message = refused(refusal, "feed");
+      row.message = undoRefused(refusal, "feed");
       return;
     }
     row.unsubscribed = false;
-    row.message = "";
+    row.message = UNDONE;
     onFeedsChanged();
     await focusIn(row, "unsubscribe");
   }

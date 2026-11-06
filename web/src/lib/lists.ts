@@ -75,7 +75,7 @@ export function newItemsMessage(touch: boolean): string {
 /** What the line above the list says after "Mark all as read". */
 export function markedAllMessage(count: number): string {
   if (count === 0) return "Everything here is already read.";
-  return `Marked ${count} ${count === 1 ? "article" : "articles"} as read`;
+  return `Marked ${count} ${count === 1 ? "article" : "articles"} as read.`;
 }
 
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).

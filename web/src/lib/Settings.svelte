@@ -235,7 +235,7 @@
       await signOut();
       onSignedOut();
     } catch {
-      message = "Couldn't sign out. Try again in a moment.";
+      message = "This device couldn't be signed out. Try again in a moment.";
     }
   }
 

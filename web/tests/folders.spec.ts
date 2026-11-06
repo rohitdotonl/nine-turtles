@@ -221,7 +221,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   await openEdit(page, "Edit folder");
   await page.getByRole("button", { name: `Delete Aa-${folder}` }).click();
   await expect(page).toHaveURL(/\/unread$/);
-  await expect(line(page)).toHaveText(`Deleted the folder Aa-${folder}`);
+  await expect(line(page)).toHaveText(`Deleted the folder Aa-${folder}.`);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toHaveCount(0);
   // The feed stays, now in no folder.
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
@@ -254,7 +254,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   expect(leaveBox!.height).toBeGreaterThanOrEqual(44);
   await leave.click();
   await expect(page).toHaveURL(/\/unread$/);
-  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}`);
+  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}.`);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(0);
   await expect(page.getByRole("button", { name: new RegExp(`Blog ${blog} ·`) })).toHaveCount(0);
 
@@ -267,14 +267,14 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(page.getByRole("region", { name: `Blog ${other}` }).getByRole("listitem")).toHaveCount(3);
   await page.keyboard.press("j");
   await page.keyboard.press("s");
-  await expect(line(page)).toHaveText("Starred");
+  await expect(line(page)).toHaveText("Starred.");
   await editWho(page, `Blog ${other}`);
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   // With a star there, it asks first whether to keep it (SPEC section 42).
   const keep = page.getByRole("group", { name: `Keep what you saved from Blog ${other}?` });
   await expect(keep).toContainText("You starred 1 of their articles.");
   await keep.getByRole("button", { name: "Keep them" }).click();
-  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}`);
+  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}.`);
   // Other tests star articles too, so look through every page of Starred.
   const starredFrom: string[] = [];
   for (let after: string | null = null, first = true; first || after; first = false) {
@@ -419,7 +419,7 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
   await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
   await tabTo(page, page.getByRole("button", { name: `Delete ${folder}` }));
   await page.keyboard.press("Enter");
-  await expect(line(page)).toHaveText(`Deleted the folder ${folder}`);
+  await expect(line(page)).toHaveText(`Deleted the folder ${folder}.`);
 
   // Unsubscribe, and u brings the feed back. The feed leaves the deleted folder for the sidebar's top level; wait for it there before tabbing.
   const feedLink = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
@@ -429,7 +429,7 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
   await editWhoByKeys(page, `Blog ${blog}`);
   await tabTo(page, page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }));
   await page.keyboard.press("Enter");
-  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}`);
+  await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}.`);
   await page.keyboard.press("u");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 

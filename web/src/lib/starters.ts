@@ -77,13 +77,13 @@ export function addLabel(ticked: number): string {
 export function startProblem(failed: readonly Starter[]): string {
   const [only] = failed;
   return failed.length === 1 && only
-    ? `${only.name} couldn't be added just now. Try again later, or choose another.`
-    : "Those feeds couldn't be added just now. Try again later.";
+    ? `${only.name} couldn't be added. Try again later, or choose another.`
+    : "Those feeds couldn't be added. Try again later.";
 }
 
 /** The note the list shows on arriving, when some starters were added and some weren't. */
 export function partlyAdded(failed: readonly Starter[]): string {
   const names = failed.map((starter) => starter.name);
   const list = names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-  return `Couldn't add ${list}. Try again later from + Add.`;
+  return `${list} couldn't be added. Try again later from + Add.`;
 }

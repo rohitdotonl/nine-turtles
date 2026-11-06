@@ -6,7 +6,7 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { createFolder, deleteFolder, listFeeds, refused, resubscribe, type Notice } from "./feeds";
+import { createFolder, deleteFolder, listFeeds, refused, resubscribe, undoRefused, type Notice } from "./feeds";
 import { newestAnswer } from "./inorder";
 import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person } from "./shapes";
@@ -90,7 +90,7 @@ export class LoadedLibrary {
     if (refusal) return refusal;
     await this.loadFeeds();
     return {
-      message: `Unsubscribed from ${name}`,
+      message: `Unsubscribed from ${name}.`,
       undo: async () => {
         let problem;
         for (const id of left) {
@@ -99,7 +99,7 @@ export class LoadedLibrary {
         }
         // Whatever came back shows, even when one couldn't.
         await this.loadFeeds();
-        return problem ? refused(problem, "feed") : undefined;
+        return problem ? undoRefused(problem, "feed") : undefined;
       },
     };
   }
@@ -111,10 +111,10 @@ export class LoadedLibrary {
     if (refusal) return refused(refusal, "folder");
     await this.loadFeeds();
     return {
-      message: `Deleted the folder ${folder.name}`,
+      message: `Deleted the folder ${folder.name}.`,
       undo: async () => {
         const problem = await createFolder(folder.name, inside);
-        if (problem) return refused(problem, "folder");
+        if (problem) return undoRefused(problem, "folder");
         await this.loadFeeds();
         return undefined;
       },
@@ -135,13 +135,13 @@ export class LoadedLibrary {
     const lead = this.rowOf(inside[0] ?? 0);
     return {
       lead,
-      message: `${folder.name} is one person now`,
+      message: `${folder.name} is one person now.`,
       undo: async () => {
         const back = await putBack(before);
         if (back) return back;
         const refusal = await createFolder(folder.name, inside);
         await this.loadFeeds();
-        return refusal ? refused(refusal, "folder") : undefined;
+        return refusal ? undoRefused(refusal, "folder") : undefined;
       },
     };
   }

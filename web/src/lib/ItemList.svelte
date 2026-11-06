@@ -38,6 +38,7 @@
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, writerOf, type OneSource } from "./people";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
@@ -93,8 +94,6 @@
 
   /** How often the list asks whether new items are waiting. */
   const ASK_EVERY_MS = 60_000;
-  /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
-  const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -251,7 +250,7 @@
   /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
   function couldNotLoad(failure: unknown): string {
     if (failure instanceof NeedsConnection) return failure.message;
-    if (connection.offline) return "These articles need a connection. They load once you're back online.";
+    if (connection.offline) return "You're offline. These articles load once you're back online.";
     return "The articles couldn't be loaded. Try again in a moment.";
   }
 
@@ -404,9 +403,10 @@
   }
 
   /** Sets read or unread on the screen at once, then saves. */
-  function setRead(changing: Article[], read: boolean, failed = "That couldn't be saved, so it was taken back.") {
+  function setRead(changing: Article[], read: boolean, failed?: string) {
     const changed = changing.filter((article) => article.read !== read);
     if (changed.length === 0) return;
+    failed ??= `${changed.length === 1 ? "The article" : `${changed.length} articles`} couldn't be marked as ${read ? "read" : "unread"}.`;
     save("read", changed, read, markRead, putRead, failed);
   }
 
@@ -463,19 +463,19 @@
   /** The reading area showed this article: it counts as read (not an undoable action). */
   export function shown(article: Article) {
     if (article.read) return;
-    setRead([article], true, "An article couldn't be marked as read. It's still unread.");
+    setRead([article], true, "The article couldn't be marked as read. It's still unread.");
     // Said at once, like everything on screen (SPEC section 25); if saving
     // fails, the line above the list says so and it's unread again.
     // Emptied first, so the same words are announced again for the next article.
     spoken = "";
-    tick().then(() => (spoken = "Marked as read"));
+    tick().then(() => (spoken = "Marked as read."));
   }
 
   /** `m` and "Mark unread": the selected article is unread again. */
   export function markUnread() {
     const article = selected;
     if (!article || !article.read) return;
-    did("Marked as unread", () => setRead([article], true));
+    did("Marked as unread.", () => setRead([article], true));
     setRead([article], false);
   }
 
@@ -484,7 +484,7 @@
     const article = selected;
     if (!article) return;
     const starred = !article.starred;
-    did(starred ? "Starred" : "Unstarred", () => setStarred(article, !starred));
+    did(starred ? "Starred." : "Unstarred.", () => setStarred(article, !starred));
     setStarred(article, starred);
   }
 
@@ -504,7 +504,7 @@
     const reverse = undoLast;
     if (!reverse) return false;
     reverse();
-    say("Undone.");
+    say(UNDONE);
     return true;
   }
 

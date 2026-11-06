@@ -40,7 +40,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   const field = pane(page).getByRole("textbox", { name: "Their email address" });
   await expect(field).toBeFocused();
   // nine turtles tries to look on their site; this made-up one can't be reached, and it says so.
-  await expect(pane(page)).toContainText("nine turtles couldn't look on their site just now.");
+  await expect(pane(page)).toContainText("Their site couldn't be checked for an address.");
   await expect(field).toHaveValue("");
   // Their site, to find the address on, opens in a new tab.
   const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
