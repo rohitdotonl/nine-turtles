@@ -921,7 +921,8 @@ async fn a_second_reader_imports_opml_without_a_second_copy_of_a_shared_feed() {
     assert_eq!(summary["summary"]["added"], 2);
 
     // One copy of the shared feed; the other reader has it, by their name,
-    // in their folder, its articles so far read.
+    // in their folder, its articles so far unread (all three: no more than
+    // the newest five, decision 0194), whatever the owner marked.
     assert_eq!(count(&state, "SELECT COUNT(*) FROM feeds").await, 2);
     assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 3);
     let theirs = other.get("/api/feeds").await;
@@ -933,7 +934,7 @@ async fn a_second_reader_imports_opml_without_a_second_copy_of_a_shared_feed() {
         .collect();
     assert_eq!(names, ["Only mine", "Shared blog"]);
     assert_eq!(theirs["feeds"][1]["id"], feed);
-    assert_eq!(theirs["feeds"][1]["unread"], 0);
+    assert_eq!(theirs["feeds"][1]["unread"], 3);
     assert_eq!(theirs["folders"][0]["name"], "Reading");
     assert_eq!(other.ids("view=all").await, ids);
     // The owner's marks, names, folders and export are as they were.

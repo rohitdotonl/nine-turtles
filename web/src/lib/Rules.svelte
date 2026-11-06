@@ -225,8 +225,8 @@
       {/if}
     {/if}
   </div>
-  <p role="alert" class={["inset-foot text-danger", !failed && "sr-only"]}>
-    {#if failed}What's hidden couldn't be loaded. Try again in a moment.{/if}
+  <p role="alert" class={["inset-foot flex items-start gap-1.5 text-danger", !failed && "sr-only"]}>
+    {#if failed}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>What's hidden couldn't be loaded. Try again in a moment.{/if}
   </p>
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>

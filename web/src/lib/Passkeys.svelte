@@ -267,7 +267,7 @@
       class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}
     >
       {#if message}
-        <p>{message}</p>
+        <p class="flex items-start gap-1.5">{#if refusal}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
         {#if undo}
           <button type="button" class="btn btn-small" data-focus="undo" aria-disabled={busy} onclick={runUndo}>Undo</button>
         {/if}
