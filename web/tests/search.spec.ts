@@ -240,7 +240,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
   const reading = page.getByRole("region", { name: "Article", exact: true });
-  // An unread article first: the reading area has begun it (decision 0206).
+  // An unread article first: the reading area has begun it (decision 0210).
   await expect(reading.getByRole("button", { name: "Start reading" })).toBeVisible();
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");

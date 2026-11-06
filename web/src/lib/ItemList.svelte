@@ -92,7 +92,7 @@
     unreadOff?: boolean;
     /** The first article listed, for the empty reading area. */
     first?: Article;
-    /** No reading area beside the list: an unread first article is begun in its row's place (decision 0206). */
+    /** No reading area beside the list: an unread first article is begun in its row's place (decision 0210). */
     lead?: boolean;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
     found?: string;

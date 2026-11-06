@@ -1,4 +1,4 @@
-// Start reading (SPEC section 7, decision 0206): the words an unread article
+// Start reading (SPEC section 7, decision 0210): the words an unread article
 // is begun with where nothing is open: its first paragraph, as plain text,
 // and its author when that isn't its source's own name. Fetched as opening
 // it would be (`readArticle`), which marks nothing read.

@@ -1,5 +1,5 @@
 <!--
-  Start reading (SPEC section 7, decision 0206): in the empty reading area, the newest unread
+  Start reading (SPEC section 7, decision 0210): in the empty reading area, the newest unread
   article (the oldest, with Oldest first) is already begun, set as the article is: a small muted
   line ("Newest unread"), its title, its byline and its first paragraph, then one solid button,
   Start reading, that opens it. Nothing counts as read until it's opened. With no reading area (a

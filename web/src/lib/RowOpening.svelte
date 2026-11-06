@@ -1,5 +1,5 @@
 <!--
-  Start reading on a phone (SPEC section 7, decision 0206): where there's no reading area, the
+  Start reading on a phone (SPEC section 7, decision 0210): where there's no reading area, the
   list's first row, when unread, is begun: under its line, its first paragraph in the reading face
   (four lines at most) and Start reading, the solid button's look, since pressing anywhere on the
   row opens it. The row is the button, and the paragraph and the button's look are hidden from

@@ -1,7 +1,7 @@
 <!--
   The reading area with nothing open (decision 0053). Where you left off part of the way through an
   article, one quiet line offers it (`PickUp`, decision 0175). Otherwise, when the list starts with
-  an unread article, that article already begun, with Start reading (`ReadingLead`, decision 0206),
+  an unread article, that article already begun, with Start reading (`ReadingLead`, decision 0210),
   near the top of the paper, in the article's own column. Otherwise one quiet line in the middle of
   the paper: Literata, muted, never the accent, no picture, 40% down (decision 0142), and under it,
   when the list has something to open, how to open one (`ReadingTip`).

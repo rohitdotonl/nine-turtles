@@ -55,7 +55,7 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
 }) => {
   const ana = unique("pp-ana");
   const [id] = await openPlaces(page, [`/blog/${ana}/feed.xml`]);
-  // An old address is tidied to the new one, and the reading area has begun their newest article (decision 0206).
+  // An old address is tidied to the new one, and the reading area has begun their newest article (decision 0210).
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
   await expect(
     page.getByRole("button", { name: "Start reading" }),

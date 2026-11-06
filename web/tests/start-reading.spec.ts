@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, nothingToPickUp, signIn, tabTo } from "./screens";
 
-// SPEC section 7, "Start reading" (decision 0206): with nothing open and an
+// SPEC section 7, "Start reading" (decision 0210): with nothing open and an
 // unread article first in the list, the reading area (on a phone, the list's
 // first place) has already begun it, and Start reading opens it. Uses a blog
 // of its own, whose newest articles arrive unread, since every test shares
