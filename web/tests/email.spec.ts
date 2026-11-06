@@ -474,3 +474,28 @@ test("the weekly email is off until switched on in Settings, and its stop page i
   await expect(page.getByRole("switch", { name: "Weekly email" })).not.toBeChecked();
   await page.context().close();
 });
+
+test("Your data says when there's nothing starred or no notes, and offers each export once there is (decision 0191)", async ({ browser }, testInfo) => {
+  const email = `nothing-yet-${testInfo.project.name}-${Date.now()}@example.com`;
+  const page = await newReader(browser, email);
+  await page.goto("/settings/data");
+  const data = page.getByRole("region", { name: "Your data" });
+  // Said in the muted grey, and not a button or link: nothing to download yet.
+  for (const words of ["Nothing starred yet", "No notes yet"]) {
+    const line = data.getByText(words, { exact: true });
+    await expect(line).toBeVisible();
+    expect(await line.evaluate((element) => element.tagName)).toBe("P");
+  }
+  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
+  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveCount(0);
+  // Once the server says something is starred and noted, each row is its download again.
+  await page.route("**/api/feeds", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), starred: true, notes: true } });
+  });
+  await page.reload();
+  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
+  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveAttribute("href", "/api/notes/export");
+  await expect(data.getByText("Nothing starred yet", { exact: true })).toHaveCount(0);
+  await page.context().close();
+});

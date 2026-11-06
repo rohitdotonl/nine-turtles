@@ -284,7 +284,7 @@
             <span class="flex min-w-0 flex-col py-2.5">
               <span class="break-words">{choice.title}</span>
               {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
-              <span class="mt-0.5 truncate text-small text-muted">{[choice.posting, choice.place ?? choice.url].filter(Boolean).join(" · ")}</span>
+              <span class="mt-0.5 truncate text-small text-muted" title={choice.url}>{[choice.posting, choice.place ?? choice.url].filter(Boolean).join(" · ")}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>

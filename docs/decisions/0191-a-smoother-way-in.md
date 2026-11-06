@@ -9,8 +9,9 @@ meets, with no new feature:
 - The website's **Start reading** opens the app's sign-up page, not sign-in:
   the most important button on the website was landing newcomers on a form
   for people who already have an account.
-- **Every password field has a Show button** (sign-in, sign-up, confirming
-  the email, a new password). Typing 12 characters blind on a phone causes
+- **The sign-in pages' password fields have a Show button** (sign-in,
+  sign-up, confirming the email, a new password; not Settings' password
+  checks). Typing 12 characters blind on a phone causes
   mistakes that only show up at the confirm step. Show becomes Hide; the
   page always opens with the dots. One shared field (`PasswordField.svelte`)
   so the five pages can't drift apart.

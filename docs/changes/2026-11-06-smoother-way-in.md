@@ -2,7 +2,7 @@
 
 - The website's **Start reading** button now opens the sign-up page, so a
   newcomer no longer lands on the sign-in form.
-- Password fields on sign-in, sign-up, confirming your email and choosing a
+- The password fields on sign-in, sign-up, confirming your email and choosing a
   new password have a **Show** button, so you can check what you typed.
 - While the welcome shows, the sidebar no longer marks Unread as where you
   are.

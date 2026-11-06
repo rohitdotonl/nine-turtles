@@ -3,7 +3,7 @@
   twelve characters blind on a phone makes mistakes, so the reader may look.
   Show turns the dots into the letters typed and becomes Hide; the field keeps
   its place and what's typed. Used on sign-in, sign-up, confirming the email
-  and choosing a new password. A quiet button in the muted ink, never the
+  and choosing a new password. A quiet button in the second ink, never the
   accent; 44px tall, the field's own height.
 -->
 <script lang="ts">
@@ -42,6 +42,7 @@
     type={shown ? "text" : "password"}
     {autocomplete}
     autocapitalize="none"
+    autocorrect="off"
     spellcheck="false"
     required
     {autofocus}
