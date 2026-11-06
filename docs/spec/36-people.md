@@ -67,15 +67,16 @@ PLAN.md → V1, item 1.*
   all as read, "new articles", search in their list and reading offline all
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.
-- **Their page,** the same for a person and a publication
+- **Their page,** the same for a person and a publication (but a
+  publication has no Write to, decision 0191)
   (`/people/12/about`): opened by pressing their name at the top of their
   list ("Alpha ›"), by **Info about Alpha** in the list's More menu, or by the
   `i` key. On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with an **Edit** button beside it; for one
   source whose own title isn't their name, that title under it, in the
-  reading serif ("Notes from Tomas" under Tomas Berg); under that, **Write
-  to Tomas Berg**, the solid ink button with the paper plane, with the
+  reading serif ("Notes from Tomas" under Tomas Berg); under that, for a
+  person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
   address under it once nine turtles knows it (section 37; the owner's core
   path, point 9); then their sources, each by its kind (Blog, Video,
   Newsletter, Podcast) with a link to the publisher's own site (a blog by its
@@ -89,8 +90,9 @@ PLAN.md → V1, item 1.*
   page into their settings. **Done** saves and turns it back; **Cancel** or
   Escape turns it back unchanged. Top to bottom (the owner's core path,
   points 11 and 12):
-  - **Name** and **Email address** (where Write back writes to them,
-    section 37);
+  - **Name** and, for a person, **Email address** (where Write back writes
+    to them, section 37; a publication has no Write back, so no address,
+    and the field goes as soon as A publication is chosen, decision 0191);
   - for one source, **This is: A person / A publication**;
   - **Folders** (one list for all their sources: Done puts every source in
     exactly those);

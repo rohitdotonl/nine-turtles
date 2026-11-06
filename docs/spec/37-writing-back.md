@@ -5,17 +5,23 @@ Decision 0147; the shape agreed with the owner on 2 November 2026 (PLAN.md →
 V1, item 2). Its look gets a refinement round.*
 
 **What it does**
-- **Write back on every article** of someone you follow: at the article's
+- **Write back on every article** of a person you follow (never a
+  publication's, decision 0191): at the article's
   end, under its closing rule (and under "Read on …" for a summary), one
   centred button, **Write back to Tomas Berg**: the solid ink button with a
   paper-plane icon, the only solid button in the reading pane, naming them
-  in full, by the name in the sidebar ("Write back to Maya Chen"; a
-  publication stays "Write back to Garden Letters"; the owner's core path,
-  points 6 and 7, decision 0183; the first-name rule went), with the address
+  in full, by the name in the sidebar ("Write back to Maya Chen"; the
+  owner's core path, points 6 and 7, decision 0183; the first-name rule
+  went), with the address
   it writes to under it in small muted type. It's also in
   the article's More menu (**Write back**) and on the keyboard, **`w`**
   (section 19). An article of a place you no longer follow (one kept only
   in Starred) has none: there's no person to write to.
+- **Not for publications** (decision 0191, the owner's choice): a
+  publication is something you only read or watch, so its articles end with
+  no Write back, its More menu has none, `w` does nothing there, its page
+  has no Write to, and its Edit has no Email address. Making it **A person**
+  in Edit brings all of them back, with any address kept from before.
 - **Write to, on their page** (the owner's core path, point 9): the same
   solid button with the paper plane, **Write to Tomas Berg**, sits under
   their name on their page (section 36), with the address under it. It

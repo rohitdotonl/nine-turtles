@@ -32,6 +32,7 @@
   import YouTubePlayer from "./YouTubePlayer.svelte";
   import EpisodePlayer from "./EpisodePlayer.svelte";
   import WriteBack from "./WriteBack.svelte";
+  import { writesBack } from "./writeBack";
   import ArticleMarks from "./ArticleMarks.svelte";
   import type { LoadedLibrary } from "./library.svelte";
   import { siteName } from "./people";
@@ -91,6 +92,8 @@
   /** Write back, at the article's end; the More menu and `w` start it too. */
   let writeBack: WriteBack | undefined = $state();
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
+  /** Someone to write back to: a person followed, never a publication (decision 0191). */
+  let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
 
   // Bumped when an article arrives from the server, so the page looks again.
   let arrivals = $state(0);
@@ -148,7 +151,7 @@
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
-        ...(followed && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
+        ...(writable && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
       ],
     },
