@@ -9,7 +9,7 @@ export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred"
 
 /**
  * Everything searched for: `words` is what's typed outside the chips, then
- * where (`scope`) and whether only starred ones (decision 0188: nothing else).
+ * where (`scope`) and whether only starred ones (decision 0189: nothing else).
  */
 export type Query = {
   words: string;

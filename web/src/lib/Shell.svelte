@@ -460,6 +460,7 @@
   function arrive(screen: Screen) {
     reading = phone && screen === "article" && selected !== undefined;
     layout.showHome(screen === "home");
+    if (phone && screen === "home") void library.catchUp(); // The feeds screen's dots catch up as you arrive on it (SPEC section 13).
     queueMicrotask(() => {
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
@@ -904,6 +905,8 @@
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
 <svelte:window bind:innerWidth={layout.windowWidth} />
+<!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
+<svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
 <!--
   While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 35), so the
   panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
@@ -959,13 +962,6 @@
     <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-13 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
         <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-[1.375rem] leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
-        {#if phone}
-          <!--
-            The feeds screen's top bar (SPEC section 20): its unread dots wait for this, as they wait for r.
-            An icon alone in a 44px target, so the large wordmark has the row to itself (decision 0041).
-          -->
-          <button type="button" onclick={loadFeeds} aria-label="Refresh" title="Refresh" class="btn-quiet btn-icon -mr-2.5"><Icon name="refresh" size={20} /></button>
-        {/if}
     </div>
     <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto pt-1 pb-4">
       <!--

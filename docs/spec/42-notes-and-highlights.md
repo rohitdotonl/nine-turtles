@@ -79,7 +79,7 @@ anywhere or counted.
   note · …".
 - A search started in **Notes** looks only through marked articles
   (its chip says "in: Notes"); search has no notes filter of its own
-  (decision 0188).
+  (decision 0189).
 
 **Unsubscribing** (section 15)
 - When the reader starred, highlighted or wrote a note on any of a place's

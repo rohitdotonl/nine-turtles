@@ -69,6 +69,13 @@ export class LoadedLibrary {
     }
   }
 
+  /** Loads the feeds again as the reader arrives on them (a phone's feeds screen): a failure keeps the dots as they were and says nothing. */
+  async catchUp() {
+    const failed = this.feedsFailed;
+    await this.loadFeeds();
+    this.feedsFailed &&= failed;
+  }
+
   /** A mark on this screen changed a feed's unread count. */
   unreadChanged(feedId: number, change: number) {
     this.#countChanges++;

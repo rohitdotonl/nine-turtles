@@ -38,16 +38,12 @@ test.describe("on a phone", () => {
 
   test("Feeds → Items → Article, each with a back arrow saying where it goes", async ({ page }) => {
     await openHome(page);
-    // The feeds screen is home: Refresh at the top, Settings at the bottom, no sidebar toggle.
+    // The feeds screen is home: the wordmark alone at the top (its dots catch up as you arrive, so
+    // nothing there invites a pull), Settings at the bottom, no sidebar toggle.
     await expect(sidebar(page).getByRole("link", { name: "Settings" })).toBeVisible();
-    const refresh = sidebar(page).getByRole("button", { name: "Refresh" });
-    await expect(refresh).toBeVisible();
+    await expect(sidebar(page).getByRole("button", { name: "Refresh" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Sidebar" })).toHaveCount(0);
     await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
-    // Refresh is an icon alone in a 44px target, so the large wordmark has its row (decision 0041).
-    expect((await refresh.innerText()).trim()).toBe("");
-    const refreshBox = (await refresh.boundingBox())!;
-    expect(Math.min(refreshBox.width, refreshBox.height)).toBeGreaterThanOrEqual(44);
     // The feeds screen is the root of a stack: nothing on it is marked as where you are, and each
     // row leads on with a chevron at its end, after any count.
     await expect(sidebar(page).locator("[aria-current]")).toHaveCount(0);

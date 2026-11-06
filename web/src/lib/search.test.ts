@@ -36,7 +36,7 @@ describe("chips", () => {
   it("say what's searched in plain words, as the options menu names it", () => {
     const query: Query = { ...emptyQuery({ kind: "folder", id: 7 }), starred: true };
     expect(chipsFor(query, library).map((chip) => chip.label)).toEqual(["in: Tech", "Starred"]);
-    // Starred is the one thing to show only (decision 0188); its chip goes on its own.
+    // Starred is the one thing to show only (decision 0189); its chip goes on its own.
     expect(withoutChip(query, "starred")).toEqual({ ...query, starred: false });
   });
 });
@@ -74,7 +74,7 @@ describe("what the server is asked", () => {
       q: "slow",
       unread: "true",
     });
-    // From Notes, only the articles the reader marked (decision 0188).
+    // From Notes, only the articles the reader marked (decision 0189).
     expect(searchParams({ ...emptyQuery({ kind: "view", view: "notes" }), words: "soup" })).toEqual({ q: "soup", notes: "true" });
     expect(resultsTitle(emptyQuery({ kind: "view", view: "notes" }).scope, library)).toBe("Results in Notes");
     expect(searchParams({ ...emptyQuery({ kind: "folder", id: 7 }), words: "x", starred: true })).toEqual({

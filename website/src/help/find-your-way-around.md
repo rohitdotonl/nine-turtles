@@ -59,7 +59,8 @@ the list). It goes once you open something else or finish it.
 
 The list never changes while you look at it. When new articles have arrived,
 a note at the bottom says **New articles**. Press <kbd>R</kbd>, or **Show**
-on a phone, to bring them in. Opening the app always shows the latest.
+on a phone, to bring them in. Opening the app always shows the latest. On a
+phone, the dots in the sidebar catch up each time you come back to it.
 
 ## Make room to read
 

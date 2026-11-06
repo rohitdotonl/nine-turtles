@@ -83,7 +83,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page).filter({ hasText: `Blog ${loose}` })).toHaveCount(1);
   await expect(results(page).filter({ hasText: `Blog ${filed}` })).toHaveCount(1);
 
-  // "This list", in the options, brings the place chip back (decision 0188).
+  // "This list", in the options, brings the place chip back (decision 0189).
   await page.getByRole("button", { name: "Search options" }).click();
   await page.getByRole("radio", { name: `${folder} This list` }).check();
   await page.keyboard.press("Escape");
@@ -118,7 +118,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   // It floats over the list instead of pushing it down.
   await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
   // A short menu of checkmark rows: the list search started from and Everything, then Starred;
-  // nothing else (decision 0188). Tab from the field lands on the row chosen.
+  // nothing else (decision 0189). Tab from the field lands on the row chosen.
   await field(page).focus();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("radio", { name: `${folder} This list` })).toBeFocused();

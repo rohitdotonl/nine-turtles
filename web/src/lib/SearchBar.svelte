@@ -222,7 +222,7 @@
     </button>
     <!--
       A popover under the options button, drawn as a menu (decision 0039): two
-      short sections of rows (decision 0188), a checkmark at the start of each one that holds, as a
+      short sections of rows (decision 0189), a checkmark at the start of each one that holds, as a
       Mac menu shows its choices. Each row is a real radio button or tick box
       under the whole row, so keyboards and screen readers get the usual
       control. It floats over the list rather than pushing it down. Its name

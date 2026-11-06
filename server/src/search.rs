@@ -152,7 +152,7 @@ pub struct Search {
     #[serde(default)]
     pub starred: bool,
     /// Only articles the reader highlighted or wrote a note on (decision
-    /// 0164): searching from the Notes list (decision 0188).
+    /// 0164): searching from the Notes list (decision 0189).
     #[serde(default)]
     pub notes: bool,
     /// Only articles whose author's name holds this (any capitals). The
