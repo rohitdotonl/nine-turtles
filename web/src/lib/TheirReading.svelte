@@ -1,5 +1,5 @@
 <!--
-  Their page's reading (SPEC section 36, decision 0207): under Write to and your note on them,
+  Their page's reading (SPEC section 36, decision 0211): under Write to and your note on them,
   "Lately", their three newest pieces, each one press from reading, and "Your highlights", the
   words you highlighted in their writing (the newest article first, at most 20; Notes has them
   all), each set as at an article's end: the words in the reading serif with a fine line at the

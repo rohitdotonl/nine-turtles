@@ -550,7 +550,7 @@ async fn kept(
 pub const THEIR_HIGHLIGHTS: i64 = 20;
 
 /// A highlight from the person's writing, as their page lists it (decision
-/// 0207): the words, the reader's note on them, and the article they're in.
+/// 0211): the words, the reader's note on them, and the article they're in.
 #[derive(Serialize, sqlx::FromRow)]
 pub struct TheirHighlight {
     #[sqlx(rename = "highlight_id")]

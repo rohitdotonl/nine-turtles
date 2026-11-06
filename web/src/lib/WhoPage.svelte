@@ -10,7 +10,7 @@
   "Write to Tomas Berg", the solid button with the paper plane, with the
   address under it (WriteBack, the owner's core path, points 9 and 10), then
   the reader's private note on them (SPEC section 42), then Lately and Your
-  highlights from their writing (TheirReading, decision 0207), then their
+  highlights from their writing (TheirReading, decision 0211), then their
   sources, each by what it is (Blog, Video, Newsletter, Podcast) with a link
   to the publisher's own site, then a quiet "Hide articles about…" (SPEC
   section 27). No
@@ -122,7 +122,7 @@
       <WriteBack feedId={feed.id} {library} />
       <!-- The reader's private note on them (SPEC section 42). -->
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
-      <!-- Lately and Your highlights from their writing (decision 0207). -->
+      <!-- Lately and Your highlights from their writing (decision 0211). -->
       {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
       <div class="flex flex-col gap-2">
         <h3 class="text-small text-ink-2">{places.length > 1 ? "Sources" : "Source"}</h3>

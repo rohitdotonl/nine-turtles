@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, choose, follow, signIn } from "./screens";
 
-// SPEC section 36, their page (decision 0207): after Write to and your note on
+// SPEC section 36, their page (decision 0211): after Write to and your note on
 // them, Lately (their three newest pieces, each one press from reading) and
 // Your highlights from their writing, then Source. Uses a blog of its own,
 // since every test shares the one nine turtles that has feeds.

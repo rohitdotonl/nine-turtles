@@ -84,7 +84,7 @@ PLAN.md → V1, item 1.*
   writing (the newest article first, at most 20; Notes has them all), each
   as at an article's end, with "From {title} · {day}" (the title opens the
   article) and your note on it; each shows only when it has something
-  (decision 0207); then their sources, each by its kind (Blog, Video,
+  (decision 0211); then their sources, each by its kind (Blog, Video,
   Newsletter, Podcast) with a link to the publisher's own site (a blog by its
   website, "alpha.example"; a channel or newsletter by its own name). The
   muted line that said what they are, their folders and since when ("A
