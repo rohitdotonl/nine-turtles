@@ -8,7 +8,7 @@
   | Group | Key | Action | Row in the list |
   |---|---|---|---|
   | Reading | `j` / `k` | Next / previous article | Next / previous article |
-  | | `w` | Write back to whoever wrote the open or selected article (section 37) | Write back |
+  | | `w` | Write back to whoever wrote the open or selected article, when it's a person's (a publication has none, section 37) | Write back |
   | | `Enter` | Open the article | Open article |
   | | `s` | Star / unstar | Star / unstar |
   | | `h` | Highlight the words chosen (section 42) | Highlight chosen words |
