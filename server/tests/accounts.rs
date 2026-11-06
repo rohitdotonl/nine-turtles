@@ -85,7 +85,15 @@ async fn open_reader(base: &str, outbox: &Outbox, email: &str) -> String {
     )
     .await;
     assert_eq!(asked.status(), StatusCode::ACCEPTED);
-    assert!(asked.headers().get("set-cookie").is_none());
+    // Nobody is signed in yet: the only cookie is the sign-up's own secret (decision 0193).
+    for cookie in asked.headers().get_all("set-cookie") {
+        assert!(
+            cookie
+                .to_str()
+                .unwrap()
+                .starts_with("nine_turtles_sign_up=")
+        );
+    }
     let (page, ticket) = newest_link(outbox, email);
     assert_eq!(page, "/finish-sign-up");
     let made = post(
