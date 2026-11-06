@@ -112,7 +112,7 @@ Every press is answered within about a tenth of a second, visibly, without motio
 
 #### 9. Power is findable, never in the way
 Keys and advanced tools speed up what's visible; nothing exists only as a key. A beginner never trips on them and can find them when needed.
-- *Explains:* the shortcut list, keys named in tooltips, the search options panel, the feed health page, progressive disclosure in the sidebar; a command menu is planned (`RnD/design-principles.md`).
+- *Explains:* the shortcut list, keys named in tooltips, the search options panel, Not working in Everyone you follow, progressive disclosure in the sidebar; a command menu is planned (`RnD/design-principles.md`).
 - **Test:** can a beginner find this when they need it, and ignore it until then?
 
 #### 10. Less, but better, and built to last
