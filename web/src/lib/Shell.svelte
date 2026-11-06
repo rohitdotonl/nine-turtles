@@ -1297,7 +1297,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
     {/key}
   {/if}
 {/snippet}

@@ -78,7 +78,16 @@ PLAN.md → V1, item 1.*
   reading serif ("Notes from Tomas" under Tomas Berg); under that, for a
   person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
   address under it once nine turtles knows it (section 37; the owner's core
-  path, point 9); then their sources, each by its kind (Blog, Video,
+  path, point 9); then your private note on them (section 42); then
+  **Lately**, their three newest pieces, each a row with its title and day
+  that opens it; then **Your highlights**, the words you highlighted in their
+  writing (the newest article first, at most 20; Notes has them all), each
+  as at an article's end, with "From {title} · {day}" (the title opens the
+  article) and your note on it; each shows only when it has something, both
+  at once, an untitled piece by its opening words (section 6); if they can't
+  be loaded, one quiet line says "Their latest pieces and your highlights
+  couldn't be loaded. Open the page again to try once more." (decision
+  0211); then their sources, each by its kind (Blog, Video,
   Newsletter, Podcast) with a link to the publisher's own site (a blog by its
   website, "alpha.example"; a channel or newsletter by its own name). The
   muted line that said what they are, their folders and since when ("A
@@ -170,3 +179,7 @@ PLAN.md → V1, item 1.*
    folder is back with both.
 8. Visit an old `/feeds/N` address: the list opens and the address bar shows
    `/people/N` or `/publications/N`.
+9. Highlight words in an article of someone's, then open their page: under
+   Write to and your note, **Lately** lists their three newest pieces and
+   **Your highlights** shows those words, "From" the article's title. Press
+   the title, or a piece in Lately: the article opens.

@@ -75,6 +75,8 @@ anywhere or counted.
   where you met, when you last wrote. It's the same on each of their places,
   and joining places into one person joins their notes.
 - The sidebar's "Find a person or folder" finds a person by it.
+- Their page also lists **Your highlights** from their writing, the
+  newest article first, at most 20 (decision 0211); Notes keeps them all.
 
 **Search** (section 14)
 - Search finds articles by the words of their highlights and notes as well
