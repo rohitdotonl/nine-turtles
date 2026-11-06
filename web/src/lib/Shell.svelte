@@ -267,7 +267,7 @@
     });
   });
   /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
-  let listCount = $state(0);
+  let listFirst: Article | undefined = $state();
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
@@ -1211,8 +1211,8 @@
                   }}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
-                  {unreadOff}
-                  bind:count={listCount}
+                  {unreadOff} lead={!panes.article}
+                  bind:first={listFirst}
                   bind:found={listFound}
                 />
               {/key}
@@ -1252,7 +1252,7 @@
               {@render welcome(false)}
             </section>
           {:else}
-            <EmptyReading {listCount} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
+            <EmptyReading first={listFirst} order={settings.sort ?? "newest"} lead={!searching.shown && !unreadOff} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
           {/if}
           </div>
         {/if}

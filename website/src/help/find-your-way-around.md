@@ -57,6 +57,11 @@ you last left part of the way through, in one quiet line: "You were reading
 stopped, on any device you sign in on (on a phone, the line is at the top of
 the list). It goes once you open something else or finish it.
 
+Otherwise, when your list starts with something unread, the reading pane
+has already begun it: its title, who wrote it and its first paragraph, with
+**Start reading** under them. Press it to read on. Nothing is marked read
+until you do. On a phone, the first article in the list is begun the same way.
+
 ## New articles wait for you
 
 The list never changes while you look at it. When new articles have arrived,

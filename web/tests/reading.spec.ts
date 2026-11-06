@@ -9,12 +9,12 @@ const article = (page: Page) => page.getByRole("region", { name: "Article", exac
 const title = (page: Page, name: string) => article(page).getByRole("heading", { level: 2, name });
 const row = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(name) });
 
-async function openRoom(page: Page, width = 1280) {
+async function openRoom(page: Page, width = 1280, { read = false } = {}) {
   await page.setViewportSize({ width, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await openReadingRoom(page);
+  await openReadingRoom(page, { read });
 }
 
 async function visits(page: Page, path: string): Promise<number> {
@@ -131,15 +131,14 @@ test.describe("on a wide window", () => {
   });
 
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
-    await openRoom(page);
+    await openRoom(page, 1280, { read: true });
     const room = page.url();
     // Beside a person's list, the same quiet line as everywhere (their page opens by their name, SPEC section 36), with the first-time tip under it.
     await expect(article(page).locator(".reading-empty")).toBeVisible();
     await expect(article(page).locator(".shortcut-tip")).toHaveText("Press J to read. Press W to write back.");
-    // Everywhere else, one quiet line in the middle of the paper (decision 0053): serif, muted grey,
-    // never the accent; screen readers also hear, since the list has articles to open, how to open one.
-    await page.goto(new URL("/all", room).href);
-    await appReady(page);
+    // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the accent;
+    // screen readers also hear, since the list has articles to open, how to open one. (A list that
+    // starts with something unread begins it instead: start-reading.spec.ts, decision 0206.)
     const empty = article(page).locator(".reading-empty");
     await expect(empty).toHaveText("Time to read something beautiful.");
     await expect(empty).toBeVisible();
@@ -1026,13 +1025,15 @@ test("on a phone, a tap opens a big picture larger, inside the screen, and the X
 
 test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0062)", async ({ page, isMobile }) => {
   test.skip(isMobile, "the tip names keys, so it's for screens with a keyboard");
-  await openRoom(page);
+  await openRoom(page, 1280, { read: true });
+  const room = page.url();
   const tip = article(page).locator(".shortcut-tip");
   await expect(tip).toBeVisible();
   // Opened with a click, not a key: the tip has done its job either way.
   await row(page, "Only the first page").click();
   await expect(title(page, "Only the first page")).toBeVisible();
-  await page.goto(new URL("/all", page.url()).href);
+  // Back to the same list, whose articles are read, so the quiet line shows (not Start reading, decision 0206).
+  await page.goto(room);
   await appReady(page);
   await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
   await expect(tip).toHaveCount(0);
@@ -1122,6 +1123,8 @@ test.describe("your place in an article (decision 0060)", () => {
     await page.waitForTimeout(300);
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
-    await expect(line).toHaveText("Time to read something beautiful.");
+    // The usual empty reading area: the quiet line, or Start reading when the list starts with something unread (decision 0206).
+    await expect(article(page).getByText(/^(Time to read something beautiful\.|Newest unread)$/)).toBeVisible();
+    await expect(article(page)).not.toContainText("You were reading");
   });
 });

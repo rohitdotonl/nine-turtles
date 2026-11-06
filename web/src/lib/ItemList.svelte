@@ -46,6 +46,8 @@
   import { when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
+  import RowOpening from "./RowOpening.svelte";
+  import { pickUp } from "./resume.svelte";
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -64,7 +66,8 @@
     results = false,
     oneFeed = false,
     unreadOff = false,
-    count = $bindable(0),
+    first = $bindable(),
+    lead = false,
     found = $bindable(""),
   }: {
     source: Source;
@@ -87,8 +90,10 @@
     oneFeed?: OneSource;
     /** Unread off (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     unreadOff?: boolean;
-    /** How many articles are listed, for the empty reading area's hint. */
-    count?: number;
+    /** The first article listed, for the empty reading area. */
+    first?: Article;
+    /** No reading area beside the list: an unread first article is begun in its row's place (decision 0206). */
+    lead?: boolean;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
     found?: string;
   } = $props();
@@ -153,7 +158,7 @@
   });
 
   $effect(() => {
-    count = articles.length;
+    first = articles[0];
   });
 
   $effect(() => {
@@ -572,7 +577,9 @@
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       {@const opening = untitledOpening(article)}
+      {@const begun = index === 0 && lead && !results && !unreadOff && !article.read && pickUp.asked && !pickUp.offer}
       <li>
+        {#if begun}<p class="-mb-3 pt-3 pl-[var(--list-start,2rem)] text-small text-muted">{order === "oldest" ? "Oldest" : "Newest"} unread</p>{/if}
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
           type="button"
@@ -580,6 +587,8 @@
           tabindex={current || (selectedIndex === -1 && index === 0) ? 0 : -1}
           aria-current={current ? "true" : undefined}
           data-space-reads
+          style:--row-title-size={begun ? "1.5rem" : undefined}
+          style:--row-title-line={begun ? "1.15" : undefined}
           onclick={(event) => {
             select(index);
             // A click made with Enter has no mouse position.
@@ -634,6 +643,7 @@
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
           </span>
+          {#if begun}<RowOpening {article} />{/if}
         </button>
       </li>
     {/each}
