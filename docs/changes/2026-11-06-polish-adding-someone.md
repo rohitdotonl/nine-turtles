@@ -5,9 +5,8 @@
 - "How often it posts" ("Posts about twice a week", "Too new to tell") is gone
   from the several-feeds choice, the website's feed finder and AI assistants'
   feed health. How often nine turtles checks each feed hasn't changed.
-- The welcome: the field comes first, with **New to feeds? Start here** and
-  **Bring your list from another app…** together under it. On a computer the
-  heading no longer jumps up when feeds are offered.
+- On a computer, the welcome's heading no longer jumps up when feeds are
+  offered.
 - On a phone, the feeds offered in the welcome sit on a white card, with
   **Follow** the full width under them.
 - On a phone with nine turtles installed, the Add sheet says, quietly,

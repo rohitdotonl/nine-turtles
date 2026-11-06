@@ -92,6 +92,8 @@ export type Article = {
   episodeSeconds?: number | null;
   /** Who wrote it, for a publication's article whose feed names someone (the owner's core path, point 4). */
   writer?: string;
+  /** An untitled article's first words, as plain text, which a list shows instead of a title (SPEC section 6). */
+  opening?: string;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -163,6 +165,7 @@ export function toArticle(article: Record<string, unknown>): Article {
     starred: article.starred === true,
     muted: article.muted === true,
     ...(typeof article.writer === "string" && article.writer.trim() ? { writer: article.writer.trim() } : {}),
+    ...(typeof article.opening === "string" && article.opening.trim() ? { opening: article.opening.trim() } : {}),
     ...excerptOf(article),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
@@ -181,6 +184,15 @@ function excerptOf(article: Record<string, unknown>): { excerpt?: ExcerptPiece[]
   if (typeof article.highlighted === "string") return { excerpt: [{ text: `Highlighted · ${article.highlighted}`, match: false }] };
   if (typeof article.noted === "string") return { excerpt: [{ text: `Your note · ${article.noted}`, match: false }] };
   return {};
+}
+
+/**
+ * What a list shows for an article with no title (SPEC section 6): its
+ * opening words, else "Untitled". Undefined for an article with a title.
+ */
+export function untitledOpening(article: Article): string | undefined {
+  if (article.title.trim()) return undefined;
+  return article.opening ?? "Untitled";
 }
 
 /** Only well-formed pieces, each kept as text. */

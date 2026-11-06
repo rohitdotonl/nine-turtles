@@ -122,6 +122,55 @@ pub struct ArticleRow {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub writer: Option<String>,
+    /// Only for an article with no title: its whole text (`untitled_body!`),
+    /// never sent as it is: it goes out as `opening`, its first words
+    /// (`ArticleRow::opening`), which the list shows instead of a
+    /// title (SPEC section 6, decision 0196).
+    #[sqlx(default)]
+    #[serde(
+        rename = "opening",
+        serialize_with = "opening_of_body",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub untitled_body: Option<String>,
+}
+
+/// An untitled article's text, for the list to show its opening instead of
+/// a title: its content, or its summary when the feed gives only that.
+/// Nothing for an article with a title, so a list never reads more than it
+/// shows.
+macro_rules! untitled_body {
+    () => {
+        "CASE WHEN TRIM(articles.title) = '' THEN COALESCE(articles.content, articles.summary) END AS untitled_body"
+    };
+}
+pub(crate) use untitled_body;
+
+/// How many characters of an untitled article's opening are sent: more than
+/// two lines of the widest list hold, which end in "…" on screen.
+const OPENING_LENGTH: usize = 200;
+
+/// An untitled article's opening words as plain text, or nothing when it
+/// has no words (a picture alone, an episode with no notes).
+pub fn opening(html: &str) -> Option<String> {
+    let words = crate::search::plain_words(html);
+    let opening: String = words.chars().take(OPENING_LENGTH).collect();
+    (!opening.is_empty()).then_some(opening)
+}
+
+impl ArticleRow {
+    /// Its opening words, when it has no title (sent as `opening`).
+    pub fn opening(&self) -> Option<String> {
+        self.untitled_body.as_deref().and_then(opening)
+    }
+}
+
+/// Writes an untitled article's text as its opening (`ArticleRow`).
+fn opening_of_body<S: serde::Serializer>(
+    body: &Option<String>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    serde::Serialize::serialize(&body.as_deref().and_then(opening), serializer)
 }
 
 /// Who wrote an article of a publication, when its feed names someone, so a
@@ -283,6 +332,8 @@ macro_rules! list_query {
                     articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
                     ",
             publication_writer!(),
+            ", ",
+            untitled_body!(),
             "
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
@@ -313,6 +364,8 @@ macro_rules! notes_query {
                     entries.read, entries.starred, entries.muted,
                     articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
             publication_writer!(),
+            ", ",
+            untitled_body!(),
             ",
                     (SELECT quote FROM notes AS first WHERE first.person_id = entries.person_id
                          AND first.article_id = entries.article_id AND first.quote IS NOT NULL

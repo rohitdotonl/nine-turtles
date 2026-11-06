@@ -1,14 +1,10 @@
 # 0199: Polish adding someone
 
-*6 November 2026. The owner's onboarding review, findings 4, 9, 12, 13 and
-16, and the owner's answers in that thread (6 November, 15:32 UTC).*
+*6 November 2026. The owner's onboarding review, findings 9, 12, 13 and 16
+(finding 4, the welcome's order, landed with decision 0198), and the owner's answers in that thread (6 November, 15:32 UTC).*
 
 **Decision.**
 
-- **The welcome's order:** heading, sentence, the field with Add, then the
-  two quiet side doors together under it: "New to feeds? Start here" and
-  "Bring your list from another app…". The eye meets the main door (the
-  field) before a side door.
 - **The welcome's heading stands still on a computer:** it sits 28% down
   the reading area (where centring put it) instead of being centred, so
   feeds offered or a message arriving grow the page downward and never

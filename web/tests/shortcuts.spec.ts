@@ -98,11 +98,12 @@ test.describe("on a wide window", () => {
     const count = sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
     const rows = page.locator("#list-pane li button[data-space-reads]");
     await expect(rows).toHaveCount(50);
-    await rows.nth(9).click();
-    await expect(count).toHaveAttribute("data-unread", `54`);
+    // Following brought only the newest five in unread (decision 0194).
+    await rows.nth(2).click();
+    await expect(count).toHaveAttribute("data-unread", `4`);
     await page.keyboard.press("Shift+O");
-    await expect(rows.nth(10)).toHaveAccessibleName(/, unread/);
-    await expect(count).toHaveAttribute("data-unread", `54`);
+    await expect(rows.nth(3)).toHaveAccessibleName(/, unread/);
+    await expect(count).toHaveAttribute("data-unread", `4`);
 
     await page.getByRole("button", { name: "More", exact: true }).click();
     await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toBeVisible();

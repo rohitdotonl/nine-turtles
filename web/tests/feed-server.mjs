@@ -42,6 +42,8 @@
 //                      "not found", and its home page still names only that,
 //                      so Find new address finds nothing new
 //   /hindi/NAME/       like /blog/NAME/, for a blog written in Hindi
+//   /untitled/NAME/    a blog called NAME of notes with no titles: a long
+//                      one, a short one, and one titled post
 //   /shelf/BLOG/       the screenshots' library: a handful of made-up blogs
 //                      with real-looking titles, authors and dates (SHELF
 //                      below), naming /shelf/BLOG/feed.xml
@@ -176,6 +178,17 @@ const kavita = (title, link) => `<?xml version="1.0"?><rss version="2.0"><channe
 <description>&lt;p&gt;शहर के पुराने पुस्तकालय में नई किताबें आई हैं।&lt;/p&gt;</description></item>
 <item><title>बारिश</title><guid>${link}rain</guid><pubDate>${new Date(NEWEST - DAY).toUTCString()}</pubDate>
 <description>&lt;p&gt;आज मौसम बहुत सुहावना है।&lt;/p&gt;</description></item></channel></rss>`;
+
+// A made-up blog of short notes with no titles, as many people's own sites send (SPEC section 6).
+const LONG_NOTE = "Walked to the river before breakfast and watched the herons fish in the shallows. ".repeat(6);
+const untitledNotes = (title, link) => `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
+<link>${link}</link>
+<item><guid>${link}long</guid><link>${link}long</link><pubDate>${new Date(NEWEST).toUTCString()}</pubDate>
+<description>&lt;p&gt;${LONG_NOTE}&lt;/p&gt;</description></item>
+<item><guid>${link}short</guid><link>${link}short</link><pubDate>${new Date(NEWEST - DAY).toUTCString()}</pubDate>
+<description>&lt;p&gt;Rain all day.&lt;/p&gt;</description></item>
+<item><title>A titled post</title><guid>${link}titled</guid><link>${link}titled</link><pubDate>${new Date(NEWEST - 2 * DAY).toUTCString()}</pubDate>
+<description>&lt;p&gt;With a title.&lt;/p&gt;</description></item></channel></rss>`;
 
 // The screenshots' library (tests/screens.ts): what a real reader might
 // follow, so the pictures on a pull request look like nine turtles in use.
@@ -442,6 +455,13 @@ createServer((request, response) => {
     const name = hindi[1];
     if (hindi[2]) return xml(kavita(`Kavita ${name}`, `https://${name}.example/`));
     return html(page(`Kavita ${name}`, [[`Kavita ${name}`, `/hindi/${name}/feed.xml`]]));
+  }
+
+  const notes = path.match(/^\/untitled\/([a-z0-9-]+)\/(feed\.xml)?$/);
+  if (notes) {
+    const name = notes[1];
+    if (notes[2]) return xml(untitledNotes(`Notes ${name}`, `https://${name}.example/`));
+    return html(page(`Notes ${name}`, [[`Notes ${name}`, `/untitled/${name}/feed.xml`]]));
   }
 
   // A writer whose feed gives no address but whose contact page does (Write back, decision 0168).

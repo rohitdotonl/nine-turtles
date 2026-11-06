@@ -208,13 +208,25 @@
     // A new article starts at its top, unless you stopped part of the way through it (below).
     if (scroller) scroller.scrollTop = 0;
     if (articleNow(id)) return;
+    fetchArticle(id);
+  });
+
+  /** Try again: the button goes as the article is asked for again, so the keyboard waits on its title. */
+  function retryArticle() {
+    heading?.focus({ preventScroll: true });
+    fetchArticle(article.id);
+  }
+
+  /** Asks for the article's text; if it can't come, the reading area says so, with Try again. */
+  function fetchArticle(id: number) {
+    problem = false;
     readArticle(id).then(
       () => arrivals++,
       () => {
         if (article.id === id) problem = true;
       },
     );
-  });
+  }
 
   // Opening an article you stopped part of the way through puts you back
   // where you were, at once. Pictures that load late push the text down, so
@@ -496,7 +508,7 @@
       {/if}
       {#if episode && connection.offline && !(player.current?.article.id === article.id)}
         <!-- Without a connection there's nothing to play from: the episode waits, as a video does (SPEC section 32). -->
-        <p class="article-note mt-6" lang="en">{EPISODE_OFFLINE}</p>
+        <p role="status" class="article-note mt-6" lang="en">{EPISODE_OFFLINE}</p>
       {:else if episode}
         <!-- A podcast's episode plays here, from the publisher's own file (SPEC section 35, decision 0113). -->
         {#key article.id}
@@ -540,7 +552,10 @@
           <p class="mt-6" lang="en">This article has no text in its feed. View original to read it on the publisher's site.</p>
         {/if}
       {:else if problem}
-        <p class="mt-6" lang="en">{connection.offline ? NOT_KEPT : "This article couldn't be loaded. Try again in a moment."}</p>
+        <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
+          {#if connection.offline}{NOT_KEPT}{:else}This article couldn't be loaded.
+            <button type="button" onclick={retryArticle} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button>{/if}
+        </p>
       {/if}
       {#if full}
         <!-- The article's last word is the reader's: their highlights and note (SPEC section 42), then writing back to whoever wrote it (SPEC section 37). -->

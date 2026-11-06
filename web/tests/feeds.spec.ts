@@ -72,15 +72,11 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Their website's address");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // The two side doors, under the field (decision 0199): "New to feeds? Start here", then "Bring your list
-  // from another app…", underlined links in the text color centred under it, each 44px tall to touch
-  // (decisions 0045, 0048, 0055). Importing opens the file chooser at once (decision 0137).
-  const newLink = reading.getByRole("link", { name: "New to feeds? Start here" });
+  // "Bring your list from another app…", an underlined link in the text color just under the field and
+  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
   const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
-  const [fieldBox, newBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), newLink.boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
-  expect(newBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
-  expect(Math.abs(importBox!.y - (newBox!.y + newBox!.height))).toBeLessThan(2);
-  expect(newBox!.height).toBeGreaterThanOrEqual(44);
+  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
+  expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
   expect(importBox!.height).toBeGreaterThanOrEqual(44);
   await expect(importLink).toHaveCSS("text-decoration-line", "underline");
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
@@ -227,9 +223,13 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   for (const box of await boxes.all()) await expect(box).not.toBeChecked();
   for (const row of await sheet.locator("label.check-row").all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   // Nothing ticked: it says so, in words.
-  const addChosen = sheet.getByRole("button", { name: "Add chosen feeds" });
-  await addChosen.click();
-  await expect(sheet.getByRole("status")).toHaveText("Choose a feed first.");
+  // Each name is a link to the writer's site, in a tab of its own.
+  const james = sheet.getByRole("link", { name: /^James/ });
+  await expect(james).toHaveAttribute("href", "https://jamesg.blog/");
+  await expect(james).toHaveAttribute("target", "_blank");
+  expect((await james.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // Nothing ticked: the main button adds all five; once any is ticked, only those.
+  await expect(sheet.getByRole("button", { name: "Add all five" })).toBeVisible();
   // Ticked ones are added one after another through the same path as a pasted address; here
   // nine turtles is made to say the sites didn't answer, so this fresh nine turtles stays empty.
   const asked: string[] = [];
@@ -238,12 +238,12 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
     asked.push((route.request().postDataJSON() as { address: string }).address);
     await route.fulfill({ status: 502, json: { error: "unreachable" } });
   });
-  await sheet.getByRole("checkbox", { name: /The Marginalian/ }).check();
-  await sheet.getByRole("checkbox", { name: /kottke\.org/ }).check();
-  await addChosen.click();
+  await sheet.getByRole("checkbox", { name: /^James/ }).check();
+  await sheet.getByRole("checkbox", { name: /Jeff Kaufman/ }).check();
+  await sheet.getByRole("button", { name: "Add 2 chosen" }).click();
   await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added just now. Try again later.");
-  expect(asked).toEqual(["https://www.themarginalian.org/feed/", "https://feeds.kottke.org/main"]);
-  await expect(sheet.getByRole("checkbox", { name: /kottke\.org/ })).toBeChecked();
+  expect(asked).toEqual(["https://jamesg.blog/feeds/posts.xml", "https://www.jefftk.com/news.rss"]);
+  await expect(sheet.getByRole("checkbox", { name: /Jeff Kaufman/ })).toBeChecked();
   // Escape closes it, back to the welcome, with the keyboard back on the link that opened it.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/unread$/);
@@ -268,25 +268,32 @@ test("New to feeds? works with the keyboard alone, and the starters chosen are a
     if (followed.length === 0) return route.fallback();
     return route.fulfill({ json: { feeds: followed, folders: [] } });
   });
+  // Each starter added is filed as a person (decision 0079).
+  const filed: unknown[] = [];
+  await page.route("**/api/feeds/9*", async (route) => {
+    filed.push(route.request().postDataJSON());
+    return route.fulfill({ json: {} });
+  });
   const link = page.getByRole("link", { name: "New to feeds? Start here" });
   await tabTo(page, link);
   await page.keyboard.press("Enter");
   const sheet = page.getByRole("dialog", { name: "New to feeds?" });
   await expect(sheet.getByRole("heading", { name: "New to feeds?" })).toBeFocused();
-  const first = sheet.getByRole("checkbox", { name: /The Marginalian/ });
+  const first = sheet.getByRole("checkbox", { name: /^James/ });
   await tabTo(page, first);
   await page.keyboard.press("Space");
   await expect(first).toBeChecked();
-  const nasa = sheet.getByRole("checkbox", { name: /NASA Image of the Day/ });
-  await tabTo(page, nasa);
+  const ava = sheet.getByRole("checkbox", { name: /^Ava/ });
+  await tabTo(page, ava);
   await page.keyboard.press("Space");
-  await tabTo(page, sheet.getByRole("button", { name: "Add chosen feeds" }));
+  await tabTo(page, sheet.getByRole("button", { name: "Add 2 chosen" }));
   await page.keyboard.press("Enter");
   // Two added: Unread opens, with both in the sidebar.
   await expect(page).toHaveURL(/\/unread$/);
   await expect(sheet).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: /Starter 9000/ })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: /Starter 9001/ })).toBeVisible();
+  expect(filed).toEqual([expect.objectContaining({ kind: "person" }), expect.objectContaining({ kind: "person" })]);
   // Once anything is followed, the sheet's address opens the home view instead (decision 0079).
   await page.goBack();
   await expect(page).toHaveURL(/\/unread$/);
@@ -303,7 +310,7 @@ test("on a phone, New to feeds? is a page sheet with its X and the main action a
   await expect(page.getByRole("heading", { level: 2, name: "New to feeds?" })).toBeVisible();
   await expect(page.getByRole("checkbox")).toHaveCount(5);
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
-  const add = (await page.getByRole("button", { name: "Add chosen feeds" }).boundingBox())!;
+  const add = (await page.getByRole("button", { name: "Add all five" }).boundingBox())!;
   expect(add.y + add.height).toBeGreaterThan(700);
   // The X goes back to the welcome it opened from.
   await page.getByRole("button", { name: "Close" }).click();
@@ -420,7 +427,7 @@ test("in the welcome, the heading stays still as feeds are offered, Add steps as
   await page.keyboard.press("Enter");
   await expect(page.getByRole("group", { name: "Feeds on this site" })).toBeVisible();
   expect(await top()).toBe(before);
-  // The field's own Add steps aside: Cancel and Follow sit at the list's foot, and the side doors wait.
+  // The field's own Add steps aside: Cancel and Follow sit at the list's foot, and the links under the field wait.
   await expect(page.getByRole("button", { name: "Add", exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "New to feeds? Start here" })).toHaveCount(0);
   await page.getByRole("button", { name: "Cancel" }).click();

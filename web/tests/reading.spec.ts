@@ -26,6 +26,35 @@ async function visits(page: Page, path: string): Promise<number> {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
+  test("an article or the feeds that couldn't be loaded say so, aloud too, with Try again", async ({ page }) => {
+    await openRoom(page);
+    let failing = true;
+    await page.route(/\/api\/articles\/[0-9]+$/, (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+    await page.keyboard.press("j");
+    const articleProblem = article(page).getByRole("status").filter({ hasText: "This article couldn't be loaded." });
+    await expect(articleProblem).toBeVisible();
+    failing = false;
+    // From the keyboard: Try again goes as the article comes, and the keyboard waits on its title, not lost.
+    await tabTo(page, articleProblem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
+    await expect(articleProblem).toHaveCount(0);
+    await expect(article(page).locator("h2.article-title")).toBeFocused();
+
+    let feedsFailing = true;
+    await page.route("**/api/feeds", (route) =>
+      feedsFailing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback(),
+    );
+    await page.reload();
+    const feedsProblem = page.getByRole("status").filter({ hasText: "Your feeds couldn't be loaded." });
+    await expect(feedsProblem).toBeVisible();
+    feedsFailing = false;
+    await tabTo(page, feedsProblem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
+    await expect(feedsProblem).toHaveCount(0);
+    await expect(page.locator("#sidebar a").first()).toBeFocused();
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
+  });
+
   test("the list's button hides and shows the article list, and f both; with both hidden one button brings both back", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
