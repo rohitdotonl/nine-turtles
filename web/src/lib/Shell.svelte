@@ -460,7 +460,7 @@
   function arrive(screen: Screen) {
     reading = phone && screen === "article" && selected !== undefined;
     layout.showHome(screen === "home");
-    if (phone && screen === "home") void loadFeeds(); // The feeds screen's dots catch up as you arrive, never while you look (SPEC section 13).
+    if (phone && screen === "home") void library.catchUp(); // The feeds screen's dots catch up as you arrive on it (SPEC section 13).
     queueMicrotask(() => {
       if (phone && screen === "home") wordmark?.focus();
       else if (reading) articleHeading?.focus({ preventScroll: true });
@@ -906,7 +906,7 @@
 -->
 <svelte:window bind:innerWidth={layout.windowWidth} />
 <!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
-<svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && loadFeeds()} />
+<svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
 <!--
   While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 35), so the
   panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
