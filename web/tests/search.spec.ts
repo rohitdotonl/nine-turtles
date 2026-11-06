@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, nothingToPickUp, signIn } from "./screens";
 
 // SPEC section 14 (search), "How to check it", done by a browser, with the
 // keyboard only. Each test uses blogs and a folder of its own, since every
@@ -235,11 +235,13 @@ test("each result shows its text around the match under the title, and × clears
 });
 
 test("with nothing found, the reading area doesn't offer j", async ({ page }) => {
+  await nothingToPickUp(page);
   const blog = unique("nothing");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
   const reading = page.getByRole("region", { name: "Article", exact: true });
-  await expect(reading).toContainText(/press j/i);
+  // An unread article first: the reading area has begun it (decision 0210).
+  await expect(reading.getByRole("button", { name: "Start reading" })).toBeVisible();
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");

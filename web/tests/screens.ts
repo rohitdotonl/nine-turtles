@@ -471,10 +471,10 @@ async function followLibrary(page: Page): Promise<void> {
 }
 
 /** Marks every article of a feed unread and unstarred again, so its screen starts the same each time. */
-async function unmark(page: Page, feed: number): Promise<void> {
+async function unmark(page: Page, feed: number, marks: [string, boolean][] = [["read", false], ["starred", false]]): Promise<void> {
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, page.url()).href)).json();
   const ids = listed.articles.map((article: { id: number }) => article.id);
-  for (const [mark, value] of [["read", false], ["starred", false]] as const) {
+  for (const [mark, value] of marks) {
     const done = await page.request.post(new URL(`/api/articles/${mark}`, page.url()).href, { data: { ids, [mark]: value } });
     expect(done.ok()).toBe(true);
   }
@@ -501,12 +501,22 @@ export async function follow(page: Page, address: string): Promise<number> {
 }
 
 /** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */
-export async function openReadingRoom(page: Page, { unread = false } = {}): Promise<void> {
+export async function openReadingRoom(page: Page, { unread = false, read = false } = {}): Promise<void> {
   const id = await follow(page, `${FEED_SITE}/reading/`);
   if (unread) await unmark(page, id);
+  // All read: the empty reading area shows its quiet line, not Start reading (decision 0210).
+  if (read) await unmark(page, id, [["read", true]]);
   await page.goto(new URL(`/people/${id}`, page.url()).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
+}
+
+/**
+ * Nothing to pick up on this page (decision 0175 comes first): every test shares
+ * one reader, and another test may have just left an article part of the way through.
+ */
+export async function nothingToPickUp(page: Page): Promise<void> {
+  await page.route("**/api/resume", (route) => (route.request().method() === "GET" ? route.fulfill({ json: {} }) : route.continue()));
 }
 
 /** Signs in through the sign-in page, the way the reader does. */
