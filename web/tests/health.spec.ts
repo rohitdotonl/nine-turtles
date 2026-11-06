@@ -280,3 +280,24 @@ test("moving a dead feed in Everyone you follow keeps its place and its confirma
   await expect(feed).toContainText("Working again.");
   await expect(feed.getByRole("button", { name: `Find new address for ${title}` })).toBeFocused();
 });
+
+test("a person whose feed stopped may not know: their Not working card offers Write to them", async ({ page }) => {
+  // Decision 0212: no dead ends. A feed is dead only after a week; the page's list is changed to call this one dead.
+  const name = `write-dead-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  await failing(page, name, "break");
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await appReady(page);
+  const dead = page.getByRole("region", { name: "Not working" });
+  const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(feed).toContainText(`${title} may not know.`);
+  // The everyday button, not a second solid one: Find new address stays the main one.
+  const write = feed.getByRole("button", { name: `Write to ${title}` });
+  await expect(write).toBeVisible();
+  await expect(write).not.toHaveClass(/btn-primary/);
+});

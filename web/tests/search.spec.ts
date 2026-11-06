@@ -294,3 +294,22 @@ test("the search options float over the list; Escape closes them first, then the
   await heading(page).focus();
   await expect(options).toBeHidden();
 });
+
+test("a search that found nothing in one place offers Search all articles, which looks everywhere", async ({ page }) => {
+  // Decision 0212: no dead ends.
+  const blog = unique("wider");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await page.keyboard.press("/");
+  await page.keyboard.type("zzyzxquux");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toBeVisible();
+  const wider = page.getByRole("button", { name: "Search all articles" });
+  await expect(wider).toBeVisible();
+  await wider.click();
+  // The same words, everywhere: nothing more to offer when that finds nothing too.
+  await expect(field(page)).toHaveValue("zzyzxquux");
+  await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toHaveCount(0);
+  await expect(page.getByText(/^Nothing found for “zzyzxquux”/)).toBeVisible();
+  await expect(wider).toHaveCount(0);
+});

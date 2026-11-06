@@ -32,6 +32,9 @@ Each one has two buttons:
   folders, articles and stars all stay.
 - **Unsubscribe**: let it go. **Undo** brings it back.
 
+For a person whose feed has stopped, there's also **Write to** them: they
+may not know their feed broke, and a short email is often all it takes.
+
 There's no need to try again yourself: nine turtles keeps checking, and
 picks up anything new as soon as the site is back.
 

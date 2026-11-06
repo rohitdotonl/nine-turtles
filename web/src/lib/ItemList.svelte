@@ -48,6 +48,7 @@
   import RowKind from "./RowKind.svelte";
   import RowOpening from "./RowOpening.svelte";
   import { pickUp } from "./resume.svelte";
+  import type { EmptyWords } from "./listWording";
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -72,7 +73,7 @@
   }: {
     source: Source;
     order: Order;
-    empty: { fact: string; how?: string };
+    empty: EmptyWords;
     /** Searched words: words in titles starting with one are shown in bold (SPEC section 14). */
     bold?: string[];
     /** Something done just before arriving, with its Undo. */
@@ -571,7 +572,7 @@
 {/if}
 
 {#if loaded && articles.length === 0}
-  <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}</div>
+  <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class="item-list">
     {#each articles as article, index (article.id)}

@@ -39,6 +39,7 @@
     feedId,
     library,
     quotes = () => [],
+    quiet = false,
   }: {
     /** The article it writes back about; none on their page, where it writes to them. */
     article?: Article;
@@ -47,6 +48,8 @@
     library: LoadedLibrary;
     /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
     quotes?: () => string[];
+    /** Beside another main action (a card's Find new address): an everyday bordered button, not the solid one. */
+    quiet?: boolean;
   } = $props();
 
   let source = $derived(library.feeds?.find((feed) => feed.id === (article?.feedId ?? feedId)));
@@ -195,11 +198,11 @@
         <p class="text-small text-ink-2">It sends from your own email.</p>
       </form>
     {:else if address}
-      <a class="btn-primary" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} />{verb} {name}</a>
+      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} />{verb} {name}</a>
       <p class="to">{address}</p>
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
     {:else}
-      <button type="button" class="btn-primary" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} />{verb} {name}</button>
+      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} />{verb} {name}</button>
     {/if}
   </div>
 {/if}
@@ -222,7 +225,8 @@
     margin-top: 0;
   }
   /* A long name wraps rather than running off a phone. */
-  .write-back > .btn-primary {
+  .write-back > .btn-primary,
+  .write-back > .btn {
     max-width: 100%;
     white-space: normal;
     text-align: center;
