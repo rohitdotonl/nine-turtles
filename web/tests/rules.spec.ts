@@ -8,9 +8,9 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // can be seen acting on an article as it arrives.
 
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
-const editor = (page: Page, name: string) => page.getByRole("dialog", { name }).or(page.getByRole("region", { name }));
+const field = (page: Page) => page.getByRole("textbox", { name: /^Hide articles (from .+ )?about$/ });
 
-test("Hide articles about… from someone's page hides what matches, asks first, and Hidden articles brings it back", async ({ page }) => {
+test("Hide articles about… from someone's page hides what matches at once, and Hidden articles brings it back", async ({ page }) => {
   const name = `rules-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
@@ -18,34 +18,36 @@ test("Hide articles about… from someone's page hides what matches, asks first,
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
 
-  // Their page › Hide articles about…: Settings › Hiding, the sentence set to them.
+  // Their page › Hide articles about…: Settings › Hiding, the field set to them and waiting.
   await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
-  const sheet = editor(page, "Hide articles");
-  await expect(sheet).toBeVisible();
-  await expect(sheet.getByRole("combobox", { name: "From" })).toHaveValue(String(id));
-
-  // Nothing to hide is refused in words.
-  await sheet.getByRole("button", { name: "Save" }).click();
-  await expect(sheet.getByRole("status")).toHaveText("Write a word or phrase to hide articles about.");
-
-  // One sentence whose blanks are named fields, each 44px to press (decision 0123).
-  for (const blank of [sheet.getByRole("textbox", { name: "About" }), sheet.getByRole("combobox", { name: "From" })]) {
-    expect((await blank.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  }
-  await sheet.getByRole("textbox", { name: "About" }).fill("Long Way");
-  await sheet.getByRole("button", { name: "Save" }).click();
-  await expect(sheet).toBeHidden();
-
-  // The sentence, and the question about what's already here, with the number first.
   const rules = page.getByRole("region", { name: "Hiding" }).last();
-  await expect(rules).toContainText(`Hide articles about “Long Way” from ${title}.`);
-  await expect(rules.getByRole("status")).toContainText("Also hide the 1 unread article that matches?");
-  await rules.getByRole("button", { name: "Hide them" }).click();
-  await expect(rules.getByRole("status")).toContainText("Hid 1 article.");
-  await expect(rules.getByRole("button", { name: "Undo" })).toBeFocused();
+  await expect(page.getByRole("textbox", { name: `Hide articles from ${title} about` })).toBeFocused();
+  await expect(rules).toContainText(`Only from ${title}`);
+
+  // Nothing to hide is refused in words, and the field says so.
+  await rules.getByRole("button", { name: "Add" }).click();
+  await expect(rules).toContainText("Type a word or phrase first.");
+  await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+
+  // For good is the usual choice. Adding hides at once what's unread and about it, with no question first.
+  await expect(rules.getByRole("radio", { name: "For good" })).toBeChecked();
+  await field(page).fill("Long Way");
+  await page.keyboard.press("Enter");
+  await expect(rules.getByRole("status")).toContainText("Hid 1 unread article about “Long Way”.");
+  await expect(field(page)).toBeFocused();
+  await expect(field(page)).toHaveValue("");
+  // Its row: the word, then whose and how long, and Remove, 44px to press.
+  const remove = rules.getByRole("button", { name: `Remove “Long Way”, ${title} · for good` });
+  await expect(remove).toBeVisible();
+  expect((await remove.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // The same word again says so, and adds nothing.
+  await field(page).fill("long way");
+  await page.keyboard.press("Enter");
+  await expect(rules.getByRole("status")).toContainText("“long way” is already hidden.");
+  await field(page).fill("");
 
   // It's gone from their list, but kept: Hidden articles lists it.
   const listed = await page.request.get(new URL(`/api/articles?feed=${id}`, FEEDS_APP).href);
@@ -93,7 +95,7 @@ test("Hide articles about… from someone's page hides what matches, asks first,
   await expect(page.getByRole("heading", { name: "Hiding", level: 2 })).toBeVisible();
 });
 
-test("an article's More menu starts the same sentence, set to whoever wrote it", async ({ page }) => {
+test("an article's More menu starts the same word, set to whoever wrote it", async ({ page }) => {
   const name = `rules-more-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
@@ -105,38 +107,32 @@ test("an article's More menu starts the same sentence, set to whoever wrote it",
   await article(page).getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Hide articles about…" }).click();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
-  const sheet = editor(page, "Hide articles");
-  await expect(sheet.getByRole("combobox", { name: "From" })).toHaveValue(String(id));
-  await page.keyboard.press("Escape");
-  await expect(sheet).toBeHidden();
+  await expect(page.getByRole("textbox", { name: `Hide articles from Blog ${name} about` })).toBeFocused();
+  // Everyone instead: the word is for everyone again.
+  await page.getByRole("button", { name: "Everyone instead" }).click();
+  await expect(page.getByRole("textbox", { name: "Hide articles about", exact: true })).toBeVisible();
 });
 
-test("a rule hides an article as it arrives; rules pause, and Delete has Undo", async ({ page }) => {
+test("a word hides an article as it arrives; a week says so, and Remove has Undo", async ({ page }) => {
   const name = `rules-new-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings/hiding", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.reload();
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
+  await page.getByRole("button", { name: "Hide articles about…" }).click();
 
   const rules = page.getByRole("region", { name: "Hiding" }).last();
-  await rules.getByRole("button", { name: "Hide articles about…" }).click();
-  const sheet = editor(page, "Hide articles");
-  // Escape closes it unchanged, and Hiding stays.
-  await expect(sheet).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(sheet).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Hiding", level: 2 })).toBeVisible();
-
-  await rules.getByRole("button", { name: "Hide articles about…" }).click();
-  await sheet.getByRole("textbox", { name: "About" }).fill("river");
-  await sheet.getByRole("combobox", { name: "From" }).selectOption(String(id));
-  await sheet.getByRole("button", { name: "Save" }).click();
-  const sentence = `Hide articles about “river” from ${title}.`;
-  await expect(rules).toContainText(sentence);
-  await expect(rules.getByRole("status")).toContainText("Rule saved. New articles about it are hidden as they arrive.");
+  await rules.getByRole("radio", { name: "For a week" }).check();
+  await field(page).fill("river");
+  await rules.getByRole("button", { name: "Add" }).click();
+  await expect(rules.getByRole("status")).toContainText("Hiding “river”, for a week. Nothing unread is about it yet.");
+  // Back to For good for the next word.
+  await expect(rules.getByRole("radio", { name: "For good" })).toBeChecked();
+  const line = `${title} · 7 days left`;
+  await expect(rules.getByRole("button", { name: `Remove “river”, ${line}` })).toBeVisible();
 
   // The blog publishes "What the river taught me (4)": it arrives hidden.
   expect((await page.request.get(`${FEED_SITE}/grow/${name}`)).ok()).toBe(true);
@@ -151,77 +147,85 @@ test("a rule hides an article as it arrives; rules pause, and Delete has Undo", 
     )
     .toBe(true);
 
-  // Its switch pauses it, saying so in words.
-  const on = rules.getByRole("switch", { name: `On: ${sentence}` });
-  await expect(on).toBeChecked();
-  // The switch flips at once; wait for the server to keep it before reloading.
-  const kept = page.waitForResponse((answer) => answer.url().endsWith("/paused") && answer.ok());
-  await on.click();
-  await expect(on).not.toBeChecked();
-  await expect(rules).toContainText(`${sentence} Paused.`);
-  await kept;
-  await page.reload();
-  await appReady(page);
-  await expect(rules.getByRole("switch", { name: `On: ${sentence}` })).not.toBeChecked();
-
-  // Edit › Delete: gone at once, with Undo bringing it back as it was.
-  await rules.getByRole("button", { name: `Edit: ${sentence}` }).click();
-  const editing = editor(page, "Edit");
-  await editing.getByRole("button", { name: "Delete" }).click();
-  await expect(rules.getByRole("status")).toContainText("Rule deleted.");
-  await expect(rules).not.toContainText(sentence);
+  // No switch and no Edit: Remove, at once, with Undo bringing it back for the time it had left.
+  await expect(rules.getByRole("switch")).toHaveCount(0);
+  await expect(rules.getByRole("button", { name: /^Edit/ })).toHaveCount(0);
+  await rules.getByRole("button", { name: `Remove “river”, ${line}` }).click();
+  await expect(rules.getByRole("status")).toContainText("Removed “river”.");
+  await expect(rules).not.toContainText(line);
   await rules.getByRole("button", { name: "Undo" }).click();
   await expect(rules.getByRole("status")).toContainText("Undone.");
-  await expect(rules).toContainText(`${sentence} Paused.`);
+  await expect(rules.getByRole("button", { name: `Remove “river”, ${line}` })).toBeVisible();
+  // The line has a ×, as the list's note does: it goes, and the keyboard waits on the group's heading.
+  await rules.getByRole("button", { name: "Close the note" }).click();
+  await expect(rules.getByText("Undone.")).toBeHidden();
+  await expect(page.locator("#rules-heading")).toBeFocused();
 });
 
-test("with the keyboard alone: a new rule, its switch, and Not now keep the keyboard's place", async ({ page }) => {
+test("when the words couldn't load, Try again loads them, keeping the keyboard's place", async ({ page }) => {
+  await page.goto(new URL("/settings/hiding", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route("**/api/rules", (route) =>
+    failing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback(),
+  );
+  await page.reload();
+  await appReady(page);
+  const rules = page.getByRole("region", { name: "Hiding" }).last();
+  const problem = rules.getByRole("status").filter({ hasText: "What's hidden couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.locator("#rules-heading")).toBeFocused();
+  await expect(field(page)).toBeVisible();
+});
+
+test("when the hidden articles couldn't load, the line says so in oxblood, and Try again loads them", async ({ page }) => {
+  await page.goto(new URL("/settings/hidden", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route(/\/api\/muted/, (route) => (failing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback()));
+  await page.reload();
+  await appReady(page);
+  const problem = page.getByRole("status").filter({ hasText: "The hidden articles couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  // A second failure says so again.
+  await page.keyboard.press("Enter");
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.locator("#muted-heading")).toBeFocused();
+});
+
+test("with the keyboard alone: a word added, then undone, keeps the keyboard's place", async ({ page }) => {
   const name = `rules-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   await page.goto(new URL("/settings/hiding", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.reload();
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
+  await page.getByRole("button", { name: "Hide articles about…" }).click();
 
   const rules = page.getByRole("region", { name: "Hiding" }).last();
-  // Past every feed the other tests have added to the sidebar, then Settings' rows.
-  await tabTo(page, rules.getByRole("button", { name: "Hide articles about…" }), 200);
-  await page.keyboard.press("Enter");
-  const sheet = editor(page, "Hide articles");
-  await expect(sheet.getByRole("heading", { name: "Hide articles" })).toBeFocused();
-  await tabTo(page, sheet.getByRole("textbox", { name: "About" }));
+  await expect(field(page)).toBeFocused();
   await page.keyboard.type("commonplace");
-  await tabTo(page, sheet.getByRole("combobox", { name: "From" }));
-  await sheet.getByRole("combobox", { name: "From" }).selectOption(String(id));
-  await tabTo(page, sheet.getByRole("button", { name: "Save" }));
+  await tabTo(page, rules.getByRole("button", { name: "Add" }));
   await page.keyboard.press("Enter");
-  await expect(sheet).toBeHidden();
-
-  // "On keeping a commonplace book (3)" already matches: the question takes the keyboard.
-  await expect(rules.getByRole("button", { name: "Hide them" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(rules.getByRole("button", { name: "Not now" })).toBeFocused();
+  // "On keeping a commonplace book (3)" already matched: hidden at once.
+  await expect(rules.getByRole("status")).toContainText("Hid 1 unread article about “commonplace”.");
+  await expect(field(page)).toBeFocused();
+  await tabTo(page, rules.getByRole("button", { name: "Undo" }));
   await page.keyboard.press("Enter");
-  await expect(page.locator("#rules-heading")).toBeFocused();
-
-  const sentence = `Hide articles about “commonplace” from Blog ${name}.`;
-  const on = rules.getByRole("switch", { name: `On: ${sentence}` });
-  await tabTo(page, on);
-  await page.keyboard.press("Space");
-  await expect(on).not.toBeChecked();
-  await expect(rules).toContainText(`${sentence} Paused.`);
-});
-
-test("on a phone, the back gesture closes the editor and stays in Hiding", async ({ page }) => {
-  test.skip(test.info().project.name !== "phone", "Only a phone's editor is a screen of its own.");
-  await page.goto(new URL("/settings/hiding", FEEDS_APP).href);
-  await appReady(page);
-  await signIn(page);
-  await page.getByRole("button", { name: "Hide articles about…" }).click();
-  await expect(page.getByRole("heading", { name: "Hide articles", level: 2 })).toBeVisible();
-  await page.goBack();
-  await expect(page.getByRole("heading", { name: "Hide articles", level: 2 })).toBeHidden();
-  await expect(page.getByRole("heading", { name: "Hiding", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings\/hiding$/);
+  await expect(rules.getByRole("status")).toContainText("Undone.");
+  await expect(field(page)).toBeFocused();
+  const listed = await page.request.get(new URL(`/api/articles?feed=${id}&view=unread`, FEEDS_APP).href);
+  expect(((await listed.json()).articles as unknown[]).length).toBe(3);
 });

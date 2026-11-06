@@ -27,6 +27,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import TextButton from "./TextButton.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
@@ -554,7 +555,7 @@
       {:else if problem}
         <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
           {#if connection.offline}{NOT_KEPT}{:else}This article couldn't be loaded.
-            <button type="button" onclick={retryArticle} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button>{/if}
+            <TextButton onclick={retryArticle}>Try again</TextButton>{/if}
         </p>
       {/if}
       {#if full}

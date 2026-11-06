@@ -182,6 +182,10 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await page.keyboard.press("Enter");
   await expect(group.getByRole("status")).toHaveText("Undone.");
   await expect(group).toContainText("This laptop");
+  // The line's ×, as the list's note has: it goes, and the keyboard waits on the group's heading.
+  await group.getByRole("button", { name: "Close the note" }).click();
+  await expect(group.getByText("Undone.")).toBeHidden();
+  await expect(page.locator("#passkeys-heading")).toBeFocused();
 
   // Removed for real: the device's passkey no longer signs in, the password does.
   await group.getByRole("button", { name: "Remove This laptop" }).click();

@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import appCss from "../app.css?raw";
 import themesCss from "../themes.css?raw";
 import html from "../../index.html?raw";
-import ruleEditor from "./RuleEditor.svelte?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
 import { LOOKS, THEMES as THEME_NAMES } from "./themes";
 
@@ -466,15 +465,8 @@ describe("the summary-only note's link underline", () => {
 // night. (A swatch's own white or black needs no contrast: its name is spoken,
 // and the chosen one also has a ring in the full text color.)
 
-describe.each(Object.entries(THEMES))("the %s theme's rule blanks and appearance swatches", (_name, colors) => {
+describe.each(Object.entries(THEMES))("the %s theme's appearance swatches", (_name, colors) => {
   const share = (source: string, pattern: RegExp) => Number(source.match(pattern)![1]) / 100;
-
-  it("draw a rule blank's dashed line at 3 : 1 on the sheet", () => {
-    const line = share(ruleEditor, /border-bottom: 1px dashed color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
-    for (const surface of ["paper", "surface-raised"]) {
-      expect(contrast(mix(colors.ink!, colors[surface]!, line), colors[surface]!), surface).toBeGreaterThanOrEqual(3);
-    }
-  });
 
   it("edge each swatch at 3 : 1 on the panel", () => {
     const edge = share(readingPanel, /\.dot \{[^}]*border: 1px solid color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);

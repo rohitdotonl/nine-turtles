@@ -80,7 +80,7 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await expect(page).toHaveURL(/\/settings\/hiding$/);
   await expect(page).toHaveTitle("Hiding · nine turtles");
   await expect(page.getByRole("heading", { level: 2, name: "Hiding" })).toBeFocused();
-  await expect(page.getByRole("button", { name: "Hide articles about…" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Hide articles about" })).toBeVisible();
   const back = page.getByRole("button", { name: "Back to Settings" });
   await expect(back).toHaveText("Settings");
   // Escape goes back to Settings, with the keyboard on the row that opened the page.

@@ -159,7 +159,7 @@ async fn a_rule_keeps_new_matching_articles_out_of_every_list_but_search_and_hid
         .post("/api/rules", json!({ "words": "Sponsored" }))
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
-    assert_eq!(made["matching"], 0);
+    assert_eq!(made["ids"], json!([]));
 
     reader.write("2", "SPONSORED: a new laptop", "Ad Team", "Buy it.");
     reader.write("3", "Unsponsored thoughts", "Jane Doe", "Mine.");
@@ -253,12 +253,7 @@ async fn a_rule_from_one_person_covers_all_their_places_and_nobody_else() {
         .post("/api/rules", json!({ "words": "garden", "feed_id": other }))
         .await;
     assert_eq!(status, StatusCode::OK, "{made}");
-    assert_eq!(made["matching"], 2);
-    let id = made["id"].as_i64().unwrap();
-    let (_, applied) = reader
-        .post(&format!("/api/rules/{id}/apply"), json!({}))
-        .await;
-    assert_eq!(applied["ids"].as_array().unwrap().len(), 2);
+    assert_eq!(made["ids"].as_array().unwrap().len(), 2);
     assert_eq!(reader.unread_count(blog).await, 0);
     assert_eq!(reader.unread_count(other).await, 0);
     assert_eq!(reader.unread_count(pond).await, 1);
@@ -277,17 +272,11 @@ async fn a_rule_from_one_person_covers_all_their_places_and_nobody_else() {
 async fn a_paused_rule_does_nothing_and_old_kinds_of_rule_are_kept_but_never_shown_or_run() {
     let reader = Reader::new().await;
     let blog = reader.follow("blog.xml").await;
+    // Paused before the switch went (decision 0201): listed, never run.
     let (_, paused) = reader
-        .post("/api/rules", json!({ "words": "laptop" }))
+        .post("/api/rules", json!({ "words": "laptop", "paused": true }))
         .await;
-    let paused = paused["id"].as_i64().unwrap();
-    let (status, _) = reader
-        .post(
-            &format!("/api/rules/{paused}/paused"),
-            json!({ "paused": true }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert!(paused["id"].is_i64(), "{paused}");
     // Rules from before (an author, a star, a folder), as the structure
     // change leaves them.
     sqlx::query(
@@ -302,15 +291,7 @@ async fn a_paused_rule_does_nothing_and_old_kinds_of_rule_are_kept_but_never_sho
     .unwrap();
     let listed = reader.get("/api/rules").await;
     assert_eq!(listed["rules"].as_array().unwrap().len(), 1);
-    for old in [90, 91, 92] {
-        let (status, _) = reader
-            .post(
-                &format!("/api/rules/{old}/paused"),
-                json!({ "paused": true }),
-            )
-            .await;
-        assert_eq!(status, StatusCode::NOT_FOUND);
-    }
+    assert_eq!(listed["rules"][0]["paused"], true);
 
     reader.write(
         "1",
@@ -331,7 +312,7 @@ async fn a_paused_rule_does_nothing_and_old_kinds_of_rule_are_kept_but_never_sho
 }
 
 #[tokio::test]
-async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
+async fn a_new_rule_hides_what_already_matches_at_once_and_can_be_undone() {
     let reader = Reader::new().await;
     reader.write("1", "Crypto news", "A", "Words.");
     reader.write("2", "Weekly notes", "A", "Mostly about crypto.");
@@ -341,15 +322,8 @@ async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
     let (_, made) = reader
         .post("/api/rules", json!({ "words": "crypto" }))
         .await;
-    // Rules act on what arrives; what's already here waits to be asked.
-    assert_eq!(made["matching"], 2);
-    assert_eq!(reader.unread_count(blog).await, 3);
-
-    let id = made["id"].as_i64().unwrap();
-    let (status, applied) = reader
-        .post(&format!("/api/rules/{id}/apply"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::OK);
+    // What's already here and unread is hidden at once (decision 0201).
+    let applied = made;
     assert_eq!(applied["ids"].as_array().unwrap().len(), 2);
     assert_eq!(
         reader.titles("/api/articles?view=unread").await,
@@ -367,7 +341,7 @@ async fn a_new_rule_can_be_applied_to_what_already_matches_and_undone() {
 }
 
 #[tokio::test]
-async fn rules_are_checked_edited_and_deleted() {
+async fn rules_are_checked_and_deleted() {
     let reader = Reader::new().await;
     let blog = reader.follow("blog.xml").await;
 
@@ -376,6 +350,7 @@ async fn rules_are_checked_edited_and_deleted() {
         json!({ "words": "  !!  " }),
         json!({ "words": "x".repeat(201) }),
         json!({ "words": "x", "feed_id": 999 }),
+        json!({ "words": "x", "days": 3 }),
     ] {
         let (status, _) = reader.post("/api/rules", refused.clone()).await;
         assert_eq!(status, StatusCode::BAD_REQUEST, "{refused}");
@@ -392,16 +367,7 @@ async fn rules_are_checked_edited_and_deleted() {
     assert_eq!(listed["rules"][0]["words"], "open web");
     assert_eq!(listed["rules"][0]["feed_id"], blog);
 
-    let (status, _) = reader
-        .post(
-            &format!("/api/rules/{id}"),
-            json!({ "words": "closed web" }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NO_CONTENT);
-    let listed = reader.get("/api/rules").await;
-    assert_eq!(listed["rules"][0]["words"], "closed web");
-    assert_eq!(listed["rules"][0]["feed_id"], Value::Null);
+    assert_eq!(listed["rules"][0]["until"], Value::Null);
 
     let (status, _) = reader
         .post(&format!("/api/rules/{id}/delete"), json!({}))
@@ -488,4 +454,67 @@ async fn leaving_one_of_someones_places_keeps_their_rule_on_the_others() {
     let rule = &reader.get("/api/rules").await["rules"][0];
     assert_eq!(rule["feed_id"], Value::Null);
     assert_eq!(rule["place_gone"], true);
+}
+
+#[tokio::test]
+async fn a_word_hidden_for_a_while_stops_and_leaves_the_list_when_its_time_is_up() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog.xml").await;
+    let (status, made) = reader
+        .post("/api/rules", json!({ "words": "election", "days": 7 }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{made}");
+    let id = made["id"].as_i64().unwrap();
+    let until = reader.get("/api/rules").await["rules"][0]["until"]
+        .as_i64()
+        .unwrap();
+    let week = until - nine_turtles::now();
+    assert!((7 * 86_400 - 60..=7 * 86_400).contains(&week), "{week}");
+
+    // While it lasts, it hides.
+    reader.write("1", "Election night", "Jane Doe", "Words.");
+    reader.check(blog).await;
+    assert_eq!(reader.unread_count(blog).await, 0);
+
+    // Once its week is over it hides nothing new and isn't listed; what it
+    // hid stays hidden.
+    sqlx::query("UPDATE rules SET until = 1 WHERE id = ?")
+        .bind(id)
+        .execute(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
+    reader.write("2", "Election, after", "Jane Doe", "Words.");
+    reader.check(blog).await;
+    assert_eq!(reader.unread_count(blog).await, 1);
+    assert_eq!(reader.get("/api/muted").await["count"], 1);
+}
+
+#[tokio::test]
+async fn undo_brings_a_removed_word_back_as_it_was_hiding_nothing_more() {
+    let reader = Reader::new().await;
+    reader.write("1", "Crypto news", "A", "Words.");
+    let blog = reader.follow("blog.xml").await;
+    // A paused word made again, and any word Undo restores, hide nothing
+    // already here (decision 0201).
+    for word in [
+        json!({ "words": "crypto", "paused": true }),
+        json!({ "words": "crypto", "restore": true }),
+    ] {
+        let (status, made) = reader.post("/api/rules", word).await;
+        assert_eq!(status, StatusCode::OK, "{made}");
+        assert_eq!(made["ids"], json!([]));
+        assert_eq!(reader.unread_count(blog).await, 1);
+    }
+    // A word whose time is already up isn't made.
+    let (status, refused) = reader
+        .post("/api/rules", json!({ "words": "crypto", "until": 1 }))
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "gone");
+    let kept: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM rules WHERE until = 1")
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(kept, 0);
 }
