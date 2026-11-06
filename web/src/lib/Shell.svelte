@@ -742,7 +742,7 @@
 
   /** Shift+J and Shift+K: the row after or before the place you're in, in the sidebar's order. */
   function rowAfter(step: 1 | -1): Route | undefined {
-    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, settings.hidden, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
+    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**
@@ -994,7 +994,7 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {unreadOff} hidden={settings.hidden} />
+      <SidebarViews {route} {follow} {phone} {unreadOff} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
@@ -1036,8 +1036,6 @@
           onSort={(next) => settings.changeSort(next)}
           unread={settings.unread}
           onUnread={(next) => settings.changeUnread(next)}
-          hidden={settings.hidden}
-          onHidden={(next) => settings.changeHidden(next)}
           bind:heading={headings.settings}
           {version}
           {owner}

@@ -7,7 +7,6 @@ import { deviceStorage } from "./device";
 import { isRecord } from "./http";
 
 export type ReadingFont = "literata" | "atkinson" | "system-serif";
-export type LineWidth = "narrow" | "medium" | "wide";
 
 export type Preferences = {
   /** The page: White, Paper, Night, or Match device (decision 0176). */
@@ -15,7 +14,6 @@ export type Preferences = {
   readingFont: ReadingFont;
   /** A step in TEXT_SIZES. `+` and `-` move through the same steps (Milestone 6). */
   textSize: number;
-  lineWidth: LineWidth;
 };
 
 export const TEXT_SIZES = [
@@ -26,14 +24,6 @@ export const TEXT_SIZES = [
   { label: "Larger", rem: 1.5 },
   { label: "Largest", rem: 1.75 },
 ] as const;
-
-// DESIGN.md: an article line of roughly 65–75 characters. A "ch" is the
-// width of a zero, wider than an average letter, so 57ch holds about 67.
-export const LINE_WIDTHS: Record<LineWidth, { label: string; ch: number }> = {
-  narrow: { label: "Narrow", ch: 52 },
-  medium: { label: "Medium", ch: 57 },
-  wide: { label: "Wide", ch: 63 },
-};
 
 /** `rest` is the end of a long name, said to screen readers but not shown, so three choices fit one row. */
 export const READING_FONTS: Record<ReadingFont, { label: string; rest?: string; family: string }> = {
@@ -48,7 +38,7 @@ function isReadingFont(value: unknown): value is ReadingFont {
   return typeof value === "string" && Object.hasOwn(READING_FONTS, value);
 }
 
-export const DEFAULTS: Preferences = { page: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" };
+export const DEFAULTS: Preferences = { page: "auto", readingFont: "literata", textSize: 2 };
 
 const KEY = "nine-turtles.preferences";
 
@@ -69,7 +59,6 @@ export function load(storage: Pick<Storage, "getItem"> | undefined = deviceStora
       typeof s.textSize === "number" && Number.isInteger(s.textSize) && s.textSize >= 0 && s.textSize < TEXT_SIZES.length
         ? s.textSize
         : DEFAULTS.textSize,
-    lineWidth: s.lineWidth === "narrow" || s.lineWidth === "medium" || s.lineWidth === "wide" ? s.lineWidth : DEFAULTS.lineWidth,
   };
 }
 
@@ -102,7 +91,6 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   const font = READING_FONTS[preferences.readingFont];
   root.style.setProperty("--reading-font", font.family);
   root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
-  root.style.setProperty("--reading-measure", `${LINE_WIDTHS[preferences.lineWidth].ch}ch`);
   // The phone's own bar above the page takes the showing page's color too
   // (index.html starts with White's by day and Night's by night).
   for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {

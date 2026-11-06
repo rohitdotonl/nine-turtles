@@ -21,13 +21,13 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
   // Reading and Look and feel hold their controls on the page itself.
   await expect(page.getByRole("switch", { name: "Unread", exact: true })).toBeVisible();
-  for (const name of ["Sort order", "Page"])
+  for (const name of ["Sort order", "Page", "Font"])
     await expect(page.getByRole("group", { name, exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Smaller text" })).toBeVisible();
-  // Font and line width are one page further in.
-  await expect(page.getByRole("group", { name: "Reading font" })).toHaveCount(0);
+  // One line width for everyone (decision 0187).
+  await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
+  const expected = ["feeds", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
@@ -106,14 +106,14 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await expect(page.getByText("On a computer")).toBeVisible();
 
   // An address opens its page straight away, and ‹ Settings still goes back.
-  await page.goto("/settings/font");
-  await expect(page.getByRole("heading", { level: 2, name: "Font and line width" })).toBeVisible();
-  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
-  await expect(page.getByRole("group", { name: "Reading font" })).toBeVisible();
-  await expect(page.getByRole("group", { name: "Line width" })).toBeVisible();
+  await page.goto("/settings/data");
+  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeVisible();
   await page.getByRole("button", { name: "Back to Settings" }).click();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("link", { name: /^Font and line width/ })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Your data", exact: true })).toBeFocused();
+  // The pages that went (decision 0187) open Settings itself.
+  await page.goto("/settings/font");
+  await expect(page).toHaveURL(/\/settings$/);
 
   // Everyone you follow keeps its X; it and Escape go back to its row too.
   await page.getByRole("link", { name: "Everyone you follow", exact: true }).click();

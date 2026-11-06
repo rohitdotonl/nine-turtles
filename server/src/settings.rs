@@ -1,7 +1,8 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order, whether Unread is on (SPEC section 10), and
-//! which lists the sidebar shows (`hidden`, decision 0105). Reader controls such as the theme
-//! belong to each device and stay in its browser.
+//! sort order and whether Unread is on (SPEC section 10). Reader controls such
+//! as the page and the font belong to each device and stay in its browser.
+//! The sidebar always shows every list now (decision 0187): a `hidden` row
+//! saved before is left in place and never read.
 
 use axum::{
     Json, Router,
@@ -22,50 +23,6 @@ pub fn routes() -> Router<AppState> {
     Router::new().route("/api/settings", get(read).post(change))
 }
 
-/// A list the reader can hide from the sidebar (Settings › Show in the sidebar). Unread,
-/// folders and feeds always show. A hidden list still opens by its address
-/// and its keys.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-enum Hideable {
-    Starred,
-    Notes,
-    All,
-}
-
-impl Hideable {
-    const EVERY: [Self; 3] = [Self::Starred, Self::Notes, Self::All];
-
-    const fn stored(self) -> &'static str {
-        match self {
-            Self::Starred => "starred",
-            Self::Notes => "notes",
-            Self::All => "all",
-        }
-    }
-}
-
-/// The hidden lists as stored: their words, separated by commas, in one
-/// order. Anything not understood is left out, such as the lists nine
-/// turtles no longer has (Recently read, saved searches and collections,
-/// decision 0174).
-fn hidden_from(stored: Option<&str>) -> Vec<Hideable> {
-    let words: Vec<&str> = stored.unwrap_or("").split(',').collect();
-    Hideable::EVERY
-        .into_iter()
-        .filter(|list| words.contains(&list.stored()))
-        .collect()
-}
-
-fn hidden_stored(hidden: &[Hideable]) -> String {
-    Hideable::EVERY
-        .into_iter()
-        .filter(|list| hidden.contains(list))
-        .map(Hideable::stored)
-        .collect::<Vec<_>>()
-        .join(",")
-}
-
 #[derive(Serialize)]
 struct Settings {
     /// Newest or oldest first.
@@ -74,8 +31,6 @@ struct Settings {
     /// off (none of those). Read state is recorded either way. Nothing
     /// stored means on.
     unread: bool,
-    /// The lists the sidebar leaves out; none by default.
-    hidden: Vec<Hideable>,
 }
 
 /// A change: only the settings named are saved, so a tab that changes the
@@ -84,13 +39,12 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     unread: Option<bool>,
-    hidden: Option<Vec<Hideable>>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'unread', 'hidden')",
+         WHERE person_id = ? AND name IN ('sort', 'unread')",
     )
     .bind(person)
     .fetch_all(db)
@@ -106,12 +60,7 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         _ => Order::Newest,
     };
     let unread = value("unread") != Some("off");
-    let hidden = hidden_from(value("hidden"));
-    Ok(Settings {
-        sort,
-        unread,
-        hidden,
-    })
+    Ok(Settings { sort, unread })
 }
 
 async fn read(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
@@ -131,14 +80,9 @@ async fn change(
         Order::Oldest => "oldest",
     });
     let unread = change.unread.map(|on| if on { "on" } else { "off" });
-    let hidden = change.hidden.as_deref().map(hidden_stored);
     let saved = async {
         let mut transaction = state.db.begin().await?;
-        for (name, value) in [
-            ("sort", sort),
-            ("unread", unread),
-            ("hidden", hidden.as_deref()),
-        ] {
+        for (name, value) in [("sort", sort), ("unread", unread)] {
             if let Some(value) = value {
                 sqlx::query(
                     "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)
@@ -158,25 +102,5 @@ async fn change(
     match saved {
         Ok(settings) => Json(settings).into_response(),
         Err(error) => database_problem("saving settings", &error),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn hidden_lists_are_kept_in_one_order_and_unknown_words_are_left_out() {
-        assert_eq!(
-            hidden_stored(&[Hideable::All, Hideable::Starred]),
-            "starred,all"
-        );
-        assert_eq!(hidden_stored(&[]), "");
-        assert_eq!(
-            hidden_from(Some("recent,later,notes,starred,collections")),
-            [Hideable::Starred, Hideable::Notes]
-        );
-        assert!(hidden_from(None).is_empty());
-        assert!(hidden_from(Some("")).is_empty());
     }
 }

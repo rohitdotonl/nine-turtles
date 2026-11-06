@@ -1,5 +1,5 @@
 // The reading settings as the signed-in screen holds them (SPEC section 18):
-// whether Unread is on, the sort order and the lists the sidebar hides. Each shows this device's last copy until the
+// whether Unread is on and the sort order. Each shows this device's last copy until the
 // server answers, and each change shows at once and saves in the order made,
 // so an earlier save that fails never rolls the screen back past a later one.
 // The settings page itself is Settings.svelte; reading.ts talks to the server.
@@ -7,11 +7,10 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { lastHidden, lastUnread, loadSettings, saveHidden, saveSort, saveUnread, type Order, type Reading } from "./reading";
+import { lastUnread, loadSettings, saveSort, saveUnread, type Order, type Reading } from "./reading";
 import { savedInOrder } from "./inorder";
-import type { Hideable } from "./router";
 
-const SETTINGS = ["unread", "sort", "hidden"] as const;
+const SETTINGS = ["unread", "sort"] as const;
 type Setting = (typeof SETTINGS)[number];
 
 export class ReadingSettings {
@@ -19,8 +18,6 @@ export class ReadingSettings {
   unread: boolean = $state(lastUnread());
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   sort: Order | undefined = $state();
-  /** The lists the sidebar leaves out (Settings › Show in the sidebar, decision 0105); they still open by address and keys. */
-  hidden: Hideable[] = $state(lastHidden());
 
   // The server's first answer, and what the reader did while it was on its
   // way. Settings › Reading waits for that answer (its choices are disabled
@@ -36,7 +33,6 @@ export class ReadingSettings {
     this.#saving("sort", (next) => saveSort(next as Order)),
     (next) => (this.sort = next),
   );
-  #hiddenSaves = savedInOrder(this.#saving("hidden", saveHidden), (next: Hideable[]) => (this.hidden = next));
 
   /**
    * Asks the server for the reader's settings and shows them,
@@ -62,10 +58,6 @@ export class ReadingSettings {
     return this.#change("sort", this.#sortSaves(next, this.sort));
   }
 
-  changeHidden(next: Hideable[]): Promise<void> {
-    return this.#change("hidden", this.#hiddenSaves(next, this.hidden));
-  }
-
   /** A save that notes when the server has kept one of the reader's changes. */
   #saving<T>(setting: Setting, save: (value: T) => Promise<void>): (value: T) => Promise<void> {
     return async (value) => {
@@ -89,7 +81,6 @@ export class ReadingSettings {
 
   #show(setting: Setting, answer: Reading) {
     if (setting === "unread") this.unread = answer.unread;
-    else if (setting === "sort") this.sort = answer.sort;
-    else this.hidden = answer.hidden;
+    else this.sort = answer.sort;
   }
 }

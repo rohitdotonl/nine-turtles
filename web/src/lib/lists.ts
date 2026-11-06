@@ -58,13 +58,12 @@ export async function newItemsWaiting(source: Source, latest: number): Promise<b
 }
 
 /**
- * The quiet caption that closes a finished list (SPEC section 6): Unread
- * says "for now", since more will come (never "caught up", a finish line);
- * every other list simply ends, and search results say there are no more.
+ * The quiet caption that closes a finished list (SPEC section 6): every
+ * list simply ends, the same words everywhere (never "caught up", a finish
+ * line; decision 0187), and search results say there are no more.
  */
 export function endOfList(source: Source): string {
   if ("search" in source) return "No more results.";
-  if ("view" in source && source.view === "unread") return "That's everything for now.";
   return "That's everything.";
 }
 

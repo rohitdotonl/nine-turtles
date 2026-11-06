@@ -1,9 +1,8 @@
 // The reading settings shared across the reader's devices (SPEC section 18):
-// the sort order, whether Unread is on and the lists the sidebar hides, with this device's copies so the app opens in them before
+// the sort order and whether Unread is on, with this device's copy of Unread so the app opens in it before
 // the server answers.
-import { HIDEABLE, type Hideable } from "./router";
 import { getJson, isRecord } from "./http";
-import { deviceJson, deviceText, setDeviceText } from "./device";
+import { deviceText, setDeviceText } from "./device";
 import { send } from "./saving";
 
 /** The reader's sort order, shared across their devices (SPEC section 18). */
@@ -22,51 +21,27 @@ export type Reading = {
    * none of those. Read state is recorded either way (SPEC section 10).
    */
   unread: boolean;
-  hidden: Hideable[];
 };
 
 /**
- * The settings shared across the reader's devices: the sort order, whether
- * Unread is on and which lists the sidebar hides. Newest first if the
- * server can't say, and Unread and the hidden lists as this device last saw them (on and none, if none).
+ * The settings shared across the reader's devices: the sort order and whether
+ * Unread is on. Newest first if the server can't say, and Unread as this
+ * device last saw it (on, if it never has).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const unread = !(isRecord(body) && body.unread === false);
-    const hidden = isRecord(body) ? hiddenFrom(body.hidden) : [];
     rememberUnread(unread);
-    rememberHidden(hidden);
+    // The lists this device once kept hidden (decision 0105) are no longer read (decision 0187).
+    setDeviceText("nine-turtles.hidden", null);
     // The copy of a reader's own keys this device once kept (decision 0110) is no longer read (decision 0170).
     setDeviceText("nine-turtles.keys", null);
-    return { sort, unread, hidden };
+    return { sort, unread };
   } catch {
-    return { sort: "newest", unread: lastUnread(), hidden: lastHidden() };
+    return { sort: "newest", unread: lastUnread() };
   }
-}
-
-/** The hidden lists named, in one order; anything else is left out. */
-export function hiddenFrom(value: unknown): Hideable[] {
-  if (!Array.isArray(value)) return [];
-  return HIDEABLE.filter((list) => value.includes(list));
-}
-
-/** Hides lists from the sidebar, or shows them again (Settings › Show in the sidebar, decision 0105). */
-export async function saveHidden(hidden: Hideable[]): Promise<void> {
-  await send("/api/settings", { hidden });
-  rememberHidden(hidden);
-}
-
-const HIDDEN_KEY = "nine-turtles.hidden";
-
-/** The lists this device last saw hidden, so they don't show for a moment before the server answers. */
-export function lastHidden(): Hideable[] {
-  return hiddenFrom(deviceJson(HIDDEN_KEY));
-}
-
-function rememberHidden(hidden: Hideable[]) {
-  setDeviceText(HIDDEN_KEY, JSON.stringify(hidden));
 }
 
 export function saveSort(sort: Order): Promise<void> {

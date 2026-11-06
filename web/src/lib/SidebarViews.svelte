@@ -1,8 +1,8 @@
 <!--
   The sidebar's fixed lists: Unread, Starred, Notes and All (SPEC
-  section 5), each with a small sign in the icon column. With Unread off
-  there's no Unread, and a list the reader hid steps aside, except All with Unread off,
-  where it's home (as Unread, which can't be hidden, is otherwise).
+  section 5), each with a small sign in the icon column, the same for
+  everyone (decision 0187). With Unread off there's no Unread, and All is
+  home.
 
   Notes shows once the reader has highlighted or written a note on
   something (SPEC section 42).
@@ -13,27 +13,24 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { noted } from "./notes.svelte";
-  import { sidebarViews, VIEW_NAMES, pathFor, type Hideable, type Route } from "./router";
+  import { sidebarViews, VIEW_NAMES, pathFor, type Route } from "./router";
 
   let {
     route,
     follow,
     phone,
     unreadOff,
-    hidden,
   }: {
     route: Route;
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone: boolean;
     unreadOff: boolean;
-    /** The lists the reader hid in Settings › Reading. */
-    hidden: Hideable[];
   } = $props();
 
   const ICONS = { unread: "dot", starred: "star", notes: "note", all: "layers" } as const;
 
-  let views = $derived(sidebarViews(unreadOff, hidden, noted.any));
+  let views = $derived(sidebarViews(unreadOff, noted.any));
 </script>
 
 <ul>
