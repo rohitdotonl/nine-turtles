@@ -77,8 +77,8 @@ anywhere or counted.
 - Search finds articles by the words of their highlights and notes as well
   as their own. A result found that way says so: "Highlighted · …" or "Your
   note · …".
-- **With notes** in the search options shows only marked
-  articles. Limited to a feed, it's that person's.
+- **Notes** in the sidebar is where only marked articles are listed;
+  search has no notes filter of its own (decision 0188).
 
 **Unsubscribing** (section 15)
 - When the reader starred, highlighted or wrote a note on any of a place's

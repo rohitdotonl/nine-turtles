@@ -1171,7 +1171,7 @@
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
-              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} here={scopeFor(under)} found={listFound} {unreadOff} onChange={(next, now) => searching.changed(next, now)} />
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} here={scopeFor(under)} found={listFound} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>

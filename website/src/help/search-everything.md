@@ -1,10 +1,10 @@
 ---
 title: Search everything you've read
-description: Find any article from the people you follow, and narrow it by person, folder or date.
+description: Find any article from the people you follow, in the list you're in or everywhere.
 groupId: reading
 order: 5
 spec: 14
-updated: 2026-11-05
+updated: 2026-11-06
 related: [star-an-article, every-keyboard-key, find-your-way-around]
 ---
 
@@ -34,9 +34,8 @@ Search starts in the list you're in, shown as a small label such as
 ## Narrow it down
 
 Press **Search options** (the sliders beside the field) to choose where to
-look, to show only unread or starred articles or those with your notes, or
-to pick a time: the past
-week, the past month, or dates of your own.
+look, **This list** or **Everything**, and to show only **Starred** articles.
+To search one person or folder, open it first, then search.
 
 ## Good to know
 

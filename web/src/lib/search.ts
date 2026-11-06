@@ -8,32 +8,17 @@ import type { Route } from "./router";
 export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred" } | { kind: "feed"; id: number } | { kind: "folder"; id: number };
 
 /**
- * Everything searched for. `words` is what's typed outside the chips; the
- * dates are `YYYY-MM-DD` or empty. Results are published strictly after
- * `after` and strictly before `before`.
+ * Everything searched for: `words` is what's typed outside the chips, then
+ * where (`scope`) and whether only starred ones (decision 0188: nothing else).
  */
 export type Query = {
   words: string;
   scope: Scope;
-  unread: boolean;
   starred: boolean;
-  /** Only articles the reader highlighted or wrote a note on (SPEC section 42). */
-  noted?: boolean;
-  after: string;
-  before: string;
 };
 
-/** A chip in the field: `label` in plain words, as the Search options menu names the same choice ("Unread", "After 1 Oct 2026"). */
-export type Chip = { key: "scope" | "unread" | "starred" | "noted" | "after" | "before"; label: string };
-
-const CHIP_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-
-/** A `YYYY-MM-DD` day in words, "1 Oct 2026", or the text as it is if it isn't one. */
-export function dayInWords(date: string): string {
-  if (!isDate(date)) return date;
-  const [year = 0, month = 1, day = 1] = date.split("-").map(Number);
-  return CHIP_DAY.format(new Date(year, month - 1, day));
-}
+/** A chip in the field: `label` in plain words, as the Search options menu names the same choice ("in: Tech", "Starred"). */
+export type Chip = { key: "scope" | "starred"; label: string };
 
 /** A search starts out limited to where you are (SPEC.md section 14). */
 export function scopeFor(route: Route): Scope {
@@ -44,18 +29,18 @@ export function scopeFor(route: Route): Scope {
 }
 
 export function emptyQuery(route: Route): Query {
-  return { words: "", scope: scopeFor(route), unread: false, starred: false, after: "", before: "" };
+  return { words: "", scope: scopeFor(route), starred: false };
 }
 
 /** Is there anything to search for? The scope alone isn't a search. */
 export function isSearching(query: Query): boolean {
-  return searchParams(query).q !== undefined || query.unread || query.starred || query.noted === true || query.after !== "" || query.before !== "";
+  return searchParams(query).q !== undefined || query.starred;
 }
 
 export function scopeName(scope: Scope, library: Library): string {
   switch (scope.kind) {
     case "all":
-      return "All feeds";
+      return "all your articles";
     case "view":
       return scope.view === "unread" ? "Unread" : "Starred";
     case "feed":
@@ -74,47 +59,18 @@ export function resultsTitle(scope: Scope, library: Library): string {
 export function chipsFor(query: Query, library: Library): Chip[] {
   const chips: Chip[] = [];
   if (query.scope.kind !== "all") chips.push({ key: "scope", label: `in: ${scopeName(query.scope, library)}` });
-  if (query.unread) chips.push({ key: "unread", label: "Unread" });
   if (query.starred) chips.push({ key: "starred", label: "Starred" });
-  if (query.noted) chips.push({ key: "noted", label: "With notes" });
-  if (query.after) chips.push({ key: "after", label: `After ${dayInWords(query.after)}` });
-  if (query.before) chips.push({ key: "before", label: `Before ${dayInWords(query.before)}` });
   return chips;
 }
 
 /** The query without one chip. Without its scope chip, a search covers everything. */
 export function withoutChip(query: Query, key: Chip["key"]): Query {
-  switch (key) {
-    case "scope":
-      return { ...query, scope: { kind: "all" } };
-    case "unread":
-    case "starred":
-    case "noted":
-      return { ...query, [key]: false };
-    case "after":
-    case "before":
-      return { ...query, [key]: "" };
-  }
+  return key === "scope" ? { ...query, scope: { kind: "all" } } : { ...query, starred: false };
 }
 
 /** Letters compared without capitals or Latin accents ("Café" is "cafe"); other scripts as written. */
 export function fold(text: string): string {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").normalize("NFC").toLocaleLowerCase();
-}
-
-/** A real day written `YYYY-MM-DD`. */
-export function isDate(text: string): boolean {
-  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return false;
-  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
-}
-
-/** The start of a `YYYY-MM-DD` day (plus `later` days) on this device's clock, in seconds since 1970. */
-function startOf(date: string, later = 0): number {
-  const [year = 0, month = 1, day = 1] = date.split("-").map(Number);
-  return Math.floor(new Date(year, month - 1, day + later).getTime() / 1000);
 }
 
 /** What the server is asked (server/src/search.rs → `Search`). */
@@ -125,11 +81,8 @@ export function searchParams(query: Query): Record<string, string> {
   const scope = query.scope;
   if (scope.kind === "feed") params.feed = String(scope.id);
   if (scope.kind === "folder") params.folder = String(scope.id);
-  if (query.unread || (scope.kind === "view" && scope.view === "unread")) params.unread = "true";
+  if (scope.kind === "view" && scope.view === "unread") params.unread = "true";
   if (query.starred || (scope.kind === "view" && scope.view === "starred")) params.starred = "true";
-  if (query.noted) params.notes = "true";
-  if (isDate(query.after)) params.since = String(startOf(query.after, 1));
-  if (isDate(query.before)) params.until = String(startOf(query.before));
   return params;
 }
 

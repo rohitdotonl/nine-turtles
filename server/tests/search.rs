@@ -308,19 +308,12 @@ async fn filters_narrow_the_results() {
         ["Tomatoes in October"]
     );
 
-    // A date range: from the start of 4 January, up to (not including) 7 January.
-    let since = (day(4) - 43_200).to_string();
-    let until = (day(7) - 43_200).to_string();
-    assert_eq!(
-        reader.titles(&[("since", &since), ("until", &until)]).await,
-        ["बारिश", "A quiet morning", "पुस्तकालय"]
-    );
     // Oldest first, when the reader's sort order says so.
     assert_eq!(
         reader
-            .titles(&[("since", &since), ("until", &until), ("order", "oldest")])
+            .titles(&[("folder", &folder), ("order", "oldest")])
             .await,
-        ["पुस्तकालय", "A quiet morning", "बारिश"]
+        ["पुस्तकालय", "बारिश"]
     );
 }
 

@@ -218,10 +218,9 @@ export const SCREENS: Screen[] = [
       await expect(page.locator("#search-field")).toBeFocused();
       await page.keyboard.type("reading");
       await expect(page.locator("#list-heading")).toHaveText("Results in All articles");
-      // A choice in the options becomes a chip.
+      // The options open over the list: where to search, and Starred (decision 0188).
       await page.getByRole("button", { name: "Search options" }).click();
-      await page.getByRole("checkbox", { name: "Unread", exact: true }).check();
-      await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
+      await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeVisible();
       await expect(page.getByRole("region", { name: /^Results in / }).locator("mark").first()).toBeVisible();
     },
   },
