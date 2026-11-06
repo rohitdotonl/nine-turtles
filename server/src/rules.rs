@@ -339,7 +339,7 @@ const MATCH_BATCH: i64 = 500;
 /// write, never holding up background checks.
 async fn matching_now(db: &sqlx::SqlitePool, rule: &Rule) -> Result<Vec<i64>, sqlx::Error> {
     let mut found = Vec::new();
-    if rule.place_gone {
+    if rule.place_gone || rule.paused {
         return Ok(found);
     }
     let mut after = 0;
@@ -414,6 +414,10 @@ pub(crate) struct RuleForm {
     /// When it stops, as Undo brings a removed rule back; wins over `days`.
     #[serde(default)]
     pub until: Option<i64>,
+    /// Undo bringing a removed rule back: it hides nothing already here, so
+    /// it comes back as it was (decision 0197).
+    #[serde(default)]
+    pub restore: bool,
 }
 
 /// The days a rule may last: a week or a month.
@@ -466,6 +470,10 @@ async fn insert(
         return Ok(Err("bad-days"));
     }
     let until = form.until.or(form.days.map(|days| now() + days * 86_400));
+    // Its time already up (Undo after its week ran out): nothing to make.
+    if until.is_some_and(|until| until <= now()) {
+        return Ok(Err("gone"));
+    }
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let words = match checked(&mut transaction, person, form).await? {
         Ok(words) => words,
@@ -519,6 +527,9 @@ async fn create_rule(
             Ok(rule) => rule,
             Err(refusal) => return Ok(Err(refusal)),
         };
+        if form.restore {
+            return Ok(Ok((rule.id, Vec::new())));
+        }
         // Found first, only reading; then changed in one short write. Only
         // those still unread are changed, and only those are answered.
         let ids = matching_now(&state.db, &rule).await?;

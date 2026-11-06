@@ -250,6 +250,8 @@ pub(super) struct RuleAsked {
     paused: bool,
     #[serde(default)]
     place_gone: bool,
+    #[serde(default)]
+    until: Option<i64>,
 }
 
 pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
@@ -260,7 +262,8 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         paused: asked.paused,
         place_gone: asked.place_gone,
         days: None,
-        until: None,
+        until: asked.until,
+        restore: false,
     };
     match rules::make(state, person, &form).await {
         Ok(Ok((id, matching))) => Ok(json!({
@@ -276,6 +279,7 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         Ok(Err("nothing-to-match")) => {
             Err("Give a word or phrase to hide articles about.".to_owned())
         }
+        Ok(Err("gone")) => Err("Its time is already up: until is in the past.".to_owned()),
         Ok(Err(_)) => {
             Err("Give the feed_id of a person the reader follows, or none for everyone.".to_owned())
         }

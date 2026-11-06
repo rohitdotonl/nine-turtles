@@ -489,3 +489,32 @@ async fn a_word_hidden_for_a_while_stops_and_leaves_the_list_when_its_time_is_up
     assert_eq!(reader.unread_count(blog).await, 1);
     assert_eq!(reader.get("/api/muted").await["count"], 1);
 }
+
+#[tokio::test]
+async fn undo_brings_a_removed_word_back_as_it_was_hiding_nothing_more() {
+    let reader = Reader::new().await;
+    reader.write("1", "Crypto news", "A", "Words.");
+    let blog = reader.follow("blog.xml").await;
+    // A paused word made again, and any word Undo restores, hide nothing
+    // already here (decision 0197).
+    for word in [
+        json!({ "words": "crypto", "paused": true }),
+        json!({ "words": "crypto", "restore": true }),
+    ] {
+        let (status, made) = reader.post("/api/rules", word).await;
+        assert_eq!(status, StatusCode::OK, "{made}");
+        assert_eq!(made["ids"], json!([]));
+        assert_eq!(reader.unread_count(blog).await, 1);
+    }
+    // A word whose time is already up isn't made.
+    let (status, refused) = reader
+        .post("/api/rules", json!({ "words": "crypto", "until": 1 }))
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "gone");
+    let kept: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM rules WHERE until = 1")
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(kept, 0);
+}

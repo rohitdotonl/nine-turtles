@@ -80,7 +80,8 @@
   async function add(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
-    const typed = words.trim().replace(/^["“]|["”]$/g, "").trim();
+    // Tidied as the server keeps it: no quote marks around it, one space between words.
+    const typed = words.trim().replace(/^["“]|["”]$/g, "").trim().split(/\s+/).join(" ");
     if (!typed) {
       say("");
       empty = true;
@@ -89,7 +90,12 @@
     }
     empty = false;
     const feedId = forFeed ?? null;
-    const same = (rule: Rule) => rule.words.toLocaleLowerCase() === typed.toLocaleLowerCase() && !rule.placeGone && (rule.feedId === null ? feedId === null : feedId !== null && rowFor(rule.feedId, people)?.id === rowFor(feedId, people)?.id);
+    const person = (id: number) => rowFor(id, people)?.id ?? id;
+    const same = (rule: Rule) =>
+      rule.words.toLocaleLowerCase() === typed.toLocaleLowerCase() &&
+      !rule.placeGone &&
+      !rule.paused &&
+      (rule.feedId === null || feedId === null ? rule.feedId === feedId : person(rule.feedId) === person(feedId));
     if (rules?.some(same)) {
       say(`“${typed}” is already hidden.`);
       field?.select();
@@ -107,8 +113,11 @@
     days = 0;
     await reload();
     say(addedMessage(typed, made.ids.length, length), async () => {
-      const refusal = (await deleteRule(made.id)) ?? (made.ids.length > 0 ? await setMuted(made.ids, false) : undefined);
-      if (refusal && refusal !== "gone") {
+      // Both, whatever the first answers: a word already removed elsewhere still gives its articles back.
+      const removed = await deleteRule(made.id);
+      const unhid = made.ids.length > 0 ? await setMuted(made.ids, false) : undefined;
+      const refusal = [removed, unhid].find((answer) => answer !== undefined && answer !== "gone");
+      if (refusal) {
         say(ruleRefused(refusal));
         return;
       }
@@ -130,8 +139,8 @@
     await reload();
     say(`Removed ${wordShown(rule)}.`, async () => {
       // Made again under a new number: harmless, as the order never decides what's hidden.
-      const made = await createRule({ ...rule });
-      say(typeof made === "string" ? ruleRefused(made) : `${wordShown(rule)} is back.`);
+      const made = await createRule({ ...rule, restore: true });
+      say(made === "gone" ? `${wordShown(rule)}'s time was up.` : typeof made === "string" ? ruleRefused(made) : `${wordShown(rule)} is back.`);
       await reload();
     });
     // The keyboard goes to the next word's Remove, or back to the field.
@@ -204,11 +213,10 @@
       >
     {/if}
   </div>
-  {#if empty}
-    <p id="hide-empty" class="inset-foot flex items-start gap-1.5 text-danger">
-      <span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>Type a word or phrase first.
-    </p>
-  {/if}
+  <!-- Always here, so screen readers hear the words as they appear. -->
+  <p id="hide-empty" role="alert" class={["inset-foot flex items-start gap-1.5 text-danger", !empty && "sr-only"]}>
+    {#if empty}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>Type a word or phrase first.{/if}
+  </p>
   <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
     {#if message}
       <p>{message}</p>
@@ -217,9 +225,9 @@
       {/if}
     {/if}
   </div>
-  {#if failed}
-    <p role="status" class="inset-foot text-danger">What's hidden couldn't be loaded. Try again in a moment.</p>
-  {/if}
+  <p role="alert" class={["inset-foot text-danger", !failed && "sr-only"]}>
+    {#if failed}What's hidden couldn't be loaded. Try again in a moment.{/if}
+  </p>
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>
 

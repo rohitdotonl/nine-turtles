@@ -32,6 +32,8 @@ export type RuleDraft = Pick<Rule, "words" | "feedId"> & {
   /** Only when Undo makes a deleted rule again whose person had gone. */
   placeGone?: boolean;
   until?: number | null;
+  /** Undo bringing a removed word back: it hides nothing more, coming back as it was. */
+  restore?: boolean;
 };
 
 /** Why a rule wasn't saved. */
@@ -131,11 +133,12 @@ function body(draft: RuleDraft): Record<string, unknown> {
     place_gone: draft.placeGone ?? false,
     days: draft.days ?? null,
     until: draft.until ?? null,
+    restore: draft.restore ?? false,
   };
 }
 
 async function post(path: string, change: unknown): Promise<Record<string, unknown> | RuleRefusal> {
-  const sent = await sendChange(path, change, ["nothing-to-match", "too-long", "no-place", "bad-days"]);
+  const sent = await sendChange(path, change, ["nothing-to-match", "too-long", "no-place", "bad-days", "gone"]);
   return sent.refusal ?? sent.answer ?? {};
 }
 

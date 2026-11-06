@@ -465,7 +465,7 @@ describe("the summary-only note's link underline", () => {
 // night. (A swatch's own white or black needs no contrast: its name is spoken,
 // and the chosen one also has a ring in the full text color.)
 
-describe.each(Object.entries(THEMES))("the %s theme's rule blanks and appearance swatches", (_name, colors) => {
+describe.each(Object.entries(THEMES))("the %s theme's appearance swatches", (_name, colors) => {
   const share = (source: string, pattern: RegExp) => Number(source.match(pattern)![1]) / 100;
 
   it("edge each swatch at 3 : 1 on the panel", () => {

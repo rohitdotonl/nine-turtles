@@ -142,6 +142,10 @@
       ruleForFeed = undefined;
     }
   });
+  // Leaving Hiding lets the person go: opened again from Settings, it's for everyone.
+  $effect(() => {
+    if (page !== "hiding") hideFor = undefined;
+  });
 
   /** Change email, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
   let task: "email" | "data" | "delete" | undefined = $state();

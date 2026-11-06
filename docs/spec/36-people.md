@@ -84,8 +84,8 @@ PLAN.md → V1, item 1.*
   muted line that said what they are, their folders and since when ("A
   person · in Friends · following since March 2026") and the separate Email
   line went (point 10). At its foot, a quiet link,
-  **Hide articles about…**, opens Settings › Hiding with a new rule for
-  them (section 27).
+  **Hide articles about…**, opens Settings › Hiding with the field set to
+  them ("Only from …", section 27).
 - **Edit** (`/people/12/edit`) turns the same
   page into their settings. **Done** saves and turns it back; **Cancel** or
   Escape turns it back unchanged. Top to bottom (the owner's core path,
