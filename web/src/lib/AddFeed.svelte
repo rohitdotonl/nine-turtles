@@ -3,7 +3,7 @@
   nine turtles, and the "+ Add" sheet. It takes a feed's address or a
   website's; nine turtles finds the feed. Several feeds become a list with a
   tick box on each, the first ticked, and Follow follows every ticked one; feeds
-  followed together from one site become one person (decision 0199). A
+  followed together from one site become one person (decision 0206). A
   YouTube address's question is a choice of one, with round marks (decision
   0049). Problems are said in plain words. While nine turtles looks, a line of
   text says so: no spinner.
@@ -70,7 +70,7 @@
     start?: boolean;
     /**
      * The welcome in the list's place, on the list's grey: the feeds offered, what was found and the two
-     * tiles are cards in the page's color (by night, a step lighter), as a phone sheet's are (decision 0199).
+     * tiles are cards in the page's color (by night, a step lighter), as a phone sheet's are (decision 0206).
      */
     onList?: boolean;
     /**
@@ -126,7 +126,7 @@
   let choosing = $derived(choices.length > 0 && !busy);
   /** The welcome's own Add steps aside while feeds are offered: Follow, at the list's foot, takes its place. */
   let offering = $derived(choices.length > 0 && !framed);
-  /** On a phone where nine turtles is installed, sharing a page into it is the easier way (decision 0199). */
+  /** On a phone where nine turtles is installed, sharing a page into it is the easier way (decision 0206). */
   let shareHint = $derived(page && runningInstalled());
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
@@ -333,14 +333,14 @@
     {/if}
   </div>
   {#if shareHint}
-    <!-- The installed app on a phone: the quieter way in, said once, as small and faint as the floors allow (decision 0199). -->
+    <!-- The installed app on a phone: the quieter way in, said once, as small and faint as the floors allow (decision 0206). -->
     <p class="share-hint">Reading them in another app? Share the page to nine turtles.</p>
   {/if}
   {/if}
   <!--
     In the welcome, everything under the field sits in one block, centred (on a
     phone, on the screen's margin). The welcome's heading never moves, so what
-    arrives here only grows the page downward (decision 0199). In a sheet the
+    arrives here only grows the page downward (decision 0206). In a sheet the
     block isn't drawn at all, so the sheet's own spacing stands. The other ways
     in sit just under the field, and a message, when there is one, comes
     between and moves them down (decision 0045).
@@ -373,7 +373,7 @@
         The feeds a site offers, as a Mac or iOS list draws a choice of any:
         each a row ending in a tick box, the first ticked, so any number can be
         followed at once, and followed together they become one person
-        (decision 0199). A YouTube address's question is a choice of one
+        (decision 0206). A YouTube address's question is a choice of one
         instead, each row ending in a round mark (decision 0049). Either way the
         choice shows by its mark, never by a tint alone, and real inputs lie
         under the rows. Each row says what nine turtles saw inside the feed: its
@@ -382,7 +382,7 @@
         too long, never cut off or broken mid-word (decision 0191). In a sheet a
         long list scrolls inside itself, so Cancel and Follow never leave the
         window. On a phone the list is a card on the screen's margin, the field's
-        own edges (decision 0199).
+        own edges (decision 0206).
       -->
       <div
         role={oneOnly ? "radiogroup" : "group"}

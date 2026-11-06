@@ -86,7 +86,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await importLink.click();
   await chooser;
   await choose(page, "not a list");
-  await expect(reading.getByRole("status").filter({ hasText: "OPML" })).toHaveText("That file doesn't look like an OPML file.");
+  await expect(reading.getByRole("status").filter({ hasText: "list of feeds" })).toHaveText("That file doesn't look like a list of feeds.");
   await expect(page).toHaveURL(/\/unread$/);
   // A list that brings no one in says so in the same place; the welcome and the keyboard's place stay.
   const again = page.waitForEvent("filechooser");
@@ -241,7 +241,7 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await sheet.getByRole("checkbox", { name: /^James/ }).check();
   await sheet.getByRole("checkbox", { name: /Jeff Kaufman/ }).check();
   await sheet.getByRole("button", { name: "Add 2 chosen" }).click();
-  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added just now. Try again later.");
+  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added. Try again later.");
   expect(asked).toEqual(["https://jamesg.blog/feeds/posts.xml", "https://www.jefftk.com/news.rss"]);
   await expect(sheet.getByRole("checkbox", { name: /Jeff Kaufman/ })).toBeChecked();
   // Escape closes it, back to the welcome, with the keyboard back on the link that opened it.
@@ -389,7 +389,7 @@ test("a site with several feeds offers them with tick boxes, and those followed 
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose which to follow:");
   // A choice of any: tick boxes, the first ticked, each row ending in a square mark that shows
-  // the choice by its check, never by a tint alone (decision 0199).
+  // the choice by its check, never by a tint alone (decision 0206).
   const choices = page.getByRole("group", { name: "Feeds on this site" });
   // Each row says what's inside (its newest title) and its address as a person says it (decision 0165), and never how often it posts.
   await expect(choices).toContainText("On keeping a commonplace book (3)");
@@ -453,7 +453,7 @@ test("following several, one that can't be followed is named in the list's line,
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   // One followed: it's asked about as a single feed is, then opens with the note.
   await page.getByRole("button", { name: "Done" }).click();
-  await expect(page.getByText(/couldn't be followed: That site didn't answer\. Try again later\./)).toBeVisible();
+  await expect(page.getByText(/couldn't be followed: The site didn't answer\. Try again later\./)).toBeVisible();
 });
 
 test("on a phone, the welcome's offered feeds sit on a card in the page's color, with Follow the list's full width", async ({ page }) => {
@@ -523,7 +523,7 @@ test("without a connection, adding says so without marking the address as wrong"
   await field(page).fill(`${FEED_SITE}/blog/${newBlog()}/`);
   await context.setOffline(true);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("Adding a feed needs a connection. Try again once you're back online.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You're offline. Adding a feed works again once you're back online.");
   await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
   await context.setOffline(false);
 });

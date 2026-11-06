@@ -53,7 +53,7 @@
       <p id="stop-help">Press Stop to turn the weekly email off.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
         <p id="stop-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", result !== "trouble" && "sr-only"]}>
-          {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>That didn't go through. Check your connection and try again.{/if}
+          {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>The weekly email couldn't be turned off. Try again in a moment.{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
         <button type="button" autofocus aria-disabled={busy} aria-describedby="stop-help stop-message" onclick={stop} class="btn-primary rounded-lg"

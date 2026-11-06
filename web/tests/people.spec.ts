@@ -217,7 +217,7 @@ test("a source's own settings: Take out of the person, and Undo puts it back", a
     page.getByRole("combobox", { name: "Kind of source" }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: `Take out of Eli ${eli}` }).click();
-  await expect(line(page)).toHaveText(`${fay}.example is on its own now`);
+  await expect(line(page)).toHaveText(`${fay}.example is on its own now.`);
   await expect(rowsNamed(page, `Blog ${fay}`)).toHaveCount(1);
 
   await page.getByRole("button", { name: "Undo" }).click();
@@ -243,7 +243,7 @@ test("Unsubscribe from a person leaves every source, and Undo brings them all ba
   await page
     .getByRole("button", { name: `Unsubscribe from Gus ${gus}` })
     .click();
-  await expect(line(page)).toContainText(`Unsubscribed from Gus ${gus}`);
+  await expect(line(page)).toContainText(`Unsubscribed from Gus ${gus}.`);
   await expect(rowsNamed(page, `Gus ${gus}`)).toHaveCount(0);
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(rowsNamed(page, `Gus ${gus}`)).toHaveCount(1);

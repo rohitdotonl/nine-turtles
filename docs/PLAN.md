@@ -132,7 +132,7 @@ milestone order above.
 10. **Choosing between several feeds, made easy** ✅ each feed shows its
     newest title; repeats are left out, and a site left with one is
     followed straight away. Built: SPEC section 3, decision 0165 (any
-    number can be ticked and followed as one person since decision 0199).
+    number can be ticked and followed as one person since decision 0206).
 
 **Decided with the owner (2 November 2026):**
 

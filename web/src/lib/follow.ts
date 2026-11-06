@@ -92,7 +92,9 @@ export function sayProblem(reason: Problem): string {
     case "plan-ended":
       return "Your free trial or plan has ended. Choose a plan in Settings to follow someone new.";
     case "offline":
-      return "Following needs a connection. Try again once you're back online.";
+      return "You're offline. Following works again once you're back online.";
+    case "trouble":
+      return "This site couldn't be followed. Try again in a moment.";
     default:
       return explain(reason);
   }

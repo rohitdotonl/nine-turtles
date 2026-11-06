@@ -77,6 +77,6 @@ export async function copyAddress(address: string): Promise<string> {
     await navigator.clipboard.writeText(address);
     return "Address copied.";
   } catch {
-    return "Couldn't copy. Select the address and copy it yourself.";
+    return "The address couldn't be copied. Select it and copy it yourself.";
   }
 }

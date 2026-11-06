@@ -10,6 +10,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
+import { UNDO_FAILED } from "./messages";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
@@ -279,8 +280,13 @@ export function refused(refusal: Refusal, what: "feed" | "folder"): string {
     case "gone":
       return `This ${what} isn't here any more.`;
     case "trouble":
-      return "That couldn't be saved. Try again in a moment.";
+      return `The ${what} couldn't be changed. Try again in a moment.`;
   }
+}
+
+/** What an Undo says when it wasn't made: trouble is the one Undo line (BRAND.md → "Messages"). */
+export function undoRefused(refusal: Refusal, what: "feed" | "folder"): string {
+  return refusal === "trouble" ? UNDO_FAILED : refused(refusal, what);
 }
 
 /** Adding a feed or importing, once the reader's trial or plan has ended (SPEC section 29). */
@@ -294,7 +300,7 @@ export function explain(reason: Problem): string {
     case "not-allowed":
       return "nine turtles can't visit that address.";
     case "unreachable":
-      return "That site didn't answer. Try again later.";
+      return "The site didn't answer. Try again later.";
     case "not-found":
       return "Nothing was found at that address.";
     case "too-big":
@@ -306,8 +312,8 @@ export function explain(reason: Problem): string {
     case "plan-ended":
       return PLAN_ENDED;
     case "offline":
-      return "Adding a feed needs a connection. Try again once you're back online.";
+      return "You're offline. Adding a feed works again once you're back online.";
     case "trouble":
-      return "nine turtles couldn't add that just now. Try again in a moment.";
+      return "The feed couldn't be added. Try again in a moment.";
   }
 }

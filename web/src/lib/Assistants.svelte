@@ -56,7 +56,7 @@
       await navigator.clipboard.writeText(text);
       message = `${what} copied.`;
     } catch {
-      message = `Couldn't copy. Select the ${what.toLowerCase()} and copy it yourself.`;
+      message = `The ${what.toLowerCase()} couldn't be copied. Select it and copy it yourself.`;
     }
   }
 
@@ -80,7 +80,7 @@
       busy = false;
       await refocus("assistant", index);
     } catch {
-      message = "Couldn't disconnect it. Try again in a moment.";
+      message = `${shortName(assistant.name)} couldn't be disconnected. Try again in a moment.`;
     }
     busy = false;
   }
@@ -100,7 +100,7 @@
       await tick();
       copyKey?.focus();
     } catch {
-      message = "Couldn't make an assistant key. Try again in a moment.";
+      message = "The assistant key couldn't be made. Try again in a moment.";
     }
     busy = false;
   }
@@ -122,7 +122,7 @@
       await refocus("unsubscribed", index);
       return;
     }
-    message = `Couldn't bring ${name} back. Try again in a moment.`;
+    message = `${name} couldn't be brought back. Try again in a moment.`;
   }
 </script>
 

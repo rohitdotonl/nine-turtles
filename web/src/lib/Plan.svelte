@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { type PlanStatus, Refused, UNREACHABLE, billingAddress, canSubscribe, checkoutAddress, describe, loadPlan } from "./plan";
+  import { type PlanStatus, Refused, PAYMENTS_UNREACHABLE, billingAddress, canSubscribe, checkoutAddress, describe, loadPlan } from "./plan";
 
   let status: PlanStatus = $state({ on: false });
   let message = $state("");
@@ -29,7 +29,7 @@
       // Dodo's page, in this tab; it sends the reader back to Settings.
       location.assign(await address());
     } catch (error) {
-      message = error instanceof Refused ? error.message : UNREACHABLE;
+      message = error instanceof Refused ? error.message : PAYMENTS_UNREACHABLE;
       busy = false;
     }
   }

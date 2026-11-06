@@ -33,7 +33,7 @@ export async function importOpml(file: File, youtube = false): Promise<ImportSum
     };
   }
   if (isRecord(body) && body.error === "not-opml") {
-    return youtube ? "That file doesn't look like subscriptions.csv from Google Takeout." : "That file doesn't look like an OPML file.";
+    return youtube ? "That file doesn't look like a list of YouTube subscriptions." : "That file doesn't look like a list of feeds.";
   }
   if (isRecord(body) && body.error === "plan-ended") return PLAN_ENDED;
   if (isRecord(body) && body.error === "too-many") {
@@ -91,7 +91,7 @@ export async function importStars(file: File): Promise<StarsSummary | string> {
     };
   }
   if (isRecord(body) && body.error === "not-stars") {
-    return "That file doesn't look like starred articles from a feed reader. Choose the JSON file your other app exports them in.";
+    return "That file doesn't look like starred articles from a feed reader. Choose the file of starred articles your other app exports.";
   }
   if (isRecord(body) && body.error === "too-much") {
     return "Nothing was imported. With this file you'd keep more than 10,000 imported articles (or 50 MB of their text), as many as one reader can.";

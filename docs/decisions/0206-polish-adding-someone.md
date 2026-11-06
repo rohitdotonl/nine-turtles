@@ -1,4 +1,4 @@
-# 0199: Polish adding someone
+# 0206: Polish adding someone
 
 *6 November 2026. The owner's onboarding review, findings 9, 12, 13 and 16
 (finding 4, the welcome's order, landed with decision 0198), and the owner's answers in that thread (6 November, 15:32 UTC).*

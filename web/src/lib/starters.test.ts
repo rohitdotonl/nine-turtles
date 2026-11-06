@@ -52,11 +52,11 @@ describe("the New to feeds? starters", () => {
   });
 
   it("say plainly what couldn't be added", () => {
-    expect(startProblem([first])).toBe("James couldn't be added just now. Try again later, or choose another.");
-    expect(startProblem(STARTERS.slice(0, 2))).toBe("Those feeds couldn't be added just now. Try again later.");
-    expect(partlyAdded([first])).toBe("Couldn't add James. Try again later from + Add.");
+    expect(startProblem([first])).toBe("James couldn't be added. Try again later, or choose another.");
+    expect(startProblem(STARTERS.slice(0, 2))).toBe("Those feeds couldn't be added. Try again later.");
+    expect(partlyAdded([first])).toBe("James couldn't be added. Try again later from + Add.");
     expect(partlyAdded(STARTERS.slice(0, 3))).toBe(
-      "Couldn't add James, Derek Sivers and Herman Martinus. Try again later from + Add.",
+      "James, Derek Sivers and Herman Martinus couldn't be added. Try again later from + Add.",
     );
   });
 

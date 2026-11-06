@@ -11,6 +11,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import type { Feed } from "./shapes";
   import {
     appliedMessage,
@@ -81,7 +82,7 @@
       await tick();
       line?.querySelector<HTMLElement>("[data-focus=yes]")?.focus();
     } else {
-      message = made ? "Saved. New articles about it are hidden as they arrive." : "Saved.";
+      message = made ? "Rule saved. New articles about it are hidden as they arrive." : "Rule saved.";
     }
   }
 
@@ -90,19 +91,19 @@
     clear();
     const refusal = await deleteRule(rule.id);
     if (refusal && refusal !== "gone") {
-      message = ruleRefused(refusal);
+      message = ruleRefused(refusal, "The rule couldn't be deleted.");
       return;
     }
     await reload();
-    message = "Deleted.";
+    message = "Rule deleted.";
     // Made again under a new number: harmless, as the order never decides what's hidden.
     undo = async () => {
       const made = await createRule({ ...rule, paused: rule.paused });
       if (typeof made === "string") {
-        message = ruleRefused(made);
+        message = made === "trouble" ? UNDO_FAILED : ruleRefused(made);
         return;
       }
-      message = "It's back.";
+      message = UNDONE;
       await reload();
     };
     await focusLine();
@@ -121,13 +122,13 @@
     busy = false;
     question = undefined;
     if (!Array.isArray(ids)) {
-      message = ruleRefused(ids);
+      message = ruleRefused(ids, "Those articles couldn't be hidden.");
       return;
     }
     message = appliedMessage(ids.length);
     undo = async () => {
       const refusal = await unapply(ids);
-      message = refusal ? ruleRefused(refusal) : "Undone: those articles are back, unread.";
+      message = refusal === undefined ? UNDONE : refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal);
       await reload();
     };
     await reload();
@@ -142,7 +143,7 @@
 
   async function notNow() {
     question = undefined;
-    message = "Saved. New articles about it are hidden as they arrive.";
+    message = "Rule saved. New articles about it are hidden as they arrive.";
     await keepPlace();
   }
 
@@ -162,7 +163,7 @@
     const refusal = await pauseRule(rule.id, !on);
     if (refusal) {
       rule.paused = on;
-      message = ruleRefused(refusal);
+      message = ruleRefused(refusal, on ? "The rule couldn't be switched on." : "The rule couldn't be paused.");
     }
   }
 

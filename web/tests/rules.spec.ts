@@ -84,6 +84,9 @@ test("Hide articles about… from someone's page hides what matches, asks first,
   await expect(hidden.getByRole("status")).toHaveText("Unhidden. It's back in your lists, unread.");
   // Nothing moves: it stays, with Undo.
   await expect(hidden.getByRole("button", { name: "Undo unhiding Walking the long way home (2)" })).toBeFocused();
+  // Undo hides it again and says so in the house style (BRAND.md → "Messages").
+  await page.keyboard.press("Enter");
+  await expect(hidden.getByRole("status")).toHaveText("Undone.");
 
   // Escape goes back to Hiding (decision 0120).
   await page.keyboard.press("Escape");
@@ -133,7 +136,7 @@ test("a rule hides an article as it arrives; rules pause, and Delete has Undo", 
   await sheet.getByRole("button", { name: "Save" }).click();
   const sentence = `Hide articles about “river” from ${title}.`;
   await expect(rules).toContainText(sentence);
-  await expect(rules.getByRole("status")).toContainText("Saved. New articles about it are hidden as they arrive.");
+  await expect(rules.getByRole("status")).toContainText("Rule saved. New articles about it are hidden as they arrive.");
 
   // The blog publishes "What the river taught me (4)": it arrives hidden.
   expect((await page.request.get(`${FEED_SITE}/grow/${name}`)).ok()).toBe(true);
@@ -165,10 +168,10 @@ test("a rule hides an article as it arrives; rules pause, and Delete has Undo", 
   await rules.getByRole("button", { name: `Edit: ${sentence}` }).click();
   const editing = editor(page, "Edit");
   await editing.getByRole("button", { name: "Delete" }).click();
-  await expect(rules.getByRole("status")).toContainText("Deleted.");
+  await expect(rules.getByRole("status")).toContainText("Rule deleted.");
   await expect(rules).not.toContainText(sentence);
   await rules.getByRole("button", { name: "Undo" }).click();
-  await expect(rules.getByRole("status")).toContainText("It's back.");
+  await expect(rules.getByRole("status")).toContainText("Undone.");
   await expect(rules).toContainText(`${sentence} Paused.`);
 });
 

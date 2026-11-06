@@ -16,7 +16,8 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import type { Folder } from "./shapes";
-  import { deleteFolder, refused } from "./feeds";
+  import { deleteFolder, refused, undoRefused } from "./feeds";
+  import { UNDONE } from "./messages";
   import { pathFor } from "./router";
   import {
     folderNames,
@@ -203,9 +204,9 @@
     busy = true;
     try {
       await undo();
-      [message, undo] = ["", undefined];
+      [message, undo] = [UNDONE, undefined];
     } catch (refusal) {
-      [message, undo] = [refused(refusal === "too-late" ? "too-late" : "trouble", "feed"), undefined];
+      [message, undo] = [undoRefused(refusal === "too-late" ? "too-late" : "trouble", "feed"), undefined];
     }
     busy = false;
     onFeedsChanged();

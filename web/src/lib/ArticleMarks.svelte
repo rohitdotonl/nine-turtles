@@ -23,6 +23,7 @@
   import { Marks, LONGEST_NOTE, OFFLINE_LINE, type Quote } from "./notes.svelte";
   import { paint, quoteOf, unpaint } from "./highlights";
   import { clock } from "./podcasts";
+  import { UNDONE } from "./messages";
   import type { Article, FullArticle, Note } from "./shapes";
 
   let {
@@ -153,9 +154,9 @@
     const credit = [article.feedTitle, article.link].filter(Boolean).join(" · ");
     try {
       await navigator.clipboard.writeText(`“${highlight.quote}”\n${credit}`);
-      say("Copied.");
+      say("Highlight copied.");
     } catch {
-      say("It couldn't be copied.");
+      say("The highlight couldn't be copied.");
     }
   }
 
@@ -172,7 +173,7 @@
   async function undo() {
     const was = removed;
     removed = undefined;
-    if (was) say((await marks.restore(was)) ?? "Highlight put back.");
+    if (was) say((await marks.restore(was)) ?? UNDONE);
   }
 
   // Without a connection, the quiet line at the foot is said once as well, for a screen reader.

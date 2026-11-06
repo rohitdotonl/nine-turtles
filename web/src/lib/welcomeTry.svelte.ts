@@ -50,5 +50,5 @@ export async function tryExample(example: Example, add: typeof addFeed = addFeed
   }
   if (result.kind === "already") return { message: "You already follow this.", problem: false };
   if (result.kind === "problem") return { message: explain(result.reason), problem: true };
-  return { message: `${example.address} couldn't be added just now. Try again later.`, problem: true };
+  return { message: `${example.address} couldn't be added. Try again later.`, problem: true };
 }

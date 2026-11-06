@@ -180,6 +180,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     group.getByRole("button", { name: "Remove This laptop" }),
   ).toHaveCount(0);
   await page.keyboard.press("Enter");
+  await expect(group.getByRole("status")).toHaveText("Undone.");
   await expect(group).toContainText("This laptop");
 
   // Removed for real: the device's passkey no longer signs in, the password does.

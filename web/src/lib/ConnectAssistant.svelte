@@ -13,6 +13,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import { UNREACHABLE } from "./messages";
   import { answerRequest, connectRequest, shortName, type ConnectRequest } from "./assistants";
 
   let { onSignedOut }: { onSignedOut: () => void } = $props();
@@ -25,7 +26,6 @@
   let heading: HTMLHeadingElement | undefined = $state();
 
   const INVALID = "This connection link isn't valid. Start again from your assistant.";
-  const TROUBLE = "nine turtles couldn't be reached. Try again in a moment.";
 
   async function load() {
     request = await connectRequest(search);
@@ -53,7 +53,7 @@
       heading?.focus();
       return;
     }
-    message = TROUBLE;
+    message = UNREACHABLE;
   }
 
   load();
@@ -108,7 +108,7 @@
       <h1 bind:this={heading} tabindex="-1" class="font-serif text-xlarge font-semibold leading-tight">
         {request.kind === "invalid" ? "This link can't be used" : "Not connected"}
       </h1>
-      <p role="status">{request.kind === "invalid" ? INVALID : TROUBLE}</p>
+      <p role="status">{request.kind === "invalid" ? INVALID : UNREACHABLE}</p>
       {#if request.kind === "trouble"}
         <button type="button" onclick={() => location.reload()} class="btn rounded-lg">Try again</button>
       {/if}

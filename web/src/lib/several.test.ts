@@ -11,7 +11,7 @@ const choices: Choice[] = [
 ];
 const urls = choices.map((choice) => choice.url);
 
-describe("following several of a site's feeds at once (decision 0199)", () => {
+describe("following several of a site's feeds at once (decision 0206)", () => {
   it("keeps those followed, in the list's order, with their newest titles", () => {
     const results: AddResult[] = [
       { kind: "added", feed: feed(1), latest: "Hello" },
@@ -30,8 +30,8 @@ describe("following several of a site's feeds at once (decision 0199)", () => {
       { kind: "problem", reason: "unreachable" },
       { kind: "problem", reason: "not-found" },
     ];
-    expect(followedTogether(urls, results, choices).note).toBe("Comments and Podcast couldn't be followed: That site didn't answer. Try again later.");
-    expect(followedTogether(urls.slice(0, 2), results.slice(0, 2), choices).note).toBe("Comments couldn't be followed: That site didn't answer. Try again later.");
+    expect(followedTogether(urls, results, choices).note).toBe("Comments and Podcast couldn't be followed: The site didn't answer. Try again later.");
+    expect(followedTogether(urls.slice(0, 2), results.slice(0, 2), choices).note).toBe("Comments couldn't be followed: The site didn't answer. Try again later.");
   });
 
   it("with nothing new followed, says the first problem, or goes to one already followed", () => {
