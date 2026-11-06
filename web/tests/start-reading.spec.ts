@@ -31,6 +31,8 @@ test("the empty reading area begins the newest unread article, and Start reading
   await expect(pane(page)).toContainText("Newest unread");
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
   await expect(pane(page).locator(".reading-empty")).toHaveCount(0);
+  // Its first paragraph, as plain text.
+  await expect(pane(page).getByText(/^A short made-up summary for article \d+\.$/)).toBeVisible();
   const start = pane(page).getByRole("button", { name: "Start reading" });
   await expect(start).toHaveClass(/btn-primary/);
   // Showing it marks nothing read.
@@ -45,6 +47,7 @@ test("on a phone, the first unread row of the list is begun, still one row", asy
   await followBlog(page);
   await expect(page.locator(".item-list li").first()).toContainText("Newest unread");
   const first = page.locator(".item-row").first();
+  await expect(first).toContainText(/A short made-up summary for article \d+\./);
   const start = first.getByText("Start reading");
   await expect(start).toBeVisible();
   // The row is still the one button: Start reading only shows that pressing it opens the article.
