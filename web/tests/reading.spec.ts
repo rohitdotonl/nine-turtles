@@ -34,8 +34,11 @@ test.describe("on a wide window", () => {
     const articleProblem = article(page).getByRole("status").filter({ hasText: "This article couldn't be loaded." });
     await expect(articleProblem).toBeVisible();
     failing = false;
-    await articleProblem.getByRole("button", { name: "Try again" }).click();
+    // From the keyboard: Try again goes as the article comes, and the keyboard waits on its title, not lost.
+    await tabTo(page, articleProblem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
     await expect(articleProblem).toHaveCount(0);
+    await expect(article(page).locator("h2.article-title")).toBeFocused();
 
     let feedsFailing = true;
     await page.route("**/api/feeds", (route) =>
@@ -45,8 +48,10 @@ test.describe("on a wide window", () => {
     const feedsProblem = page.getByRole("status").filter({ hasText: "Your feeds couldn't be loaded." });
     await expect(feedsProblem).toBeVisible();
     feedsFailing = false;
-    await feedsProblem.getByRole("button", { name: "Try again" }).click();
+    await tabTo(page, feedsProblem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
     await expect(feedsProblem).toHaveCount(0);
+    await expect(page.locator("#sidebar a").first()).toBeFocused();
     await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
   });
 

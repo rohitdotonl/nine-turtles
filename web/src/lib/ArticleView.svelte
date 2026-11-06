@@ -208,6 +208,12 @@
     fetchArticle(id);
   });
 
+  /** Try again: the button goes as the article is asked for again, so the keyboard waits on its title. */
+  function retryArticle() {
+    heading?.focus({ preventScroll: true });
+    fetchArticle(article.id);
+  }
+
   /** Asks for the article's text; if it can't come, the reading area says so, with Try again. */
   function fetchArticle(id: number) {
     problem = false;
@@ -538,7 +544,7 @@
       {:else if problem}
         <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
           {#if connection.offline}{NOT_KEPT}{:else}This article couldn't be loaded.
-            <button type="button" onclick={() => fetchArticle(article.id)} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button>{/if}
+            <button type="button" onclick={retryArticle} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button>{/if}
         </p>
       {/if}
       {#if full}
