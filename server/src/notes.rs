@@ -363,17 +363,27 @@ pub struct Kept {
     pub note: bool,
 }
 
+/// The places of the person place `?2` belongs to, for reader `?1`: `places`,
+/// with each place's `feed_id` and the reader's `note` on it. Every place at
+/// once, as "Unsubscribe from …" leaves them all and their page lists them all.
+macro_rules! places_of {
+    () => {
+        "WITH places AS (
+             SELECT feed_id, note FROM subscriptions
+             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
+                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))"
+    };
+}
+
 pub async fn kept_by(
     db: &sqlx::SqlitePool,
     person: i64,
     feed: i64,
 ) -> Result<Option<Kept>, sqlx::Error> {
     // Every place of the person's at once, as "Unsubscribe from …" leaves them all.
-    let found: Option<(i64, i64, bool)> = sqlx::query_as(
-        "WITH places AS (
-             SELECT feed_id, note FROM subscriptions
-             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
-                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))
+    let found: Option<(i64, i64, bool)> = sqlx::query_as(concat!(
+        places_of!(),
+        "
          SELECT
              (SELECT COUNT(*) FROM entries WHERE person_id = ?1 AND starred = 1
                   AND feed_id IN (SELECT feed_id FROM places)),
@@ -382,7 +392,7 @@ pub async fn kept_by(
               WHERE notes.person_id = ?1 AND entries.feed_id IN (SELECT feed_id FROM places)),
              EXISTS (SELECT 1 FROM places WHERE note IS NOT NULL)
          FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND unsubscribed_at IS NULL",
-    )
+    ))
     .bind(person)
     .bind(feed)
     .fetch_optional(db)
@@ -568,17 +578,17 @@ pub async fn highlights_of(
     person: i64,
     feed: i64,
 ) -> Result<Vec<TheirHighlight>, sqlx::Error> {
-    sqlx::query_as(
-        "WITH places AS (
-             SELECT feed_id FROM subscriptions
-             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
-                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))
+    sqlx::query_as(concat!(
+        places_of!(),
+        "
          SELECT notes.id AS highlight_id, notes.quote, notes.note,
              entries.article_id AS id, entries.feed_id,
              COALESCE(writers.name, subscriptions.title) AS feed_title,
              articles.title, articles.link, entries.sort_at AS at,
              entries.read, entries.starred, entries.muted,
-             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds
+             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
+        crate::feeds::untitled_body!(),
+        "
          FROM notes
              JOIN entries ON entries.person_id = notes.person_id AND entries.article_id = notes.article_id
              JOIN articles ON articles.id = entries.article_id
@@ -589,7 +599,7 @@ pub async fn highlights_of(
              AND entries.feed_id IN (SELECT feed_id FROM places)
          ORDER BY entries.sort_at DESC, notes.made_at, notes.id
          LIMIT ?3",
-    )
+    ))
     .bind(person)
     .bind(feed)
     .bind(THEIR_HIGHLIGHTS)

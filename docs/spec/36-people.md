@@ -83,8 +83,11 @@ PLAN.md → V1, item 1.*
   that opens it; then **Your highlights**, the words you highlighted in their
   writing (the newest article first, at most 20; Notes has them all), each
   as at an article's end, with "From {title} · {day}" (the title opens the
-  article) and your note on it; each shows only when it has something
-  (decision 0211); then their sources, each by its kind (Blog, Video,
+  article) and your note on it; each shows only when it has something, both
+  at once, an untitled piece by its opening words (section 6); if they can't
+  be loaded, one quiet line says "Their latest pieces and your highlights
+  couldn't be loaded. Open the page again to try once more." (decision
+  0211); then their sources, each by its kind (Blog, Video,
   Newsletter, Podcast) with a link to the publisher's own site (a blog by its
   website, "alpha.example"; a channel or newsletter by its own name). The
   muted line that said what they are, their folders and since when ("A

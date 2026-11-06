@@ -495,6 +495,33 @@ async fn their_page_lists_the_highlights_from_their_writing() {
     assert_eq!(found["highlights"][0]["article"]["id"], ids[0]);
     assert_eq!(found["highlights"][0]["article"]["feed_id"], feed);
 
+    // Joined into one person with another place of theirs, their page lists that place's highlights too.
+    let (letters, more) = follow(&base, &cookie, &publisher().await).await;
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &format!("/api/articles/{}/highlights", more[4]),
+        json!({ "quote": "number 5", "note": null }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let (status, joined) = send(
+        &base,
+        &cookie,
+        "/api/writers/join",
+        json!({ "feeds": [feed, letters], "name": "Kitchen" }),
+    )
+    .await;
+    assert!(status.is_success(), "{joined}");
+    let (_, found) = ask(&base, &cookie, &format!("/api/feeds/{feed}/highlights")).await;
+    let quotes: Vec<&str> = found["highlights"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|each| each["quote"].as_str().unwrap())
+        .collect();
+    assert_eq!(quotes, ["number 1", "A warm", "soup", "number 5"]);
+
     // Another reader following the same blog sees none of them.
     let (_, other) = common::another_reader(&state).await;
     let (theirs, _) = follow(&base, &other, &address).await;

@@ -4,13 +4,15 @@
   words you highlighted in their writing (the newest article first, at most 20; Notes has them
   all), each set as at an article's end: the words in the reading serif with a fine line at the
   left, "From {title} · {day}" (the title opens the article) and your note on it. Each part shows
-  only when it has something. No counts, no color.
+  only when it has something, and both come at once, so the page moves once, not twice; when they
+  can't be loaded, one quiet line says so rather than letting them seem gone. An untitled piece shows
+  its opening words, as a list does (decision 0196). No counts, no color.
 -->
 <script lang="ts">
   import { getJson, isRecord } from "./http";
   import { listArticles } from "./lists";
   import NoteText from "./NoteText.svelte";
-  import { toArticle, type Article } from "./shapes";
+  import { toArticle, untitledOpening, type Article } from "./shapes";
   import { when } from "./times";
 
   let { feed, onOpen }: { feed: number; onOpen: (article: Article) => void } = $props();
@@ -22,20 +24,25 @@
 
   let lately: Article[] = $state([]);
   let highlights: Highlight[] = $state([]);
+  let failed = $state(false);
 
   $effect(() => {
     const id = feed;
     lately = [];
     highlights = [];
-    listArticles({ feed: id }, "newest", null).then(
-      (page) => id === feed && (lately = page.articles.slice(0, LATELY)),
-      () => undefined,
-    );
-    getJson(`/api/feeds/${id}/highlights`).then(
-      (body) => id === feed && (highlights = toHighlights(body)),
-      () => undefined,
+    failed = false;
+    Promise.all([listArticles({ feed: id }, "newest", null), getJson(`/api/feeds/${id}/highlights`)]).then(
+      ([page, body]) => {
+        if (id !== feed) return;
+        lately = page.articles.slice(0, LATELY);
+        highlights = toHighlights(body);
+      },
+      () => id === feed && (failed = true),
     );
   });
+
+  /** Its title, or an untitled piece's opening words. */
+  const titleOf = (article: Article) => untitledOpening(article) ?? article.title;
 
   function toHighlights(body: unknown): Highlight[] {
     if (!isRecord(body) || !Array.isArray(body.highlights)) return [];
@@ -47,6 +54,10 @@
   }
 </script>
 
+{#if failed}
+  <p class="text-small text-ink-2">Their latest pieces and your highlights couldn't be loaded. Open the page again to try once more.</p>
+{/if}
+
 {#if lately.length > 0}
   <section class="flex flex-col gap-2" aria-labelledby="their-lately">
     <h3 id="their-lately" class="label">Lately</h3>
@@ -54,7 +65,7 @@
       {#each lately as article (article.id)}
         <li>
           <button type="button" class="row" onclick={() => onOpen(article)}>
-            <span class="title">{article.title || "Untitled"}</span>
+            <span class="title">{titleOf(article)}</span>
             <time class="day" datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
           </button>
         </li>
@@ -71,7 +82,7 @@
         <li class="quote">
           <p class="font-serif text-ink">{each.quote}</p>
           <p class="from">
-            From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{each.article.title || "Untitled"}</button>
+            From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
             · <time datetime={new Date(each.article.at * 1000).toISOString()}>{when(each.article.at)}</time>
           </p>
           {#if each.note}<div class="text-small"><NoteText note={each.note} /></div>{/if}
