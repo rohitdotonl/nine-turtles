@@ -185,7 +185,7 @@ test.describe("with a finger", () => {
     const [first, second] = [unique("Tch"), unique("Tci")];
     await blogsInFolders(page, [first, second]);
     const cdp = await page.context().newCDPSession(page);
-    const touch = (type: string, x: number, y: number) =>
+    const touch = (type: "touchStart" | "touchMove" | "touchEnd", x: number, y: number) =>
       cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
     let from = await middleOf(folderRow(page, second).locator(".folder-row"));
 
