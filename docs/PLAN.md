@@ -165,7 +165,7 @@ for real):
   at least 3 readers follow, with what's wrong and the blog's address,
   never who follows them, so Rohit can write to the blogger by hand.
 - **A browser extension** for adding feeds while browsing (until then, the
-  bookmark in Settings › Add from anywhere does the same job on computers).
+  bookmark in Settings › Install the app on any device does the same job on computers).
 
 **To discuss for V2** (from the research notes, decision 0160; nothing
 agreed yet):

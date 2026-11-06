@@ -681,19 +681,21 @@ test("Follow on someone already followed takes you to them", async ({ page, isMo
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 });
 
-test("Settings gives a bookmark button to drag, built from this nine turtles' own address, and Copy for it", async ({ page }) => {
-  await openApp(page, "/settings/add-from-anywhere");
-  const group = page.getByRole("region", { name: "Add from anywhere" });
+test("Settings gives a computer a bookmark button to drag, built from this nine turtles' own address", async ({ page }) => {
+  await openApp(page, "/settings/install");
+  const group = page.getByRole("region", { name: "Install the app on any device" });
+  await group.getByText("Computer", { exact: true }).click();
   const button = group.getByRole("link", { name: "Add to nine turtles" });
   await expect(button).toHaveAttribute("href", `javascript:void(location.href='${FEEDS_APP}/add?url='+encodeURIComponent(location.href))`);
   // Pressed in the app, it says where it works instead of going anywhere.
   await button.click();
-  await expect(group.getByRole("status")).toHaveText("Drag it to your bookmarks bar: it works from there.");
-  await expect(page).toHaveURL(/\/settings\/add-from-anywhere$/);
-  await expect(group.getByRole("button", { name: "Copy bookmark" })).toBeVisible();
-  // The bookmark's words are shown too, for anyone who copies it by hand.
-  await expect(group.getByText(`javascript:void(location.href='${FEEDS_APP}/add?url=`)).toBeVisible();
-  // Until the Shortcut's link exists, no button leads nowhere; the foot says what to do instead.
+  await expect(group.getByRole("status").filter({ hasText: "Drag it" })).toHaveText("Drag it to your bookmarks bar: it works from there.");
+  await expect(page).toHaveURL(/\/settings\/install$/);
+  // No raw bookmark code and no Copy: the button is the one way on a computer.
+  await expect(group.getByRole("button", { name: /Copy/ })).toHaveCount(0);
+  await expect(group.getByText("javascript:")).toHaveCount(0);
+  // Until the Shortcut's link exists, the iPhone tab says what to do instead, and no button leads nowhere.
+  await group.getByText("iPhone & iPad", { exact: true }).click();
   await expect(group.getByRole("link", { name: /Get the Shortcut/ })).toHaveCount(0);
-  await expect(group.getByText(/On iPhone and iPad, copy the page's address and paste it into \+ Add\. Each way asks before following anyone\./)).toBeVisible();
+  await expect(group.getByText("Copy the blog's address, then paste it into + Add.")).toBeVisible();
 });

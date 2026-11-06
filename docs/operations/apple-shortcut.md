@@ -4,7 +4,7 @@ iPhone and iPad readers follow a site from Safari's Share button with a
 ready-made Shortcut (decision 0177). Apple only lets a Shortcut be shared
 from a device signed in to iCloud, so the owner makes it once and an agent
 puts its iCloud link in `SHORTCUT_LINK` in `web/src/lib/share.ts`. Until
-then, Settings › Add from anywhere hides the iPhone row.
+then, the iPhone & iPad tab of Settings › Install the app on any device says to paste the address into + Add instead.
 
 ## Making it (about five minutes, on the owner's iPhone)
 

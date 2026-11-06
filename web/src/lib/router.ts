@@ -31,8 +31,7 @@ export const helpPage = (name: string) => `${HELP_URL}${name}/`;
  */
 export const SETTINGS_PAGES = {
   data: "Your data",
-  "add-from-anywhere": "Add from anywhere",
-  install: "Install the app",
+  install: "Install the app on any device",
   hiding: "Hiding",
   newsletters: "Newsletters",
   assistants: "Connected assistants",
@@ -43,6 +42,8 @@ export const SETTINGS_PAGES = {
 export type SettingsPage = keyof typeof SETTINGS_PAGES;
 
 function settingsPage(name: string): SettingsPage | undefined {
+  // Add from anywhere joined Install the app on any device; its old address still lands there.
+  if (name === "add-from-anywhere") return "install";
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 

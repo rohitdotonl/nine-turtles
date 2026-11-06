@@ -1,7 +1,7 @@
 // Whether nine turtles is installed here, and the one-press Install that
 // Chrome, Edge and Android offer (SPEC section 20, decision 0151). Those
 // browsers announce once per page that nine turtles can be installed; the
-// announcement is kept from the start (main.ts) so Settings › Install the app
+// announcement is kept from the start (main.ts) so Settings › Install the app on any device
 // can offer its Install button whenever it's opened. Nothing else ever shows
 // it: no banner, no reminder.
 

@@ -4,7 +4,7 @@ description: Give nine turtles its own icon and window on an iPhone, an Android 
 groupId: getting-started
 order: 4
 spec: 20
-updated: 2026-11-03
+updated: 2026-11-06
 related: [read-offline, create-your-account, follow-someone]
 ---
 
@@ -14,14 +14,14 @@ related: [read-offline, create-your-account, follow-someone]
   updates itself each time you open it.
 </p>
 
-**Settings › Install the app** shows the steps for the device you're on.
-Here they all are.
+**Settings › Install the app on any device** opens on the tab for the
+device you're on: Computer, Android, or iPhone & iPad. Here are all the steps.
 
-## iPhone and iPad (Safari)
+## iPhone and iPad
 
-1. Open <a href="{{ site.app }}">app.nineturtles.app</a> in Safari.
-2. Tap **Share**: the square with an arrow pointing up. In the newest
-   Safari, it's under **More** (…).
+1. Open <a href="{{ site.app }}">app.nineturtles.app</a> in Safari, or another browser.
+2. Tap **Share**: the square with an arrow pointing up. In Safari it may be
+   under **More** (…).
 3. Scroll down if you need to, and tap **Add to Home Screen**.
 4. Tap **Add**.
 
@@ -42,7 +42,7 @@ This needs macOS Sonoma or later.
 
 ## Chrome or Edge on a computer
 
-In **Settings › Install the app**, press **Install nine turtles**. Or:
+In **Settings › Install the app on any device**, press **Install nine turtles**. Or:
 
 - **Chrome:** click the install icon at the right end of the address bar.
   If it isn't there, open the menu (⋮), then **Cast, save and share**, then
@@ -54,8 +54,11 @@ Then click **Install**.
 
 ## Firefox
 
-Firefox on a computer can't install web apps. Use Chrome, Edge or Safari
-instead, or pin the tab.
+- **On Windows** (Firefox 143 or later): click the web apps button at the
+  right end of the address bar. nine turtles goes on your taskbar and in the
+  Start menu.
+- **On a Mac or Linux**, Firefox can't install web apps yet. Use Chrome or
+  Edge instead, or Safari on a Mac.
 
 ## Good to know
 
