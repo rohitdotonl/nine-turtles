@@ -258,6 +258,15 @@ test.describe("with a finger", () => {
     await touch("touchMove", from.x, from.y - 30);
     await touch("touchEnd", 0, 0);
     await expect(note(page)).toHaveCount(0);
+    // The swipe may have flung the sidebar: it's let come to rest, as a touch during a fling only stops it.
+    const resting = sidebar(page).locator(".scroller");
+    let at = -1;
+    await expect(async () => {
+      const now = await resting.evaluate((element) => element.scrollTop);
+      const settled = now === at;
+      at = now;
+      expect(settled).toBe(true);
+    }).toPass({ intervals: [150] });
 
     // Held for over half a second, then moved: the folder lifts and lands.
     from = await middleOf(folderRow(page, second).locator(".folder-row"));
