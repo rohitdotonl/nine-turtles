@@ -32,7 +32,9 @@ numbers: you never have a pile to clear.
 ## The list of articles
 
 Choose anything in the sidebar and its articles appear, newest first. Unread
-articles are in bolder type with a dot beside them. A star means you starred
+articles are in bolder type with a dot beside them. A post with no title,
+such as a short note, shows its first words instead, in plain type, up to
+two lines. A star means you starred
 it, headphones mean a podcast episode, and a small screen means a video.
 Older articles load as you reach the bottom, and every list ends with
 "That's everything."

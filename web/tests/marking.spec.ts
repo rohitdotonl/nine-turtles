@@ -51,6 +51,33 @@ function escape(text: string): string {
 test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
+  test("a post with no title shows its opening once, never semibold, at most two lines", async ({ page }) => {
+    const name = `untitled-${test.info().workerIndex}-${Date.now()}`;
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    const id = await follow(page, `${FEED_SITE}/untitled/${name}/`);
+    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+    await appReady(page);
+    const rowOf = (start: string) => page.locator(".item-row", { hasText: start });
+    const titleOf = (start: string) => rowOf(start).locator(".title");
+
+    // Its opening words where the title would be, in regular weight even while unread, with the dot.
+    const long = titleOf("Walked to the river");
+    await expect(long).toBeVisible();
+    await expect(long).toHaveCSS("font-weight", "400");
+    await expect(rowOf("Walked to the river").locator(".unread-dot")).toHaveCount(1);
+    await expect(rowOf("Walked to the river")).toHaveAccessibleName(/^Walked to the river.*, unread/);
+    // Two lines, then "…"; and nothing of its text repeated under it.
+    const lineHeight = await long.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight));
+    expect((await long.boundingBox())!.height).toBeLessThanOrEqual(lineHeight * 2 + 1);
+    await expect(rowOf("Walked to the river").locator(".excerpt")).toHaveCount(0);
+    await expect(titleOf("Rain all day.")).toHaveCSS("font-weight", "400");
+    // A titled post is as before.
+    await expect(titleOf("A titled post")).toHaveCSS("font-weight", "600");
+  });
+
   test("showing an article marks it read; m marks it unread again, and u undoes that", async ({ page }) => {
     const blog = await openBlog(page);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);

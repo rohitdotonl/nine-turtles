@@ -37,26 +37,46 @@ export type Kept = FullArticle & { first: boolean };
  * tab made it (none for marks from before decision 0121): another tab sends
  * it only for that reader.
  */
-export type Mark = { key: string; kind: "read" | "starred"; id: number; value: boolean; at: number; reader?: number };
+export type Mark = {
+  key: string;
+  kind: "read" | "starred";
+  id: number;
+  value: boolean;
+  at: number;
+  reader?: number;
+};
 
 /** What the signed-in screen needs to open without a connection. */
-export type KeptSession = { version: string; owner: boolean; email: string | null; emailSending: boolean };
+export type KeptSession = {
+  version: string;
+  owner: boolean;
+  email: string | null;
+  emailSending: boolean;
+};
 
 // Keeping articles for reading offline is always on (decision 0187): there's
 // no switch. Signing out deletes the copies (`forget`).
 
 // ---- The words the screens say ------------------------------------------
 
-export const SHOWING_KEPT = "Offline. Showing the articles saved on this device.";
-export const NOTHING_KEPT_HERE = "Nothing here is saved on this device. It will show when you're back online.";
+export const SHOWING_KEPT =
+  "Offline. Showing the articles saved on this device.";
+export const NOTHING_KEPT_HERE =
+  "Nothing here is saved on this device. It will show when you're back online.";
 export const END_OF_KEPT = "That's everything saved on this device.";
-export const NOT_KEPT = "This article isn't saved on this device. It opens when you're back online.";
-export const SEARCH_NEEDS_CONNECTION = "Search needs a connection. It works again once you're back online.";
-export const REFRESH_NEEDS_CONNECTION = "Refresh needs a connection. This is what's saved on this device.";
-export const NOTES_NEED_CONNECTION = "Notes needs a connection. It shows once you're back online.";
+export const NOT_KEPT =
+  "This article isn't saved on this device. It opens when you're back online.";
+export const SEARCH_NEEDS_CONNECTION =
+  "Search needs a connection. It works again once you're back online.";
+export const REFRESH_NEEDS_CONNECTION =
+  "Refresh needs a connection. This is what's saved on this device.";
+export const NOTES_NEED_CONNECTION =
+  "Notes needs a connection. It shows once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
-export const EPISODE_OFFLINE = "The episode plays here when you're back online.";
-export const SETTINGS_NEED_CONNECTION = "Settings need a connection. They open once you're back online.";
+export const EPISODE_OFFLINE =
+  "The episode plays here when you're back online.";
+export const SETTINGS_NEED_CONNECTION =
+  "Settings need a connection. They open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */
 export class NeedsConnection extends Error {}
@@ -67,31 +87,59 @@ export class NeedsConnection extends Error {}
  * Which articles to keep: the first `KEEP_UNREAD` of the reader's list (Unread,
  * or All with Unread off) and the first `KEEP_STARRED` starred ones, each once.
  */
-export function toKeep(first: Article[], starred: Article[]): Map<number, { row: Article; first: boolean }> {
+export function toKeep(
+  first: Article[],
+  starred: Article[],
+): Map<number, { row: Article; first: boolean }> {
   const keep = new Map<number, { row: Article; first: boolean }>();
-  for (const row of first.slice(0, KEEP_UNREAD)) keep.set(row.id, { row, first: true });
-  for (const row of starred.slice(0, KEEP_STARRED)) if (!keep.has(row.id)) keep.set(row.id, { row, first: false });
+  for (const row of first.slice(0, KEEP_UNREAD))
+    keep.set(row.id, { row, first: true });
+  for (const row of starred.slice(0, KEEP_STARRED))
+    if (!keep.has(row.id)) keep.set(row.id, { row, first: false });
   return keep;
 }
 
 /** A kept article brought up to date with its row in the server's list: its marks and names may have changed. */
 export function refreshed(kept: Kept, row: Article, first: boolean): Kept {
-  return { ...kept, read: row.read, starred: row.starred, muted: row.muted, feedTitle: row.feedTitle, at: row.at, first };
+  return {
+    ...kept,
+    read: row.read,
+    starred: row.starred,
+    muted: row.muted,
+    feedTitle: row.feedTitle,
+    at: row.at,
+    first,
+  };
 }
 
 /** A kept article with a mark made on this device. */
 export function withMark(kept: Kept, mark: Pick<Mark, "kind" | "value">): Kept {
-  return mark.kind === "read" ? { ...kept, read: mark.value, muted: mark.value ? kept.muted : false } : { ...kept, starred: mark.value };
+  return mark.kind === "read"
+    ? { ...kept, read: mark.value, muted: mark.value ? kept.muted : false }
+    : { ...kept, starred: mark.value };
 }
 
 /** The feeds a list without a connection shows: one feed, a folder's, or all of them. */
-function feedsOf(source: Source, library: Library | undefined): Set<number> | undefined {
+function feedsOf(
+  source: Source,
+  library: Library | undefined,
+): Set<number> | undefined {
   // A person's list holds all their places (SPEC section 36).
   if ("feed" in source) {
     const feed = library?.feeds.find((each) => each.id === source.feed);
-    return new Set([source.feed, ...(feed && library ? placesOf(feed, library.feeds).map((place) => place.id) : [])]);
+    return new Set([
+      source.feed,
+      ...(feed && library
+        ? placesOf(feed, library.feeds).map((place) => place.id)
+        : []),
+    ]);
   }
-  if ("folder" in source) return new Set((library?.feeds ?? []).filter((feed) => feed.folders.includes(source.folder)).map((feed) => feed.id));
+  if ("folder" in source)
+    return new Set(
+      (library?.feeds ?? [])
+        .filter((feed) => feed.folders.includes(source.folder))
+        .map((feed) => feed.id),
+    );
   return undefined;
 }
 
@@ -101,30 +149,72 @@ function feedsOf(source: Source, library: Library | undefined): Set<number> | un
  * that was kept), Starred the starred ones, everything else what's kept.
  * Search can't be done here.
  */
-export function keptList(kept: Kept[], source: Source, order: Order, library?: Library): Article[] {
+export function keptList(
+  kept: Kept[],
+  source: Source,
+  order: Order,
+  library?: Library,
+): Article[] {
   if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
   // Notes isn't kept on the device (SPEC section 42).
-  if ("view" in source && source.view === "notes") throw new NeedsConnection(NOTES_NEED_CONNECTION);
+  if ("view" in source && source.view === "notes")
+    throw new NeedsConnection(NOTES_NEED_CONNECTION);
   const feeds = feedsOf(source, library);
   const view = "view" in source ? source.view : undefined;
   const shown = kept.filter((article) => {
     if (feeds && !feeds.has(article.feedId)) return false;
-    if (view === "unread") return article.first && !article.read && !article.muted;
+    if (view === "unread")
+      return article.first && !article.read && !article.muted;
     if (view === "starred") return article.starred;
     // Only Starred lists a muted article, as on the server.
     return !article.muted;
   });
   shown.sort((one, other) => one.at - other.at || one.id - other.id);
   if (order === "newest") shown.reverse();
-  return shown.map(({ id, feedId, feedTitle, title, link, at, read, starred, muted }) => ({ id, feedId, feedTitle, title, link, at, read, starred, muted }));
+  // An untitled post's opening words come along, so it's listed as it is online (SPEC section 6).
+  return shown.map(
+    ({
+      id,
+      feedId,
+      feedTitle,
+      title,
+      link,
+      at,
+      read,
+      starred,
+      muted,
+      opening,
+    }) => ({
+      id,
+      feedId,
+      feedTitle,
+      title,
+      link,
+      at,
+      read,
+      starred,
+      muted,
+      ...(opening ? { opening } : {}),
+    }),
+  );
 }
 
 /** Marks waiting to be sent, in parts the server takes in one request each: the same mark, made at the same moment. */
-export function inParts(marks: Mark[]): { kind: Mark["kind"]; value: boolean; at: number; ids: number[] }[] {
-  const parts = new Map<string, { kind: Mark["kind"]; value: boolean; at: number; ids: number[] }>();
+export function inParts(
+  marks: Mark[],
+): { kind: Mark["kind"]; value: boolean; at: number; ids: number[] }[] {
+  const parts = new Map<
+    string,
+    { kind: Mark["kind"]; value: boolean; at: number; ids: number[] }
+  >();
   for (const mark of [...marks].sort((one, other) => one.at - other.at)) {
     const key = `${mark.kind}:${mark.value}:${mark.at}`;
-    const part = parts.get(key) ?? { kind: mark.kind, value: mark.value, at: mark.at, ids: [] };
+    const part = parts.get(key) ?? {
+      kind: mark.kind,
+      value: mark.value,
+      at: mark.at,
+      ids: [],
+    };
     part.ids.push(mark.id);
     parts.set(key, part);
   }
@@ -132,17 +222,31 @@ export function inParts(marks: Mark[]): { kind: Mark["kind"]; value: boolean; at
 }
 
 /** The sidebar's counts, as kept, after read marks made here: each mark that changed an article moves its feed's count. */
-export function countsAfter(library: Library, before: Map<number, Kept>, changed: Kept[]): Library {
+export function countsAfter(
+  library: Library,
+  before: Map<number, Kept>,
+  changed: Kept[],
+): Library {
   const change = new Map<number, number>();
   for (const after of changed) {
     const was = before.get(after.id);
     if (!was || was.read === after.read) continue;
-    change.set(after.feedId, (change.get(after.feedId) ?? 0) + (after.read ? -1 : 1));
+    change.set(
+      after.feedId,
+      (change.get(after.feedId) ?? 0) + (after.read ? -1 : 1),
+    );
   }
   if (change.size === 0) return library;
   return {
     ...library,
-    feeds: library.feeds.map((feed) => (change.has(feed.id) ? { ...feed, unread: Math.max(0, feed.unread + (change.get(feed.id) ?? 0)) } : feed)),
+    feeds: library.feeds.map((feed) =>
+      change.has(feed.id)
+        ? {
+            ...feed,
+            unread: Math.max(0, feed.unread + (change.get(feed.id) ?? 0)),
+          }
+        : feed,
+    ),
   };
 }
 
@@ -154,7 +258,8 @@ let opening: Promise<IDBDatabase> | undefined;
 
 function open(): Promise<IDBDatabase> {
   opening ??= new Promise<IDBDatabase>((resolve, reject) => {
-    if (typeof indexedDB === "undefined") return reject(new Error("no IndexedDB"));
+    if (typeof indexedDB === "undefined")
+      return reject(new Error("no IndexedDB"));
     const request = indexedDB.open(NAME, 1);
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -181,7 +286,11 @@ function open(): Promise<IDBDatabase> {
 }
 
 /** Runs `work` in one transaction over `stores`; resolves once it's written. */
-async function inside<T>(stores: Store[], mode: IDBTransactionMode, work: (tx: IDBTransaction) => Promise<T> | T): Promise<T> {
+async function inside<T>(
+  stores: Store[],
+  mode: IDBTransactionMode,
+  work: (tx: IDBTransaction) => Promise<T> | T,
+): Promise<T> {
   const db = await open();
   const tx = db.transaction(stores, mode);
   const done = new Promise<void>((resolve, reject) => {
@@ -202,12 +311,16 @@ function ask<T>(request: IDBRequest<T>): Promise<T> {
 }
 
 async function allKept(): Promise<Kept[]> {
-  return inside(["articles"], "readonly", (tx) => ask(tx.objectStore("articles").getAll() as IDBRequest<Kept[]>));
+  return inside(["articles"], "readonly", (tx) =>
+    ask(tx.objectStore("articles").getAll() as IDBRequest<Kept[]>),
+  );
 }
 
 async function about<T>(key: string): Promise<T | undefined> {
   try {
-    return await inside(["about"], "readonly", (tx) => ask(tx.objectStore("about").get(key) as IDBRequest<T | undefined>));
+    return await inside(["about"], "readonly", (tx) =>
+      ask(tx.objectStore("about").get(key) as IDBRequest<T | undefined>),
+    );
   } catch {
     return undefined;
   }
@@ -215,7 +328,11 @@ async function about<T>(key: string): Promise<T | undefined> {
 
 async function remember(key: string, value: unknown): Promise<void> {
   try {
-    await inside(["about"], "readwrite", (tx) => void tx.objectStore("about").put(value, key));
+    await inside(
+      ["about"],
+      "readwrite",
+      (tx) => void tx.objectStore("about").put(value, key),
+    );
   } catch {
     // Without its database this device simply keeps nothing.
   }
@@ -256,7 +373,10 @@ export async function keptLibrary(): Promise<Library | undefined> {
 }
 
 /** A list from the copies on this device, or undefined when there are none to show from. */
-export async function keptPage(source: Source, order: Order): Promise<Page | undefined> {
+export async function keptPage(
+  source: Source,
+  order: Order,
+): Promise<Page | undefined> {
   let kept: Kept[];
   try {
     kept = await allKept();
@@ -264,13 +384,22 @@ export async function keptPage(source: Source, order: Order): Promise<Page | und
     return undefined;
   }
   const library = "folder" in source ? await keptLibrary() : undefined;
-  return { articles: keptList(kept, source, order, library), next: null, latest: 0, kept: true };
+  return {
+    articles: keptList(kept, source, order, library),
+    next: null,
+    latest: 0,
+    kept: true,
+  };
 }
 
 /** An article from the copies on this device. */
-export async function keptArticle(id: number): Promise<FullArticle | undefined> {
+export async function keptArticle(
+  id: number,
+): Promise<FullArticle | undefined> {
   try {
-    const kept = await inside(["articles"], "readonly", (tx) => ask(tx.objectStore("articles").get(id) as IDBRequest<Kept | undefined>));
+    const kept = await inside(["articles"], "readonly", (tx) =>
+      ask(tx.objectStore("articles").get(id) as IDBRequest<Kept | undefined>),
+    );
     if (!kept) return undefined;
     const { first: _first, ...article } = kept;
     return article;
@@ -285,7 +414,12 @@ export async function keptArticle(id: number): Promise<FullArticle | undefined> 
  * whether it was written down, so a mark the server can't take yet is kept
  * for later rather than taken back.
  */
-export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean, at: number): Promise<boolean> {
+export async function noteMark(
+  kind: Mark["kind"],
+  ids: number[],
+  value: boolean,
+  at: number,
+): Promise<boolean> {
   try {
     await inside(["articles", "marks", "about"], "readwrite", async (tx) => {
       const articles = tx.objectStore("articles");
@@ -293,8 +427,17 @@ export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean
       const before = new Map<number, Kept>();
       const changed: Kept[] = [];
       for (const id of ids) {
-        marks.put({ key: `${kind}:${id}`, kind, id, value, at, reader: currentTabReader() } satisfies Mark);
-        const kept = await ask(articles.get(id) as IDBRequest<Kept | undefined>);
+        marks.put({
+          key: `${kind}:${id}`,
+          kind,
+          id,
+          value,
+          at,
+          reader: currentTabReader(),
+        } satisfies Mark);
+        const kept = await ask(
+          articles.get(id) as IDBRequest<Kept | undefined>,
+        );
         if (!kept) continue;
         const after = withMark(kept, { kind, value });
         before.set(id, kept);
@@ -302,8 +445,16 @@ export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean
         articles.put(after);
       }
       if (kind !== "read" || changed.length === 0) return;
-      const library = await ask(tx.objectStore("about").get("library") as IDBRequest<Library | undefined>);
-      if (library) tx.objectStore("about").put(countsAfter(library, before, changed), "library");
+      const library = await ask(
+        tx.objectStore("about").get("library") as IDBRequest<
+          Library | undefined
+        >,
+      );
+      if (library)
+        tx.objectStore("about").put(
+          countsAfter(library, before, changed),
+          "library",
+        );
     });
     return true;
   } catch {
@@ -312,13 +463,19 @@ export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean
 }
 
 /** The server has these marks: they no longer wait, unless a later one was made since. */
-export async function markSent(kind: Mark["kind"], ids: number[], at: number): Promise<void> {
+export async function markSent(
+  kind: Mark["kind"],
+  ids: number[],
+  at: number,
+): Promise<void> {
   try {
     await inside(["marks"], "readwrite", async (tx) => {
       const marks = tx.objectStore("marks");
       for (const id of ids) {
         const key = `${kind}:${id}`;
-        const waiting = await ask(marks.get(key) as IDBRequest<Mark | undefined>);
+        const waiting = await ask(
+          marks.get(key) as IDBRequest<Mark | undefined>,
+        );
         if (waiting && waiting.at === at) marks.delete(key);
       }
     });
@@ -331,7 +488,11 @@ export async function markSent(kind: Mark["kind"], ids: number[], at: number): P
 const beingSent = new Set<string>();
 
 /** Notes that these marks are on their way; returns how to say they've arrived (or failed). */
-export function sending(kind: Mark["kind"], ids: number[], at: number): () => void {
+export function sending(
+  kind: Mark["kind"],
+  ids: number[],
+  at: number,
+): () => void {
   const keys = ids.map((id) => `${kind}:${id}:${at}`);
   for (const key of keys) beingSent.add(key);
   return () => {
@@ -341,7 +502,9 @@ export function sending(kind: Mark["kind"], ids: number[], at: number): () => vo
 
 async function waitingMarks(): Promise<Mark[]> {
   try {
-    return await inside(["marks"], "readonly", (tx) => ask(tx.objectStore("marks").getAll() as IDBRequest<Mark[]>));
+    return await inside(["marks"], "readonly", (tx) =>
+      ask(tx.objectStore("marks").getAll() as IDBRequest<Mark[]>),
+    );
   } catch {
     return [];
   }
@@ -351,7 +514,12 @@ async function waitingMarks(): Promise<Mark[]> {
 export type Fetchers = {
   list: (source: Source, order: Order, after: string | null) => Promise<Page>;
   several: (ids: number[]) => Promise<FullArticle[]>;
-  sendMark: (kind: Mark["kind"], ids: number[], value: boolean, at: number) => Promise<void>;
+  sendMark: (
+    kind: Mark["kind"],
+    ids: number[],
+    value: boolean,
+    at: number,
+  ) => Promise<void>;
   /** Whether a failed send was the server saying no, rather than not being reached. */
   refused: (problem: unknown) => boolean;
 };
@@ -373,14 +541,24 @@ export function useFetchers(given: Fetchers): void {
 export async function sendWaiting(): Promise<void> {
   if (!fetchers) return;
   const reader = currentTabReader();
-  const all = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
+  const all = (await waitingMarks()).filter(
+    (mark) => !beingSent.has(`${mark.key}:${mark.at}`),
+  );
   // A mark another reader's tab left here (they're no longer signed in on this
   // browser) is never sent as this reader's: it goes (decision 0121).
   // While this tab's reader isn't known, only marks from before decision 0121
   // (which name no reader) go; the rest wait for a tab that knows.
-  const theirs = reader === undefined ? [] : all.filter((mark) => mark.reader !== undefined && mark.reader !== reader);
-  for (const part of inParts(theirs)) await markSent(part.kind, part.ids, part.at);
-  const waiting = all.filter((mark) => (reader === undefined ? mark.reader === undefined : !theirs.includes(mark)));
+  const theirs =
+    reader === undefined
+      ? []
+      : all.filter(
+          (mark) => mark.reader !== undefined && mark.reader !== reader,
+        );
+  for (const part of inParts(theirs))
+    await markSent(part.kind, part.ids, part.at);
+  const waiting = all.filter((mark) =>
+    reader === undefined ? mark.reader === undefined : !theirs.includes(mark),
+  );
   for (const part of inParts(waiting)) {
     try {
       await fetchers.sendMark(part.kind, part.ids, part.value, part.at);
@@ -399,11 +577,18 @@ export async function sendWaiting(): Promise<void> {
  */
 export function keepUpToDate(order: Order, unread: boolean): Promise<void> {
   if (!fetchers) return Promise.resolve();
-  running ??= round(fetchers, order, unread).finally(() => (running = undefined));
+  running ??= round(fetchers, order, unread).finally(
+    () => (running = undefined),
+  );
   return running;
 }
 
-async function firstOf(list: Fetchers["list"], source: Source, order: Order, most: number): Promise<Article[]> {
+async function firstOf(
+  list: Fetchers["list"],
+  source: Source,
+  order: Order,
+  most: number,
+): Promise<Article[]> {
   const rows: Article[] = [];
   let after: string | null = null;
   do {
@@ -415,16 +600,32 @@ async function firstOf(list: Fetchers["list"], source: Source, order: Order, mos
   return rows.slice(0, most);
 }
 
-async function round(using: Fetchers, order: Order, unread: boolean): Promise<void> {
+async function round(
+  using: Fetchers,
+  order: Order,
+  unread: boolean,
+): Promise<void> {
   const mine = generation;
   const still = () => mine === generation;
   try {
     await sendWaiting();
-    const first = await firstOf(using.list, { view: homeView(unread) }, order, KEEP_UNREAD);
-    const starred = await firstOf(using.list, { view: "starred" }, "newest", KEEP_STARRED);
+    const first = await firstOf(
+      using.list,
+      { view: homeView(unread) },
+      order,
+      KEEP_UNREAD,
+    );
+    const starred = await firstOf(
+      using.list,
+      { view: "starred" },
+      "newest",
+      KEEP_STARRED,
+    );
     if (!still()) return;
     const keep = toKeep(first, starred);
-    const waiting = new Map((await waitingMarks()).map((mark) => [mark.key, mark]));
+    const waiting = new Map(
+      (await waitingMarks()).map((mark) => [mark.key, mark]),
+    );
     const missing: number[] = [];
     await inside(["articles"], "readwrite", async (tx) => {
       const articles = tx.objectStore("articles");
@@ -437,18 +638,28 @@ async function round(using: Fetchers, order: Order, unread: boolean): Promise<vo
           continue;
         }
         have.add(kept.id);
-        articles.put(withWaiting(refreshed(kept, wanted.row, wanted.first), waiting));
+        articles.put(
+          withWaiting(refreshed(kept, wanted.row, wanted.first), waiting),
+        );
       }
       for (const id of keep.keys()) if (!have.has(id)) missing.push(id);
     });
     for (let start = 0; start < missing.length; start += AT_ONCE) {
       if (!still()) return;
-      const fetched = await using.several(missing.slice(start, start + AT_ONCE));
+      const fetched = await using.several(
+        missing.slice(start, start + AT_ONCE),
+      );
       if (!still()) return;
       await inside(["articles"], "readwrite", (tx) => {
         for (const article of fetched) {
           const wanted = keep.get(article.id);
-          if (wanted) tx.objectStore("articles").put(withWaiting({ ...article, muted: wanted.row.muted, first: wanted.first }, waiting));
+          if (wanted)
+            tx.objectStore("articles").put(
+              withWaiting(
+                { ...article, muted: wanted.row.muted, first: wanted.first },
+                waiting,
+              ),
+            );
         }
       });
       await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
@@ -504,7 +715,8 @@ export class Keeper {
 
   /** nine turtles came back into view (or went out of it). */
   lookedAgain = () => {
-    if (!document.hidden && this.#clock() - this.#last > KEEP_AGAIN_AFTER) this.now();
+    if (!document.hidden && this.#clock() - this.#last > KEEP_AGAIN_AFTER)
+      this.now();
   };
 
   /** Starts keeping up when the connection comes back and on coming back into view. Returns how to stop. */
