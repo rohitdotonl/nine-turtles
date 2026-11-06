@@ -10,7 +10,7 @@
 //! Rules act on articles as they arrive (`feeds::store_articles` calls
 //! `apply_to_new`). A rule made on the screen also hides, at once, the
 //! unread articles that already match; the screen offers Undo (decision
-//! 0197). A rule may last a week or a month (`until`): once that has
+//! 0201). A rule may last a week or a month (`until`): once that has
 //! passed it stops hiding and isn't listed, and what it hid stays hidden.
 //!
 //! Each rule is a reader's, and changes only that reader's marks (their
@@ -80,7 +80,7 @@ pub struct Rule {
     pub feed_id: Option<i64>,
     /// The person it applied to is no longer followed, so it matches nothing.
     pub place_gone: bool,
-    /// Paused before the switch went (decision 0197); only an assistant
+    /// Paused before the switch went (decision 0201); only an assistant
     /// makes one now. It hides nothing.
     pub paused: bool,
     /// When it stops hiding, in seconds since 1970; none for good.
@@ -415,7 +415,7 @@ pub(crate) struct RuleForm {
     #[serde(default)]
     pub until: Option<i64>,
     /// Undo bringing a removed rule back: it hides nothing already here, so
-    /// it comes back as it was (decision 0197).
+    /// it comes back as it was (decision 0201).
     #[serde(default)]
     pub restore: bool,
 }
@@ -515,7 +515,7 @@ pub(crate) async fn make(
 }
 
 /// Makes a rule from the screen and hides, at once, the unread articles
-/// that already match it (decision 0197). Answers its number and exactly
+/// that already match it (decision 0201). Answers its number and exactly
 /// the articles it hid, so Undo can bring those back.
 async fn create_rule(
     SignedIn(person): SignedIn,

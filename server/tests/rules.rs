@@ -272,7 +272,7 @@ async fn a_rule_from_one_person_covers_all_their_places_and_nobody_else() {
 async fn a_paused_rule_does_nothing_and_old_kinds_of_rule_are_kept_but_never_shown_or_run() {
     let reader = Reader::new().await;
     let blog = reader.follow("blog.xml").await;
-    // Paused before the switch went (decision 0197): listed, never run.
+    // Paused before the switch went (decision 0201): listed, never run.
     let (_, paused) = reader
         .post("/api/rules", json!({ "words": "laptop", "paused": true }))
         .await;
@@ -322,7 +322,7 @@ async fn a_new_rule_hides_what_already_matches_at_once_and_can_be_undone() {
     let (_, made) = reader
         .post("/api/rules", json!({ "words": "crypto" }))
         .await;
-    // What's already here and unread is hidden at once (decision 0197).
+    // What's already here and unread is hidden at once (decision 0201).
     let applied = made;
     assert_eq!(applied["ids"].as_array().unwrap().len(), 2);
     assert_eq!(
@@ -496,7 +496,7 @@ async fn undo_brings_a_removed_word_back_as_it_was_hiding_nothing_more() {
     reader.write("1", "Crypto news", "A", "Words.");
     let blog = reader.follow("blog.xml").await;
     // A paused word made again, and any word Undo restores, hide nothing
-    // already here (decision 0197).
+    // already here (decision 0201).
     for word in [
         json!({ "words": "crypto", "paused": true }),
         json!({ "words": "crypto", "restore": true }),

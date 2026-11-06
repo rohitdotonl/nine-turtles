@@ -1393,7 +1393,7 @@ async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules() {
 
     // The owner's rule no longer points at it; the other reader's still
     // does, and their articles are all there (hidden by their own rule as
-    // it was made, decision 0197).
+    // it was made, decision 0201).
     let mine = owner.get("/api/rules").await["rules"][0].clone();
     assert_eq!(mine["place_gone"], true);
     let theirs = other.get("/api/rules").await["rules"][0].clone();

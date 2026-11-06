@@ -1,6 +1,6 @@
 // Hiding (SPEC section 27): a list of words, each hiding articles about it
 // from everyone or one person, for a week, a month or for good (decision
-// 0197). This file talks to the server about them and writes each in words,
+// 0201). This file talks to the server about them and writes each in words,
 // the way Settings › Hiding lists it.
 
 import { rowFor } from "./people";
@@ -17,7 +17,7 @@ export type Rule = {
   feedId: number | null;
   /** The person it applied to is no longer followed, so it matches nothing. */
   placeGone: boolean;
-  /** Paused before the switch went (decision 0197): it hides nothing. */
+  /** Paused before the switch went (decision 0201): it hides nothing. */
   paused: boolean;
   /** When it stops hiding, in seconds since 1970; null for good. */
   until: number | null;

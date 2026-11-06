@@ -3,18 +3,20 @@
   first-visit welcome: two sentences on what a feed is, a link to the
   website's guide, and a short, fixed list of feeds to start with, drawn as a
   grouped list of tick boxes, as a Mac draws a choice of any (decision 0045).
-  None is ticked to begin with: the reader chooses. "Add chosen feeds" adds
-  them one after another through the same path as pasting an address; while
-  it works, a line of text says so, with no spinner.
+  None is ticked to begin with: the reader chooses. Each writer's name links to
+  their site, in a tab of its own. With nothing ticked the main button reads
+  "Add all five" and adds them all; once any is ticked, "Add 2 chosen" adds
+  only those. They're added one after another through the same path as
+  pasting an address; while it works, a line of text says so, with no spinner.
 
-  In a sheet, Cancel and "Add chosen feeds" share the foot row; on a phone's
+  In a sheet, Cancel and the main button share the foot row; on a phone's
   page, the phone sheet's one build (decision 0052): no Cancel (the X beside
   the title is the way out) and the main action the full width at the foot.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
-  import { GUIDE_URL, STARTERS, addStarters, startProblem, type Starter } from "./starters";
+  import { GUIDE_URL, STARTERS, addLabel, addStarters, siteName, startProblem, type Starter } from "./starters";
 
   let {
     onAdded,
@@ -38,11 +40,8 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
-    const picked = STARTERS.filter((starter) => chosen.includes(starter.feed));
-    if (picked.length === 0) {
-      message = "Choose a feed first.";
-      return;
-    }
+    // Nothing ticked: all of them.
+    const picked = chosen.length === 0 ? STARTERS : STARTERS.filter((starter) => chosen.includes(starter.feed));
     busy = true;
     message = "";
     adding = picked.length;
@@ -64,9 +63,17 @@
     <div class="inset-group">
       {#each STARTERS as starter (starter.feed)}
         <label class="inset-row check-row flex-nowrap">
-          <input type="checkbox" value={starter.feed} bind:group={chosen} />
+          <input type="checkbox" value={starter.feed} bind:group={chosen} aria-label={`${starter.name}: ${starter.about}`} />
           <span class="flex min-w-0 flex-col py-1">
-            <span class="break-words">{starter.name}</span>
+            <!--
+              Their name and site's address are one link to the site, in a tab of its own, at least
+              44px tall, raised above the tick box that covers the row: pressing them opens the site,
+              pressing anywhere else in the row ticks.
+            -->
+            <a href={starter.site} target="_blank" rel="noopener" class="relative z-10 flex min-h-11 flex-col justify-center self-start">
+              <span class="break-words underline decoration-1 underline-offset-[3px]">{starter.name}</span>
+              <span class="text-meta break-all text-ink-2">{siteName(starter.site)}<span class="sr-only"> (their website, opens in a new tab)</span></span>
+            </a>
             <span class="text-meta text-muted">{starter.about}</span>
           </span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
@@ -84,13 +91,13 @@
   </p>
   {#if page}
     <div class="page-action">
-      <button type="submit" aria-disabled={busy} class="btn-primary">Add chosen feeds</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary">{addLabel(chosen.length)}</button>
     </div>
   {:else}
     <!-- The sheet's one row of actions, 20px under what's above it: Cancel, then the main action at the right end. -->
     <div class="sheet-actions mt-5">
       <button type="button" onclick={onCancel} class="btn">Cancel</button>
-      <button type="submit" aria-disabled={busy} class="btn-primary">Add chosen feeds</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary">{addLabel(chosen.length)}</button>
     </div>
   {/if}
 </form>

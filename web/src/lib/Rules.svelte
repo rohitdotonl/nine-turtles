@@ -1,5 +1,5 @@
 <!--
-  Settings › Hiding (SPEC section 27, decision 0197): a plain list of words.
+  Settings › Hiding (SPEC section 27, decision 0201): a plain list of words.
   At the top, one field, "Hide articles about…", with Add and how long it
   lasts (For a week, For a month or For good, the usual one). Adding hides
   at once the unread articles already about it, with no question first; the

@@ -8,7 +8,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { type Label, TooLate, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
+  import { type Label, TooLate, copyAddress, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
 
   let on = $state(false);
   let address = $state("");
@@ -30,12 +30,7 @@
   );
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(address);
-      message = "Address copied.";
-    } catch {
-      message = "Couldn't copy. Select the address and copy it yourself.";
-    }
+    message = await copyAddress(address);
     // Undo for New address stays on the line: copying changes nothing.
   }
 

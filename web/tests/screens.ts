@@ -327,7 +327,7 @@ export const SCREENS: Screen[] = [
   {
     // Settings › Hiding with three words: for good, for a person for a while, and one
     // paused before the switch went. The rules are as the server would send them, so the
-    // library the screenshots follow stays as it is (decision 0197).
+    // library the screenshots follow stays as it is (decision 0201).
     name: "hiding",
     path: "/settings/hiding",
     signedIn: true,
