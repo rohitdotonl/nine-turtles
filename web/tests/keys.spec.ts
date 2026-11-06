@@ -37,7 +37,7 @@ test.describe("on a wide window", () => {
     await signedIn(page);
     await page.keyboard.press("?");
     await expect(sheet(page)).toBeVisible();
-    const help = sheet(page).getByRole("link", { name: "Help with keys (on the nine turtles website)" });
+    const help = sheet(page).getByRole("link", { name: "Help with keys (on the nine turtles website, opens in a new tab)" });
     await expect(help).toHaveAttribute("href", "https://nineturtles.app/help/every-keyboard-key/");
     await expect(help).toHaveAttribute("target", "_blank");
     expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);

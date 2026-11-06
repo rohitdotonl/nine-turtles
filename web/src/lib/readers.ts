@@ -99,10 +99,37 @@ export const FINISH_SIGN_UP_PAGE = "/finish-sign-up";
 
 export type FinishResult =
   | { ok: true }
-  | { ok: false; reason: "wrong-password" | "expired" | "already" | "too-many" | "unreachable" }
+  | { ok: false; reason: "wrong-password" | "password-needed" | "expired" | "already" | "too-many" | "unreachable" }
   | { ok: false; reason: "wait"; waitSeconds: number };
 
-/** Follows a sign-up's link with the password chosen at sign-up: the account is made and this device signed in. */
+/**
+ * What a sign-up's link can do here, asked as the page opens without using it up (decision 0193):
+ * finish with one press in the browser that signed up, ask the password anywhere else, or nothing,
+ * when it has run out.
+ */
+export type LinkHere = "same-browser" | "password" | "expired" | "unreachable";
+
+export async function checkSignUpLink(ticket: string): Promise<LinkHere> {
+  let response: Response;
+  try {
+    response = await api("/api/sign-up/check", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ticket }),
+    });
+  } catch {
+    return "unreachable";
+  }
+  if (response.status === 410) return "expired";
+  if (!response.ok) return "unreachable";
+  const body: unknown = await response.json().catch(() => null);
+  return isRecord(body) && body.same_browser === true ? "same-browser" : "password";
+}
+
+/**
+ * Follows a sign-up's link: the account is made and this device signed in. With the password chosen
+ * at sign-up, or, in the browser that signed up, with none ("" , decision 0193).
+ */
 export async function finishSignUp(ticket: string, password: string): Promise<FinishResult> {
   let response: Response;
   try {
@@ -120,7 +147,7 @@ export async function finishSignUp(ticket: string, password: string): Promise<Fi
   if (error === "wait") {
     return { ok: false, reason: "wait", waitSeconds: isRecord(body) && typeof body.wait_seconds === "number" ? body.wait_seconds : 60 };
   }
-  return error === "wrong-password" || error === "expired" || error === "already" || error === "too-many"
+  return error === "wrong-password" || error === "password-needed" || error === "expired" || error === "already" || error === "too-many"
     ? { ok: false, reason: error }
     : { ok: false, reason: "unreachable" };
 }
@@ -130,6 +157,8 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
   switch (result.reason) {
     case "wrong-password":
       return "That isn't the password you chose when you signed up.";
+    case "password-needed":
+      return "Type the password you chose when you signed up.";
     case "wait":
       return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
     case "expired":

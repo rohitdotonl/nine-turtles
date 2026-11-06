@@ -18,7 +18,7 @@ export const RESET_PAGE = "/reset-password";
 export const CONFIRM_PAGE = "/confirm-email";
 export const SIGN_IN_LINK_PAGE = "/sign-in-link";
 
-/** The sign-in and sign-up pages' own addresses (decision 0196). Signed in already, either opens nine turtles itself. */
+/** The sign-in and sign-up pages' own addresses (decision 0199). Signed in already, either opens nine turtles itself. */
 export const SIGN_IN_PAGE = "/sign-in";
 export const SIGN_UP_PAGE = "/sign-up";
 

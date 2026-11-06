@@ -1,14 +1,16 @@
 <!--
   The page a sign-up's emailed link opens (/finish-sign-up#ticket=…, SPEC
-  section 1, decision 0154). Built like sign-in: Password (named above its
-  field, "The one you chose when you signed up." under it), Confirm email,
-  and a quiet "Forgot it? Sign up again". The link shows the address is the reader's; the password shows the
-  sign-up is theirs, so a stranger who signed up with the same address
-  can't hand them an account with the stranger's password. Nothing happens
-  until the reader presses Confirm email, so a mail program checking links
-  can't use the link up. Then "You're signed up", with Open nine turtles. A
-  link that has run out says so calmly, and the keyboard goes to what it
-  says.
+  section 1, decisions 0154 and 0193). Built like sign-in. In the browser
+  that signed up, it holds only Confirm email: that browser keeps a secret
+  from Sign up, which with the link is proof enough. Anywhere else it asks
+  the password too (named above its field, "The one you chose when you
+  signed up." under it), with a quiet "Forgot it? Sign up again": the link
+  shows the address is the reader's, the password that the sign-up is
+  theirs, so a stranger who signed up with the same address can't hand them
+  an account with the stranger's password. Nothing happens until the reader
+  presses Confirm email, so a mail program checking links can't use the link
+  up. Then nine turtles opens, signed in, on its welcome. A link that has
+  run out says so calmly, and the keyboard goes to what it says.
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -16,7 +18,7 @@
   import Icon from "./Icon.svelte";
   import PasswordField from "./PasswordField.svelte";
   import { ticketFrom } from "./accounts";
-  import { explainFinish, finishSignUp } from "./readers";
+  import { checkSignUpLink, explainFinish, finishSignUp, type LinkHere } from "./readers";
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
 
@@ -30,24 +32,42 @@
   let refused = $state(false);
   /** The link has run out, was used, or the address has an account: the form goes, the message stays. */
   let spent = $state((() => ticket === "")());
-  let signedUp = $state(false);
   let busy = $state(false);
-  let doneHeading: HTMLHeadingElement | undefined = $state();
   let spentMessage: HTMLParagraphElement | undefined = $state();
+  let confirmButton: HTMLButtonElement | undefined = $state();
+  /** Whether this is the browser that signed up (no password asked); unknown until the server answers. */
+  let here = $state<LinkHere | undefined>(ticket === "" ? "expired" : undefined);
+  let sameBrowser = $derived(here === "same-browser");
+
+  if (ticket !== "") {
+    checkSignUpLink(ticket).then((answer) => {
+      // Not reachable: the password form, as before; pressing Confirm email says what's wrong.
+      here = answer === "unreachable" ? "password" : answer;
+      // Run out or used: it says so at once, and the keyboard (and a screen reader) goes there.
+      if (answer === "expired") {
+        spent = true;
+        tick().then(() => spentMessage?.focus());
+      }
+      // The only thing to do on this page, so it has the focus (the password field takes it itself).
+      if (answer === "same-browser") tick().then(() => confirmButton?.focus());
+    });
+  }
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    if (busy || password === "") return;
+    if (busy || (!sameBrowser && password === "")) return;
     busy = true;
-    const result = await finishSignUp(ticket, password);
+    const result = await finishSignUp(ticket, sameBrowser ? "" : password);
     busy = false;
     if (result.ok) {
-      signedUp = true;
-      // The form and its button are gone: the keyboard goes to what replaced them.
-      tick().then(() => doneHeading?.focus());
+      // Signed in: nine turtles opens straight away, on its welcome.
+      history.replaceState(null, "", "/");
+      onSignedIn();
       return;
     }
     message = explainFinish(result);
+    // This browser's secret has gone (its 24 hours, or cleared): the password, as anywhere else.
+    if (result.reason === "password-needed") here = "password";
     refused = result.reason === "wrong-password" || result.reason === "wait";
     spent = result.reason === "expired" || result.reason === "already";
     password = "";
@@ -74,18 +94,22 @@
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">Confirm your email.</p>
   </div>
-  {#if signedUp}
-    <div class="flex w-full flex-col items-stretch gap-3 text-center sm:max-w-xs">
-      <h2 bind:this={doneHeading} tabindex="-1" class="font-semibold">You're signed up</h2>
-      <p>You're signed in on this device.</p>
-      <a href="/" onclick={leave} class="btn-primary rounded-lg">Open nine turtles</a>
-    </div>
-  {:else if spent}
+  {#if spent}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
       <p bind:this={spentMessage} tabindex="-1">{message || explainFinish({ ok: false, reason: "expired" })}</p>
       <a href="/" onclick={leave} class="btn rounded-lg">Sign in</a>
     </div>
-  {:else}
+  {:else if sameBrowser}
+    <!-- The browser that signed up (decision 0193): one press, nothing to type. -->
+    <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
+      <div class="flex min-h-[6rem] flex-col gap-3">
+        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        </p>
+        <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Confirm email</button>
+      </div>
+    </form>
+  {:else if here === "password"}
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <div class="flex flex-col gap-1.5">
         <label for="password" class="text-small text-ink-2">Password</label>

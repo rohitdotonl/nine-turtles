@@ -1,6 +1,6 @@
 <!--
   Decides between the sign-in page (shown signed out at any address, and at
-  /sign-in, decision 0196), the sign-up page (/sign-up, open
+  /sign-in, decision 0199), the sign-up page (/sign-up, open
   to anyone, decision 0115), the pages an
   emailed link opens (/reset-password and /confirm-email, decision 0088;
   /sign-in-link, decision 0096; /finish-sign-up, decision 0154; /weekly-email, which

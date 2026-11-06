@@ -110,7 +110,7 @@
         <div class="inset-row">
           <p class="min-w-0">Get the Shortcut once, then on any blog tap Share › Add to nine turtles.</p>
           <a class="btn btn-small" href={SHORTCUT_LINK} target="_blank" rel="noopener noreferrer"
-            >Get the Shortcut<span class="sr-only"> (opens Apple's page)</span></a
+            >Get the Shortcut<span class="sr-only"> (Apple's page, opens in a new tab)</span></a
           >
         </div>
       {:else}

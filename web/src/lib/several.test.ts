@@ -11,7 +11,7 @@ const choices: Choice[] = [
 ];
 const urls = choices.map((choice) => choice.url);
 
-describe("following several of a site's feeds at once (decision 0196)", () => {
+describe("following several of a site's feeds at once (decision 0199)", () => {
   it("keeps those followed, in the list's order, with their newest titles", () => {
     const results: AddResult[] = [
       { kind: "added", feed: feed(1), latest: "Hello" },

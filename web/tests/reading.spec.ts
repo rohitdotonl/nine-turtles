@@ -148,7 +148,7 @@ test.describe("on a wide window", () => {
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
     // Credit: the source links to the publisher, with the author and time.
-    await expect(article(page).getByRole("link", { name: "Reading Room", exact: true })).toHaveAttribute("href", "https://reading-room.example/");
+    await expect(article(page).getByRole("link", { name: "Reading Room (opens in a new tab)", exact: true })).toHaveAttribute("href", "https://reading-room.example/");
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
     await expect(article(page).locator("article")).toHaveAttribute("lang", "en-gb");

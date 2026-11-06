@@ -1,4 +1,4 @@
-# 0196: Polish adding someone
+# 0199: Polish adding someone
 
 *6 November 2026. The owner's onboarding review, findings 4, 9, 12, 13 and
 16, and the owner's answers in that thread (6 November, 15:32 UTC).*

@@ -23,7 +23,8 @@ related: [follow-someone, install-the-app, delete-your-account]
    and only ever counted, never shown with your name.
 4. Press **Sign up**.
 5. Open the email called **Confirm your email for nine turtles**, press its
-   link, type your password again and press **Confirm email**.
+   link and press **Confirm email**. If you open it in another browser or on
+   another device, type your password first.
 
 You're in, and signed in on that device. The link works once, within 24
 hours.

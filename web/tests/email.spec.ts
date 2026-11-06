@@ -40,10 +40,9 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   const { link } = await newestMail(email, "Confirm your email for nine turtles");
+  // The browser that signed up: one press, and nine turtles opens (decision 0193).
   await page.goto(link);
-  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Confirm email" }).click();
-  await page.getByRole("link", { name: "Open nine turtles" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   return page;
 }
@@ -88,30 +87,30 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
 
-  // The email's link opens a page that asks for the password chosen, so only whoever signed up can finish it.
   const { mail, link } = await newestMail(email, "Confirm your email for nine turtles");
   expect(mail.body).toContain("24 hours");
   expect(link).toMatch(/^\/finish-sign-up#ticket=/);
+  // In another browser, the link asks for the password chosen, so only whoever signed up can finish it.
+  const elsewhere = await (await browser.newContext({ baseURL: MAIL_APP })).newPage();
+  await elsewhere.goto(link);
+  await expect(elsewhere.getByLabel("Password", { exact: true })).toBeFocused();
+  await elsewhere.keyboard.type("not the password at all");
+  await elsewhere.keyboard.press("Enter");
+  await expect(elsewhere.getByText("That isn't the password you chose when you signed up.")).toBeVisible();
+  await expect(elsewhere.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  await elsewhere.context().close();
+  // In the browser that signed up, there's nothing to type (decision 0193): Confirm email has the
+  // keyboard, and one press opens nine turtles, on its welcome, with no "You're signed up" stop.
   await page.goto(link);
-  await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
-  await page.keyboard.type("not the password at all");
-  await page.keyboard.press("Enter");
-  await expect(page.getByText("That isn't the password you chose when you signed up.")).toBeVisible();
-  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
-  await page.keyboard.type(READER_PASSWORD);
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: "You're signed up" })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Open nine turtles" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Confirm email" })).toBeFocused();
+  await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
   await page.keyboard.press("Enter");
   // In nine turtles, signed in as the new reader, their address confirmed.
   await expect(page.locator("#sidebar")).toBeAttached();
   const session = await page.evaluate(async () => (await fetch("/api/session")).json());
   expect(session).toMatchObject({ signed_in: true, owner: false, email, email_confirmed: true });
-  // The same link again: the form gives way to why, and the keyboard goes there.
+  // The same link again: it says why at once, and the keyboard goes there.
   await page.goto(link);
-  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
-  await page.getByRole("button", { name: "Confirm email" }).click();
   await expect(page.getByText("This link has expired or was already used. Sign up again for a new one.")).toBeFocused();
   await context.close();
 });

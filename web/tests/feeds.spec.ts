@@ -72,7 +72,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Their website's address");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // The two side doors, under the field (decision 0196): "New to feeds? Start here", then "Bring your list
+  // The two side doors, under the field (decision 0199): "New to feeds? Start here", then "Bring your list
   // from another app…", underlined links in the text color centred under it, each 44px tall to touch
   // (decisions 0045, 0048, 0055). Importing opens the file chooser at once (decision 0137).
   const newLink = reading.getByRole("link", { name: "New to feeds? Start here" });
@@ -382,7 +382,7 @@ test("a site with several feeds offers them with tick boxes, and those followed 
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose which to follow:");
   // A choice of any: tick boxes, the first ticked, each row ending in a square mark that shows
-  // the choice by its check, never by a tint alone (decision 0196).
+  // the choice by its check, never by a tint alone (decision 0199).
   const choices = page.getByRole("group", { name: "Feeds on this site" });
   // Each row says what's inside (its newest title) and its address as a person says it (decision 0165), and never how often it posts.
   await expect(choices).toContainText("On keeping a commonplace book (3)");

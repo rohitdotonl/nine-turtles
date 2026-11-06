@@ -1247,7 +1247,7 @@
                 : undefined}
             />
           {:else if welcoming && !missing}
-            <!-- No feeds yet: the welcome has the reading area (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0196). -->
+            <!-- No feeds yet: the welcome has the reading area (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0199). -->
             <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center overflow-y-auto bg-paper px-5 pt-[28vh] pb-10 md:px-10">
               {@render welcome(false, false)}
             </section>

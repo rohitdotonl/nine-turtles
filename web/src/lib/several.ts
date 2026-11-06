@@ -1,5 +1,5 @@
 // Following several of a site's feeds at once (SPEC section 3, decision
-// 0196): Add a feed's list of the feeds a site offers has a tick box on each,
+// 0199): Add a feed's list of the feeds a site offers has a tick box on each,
 // and Follow follows every ticked one, one after another. Those followed
 // together become one person (a blog and its podcast); this sorts out what
 // happened, so the screen can say it.

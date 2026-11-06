@@ -1,7 +1,7 @@
 <!--
   The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
   sentence, a wide field with Add, then the two quiet side doors under it, "New to feeds?
-  Start here" and importing a list of feeds (decision 0196), all in one centred 420px
+  Start here" and importing a list of feeds (decision 0199), all in one centred 420px
   column: one message, one action.
   On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
   With the Add a feed sheet open over it (`covered`), the sheet has the only field.
@@ -49,7 +49,7 @@
   </div>
   {#if !covered}
     <!--
-      The two side doors sit just under the field, the main door (decision 0196), centred as
+      The two side doors sit just under the field, the main door (decision 0199), centred as
       everything here is (on a phone, on the screen's margin): "New to feeds?", for someone who
       has never used feeds (what they are, and a few to start with, in a sheet; decision 0079),
       then importing, the other way in (decisions 0045, 0048). Each is a link in the text color,

@@ -11,7 +11,7 @@ describe("emailed links", () => {
 });
 
 describe("the sign-in and sign-up pages' addresses", () => {
-  it("give way to nine turtles' home once signed in, and every other address stays (decision 0196)", () => {
+  it("give way to nine turtles' home once signed in, and every other address stays (decision 0199)", () => {
     expect(signedInPath("/sign-in")).toBe("/");
     expect(signedInPath("/sign-up")).toBe("/");
     expect(signedInPath("/people/3")).toBe("/people/3");
