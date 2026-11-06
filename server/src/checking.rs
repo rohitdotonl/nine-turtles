@@ -297,7 +297,17 @@ async fn worked(
     }
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
+            // Never checked yet: followed from a file, so its followers get
+            // only its newest few unread, as when adding one (decision 0192).
+            let first: bool =
+                sqlx::query_scalar("SELECT fetched_at IS NULL FROM feeds WHERE id = ?")
+                    .bind(feed_id)
+                    .fetch_one(&mut *transaction)
+                    .await?;
             store_articles(&mut transaction, feed_id, &parsed.articles, now).await?;
+            if first {
+                feeds::keep_newest_unread(&mut transaction, None, feed_id).await?;
+            }
             // Where to write back, and the feed's own title, as the feed says now
             // (decisions 0147 and 0167); then its followers still waiting for a name get one.
             sqlx::query("UPDATE feeds SET email = ?, title = ? WHERE id = ?")

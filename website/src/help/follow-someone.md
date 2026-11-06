@@ -28,9 +28,11 @@ When a blog signs every article with one writer's name, nine turtles calls
 them by that name, with the blog's title under it on their page. Want a
 different name? Change it in **Edit** on their page; yours always stays.
 
-They appear in your sidebar under **People** or **Publications**, and their
-newest articles are ready to read. From now on, new ones arrive by
-themselves.
+They appear in your sidebar under **People** or **Publications**. Their
+five newest articles wait in **Unread**; anything older is on their page,
+already marked read, so following someone who writes a lot doesn't bury
+everything else. From now on, everything new they post arrives by itself,
+unread.
 
 If the site offers more than one feed, such as one for everything and one
 per topic, nine turtles lists them, each with its newest title and how often

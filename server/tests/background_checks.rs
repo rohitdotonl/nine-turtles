@@ -222,12 +222,24 @@ impl Reader {
     }
 
     async fn post(&self, path: &str, body: Value) -> (StatusCode, Value) {
+        self.send(&self.cookie, path, "application/json", body.to_string())
+            .await
+    }
+
+    /// Sends `body` to `path` as the reader signed in with `cookie`.
+    async fn send(
+        &self,
+        cookie: &str,
+        path: &str,
+        content_type: &str,
+        body: String,
+    ) -> (StatusCode, Value) {
         let response = Client::new()
             .post(format!("{}{path}", self.base))
-            .header("cookie", &self.cookie)
+            .header("cookie", cookie)
             .header("sec-fetch-site", "same-origin")
-            .header("content-type", "application/json")
-            .body(body.to_string())
+            .header("content-type", content_type)
+            .body(body)
             .send()
             .await
             .unwrap();
@@ -349,6 +361,68 @@ async fn new_articles_arrive_on_their_own_and_the_list_waits_to_be_asked() {
         .unwrap()["unread"]
         .clone();
     assert_eq!(unread, 5);
+}
+
+#[tokio::test]
+async fn following_someone_brings_only_their_newest_five_into_unread() {
+    let reader = Reader::new().await;
+    reader.change(|site| {
+        site.articles = 12;
+        site.started -= DAY;
+    });
+    let feed = reader.follow("/grow.xml").await;
+    assert_eq!(
+        reader.titles("view=unread").await,
+        ["Post 12", "Post 11", "Post 10", "Post 9", "Post 8"]
+    );
+    // The older ones are kept in their own list, already read.
+    assert_eq!(reader.titles(&format!("feed={feed}")).await.len(), 12);
+
+    // Everything they post afterwards arrives unread, however much.
+    reader.change(|site| site.articles = 20);
+    reader.round(nine_turtles::now() + DAY).await;
+    assert_eq!(reader.titles("view=unread").await.len(), 13);
+}
+
+#[tokio::test]
+async fn a_file_of_feeds_brings_only_each_ones_newest_five_into_unread() {
+    let reader = Reader::new().await;
+    reader.change(|site| {
+        site.articles = 12;
+        site.started -= DAY;
+    });
+    // Another reader already follows one of the file's feeds, so it's stored.
+    let (_, other) = common::another_reader(&reader.state).await;
+    let address = |name: &str| format!("{}/many/{name}.xml", reader.site);
+    let body = json!({ "address": address("shared") }).to_string();
+    let (status, _) = reader
+        .send(&other, "/api/feeds", "application/json", body)
+        .await;
+    assert_eq!(status, StatusCode::CREATED);
+
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><head><title>Mine</title></head><body>
+        <outline text="Shared" type="rss" xmlUrl="{}"/>
+        <outline text="New" type="rss" xmlUrl="{}"/></body></opml>"#,
+        address("shared"),
+        address("new")
+    );
+    let (status, answer) = reader
+        .send(&reader.cookie, "/api/opml", "text/x-opml", file)
+        .await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    // The stored one straight away; the new one at its first check.
+    assert_eq!(reader.titles("view=unread").await.len(), 5);
+    reader.round(nine_turtles::now() + MINUTE).await;
+    let feeds = reader.get("/api/feeds").await;
+    let unread: Vec<i64> = feeds["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|feed| feed["unread"].as_i64().unwrap())
+        .collect();
+    assert_eq!(unread, [5, 5]);
+    assert_eq!(reader.titles("view=all").await.len(), 24);
 }
 
 #[tokio::test]

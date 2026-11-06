@@ -8,7 +8,8 @@
 //! feed in several folders, and feeds already followed aren't duplicated
 //! (they join the file's folders). A feed another reader already follows
 //! isn't stored twice: the reader gets their own subscription to it, its
-//! articles so far counted as read. Exporting writes each feed the reader
+//! newest five articles so far unread and the rest read; a feed new to nine
+//! turtles gets the same at its first check (decision 0192). Exporting writes each feed the reader
 //! follows under every folder of theirs it's in. The subscriptions file
 //! Google Takeout gives for YouTube is read here too (`youtube::takeout`).
 
@@ -30,7 +31,7 @@ use crate::{
     AppState, admin,
     auth::{SignedIn, database_problem},
     feed,
-    feeds::{enter_read, followed_at, make_room, stored_at, subscribe},
+    feeds::{enter_newest, followed_at, make_room, stored_at, subscribe},
     folders::{self, FOLDERS, Folder, MEMBERSHIPS, clean_name},
     now,
 };
@@ -260,9 +261,10 @@ async fn follow_one(
         None => stored_at(&mut *connection, key).await?,
     };
     subscribe(connection, person, id, &title, now).await?;
-    // Nothing is fetched here, so what's already stored counts as read;
-    // what arrives from the next check is new.
-    enter_read(connection, person, id).await?;
+    // Nothing is fetched here: of what's already stored (for other readers),
+    // the newest few are unread and the rest read. A feed new to nine turtles
+    // gets the same at its first check (decision 0192).
+    enter_newest(connection, person, id).await?;
     summary.added += 1;
     Ok(id)
 }
