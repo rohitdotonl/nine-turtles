@@ -28,9 +28,10 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await expect(joining.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await joining.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   // One optional question (decision 0155), next after the password from the
-  // keyboard: "Rather not say" until chosen, then Sign up.
+  // keyboard (past the password's Show): "Rather not say" until chosen, then Sign up.
   const heardAbout = joining.getByLabel("How did you hear about nine turtles?");
   await expect(heardAbout).toHaveValue("");
+  await joining.keyboard.press("Tab");
   await joining.keyboard.press("Tab");
   await expect(heardAbout).toBeFocused();
   await joining.keyboard.press("ArrowDown");

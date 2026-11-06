@@ -53,8 +53,8 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
-  // Email, Password, Forgot?, Sign in, then Sign up (decision 0122).
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Show, Forgot?, Sign in, then Sign up (decisions 0122, 0191).
+  for (let step = 0; step < 5; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Sign up" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/sign-up$/);
@@ -127,8 +127,8 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  // Email, Password, then Forgot? (decision 0122).
-  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Show, then Forgot? (decisions 0122, 0191).
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
   const forgot = page.getByRole("link", { name: "Forgot?" });
   await expect(forgot).toBeFocused();
   // Small to the eye, on the password name's line at the right, but 44px to touch, never over a field.
@@ -191,13 +191,13 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   await expect(page.getByText("Choose a new password, if you like.")).toBeVisible();
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("New password", { exact: true })).toBeFocused();
-  await expect(page.getByLabel("New password", { exact: true })).toHaveAttribute("autocomplete", "new-password");
+  await expect(page.getByLabel(/^New password/)).toBeFocused();
+  await expect(page.getByLabel(/^New password/)).toHaveAttribute("autocomplete", "new-password");
   await page.keyboard.type("short");
   await page.keyboard.press("Enter");
   await expect(page.locator("#choose-message")).toHaveText("Choose a password of at least 12 characters.");
-  await expect(page.getByLabel("New password", { exact: true })).toHaveAttribute("aria-invalid", "true");
-  await page.getByLabel("New password", { exact: true }).fill(NEW_PASSWORD);
+  await expect(page.getByLabel(/^New password/)).toHaveAttribute("aria-invalid", "true");
+  await page.getByLabel(/^New password/).fill(NEW_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   expect(new URL(page.url()).pathname).not.toBe("/sign-in-link");
@@ -227,7 +227,7 @@ test("an older password link still sets a new password", async ({ browser }, tes
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
   await page.goto(link);
-  await expect(page.getByLabel("New password", { exact: true })).toBeFocused();
+  await expect(page.getByLabel(/^New password/)).toBeFocused();
   await page.keyboard.type(NEW_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -342,8 +342,8 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
 
   await page.keyboard.press("Enter");
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
-  // Past the two downloads to Delete data, with only the keyboard.
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  // Past the one download (nothing is starred, so that row isn't a button) to Delete data, with only the keyboard.
+  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
   await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
   await page.keyboard.press("Enter");
   // The app starts again at its start, empty, still signed in.
@@ -364,7 +364,7 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Forgot?" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Email")).toBeFocused();
@@ -383,8 +383,8 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   // Not now: straight to reading, the password as it was.
-  // New password, Set password, then Not now.
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  // New password, its Show, Set password, then Not now.
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Not now" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -426,7 +426,7 @@ test("choosing a password after the hour has run out says so, and the keyboard g
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   // As if the hour ran out, or nine turtles restarted, while the page was open.
   await page.route("**/api/password/reset", (route) => route.fulfill({ status: 410, contentType: "application/json", body: JSON.stringify({ error: "expired" }) }));
-  await page.getByLabel("New password", { exact: true }).fill("a-new-long-password");
+  await page.getByLabel(/^New password/).fill("a-new-long-password");
   await page.getByRole("button", { name: "Set password" }).click();
   await expect(page.getByText("That took too long, so your password stays as it is.")).toBeFocused();
   await page.keyboard.press("Tab");
