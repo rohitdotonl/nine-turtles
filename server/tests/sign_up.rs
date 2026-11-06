@@ -531,3 +531,25 @@ async fn a_strangers_browser_secret_never_finishes_someone_elses_link() {
     .await;
     assert_eq!(error_of(crossed).await, "password-needed");
 }
+
+#[tokio::test]
+async fn a_browser_keeps_one_secret_for_all_its_sign_ups() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    // A mistyped address first, then "Use another email" and the right one, from one browser.
+    let first = sign_up(&base, "mistyped@example.com", PASSWORD).await;
+    let browser = sign_up_cookie(&first);
+    let second = post(
+        &base,
+        "/api/sign-up",
+        Some(&browser),
+        json!({ "email": "right@example.com", "password": PASSWORD }),
+    )
+    .await;
+    assert_eq!(sign_up_cookie(&second), browser);
+    // Either link needs only one press in this browser.
+    for email in ["mistyped@example.com", "right@example.com"] {
+        let (_, ticket) = newest_link(&outbox, email);
+        let here = json_of(check(&base, &ticket, Some(&browser)).await).await;
+        assert_eq!(here["same_browser"], true, "{email}");
+    }
+}

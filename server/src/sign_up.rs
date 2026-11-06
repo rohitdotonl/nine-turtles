@@ -95,7 +95,11 @@ pub const HEARD_ABOUT: &[&str] = &["blog", "friend", "search", "ai", "reddit", "
 /// without the email settings, makes it at once and signs this device in
 /// (204). An address that already has an account is said to (decision
 /// 0115 accepted that every sign-up page does).
-async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Response {
+async fn sign_up(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(form): Json<SignUp>,
+) -> Response {
     let email = form.email.trim().to_owned();
     if !plausible_email(&email) {
         return refused(StatusCode::BAD_REQUEST, "email");
@@ -167,7 +171,9 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Ok(true) => return refused(StatusCode::CONFLICT, "already"),
         Err(error) => return database_problem("finding a reader", &error),
     }
-    let Some(secret) = browser::new_secret() else {
+    // A browser keeps one secret for all its sign-ups, so a link sent before
+    // "Use another email" still needs only one press here.
+    let Some(secret) = browser::secret_in(&headers).or_else(browser::new_secret) else {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
     let waiting = wait_for_confirming(&state.db, &email, &line, heard_about.as_deref(), &secret);
@@ -264,6 +270,23 @@ struct Check {
     ticket: String,
 }
 
+/// The address's newest waiting sign-ups (`WAITING_PER_ADDRESS`), the ones
+/// a link can finish, newest first, each with its browser's scrambled
+/// secret, if it has one: the password picks among these, or the browser's
+/// secret does (`browser::waiting`).
+async fn newest_waiting(db: &SqlitePool, email: &str) -> Result<Vec<WaitingHere>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT id, password_hash, heard_about, browser_hash FROM email_links
+         WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
+         ORDER BY created_at DESC, id DESC LIMIT ?",
+    )
+    .bind(email)
+    .bind(now())
+    .bind(WAITING_PER_ADDRESS)
+    .fetch_all(db)
+    .await
+}
+
 /// The address a sign-up's link was sent to, while the link still works.
 async fn link_email(db: &SqlitePool, ticket: &str) -> Result<Option<String>, sqlx::Error> {
     sqlx::query_scalar(
@@ -298,6 +321,8 @@ async fn check_link(
 /// A waiting sign-up: its line in `email_links`, the scrambled password and
 /// the answer to "How did you hear about nine turtles?".
 type Waiting = (i64, String, Option<String>);
+/// A waiting sign-up, with its browser's scrambled secret, if it has one.
+type WaitingHere = (i64, String, Option<String>, Option<Vec<u8>>);
 
 /// Follows a sign-up's link with the password chosen at sign-up: makes the
 /// account, its address confirmed, and signs this device in. The ticket
@@ -310,7 +335,6 @@ async fn finish_sign_up(
     headers: HeaderMap,
     Json(form): Json<Finish>,
 ) -> Response {
-    let now = now();
     let email = match link_email(&state.db, &form.ticket).await {
         Ok(Some(email)) => email,
         Ok(None) => return refused(StatusCode::GONE, "expired"),
@@ -333,22 +357,12 @@ async fn finish_sign_up(
     if let Some(wait) = count_try(&state, &account).await {
         return wait_response(wait);
     }
-    let waiting: Result<Vec<Waiting>, sqlx::Error> = sqlx::query_as(
-        "SELECT id, password_hash, heard_about FROM email_links
-         WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
-         ORDER BY created_at DESC, id DESC LIMIT ?",
-    )
-    .bind(&email)
-    .bind(now)
-    .bind(WAITING_PER_ADDRESS)
-    .fetch_all(&state.db)
-    .await;
-    let waiting = match waiting {
+    let waiting = match newest_waiting(&state.db, &email).await {
         Ok(waiting) => waiting,
         Err(error) => return database_problem("finding a sign-up link", &error),
     };
     let mut chosen = None;
-    for (id, line, heard_about) in waiting {
+    for (id, line, heard_about, _) in waiting {
         match check_password(&state, &account, form.password.clone(), Some(line.clone())).await {
             Some(true) => {
                 chosen = Some((id, line, heard_about));

@@ -17,11 +17,11 @@
 use axum::http::{HeaderMap, HeaderValue, header};
 use sqlx::SqlitePool;
 
-use super::{WAITING_PER_ADDRESS, Waiting};
+use super::Waiting;
 use crate::{
     accounts::CONFIRM_LIFETIME,
     auth::{new_token, scramble},
-    log, now,
+    log,
 };
 
 const COOKIE: &str = "nine_turtles_sign_up";
@@ -64,16 +64,7 @@ pub(super) async fn waiting(
     let Some(secret) = secret_in(headers) else {
         return Ok(None);
     };
-    let newest: Vec<(i64, String, Option<String>, Option<Vec<u8>>)> = sqlx::query_as(
-        "SELECT id, password_hash, heard_about, browser_hash FROM email_links
-         WHERE purpose = 'sign-up' AND email = ? AND used = 0 AND expires_at > ?
-         ORDER BY created_at DESC, id DESC LIMIT ?",
-    )
-    .bind(email)
-    .bind(now())
-    .bind(WAITING_PER_ADDRESS)
-    .fetch_all(db)
-    .await?;
+    let newest = super::newest_waiting(db, email).await?;
     let scrambled = scramble(&secret);
     Ok(newest
         .into_iter()
@@ -82,7 +73,7 @@ pub(super) async fn waiting(
 }
 
 /// This browser's secret, if it sends a well-formed one.
-fn secret_in(headers: &HeaderMap) -> Option<String> {
+pub(super) fn secret_in(headers: &HeaderMap) -> Option<String> {
     headers
         .get_all(header::COOKIE)
         .iter()

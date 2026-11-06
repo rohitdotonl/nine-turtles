@@ -28,3 +28,17 @@ secret of theirs, so you're asked your password. Every other limit stays:
 one use, 24 hours, the address's three newest sign-ups, the hourly caps.
 Sign-ups from before this change have no secret; their links ask the
 password.
+
+**The one case it gives up, accepted.** On a browser two people share (a
+family computer, a library's), a stranger who signed up there with your
+address within the last 24 hours leaves their secret in it. If you then
+open your own link in that same browser, without having signed up from
+it yourself, their secret picks their sign-up, and the account is made
+with their password. Before, your password picked yours. It needs the
+stranger at your browser and you confirming there within a day, so it's
+accepted for one press everywhere else; you'd notice at once, as your
+password wouldn't work, and Forgot? gets the account back by email.
+
+A browser keeps one secret for all its sign-ups (a new one only when it
+has none), so a link sent before "Use another email" still needs only one
+press there.
