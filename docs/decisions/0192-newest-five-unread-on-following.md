@@ -29,4 +29,7 @@ page.
   (`checking`, when `fetched_at` is still empty).
 - Undo of an unsubscribe still brings the feed back exactly as it was, and
   Find new address (moving a feed) is unchanged: neither is a new follow.
+- Only readers following the feed right now are trimmed: a reader waiting
+  for Undo, or one who left long ago, keeps their marks (decision 0086), and
+  a starred article is never touched.
 - Nothing changes for feeds already followed: no stored data is touched.

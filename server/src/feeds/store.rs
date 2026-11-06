@@ -187,7 +187,9 @@ pub const UNREAD_ON_FOLLOWING: i64 = 5;
 
 /// Marks read every unread article of this feed but the newest
 /// `UNREAD_ON_FOLLOWING`, for one reader (`Some`) or, after a feed's first
-/// check, for each of its followers (`None`): just after they follow it.
+/// check, for each reader following it now (`None`): just after they follow
+/// it. A reader waiting for Undo, or one who left long ago, keeps their marks
+/// (decision 0086), and a starred article is left as it is.
 pub async fn keep_newest_unread(
     connection: &mut sqlx::SqliteConnection,
     person: Option<i64>,
@@ -195,7 +197,9 @@ pub async fn keep_newest_unread(
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE entries SET read = 1
-         WHERE feed_id = ?1 AND read = 0 AND (?2 IS NULL OR person_id = ?2)
+         WHERE feed_id = ?1 AND read = 0 AND starred = 0 AND (?2 IS NULL OR person_id = ?2)
+             AND person_id IN (SELECT person_id FROM subscriptions
+                               WHERE feed_id = ?1 AND unsubscribed_at IS NULL)
              AND (person_id, article_id) IN (
                  SELECT person_id, article_id FROM (
                      SELECT person_id, article_id, ROW_NUMBER() OVER (

@@ -385,6 +385,57 @@ async fn following_someone_brings_only_their_newest_five_into_unread() {
 }
 
 #[tokio::test]
+async fn a_muted_post_does_not_take_one_of_the_five() {
+    let reader = Reader::new().await;
+    reader.change(|site| {
+        site.articles = 12;
+        site.started -= DAY;
+    });
+    let (status, made) = reader
+        .post("/api/rules", json!({ "words": "Post 12" }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{made}");
+    reader.follow("/grow.xml").await;
+    assert_eq!(
+        reader.titles("view=unread").await,
+        ["Post 11", "Post 10", "Post 9", "Post 8", "Post 7"]
+    );
+}
+
+#[tokio::test]
+async fn another_readers_import_leaves_a_reader_waiting_for_undo_as_they_were() {
+    let reader = Reader::new().await;
+    reader.change(|site| site.started -= DAY);
+    let feed = reader.follow("/many/kept.xml").await;
+    // Seven more arrive, all unread: ten in all.
+    reader.change(|site| site.articles = 10);
+    reader.round(nine_turtles::now() + DAY).await;
+    assert_eq!(reader.titles("view=unread").await.len(), 10);
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{feed}/unsubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+
+    // Someone else brings the same feed in from a file, and it's checked.
+    let (_, other) = common::another_reader(&reader.state).await;
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><body>
+        <outline text="Kept" type="rss" xmlUrl="{}/many/kept.xml"/></body></opml>"#,
+        reader.site
+    );
+    let (status, _) = reader.send(&other, "/api/opml", "text/x-opml", file).await;
+    assert_eq!(status, StatusCode::OK);
+    reader.round(nine_turtles::now() + MINUTE).await;
+
+    // Undo brings the first reader's feed back whole, all ten unread.
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{feed}/resubscribe"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(reader.titles("view=unread").await.len(), 10);
+}
+
+#[tokio::test]
 async fn a_file_of_feeds_brings_only_each_ones_newest_five_into_unread() {
     let reader = Reader::new().await;
     reader.change(|site| {
