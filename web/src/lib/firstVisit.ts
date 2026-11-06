@@ -5,6 +5,9 @@
 // drawing anything. The welcome itself is drawn by `Welcome.svelte`.
 import type { Route } from "./router";
 
+// The welcome's "Or try one" keeps it on screen after the first follow (decision 0198).
+export { stopTrying, trying } from "./welcomeTry.svelte";
+
 /** No feeds yet, once the feeds have loaded. */
 export function isFirstVisit(feeds: readonly unknown[] | undefined): boolean {
   return feeds !== undefined && feeds.length === 0;

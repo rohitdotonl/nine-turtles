@@ -62,7 +62,7 @@
   import { headingFor, placeNameOf } from "./listHeading";
   import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextInSidebar, type ArticleMove } from "./moving";
-  import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
+  import { isFirstVisit, newToFeedsGivesWay, stopTrying, trying, welcomeFor } from "./firstVisit";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
@@ -111,8 +111,7 @@
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
 
-  // Switching to Unread off (here, or on another device before this one
-  // heard) while on Unread moves you to All, in place: no new history step.
+  // Switching Unread off (here, or on another device) while on Unread moves you to All, in place.
   $effect(() => {
     const next = homeFor(route, settings.unread);
     if (next === route) return;
@@ -249,7 +248,7 @@
   let listInstead = $derived(insteadOfList(under, found));
   /** No feeds yet: Unread and All show the welcome instead (`firstVisit.ts`). */
   let firstVisit = $derived(isFirstVisit(library.feeds));
-  let whereWelcome = $derived(welcomeFor({ firstVisit, under, article: panes.article, phone, missing: missing !== undefined }));
+  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, article: panes.article, phone, missing: missing !== undefined }));
   let welcoming = $derived(whereWelcome.shown);
   /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
   let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
@@ -525,6 +524,7 @@
       return;
     }
     const from = screenNow();
+    stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
@@ -881,7 +881,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} />
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
 {/snippet}
 
 {#snippet listHead()}

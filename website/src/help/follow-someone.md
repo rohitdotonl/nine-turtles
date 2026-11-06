@@ -51,8 +51,18 @@ address, or the address of one of their videos. More in
 <a href="/help/listen-to-podcasts/">Listen to podcasts</a> and
 <a href="/help/watch-youtube-videos/">Watch YouTube videos</a>.
 
-Newsletters are different: they come by email. See
+Many newsletters, such as those on Substack, have a feed too: paste their
+address like any other. One that only comes by email has none, so when nine
+turtles finds no feed it shows your own nine turtles address, with **Copy**:
+sign up with it and each issue arrives here. See
 <a href="/help/newsletters/">Read your newsletters here</a>.
+
+## Not sure what to paste?
+
+On your first visit, the welcome offers three examples under **Or try one**:
+a blog, a newsletter and a YouTube channel. Press **Try** on one to follow it
+at once and see their newest post right there. **Start reading** takes you
+into nine turtles.
 
 ## Follow from anywhere
 

@@ -27,6 +27,7 @@
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import ByEmail from "./ByEmail.svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
   import { onDestroy, tick } from "svelte";
@@ -83,6 +84,8 @@
   let asking: Feed | undefined = $state();
   /** Their newest title, shown with their site above the question. */
   let latest: string | undefined = $state();
+  /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
+  let noFeed = $state("");
   let who: WhoKind = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
   /** Closed (Escape, Cancel, a press outside) while still looking or before Done: the feed is followed all the same. */
@@ -132,6 +135,7 @@
     badAddress = false;
     if (!fromChoices) choices = [];
     alreadyId = undefined;
+    noFeed = "";
     const result = await addFeed(text);
     busy = false;
     switch (result.kind) {
@@ -164,6 +168,7 @@
         message = explain(result.reason);
         problem = true;
         badAddress = !NOT_THE_ADDRESS.includes(result.reason);
+        if (result.reason === "no-feed") noFeed = text;
         break;
     }
   }
@@ -342,6 +347,8 @@
         >
       </p>
     {/if}
+
+    {#if noFeed && !busy}<ByEmail site={noFeed} />{/if}
 
     {#if alternative}{@render alternative()}{/if}
   </div>

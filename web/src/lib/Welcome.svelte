@@ -1,13 +1,16 @@
 <!--
   The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-  sentence, a wide field with Add, and importing a list of feeds as a quiet second way in,
-  all in one centred 420px column, like Apple Books' empty library: one message, one action.
+  sentence, a wide field with Add, then just under it "Bring your list from another app…" for
+  someone who already reads feeds, then "Or try one": three example addresses to follow in one
+  press (decision 0198), and "New to feeds?", all in one centred 420px column: one message, one
+  main action (Add).
   On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
   With the Add a feed sheet open over it (`covered`), the sheet has the only field.
 -->
 <script lang="ts">
   import AddFeed from "./AddFeed.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import TryOne from "./TryOne.svelte";
   import type { Feed } from "./shapes";
   import type { Route } from "./router";
 
@@ -20,6 +23,7 @@
     onAdded,
     onOpen,
     onImported,
+    onTried,
   }: {
     start: boolean;
     covered: boolean;
@@ -31,7 +35,12 @@
     onOpen: (id: number) => void;
     /** A list from another app brought feeds in: the welcome gives way, and `message` says what came. */
     onImported: (message: string) => void;
+    /** An example was followed: the sidebar shows them, and the welcome stays to show their newest post. */
+    onTried: () => void;
   } = $props();
+
+  /** Add is asking who was just found: the examples step aside until it's answered. */
+  let asked = $state("");
 
   /** What importing said, while the welcome stays (nothing came in, or the file wasn't a list). */
   let importLines: string[] = $state([]);
@@ -42,8 +51,6 @@
   <div class={start ? "text-left" : "text-center"}>
     <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
     <p class="mt-3 text-ink-2">Paste the address of someone's blog, newsletter or channel.</p>
-    <!-- For someone who has never used feeds: what they are, and a few to start with, in a sheet (decision 0079). -->
-    <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link mt-1">New to feeds? Start here</a>
   </div>
   {#if !covered}
     <!--
@@ -54,12 +61,15 @@
       chooser at once (decision 0137); what came in is said on the list that follows, and a
       file that brought nothing is said here, under it.
     -->
-    <AddFeed bind:field feeds={[]} {onAdded} {onOpen} {start}>
+    <AddFeed bind:field bind:asked feeds={[]} {onAdded} {onOpen} {start}>
       {#snippet alternative()}
         <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
         <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line, index (index)}<p>{line}</p>{/each}
         </div>
+        <!-- Then, for someone new: three examples to follow in one press (decision 0198), and what feeds are (decision 0079). -->
+        {#if !asked}<TryOne {follow} {onTried} />{/if}
+        <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>
       {/snippet}
     </AddFeed>
   {:else}
@@ -73,8 +83,10 @@
         <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Their website's address</span></span>
         <span class="btn-primary rounded-lg">Add</span>
       </div>
-      <div class="flex min-h-[5.8rem] flex-col items-center">
+      <div class={["flex min-h-[5.8rem] flex-col", start ? "items-start" : "items-center"]}>
         <span class="text-link">{BRING}</span>
+        <TryOne {follow} {onTried} />
+        <span class="text-link">New to feeds? Start here</span>
       </div>
     </div>
   {/if}
