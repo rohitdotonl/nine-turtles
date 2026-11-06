@@ -9,8 +9,8 @@
   themselves, with a small grey "Loading…", and nothing above moves
   (decision 0074). For the keyboard and screen readers, a "Show older articles"
   button sits there too, hidden until it has the keyboard's place. At the
-  very end, a quiet caption: "That's everything for now." in Unread, "No more
-  results." after a search, and "That's everything." anywhere else. Choosing an article (a click, Enter, or j and k)
+  very end, a quiet caption: "No more results." after a search, and
+  "That's everything." anywhere else. Choosing an article (a click, Enter, or j and k)
   selects it and the reading area shows it (SPEC section 7); the next one is
   fetched in advance.
 

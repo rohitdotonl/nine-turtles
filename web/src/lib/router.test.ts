@@ -17,6 +17,9 @@ describe("addresses", () => {
     expect(parse("/settings/hiding")).toEqual({ kind: "settings", page: "hiding" });
     expect(parse("/settings/add-from-anywhere/")).toEqual({ kind: "settings", page: "add-from-anywhere" });
     expect(parse("/settings/install")).toEqual({ kind: "settings", page: "install" });
+    // Pages that went (decision 0187) open Settings itself.
+    expect(parse("/settings/font")).toEqual({ kind: "settings" });
+    expect(parse("/settings/sidebar")).toEqual({ kind: "settings" });
     expect(parse("/add-feed")).toEqual({ kind: "add-feed" });
     expect(parse("/new-to-feeds")).toEqual({ kind: "new-to-feeds" });
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });
@@ -62,8 +65,8 @@ describe("addresses", () => {
     expect(pathFor({ kind: "muted" })).toBe("/settings/hidden");
     expect(titleFor({ kind: "muted" })).toBe("Hidden articles · nine turtles");
     expect(pathFor({ kind: "readers" })).toBe("/settings/readers/all");
-    expect(pathFor({ kind: "settings", page: "font" })).toBe("/settings/font");
-    expect(titleFor({ kind: "settings", page: "font" })).toBe("Font and line width · nine turtles");
+    expect(pathFor({ kind: "settings", page: "data" })).toBe("/settings/data");
+    expect(titleFor({ kind: "settings", page: "data" })).toBe("Your data · nine turtles");
     expect(titleFor({ kind: "readers" })).toBe("All readers · nine turtles");
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
     expect(pathFor({ kind: "about", id: 3 })).toBe("/people/3/about");

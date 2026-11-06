@@ -25,11 +25,11 @@ describe("the reading settings", () => {
     vi.stubGlobal("localStorage", { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => stored.set(key, value), removeItem: (key: string) => stored.delete(key) });
     server({ sort: "oldest", unread: true });
     let { loadSettings } = await load();
-    expect(await loadSettings()).toEqual({ sort: "oldest", unread: true, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "oldest", unread: true });
 
     server({ sort: "sideways", unread: false });
     ({ loadSettings } = await load());
-    expect(await loadSettings()).toEqual({ sort: "newest", unread: false, hidden: [] });
+    expect(await loadSettings()).toEqual({ sort: "newest", unread: false });
 
     // Unreachable: newest first, and Unread is as this device last saw it.
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));

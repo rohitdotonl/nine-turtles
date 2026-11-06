@@ -17,12 +17,12 @@
 - Your current place is marked as in the list (section 6), a rounded pill of soft neutral grey set a little in from the sidebar's edges, with no color (decision 0057), its name semibold in full ink, and, its icon in full ink. Starred's star stays an outline there: a filled star only ever means an article is starred (decision 0182). When your place changes, its row scrolls into view in the sidebar if it was out of sight, at once and only as far as needed, never smoothly; it doesn't move when dots come and go. On a phone's feeds screen nothing is marked: it's where you start, not a place you're in. Under the pointer a row gets a fainter, neutral tone, never the accent.
 - While Settings is open, its button at the foot of the sidebar shows as your place, with the same pill, and screen readers hear it as the current page. The shortcut list's button, while its list is open, sits on a faint ink tile instead (section 19). The fill is never the only sign (decision 0054).
 - A broken feed looks like any other feed in the sidebar; it just doesn't get new items. Everyone you follow (section 15, in Settings › Your library) lists the feeds that aren't working at its top, and the daily check mentions them too.
-- **Hiding lists** (decisions 0105, 0174): Starred, Notes and All articles can each be left out of the sidebar in Settings › Show in the sidebar (section 18); all show by default. Unread, folders and feeds always show, and with Unread off All articles does too (it's home there). A hidden list still works: its address opens it, and `g s` and `g a` still go to Starred and All articles. The choice is the reader's, on all their devices.
+- **The same lists for everyone** (decision 0187): Unread (while it's on), Starred, Notes (once there's a highlight or note) and All articles always show; none can be hidden. So Help, the screenshots and the keys always match what a reader sees.
 - Recently read, saved searches and collections were removed in favour of Starred (decision 0174); their old addresses lead to "Wrong turn?".
 
 **How to check it**
 1. Add people and publications whose names start with different letters. They're in alphabetical order under their headings, below the fixed views.
 2. With Unread on, a person with unread articles shows a small dot at the end of their row, and no number. "Unread" itself shows no dot. Read their last unread article: the dot goes.
 3. Nowhere in the sidebar is there a number, however many articles are unread.
-4. In Settings › Show in the sidebar, untick All articles: it leaves the sidebar, on your other devices too. Go to `/all`: it still opens. Tick it again.
+4. Settings has no Show in the sidebar row, and `/settings/sidebar` opens Settings itself. The sidebar shows Unread, Starred and All articles.
 5. Go to `/recent`: it says "Wrong turn?" (decision 0174).

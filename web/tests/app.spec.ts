@@ -278,7 +278,7 @@ test("shortcuts don't fire while typing in a field", async ({ page }) => {
   await expect(page).toHaveURL(/\/unread$/);
 });
 
-test("Settings: appearance, font, size and width apply at once and are remembered on this device", async ({ page }) => {
+test("Settings: appearance, font and size apply at once and are remembered on this device", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await openApp(page);
   await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
@@ -328,8 +328,8 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   const look = page.getByRole("region", { name: "Look and feel" });
   const widths = (where: Locator) => where.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
   const controls = [...(await widths(page.getByRole("region", { name: "Reading" }))), ...(await widths(look))];
-  // Sort order, Page and Text size (Unread is a switch, decision 0172).
-  expect(controls).toHaveLength(3);
+  // Sort order, Page, Text size and Font (Unread is a switch, decision 0172).
+  expect(controls).toHaveLength(4);
   expect(new Set(controls).size).toBe(1);
   // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
   // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a
@@ -354,44 +354,31 @@ test("Settings: appearance, font, size and width apply at once and are remembere
   await expect(look.getByRole("status")).toHaveText("Largest");
   await expect(larger).toHaveAttribute("aria-disabled", "true");
 
-  // Font and line width are a page of their own (decision 0120), its row showing the font; the page is no longer there (decision 0176).
-  const fontRow = look.getByRole("link", { name: /^Font and line width/ });
-  await expect(fontRow).toContainText("Literata");
-  await fontRow.click();
-  await expect(page).toHaveURL(/\/settings\/font$/);
-  await expect(page.getByRole("group", { name: "Theme" })).toHaveCount(0);
-  // Font and line width are segmented controls: the chosen one is raised (a small shadow) and semibold, and by day
-  // a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).toHaveCSS("font-weight", "600");
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(page.locator("label.choice").filter({ hasText: "Medium" })).not.toHaveCSS("box-shadow", "none");
-  await expect(page.locator("label.choice").filter({ hasText: "Wide" })).toHaveCSS("font-weight", "400");
-  const pageControls = await page.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  expect(pageControls).toHaveLength(2);
-  expect(new Set([...pageControls, ...controls]).size).toBe(1);
-
-  const sample = page.locator(".reading-sample");
-  await expect(sample).toHaveCSS("font-size", "28px");
-  await expect(sample).toHaveCSS("font-family", /^Literata/);
-  // rohit.onl's font, the device's own serif (decision 0063).
+  // Font is on Settings itself, with no line width (decision 0187). It's a segmented control: the chosen one is
+  // raised (a small shadow) and semibold, and by day a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
+  await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
+  const font = look.getByRole("group", { name: "Font", exact: true });
+  const literata = font.locator("label.choice").filter({ hasText: "Literata" });
+  const system = font.locator("label.choice").filter({ hasText: "System serif" });
+  await expect(literata).toHaveCSS("font-weight", "600");
+  await expect(literata).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(literata).not.toHaveCSS("box-shadow", "none");
+  await expect(system).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+  await expect(system).toHaveCSS("font-weight", "400");
+  // rohit.onl's font, the device's own serif (decision 0063), then Atkinson; articles take it at once.
+  const reading = () => page.locator("html").evaluate((html) => html.style.getPropertyValue("--reading-font"));
   await page.getByLabel("System serif").check();
-  await expect(sample).toHaveCSS("font-family", /^ui-serif/);
+  await expect.poll(reading).toContain("ui-serif");
   await page.getByLabel("Atkinson Hyperlegible").check();
-  await expect(sample).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next"/);
-  await page.getByLabel("Narrow").check();
+  await expect.poll(reading).toContain("Atkinson");
 
   await page.reload();
   await appReady(page);
+  // Remembered on this device.
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
-  await expect(page.getByLabel("Narrow")).toBeChecked();
-  // Escape goes back to Settings, where the rest was remembered too.
-  await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByLabel("White", { exact: true })).toBeChecked();
   await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
-  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("link", { name: /^Font and line width/ })).toContainText("Atkinson");
 
   // Escape closes Settings and returns to where you were.
   await page.keyboard.press("Escape");
@@ -464,7 +451,7 @@ test("every font comes from nine turtles itself", async ({ page }) => {
     if (request.resourceType() === "font") fontOrigins.push(new URL(request.url()).origin);
   });
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page, "/settings/font");
+  await openApp(page, "/settings");
   await page.getByLabel("Atkinson Hyperlegible").check();
   await page.evaluate(() => document.fonts.ready);
   const families = await page.evaluate(() =>
@@ -744,13 +731,6 @@ test("Settings is one centred column of grouped lists; its rows that act or open
     input.dispatchEvent(new Event("change", { bubbles: true }));
   });
   await expect(data.getByText("1 line couldn't be read: Walks.")).toBeVisible();
-
-  // The preview passage is the first row of Font and line width's group, its words on the rows' words (decision 0055).
-  await page.goto("/settings/font");
-  const sampleRow = page.locator(".reading-sample");
-  expect(await sampleRow.evaluate((element) => element.closest(".inset-group") !== null && element.parentElement?.firstElementChild === element)).toBe(true);
-  const [sampleText, fontName] = await Promise.all([sampleRow.locator("p").boundingBox(), page.getByText("Reading font", { exact: true }).boundingBox()]);
-  expect(Math.abs(sampleText!.x - fontName!.x)).toBeLessThan(1.5);
 });
 
 /** Makes the server's answers to /api/session say a newer version is live, then brings the tab back into view. */

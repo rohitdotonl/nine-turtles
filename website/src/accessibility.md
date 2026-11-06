@@ -3,7 +3,7 @@ layout: page.njk
 title: Accessibility
 description: How nine turtles makes sure everyone can read, and how to tell me when something falls short.
 permalink: /accessibility/
-updated: 2026-11-04
+updated: 2026-11-06
 ---
 
 <p class="lede">
@@ -38,7 +38,7 @@ at level AA, and go further where reading is concerned:
   across.
 - **Fonts for reading.** Besides Literata, you can read in Atkinson
   Hyperlegible, a typeface designed for people with low vision, at six text
-  sizes and three line widths.
+  sizes, with lines kept to a comfortable length.
 
 ## How it's checked
 

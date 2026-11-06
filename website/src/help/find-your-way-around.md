@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-05
+updated: 2026-11-06
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -29,16 +29,13 @@ From the top:
 A small dot at the end of a row means something there is new. There are no
 numbers: you never have a pile to clear.
 
-You can hide the lists you don't use in **Settings › Show in the sidebar**.
-Unread, folders, people and publications always stay.
-
 ## The list of articles
 
 Choose anything in the sidebar and its articles appear, newest first. Unread
 articles are in bolder type with a dot beside them. A star means you starred
 it, headphones mean a podcast episode, and a small screen means a video.
-Older articles load as you reach the bottom, and every list ends: Unread
-with "That's everything for now."
+Older articles load as you reach the bottom, and every list ends with
+"That's everything."
 
 The list's **More** menu (the three dots) holds what you can do to the whole
 list: mark it all as read, refresh it, or sort it oldest first. In a

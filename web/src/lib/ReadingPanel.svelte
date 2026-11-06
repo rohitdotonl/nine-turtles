@@ -1,7 +1,7 @@
 <!--
   The "Aa" reading panel (SPEC section 7; decision 0034): the reader's own
   controls, one press from the text, as in Apple Books. Text size (the same
-  steps as `+` and `-`), the page (White, Paper, Night or Match device), the reading font and the line width, all
+  steps as `+` and `-`), the page (White, Paper, Night or Match device) and the reading font, all
   the same preferences as Settings › Look and feel, applied at once to the
   article behind it.
 
@@ -16,7 +16,7 @@
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
   import { LOOKS, PAGES, type Page } from "./themes";
-  import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
+  import { READING_FONTS, type Preferences } from "./preferences";
 
   let {
     preferences = $bindable(),
@@ -127,18 +127,6 @@
         <label class="word" style:font-family={font.family}>
           <input type="radio" name="aa-font" {value} bind:group={preferences.readingFont} />
           {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
-        </label>
-      {/each}
-    </div>
-  </fieldset>
-
-  <fieldset class="aa-line">
-    <legend class="aa-name">Line width</legend>
-    <div class="aa-choices">
-      {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-        <label class="word">
-          <input type="radio" name="aa-width" {value} bind:group={preferences.lineWidth} />
-          {width.label}
         </label>
       {/each}
     </div>
