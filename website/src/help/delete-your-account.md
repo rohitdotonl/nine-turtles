@@ -4,7 +4,7 @@ description: Delete your account and everything in it, or delete only what you f
 groupId: you-and-your-account
 order: 5
 spec: 23
-updated: 2026-11-05
+updated: 2026-11-06
 related: [download-everything, your-plan, unfollow-someone]
 ---
 
@@ -18,14 +18,15 @@ related: [download-everything, your-plan, unfollow-someone]
 1. Open **Settings › Account** and press **Delete account…**
 2. Read what will go. Under **Before you go, you can download them**, save
    anything you'd like to keep.
-3. Press **Delete account**.
+3. Type **Your password**, so nobody else at a device you left signed in
+   can do it, and press **Delete account**.
 
 Everything goes at once: who you follow, your folders, your read and starred
 articles, notes, rules, passkeys, email and password. If you're on a plan, it's cancelled first. You're signed out.
 
 ## Start afresh, and keep the account
 
-**Delete data…**, in the same place, deletes who you follow, your articles,
+**Delete data…**, in the same place, asks for your password too, then deletes who you follow, your articles,
 stars, notes and rules, and leaves you with an empty
 nine turtles. Your email, password, settings, plan and newsletter address
 stay.

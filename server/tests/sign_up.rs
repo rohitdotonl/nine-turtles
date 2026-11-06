@@ -119,7 +119,17 @@ async fn the_account_is_made_only_when_the_emailed_link_is_followed() {
     assert_eq!(sent.len(), 1);
     assert_eq!(sent[0].subject, "Confirm your email for nine turtles");
     assert!(sent[0].body.contains("24 hours"));
-    assert!(sent[0].body.contains("If you didn't sign up"));
+    // Every link email opens and ends the same way (decision 0200).
+    assert!(
+        sent[0]
+            .body
+            .contains("Someone, hopefully you, asked to sign up")
+    );
+    assert!(
+        sent[0]
+            .body
+            .contains("If you didn't ask, ignore this email")
+    );
     let (page, ticket) = newest_link(&outbox, email);
     assert_eq!(page, "/finish-sign-up");
 

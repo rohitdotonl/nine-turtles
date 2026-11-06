@@ -214,9 +214,10 @@ async fn sign_up(
         &email,
         "Confirm your email for nine turtles",
         format!(
-            "Hello,\n\nTo finish signing up for nine turtles, open this link and type the \
-             password you chose (in the browser you signed up in, it won't ask):\n\n{link}\n\nIt works once, for the next 24 hours. If you didn't sign up, \
-             ignore this email and no account is made.{SIGN_OFF}"
+            "Hello,\n\nSomeone, hopefully you, asked to sign up for nine turtles with this email. \
+             To finish, open this link (in another browser than the one you signed up in, \
+             it asks for the password you chose):\n\n{link}\n\nIt works once, for the next \
+             24 hours. If you didn't ask, ignore this email: no account is made.{SIGN_OFF}"
         ),
         "a link to confirm a new account",
     );
@@ -231,10 +232,10 @@ fn send_already(mailer: &crate::email::Mailer, email: &str) {
         email,
         "You already have a nine turtles account",
         format!(
-            "Hello,\n\nSomeone, hopefully you, tried to sign up for nine turtles with this email. \
+            "Hello,\n\nSomeone, hopefully you, asked to sign up for nine turtles with this email. \
              You already have an account, so nothing new was made. To sign in, go to:\n\n\
              {home}\n\nand type your password, or press Forgot? there if you've lost it. \
-             If it wasn't you, ignore this email: nothing has changed.{SIGN_OFF}"
+             If you didn't ask, ignore this email: nothing has changed.{SIGN_OFF}"
         ),
         "a note that an account already exists",
     );

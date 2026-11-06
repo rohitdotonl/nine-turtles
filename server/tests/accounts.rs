@@ -642,10 +642,35 @@ async fn deleting_an_account_leaves_nothing_of_theirs() {
     }
 
     // The owner's own account can't be deleted.
-    let refused = post(&base, "/api/people/me/delete", Some(&owner), json!({})).await;
+    let refused = post(
+        &base,
+        "/api/people/me/delete",
+        Some(&owner),
+        json!({ "password": PASSWORD }),
+    )
+    .await;
     assert_eq!(refused.status(), StatusCode::FORBIDDEN);
 
-    let deleted = post(&base, "/api/people/me/delete", Some(&cookie), json!({})).await;
+    // Without their password, or with a wrong one, nothing goes (decision 0200).
+    for (password, error) in [("", "password-needed"), (NEW_PASSWORD, "wrong-password")] {
+        let kept = post(
+            &base,
+            "/api/people/me/delete",
+            Some(&cookie),
+            json!({ "password": password }),
+        )
+        .await;
+        assert_eq!(error_of(kept).await, error);
+        assert_eq!(session(&base, Some(&cookie)).await["signed_in"], true);
+    }
+
+    let deleted = post(
+        &base,
+        "/api/people/me/delete",
+        Some(&cookie),
+        json!({ "password": READER_PASSWORD }),
+    )
+    .await;
     assert_eq!(deleted.status(), StatusCode::NO_CONTENT);
     // The cookie is cleared.
     let cleared: Vec<&str> = deleted
@@ -834,11 +859,22 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
     let refused = post(&base, "/api/people/me/data/delete", None, json!({})).await;
     assert_eq!(refused.status(), StatusCode::UNAUTHORIZED);
 
+    // A wrong password empties nothing (decision 0200).
+    let kept = post(
+        &base,
+        "/api/people/me/data/delete",
+        Some(&cookie),
+        json!({ "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(kept.status(), StatusCode::UNAUTHORIZED);
+    assert!(lines_of(db, "subscriptions", person).await > 0);
+
     let emptied = post(
         &base,
         "/api/people/me/data/delete",
         Some(&cookie),
-        json!({}),
+        json!({ "password": READER_PASSWORD }),
     )
     .await;
     assert_eq!(emptied.status(), StatusCode::NO_CONTENT);
@@ -885,7 +921,13 @@ async fn deleting_ones_data_empties_the_account_but_keeps_it() {
     );
 
     // The owner can empty their own account too.
-    let emptied = post(&base, "/api/people/me/data/delete", Some(&owner), json!({})).await;
+    let emptied = post(
+        &base,
+        "/api/people/me/data/delete",
+        Some(&owner),
+        json!({ "password": PASSWORD }),
+    )
+    .await;
     assert_eq!(emptied.status(), StatusCode::NO_CONTENT);
     for table in nine_turtles::people::DATA_TABLES {
         assert_eq!(
@@ -1772,5 +1814,84 @@ async fn sign_up_password_link_and_reset_set_the_same_locked_cookie_for_a_year()
     assert_eq!(
         session(&base, Some(&cookie_from(&reset))).await["signed_in"],
         true
+    );
+}
+
+#[tokio::test]
+async fn changing_ones_password_needs_the_current_one_and_signs_out_other_devices() {
+    // Decision 0200: Settings › Account › Password › Change….
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    signed_in(&base).await;
+    let email = "pia@example.com";
+    let laptop = open_reader(&base, &outbox, email).await;
+    let phone = cookie_from(&sign_in(&base, email, READER_PASSWORD).await);
+    let change = |cookie: String, current: &'static str, password: &'static str| {
+        let base = base.clone();
+        async move {
+            post(
+                &base,
+                "/api/people/me/password",
+                Some(&cookie),
+                json!({ "current": current, "password": password }),
+            )
+            .await
+        }
+    };
+
+    // Signed out, a wrong current password, or a short new one: nothing changes.
+    let anyone = post(
+        &base,
+        "/api/people/me/password",
+        None,
+        json!({ "current": READER_PASSWORD, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(anyone.status(), StatusCode::UNAUTHORIZED);
+    let wrong = change(laptop.clone(), "not the password at all", NEW_PASSWORD).await;
+    assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(error_of(wrong).await, "wrong-password");
+    let short = change(laptop.clone(), READER_PASSWORD, "too short").await;
+    assert_eq!(error_of(short).await, "password-short");
+    assert_eq!(session(&base, Some(&phone)).await["signed_in"], true);
+
+    // The right one: this device is signed in again, every other one is out.
+    let changed = change(laptop.clone(), READER_PASSWORD, NEW_PASSWORD).await;
+    assert_eq!(changed.status(), StatusCode::OK);
+    let laptop = cookie_from(&changed);
+    assert_eq!(session(&base, Some(&laptop)).await["signed_in"], true);
+    assert_eq!(session(&base, Some(&phone)).await["signed_in"], false);
+    assert_eq!(
+        sign_in(&base, email, READER_PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        sign_in(&base, email, NEW_PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+}
+
+#[tokio::test]
+async fn the_owner_can_change_their_password_in_settings_too() {
+    // Decision 0200: the owner's new password is stored, as Forgot?'s is, and
+    // their Render password setting stops signing them in.
+    let (base, _, _) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let changed = post(
+        &base,
+        "/api/people/me/password",
+        Some(&owner),
+        json!({ "current": PASSWORD, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(changed.status(), StatusCode::OK);
+    assert_eq!(
+        sign_in(&base, "owner@example.com", PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        sign_in(&base, "owner@example.com", NEW_PASSWORD)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
     );
 }
