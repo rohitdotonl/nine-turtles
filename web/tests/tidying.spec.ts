@@ -71,6 +71,10 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   await expect(yours(page).getByRole("link", { name: new RegExp(first) })).toHaveCount(0);
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Undone." })).toHaveText("Undone.");
+  // The line has a ×, as the list's note does: it goes, and the keyboard waits on Choose….
+  await yours(page).getByRole("button", { name: "Close the note" }).click();
+  await expect(yours(page).getByText("Undone.")).toBeHidden();
+  await expect(yours(page).getByRole("button", { name: "Choose…" })).toBeFocused();
   await expect(yours(page).getByRole("link", { name: new RegExp(first) })).toBeVisible();
   await expect(yours(page).getByRole("link", { name: new RegExp(second) })).toBeVisible();
 
@@ -106,4 +110,22 @@ test("with the keyboard alone: Choose, tick, Move to… and Escape closes only t
   // Escape on the page goes back to Settings.
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+});
+
+test("when everyone you follow couldn't load, Try again loads them, keeping the keyboard's place", async ({ page }) => {
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route("**/api/tidy/feeds", (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
+  await page.reload();
+  await appReady(page);
+  const problem = yours(page).getByRole("status").filter({ hasText: "Everyone you follow couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.locator("#your-feeds-heading")).toBeFocused();
+  await expect(yours(page).getByRole("button", { name: "Choose…" })).toBeVisible();
 });
