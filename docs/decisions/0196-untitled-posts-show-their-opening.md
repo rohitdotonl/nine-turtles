@@ -1,4 +1,4 @@
-# 0193: A post with no title shows its opening once
+# 0196: A post with no title shows its opening once
 
 *6 November 2026.*
 

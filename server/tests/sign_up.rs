@@ -97,7 +97,15 @@ async fn the_account_is_made_only_when_the_emailed_link_is_followed() {
 
     let asked = sign_up(&base, email, PASSWORD).await;
     assert_eq!(asked.status(), StatusCode::ACCEPTED);
-    assert!(asked.headers().get("set-cookie").is_none());
+    // Nobody is signed in yet: the only cookie is the sign-up's own secret (decision 0193).
+    for cookie in asked.headers().get_all("set-cookie") {
+        assert!(
+            cookie
+                .to_str()
+                .unwrap()
+                .starts_with("nine_turtles_sign_up=")
+        );
+    }
     let body = json_of(asked).await;
     assert_eq!(body["sent_to"], email);
 
@@ -376,4 +384,172 @@ async fn wrong_passwords_on_the_link_are_slowed_down_as_sign_in_does() {
     let waiting = finish(&base, &ticket, PASSWORD).await;
     assert_eq!(waiting.status(), StatusCode::TOO_MANY_REQUESTS);
     assert_eq!(error_of(waiting).await, "wait");
+}
+
+/// The sign-up secret the browser that pressed Sign up keeps (decision 0193).
+fn sign_up_cookie(response: &Response) -> String {
+    response
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|value| value.to_str().unwrap())
+        .find(|value| value.starts_with("nine_turtles_sign_up="))
+        .expect("a sign-up secret")
+        .split(';')
+        .next()
+        .unwrap()
+        .to_owned()
+}
+
+async fn check(base: &str, ticket: &str, cookie: Option<&str>) -> Response {
+    post(
+        base,
+        "/api/sign-up/check",
+        cookie,
+        json!({ "ticket": ticket }),
+    )
+    .await
+}
+
+#[tokio::test]
+async fn the_browser_that_signed_up_confirms_without_the_password() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    let email = "same@example.com";
+    let asked = sign_up(&base, email, PASSWORD).await;
+    assert_eq!(asked.status(), StatusCode::ACCEPTED);
+    let browser = sign_up_cookie(&asked);
+    let header = asked.headers()["set-cookie"].to_str().unwrap().to_owned();
+    for part in ["HttpOnly", "Secure", "SameSite=Lax", "Path=/api/sign-up"] {
+        assert!(header.contains(part), "{part}");
+    }
+    let (_, ticket) = newest_link(&outbox, email);
+
+    // Asking uses nothing up: this browser needs no password, any other does.
+    let here = json_of(check(&base, &ticket, Some(&browser)).await).await;
+    assert_eq!(here["same_browser"], true);
+    let elsewhere = json_of(check(&base, &ticket, None).await).await;
+    assert_eq!(elsewhere["same_browser"], false);
+
+    // Elsewhere, an empty password is asked for; nothing is counted or made.
+    let without = post(
+        &base,
+        "/api/sign-up/finish",
+        None,
+        json!({ "ticket": ticket, "password": "" }),
+    )
+    .await;
+    assert_eq!(without.status(), StatusCode::UNAUTHORIZED);
+    assert_eq!(error_of(without).await, "password-needed");
+
+    // Here, one press makes the account, signs in, and forgets the secret.
+    let made = post(
+        &base,
+        "/api/sign-up/finish",
+        Some(&browser),
+        json!({ "ticket": ticket }),
+    )
+    .await;
+    assert_eq!(made.status(), StatusCode::OK);
+    let cookies: Vec<String> = made
+        .headers()
+        .get_all("set-cookie")
+        .iter()
+        .map(|value| value.to_str().unwrap().to_owned())
+        .collect();
+    assert!(
+        cookies
+            .iter()
+            .any(|cookie| cookie.starts_with("nine_turtles_sign_up=;")
+                && cookie.contains("Max-Age=0"))
+    );
+    let session_cookie = cookie_from(&made);
+    let now = session(&base, &session_cookie).await;
+    assert_eq!(now["signed_in"], true);
+    assert_eq!(now["email_confirmed"], true);
+    assert_eq!(
+        sign_in(&base, email, PASSWORD).await.status(),
+        StatusCode::NO_CONTENT
+    );
+    // The link works once, from here too.
+    assert_eq!(
+        check(&base, &ticket, Some(&browser)).await.status(),
+        StatusCode::GONE
+    );
+}
+
+#[tokio::test]
+async fn a_strangers_browser_secret_never_finishes_someone_elses_link() {
+    let (base, state, outbox) = start_with_mail(common::config()).await;
+    let email = "owner@example.com";
+    // The address's owner signs up; a minute later a stranger signs up with the same
+    // address, from their own browser, and keeps that browser's secret.
+    assert_eq!(
+        sign_up(&base, email, PASSWORD).await.status(),
+        StatusCode::ACCEPTED
+    );
+    let (_, owners) = newest_link(&outbox, email);
+    a_minute_passes(&state.db).await;
+    let strangers = sign_up(&base, email, OTHER_PASSWORD).await;
+    let stranger = sign_up_cookie(&strangers);
+    // The stranger never gets the email, so has no ticket: a made-up one does nothing.
+    let guessed = post(
+        &base,
+        "/api/sign-up/finish",
+        Some(&stranger),
+        json!({ "ticket": "0".repeat(64) }),
+    )
+    .await;
+    assert_eq!(guessed.status(), StatusCode::GONE);
+    // The owner's browser holds no secret of the stranger's: they're asked their password.
+    assert_eq!(
+        json_of(check(&base, &owners, None).await).await["same_browser"],
+        false
+    );
+    assert_eq!(
+        finish(&base, &owners, PASSWORD).await.status(),
+        StatusCode::OK
+    );
+    assert_eq!(
+        sign_in(&base, email, OTHER_PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+
+    // A secret from another address's sign-up never stands in for this one's password.
+    let other = sign_up(&base, "else@example.com", PASSWORD).await;
+    let other_secret = sign_up_cookie(&other);
+    assert_eq!(
+        sign_up(&base, "third@example.com", PASSWORD).await.status(),
+        StatusCode::ACCEPTED
+    );
+    let (_, third) = newest_link(&outbox, "third@example.com");
+    let crossed = post(
+        &base,
+        "/api/sign-up/finish",
+        Some(&other_secret),
+        json!({ "ticket": third }),
+    )
+    .await;
+    assert_eq!(error_of(crossed).await, "password-needed");
+}
+
+#[tokio::test]
+async fn a_browser_keeps_one_secret_for_all_its_sign_ups() {
+    let (base, _, outbox) = start_with_mail(common::config()).await;
+    // A mistyped address first, then "Use another email" and the right one, from one browser.
+    let first = sign_up(&base, "mistyped@example.com", PASSWORD).await;
+    let browser = sign_up_cookie(&first);
+    let second = post(
+        &base,
+        "/api/sign-up",
+        Some(&browser),
+        json!({ "email": "right@example.com", "password": PASSWORD }),
+    )
+    .await;
+    assert_eq!(sign_up_cookie(&second), browser);
+    // Either link needs only one press in this browser.
+    for email in ["mistyped@example.com", "right@example.com"] {
+        let (_, ticket) = newest_link(&outbox, email);
+        let here = json_of(check(&base, &ticket, Some(&browser)).await).await;
+        assert_eq!(here["same_browser"], true, "{email}");
+    }
 }

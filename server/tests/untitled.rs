@@ -1,4 +1,4 @@
-//! Posts with no title (SPEC section 6, decision 0193): the list is sent
+//! Posts with no title (SPEC section 6, decision 0196): the list is sent
 //! the post's opening words, as plain text, to show once instead of a
 //! title, and no line of its text under it. Tested against a real running
 //! nine turtles and a made-up feed.

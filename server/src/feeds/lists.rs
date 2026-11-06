@@ -125,7 +125,7 @@ pub struct ArticleRow {
     /// Only for an article with no title: its whole text (`untitled_body!`),
     /// never sent as it is: it goes out as `opening`, its first words
     /// (`ArticleRow::opening`), which the list shows instead of a
-    /// title (SPEC section 6, decision 0193).
+    /// title (SPEC section 6, decision 0196).
     #[sqlx(default)]
     #[serde(
         rename = "opening",
