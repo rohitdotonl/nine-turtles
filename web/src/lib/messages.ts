@@ -1,5 +1,5 @@
 // The lines said again and again after an action or a failure, in the
-// house style (BRAND.md → "Messages", decision 0197): one copy of each, so
+// house style (BRAND.md → "Messages", decision 0199): one copy of each, so
 // the same thing is always said the same way.
 
 /** When nine turtles' own server can't be reached. */

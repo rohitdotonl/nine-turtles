@@ -84,6 +84,9 @@ test("Hide articles about… from someone's page hides what matches, asks first,
   await expect(hidden.getByRole("status")).toHaveText("Unhidden. It's back in your lists, unread.");
   // Nothing moves: it stays, with Undo.
   await expect(hidden.getByRole("button", { name: "Undo unhiding Walking the long way home (2)" })).toBeFocused();
+  // Undo hides it again and says so in the house style (BRAND.md → "Messages").
+  await page.keyboard.press("Enter");
+  await expect(hidden.getByRole("status")).toHaveText("Undone.");
 
   // Escape goes back to Hiding (decision 0120).
   await page.keyboard.press("Escape");

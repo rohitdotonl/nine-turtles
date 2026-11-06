@@ -137,7 +137,7 @@
     busy = false;
     if (result === "ok") {
       passkey.name = draft.trim() === "" ? null : draft.trim();
-      say("Saved the passkey's name.");
+      say("Passkey name saved.");
       await stopRename(passkey.id);
       return;
     }

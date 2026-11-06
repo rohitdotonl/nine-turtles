@@ -141,7 +141,7 @@ export class LoadedLibrary {
         if (back) return back;
         const refusal = await createFolder(folder.name, inside);
         await this.loadFeeds();
-        return refusal ? refused(refusal, "folder") : undefined;
+        return refusal ? undoRefused(refusal, "folder") : undefined;
       },
     };
   }

@@ -70,6 +70,7 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   await expect(page.getByRole("status").filter({ hasText: "Unsubscribed" })).toHaveText("Unsubscribed from 2.");
   await expect(yours(page).getByRole("link", { name: new RegExp(first) })).toHaveCount(0);
   await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Undone." })).toHaveText("Undone.");
   await expect(yours(page).getByRole("link", { name: new RegExp(first) })).toBeVisible();
   await expect(yours(page).getByRole("link", { name: new RegExp(second) })).toBeVisible();
 

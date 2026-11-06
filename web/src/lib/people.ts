@@ -9,7 +9,7 @@
 // (`/people/3`), whose list the server widens to all of them, and its count is
 // their places' counts added up.
 
-import { change, plainSourceName, refused, type Notice } from "./feeds";
+import { change, plainSourceName, refused, undoRefused, type Notice } from "./feeds";
 import type { Article, Feed, Person, PlaceKind } from "./shapes";
 
 export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter", podcast: "Podcast" };
@@ -132,7 +132,7 @@ export async function unsubscribeAll(feed: number, removeKept = false): Promise<
 /** Undo for a join or a separation. */
 export async function putBack(before: Before[]): Promise<string | undefined> {
   const { refusal } = await change("/api/writers/put-back", { before });
-  return refusal ? refused(refusal, "feed") : undefined;
+  return refusal ? undoRefused(refusal, "feed") : undefined;
 }
 
 /** "Take out of Alpha": one source leaves its person, and stands on its own. */

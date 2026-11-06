@@ -136,8 +136,8 @@ export function appliedMessage(count: number): string {
   return count === 1 ? "Hid 1 article." : `Hid ${count} articles.`;
 }
 
-/** What the rule editor says when a rule wasn't saved. */
-export function ruleRefused(refusal: RuleRefusal): string {
+/** What the rule editor says when a rule wasn't saved; `failed` names what couldn't be done, for trouble. */
+export function ruleRefused(refusal: RuleRefusal, failed = "The rule couldn't be saved."): string {
   switch (refusal) {
     case "nothing-to-match":
       return "Write a word or phrase to hide articles about.";
@@ -148,7 +148,7 @@ export function ruleRefused(refusal: RuleRefusal): string {
     case "gone":
       return "This isn't here any more.";
     case "trouble":
-      return "The rule couldn't be saved. Try again in a moment.";
+      return `${failed} Try again in a moment.`;
   }
 }
 

@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 6 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185, 0197).*
+*Every brand decision on one page. Last updated: 6 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185, 0199).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -96,7 +96,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
 - Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".
 
-## Messages (Live, decision 0197)
+## Messages (Live, decision 0199)
 
 Every line the app says after you do something, or when something fails:
 the floating note at the bottom of a list, the line under a form or a

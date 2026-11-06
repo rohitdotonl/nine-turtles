@@ -91,7 +91,7 @@
     clear();
     const refusal = await deleteRule(rule.id);
     if (refusal && refusal !== "gone") {
-      message = ruleRefused(refusal);
+      message = ruleRefused(refusal, "The rule couldn't be deleted.");
       return;
     }
     await reload();
@@ -122,7 +122,7 @@
     busy = false;
     question = undefined;
     if (!Array.isArray(ids)) {
-      message = ruleRefused(ids);
+      message = ruleRefused(ids, "Those articles couldn't be hidden.");
       return;
     }
     message = appliedMessage(ids.length);
@@ -163,7 +163,7 @@
     const refusal = await pauseRule(rule.id, !on);
     if (refusal) {
       rule.paused = on;
-      message = ruleRefused(refusal);
+      message = ruleRefused(refusal, on ? "The rule couldn't be switched on." : "The rule couldn't be paused.");
     }
   }
 

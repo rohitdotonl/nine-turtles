@@ -301,7 +301,7 @@ export function explain(reason: Problem): string {
     case "not-allowed":
       return "nine turtles can't visit that address.";
     case "unreachable":
-      return "That site didn't answer. Try again later.";
+      return "The site didn't answer. Try again later.";
     case "not-found":
       return "Nothing was found at that address.";
     case "too-big":

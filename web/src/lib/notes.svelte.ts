@@ -10,6 +10,7 @@ import { connection, whenBack } from "./connection.svelte";
 import { deviceJson, setDeviceText } from "./device";
 import { currentTabReader } from "./updates.svelte";
 import { toNote, type FullArticle, type Note } from "./shapes";
+import { UNDO_FAILED } from "./messages";
 
 export const OFFLINE_LINE = "You're offline. This is saved on this device only, and reaches your account once you're back online.";
 
@@ -110,12 +111,20 @@ async function send(change: Waiting): Promise<Sent | "offline"> {
   return { answer, refusal };
 }
 
+/** What couldn't be done, by the kind of change, when the trouble was nine turtles' own. */
+const FAILED: Record<Waiting["kind"], string> = {
+  highlight: "The highlight couldn't be saved.",
+  change: "The note couldn't be saved.",
+  remove: "The highlight couldn't be removed.",
+  "article-note": "The note couldn't be saved.",
+};
+
 /** Why a change wasn't kept, in plain words (shown, never silently dropped). */
-export function notKept(refusal: string): string {
+function notKept(refusal: string, kind: Waiting["kind"]): string {
   if (refusal === "too-long") return "That note is too long. Make it shorter.";
   if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
   if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
-  return "The highlight or note couldn't be saved. Try again in a moment.";
+  return `${FAILED[kind]} Try again in a moment.`;
 }
 
 let sending = false;
@@ -205,7 +214,7 @@ export class Marks {
     }
     if (sent.refusal) {
       this.keep(before);
-      return { refusal: notKept(sent.refusal) };
+      return { refusal: notKept(sent.refusal, change.kind) };
     }
     return sent;
   }
@@ -244,7 +253,9 @@ export class Marks {
   /** Undo for a removed highlight: it's made again, with its note. Answers why, if it couldn't be. */
   async restore(was: Note): Promise<string | undefined> {
     if (was.quote === null) return undefined;
-    return (await this.highlight({ quote: was.quote, before: was.before, after: was.after }, was.note)).problem;
+    const { problem } = await this.highlight({ quote: was.quote, before: was.before, after: was.after }, was.note);
+    // Trouble on nine turtles' side is the one failed-Undo line (BRAND.md → "Messages").
+    return problem === notKept("trouble", "highlight") ? UNDO_FAILED : problem;
   }
 
   /** Sets the note on the whole article; an empty one removes it. Answers why, if it couldn't be kept. */
