@@ -22,7 +22,7 @@
   lined up with the first line of its name, and a setting's description
   sits straight under its name (S1, decision 0120).
 
-  The groups' own components, each saying where it's described: InstallApp, Rules and RuleEditor, Newsletters, Assistants,
+  The groups' own components, each saying where it's described: InstallApp, Rules, Newsletters, Assistants,
   Readers, Plan, Passkeys, ChangeEmail and DeleteAccount.
 -->
 <script lang="ts">
@@ -41,9 +41,7 @@
   import PasskeysGroup from "./Passkeys.svelte";
   import Plan from "./Plan.svelte";
   import Readers from "./Readers.svelte";
-  import RuleEditor from "./RuleEditor.svelte";
   import Rules from "./Rules.svelte";
-  import type { Rule } from "./rules";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
   import { PAGES } from "./themes";
@@ -122,9 +120,9 @@
     onReaders: (event: MouseEvent) => void;
     /** Everyone the reader follows, one row each (the sidebar's rows), for Hiding. */
     people: Feed[];
-    /** On a phone the rule editor is the phone sheet, in place of Settings. */
+    /** On a phone a task (Change email, Delete…) is a screen in place of Settings. */
     phone?: boolean;
-    /** A new rule for this person opens at once ("Hide articles about…" on an article or a person's page). */
+    /** Hiding opens set to this person ("Hide articles about…" on an article or a person's page). */
     ruleForFeed?: number;
     /** The sidebar is hidden, so the top line starts clear of its toggle. */
     besideToggle?: boolean;
@@ -135,55 +133,19 @@
     { value: "oldest", label: "Oldest first" },
   ] as const;
 
-  /** The rule editor, while open: a rule to change, or a new one (perhaps for a feed). */
-  let editing: { rule?: Rule; feedId?: number } | undefined = $state();
-  let rulesPanel: Rules | undefined = $state();
-  /** What the editor did, for Rules to say once it's showing (on a phone it comes back as the editor closes). */
-  let pending: (() => void) | undefined;
-  let ruleHeading: HTMLHeadingElement | undefined = $state();
+  /** Hiding started from someone's page or an article: the word field waits, set to them. */
+  let hideFor: number | undefined = $state();
 
   $effect(() => {
     if (ruleForFeed !== undefined) {
-      openEditor({ feedId: ruleForFeed });
+      hideFor = ruleForFeed;
       ruleForFeed = undefined;
     }
   });
-
-  /**
-   * On a phone the editor is a screen of its own, so it's a step in history:
-   * the back gesture closes it, unchanged, rather than leaving Settings.
-   */
-  let stepped = false;
-  function openEditor(next: { rule?: Rule; feedId?: number }) {
-    editing = next;
-    if (phone && !stepped) {
-      history.pushState(history.state, "", location.href);
-      stepped = true;
-    }
-  }
-
-  /** The back gesture (or Back) while the editor's step is showing: it closes, unchanged. */
-  function backed() {
-    if (!stepped) return;
-    stepped = false;
-    closeEditor();
-  }
-
-  /** Closing the editor: on a phone, Settings comes back, and the keyboard returns to Rules. */
-  function closeEditor() {
-    if (stepped) {
-      // Closed by its X, Save or Delete: its step in history goes too.
-      stepped = false;
-      history.back();
-    }
-    editing = undefined;
-    queueMicrotask(() => {
-      document.getElementById("rules-heading")?.focus();
-      const doing = pending;
-      pending = undefined;
-      doing?.();
-    });
-  }
+  // Leaving Hiding lets the person go: opened again from Settings, it's for everyone.
+  $effect(() => {
+    if (page !== "hiding") hideFor = undefined;
+  });
 
   /** Change email, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
   let task: "email" | "data" | "delete" | undefined = $state();
@@ -265,7 +227,6 @@
   }
 </script>
 
-<svelte:window onpopstate={backed} />
 
 <!-- What a screen reader hears after each row's name that opens a page of its own. -->
 <span id="opens-page" hidden>Opens its own page.</span>
@@ -285,26 +246,6 @@
 {/snippet}
 
 
-{#if editing}
-  {#key editing}
-    <RuleEditor
-      sheet={!phone}
-      rule={editing.rule}
-      feedId={editing.feedId}
-      {people}
-      bind:heading={ruleHeading}
-      onCancel={closeEditor}
-      onSaved={(draft, made) => {
-        pending = () => rulesPanel?.saved(draft, made);
-        closeEditor();
-      }}
-      onDelete={(rule) => {
-        pending = () => rulesPanel?.remove(rule);
-        closeEditor();
-      }}
-    />
-  {/key}
-{/if}
 {#if task === "email"}
   <ChangeEmail
     sheet={!phone}
@@ -321,7 +262,7 @@
 {:else if task === "delete"}
   <DeleteAccount sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
 {/if}
-{#if !(editing && phone) && !(task && phone)}
+{#if !(task && phone)}
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
 <section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex flex-1 flex-col bg-paper">
   {#if page}
@@ -557,13 +498,7 @@
       {:else if page === "install"}
         <InstallApp />
       {:else if page === "hiding"}
-        <Rules
-          bind:this={rulesPanel}
-          {people}
-          {onMuted}
-          onNew={() => openEditor({})}
-          onEdit={(rule) => openEditor({ rule })}
-        />
+        <Rules {people} {onMuted} bind:forFeed={hideFor} />
       {:else if page === "newsletters"}
         <Newsletters />
       {:else if page === "assistants"}

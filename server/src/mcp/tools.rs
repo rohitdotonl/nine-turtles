@@ -221,6 +221,7 @@ fn list() -> Vec<Value> {
                 "title_only": { "type": "boolean", "description": "Only to make an old titles-only rule again, as delete_rule answered it." },
                 "paused": { "type": "boolean", "description": "Made paused, as a removed rule was." },
                 "place_gone": { "type": "boolean", "description": "Only to make a removed rule again whose person is no longer followed, as delete_rule answered it: it matches nothing, never everyone." },
+                "until": { "type": "integer", "description": "Only to make a removed rule again that hid for a week or a month, as delete_rule answered it (seconds since 1970)." },
             }),
             &["words"],
             changing(false, false),

@@ -50,7 +50,7 @@
     go: (next: Route, notice?: Notice) => void;
     /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
-    /** "Hide articles about…": Settings › Hiding, with a new rule for them. */
+    /** "Hide articles about…": Settings › Hiding, with the field set to them ("Only from …"). */
     onHide: () => void;
     /** Find new address moved a source. */
     onMoved: (source: Feed, after: Sick) => void;

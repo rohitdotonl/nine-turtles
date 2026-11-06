@@ -436,6 +436,18 @@ async fn the_reader_approves_and_the_assistant_works() {
     )
     .await;
     assert!(!error);
+    // Made again as delete_rule answered it, a word for a week keeps its end.
+    let until = nine_turtles::now() + 3 * 86_400;
+    let (_, error) = tool(
+        &base,
+        &access,
+        "add_rule",
+        json!({ "words": "election", "until": until }),
+    )
+    .await;
+    assert!(!error);
+    let (rules, _) = tool(&base, &access, "list_rules", json!({})).await;
+    assert_eq!(rules["rules"][0]["until"], until);
     let (_, error) = tool(&base, &access, "add_rule", json!({ "words": "" })).await;
     assert!(error, "a rule needs something to match");
 

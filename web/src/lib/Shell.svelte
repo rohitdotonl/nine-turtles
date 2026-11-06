@@ -149,7 +149,7 @@
   let wordmark: HTMLHeadingElement | undefined = $state();
   /** The headings (and the add field) the keyboard's place lands on (`landing.ts`). */
   const headings: Headings = $state({});
-  /** "Hide articles about…" on an article or a person's page: Settings › Hiding opens with a new rule for them. */
+  /** "Hide articles about…" on an article or a person's page: Settings › Hiding opens with the field set to them ("Only from …"). */
   let ruleForFeed: number | undefined = $state();
   /** Everyone you follow, Hidden articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
@@ -397,7 +397,7 @@
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
       // A sheet keeps the keyboard to itself; its Escape is the dialog's own
-      // (Settings' rule editor is a sheet of Settings' own, so it's asked of the page).
+      // (Settings' own sheets are asked of the page).
       if (event.defaultPrevented || cheatSheetOpen || sheetShown || document.querySelector("dialog:modal")) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
@@ -655,7 +655,7 @@
     return movedFeed?.to === id ? movedFeed.from : id;
   }
 
-  function hideFrom(feed: number) { // "Hide articles about…" (an article's More menu, a person's page): Settings › Hiding, with a new rule for them.
+  function hideFrom(feed: number) { // "Hide articles about…" (an article's More menu, a person's page): Settings › Hiding, with the field set to them ("Only from …").
     ruleForFeed = feed;
     go({ kind: "settings", page: "hiding" });
   }

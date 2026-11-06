@@ -1,7 +1,7 @@
-// Hiding (SPEC section 27): "Hide articles about [words] from [everyone /
-// this person]", one sentence the reader fills in. This file talks to the
-// server about rules and writes each one as that sentence, the way Settings
-// › Hiding lists it.
+// Hiding (SPEC section 27): a list of words, each hiding articles about it
+// from everyone or one person, for a week, a month or for good (decision
+// 0201). This file talks to the server about them and writes each in words,
+// the way Settings › Hiding lists it.
 
 import { rowFor } from "./people";
 import { toArticle, type Article, type Feed } from "./shapes";
@@ -17,42 +17,27 @@ export type Rule = {
   feedId: number | null;
   /** The person it applied to is no longer followed, so it matches nothing. */
   placeGone: boolean;
+  /** Paused before the switch went (decision 0201): it hides nothing. */
   paused: boolean;
+  /** When it stops hiding, in seconds since 1970; null for good. */
+  until: number | null;
 };
 
-/** What the editor sends: a rule without its number or its state. */
+/** What Settings sends: a new word, or a removed rule made again by Undo. */
 export type RuleDraft = Pick<Rule, "words" | "feedId"> & {
+  /** For a week (7) or a month (30); absent for good. */
+  days?: 7 | 30;
   titleOnly?: boolean;
   paused?: boolean;
   /** Only when Undo makes a deleted rule again whose person had gone. */
   placeGone?: boolean;
+  until?: number | null;
+  /** Undo bringing a removed word back: it hides nothing more, coming back as it was. */
+  restore?: boolean;
 };
 
-/** The one quiet line under the editor's sentence. */
-export const HIDING_HELP = "Hidden articles are kept and marked read. Search still finds them.";
-
-/**
- * The words the person blank shows: "everyone", a person's name, or
- * "choose someone…" while none is chosen. `who` is the editor's menu value:
- * "all", a place's number, or "".
- */
-export function whoChoice(who: string, people: Feed[]): string {
-  if (who === "") return "choose someone…";
-  if (who === "all") return "everyone";
-  return rowFor(Number(who), people)?.title ?? "";
-}
-
-/**
- * How wide a blank in the rule's sentence is, as CSS: about half an em per
- * letter of its words (28 at most), plus room for a menu's small arrow
- * (1.25rem) or a field's edge (0.3rem), so the sentence reads without gaps.
- */
-export function blankWidth(words: string, room = 1.25): string {
-  return `calc(${Math.min(words.length, 28) * 0.5 + 0.3}em + ${room}rem)`;
-}
-
 /** Why a rule wasn't saved. */
-export type RuleRefusal = "nothing-to-match" | "too-long" | "no-place" | "gone" | "trouble";
+export type RuleRefusal = "nothing-to-match" | "too-long" | "no-place" | "bad-days" | "gone" | "trouble";
 
 export async function listRules(): Promise<{ rules: Rule[]; muted: number }> {
   const answer = await getJson("/api/rules");
@@ -63,38 +48,16 @@ export async function listRules(): Promise<{ rules: Rule[]; muted: number }> {
   };
 }
 
-/** Makes a rule. Answers its number and how many unread articles already match it. */
-export async function createRule(draft: RuleDraft): Promise<{ id: number; matching: number } | RuleRefusal> {
+/** Makes a rule, which hides at once the unread articles already about it. Answers its number and exactly those, for Undo. */
+export async function createRule(draft: RuleDraft): Promise<{ id: number; ids: number[] } | RuleRefusal> {
   const sent = await post("/api/rules", body(draft));
   if (typeof sent === "string") return sent;
-  return { id: Number(sent.id), matching: Number(sent.matching ?? 0) };
-}
-
-export async function editRule(id: number, draft: RuleDraft): Promise<RuleRefusal | undefined> {
-  const sent = await post(`/api/rules/${id}`, body(draft));
-  return typeof sent === "string" ? sent : undefined;
-}
-
-export async function pauseRule(id: number, paused: boolean): Promise<RuleRefusal | undefined> {
-  const sent = await post(`/api/rules/${id}/paused`, { paused });
-  return typeof sent === "string" ? sent : undefined;
+  return { id: Number(sent.id), ids: Array.isArray(sent.ids) ? sent.ids.map(Number) : [] };
 }
 
 export async function deleteRule(id: number): Promise<RuleRefusal | undefined> {
   const sent = await post(`/api/rules/${id}/delete`, {});
   return typeof sent === "string" ? sent : undefined;
-}
-
-/** Applies a rule once to the unread articles that match it now. Answers exactly those, for Undo. */
-export async function applyRule(id: number): Promise<number[] | RuleRefusal> {
-  const sent = await post(`/api/rules/${id}/apply`, {});
-  if (typeof sent === "string") return sent;
-  return Array.isArray(sent.ids) ? sent.ids.map(Number) : [];
-}
-
-/** Undoes applying a rule: exactly the articles it hid come back. */
-export async function unapply(ids: number[]): Promise<RuleRefusal | undefined> {
-  return setMuted(ids, false);
 }
 
 /** The Hidden articles page: the newest hidden articles, and how many there are in all. */
@@ -110,41 +73,50 @@ export async function setMuted(ids: number[], muted: boolean): Promise<RuleRefus
   return typeof sent === "string" ? sent : undefined;
 }
 
-/**
- * A rule as one plain sentence: "Hide articles about “crypto” from
- * everyone." An old title-only rule says so: "about “x” (in titles)".
- */
-export function describe(rule: Pick<Rule, "words" | "titleOnly" | "feedId" | "placeGone">, people: Feed[]): string {
-  const about = `about “${rule.words.trim()}”${rule.titleOnly ? " (in titles)" : ""}`;
-  return `Hide articles ${about} from ${whoWords(rule, people)}.`;
-}
-
-/** Who a rule hides from, in words: "everyone", "Alpha", or "someone you no longer follow". */
+/** Who a rule hides from, in words: "Everyone", "Alpha", or "Someone you no longer follow". */
 export function whoWords(rule: Pick<Rule, "feedId" | "placeGone">, people: Feed[]): string {
-  if (rule.placeGone) return "someone you no longer follow";
-  if (rule.feedId === null) return "everyone";
-  return rowFor(rule.feedId, people)?.title ?? "someone you no longer follow";
+  if (rule.placeGone) return "Someone you no longer follow";
+  if (rule.feedId === null) return "Everyone";
+  return rowFor(rule.feedId, people)?.title ?? "Someone you no longer follow";
 }
 
-/** The question asked once a new rule is saved, when unread articles already match it. */
-export function applyQuestion(count: number): string {
-  return count === 1 ? "Also hide the 1 unread article that matches?" : `Also hide the ${count} unread articles that match?`;
+/** A word as its row shows it: “sponsored”, and “x” (in titles) for an old rule that looks in titles only. */
+export function wordShown(rule: Pick<Rule, "words" | "titleOnly">): string {
+  return `“${rule.words.trim()}”${rule.titleOnly ? " (in titles)" : ""}`;
 }
 
-/** What Settings says once a rule was applied to articles already here. */
-export function appliedMessage(count: number): string {
-  return count === 1 ? "Hid 1 article." : `Hid ${count} articles.`;
+/** How long a word still hides: "for good", "5 days left" (whole days, rounded up), or "paused" for one paused before the switch went. */
+export function howLong(rule: Pick<Rule, "until" | "paused">, now: number): string {
+  if (rule.paused) return "paused";
+  if (rule.until === null) return "for good";
+  const days = Math.max(1, Math.ceil((rule.until - now) / 86_400));
+  return days === 1 ? "1 day left" : `${days} days left`;
 }
 
-/** What the rule editor says when a rule wasn't saved; `failed` names what couldn't be done, for trouble. */
-export function ruleRefused(refusal: RuleRefusal, failed = "The rule couldn't be saved."): string {
+/** A word's row, under the word: whose articles it hides, and for how long ("Everyone · for good"). */
+export function ruleLine(rule: Rule, people: Feed[], now: number): string {
+  return `${whoWords(rule, people)} · ${howLong(rule, now)}`;
+}
+
+/** What Settings says once a word is added, with what it hid at once. */
+export function addedMessage(words: string, hid: number, days?: 7 | 30): string {
+  const when = days === 7 ? ", for a week" : days === 30 ? ", for a month" : "";
+  const word = `“${words}”`;
+  if (hid === 0) return `Hiding ${word}${when}. Nothing unread is about it yet.`;
+  return `Hid ${hid === 1 ? "1 unread article" : `${hid} unread articles`} about ${word}${when}.`;
+}
+
+/** What Settings says when a word wasn't saved; `failed` names what couldn't be done, for trouble (BRAND.md → "Messages"). */
+export function ruleRefused(refusal: RuleRefusal, failed = "The word couldn't be added."): string {
   switch (refusal) {
     case "nothing-to-match":
       return "Write a word or phrase to hide articles about.";
     case "too-long":
       return "That's too long: keep it to 200 characters.";
     case "no-place":
-      return "You no longer follow them. Choose someone else.";
+      return "You no longer follow them.";
+    case "bad-days":
+      return "Choose a week, a month or for good.";
     case "gone":
       return "This isn't here any more.";
     case "trouble":
@@ -159,11 +131,14 @@ function body(draft: RuleDraft): Record<string, unknown> {
     title_only: draft.titleOnly ?? false,
     paused: draft.paused ?? false,
     place_gone: draft.placeGone ?? false,
+    days: draft.days ?? null,
+    until: draft.until ?? null,
+    restore: draft.restore ?? false,
   };
 }
 
 async function post(path: string, change: unknown): Promise<Record<string, unknown> | RuleRefusal> {
-  const sent = await sendChange(path, change, ["nothing-to-match", "too-long", "no-place"]);
+  const sent = await sendChange(path, change, ["nothing-to-match", "too-long", "no-place", "bad-days", "gone"]);
   return sent.refusal ?? sent.answer ?? {};
 }
 
@@ -175,5 +150,6 @@ function toRule(rule: Record<string, unknown>): Rule {
     feedId: typeof rule.feed_id === "number" ? rule.feed_id : null,
     placeGone: rule.place_gone === true,
     paused: rule.paused === true,
+    until: typeof rule.until === "number" ? rule.until : null,
   };
 }
