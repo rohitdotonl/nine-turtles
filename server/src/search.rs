@@ -623,10 +623,16 @@ pub async fn find(
             .into_iter()
             .map(|each| {
                 // The text searched: the content, or the summary when the feed gives only that.
-                // An untitled article shows its opening instead of a title, with no line of
-                // its text under it (SPEC section 6).
+                // An untitled article shows its opening instead of a title: no line of its
+                // text under it when the opening already shows a searched word (SPEC section 6).
+                let opening = each.article.opening();
                 let excerpt = match each.content.as_deref().or(each.summary.as_deref()) {
-                    _ if each.article.untitled_body.is_some() => None,
+                    _ if opening
+                        .as_deref()
+                        .is_some_and(|words| excerpt(words, &searched).is_some()) =>
+                    {
+                        None
+                    }
                     Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
                     _ => None,
                 };

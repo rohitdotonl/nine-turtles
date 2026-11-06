@@ -22,7 +22,7 @@ async fn blog() -> String {
 fn feed() -> impl IntoResponse {
     let now = nine_turtles::now();
     let date = |days: i64| nine_turtles::dates::rfc3339(now - days * 86_400);
-    let long = "walking ".repeat(60);
+    let long = format!("{} kingfisher", "walking ".repeat(60));
     (
         [(header::CONTENT_TYPE, "application/rss+xml")],
         format!(
@@ -83,7 +83,7 @@ async fn an_untitled_post_is_listed_by_its_opening_words_once() {
     assert_eq!(note["opening"], "Saw the first heron of the year.");
     // A long post sends only what two lines can show.
     let long = by_link("/long")["opening"].as_str().unwrap().to_owned();
-    assert_eq!(long.chars().count(), 280);
+    assert_eq!(long.chars().count(), 200);
     // A titled post is sent its title alone.
     assert!(by_link("/titled").get("opening").is_none());
 
@@ -96,7 +96,7 @@ async fn an_untitled_post_is_listed_by_its_opening_words_once() {
     );
 
     // Searching finds it by its words, and shows no line of its text under
-    // the opening: the opening already is its text.
+    // the opening when the opening already shows the searched word.
     let found = ask(&base, &cookie, "/api/search?q=heron").await;
     let results = found["articles"].as_array().unwrap();
     let untitled = results.iter().find(|result| result["id"] == id).unwrap();
@@ -107,4 +107,9 @@ async fn an_untitled_post_is_listed_by_its_opening_words_once() {
         .find(|result| result["title"] == "A titled post")
         .unwrap();
     assert!(titled["excerpt"].is_array());
+    // A word found only past the opening gets its line, to say why it was found.
+    let found = ask(&base, &cookie, "/api/search?q=kingfisher").await;
+    let deep = &found["articles"][0];
+    assert_eq!(deep["opening"].as_str().unwrap().chars().count(), 200);
+    assert!(deep["excerpt"].is_array());
 }

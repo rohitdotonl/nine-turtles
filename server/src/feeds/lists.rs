@@ -122,8 +122,9 @@ pub struct ArticleRow {
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub writer: Option<String>,
-    /// Only for an article with no title: its text (`untitled_body!`), sent
-    /// as `opening`, its first words, which the list shows instead of a
+    /// Only for an article with no title: its whole text (`untitled_body!`),
+    /// never sent as it is: it goes out as `opening`, its first words
+    /// (`ArticleRow::opening`), which the list shows instead of a
     /// title (SPEC section 6, decision 0193).
     #[sqlx(default)]
     #[serde(
@@ -147,7 +148,7 @@ pub(crate) use untitled_body;
 
 /// How many characters of an untitled article's opening are sent: more than
 /// two lines of the widest list hold, which end in "…" on screen.
-const OPENING_LENGTH: usize = 280;
+const OPENING_LENGTH: usize = 200;
 
 /// An untitled article's opening words as plain text, or nothing when it
 /// has no words (a picture alone, an episode with no notes).
@@ -155,6 +156,13 @@ pub fn opening(html: &str) -> Option<String> {
     let words = crate::search::plain_words(html);
     let opening: String = words.chars().take(OPENING_LENGTH).collect();
     (!opening.is_empty()).then_some(opening)
+}
+
+impl ArticleRow {
+    /// Its opening words, when it has no title (sent as `opening`).
+    pub fn opening(&self) -> Option<String> {
+        self.untitled_body.as_deref().and_then(opening)
+    }
 }
 
 /// Writes an untitled article's text as its opening (`ArticleRow`).

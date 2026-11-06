@@ -1,20 +1,58 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Article, Library } from "./shapes";
 import { lost, offsetFrom, reached } from "./connection.svelte";
-import { KEEP_AFTER_REFRESH, KEEP_AGAIN_AFTER, KEEP_STARRED, KEEP_UNREAD, Keeper, NeedsConnection, countsAfter, inParts, keptList, toKeep, withMark, type Kept } from "./offline";
+import {
+  KEEP_AFTER_REFRESH,
+  KEEP_AGAIN_AFTER,
+  KEEP_STARRED,
+  KEEP_UNREAD,
+  Keeper,
+  NeedsConnection,
+  countsAfter,
+  inParts,
+  keptList,
+  toKeep,
+  withMark,
+  type Kept,
+} from "./offline";
 
 function row(id: number, more: Partial<Article> = {}): Article {
-  return { id, feedId: 1, feedTitle: "Garden", title: `Post ${id}`, link: null, at: id * 100, read: false, starred: false, muted: false, ...more };
+  return {
+    id,
+    feedId: 1,
+    feedTitle: "Garden",
+    title: `Post ${id}`,
+    link: null,
+    at: id * 100,
+    read: false,
+    starred: false,
+    muted: false,
+    ...more,
+  };
 }
 
 function kept(id: number, more: Partial<Kept> = {}): Kept {
-  return { ...row(id), siteUrl: null, author: null, content: "<p>Words</p>", summary: null, language: null, first: true, ...more };
+  return {
+    ...row(id),
+    siteUrl: null,
+    author: null,
+    content: "<p>Words</p>",
+    summary: null,
+    language: null,
+    first: true,
+    ...more,
+  };
 }
 
 describe("what's kept for reading offline", () => {
   it("is the first 200 of the reader's list and the newest 200 starred, each once", () => {
     const first = Array.from({ length: 250 }, (_, index) => row(index + 1));
-    const starred = [row(5, { starred: true }), ...Array.from({ length: 250 }, (_, index) => row(1000 + index, { starred: true }))];
+    const starred = [
+      row(5, { starred: true }),
+      ...Array.from({ length: 250 }, (_, index) =>
+        row(1000 + index, { starred: true }),
+      ),
+    ];
     const keep = toKeep(first, starred);
     expect(keep.size).toBe(KEEP_UNREAD + KEEP_STARRED - 1);
     expect(keep.get(5)?.first).toBe(true);
@@ -39,6 +77,13 @@ describe("lists without a connection", () => {
     expect(ids(keptList(all, { view: "unread" }, "oldest"))).toEqual([1, 4]);
   });
 
+  it("an untitled copy is listed by its opening words, as online", () => {
+    const untitled = kept(6, { title: "", opening: "Rain all day." });
+    expect(keptList([untitled], { view: "all" }, "newest")[0]?.opening).toBe(
+      "Rain all day.",
+    );
+  });
+
   it("Starred shows every starred copy, muted ones too", () => {
     expect(ids(keptList(all, { view: "starred" }, "newest"))).toEqual([5, 3]);
   });
@@ -47,26 +92,39 @@ describe("lists without a connection", () => {
     expect(ids(keptList(all, { view: "all" }, "newest"))).toEqual([4, 3, 2, 1]);
     expect(ids(keptList(all, { feed: 2 }, "newest"))).toEqual([4]);
     const library: Library = {
-      feeds: [{ id: 2, title: "Notes", siteUrl: null, unread: 1, folders: [7] }],
+      feeds: [
+        { id: 2, title: "Notes", siteUrl: null, unread: 1, folders: [7] },
+      ],
       folders: [{ id: 7, name: "Friends" }],
     };
     expect(ids(keptList(all, { folder: 7 }, "newest", library))).toEqual([4]);
   });
 
   it("lists rows only, never the kept text", () => {
-    expect(keptList(all, { view: "all" }, "newest")[0]).not.toHaveProperty("content");
+    expect(keptList(all, { view: "all" }, "newest")[0]).not.toHaveProperty(
+      "content",
+    );
   });
 
   it("search says plainly that it needs a connection", () => {
-    expect(() => keptList(all, { search: { q: "garden" } }, "newest")).toThrow(NeedsConnection);
+    expect(() => keptList(all, { search: { q: "garden" } }, "newest")).toThrow(
+      NeedsConnection,
+    );
   });
 });
 
 describe("marks made without a connection", () => {
   it("show on the copy at once; marking unread unmutes, as on the server", () => {
     expect(withMark(kept(1), { kind: "read", value: true }).read).toBe(true);
-    expect(withMark(kept(1, { read: true, muted: true }), { kind: "read", value: false })).toMatchObject({ read: false, muted: false });
-    expect(withMark(kept(1), { kind: "starred", value: true }).starred).toBe(true);
+    expect(
+      withMark(kept(1, { read: true, muted: true }), {
+        kind: "read",
+        value: false,
+      }),
+    ).toMatchObject({ read: false, muted: false });
+    expect(withMark(kept(1), { kind: "starred", value: true }).starred).toBe(
+      true,
+    );
   });
 
   it("are sent oldest first, those made together in one request", () => {
@@ -96,7 +154,11 @@ describe("marks made without a connection", () => {
       [2, kept(2)],
       [3, kept(3, { feedId: 2 })],
     ]);
-    const after = countsAfter(library, before, [kept(1, { read: true }), kept(2, { read: true }), kept(3, { feedId: 2, read: true })]);
+    const after = countsAfter(library, before, [
+      kept(1, { read: true }),
+      kept(2, { read: true }),
+      kept(3, { feedId: 2, read: true }),
+    ]);
     expect(after.feeds.map((feed) => feed.unread)).toEqual([0, 0]);
   });
 });
@@ -115,7 +177,10 @@ describe("when the copies are brought up to date", () => {
   function setUp() {
     let time = 1_000_000;
     const kept: number[] = [];
-    const keeper = new Keeper(() => kept.push(time), () => time);
+    const keeper = new Keeper(
+      () => kept.push(time),
+      () => time,
+    );
     return { keeper, kept, wait: (ms: number) => (time += ms) };
   }
 
@@ -152,7 +217,10 @@ describe("when the copies are brought up to date", () => {
     const browser = new EventTarget();
     vi.stubGlobal("document", page);
     vi.stubGlobal("addEventListener", browser.addEventListener.bind(browser));
-    vi.stubGlobal("removeEventListener", browser.removeEventListener.bind(browser));
+    vi.stubGlobal(
+      "removeEventListener",
+      browser.removeEventListener.bind(browser),
+    );
     const { keeper, kept, wait } = setUp();
     const stop = keeper.watch();
     browser.dispatchEvent(new Event("online"));
