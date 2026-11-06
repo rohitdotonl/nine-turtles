@@ -9,7 +9,7 @@
   import { tick } from "svelte";
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
-  import TextButton from "./TextButton.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import { untitledOpening, type Article } from "./shapes";
   import { when } from "./times";
   import { listMuted, ruleRefused, setMuted } from "./rules";
@@ -48,11 +48,6 @@
     load();
   });
 
-  /** Try again: the button goes as the list is asked for again, so the keyboard waits on the page's heading. */
-  function retry() {
-    heading?.focus();
-    load();
-  }
 
   async function change(row: Row, muted: boolean) {
     if (row.busy) return;
@@ -77,7 +72,7 @@
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
-        <p role="status" class="text-ink-2">The hidden articles couldn't be loaded. <TextButton onclick={retry}>Try again</TextButton></p>
+        <LoadFailed words="The hidden articles couldn't be loaded." heading="muted-heading" onRetry={() => ((failed = false), load())} />
       {:else if rows && rows.length === 0}
         <div role="status">
           <p class="text-ink">Nothing is hidden.</p>

@@ -13,7 +13,7 @@
   import Icon from "./Icon.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
   import NoteLine from "./NoteLine.svelte";
-  import TextButton from "./TextButton.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import type { Feed } from "./shapes";
   import {
     appliedMessage,
@@ -178,12 +178,6 @@
     await keepPlace();
   }
 
-  /** Try again after the rules couldn't load: the button goes, so the keyboard waits on the group's heading. */
-  async function retry() {
-    document.getElementById("rules-heading")?.focus();
-    await reload();
-  }
-
   function edit(rule: Rule) {
     clear();
     onEdit(rule);
@@ -241,10 +235,7 @@
     {/if}
   </div>
   {#if failed}
-    <p role="status" class="inset-foot flex items-center gap-1.5 text-danger">
-      <span class="shrink-0"><Icon name="alert" size={16} /></span>What's hidden couldn't be loaded.
-      <TextButton class="-ml-1 px-1" onclick={retry}>Try again</TextButton>
-    </p>
+    <LoadFailed class="inset-foot" words="What's hidden couldn't be loaded." heading="rules-heading" onRetry={() => ((failed = false), reload())} />
   {/if}
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>

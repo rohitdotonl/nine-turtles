@@ -10,8 +10,7 @@
   kept for 30 days and listed below, each with Bring back.
 -->
 <script lang="ts">
-  import Icon from "./Icon.svelte";
-  import TextButton from "./TextButton.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import { tick } from "svelte";
   import { date } from "./admin";
   import { resubscribe } from "./feeds";
@@ -55,12 +54,6 @@
     );
   }
   load();
-
-  /** Try again: the button goes as the list is asked for again, so the keyboard waits on the group's heading. */
-  function retry() {
-    heading?.focus();
-    load();
-  }
 
   async function copy(text: string, what: string) {
     try {
@@ -202,10 +195,7 @@
     </p>
   {/if}
   {#if failed}
-    <p role="status" class="inset-foot flex items-center gap-1.5 text-danger">
-      <span class="shrink-0"><Icon name="alert" size={16} /></span>The connected assistants couldn't be loaded.
-      <TextButton class="-ml-1 px-1" onclick={retry}>Try again</TextButton>
-    </p>
+    <LoadFailed class="inset-foot" words="The connected assistants couldn't be loaded." heading="assistants-heading" onRetry={() => ((failed = false), load())} />
   {/if}
   <p class="inset-foot">
     Connect an AI assistant such as Claude or ChatGPT to your nine turtles, so it can find, sort and tidy things for

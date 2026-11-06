@@ -248,11 +248,10 @@
     }
   }
 
-  /** Try again after the list couldn't load: the button goes as the list is asked for again, so the keyboard waits on the list's heading. */
+  /** Try again after the list couldn't load: it's asked for again from the top, and the keyboard waits on the list's heading as the button goes. */
   function retryList() {
     document.getElementById("list-heading")?.focus({ preventScroll: true });
-    if (articles.length > 0 && next !== null) load(next);
-    else void refresh();
+    void refresh();
   }
 
   /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */

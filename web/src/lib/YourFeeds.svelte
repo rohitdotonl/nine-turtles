@@ -19,7 +19,7 @@
   import { deleteFolder, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
-  import TextButton from "./TextButton.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import { pathFor } from "./router";
   import {
     folderNames,
@@ -118,12 +118,6 @@
     endUndo();
     await tick();
     editButton?.focus();
-  }
-
-  /** Try again after the list couldn't load: the keyboard waits on the page's heading. */
-  async function retry() {
-    heading?.focus();
-    await load();
   }
 
   function toggleEditing() {
@@ -244,7 +238,7 @@
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} />
       {#if failed}
-        <p role="status" class="text-ink-2">Everyone you follow couldn't be loaded. <TextButton onclick={retry}>Try again</TextButton></p>
+        <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
       {:else if feeds}
         <!-- What the last action did, with its Undo, until the next one. -->
         <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />

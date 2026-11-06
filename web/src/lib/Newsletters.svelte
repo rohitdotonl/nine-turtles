@@ -11,7 +11,7 @@
   import Icon from "./Icon.svelte";
   import NoteLine from "./NoteLine.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
-  import { type Label, TooLate, copyAddress, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
+  import { type Label, COPIED, TooLate, copyAddress, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
 
   let on = $state(false);
   let address = $state("");
@@ -36,7 +36,7 @@
 
   async function copy() {
     message = await copyAddress(address);
-    refusal = message !== "Address copied.";
+    refusal = message !== COPIED;
     // Undo for New address stays on the line: copying changes nothing.
   }
 
@@ -81,9 +81,8 @@
 
   async function toggle(label: Label, on: boolean) {
     // The switch shows the change at once, and goes back if it couldn't be saved.
-    // Another action here: New address's Undo goes, as the list's note does (SPEC section 8).
+    // New address's Undo stays, as it does for Copy: once it's gone the old address can't come back.
     label.on = on;
-    previous = null;
     try {
       await switchLabel(label.label, on);
       [message, refusal] = [on ? `${label.address} takes email again.` : `Email to ${label.address} is now turned away.`, false];
@@ -133,8 +132,8 @@
         >New address<span class="row-glyph"><Icon name="refresh" size={18} /></span></button
       >
     </div>
-    <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
-      <NoteLine {message} {refusal} {busy} onUndo={previous ? undo : undefined} onClose={closeNote} />
+    <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
+      <NoteLine announce {message} {refusal} {busy} onUndo={previous ? undo : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
       Sign up to newsletters with this address and each one arrives as its own feed. Unsubscribing from a feed also

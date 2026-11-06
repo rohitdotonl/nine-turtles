@@ -284,10 +284,9 @@
     <div
       bind:this={line}
       id="passkeys-message"
-      role="status"
       class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}
     >
-      <NoteLine {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onRetry={loadFailed ? retry : undefined} onClose={closeNote} />
+      <NoteLine announce {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onRetry={loadFailed ? retry : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
       Sign in with your fingerprint, face or device PIN instead of a password. Adding a passkey asks for your password.

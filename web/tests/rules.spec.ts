@@ -250,3 +250,24 @@ test("on a phone, the back gesture closes the editor and stays in Hiding", async
   await expect(page.getByRole("heading", { name: "Hiding", level: 2 })).toBeVisible();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
 });
+
+test("when the hidden articles couldn't load, the line says so in oxblood, and Try again loads them", async ({ page }) => {
+  await page.goto(new URL("/settings/hidden", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route(/\/api\/muted/, (route) => (failing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback()));
+  await page.reload();
+  await appReady(page);
+  const problem = page.getByRole("status").filter({ hasText: "The hidden articles couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  // A second failure says so again.
+  await page.keyboard.press("Enter");
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.locator("#muted-heading")).toBeFocused();
+});
