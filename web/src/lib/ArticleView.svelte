@@ -256,6 +256,12 @@
     return () => area.removeEventListener("click", followAnchor);
   });
 
+  // The article's own links open in a new tab (cleaned so by nine turtles);
+  // each tells a screen reader so, as every link out of nine turtles does.
+  $effect(() => {
+    for (const link of text?.querySelectorAll('a[target="_blank"]') ?? []) link.setAttribute("aria-describedby", "new-tab-note");
+  });
+
   // Pictures that open larger (decision 0107): one the page shows clearly
   // smaller than it really is, once it has loaded, and not inside a link,
   // becomes a button. Looked at again whenever a picture loads or changes
@@ -400,7 +406,7 @@
 {/snippet}
 
 {#snippet original(size: number)}
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" title={phone ? "View original" : tip("View original", "open-original")} class="btn-quiet btn-icon"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={phone ? "View original" : tip("View original", "open-original")} class="btn-quiet btn-icon"
     ><Icon name="open" {size} /></a
   >
 {/snippet}
@@ -409,6 +415,7 @@
 <svelte:window onkeydown={(event) => SCROLL_KEYS.has(event.key) && (moved = true)} />
 
 <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper">
+  <span id="new-tab-note" hidden lang="en">Opens in a new tab</span>
   <!--
     The top bar is solid, in the page's own color, across the whole pane
     (scrollbar included), so its icons are anchored to the pane's edges
@@ -461,7 +468,7 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
         {#if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}</a>
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}<span class="sr-only"> (opens in a new tab)</span></a>
         {:else}
           <span class="publisher">{article.feedTitle}</span>
         {/if}
@@ -521,7 +528,7 @@
           -->
           <p class="article-note" lang="en">
             <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
-                >{episode ? "Read the episode page on" : "Read on"} {site}<span aria-hidden="true">&nbsp;›</span></a
+                >{episode ? "Read the episode page on" : "Read on"} {site}<span aria-hidden="true">&nbsp;›</span><span class="sr-only"> (opens in a new tab)</span></a
               >{/if}
           </p>
         {:else if video || episode}

@@ -149,7 +149,9 @@ function link(href) {
   if (/^https?:\/\//i.test(href)) {
     const anchor = element("a", null, href.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, ""));
     anchor.href = href;
-    anchor.rel = "noreferrer";
+    anchor.rel = "noopener noreferrer";
+    anchor.target = "_blank";
+    anchor.append(element("span", "sr-only", " (opens in a new tab)"));
     return anchor;
   }
   return code(href);

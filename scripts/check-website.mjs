@@ -72,6 +72,16 @@ const server = createServer((request, response) => {
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 
+// Runs in the page: what's wrong with its links to other sites (none for
+// nine turtles' own addresses, which open in the same tab).
+function outsideLinkProblems() {
+  const own = ["nineturtles.app", "www.nineturtles.app", "app.nineturtles.app", location.hostname];
+  return [...document.querySelectorAll("a[href^='http']")]
+    .filter((link) => !own.includes(link.hostname))
+    .filter((link) => link.target !== "_blank" || !link.relList.contains("noopener") || !link.textContent.includes("(opens in a new tab)"))
+    .map((link) => `the link to ${link.href} should open in a new tab, with noopener, and say "(opens in a new tab)" to screen readers`);
+}
+
 const problems = [...redirectProblems];
 const browser = await chromium.launch({ executablePath: process.env.NINE_TURTLES_CHROMIUM || undefined });
 try {
@@ -95,6 +105,9 @@ try {
             const reply = await page.request.get(base + target.split("#")[0]);
             if (!reply.ok()) problems.push(`${path}: the link or picture ${target} leads nowhere (${reply.status()})`);
           }
+          // A link to another site opens in a new tab and says so; links to
+          // the app (the way in) stay in the same tab.
+          problems.push(...(await page.evaluate(outsideLinkProblems)).map((problem) => `${path}: ${problem}`));
         }
         // With the keyboard alone: the first Tab shows "Skip to the text" on
         // screen, and every link after it shows a visible focus outline.
@@ -178,6 +191,7 @@ try {
       problems.push(`${where}: shows the addresses ${shown.addresses.join(", ")}`);
     }
     if (shown.links.join() !== "https://quiet.example/2") problems.push(`${where}: links the titles to ${shown.links.join(", ")}`);
+    problems.push(...(await page.evaluate(outsideLinkProblems)).map((problem) => `${where}: ${problem}`));
     if (shown.bold !== 0) problems.push(`${where}: shows a title's HTML as HTML`);
     if (shown.address !== "?address=quiet.example") problems.push(`${where}: the page's address is ${shown.address}`);
     if (asked.some((question) => question.cookie)) problems.push(`${where}: sends cookies to the app`);
