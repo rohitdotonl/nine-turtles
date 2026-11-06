@@ -90,10 +90,12 @@ PLAN.md → V1, item 1.*
   page into their settings. **Done** saves and turns it back; **Cancel** or
   Escape turns it back unchanged. Top to bottom (the owner's core path,
   points 11 and 12):
-  - **Name** and, for a person, **Email address** (where Write back writes
-    to them, section 37; a publication has no Write back, so no address,
-    and the field goes as soon as A publication is chosen, decision 0191);
+  - **Name**;
   - for one source, **This is: A person / A publication**;
+  - for a person, **Email address** (where Write back writes to them,
+    section 37), under This is: a publication has no Write back, so no
+    address, and the field goes as soon as A publication is chosen, taking
+    away only what's below the choice (decision 0191);
   - **Folders** (one list for all their sources: Done puts every source in
     exactly those);
   - for one source, its settings right here in Edit: **Pause for a while**

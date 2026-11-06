@@ -15,7 +15,9 @@ owner, reviewing onboarding, chose to remove it.
 - A publication has no Write back: not at the end of its articles, not in the
   article's More menu, not on `w`, and no Write to on its page.
 - Its Edit has no Email address field; the field goes as soon as A publication
-  is chosen, and nothing typed in it then is kept.
+  is chosen, and nothing typed in it then is kept. The field moves under
+  **This is**, so choosing takes away only what's below the choice and
+  nothing above the pointer moves.
 - Choosing **A person** in Edit brings all of it back, with any address kept
   from before (the address stays stored; only what's shown changes).
 - The question when adding stays, with nine turtles' guess chosen in advance
