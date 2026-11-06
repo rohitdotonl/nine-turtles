@@ -19,6 +19,7 @@
 - A broken feed looks like any other feed in the sidebar; it just doesn't get new items. Everyone you follow (section 15, in Settings › Your library) lists the feeds that aren't working at its top, and the daily check mentions them too.
 - **The same lists for everyone** (decision 0187): Unread (while it's on), Starred, Notes (once there's a highlight or note) and All articles always show; none can be hidden. So Help, the screenshots and the keys always match what a reader sees.
 - Recently read, saved searches and collections were removed in favour of Starred (decision 0174); their old addresses lead to "Wrong turn?".
+- If the feeds can't be loaded, the sidebar says "Your feeds couldn't be loaded." (announced to screen readers) with a **Try again** button, which loads them again and, once they're back, puts the keyboard on the sidebar's first row.
 
 **How to check it**
 1. Add people and publications whose names start with different letters. They're in alphabetical order under their headings, below the fixed views.
