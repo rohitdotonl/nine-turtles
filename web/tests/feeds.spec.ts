@@ -430,6 +430,44 @@ test("in the welcome, the heading stays still as feeds are offered, Add steps as
   expect(await top()).toBe(before);
 });
 
+test("following several, one that can't be followed is named in the list's line, and the rest are followed", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  const name = newBlog("two");
+  await field(page).fill(`${FEED_SITE}/blog/${name}/`);
+  await page.keyboard.press("Enter");
+  const choices = page.getByRole("group", { name: "Feeds on this site" });
+  await choices.getByRole("checkbox", { name: /^Comments/ }).check();
+  // The comments feed's follow fails; the first goes through.
+  await page.route("**/api/feeds", async (route) => {
+    const asked = route.request().postDataJSON() as { address: string };
+    if (route.request().method() === "POST" && asked.address.includes("comments")) await route.fulfill({ status: 502, json: { error: "unreachable" } });
+    else await route.continue();
+  });
+  await page.getByRole("button", { name: "Follow", exact: true }).click();
+  // One followed: it's asked about as a single feed is, then opens with the note.
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByText(/couldn't be followed: That site didn't answer\. Try again later\./)).toBeVisible();
+});
+
+test("on a phone, the welcome's offered feeds sit on a card in the page's color, with Follow the list's full width", async ({ page }) => {
+  await newReader(page, 390);
+  await page.goto(new URL("/", FEEDS_APP).href);
+  await appReady(page);
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog("two")}/`);
+  await page.keyboard.press("Enter");
+  const choices = page.getByRole("group", { name: "Feeds on this site" });
+  await expect(choices).toBeVisible();
+  // A card, not text on the list's grey (finding 12): its color is the page's, not the list's.
+  const [card, ground] = await Promise.all([
+    choices.evaluate((group) => getComputedStyle(group).backgroundColor),
+    page.locator("#list-pane").evaluate((pane) => getComputedStyle(pane).backgroundColor),
+  ]);
+  expect(card).not.toBe(ground);
+  const [follow, list] = await Promise.all([page.getByRole("button", { name: "Follow", exact: true }).boundingBox(), choices.boundingBox()]);
+  expect(Math.abs(follow!.width - list!.width)).toBeLessThan(1);
+  expect(Math.abs(follow!.x - list!.x)).toBeLessThan(1);
+});
+
 test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
   await field(page).fill(`${NO_FEED_SITE}/plain/`);

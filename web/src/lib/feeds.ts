@@ -13,8 +13,8 @@ import { saved } from "./saving";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
- * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, how
- * often it posts and its newest title. `place` is the address as a person says it ("maralind.example/feed").
+ * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, its
+ * newest title. `place` is the address as a person says it ("maralind.example/feed").
  */
 export type Choice = { title: string; url: string; place?: string; latest?: string };
 

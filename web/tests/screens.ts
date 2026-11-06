@@ -158,9 +158,10 @@ export const SCREENS: Screen[] = [
       await page.goto(new URL(`/people/${id}`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("button", { name: /On reading the same book twice/ })).toBeVisible();
+      // The second article, starred: opening another would put the note away.
+      await page.keyboard.press("j");
       await page.keyboard.press("j");
       await page.keyboard.press("s");
-      await page.keyboard.press("j");
       await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
     },
   },

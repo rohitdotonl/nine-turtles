@@ -11,8 +11,7 @@
 //! never on an article's page.
 //!
 //! When there are several feeds, each is looked at once, one after another
-//! (`look_inside`), so the reader can see how often it posts and what it
-//! posted last: repeats (the same posts in another format) and feeds that
+//! (`look_inside`), so the reader can see what it posted last: repeats (the same posts in another format) and feeds that
 //! aren't there are left out.
 
 use std::{
