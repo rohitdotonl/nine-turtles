@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 37
-updated: 2026-11-05
+updated: 2026-11-06
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -12,6 +12,10 @@ related: [one-person-several-places, share-an-article, newsletters]
   Liked something? Tell the person who wrote it. At the end of each article
   from someone you follow is a button to write back to them, by email.
 </p>
+
+Write back is for people. A publication, such as a magazine, has no Write
+back button; if you'd like to write to one, open its page, press **Edit**
+and choose **A person**.
 
 ## Write back
 
