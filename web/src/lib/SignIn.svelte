@@ -21,7 +21,7 @@
   import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
-  import { SIGN_IN_LINK_MINUTES, askForLink, explainAsked } from "./accounts";
+  import { SIGN_IN_LINK_MINUTES, SIGN_UP_PAGE, askForLink, explainAsked } from "./accounts";
   import {
     type PasskeySignIn,
     autofillAvailable,
@@ -198,7 +198,7 @@
 
   function signUp(event: MouseEvent) {
     event.preventDefault();
-    history.pushState(null, "", "/sign-up");
+    history.pushState(null, "", SIGN_UP_PAGE);
     onSignUp?.();
   }
 </script>
@@ -295,7 +295,7 @@
       {:else}
         <!-- A passkey signs in without the fields: a quieter button, edged rather than filled. -->
         {#if offered}<button type="button" class="btn rounded-lg" aria-disabled={busy} onclick={passkey}>Sign in with a passkey</button>{/if}
-        <p class="text-center text-small">New here? <a href="/sign-up" class="text-link" onclick={signUp}>Sign up</a></p>
+        <p class="text-center text-small">New here? <a href={SIGN_UP_PAGE} class="text-link" onclick={signUp}>Sign up</a></p>
       {/if}
     </div>
   </form>

@@ -25,6 +25,6 @@ meets, with no new feature:
   whether there are notes; they now say whether anything is starred too, and
   starring something switches the row on at once.
 
-**Not done.** Hiding the phone welcome's "‹ Feeds" (finding 7) is waiting on
-the owner: on a phone the Feeds screen is the only way to Settings, Help and
-signing out while the welcome shows.
+**Not done, on purpose.** The phone welcome's "‹ Feeds" (finding 7) stays:
+the owner chose to keep it (6 November 2026), because on a phone the Feeds
+screen is the way to Settings, Help and signing out while the welcome shows.

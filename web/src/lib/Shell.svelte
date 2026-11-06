@@ -552,10 +552,10 @@
     go({ kind: "feed", id });
   }
 
-  async function added(feed: Feed) {
+  async function added(feed: Feed, note?: string) {
     const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
-    if (!stay) openFeed(feed.id);
+    if (!stay) go({ kind: "feed", id: library.rowOf(feed.id) }, note ? { message: note } : undefined); // As one person, if several were followed together.
   }
 
   /**
@@ -880,8 +880,8 @@
   };
 </script>
 
-{#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
+{#snippet welcome(start: boolean, onList: boolean)}
+  <Welcome {start} {onList} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
 {/snippet}
 
 {#snippet listHead()}
@@ -1181,7 +1181,7 @@
                 margin (decision 0052). A medium window keeps it centred.
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
-              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
+              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone, true)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined}
               {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
@@ -1247,9 +1247,9 @@
                 : undefined}
             />
           {:else if welcoming && !missing}
-            <!-- No feeds yet: the welcome has the reading area, where a new reader's eyes go (SPEC section 2). -->
-            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center justify-center bg-paper px-5 pb-[12vh] md:px-10">
-              {@render welcome(false)}
+            <!-- No feeds yet: the welcome has the reading area (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0206). -->
+            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center overflow-y-auto bg-paper px-5 pt-[28vh] pb-10 md:px-10">
+              {@render welcome(false, false)}
             </section>
           {:else}
             <EmptyReading first={listFirst} order={settings.sort ?? "newest"} lead={!searching.shown && !unreadOff} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />

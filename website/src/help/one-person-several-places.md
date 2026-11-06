@@ -57,6 +57,12 @@ Press **Done** to save, or **Cancel** to leave everything as it was.
 
 ## Join someone's sources
 
+When you add someone whose site offers several feeds (say, a blog and a
+podcast), tick each one you want and press **Follow**: they arrive already
+joined, as one person.
+
+To join sources you already follow:
+
 1. Open their page and press **Edit**.
 2. Press **+ Add another place** (or, for someone with two or more
    sources already, **+ Add a source**).

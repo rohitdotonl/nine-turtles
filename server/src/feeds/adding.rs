@@ -140,7 +140,6 @@ fn choice_json(choice: &lookup::Choice) -> serde_json::Value {
         "title": choice.found.title,
         "url": choice.found.url.as_str(),
         "place": lookup::said(&choice.found.url),
-        "posting": inside.and_then(|inside| inside.posting.as_deref()),
         "latest": inside.and_then(|inside| inside.latest.as_deref()),
     })
 }

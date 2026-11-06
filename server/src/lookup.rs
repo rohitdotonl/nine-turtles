@@ -11,8 +11,7 @@
 //! never on an article's page.
 //!
 //! When there are several feeds, each is looked at once, one after another
-//! (`look_inside`), so the reader can see how often it posts and what it
-//! posted last: repeats (the same posts in another format) and feeds that
+//! (`look_inside`), so the reader can see what it posted last: repeats (the same posts in another format) and feeds that
 //! aren't there are left out.
 
 use std::{
@@ -26,7 +25,6 @@ use reqwest::Url;
 use crate::{
     AppState, discover, feed,
     fetch::{self, FetchError, Fetched},
-    frequency,
 };
 
 /// The most addresses tried beyond the page the reader gave.
@@ -85,8 +83,6 @@ impl Choice {
 /// What a look inside a feed shows the reader.
 #[derive(Default)]
 pub struct Inside {
-    /// "Posts about twice a week", if its articles say when they were posted.
-    pub posting: Option<String>,
     /// Its newest article's title, if it has one.
     pub latest: Option<String>,
 }
@@ -224,7 +220,6 @@ fn places(page: &Url) -> Vec<Url> {
 async fn look_inside(state: &AppState, found: Vec<discover::Found>) -> Vec<Choice> {
     let local = state.config.local_feeds_allowed;
     let until = Instant::now() + LOOKING_INSIDE_FOR;
-    let now = crate::now();
     let mut choices: Vec<Choice> = Vec::new();
     let mut seen: Vec<Vec<String>> = Vec::new();
     let mut stopped = false;
@@ -260,13 +255,6 @@ async fn look_inside(state: &AppState, found: Vec<discover::Found>) -> Vec<Choic
         let fetched =
             (choices.is_empty() || fetched.body.len() <= KEPT_LARGEST).then(|| Box::new(fetched));
         let inside = Inside {
-            posting: frequency::of_dates(
-                parsed
-                    .articles
-                    .iter()
-                    .filter_map(|article| article.published_at),
-                now,
-            ),
             latest: newest_title(&parsed),
         };
         choices.push(Choice {

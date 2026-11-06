@@ -412,7 +412,6 @@ h1 + .byline {
   font-family: var(--serif);
   color: var(--ink-2);
 }
-.feed-posting,
 .feed-url {
   color: var(--ink-2);
   font-size: 0.875rem;
