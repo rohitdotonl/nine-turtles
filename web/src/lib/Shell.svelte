@@ -398,7 +398,7 @@
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
       // A sheet keeps the keyboard to itself; its Escape is the dialog's own
-      // (Settings' rule editor is a sheet of Settings' own, so it's asked of the page).
+      // (Settings' own sheets are asked of the page).
       if (event.defaultPrevented || cheatSheetOpen || sheetShown || document.querySelector("dialog:modal")) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;

@@ -317,20 +317,6 @@ async fn rules_stay_with_the_reader_who_made_them() {
     let id = made["id"].as_i64().unwrap();
 
     assert_eq!(other.get("/api/rules").await["rules"], json!([]));
-    let edit = json!({ "words": "potatoes" });
-    let (status, _) = other.post(&format!("/api/rules/{id}"), edit).await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
-    let (status, _) = other
-        .post(
-            &format!("/api/rules/{id}/paused"),
-            json!({ "paused": true }),
-        )
-        .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
-    let (status, _) = other
-        .post(&format!("/api/rules/{id}/apply"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
     let (status, _) = other
         .post(&format!("/api/rules/{id}/delete"), json!({}))
         .await;
@@ -855,7 +841,13 @@ async fn each_readers_rules_act_only_on_their_own_marks() {
     ] {
         let (status, made) = reader.post("/api/rules", rule).await;
         assert_eq!(status, StatusCode::OK, "{made}");
+        // Hiding what's there now, as a rule is made, changes only its
+        // reader's marks: the owner's tomatoes hide their three.
+        let hid = made["ids"].as_array().unwrap().len();
+        assert_eq!(hid, if made["id"] == 1 { 3 } else { 0 }, "{made}");
     }
+    assert_eq!(other.get("/api/muted").await["count"], 0);
+    assert_eq!(other.ids("view=unread").await.len(), 3);
 
     let new = nine_turtles::feed::ParsedArticle {
         fingerprint: "post-4".to_owned(),
@@ -892,17 +884,9 @@ async fn each_readers_rules_act_only_on_their_own_marks() {
     assert_eq!(marks(1).await.unwrap(), (true, false, true));
     assert_eq!(marks(2).await.unwrap(), (false, false, false));
 
-    // Applying a rule to what's there now changes only its reader's marks.
-    let rules = owner.get("/api/rules").await["rules"].clone();
-    let mute = rules[0]["id"].as_i64().unwrap();
     other
         .post("/api/articles/read", json!({ "ids": [id], "read": false }))
         .await;
-    let (status, applied) = owner
-        .post(&format!("/api/rules/{mute}/apply"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::OK, "{applied}");
-    assert_eq!(applied["ids"].as_array().unwrap().len(), 3);
     assert_eq!(other.get("/api/muted").await["count"], 0);
     assert_eq!(other.ids("view=unread").await.len(), 4);
 }
@@ -1311,18 +1295,16 @@ async fn rules_and_folders_cant_be_pointed_at_another_readers_things() {
     let (_, in_garden) = owner
         .post(
             "/api/rules",
-            json!({ "words": "tomatoes", "feed_id": shared }),
+            json!({ "words": "zucchini", "feed_id": shared }),
         )
         .await;
     let in_garden = in_garden["id"].as_i64().unwrap();
     // The other reader's own rule can't be pointed at someone only the
     // owner follows.
     let (_, theirs) = other.post("/api/rules", json!({ "words": "beans" })).await;
-    let theirs = theirs["id"].as_i64().unwrap();
+    assert!(theirs["id"].is_i64(), "{theirs}");
     for place in [json!({ "words": "beans", "feed_id": only_mine })] {
-        let (status, refused) = other
-            .post(&format!("/api/rules/{theirs}"), place.clone())
-            .await;
+        let (status, refused) = other.post("/api/rules", place.clone()).await;
         assert_eq!(status, StatusCode::BAD_REQUEST, "{place}");
         assert_eq!(refused["error"], "no-place");
     }
@@ -1409,13 +1391,14 @@ async fn one_reader_leaving_a_shared_feed_leaves_the_others_rules() {
         .unwrap();
 
     // The owner's rule no longer points at it; the other reader's still
-    // does, and their articles are all there.
+    // does, and their articles are all there (hidden by their own rule as
+    // it was made, decision 0197).
     let mine = owner.get("/api/rules").await["rules"][0].clone();
     assert_eq!(mine["place_gone"], true);
     let theirs = other.get("/api/rules").await["rules"][0].clone();
     assert_eq!(theirs["place_gone"], false);
     assert_eq!(theirs["feed_id"], feed);
-    assert_eq!(other.ids("view=unread").await.len(), 3);
+    assert_eq!(other.get("/api/muted").await["count"], 3);
 }
 
 #[tokio::test]
@@ -1512,11 +1495,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
             json!({ "words": "tomatoes", "feed_id": feed }),
         )
         .await;
-    let rule = rule["id"].as_i64().unwrap();
-    let (status, _) = owner
-        .post(&format!("/api/rules/{rule}/apply"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::OK);
+    assert!(rule["ids"].is_array(), "{rule}");
     let opened = other.get(&format!("/api/articles/{older}")).await;
     assert_eq!(opened["article"]["feed_id"], new_feed);
     assert_eq!(opened["article"]["read"], true);

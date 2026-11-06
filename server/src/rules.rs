@@ -8,8 +8,10 @@
 //! ranking (DESIGN.md → "Never").
 //!
 //! Rules act on articles as they arrive (`feeds::store_articles` calls
-//! `apply_to_new`). A new rule can also be applied, once, to the unread
-//! articles that already match; the screen asks first and offers Undo.
+//! `apply_to_new`). A rule made on the screen also hides, at once, the
+//! unread articles that already match; the screen offers Undo (decision
+//! 0197). A rule may last a week or a month (`until`): once that has
+//! passed it stops hiding and isn't listed, and what it hid stays hidden.
 //!
 //! Each rule is a reader's, and changes only that reader's marks (their
 //! entries); another reader of the same feed sees the article as before.
@@ -55,10 +57,7 @@ pub const MUTED_SHOWN: i64 = 200;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/rules", get(list_rules).post(create_rule))
-        .route("/api/rules/{id}", post(edit_rule))
-        .route("/api/rules/{id}/paused", post(pause_rule))
         .route("/api/rules/{id}/delete", post(delete_rule))
-        .route("/api/rules/{id}/apply", post(apply_rule))
         .route("/api/muted", get(list_muted))
 }
 
@@ -81,16 +80,21 @@ pub struct Rule {
     pub feed_id: Option<i64>,
     /// The person it applied to is no longer followed, so it matches nothing.
     pub place_gone: bool,
+    /// Paused before the switch went (decision 0197); only an assistant
+    /// makes one now. It hides nothing.
     pub paused: bool,
+    /// When it stops hiding, in seconds since 1970; none for good.
+    pub until: Option<i64>,
 }
 
-type RuleLine = (i64, i64, String, bool, Option<i64>, bool, bool);
+type RuleLine = (i64, i64, String, bool, Option<i64>, bool, bool, Option<i64>);
 
 /// A reader's rules, in the order they were made. Takes the reader. Rules
-/// that no longer fit (an author, star or mark read, a folder) are left out.
-const RULES: &str = "SELECT id, person_id, words, title_only, feed_id, place_gone, paused
+/// that no longer fit (an author, star or mark read, a folder), and those
+/// whose week or month is over, are left out.
+const RULES: &str = "SELECT id, person_id, words, title_only, feed_id, place_gone, paused, until
     FROM rules WHERE person_id = ? AND action = 'mute' AND author = '' AND words != ''
-        AND folder_id IS NULL
+        AND folder_id IS NULL AND (until IS NULL OR until > unixepoch())
     ORDER BY id";
 
 pub(crate) async fn rules(
@@ -104,7 +108,7 @@ pub(crate) async fn rules(
     Ok(lines
         .into_iter()
         .map(
-            |(id, person_id, words, title_only, feed_id, place_gone, paused)| Rule {
+            |(id, person_id, words, title_only, feed_id, place_gone, paused, until)| Rule {
                 id,
                 person_id,
                 words,
@@ -112,6 +116,7 @@ pub(crate) async fn rules(
                 feed_id,
                 place_gone,
                 paused,
+                until,
             },
         )
         .collect())
@@ -403,7 +408,16 @@ pub(crate) struct RuleForm {
     pub paused: bool,
     #[serde(default)]
     pub place_gone: bool,
+    /// For a week (7) or a month (30); none for good.
+    #[serde(default)]
+    pub days: Option<i64>,
+    /// When it stops, as Undo brings a removed rule back; wins over `days`.
+    #[serde(default)]
+    pub until: Option<i64>,
 }
+
+/// The days a rule may last: a week or a month.
+const DAYS: [i64; 2] = [7, 30];
 
 /// A phrase as the reader typed it, its spaces tidied. None if it's too long.
 fn tidy(text: &str) -> Option<String> {
@@ -442,14 +456,16 @@ async fn rule(
         .find(|rule| rule.id == id))
 }
 
-/// Makes a rule for reader `person`, from the screen or an assistant
-/// (`mcp`). Answers its number and how many unread articles already match
-/// it, or why it was refused.
-pub(crate) async fn make(
+/// Saves a rule for reader `person`. Answers it, or why it was refused.
+async fn insert(
     state: &AppState,
     person: i64,
     form: &RuleForm,
-) -> Result<Result<(i64, usize), &'static str>, sqlx::Error> {
+) -> Result<Result<Rule, &'static str>, sqlx::Error> {
+    if form.days.is_some_and(|days| !DAYS.contains(&days)) {
+        return Ok(Err("bad-days"));
+    }
+    let until = form.until.or(form.days.map(|days| now() + days * 86_400));
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
     let words = match checked(&mut transaction, person, form).await? {
         Ok(words) => words,
@@ -457,8 +473,8 @@ pub(crate) async fn make(
     };
     let id: i64 = sqlx::query_scalar(
         "INSERT INTO rules (person_id, words, title_only, feed_id, place_gone, action, paused,
-             created_at)
-         VALUES (?, ?, ?, ?, ?, 'mute', ?, ?) RETURNING id",
+             until, created_at)
+         VALUES (?, ?, ?, ?, ?, 'mute', ?, ?, ?) RETURNING id",
     )
     .bind(person)
     .bind(&words)
@@ -466,130 +482,42 @@ pub(crate) async fn make(
     .bind(form.feed_id)
     .bind(form.place_gone && form.feed_id.is_none())
     .bind(form.paused)
+    .bind(until)
     .bind(now())
     .fetch_one(&mut *transaction)
     .await?;
     let made = rule(&mut transaction, person, id).await?;
     transaction.commit().await?;
-    let matching = match made {
-        Some(rule) => matching_now(&state.db, &rule).await?.len(),
-        None => 0,
-    };
-    Ok(Ok((id, matching)))
+    Ok(made.ok_or("gone"))
 }
 
-/// Makes a rule. Answers its number and how many unread articles already
-/// match it, so the screen can offer to hide them too.
+/// Makes a rule for reader `person`, for an assistant (`mcp`). Answers its
+/// number and how many unread articles already match it, or why it was
+/// refused.
+pub(crate) async fn make(
+    state: &AppState,
+    person: i64,
+    form: &RuleForm,
+) -> Result<Result<(i64, usize), &'static str>, sqlx::Error> {
+    let rule = match insert(state, person, form).await? {
+        Ok(rule) => rule,
+        Err(refusal) => return Ok(Err(refusal)),
+    };
+    Ok(Ok((rule.id, matching_now(&state.db, &rule).await?.len())))
+}
+
+/// Makes a rule from the screen and hides, at once, the unread articles
+/// that already match it (decision 0197). Answers its number and exactly
+/// the articles it hid, so Undo can bring those back.
 async fn create_rule(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
     Json(form): Json<RuleForm>,
 ) -> Response {
-    let made = make(&state, person, &form).await;
-    match made {
-        Ok(Ok((id, matching))) => Json(json!({ "id": id, "matching": matching })).into_response(),
-        Ok(Err(refusal)) => problem(refusal),
-        Err(error) => database_problem("making a rule", &error),
-    }
-}
-
-/// Changes a rule. It acts on articles arriving from now on.
-async fn edit_rule(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-    Json(form): Json<RuleForm>,
-) -> Response {
-    let saved: Result<Result<bool, &str>, sqlx::Error> = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        if rule(&mut transaction, person, id).await?.is_none() {
-            return Ok(Ok(false));
-        }
-        let words = match checked(&mut transaction, person, &form).await? {
-            Ok(words) => words,
+    let made = async {
+        let rule = match insert(&state, person, &form).await? {
+            Ok(rule) => rule,
             Err(refusal) => return Ok(Err(refusal)),
-        };
-        let changed = sqlx::query(
-            "UPDATE rules SET words = ?, title_only = ?, feed_id = ?, place_gone = 0
-             WHERE id = ? AND person_id = ?",
-        )
-        .bind(&words)
-        .bind(form.title_only)
-        .bind(form.feed_id)
-        .bind(id)
-        .bind(person)
-        .execute(&mut *transaction)
-        .await?;
-        transaction.commit().await?;
-        Ok(Ok(changed.rows_affected() > 0))
-    }
-    .await;
-    match saved {
-        Ok(Ok(true)) => StatusCode::NO_CONTENT.into_response(),
-        Ok(Ok(false)) => StatusCode::NOT_FOUND.into_response(),
-        Ok(Err(refusal)) => problem(refusal),
-        Err(error) => database_problem("changing a rule", &error),
-    }
-}
-
-#[derive(Deserialize)]
-struct Paused {
-    paused: bool,
-}
-
-/// Pauses a rule, or starts it again.
-async fn pause_rule(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-    Json(form): Json<Paused>,
-) -> Response {
-    let changed = async {
-        let mut connection = state.db.acquire().await?;
-        if rule(&mut connection, person, id).await?.is_none() {
-            return Ok(false);
-        }
-        sqlx::query("UPDATE rules SET paused = ? WHERE id = ? AND person_id = ?")
-            .bind(form.paused)
-            .bind(id)
-            .bind(person)
-            .execute(&mut *connection)
-            .await?;
-        Ok::<_, sqlx::Error>(true)
-    }
-    .await;
-    match changed {
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => database_problem("pausing a rule", &error),
-    }
-}
-
-/// Deletes a rule. What it already did stays done. The screen keeps the
-/// rule, so Undo can make it again.
-async fn delete_rule(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Response {
-    match delete(&state.db, person, id).await {
-        Ok(false) => StatusCode::NOT_FOUND.into_response(),
-        Ok(true) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => database_problem("deleting a rule", &error),
-    }
-}
-
-/// Applies a rule, once, to the unread articles that match it now. Answers
-/// the articles it hid, so the screen can undo exactly those.
-async fn apply_rule(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Response {
-    let applied: Result<Option<Vec<i64>>, sqlx::Error> = async {
-        let found = rule(&mut *state.db.acquire().await?, person, id).await?;
-        let Some(rule) = found else {
-            return Ok(None);
         };
         // Found first, only reading; then changed in one short write. Only
         // those still unread are changed, and only those are answered.
@@ -605,13 +533,27 @@ async fn apply_rule(
         .await?;
         hide(&mut transaction, person, &ids).await?;
         transaction.commit().await?;
-        Ok(Some(ids))
+        Ok::<_, sqlx::Error>(Ok((rule.id, ids)))
     }
     .await;
-    match applied {
-        Ok(Some(ids)) => Json(json!({ "ids": ids })).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(error) => database_problem("applying a rule", &error),
+    match made {
+        Ok(Ok((id, ids))) => Json(json!({ "id": id, "ids": ids })).into_response(),
+        Ok(Err(refusal)) => problem(refusal),
+        Err(error) => database_problem("making a rule", &error),
+    }
+}
+
+/// Deletes a rule. What it already did stays done. The screen keeps the
+/// rule, so Undo can make it again.
+async fn delete_rule(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    match delete(&state.db, person, id).await {
+        Ok(false) => StatusCode::NOT_FOUND.into_response(),
+        Ok(true) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => database_problem("deleting a rule", &error),
     }
 }
 
@@ -675,6 +617,7 @@ mod tests {
             feed_id: None,
             place_gone: false,
             paused: false,
+            until: None,
         }
     }
 

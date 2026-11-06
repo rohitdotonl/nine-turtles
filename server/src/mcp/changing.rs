@@ -259,13 +259,15 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         title_only: asked.title_only,
         paused: asked.paused,
         place_gone: asked.place_gone,
+        days: None,
+        until: None,
     };
     match rules::make(state, person, &form).await {
         Ok(Ok((id, matching))) => Ok(json!({
             "done": true,
             "rule_id": id,
             "unread_articles_already_matching": matching,
-            "note": "It hides articles arriving from now on; the reader can hide those already here too, in Settings › Hiding.",
+            "note": "It hides articles arriving from now on.",
         })),
         Ok(Err("too-long")) => Err(format!(
             "The words are at most {} characters.",

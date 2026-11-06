@@ -325,25 +325,25 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Settings › Hiding with two rules, one paused, and the editor open over it. The
-    // rules are as the server would send them, so the library the screenshots follow stays as it is.
+    // Settings › Hiding with three words: for good, for a person for a while, and one
+    // paused before the switch went. The rules are as the server would send them, so the
+    // library the screenshots follow stays as it is (decision 0197).
     name: "hiding",
     path: "/settings/hiding",
     signedIn: true,
     library: true,
     open: async (page) => {
-      const rule = (id: number, words: string, paused: boolean) => ({ id, words, title_only: false, feed_id: null, place_gone: false, paused });
+      const soon = Math.floor(Date.now() / 1000) + 5 * 24 * 60 * 60;
+      const rule = (id: number, words: string, paused: boolean, until: number | null) => ({ id, words, title_only: false, feed_id: null, place_gone: false, paused, until });
       await page.route("**/api/rules", (route) =>
         route.request().method() === "GET"
-          ? route.fulfill({ json: { rules: [rule(901, "sponsored", false), rule(902, "crypto", true)], muted: 12 } })
+          ? route.fulfill({ json: { rules: [rule(901, "sponsored", false, null), rule(902, "election", false, soon), rule(903, "crypto", true, null)], muted: 12 } })
           : route.continue(),
       );
       await page.reload();
       await appReady(page);
-      await expect(page.getByText("Hide articles about “sponsored” from everyone.")).toBeVisible();
-      await page.getByRole("button", { name: "Hide articles about…" }).click();
-      await expect(page.getByRole("heading", { level: 2, name: "Hide articles" })).toBeVisible();
-      await page.getByRole("textbox", { name: "About" }).fill("giveaway");
+      await expect(page.getByText("Everyone · 5 days left")).toBeVisible();
+      await page.getByRole("textbox", { name: "Hide articles about" }).fill("giveaway");
     },
   },
   {
