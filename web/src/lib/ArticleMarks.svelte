@@ -211,7 +211,6 @@
     box?.setSelectionRange(draft.length, draft.length);
   }
 
-  /** h: highlights the words chosen. */
   /** The words the reader highlighted, in the order they were made: Write back starts the email with them. */
   export function quotes(): string[] {
     return marks.highlights.flatMap((each) => (each.quote ? [each.quote] : []));
@@ -225,6 +224,7 @@
     if (words && writeBack) writeBack(words);
   }
 
+  /** h: highlights the words chosen. */
   export function highlight() {
     void highlightChosen();
   }

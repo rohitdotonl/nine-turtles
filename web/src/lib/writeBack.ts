@@ -54,23 +54,50 @@ export function replySubject(title: string): string {
   return /^re:/i.test(plain) ? plain : `Re: ${plain}`;
 }
 
-/** The most of the reader's highlights an email starts with: some email apps refuse a longer link. */
+/**
+ * The most the quotes may take once written into the link (spaces and other
+ * letters grow there): some email apps, on Windows most, refuse a link much
+ * longer than 2,000 characters.
+ */
 const LONGEST_QUOTES = 1500;
 
+const linkSize = (text: string) => encodeURIComponent(text).length;
+
+/** A quote as email apps write one: each line starting "> ". */
+const asQuote = (text: string) => text.trim().split(/\n+/).map((line) => `> ${line.trim()}`).join("\n");
+
+/** The first words of `text` that fit in `room`, ending "…"; empty when not even one does. */
+function shortened(text: string, room: number): string {
+  const words = text.trim().split(/(?<=\s)/);
+  let kept = "";
+  for (const word of words) {
+    if (linkSize(asQuote(`${kept}${word}`.trimEnd() + "…")) > room) break;
+    kept += word;
+  }
+  return kept.trim() ? asQuote(`${kept.trimEnd()}…`) : "";
+}
+
 /**
- * How the email starts when the reader highlighted words (decision 0205): each
- * quote on lines of its own beginning "> ", as email apps quote, a blank line
- * after each, then room to write. Quotes past 1,500 characters are left out.
+ * How the email starts when the reader highlighted or chose words (decision
+ * 0205): each quote on lines of its own beginning "> ", as email apps quote, a
+ * blank line after each, then room to write. Quotes that would make the link
+ * too long are left out; when even the first is too long, its first words are
+ * kept, ending "…", so the email never starts empty under a line saying it
+ * starts with them.
  */
 export function quotedBody(quotes: string[]): string {
   const kept: string[] = [];
   let size = 0;
   for (const quote of quotes) {
     if (!quote.trim()) continue;
-    const lines = quote.trim().split(/\n+/).map((line) => `> ${line.trim()}`).join("\n");
-    if (size + lines.length > LONGEST_QUOTES) continue;
+    let lines = asQuote(quote);
+    if (size + linkSize(lines) > LONGEST_QUOTES) {
+      if (kept.length) break;
+      lines = shortened(quote, LONGEST_QUOTES);
+      if (!lines) break;
+    }
     kept.push(lines);
-    size += lines.length;
+    size += linkSize(lines) + linkSize("\n\n");
   }
   return kept.length ? `${kept.join("\n\n")}\n\n` : "";
 }

@@ -36,9 +36,12 @@ V1, item 2). Its look gets a refinement round.*
 - **Write back about this** (decision 0205): when you've highlighted words
   in the article (section 42), the email starts with them, each quote on
   lines beginning "> " as email apps quote, a blank line after each, then
-  room for your reply (at most 1,500 characters of quotes; any past that
-  are left out). One more line under the address says so, in the same
-  quiet type: "Your email starts with the words you highlighted." The small
+  room for your reply (at most 1,500 characters of quotes as written into
+  the link, so it stays one email apps take; quotes past that are left
+  out, and a first quote too long by itself keeps its first words, ending
+  "…"). One more line under the address says so, in the same
+  quiet type: "Your email starts with the words you highlighted." (or
+  "…the words you chose." after Write back about this) The small
   menu beside words you choose, and the one beside a highlight you press,
   end with **Write back about this**, set apart by a hairline because it
   leaves nine turtles; it writes back starting with only those words,
@@ -134,13 +137,15 @@ V1, item 2). Its look gets a refinement round.*
    email app at once, with no question, and their page shows the address.
 7. On a computer, open an article and press `w`: the same as pressing
    Write back.
-9. Highlight a sentence in an article of someone whose address is known.
-   Under Write back's address: "Your email starts with the words you
-   highlighted." Press Write back: your email starts with "> " and the
-   sentence. Choose other words: the small menu ends with **Write back
-   about this**; press it, and the email starts with those words only.
 8. Follow a blog whose contact page shows the writer's email but whose feed
    doesn't: press Write back; the field fills with the address and the line
    says "Found on their site. Check it, then press Write back." Press Not
    now and Write back again: the same address appears at once (nothing is
    visited twice).
+9. Highlight a sentence in an article of someone whose address is known.
+   Under Write back's address: "Your email starts with the words you
+   highlighted." Press Write back: your email starts with "> " and the
+   sentence. Choose other words: the small menu ends with **Write back
+   about this**; press it, and the email starts with those words only. (It
+   counts as pressing Write back: with no address known, it opens the same
+   box and the same one look on their site, decision 0168.)

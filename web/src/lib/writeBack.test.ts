@@ -42,8 +42,14 @@ describe("writing back", () => {
     expect(writeBackLink("alpha@alpha.example", "Tea", ["Cake & tea"])).toBe(
       "mailto:alpha@alpha.example?subject=Re%3A%20Tea&body=%3E%20Cake%20%26%20tea%0A%0A",
     );
-    // Past 1,500 characters the rest are left out, so the link stays one every email app takes.
-    expect(quotedBody(["a".repeat(1400), "b".repeat(200), "c"])).toBe(`> ${"a".repeat(1400)}\n\n> c\n\n`);
+    // Past 1,500 characters once in the link, the rest are left out, so the link stays one email apps take.
+    expect(quotedBody(["a".repeat(1400), "b".repeat(200), "c"])).toBe(`> ${"a".repeat(1400)}\n\n`);
+    // Measured as written into the link: Japanese grows nine times there.
+    expect(encodeURIComponent(quotedBody(["文".repeat(400)])).length).toBeLessThanOrEqual(1520);
+    // One quote too long by itself keeps its first words, ending "…", never nothing.
+    const long = quotedBody([`${"word ".repeat(400)}end`]);
+    expect(long).toMatch(/^> word word .*word…\n\n$/);
+    expect(encodeURIComponent(long).length).toBeLessThanOrEqual(1520);
   });
 
   it("tells one address from anything else", () => {
