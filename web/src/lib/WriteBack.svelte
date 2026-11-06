@@ -23,7 +23,7 @@
 
   The More menu's "Write back" and its key (`w`) do the same (`start`).
 
-  A publication has none of this (decision 0191): nothing shows, and `start` does nothing.
+  A publication has none of this (decision 0192): nothing shows, and `start` does nothing.
 -->
 <script lang="ts">
   import { tip } from "./keyboard";
@@ -47,7 +47,7 @@
   } = $props();
 
   let source = $derived(library.feeds?.find((feed) => feed.id === (article?.feedId ?? feedId)));
-  /** Their place, when they're someone to write to: a publication has none (decision 0191). */
+  /** Their place, when they're someone to write to: a publication has none (decision 0192). */
   let place = $derived(writesBack(source) ? source : undefined);
   let name = $derived(plainSourceName(library.shownAs(place)?.title ?? article?.feedTitle ?? ""));
   let address = $derived(place && addressFor(place, library.feeds ?? []));

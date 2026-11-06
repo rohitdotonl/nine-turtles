@@ -517,7 +517,7 @@ test("Edit keeps only Name, This is, Email address, Folders and Pause, then Unsu
   await expect(sheet.getByRole("button", { name: "+ Add another place" })).toBeVisible();
   await expect(sheet.getByText("Type a name to make a folder.")).toBeVisible();
   await expect(sheet.getByRole("checkbox", { name: "Pause for a while" })).toBeVisible();
-  // In that order, top to bottom: Email address under This is, as only a person has one (decision 0191).
+  // In that order, top to bottom: Email address under This is, as only a person has one (decision 0192).
   const tops = await Promise.all(
     [sheet.getByLabel("Name"), sheet.getByRole("group", { name: "This is" }), sheet.getByLabel("Email address"), sheet.getByRole("group", { name: "Folders" }), sheet.getByRole("checkbox", { name: "Pause for a while" }), sheet.getByRole("button", { name: `Unsubscribe from Blog ${blog}` })].map(
       async (each) => (await each.boundingBox())!.y,

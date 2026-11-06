@@ -124,7 +124,7 @@ test("A publication has no Write back, no Write to and no email address in Edit;
     await who().getByRole("radio", { name: kind }).check();
   };
 
-  // Made a publication: the Email address field (under This is) goes as soon as it's chosen (decision 0191).
+  // Made a publication: the Email address field (under This is) goes as soon as it's chosen (decision 0192).
   await editAs("A person");
   await expect(who().getByRole("textbox", { name: "Email address" })).toBeVisible();
   await who().getByRole("radio", { name: "A publication" }).check();

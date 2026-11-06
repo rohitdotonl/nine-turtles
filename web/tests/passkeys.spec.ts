@@ -98,7 +98,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await passesAccessibilityChecks(page);
 
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page
@@ -198,7 +198,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     "That passkey isn't one this nine turtles knows. Sign in with your password.",
   );
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
 });
@@ -217,7 +217,7 @@ test("passkeys aren't offered where they can't work", async ({ page }) => {
   );
 });
 
-test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sign up", async ({
+test("the keyboard goes Email, Password, Show, Forgot?, Sign in, the passkey, then Sign up", async ({
   page,
   isMobile,
 }) => {
@@ -237,7 +237,8 @@ test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sig
   await expect(passkey).toBeVisible();
   await expect(page.getByLabel("Email")).toBeFocused();
   const order = [
-    page.getByLabel("Password"),
+    page.getByLabel("Password", { exact: true }),
+    page.getByRole("button", { name: "Show password" }),
     page.getByRole("link", { name: "Forgot?" }),
     page.getByRole("button", { name: "Sign in", exact: true }),
     passkey,
@@ -248,7 +249,7 @@ test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sig
     await expect(next).toBeFocused();
   }
   // The passkey is a quieter button, edged and unfilled, 44px tall, under Sign in.
-  const signIn = (await order[2]!.boundingBox())!;
+  const signIn = (await order[3]!.boundingBox())!;
   const quiet = (await passkey.boundingBox())!;
   expect(quiet.y).toBeGreaterThan(signIn.y + signIn.height);
   expect(quiet.height).toBeGreaterThanOrEqual(44);
@@ -346,7 +347,7 @@ test("Settings › Passkeys passes the accessibility checks, and Cancel leaves t
   await page.goto(`${local()}/`);
   await appReady(page);
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page.goto(`${local()}/settings/passkeys`);

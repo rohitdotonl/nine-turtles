@@ -6,7 +6,7 @@ V1, item 2). Its look gets a refinement round.*
 
 **What it does**
 - **Write back on every article** of a person you follow (never a
-  publication's, decision 0191): at the article's
+  publication's, decision 0192): at the article's
   end, under its closing rule (and under "Read on …" for a summary), one
   centred button, **Write back to Tomas Berg**: the solid ink button with a
   paper-plane icon, the only solid button in the reading pane, naming them
@@ -17,7 +17,7 @@ V1, item 2). Its look gets a refinement round.*
   the article's More menu (**Write back**) and on the keyboard, **`w`**
   (section 19). An article of a place you no longer follow (one kept only
   in Starred) has none: there's no person to write to.
-- **Not for publications** (decision 0191, the owner's choice): a
+- **Not for publications** (decision 0192, the owner's choice): a
   publication is something you only read or watch, so its articles end with
   no Write back, its More menu has none, `w` does nothing there, its page
   has no Write to, and its Edit has no Email address. Making it **A person**

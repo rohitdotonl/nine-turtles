@@ -4,6 +4,7 @@
 import { OtherReader, api } from "./updates.svelte";
 import { noConnection, serverNow } from "./connection.svelte";
 import { markSent, noteMark, sending } from "./offline";
+import { stars } from "./stars.svelte";
 
 // Marks are sent one after another, in the order they were made, so an undo
 // can never overtake the mark it undoes. Lists and counts wait for them, so
@@ -115,6 +116,7 @@ export function markRead(ids: number[], read: boolean): Promise<void> {
 
 /** Stars or unstars articles. The screen has already changed; this tells the server. */
 export function markStarred(ids: number[], starred: boolean): Promise<void> {
+  if (starred) stars.any = true;
   return sendMark("starred", ids, starred, serverNow());
 }
 

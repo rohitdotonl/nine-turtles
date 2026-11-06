@@ -92,7 +92,7 @@
   /** Write back, at the article's end; the More menu and `w` start it too. */
   let writeBack: WriteBack | undefined = $state();
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
-  /** Someone to write back to: a person followed, never a publication (decision 0191). */
+  /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
 
   // Bumped when an article arrives from the server, so the page looks again.

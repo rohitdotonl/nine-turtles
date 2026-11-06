@@ -8,13 +8,13 @@
 // feed's author, a newsletter's sender); else any other place's.
 //
 // Only people are written back to: a publication is something you read or
-// watch (decision 0191), so it has no Write back anywhere.
+// watch (decision 0192), so it has no Write back anywhere.
 
 import { sendChange } from "./http";
 import { placesOf } from "./people";
 import type { Feed } from "./shapes";
 
-/** Write back is offered for a person only, never a publication (decision 0191). */
+/** Write back is offered for a person only, never a publication (decision 0192). */
 export function writesBack(feed: Pick<Feed, "kind"> | undefined): boolean {
   return feed !== undefined && feed.kind !== "publication";
 }

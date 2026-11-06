@@ -84,7 +84,7 @@
     if (busy) return;
     message = "";
     // A wrong address is caught before anything is saved, keeping what was typed.
-    // A publication has no address to keep (decision 0191): its field is hidden, so nothing typed there counts.
+    // A publication has no address to keep (decision 0192): its field is hidden, so nothing typed there counts.
     const newAddress = who === "person" && address.trim() !== knownAddress;
     if (newAddress && address.trim() && !looksLikeAddress(address)) {
       message = "That doesn't look like an email address. Check it and try again.";
@@ -170,7 +170,7 @@
       </fieldset>
     {/if}
 
-    <!-- Where Write back writes: a person only, as a publication has no Write back (decision 0191). Under This is, so choosing
+    <!-- Where Write back writes: a person only, as a publication has no Write back (decision 0192). Under This is, so choosing
       A publication takes away only what's below the choice, and nothing above the pointer moves. -->
     {#if who === "person"}
     <div class="flex flex-col gap-1.5">

@@ -18,6 +18,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
   import { SIGN_IN_LINK_MINUTES, askForLink, explainAsked } from "./accounts";
@@ -257,16 +258,13 @@
       -->
       <div class="-mt-3 grid grid-cols-[1fr_auto] items-end gap-x-3">
         <label for="password" class="col-start-1 row-start-1 text-small text-ink-2">Password</label>
-        <input
+        <PasswordField
           id="password"
-          name="password"
-          type="password"
           autocomplete="current-password"
-          required
           bind:value={password}
-          aria-describedby="sign-in-message"
-          aria-invalid={refused ? "true" : undefined}
-          class="field col-span-2 row-start-2 mt-1.5"
+          describedby="sign-in-message"
+          invalid={refused}
+          class="col-span-2 row-start-2 mt-1.5"
         />
         {#if emailSending}
           <a

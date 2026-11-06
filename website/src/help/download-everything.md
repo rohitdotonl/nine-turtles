@@ -4,7 +4,7 @@ description: Save what you follow, your starred articles and your notes as files
 groupId: you-and-your-account
 order: 3
 spec: 23
-updated: 2026-11-04
+updated: 2026-11-06
 related: [bring-your-feeds, star-an-article, delete-your-account]
 ---
 
@@ -28,6 +28,8 @@ Open **Settings › Your data** and press any of these:
 
 ## Good to know
 
+- With nothing starred yet, the row reads **Nothing starred yet** instead;
+  with no notes, **No notes yet**. There's nothing to download until there is.
 - Downloads work even after a trial or plan has ended.
 - Newsletters aren't in the OPML file: they arrive by email, not from a
   feed.

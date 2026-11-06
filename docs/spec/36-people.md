@@ -68,7 +68,7 @@ PLAN.md → V1, item 1.*
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.
 - **Their page,** the same for a person and a publication (but a
-  publication has no Write to, decision 0191)
+  publication has no Write to, decision 0192)
   (`/people/12/about`): opened by pressing their name at the top of their
   list ("Alpha ›"), by **Info about Alpha** in the list's More menu, or by the
   `i` key. On a computer it opens in the reading area beside their list,
@@ -95,7 +95,7 @@ PLAN.md → V1, item 1.*
   - for a person, **Email address** (where Write back writes to them,
     section 37), under This is: a publication has no Write back, so no
     address, and the field goes as soon as A publication is chosen, taking
-    away only what's below the choice (decision 0191);
+    away only what's below the choice (decision 0192);
   - **Folders** (one list for all their sources: Done puts every source in
     exactly those);
   - for one source, its settings right here in Edit: **Pause for a while**

@@ -72,24 +72,25 @@ test("its button hides and shows the sidebar; its button sits on the sidebar, th
 
 test("the sidebar lists Unread, Starred and All articles, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page);
+  // Starred: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
+  await openApp(page, "/starred");
   const links = sidebar(page).getByRole("list").getByRole("link");
   await expect(links).toHaveText(["Unread", "Starred", "All articles"]);
 
-  const unread = sidebar(page).getByRole("link", { name: "Unread" });
-  await expect(unread).toHaveAttribute("aria-current", "page");
+  const here = sidebar(page).getByRole("link", { name: "Starred" });
+  await expect(here).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
   // One pill, as in the list: a neutral grey, the text color at 8% over the sidebar
   // (--tint-sidebar), 8px corners, 8px in from the pane's edge, with no color and
   // no bar (decision 0057).
-  await expect(unread).toHaveCSS("background-color", "rgb(221, 221, 223)");
-  expect(await unread.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
-  await expect(unread).toHaveCSS("border-top-left-radius", "8px");
+  await expect(here).toHaveCSS("background-color", "rgb(221, 221, 223)");
+  expect(await here.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
+  await expect(here).toHaveCSS("border-top-left-radius", "8px");
   // The place you're in has its icon in full ink, beside the pill and the semibold name; never the accent (decision 0057).
-  await expect(unread.locator("svg")).toHaveCSS("color", "rgb(20, 20, 20)");
-  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg")).not.toHaveCSS("color", "rgb(20, 20, 20)");
-  const inset = await unread.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
+  await expect(here.locator("svg")).toHaveCSS("color", "rgb(20, 20, 20)");
+  await expect(sidebar(page).getByRole("link", { name: "Unread" }).locator("svg")).not.toHaveCSS("color", "rgb(20, 20, 20)");
+  const inset = await here.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
   expect(Math.abs(inset - 8)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).
   await expect(sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" })).toHaveAttribute("tabindex", "-1");
@@ -116,10 +117,7 @@ test("the sidebar lists Unread, Starred and All articles, with a grey pill marki
   });
   expect(Math.abs(feetAboveBaseline)).toBeLessThan(1);
 
-  await sidebar(page).getByRole("link", { name: "Starred" }).click();
-  await expect(page).toHaveURL(/\/starred$/);
-  await expect(sidebar(page).getByRole("link", { name: "Starred" })).toHaveAttribute("aria-current", "page");
-  await expect(unread).not.toHaveAttribute("aria-current", "page");
+  await expect(sidebar(page).getByRole("link", { name: "Unread" })).not.toHaveAttribute("aria-current", "page");
   // Where you are is the grey pill, so Starred's star stays an outline: filled only ever means starred (decision 0182).
   await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg path")).toHaveAttribute("fill", "none");
   // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
@@ -710,7 +708,6 @@ test("Settings is one centred column of grouped lists; its rows that act or open
     page.getByRole("link", { name: "Export OPML" }),
     page.getByRole("button", { name: "Import YouTube subscriptions" }),
     page.getByRole("button", { name: "Import starred articles" }),
-    page.getByRole("link", { name: "Export starred articles" }),
   ]) {
     const box = (await row.boundingBox())!;
     expect(Math.round(box.width)).toBe(width);

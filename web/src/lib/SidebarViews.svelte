@@ -8,7 +8,8 @@
   something (SPEC section 42).
 
   On a phone the feeds screen is the root of a stack: nothing is selected
-  there, and each row leads on with a chevron (decision 0041).
+  there, and each row leads on with a chevron (decision 0041). Nor while the
+  welcome shows: you're on the welcome, not in Unread (decision 0191).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -20,12 +21,15 @@
     follow,
     phone,
     unreadOff,
+    welcoming = false,
   }: {
     route: Route;
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone: boolean;
     unreadOff: boolean;
+    /** The welcome is showing in this list's place: no row is where you are. */
+    welcoming?: boolean;
   } = $props();
 
   const ICONS = { unread: "dot", starred: "star", notes: "note", all: "layers" } as const;
@@ -35,7 +39,7 @@
 
 <ul>
   {#each views as view (view)}
-    {@const current = !phone && route.kind === "view" && route.view === view}
+    {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
     <li>
       <a
         href={pathFor({ kind: "view", view })}
