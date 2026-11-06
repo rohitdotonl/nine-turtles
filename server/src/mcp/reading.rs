@@ -111,6 +111,10 @@ async fn find(state: &AppState, person: i64, search: Search) -> Answer {
                     if article.muted {
                         line["muted"] = json!(true);
                     }
+                    // A post with no title: its first words say what it is (SPEC section 6).
+                    if let Some(opening) = article.opening() {
+                        line["opening"] = json!(opening);
+                    }
                     if let Some(excerpt) = &hit.excerpt {
                         line["excerpt"] = json!(
                             excerpt
