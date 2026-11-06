@@ -12,7 +12,7 @@ test("a new browser sees only the email and password fields", async ({ page }) =
   // The email first, as password managers expect; everyone, the owner too, fills in both (decision 0116).
   await expect(page.getByLabel("Email")).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
-  await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "current-password");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("autocomplete", "current-password");
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
   // Under the form, always: New here? Sign up (decision 0115).
   await expect(page.getByText("New here?")).toBeVisible();
@@ -29,7 +29,7 @@ test("sign-in is one centred column, at the phone's one 20px margin, each field 
   await page.goto("/");
   await appReady(page);
   const email = (await page.getByLabel("Email").boundingBox())!;
-  const field = page.getByLabel("Password");
+  const field = page.getByLabel("Password", { exact: true });
   // Real names you can see, above their fields on the column's left edge, 6px over them (decision 0122), not placeholders.
   const emailName = (await page.locator('label[for="email"]').boundingBox())!;
   const passwordName = (await page.locator('label[for="password"]').boundingBox())!;
@@ -87,7 +87,7 @@ test("a wrong password says so calmly and keeps you out", async ({ page, request
   await ownerHasEmail(request);
   await page.goto("/");
   await appReady(page);
-  const fieldBefore = (await page.getByLabel("Password").boundingBox())!;
+  const fieldBefore = (await page.getByLabel("Password", { exact: true }).boundingBox())!;
 
   // An email of its own, so these wrong tries never make the owner wait.
   await page.keyboard.type(`wrong-${testInfo.project.name}@example.com`);
@@ -96,13 +96,13 @@ test("a wrong password says so calmly and keeps you out", async ({ page, request
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
-  expect((await page.getByLabel("Password").boundingBox())!.y).toBe(fieldBefore.y);
+  expect((await page.getByLabel("Password", { exact: true }).boundingBox())!.y).toBe(fieldBefore.y);
   // The message sits between the field and the button, and the field is marked. The room for
   // it is kept below the button, so the field and the title above it don't move (decision 0048).
-  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
   const message = (await page.getByRole("status").boundingBox())!;
   expect(message.y).toBeLessThan((await page.getByRole("button", { name: "Sign in" }).boundingBox())!.y);
-  await expect(page.getByLabel("Password")).toHaveValue("");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
@@ -175,7 +175,7 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
 
   await page.reload();
   await appReady(page);
-  await expect(page.getByLabel("Password")).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 });
 
 test("without an email, nothing is sent and the email field is asked for", async ({ page }) => {
@@ -208,7 +208,7 @@ test("a wrong password never says whether the email has an account", async ({ pa
 
   await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
   await expect(page.getByLabel("Email")).toHaveAttribute("aria-invalid", "true");
-  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
@@ -223,4 +223,31 @@ test("the browser's security rules block nothing nine turtles itself needs", asy
   await page.evaluate(() => document.fonts.ready);
 
   expect(blocked).toEqual([]);
+});
+
+test("Show in the password field shows what's typed, and Hide hides it again (decision 0191)", async ({ page }) => {
+  await page.goto("/");
+  await appReady(page);
+  const field = page.getByLabel("Password", { exact: true });
+  await field.fill("a-long-password");
+  await expect(field).toHaveAttribute("type", "password");
+  // Reached by the keyboard straight after the field, inside it at its right end, 44px tall.
+  await field.focus();
+  await page.keyboard.press("Tab");
+  const show = page.getByRole("button", { name: "Show password" });
+  await expect(show).toBeFocused();
+  const box = (await show.boundingBox())!;
+  const fieldBox = (await field.boundingBox())!;
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  expect(Math.abs(box.x + box.width - (fieldBox.x + fieldBox.width))).toBeLessThan(1);
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("type", "text");
+  await expect(field).toHaveValue("a-long-password");
+  await expect(page.getByRole("button", { name: "Hide password" })).toHaveText("Hide");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("type", "password");
+  // The sign-up page has the same field.
+  await page.goto("/sign-up");
+  await appReady(page);
+  await expect(page.getByRole("button", { name: "Show password" })).toBeVisible();
 });

@@ -511,7 +511,7 @@ export async function openReadingRoom(page: Page, { unread = false } = {}): Prom
 /** Signs in through the sign-in page, the way the reader does. */
 export async function signIn(page: Page): Promise<void> {
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   // At most two password checks run at once on the whole server, each a
   // deliberately slow scramble, so with every test signing in together one

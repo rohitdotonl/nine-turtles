@@ -3,6 +3,7 @@
 // and the words the screens say about them.
 import type { Route, View } from "./router";
 import { noted } from "./notes.svelte";
+import { stars } from "./stars.svelte";
 import { api } from "./updates.svelte";
 import { noConnection } from "./connection.svelte";
 import { keepLibrary, keptLibrary } from "./offline";
@@ -60,6 +61,7 @@ export async function listFeeds(): Promise<Library> {
   };
   keepLibrary(library);
   if (isRecord(body) && body.notes === true) noted.any = true;
+  if (isRecord(body) && body.starred === true) stars.any = true;
   return library;
 }
 

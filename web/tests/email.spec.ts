@@ -36,12 +36,12 @@ async function newReader(browser: Browser, email: string): Promise<Page> {
   const page = await context.newPage();
   await page.goto("/sign-up");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(READER_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   const { link } = await newestMail(email, "Confirm your email for nine turtles");
   await page.goto(link);
-  await page.getByLabel("Password").fill(READER_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Confirm email" }).click();
   await page.getByRole("link", { name: "Open nine turtles" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -53,15 +53,15 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   const page = await context.newPage();
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
-  // Email, Password, Forgot?, Sign in, then Sign up (decision 0122).
-  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Show, Forgot?, Sign in, then Sign up (decisions 0122, 0191).
+  for (let step = 0; step < 5; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Sign up" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/sign-up$/);
   await expect(page.getByLabel("Email")).toBeFocused();
   // Each field named above it; the password's helper line under it; Sign in, for those who have an account, under Sign up.
   await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
-  await expect(page.getByLabel("Password")).toHaveAttribute("autocomplete", "new-password");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("autocomplete", "new-password");
   await expect(page.getByText("At least 12 characters.")).toBeVisible();
   await expect(page.getByText("Have an account?")).toBeVisible();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
@@ -93,11 +93,11 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   expect(mail.body).toContain("24 hours");
   expect(link).toMatch(/^\/finish-sign-up#ticket=/);
   await page.goto(link);
-  await expect(page.getByLabel("Password")).toBeFocused();
+  await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
   await page.keyboard.type("not the password at all");
   await page.keyboard.press("Enter");
   await expect(page.getByText("That isn't the password you chose when you signed up.")).toBeVisible();
-  await expect(page.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
   await page.keyboard.type(READER_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "You're signed up" })).toBeFocused();
@@ -110,7 +110,7 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   expect(session).toMatchObject({ signed_in: true, owner: false, email, email_confirmed: true });
   // The same link again: the form gives way to why, and the keyboard goes there.
   await page.goto(link);
-  await page.getByLabel("Password").fill(READER_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await page.getByRole("button", { name: "Confirm email" }).click();
   await expect(page.getByText("This link has expired or was already used. Sign up again for a new one.")).toBeFocused();
   await context.close();
@@ -127,15 +127,15 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  // Email, Password, then Forgot? (decision 0122).
-  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  // Email, Password, Show, then Forgot? (decisions 0122, 0191).
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
   const forgot = page.getByRole("link", { name: "Forgot?" });
   await expect(forgot).toBeFocused();
   // Small to the eye, on the password name's line at the right, but 44px to touch, never over a field.
   const [forgotBox, name, field, emailBox] = [
     (await forgot.boundingBox())!,
     (await page.locator('label[for="password"]').boundingBox())!,
-    (await page.getByLabel("Password").boundingBox())!,
+    (await page.getByLabel("Password", { exact: true }).boundingBox())!,
     (await page.getByLabel("Email").boundingBox())!,
   ];
   expect(forgotBox.height).toBeGreaterThanOrEqual(44);
@@ -149,7 +149,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.getByLabel("Email")).toBeFocused();
   await expect(page.getByLabel("Email")).toHaveValue(email);
   await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
-  await expect(page.getByLabel("Password")).toHaveCount(0);
+  await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
   await expect(page.getByText("We'll email you a link that signs you in. You can choose a new password after.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Email me a link" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to sign in" })).toBeVisible();
@@ -172,7 +172,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.getByRole("status").filter({ hasText: "Another link is on its way." })).toBeVisible();
   // An address with no account hears exactly the same.
   await page.getByRole("link", { name: "Back to sign in" }).click();
-  await expect(page.getByLabel("Password")).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Forgot?" }).click();
   await page.getByLabel("Email").fill("nobody-here@example.com");
   await page.keyboard.press("Enter");
@@ -191,25 +191,25 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   await expect(page.getByText("Choose a new password, if you like.")).toBeVisible();
   await page.keyboard.press("Tab");
-  await expect(page.getByLabel("New password")).toBeFocused();
-  await expect(page.getByLabel("New password")).toHaveAttribute("autocomplete", "new-password");
+  await expect(page.getByLabel(/^New password/)).toBeFocused();
+  await expect(page.getByLabel(/^New password/)).toHaveAttribute("autocomplete", "new-password");
   await page.keyboard.type("short");
   await page.keyboard.press("Enter");
   await expect(page.locator("#choose-message")).toHaveText("Choose a password of at least 12 characters.");
-  await expect(page.getByLabel("New password")).toHaveAttribute("aria-invalid", "true");
-  await page.getByLabel("New password").fill(NEW_PASSWORD);
+  await expect(page.getByLabel(/^New password/)).toHaveAttribute("aria-invalid", "true");
+  await page.getByLabel(/^New password/).fill(NEW_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
   expect(new URL(page.url()).pathname).not.toBe("/sign-in-link");
 
   // The other device was signed out; the new password signs in, the old one doesn't.
   await laptop.reload();
-  await expect(laptop.getByLabel("Password")).toBeVisible();
+  await expect(laptop.getByLabel("Password", { exact: true })).toBeVisible();
   await laptop.getByLabel("Email").fill(email);
-  await laptop.getByLabel("Password").fill(READER_PASSWORD);
+  await laptop.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await laptop.keyboard.press("Enter");
   await expect(laptop.locator("#sign-in-message")).toHaveText("That email and password don't match.");
-  await laptop.getByLabel("Password").fill(NEW_PASSWORD);
+  await laptop.getByLabel("Password", { exact: true }).fill(NEW_PASSWORD);
   await laptop.keyboard.press("Enter");
   await expect(laptop.locator("#sidebar")).toBeAttached();
   await laptop.context().close();
@@ -227,7 +227,7 @@ test("an older password link still sets a new password", async ({ browser }, tes
   const context = await browser.newContext({ baseURL: MAIL_APP });
   const page = await context.newPage();
   await page.goto(link);
-  await expect(page.getByLabel("New password")).toBeFocused();
+  await expect(page.getByLabel(/^New password/)).toBeFocused();
   await page.keyboard.type(NEW_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -281,17 +281,19 @@ test("a reader changes their email by a link to the new one, then deletes their 
   const sure = page.getByRole("dialog", { name: "Delete your account?" });
   await expect(sure.getByRole("heading", { name: "Delete your account?" })).toBeFocused();
   await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
-  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
+  // Nothing starred yet: said, not offered as an empty file (decision 0191).
+  await expect(sure.getByText("Nothing starred yet", { exact: true })).toBeVisible();
+  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
   // Escape keeps everything.
   await page.keyboard.press("Escape");
   await expect(sure).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Delete account…" })).toBeFocused();
   await page.keyboard.press("Enter");
   await sure.getByRole("button", { name: "Delete account" }).click();
-  await expect(page.getByLabel("Password")).toBeVisible();
+  await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 
   await page.getByLabel("Email").fill(next);
-  await page.getByLabel("Password").fill(READER_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await page.keyboard.press("Enter");
   await expect(page.locator("#sign-in-message")).toHaveText("That email and password don't match.");
   await page.context().close();
@@ -302,7 +304,7 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   const page = await context.newPage();
   await page.goto("/");
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page.goto("/settings");
@@ -329,7 +331,9 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
   // The downloads first.
   await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
-  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
+  // Nothing starred yet: said, not offered as an empty file (decision 0191).
+  await expect(sure.getByText("Nothing starred yet", { exact: true })).toBeVisible();
+  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
   // Escape keeps everything.
   await page.keyboard.press("Escape");
   await expect(sure).toHaveCount(0);
@@ -338,8 +342,8 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
 
   await page.keyboard.press("Enter");
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
-  // Past the two downloads to Delete data, with only the keyboard.
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  // Past the one download (nothing is starred, so that row isn't a button) to Delete data, with only the keyboard.
+  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
   await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
   await page.keyboard.press("Enter");
   // The app starts again at its start, empty, still signed in.
@@ -360,7 +364,7 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await page.goto("/");
   await expect(page.getByLabel("Email")).toBeFocused();
   await page.keyboard.type(email);
-  for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Forgot?" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Email")).toBeFocused();
@@ -379,8 +383,8 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   // Not now: straight to reading, the password as it was.
-  // New password, Set password, then Not now.
-  for (let step = 0; step < 3; step += 1) await page.keyboard.press("Tab");
+  // New password, its Show, Set password, then Not now.
+  for (let step = 0; step < 4; step += 1) await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Not now" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
@@ -399,7 +403,7 @@ test("a reader signs in by an emailed link, once, keeping their password, with o
   await second.getByRole("button", { name: "Sign in" }).click();
   await expect(second.getByRole("status").filter({ hasText: "This link has expired or was already used." })).toBeVisible();
   await second.getByRole("link", { name: "Sign in" }).click();
-  await expect(second.getByLabel("Password")).toBeVisible();
+  await expect(second.getByLabel("Password", { exact: true })).toBeVisible();
 
   await again.close();
   await laptop.context().close();
@@ -422,7 +426,7 @@ test("choosing a password after the hour has run out says so, and the keyboard g
   await expect(page.getByRole("heading", { name: "You're signed in" })).toBeFocused();
   // As if the hour ran out, or nine turtles restarted, while the page was open.
   await page.route("**/api/password/reset", (route) => route.fulfill({ status: 410, contentType: "application/json", body: JSON.stringify({ error: "expired" }) }));
-  await page.getByLabel("New password").fill("a-new-long-password");
+  await page.getByLabel(/^New password/).fill("a-new-long-password");
   await page.getByRole("button", { name: "Set password" }).click();
   await expect(page.getByText("That took too long, so your password stays as it is.")).toBeFocused();
   await page.keyboard.press("Tab");
@@ -468,5 +472,30 @@ test("the weekly email is off until switched on in Settings, and its stop page i
   await savedOff;
   await page.reload();
   await expect(page.getByRole("switch", { name: "Weekly email" })).not.toBeChecked();
+  await page.context().close();
+});
+
+test("Your data says when there's nothing starred or no notes, and offers each export once there is (decision 0191)", async ({ browser }, testInfo) => {
+  const email = `nothing-yet-${testInfo.project.name}-${Date.now()}@example.com`;
+  const page = await newReader(browser, email);
+  await page.goto("/settings/data");
+  const data = page.getByRole("region", { name: "Your data" });
+  // Said in the muted grey, and not a button or link: nothing to download yet.
+  for (const words of ["Nothing starred yet", "No notes yet"]) {
+    const line = data.getByText(words, { exact: true });
+    await expect(line).toBeVisible();
+    expect(await line.evaluate((element) => element.tagName)).toBe("P");
+  }
+  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
+  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveCount(0);
+  // Once the server says something is starred and noted, each row is its download again.
+  await page.route("**/api/feeds", async (route) => {
+    const response = await route.fetch();
+    await route.fulfill({ response, json: { ...(await response.json()), starred: true, notes: true } });
+  });
+  await page.reload();
+  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
+  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveAttribute("href", "/api/notes/export");
+  await expect(data.getByText("Nothing starred yet", { exact: true })).toHaveCount(0);
   await page.context().close();
 });

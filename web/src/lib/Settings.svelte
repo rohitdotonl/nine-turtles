@@ -31,6 +31,8 @@
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
+  import { noted } from "./notes.svelte";
+  import { stars } from "./stars.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import InstallApp from "./InstallApp.svelte";
   import ImportStars from "./ImportStars.svelte";
@@ -202,6 +204,11 @@
   let sortMessage = $state("");
   /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
+  /** Your data's two exports: each a download once there's something in it, else a line saying there's nothing yet. */
+  const exports = $derived([
+    { href: "/api/starred/export", label: "Export starred articles", any: stars.any, none: "Nothing starred yet" },
+    { href: "/api/notes/export", label: "Export notes and highlights", any: noted.any, none: "No notes yet" },
+  ]);
 
   async function chooseUnread(next: boolean) {
     sortMessage = "";
@@ -526,8 +533,13 @@
         <div class="inset-group">
           <ImportOpml {onImported} bind:lines={importLines} />
           <ImportStars {onImported} bind:lines={importLines} />
-          {#each [["/api/starred/export", "Export starred articles"], ["/api/notes/export", "Export notes and highlights"]] as [href, label] (href)}
-            <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+          <!-- An export with nothing in it says so instead, in a row that isn't a button (decision 0191). -->
+          {#each exports as { href, label, any, none } (href)}
+            {#if any}
+              <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+            {:else}
+              <p class="inset-row text-muted">{none}</p>
+            {/if}
           {/each}
         </div>
         <div role="status" class={["inset-foot flex flex-col gap-1 text-ink", importLines.length === 0 && "sr-only"]}>

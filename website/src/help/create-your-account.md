@@ -4,7 +4,7 @@ description: Sign up with your email address, confirm it, sign in on each device
 groupId: getting-started
 order: 1
 spec: 1 and 41
-updated: 2026-11-03
+updated: 2026-11-06
 related: [follow-someone, install-the-app, delete-your-account]
 ---
 
@@ -15,8 +15,10 @@ related: [follow-someone, install-the-app, delete-your-account]
 
 ## Sign up
 
-1. Go to <a href="{{ site.app }}">app.nineturtles.app</a> and press **Sign up**.
+1. Press **Start reading** on [nineturtles.app](/), or go to
+   <a href="{{ site.app }}/sign-up">app.nineturtles.app/sign-up</a>.
 2. Type your **Email** and choose a **Password** of at least 12 characters.
+   Press **Show** in the field to see what you typed.
 3. If you like, tell me how you heard about nine turtles. It's optional,
    and only ever counted, never shown with your name.
 4. Press **Sign up**.

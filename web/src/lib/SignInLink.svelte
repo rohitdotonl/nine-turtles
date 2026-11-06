@@ -10,6 +10,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import PasswordField from "./PasswordField.svelte";
   import { PASSWORD_MINIMUM } from "./readers";
   import { explainLink, resetPassword, signInByLink, ticketFrom } from "./accounts";
 
@@ -99,16 +100,13 @@
         <form class="flex flex-col gap-3" onsubmit={choose}>
           <div class="flex flex-col gap-1.5">
             <label for="password" class="text-small text-ink-2">New password</label>
-            <input
+            <PasswordField
               id="password"
-              name="password"
-              type="password"
               autocomplete="new-password"
-              required
+              label="new password"
               bind:value={password}
-              aria-describedby="choose-help choose-message"
-              aria-invalid={refused ? "true" : undefined}
-              class="field"
+              describedby="choose-help choose-message"
+              invalid={refused}
             />
             <p id="choose-help" class="field-help mt-0">At least {PASSWORD_MINIMUM} characters. Your other devices will be signed out.</p>
           </div>
