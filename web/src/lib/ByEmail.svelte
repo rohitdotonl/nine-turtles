@@ -5,7 +5,7 @@
   Add is, and a link to the site to sign up there. Shown only while nine turtles takes newsletters.
 -->
 <script lang="ts">
-  import { newslettersStatus } from "./newsletters";
+  import { copyAddress, newslettersStatus } from "./newsletters";
 
   let { site }: { site: string } = $props();
 
@@ -20,21 +20,16 @@
   });
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(address);
-      message = "Address copied.";
-    } catch {
-      message = "Couldn't copy. Select the address and copy it yourself.";
-    }
+    message = await copyAddress(address);
   }
 </script>
 
 {#if address}
   <section aria-labelledby="by-email-head" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
-    <h3 id="by-email-head" class="text-[0.6875rem] leading-[1.3] font-semibold tracking-[0.1em] text-muted uppercase">If it's a newsletter</h3>
+    <h3 id="by-email-head" class="small-caps">If it's a newsletter</h3>
     <p class="text-ink-2">Sign up with your own nine turtles address, and each issue arrives here instead of your inbox.</p>
     <div class="flex gap-2">
-      <input readonly value={address} aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="field min-w-0 flex-1 text-ink" />
+      <input readonly value={address} translate="no" aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="field min-w-0 flex-1 text-ink" />
       <button type="button" onclick={copy} class="btn rounded-lg">Copy<span class="sr-only"> address</span></button>
     </div>
     <p role="status" class={["text-small text-ink-2", !message && "sr-only"]}>{message}</p>

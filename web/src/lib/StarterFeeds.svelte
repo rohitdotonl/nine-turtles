@@ -63,7 +63,7 @@
     <div class="inset-group">
       {#each STARTERS as starter (starter.feed)}
         <label class="inset-row check-row flex-nowrap">
-          <input type="checkbox" value={starter.feed} bind:group={chosen} />
+          <input type="checkbox" value={starter.feed} bind:group={chosen} aria-label={`${starter.name}: ${starter.about}`} />
           <span class="flex min-w-0 flex-col py-1">
             <!--
               Their name and site's address are one link to the site, in a tab of its own, at least

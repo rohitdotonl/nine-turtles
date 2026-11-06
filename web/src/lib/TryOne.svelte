@@ -7,6 +7,7 @@
   outlined button, as the way into the app.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Route } from "./router";
   import { examplesLeft, trying, tryExample, type Example } from "./welcomeTry.svelte";
@@ -21,19 +22,25 @@
 
   let busy = $state("");
   let message = $state("");
+  /** The message is a problem (red, after an icon), not news. */
+  let problem = $state(false);
   let left = $derived(examplesLeft());
 
   async function press(example: Example) {
     if (busy) return;
     busy = example.address;
     message = "";
-    const problem = await tryExample(example);
+    const answer = await tryExample(example);
     busy = "";
-    if (problem) message = problem;
-    else onTried();
+    problem = answer.problem;
+    message = answer.message;
+    if (answer.problem || !trying.current) return;
+    onTried();
+    // The row pressed is gone: the keyboard's place moves to their newest post, which screen readers hear.
+    await tick();
+    document.getElementById("tried-name")?.focus();
   }
 
-  const CAPS = "text-[0.6875rem] leading-[1.3] font-semibold tracking-[0.1em] uppercase text-muted";
 </script>
 
 <div class="mt-2 mb-4 flex flex-col gap-8 self-stretch text-left">
@@ -41,7 +48,7 @@
     {@const { feed, latest } = trying.current}
     <!-- Their newest post, right here: the moment a feed makes sense. -->
     <article aria-labelledby="tried-name" class="flex flex-col gap-2 border-l-2 border-ink pl-5">
-      <h3 id="tried-name" class={CAPS}>{latest ? `Newest from ${feed.title}` : feed.title}</h3>
+      <h3 id="tried-name" tabindex="-1" class="small-caps">{latest ? `Newest from ${feed.title}` : feed.title}</h3>
       {#if latest}
         <a
           href={`/people/${feed.id}`}
@@ -55,21 +62,21 @@
   {/if}
   {#if left.length > 0}
     <section aria-labelledby="try-head" class="flex flex-col gap-2">
-      <h3 id="try-head" class={CAPS}>{trying.current ? "Try another" : "Or try one"}</h3>
+      <h3 id="try-head" class="small-caps">{trying.current ? "Try another" : "Or try one"}</h3>
       <ul class="m-0 flex list-none flex-col p-0">
         {#each left as example (example.address)}
           <li class="try-row">
             <button type="button" aria-disabled={busy !== ""} onclick={() => press(example)} class="group flex min-h-14 w-full cursor-pointer items-center gap-4 py-2 text-left">
-              <span class={["w-24 shrink-0", CAPS]}>{example.kind}</span>
-              <span class="min-w-0 flex-1 truncate text-ink">{example.address}</span>
-              <span class="try-word shrink-0 text-small text-ink-2">{busy === example.address ? "Adding…" : "Try"}<span class="sr-only"> {example.address}</span></span>
+              <span class="small-caps w-24 shrink-0">{example.kind}</span>
+              <span class="min-w-0 flex-1 break-all text-ink">{example.address}</span>
+              <span class="try-word shrink-0 text-small text-ink-2">{busy === example.address ? "Adding…" : "Try"}</span>
             </button>
           </li>
         {/each}
       </ul>
     </section>
   {/if}
-  <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}</p>
+  <p role="status" class={["flex items-start gap-1.5 text-small", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
 </div>
 
 <style>

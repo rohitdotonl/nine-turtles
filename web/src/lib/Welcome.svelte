@@ -11,6 +11,7 @@
   import AddFeed from "./AddFeed.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import TryOne from "./TryOne.svelte";
+  import { trying } from "./welcomeTry.svelte";
   import type { Feed } from "./shapes";
   import type { Route } from "./router";
 
@@ -69,7 +70,7 @@
         </div>
         <!-- Then, for someone new: three examples to follow in one press (decision 0198), and what feeds are (decision 0079). -->
         {#if !asked}<TryOne {follow} {onTried} />{/if}
-        <a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>
+        {#if !trying.current}<a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>{/if}
       {/snippet}
     </AddFeed>
   {:else}

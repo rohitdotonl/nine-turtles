@@ -38,17 +38,17 @@ export function examplesLeft(): Example[] {
 
 /**
  * Follows an example. A site offering several feeds takes its first, as Add's
- * own choice starts on it. Answers what went wrong, in words, or nothing.
+ * own choice starts on it. Answers what to say, and whether it's a problem.
  */
-export async function tryExample(example: Example, add: typeof addFeed = addFeed): Promise<string | undefined> {
+export async function tryExample(example: Example, add: typeof addFeed = addFeed): Promise<{ message: string; problem: boolean }> {
   let result = await add(example.address);
   if (result.kind === "choose" && result.choices[0]) result = await add(result.choices[0].url);
   if (result.kind === "added") {
     trying.current = { feed: result.feed, ...(result.latest ? { latest: result.latest } : {}) };
     trying.done.push(example.address);
-    return undefined;
+    return { message: `You're following ${result.feed.title}.`, problem: false };
   }
-  if (result.kind === "already") return "You already follow this.";
-  if (result.kind === "problem") return explain(result.reason);
-  return `${example.address} couldn't be added just now. Try again later.`;
+  if (result.kind === "already") return { message: "You already follow this.", problem: false };
+  if (result.kind === "problem") return { message: explain(result.reason), problem: true };
+  return { message: `${example.address} couldn't be added just now. Try again later.`, problem: true };
 }

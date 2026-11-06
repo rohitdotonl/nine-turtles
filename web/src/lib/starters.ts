@@ -2,8 +2,8 @@
  * The "New to feeds?" starters (SPEC section 2, decision 0079): a short,
  * fixed list shown only in the first-visit welcome, the same for every
  * reader, so a newcomer can see how feeds work before choosing their own.
- * Nothing here is ranked or chosen for anyone, and none is added unless the
- * reader ticks it. Each is a person writing their own blog, so each is filed
+ * Nothing here is ranked or chosen for anyone, and none is ticked for the
+ * reader: they tick some, or "Add all five" adds them all. Each is a person writing their own blog, so each is filed
  * as a person, someone you might write back to (decision 0163). Each address is the publisher's own feed, so adding one
  * never looks at a web page (decision 0016).
  */

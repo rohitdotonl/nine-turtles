@@ -62,7 +62,8 @@
   import { headingFor, placeNameOf } from "./listHeading";
   import { focusArriving, landingFor, type Headings } from "./landing";
   import { moveArticle, nextInSidebar, type ArticleMove } from "./moving";
-  import { isFirstVisit, newToFeedsGivesWay, stopTrying, trying, welcomeFor } from "./firstVisit";
+  import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
+  import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
@@ -293,10 +294,9 @@
     document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName);
   });
 
-  // Where you are is always in sight in the sidebar (SPEC section 5): when the
-  // place changes, its row scrolls just far enough to show, at once, never
-  // smoothly (decision 0051). Not when the feeds' counts change, so nothing
-  // moves unless you move it. The phone's feeds screen marks no place.
+  // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes,
+  // its row scrolls just far enough to show, at once, never smoothly (decision 0051). Not when
+  // the feeds' counts change, so nothing moves unless you move it. The phone's feeds screen marks no place.
   let sidebarPlace = $derived(!phone && panes.sidebar && library.feeds !== undefined ? pathFor(route) : "");
   $effect(() => {
     if (sidebarPlace === "") return;
@@ -346,9 +346,8 @@
     // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
 
-    // Arriving here by switching to a new version: the screen is as the
-    // reader left it, and the keyboard's place goes to the heading, as going
-    // here without the switch would have done.
+    // Arriving here by switching to a new version: the screen is as the reader left it, and the
+    // keyboard's place goes to the heading, as going here without the switch would have done.
     const switched = arrivedBySwitching();
     if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
@@ -384,6 +383,7 @@
         steps.sheetOpenedByBrowser();
       }
       route = next;
+      stopTrying(); // Back and Forward end the welcome's "Or try one" too (decision 0195).
       if (isList(route)) lastPlace = route;
       if (!move.keepsArticle) {
         selected = undefined;
@@ -553,7 +553,7 @@
   }
 
   async function added(feed: Feed) {
-    const stay = route.kind !== "add-feed" && !firstVisit; // Add a feed closed while still looking: the feed only joins the sidebar.
+    const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
     if (!stay) openFeed(feed.id);
   }
