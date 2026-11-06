@@ -172,6 +172,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
+- The welcome's "Or try one": three example addresses followed in one press (`welcomeTry.svelte.ts`, `TryOne.svelte`); no feed found offers your newsletter address (`ByEmail.svelte`)
 - The list's heading: the place's name, "Folder not found" or "Results in …" (`listHeading.ts`); the title line that shows it, with Search on a phone and More beside it (`ListHead.svelte`)
 - Pick up where you left off: the one article left partway, kept on the server and offered in one line (`resume.svelte.ts`, `PickUp.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
