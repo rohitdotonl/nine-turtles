@@ -162,6 +162,8 @@ test.describe("on a wide window", () => {
     // e opens Edit: in their list, theirs; in the folder's, Edit folder (the owner's core path, point 16).
     await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
     await appReady(page);
+    // Once the list knows whose it is: a key pressed before the feeds arrive has no one to edit yet.
+    await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
     await page.keyboard.press("e");
     await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/edit$`));
     await page.keyboard.press("Escape");
