@@ -1869,3 +1869,29 @@ async fn changing_ones_password_needs_the_current_one_and_signs_out_other_device
         StatusCode::NO_CONTENT
     );
 }
+
+#[tokio::test]
+async fn the_owner_can_change_their_password_in_settings_too() {
+    // Decision 0200: the owner's new password is stored, as Forgot?'s is, and
+    // their Render password setting stops signing them in.
+    let (base, _, _) = start_with_mail(common::config()).await;
+    let owner = signed_in(&base).await;
+    let changed = post(
+        &base,
+        "/api/people/me/password",
+        Some(&owner),
+        json!({ "current": PASSWORD, "password": NEW_PASSWORD }),
+    )
+    .await;
+    assert_eq!(changed.status(), StatusCode::OK);
+    assert_eq!(
+        sign_in(&base, "owner@example.com", PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        sign_in(&base, "owner@example.com", NEW_PASSWORD)
+            .await
+            .status(),
+        StatusCode::NO_CONTENT
+    );
+}

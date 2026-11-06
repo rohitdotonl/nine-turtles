@@ -12,7 +12,7 @@ import { PASSWORD_MINIMUM, errorOf } from "./readers";
 import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
-import { UNREACHABLE } from "./messages";
+import { PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
 
 /** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
@@ -212,11 +212,11 @@ export function explainChange(result: ChangeResult): string {
     case "same":
       return "That's already your email.";
     case "password-needed":
-      return "Type your password first.";
+      return PASSWORD_FIRST;
     case "wrong-password":
-      return "That isn't your password.";
+      return WRONG_PASSWORD;
     case "wait":
-      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+      return tooManyTries(duration(result.waitSeconds));
     case "too-many":
       return "Enough links have gone out for now. Try again in an hour.";
     case "no-email":
@@ -278,11 +278,11 @@ export function deleteData(password: string): Promise<ConfirmResult> {
 export function explainConfirm(result: Exclude<ConfirmResult, { ok: true }>, failed: string): string {
   switch (result.reason) {
     case "password-needed":
-      return "Type your password first.";
+      return PASSWORD_FIRST;
     case "wrong-password":
-      return "That isn't your password.";
+      return WRONG_PASSWORD;
     case "wait":
-      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+      return tooManyTries(duration(result.waitSeconds));
     case "password-short":
       return `Choose a new password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":

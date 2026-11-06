@@ -3,7 +3,7 @@
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { UNREACHABLE } from "./messages";
+import { UNREACHABLE, tooManyTries } from "./messages";
 import { deviceText, setDeviceText } from "./device";
 
 /**
@@ -113,7 +113,7 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
     case "email-needed":
       return "Type your email too.";
     case "wait":
-      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+      return tooManyTries(duration(result.waitSeconds));
     case "password-missing":
       return "No password has been set yet. The setup guide explains how to set one.";
     case "password-invalid":

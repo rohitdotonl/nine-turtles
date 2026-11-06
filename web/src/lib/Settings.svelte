@@ -148,14 +148,14 @@
     if (page !== "hiding") hideFor = undefined;
   });
 
-  /** Change email, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
+  /** Change email, Change password, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
   let task: "email" | "password" | "data" | "delete" | undefined = $state();
   let taskHeading: HTMLHeadingElement | undefined = $state();
   let changeButton: HTMLButtonElement | undefined = $state();
   let deleteButton: HTMLButtonElement | undefined = $state();
   let passwordButton: HTMLButtonElement | undefined = $state();
   let dataButton: HTMLButtonElement | undefined = $state();
-  /** What Change email did, said under Account. */
+  /** What Change email or Change password did, said under Account. */
   let accountNote = $state("");
 
   function closeTask() {

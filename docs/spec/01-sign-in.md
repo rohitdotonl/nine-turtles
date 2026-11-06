@@ -51,7 +51,7 @@
 - Forgot? takes as long whether or not the email has an account.
 - **At most three emails go to one address in any hour**, whatever they're for, **and one link of each kind (password, sign-in, change of email, sign-up) a minute**, so pressing Email me a link twice sends one email. Past either, the answer stays the same and nothing is sent, so nine turtles can't fill anyone's inbox. Limits count each address wherever the requests come from: nine turtles sits behind Render's proxy, so it can't reliably tell one place from another.
 - A new password also ends any sign-in link not yet used, and any other offer to choose one.
-- Emails are short plain text, signed "Rohit" with "nine turtles" on the line under it (decision 0142): no pictures, no tracking, and no link but the one asked for. Each one that holds a link opens "Someone, hopefully you, asked to …" and ends "If you didn't ask, ignore this email: …", saying what happens if they do (decision 0200).
+- Emails are short plain text, signed "Rohit" with "nine turtles" on the line under it (decision 0142): no pictures, no tracking, and no link but the one asked for. Each one that holds a link opens and ends the same way (BRAND.md → "Emails", decision 0200).
 
 **How to check it**
 1. Open the app's address in a private browser window. You see only the email and password fields, nothing about your feeds.

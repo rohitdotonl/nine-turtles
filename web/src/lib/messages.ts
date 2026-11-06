@@ -10,3 +10,14 @@ export const UNDONE = "Undone.";
 
 /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
 export const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
+
+/** Asked for the reader's own password and given none. */
+export const PASSWORD_FIRST = "Type your password first.";
+
+/** Asked for the reader's own password and given another. */
+export const WRONG_PASSWORD = "That isn't your password.";
+
+/** Too many wrong passwords; `wait` is how long, in words ("2 minutes"). */
+export function tooManyTries(wait: string): string {
+  return `Too many wrong tries. Try again in ${wait}.`;
+}
