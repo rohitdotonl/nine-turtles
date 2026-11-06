@@ -628,6 +628,8 @@ async fn list_muted(SignedIn(person): SignedIn, State(state): State<AppState>) -
                     entries.read, entries.starred, entries.muted,
                     articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,",
             crate::feeds::publication_writer!(),
+            ", ",
+            crate::feeds::untitled_body!(),
             "
              FROM entries CROSS JOIN articles ON articles.id = entries.article_id
                  CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id

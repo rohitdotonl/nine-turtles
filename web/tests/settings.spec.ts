@@ -247,7 +247,7 @@ test("in the installed app, Install the app on any device says it's installed in
 test("the foot of Settings links to Help on the website, in a tab of its own, reached by the keyboard", async ({ page }) => {
   // SPEC sections 18 and 40 (decision 0157).
   await openSettings(page);
-  const help = page.getByRole("link", { name: "Help (on the nine turtles website)" });
+  const help = page.getByRole("link", { name: "Help (on the nine turtles website, opens in a new tab)" });
   await expect(help).toHaveAttribute("href", "https://nineturtles.app/help/");
   await expect(help).toHaveAttribute("target", "_blank");
   expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);

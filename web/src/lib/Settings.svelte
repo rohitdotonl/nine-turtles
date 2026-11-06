@@ -526,7 +526,7 @@
             you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
           </p>
         {/if}
-        <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website)</span></a> · <span translate="no">Version {version}</span></p>
+        <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
       </section>
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">

@@ -121,7 +121,7 @@
             <dt>{PLACE_NAMES[place.place ?? "blog"]}</dt>
             <dd>
               {#if place.siteUrl}
-                <a href={place.siteUrl} target="_blank" rel="noopener noreferrer" class="underline decoration-1 underline-offset-4">{placeShownAs(place)}</a>
+                <a href={place.siteUrl} target="_blank" rel="noopener noreferrer" class="underline decoration-1 underline-offset-4">{placeShownAs(place)}<span class="sr-only"> (opens in a new tab)</span></a>
               {:else}
                 {placeShownAs(place)}
               {/if}

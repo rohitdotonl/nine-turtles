@@ -53,6 +53,11 @@ pub struct FullArticle {
     /// The reader's highlights and note on it (SPEC section 42), in the order made.
     #[sqlx(skip)]
     pub notes: Vec<crate::notes::Note>,
+    /// An untitled article's first words (SPEC section 6), which a list of
+    /// the copies kept on the reader's device shows instead of a title.
+    #[sqlx(skip)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub opening: Option<String>,
 }
 
 /// Only an article the reader has (an entry of theirs); any other is not
@@ -176,6 +181,10 @@ pub(crate) async fn full_articles(
         article.summary = article.summary.take().map(|html| stored_html(&html));
         article.link = article.link.take().map(|link| stored_link(&link));
         article.language = article.language.take().filter(|tag| is_language_tag(tag));
+        if article.title.trim().is_empty() {
+            let body = article.content.as_deref().or(article.summary.as_deref());
+            article.opening = body.and_then(super::opening);
+        }
     }
     Ok(articles)
 }
