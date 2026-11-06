@@ -54,7 +54,7 @@
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { SETTINGS_NEED_CONNECTION, keeping, sendWaiting, setKeeping } from "./offline";
+  import { SETTINGS_NEED_CONNECTION, sendWaiting } from "./offline";
   import { newslettersStatus } from "./newsletters";
   import { browserHasPasskeys, passkeysHere } from "./passkeys";
   import { describe, loadPlan } from "./plan";
@@ -223,14 +223,6 @@
     }
   }
 
-  /** Whether this device keeps articles for reading offline (SPEC section 32): on unless switched off here. */
-  let keepingOffline = $state(keeping());
-
-  function switchKeeping(on: boolean) {
-    keepingOffline = on;
-    void setKeeping(on);
-  }
-
   async function leave() {
     try {
       // Marks made offline go first: signing out deletes this device's copies (SPEC section 32).
@@ -287,30 +279,6 @@
   </a>
 {/snippet}
 
-{#snippet keepSwitch()}
-  <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
-  <div class="inset-row setting">
-    <p class="setting-name" aria-hidden="true">Keep articles for reading offline</p>
-    <label class="switch-target -my-2 -mr-2">
-      <input
-        type="checkbox"
-        role="switch"
-        class="switch"
-        aria-label="Keep articles for reading offline"
-        aria-describedby="keep-offline-foot"
-        checked={keepingOffline}
-        onchange={(event) => switchKeeping(event.currentTarget.checked)}
-      />
-    </label>
-  </div>
-{/snippet}
-
-{#snippet keepFoot()}
-  <p id="keep-offline-foot" class="inset-foot">
-    On this device only: the words of your first 200 unread and newest 200 starred articles, without images, so
-    you can read, mark and star them without a connection. Switching this off, or signing out, deletes them.
-  </p>
-{/snippet}
 
 {#if editing}
   {#key editing}
@@ -362,15 +330,6 @@
       {#if connection.offline}
         <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 32). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
-        {#if !page || page === "data"}
-          <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
-          <section aria-label="Reading offline">
-            <div class="inset-group">
-              {@render keepSwitch()}
-            </div>
-            {@render keepFoot()}
-          </section>
-        {/if}
       {:else if !page}
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="settings-head">Reading</h3>
@@ -568,7 +527,6 @@
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
-          {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
           <ImportStars {onImported} bind:lines={importLines} />
           {#each [["/api/starred/export", "Export starred articles"], ["/api/notes/export", "Export notes and highlights"]] as [href, label] (href)}
@@ -580,7 +538,6 @@
             <p>{line}</p>
           {/each}
         </div>
-        {@render keepFoot()}
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,

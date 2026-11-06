@@ -11,16 +11,14 @@
 // The copies live in the browser's own database for this site (IndexedDB),
 // never in the tab's memory, and are fetched a few dozen at a time, a moment
 // apart, so the app never waits for them. Signing out (or being signed out)
-// deletes them, as does switching "Keep articles for reading offline" off in
-// Settings; both send any waiting marks first. It's on unless switched off,
-// on each device. (Marks still waiting when a sign-in has expired can't be
+// deletes them, sending any waiting marks first. It's always on, on every
+// device, with no switch (decision 0187). (Marks still waiting when a sign-in has expired can't be
 // saved: the server would refuse them anyway. Decision 0101.)
 
 import { placesOf } from "./people";
 import type { Article, FullArticle, Library, Page, Source } from "./shapes";
 import { homeView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
-import { deviceText, setDeviceText } from "./device";
 import { whenBack } from "./connection.svelte";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
@@ -44,21 +42,8 @@ export type Mark = { key: string; kind: "read" | "starred"; id: number; value: b
 /** What the signed-in screen needs to open without a connection. */
 export type KeptSession = { version: string; owner: boolean; email: string | null; emailSending: boolean };
 
-const SWITCH_KEY = "nine-turtles.offline";
-
-/** Whether this device keeps articles for reading offline: yes unless switched off in Settings. */
-export function keeping(): boolean {
-  return deviceText(SWITCH_KEY) !== "off";
-}
-
-/** Switches keeping on or off on this device. Off sends any waiting marks it can, then deletes every copy. */
-export async function setKeeping(on: boolean): Promise<void> {
-  // Waiting marks go first, unless there's plainly no connection to send them on.
-  if (!on && globalThis.navigator?.onLine !== false) await sendWaiting();
-  // Private browsing may refuse: then it's on for as long as this tab is open.
-  setDeviceText(SWITCH_KEY, on ? null : "off");
-  if (!on) await forget();
-}
+// Keeping articles for reading offline is always on (decision 0187): there's
+// no switch. Signing out deletes the copies (`forget`).
 
 // ---- The words the screens say ------------------------------------------
 
@@ -253,26 +238,25 @@ export async function forget(): Promise<void> {
 
 /** Keeps what the signed-in screen needs to open without a connection. */
 export function keepSession(session: KeptSession): void {
-  if (keeping()) void remember("session", session);
+  void remember("session", session);
 }
 
 /** The signed-in screen as last kept, if this device keeps articles. */
 export async function keptSession(): Promise<KeptSession | undefined> {
-  return keeping() ? about<KeptSession>("session") : undefined;
+  return about<KeptSession>("session");
 }
 
 /** Keeps the sidebar's feeds and folders, as the server last gave them. */
 export function keepLibrary(library: Library): void {
-  if (keeping()) void remember("library", library);
+  void remember("library", library);
 }
 
 export async function keptLibrary(): Promise<Library | undefined> {
-  return keeping() ? about<Library>("library") : undefined;
+  return about<Library>("library");
 }
 
 /** A list from the copies on this device, or undefined when there are none to show from. */
 export async function keptPage(source: Source, order: Order): Promise<Page | undefined> {
-  if (!keeping()) return undefined;
   let kept: Kept[];
   try {
     kept = await allKept();
@@ -285,7 +269,6 @@ export async function keptPage(source: Source, order: Order): Promise<Page | und
 
 /** An article from the copies on this device. */
 export async function keptArticle(id: number): Promise<FullArticle | undefined> {
-  if (!keeping()) return undefined;
   try {
     const kept = await inside(["articles"], "readonly", (tx) => ask(tx.objectStore("articles").get(id) as IDBRequest<Kept | undefined>));
     if (!kept) return undefined;
@@ -303,7 +286,6 @@ export async function keptArticle(id: number): Promise<FullArticle | undefined> 
  * for later rather than taken back.
  */
 export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean, at: number): Promise<boolean> {
-  if (!keeping()) return false;
   try {
     await inside(["articles", "marks", "about"], "readwrite", async (tx) => {
       const articles = tx.objectStore("articles");
@@ -331,7 +313,6 @@ export async function noteMark(kind: Mark["kind"], ids: number[], value: boolean
 
 /** The server has these marks: they no longer wait, unless a later one was made since. */
 export async function markSent(kind: Mark["kind"], ids: number[], at: number): Promise<void> {
-  if (!keeping()) return;
   try {
     await inside(["marks"], "readwrite", async (tx) => {
       const marks = tx.objectStore("marks");
@@ -390,7 +371,7 @@ export function useFetchers(given: Fetchers): void {
  * answered, but not yes) is dropped, so it never holds up the rest.
  */
 export async function sendWaiting(): Promise<void> {
-  if (!fetchers || !keeping()) return;
+  if (!fetchers) return;
   const reader = currentTabReader();
   const all = (await waitingMarks()).filter((mark) => !beingSent.has(`${mark.key}:${mark.at}`));
   // A mark another reader's tab left here (they're no longer signed in on this
@@ -417,7 +398,7 @@ export async function sendWaiting(): Promise<void> {
  * time. Only one round runs at once; one asked for meanwhile waits for it.
  */
 export function keepUpToDate(order: Order, unread: boolean): Promise<void> {
-  if (!keeping() || !fetchers) return Promise.resolve();
+  if (!fetchers) return Promise.resolve();
   running ??= round(fetchers, order, unread).finally(() => (running = undefined));
   return running;
 }
@@ -436,7 +417,7 @@ async function firstOf(list: Fetchers["list"], source: Source, order: Order, mos
 
 async function round(using: Fetchers, order: Order, unread: boolean): Promise<void> {
   const mine = generation;
-  const still = () => mine === generation && keeping();
+  const still = () => mine === generation;
   try {
     await sendWaiting();
     const first = await firstOf(using.list, { view: homeView(unread) }, order, KEEP_UNREAD);

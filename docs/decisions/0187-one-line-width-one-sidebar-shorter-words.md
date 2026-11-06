@@ -23,6 +23,10 @@ can do. The owner agreed to all three.
   note, Unread while it's on. `/settings/sidebar` opens Settings. The server
   no longer reads or saves the setting; rows saved before are left in place,
   unread (nothing a reader made is lost: it only ever hid a list).
+- **Reading offline is always on** (point 3 of the review): the Keep
+  articles for reading offline switch goes from Settings › Your data.
+  Signing out still deletes the copies, which covers a shared computer. A
+  device that had it switched off starts keeping copies again.
 - **Shorter words:** Look and feel says "Apply to this device only. The Aa
   button above an article changes these too."; Hiding says "Hidden articles
   are kept, and search still finds them."; Pause for a while says "Their new
