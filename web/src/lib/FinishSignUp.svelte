@@ -14,6 +14,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import PasswordField from "./PasswordField.svelte";
   import { ticketFrom } from "./accounts";
   import { explainFinish, finishSignUp } from "./readers";
 
@@ -88,18 +89,14 @@
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <div class="flex flex-col gap-1.5">
         <label for="password" class="text-small text-ink-2">Password</label>
-        <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <input
+        <!-- The only thing to do on this page, so it has the focus. -->
+        <PasswordField
           id="password"
-          name="password"
-          type="password"
           autocomplete="current-password"
-          required
           autofocus
           bind:value={password}
-          aria-describedby="finish-help finish-message"
-          aria-invalid={refused ? "true" : undefined}
-          class="field"
+          describedby="finish-help finish-message"
+          invalid={refused}
         />
         <p id="finish-help" class="field-help mt-0">The one you chose when you signed up.</p>
       </div>

@@ -49,6 +49,6 @@ description: "A letter from Rohit, who makes nine turtles: a quiet place to read
 <p class="signature"><span class="name">{{ site.maker }}</span><span class="quiet">I make nine turtles, and I read every email myself.</span></p>
 
 <div class="letter-end">
-  <p><a class="button" href="{{ site.app }}">Start reading</a></p>
+  <p><a class="button" href="{{ site.app }}/sign-up">Start reading</a></p>
   <p class="ps">P.S. Write back to me: <a href="mailto:{{ site.email }}">{{ site.email }}</a>. That's the whole idea.</p>
 </div>

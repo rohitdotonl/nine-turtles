@@ -244,6 +244,8 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
     let empty = reader.get("/api/starred/export").await;
     assert_eq!(empty["version"], "https://jsonfeed.org/version/1.1");
     assert_eq!(empty["items"], json!([]));
+    // Settings says "Nothing starred yet" instead of offering an empty file (SPEC section 18).
+    assert_eq!(reader.get("/api/feeds").await["starred"], false);
 
     let all = reader.list("view=all").await;
     let ids = [all[3].1, all[60].1, all[110].1];
@@ -253,6 +255,7 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
             json!({ "ids": ids, "starred": true }),
         )
         .await;
+    assert_eq!(reader.get("/api/feeds").await["starred"], true);
 
     let response = Client::new()
         .get(format!("{}/api/starred/export", reader.base))

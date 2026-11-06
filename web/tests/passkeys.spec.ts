@@ -98,7 +98,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
   await passesAccessibilityChecks(page);
 
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page
@@ -198,7 +198,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
     "That passkey isn't one this nine turtles knows. Sign in with your password.",
   );
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
 });
@@ -237,7 +237,7 @@ test("the keyboard goes Email, Password, Forgot?, Sign in, the passkey, then Sig
   await expect(passkey).toBeVisible();
   await expect(page.getByLabel("Email")).toBeFocused();
   const order = [
-    page.getByLabel("Password"),
+    page.getByLabel("Password", { exact: true }),
     page.getByRole("link", { name: "Forgot?" }),
     page.getByRole("button", { name: "Sign in", exact: true }),
     passkey,
@@ -346,7 +346,7 @@ test("Settings › Passkeys passes the accessibility checks, and Cancel leaves t
   await page.goto(`${local()}/`);
   await appReady(page);
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
   await page.goto(`${local()}/settings/passkeys`);

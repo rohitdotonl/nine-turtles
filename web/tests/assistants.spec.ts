@@ -25,7 +25,7 @@ test("the connect page comes after sign-in, says what the assistant may do, and 
   await appReady(page);
   // Signed out, sign-in comes first; the address, with its query, stays.
   await page.getByLabel("Email").fill(OWNER_EMAIL);
-  await page.getByLabel("Password").fill(TEST_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   const heading = page.getByRole("heading", { level: 1, name: "Connect Claude <b>bold</b> to nine turtles?" });

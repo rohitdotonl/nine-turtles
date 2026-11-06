@@ -197,7 +197,7 @@
             <input type="radio" name="add-place-choice" value={choice.url} bind:group={picked} />
             <span class="flex min-w-0 flex-col py-1">
               <span class="break-words">{choice.title}</span>
-              <span class="text-small break-all text-muted">{choice.url}</span>
+              <span class="truncate text-small text-muted">{choice.url}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>

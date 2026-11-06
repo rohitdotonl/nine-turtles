@@ -990,7 +990,7 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {unreadOff} />
+      <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}

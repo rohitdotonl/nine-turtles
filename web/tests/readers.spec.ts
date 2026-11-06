@@ -18,15 +18,15 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await joining.getByRole("link", { name: "Sign up" }).click();
   await expect(joining).toHaveURL(/\/sign-up$/);
   await expect(joining.getByLabel("Email")).toBeFocused();
-  await expect(joining.getByLabel("Password")).toHaveAttribute("autocomplete", "new-password");
+  await expect(joining.getByLabel("Password", { exact: true })).toHaveAttribute("autocomplete", "new-password");
   const email = `reader-${testInfo.project.name}-${Date.now()}@example.com`;
   await joining.keyboard.type(email);
   await joining.keyboard.press("Tab");
   await joining.keyboard.type("short");
   await joining.keyboard.press("Enter");
   await expect(joining.getByRole("status")).toHaveText("Choose a password of at least 12 characters.");
-  await expect(joining.getByLabel("Password")).toHaveAttribute("aria-invalid", "true");
-  await joining.getByLabel("Password").fill(READER_PASSWORD);
+  await expect(joining.getByLabel("Password", { exact: true })).toHaveAttribute("aria-invalid", "true");
+  await joining.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   // One optional question (decision 0155), next after the password from the
   // keyboard: "Rather not say" until chosen, then Sign up.
   const heardAbout = joining.getByLabel("How did you hear about nine turtles?");
@@ -54,7 +54,7 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   const again = await (await browser.newContext()).newPage();
   await again.goto("/sign-up");
   await again.getByLabel("Email").fill(email);
-  await again.getByLabel("Password").fill(READER_PASSWORD);
+  await again.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
   await again.getByRole("button", { name: "Sign up" }).click();
   await expect(again.getByRole("status")).toHaveText("That email already has an account. Sign in instead.");
   await expect(again.getByRole("link", { name: "Sign in" })).toBeVisible();

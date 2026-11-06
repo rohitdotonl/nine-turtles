@@ -8,6 +8,7 @@
 <script lang="ts">
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import PasswordField from "./PasswordField.svelte";
   import { PASSWORD_MINIMUM } from "./readers";
   import { explainLink, resetPassword, ticketFrom } from "./accounts";
 
@@ -63,19 +64,16 @@
   {:else}
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <label for="password" class="sr-only">New password, at least {PASSWORD_MINIMUM} characters</label>
-      <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-      <input
+      <!-- The only thing to do on this page, so it has the focus. -->
+      <PasswordField
         id="password"
-        name="password"
-        type="password"
         autocomplete="new-password"
         placeholder="New password"
-        required
+        label="new password"
         autofocus
         bind:value={password}
-        aria-describedby="reset-help reset-message"
-        aria-invalid={refused ? "true" : undefined}
-        class="field"
+        describedby="reset-help reset-message"
+        invalid={refused}
       />
       <p id="reset-help" class="text-center text-meta text-muted">
         At least {PASSWORD_MINIMUM} characters. Your other devices will be signed out.

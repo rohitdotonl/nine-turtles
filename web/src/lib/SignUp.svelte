@@ -13,6 +13,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { HEARD_ABOUT, PASSWORD_MINIMUM, explainSignUp, signUp, type HeardAbout } from "./readers";
 
@@ -122,16 +123,12 @@
     <!-- The same room above the password's name as on sign-in, where "Forgot?" sits, so the two pages line up. -->
     <div class="flex flex-col gap-1.5 pt-3">
       <label for="password" class="text-small text-ink-2">Password</label>
-      <input
+      <PasswordField
         id="password"
-        name="password"
-        type="password"
         autocomplete="new-password"
-        required
         bind:value={password}
-        aria-describedby="sign-up-help sign-up-message"
-        aria-invalid={refusedField === "password" ? "true" : undefined}
-        class="field"
+        describedby="sign-up-help sign-up-message"
+        invalid={refusedField === "password"}
       />
       <p id="sign-up-help" class="field-help mt-0">At least {PASSWORD_MINIMUM} characters.</p>
     </div>

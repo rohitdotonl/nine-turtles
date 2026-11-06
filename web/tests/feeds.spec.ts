@@ -33,7 +33,7 @@ async function newReader(page: Page, width: number) {
   await page.setViewportSize({ width, height: 800 });
   await page.goto(new URL("/sign-up", FEEDS_APP).href);
   await page.getByLabel("Email").fill(`${newBlog("new")}@example.com`);
-  await page.getByLabel("Password").fill("slow mornings, long reads");
+  await page.getByLabel("Password", { exact: true }).fill("slow mornings, long reads");
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
 }
@@ -56,6 +56,8 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await expect(reading.getByRole("button", { name: "Add", exact: true })).toBeVisible();
   await expect(page.getByText("Nothing here yet.")).toHaveCount(0);
   await expect(sidebar(page).getByRole("searchbox", { name: "Find a person or folder" })).toHaveCount(0);
+  // You're on the welcome, not in Unread: no row in the sidebar is marked as where you are (decision 0191).
+  await expect(sidebar(page).locator('[aria-current="page"]')).toHaveCount(0);
   await expect(page.getByText("Time to read something beautiful.")).toHaveCount(0);
   const [welcome, pane] = await Promise.all([reading.locator("#welcome-heading").boundingBox(), reading.boundingBox()]);
   expect(Math.abs(welcome!.x + welcome!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);

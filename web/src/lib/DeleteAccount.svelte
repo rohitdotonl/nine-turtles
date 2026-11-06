@@ -25,6 +25,7 @@
   import { edge } from "./edge";
   import { deleteAccount, deleteData } from "./accounts";
   import { forget } from "./offline";
+  import { stars } from "./stars.svelte";
 
   let {
     heading = $bindable(),
@@ -99,9 +100,14 @@
         <a href="/api/opml" download class="inset-row inset-action"
           >Export OPML<span class="row-glyph"><Icon name="download" size={18} /></span></a
         >
-        <a href="/api/starred/export" download class="inset-row inset-action"
-          >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
-        >
+        {#if stars.any}
+          <a href="/api/starred/export" download class="inset-row inset-action"
+            >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
+          >
+        {:else}
+          <!-- Nothing to download: said in a row that isn't a button (decision 0191). -->
+          <p class="inset-row text-muted">Nothing starred yet</p>
+        {/if}
       </div>
       <p class="field-help">
         Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.
