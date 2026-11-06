@@ -28,6 +28,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import ChangeEmail from "./ChangeEmail.svelte";
+  import ChangePassword from "./ChangePassword.svelte";
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
@@ -148,16 +149,18 @@
   });
 
   /** Change email, Delete data or Delete account, while open: a sheet over Settings, or on a phone a screen in its place. */
-  let task: "email" | "data" | "delete" | undefined = $state();
+  let task: "email" | "password" | "data" | "delete" | undefined = $state();
   let taskHeading: HTMLHeadingElement | undefined = $state();
   let changeButton: HTMLButtonElement | undefined = $state();
   let deleteButton: HTMLButtonElement | undefined = $state();
+  let passwordButton: HTMLButtonElement | undefined = $state();
   let dataButton: HTMLButtonElement | undefined = $state();
   /** What Change email did, said under Account. */
   let accountNote = $state("");
 
   function closeTask() {
-    const from = task === "email" ? changeButton : task === "data" ? dataButton : deleteButton;
+    const from =
+      task === "email" ? changeButton : task === "password" ? passwordButton : task === "data" ? dataButton : deleteButton;
     task = undefined;
     queueMicrotask(() => from?.focus());
   }
@@ -253,6 +256,17 @@
     bind:heading={taskHeading}
     onCancel={closeTask}
     onSent={(note) => {
+      accountNote = note;
+      closeTask();
+    }}
+  />
+{:else if task === "password"}
+  <ChangePassword
+    sheet={!phone}
+    {besideToggle}
+    bind:heading={taskHeading}
+    onCancel={closeTask}
+    onChanged={(note) => {
       accountNote = note;
       closeTask();
     }}
@@ -439,6 +453,16 @@
                 >Change…<span class="sr-only"> email</span></button
               >
             {/if}
+          </div>
+          <!-- Changed with the current password; every other device is signed out (decision 0200). -->
+          <div class="inset-row setting">
+            <div class="setting-label">
+              {@render icon("lock")}
+              <div class="setting-words"><p class="setting-name">Password</p></div>
+            </div>
+            <button bind:this={passwordButton} type="button" onclick={() => (task = "password")} class="btn btn-small shrink-0"
+              >Change…<span class="sr-only"> password</span></button
+            >
           </div>
           {#if emailSending && email}<WeeklyEmail onProblem={(text) => (message = text)} />{/if}
           <!-- In the text color, not oxblood: signing out removes nothing, and oxblood means something goes (decision 0042). -->

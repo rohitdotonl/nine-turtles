@@ -290,6 +290,14 @@ test("a reader changes their email by a link to the new one, then deletes their 
   await expect(sure).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Delete account…" })).toBeFocused();
   await page.keyboard.press("Enter");
+  // Your password first, so a device left signed in can't delete anything (decision 0200).
+  const yours = sure.getByLabel("Your password");
+  await yours.fill("not my password at all");
+  await sure.getByRole("button", { name: "Delete account" }).click();
+  await expect(sure.getByRole("status").filter({ hasText: "That isn't your password." })).toBeVisible();
+  await expect(yours).toBeFocused();
+  await expect(yours).toHaveValue("");
+  await yours.fill(READER_PASSWORD);
   await sure.getByRole("button", { name: "Delete account" }).click();
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 
@@ -343,8 +351,12 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
 
   await page.keyboard.press("Enter");
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
-  // Past the one download (nothing is starred, so that row isn't a button) to Delete data, with only the keyboard.
+  // Past the one download (nothing is starred, so that row isn't a button) to the password, then Delete data,
+  // with only the keyboard (decision 0200).
   for (let step = 0; step < 2; step += 1) await page.keyboard.press("Tab");
+  await expect(sure.getByLabel("Your password")).toBeFocused();
+  await page.keyboard.type(READER_PASSWORD);
+  await page.keyboard.press("Tab");
   await expect(sure.getByRole("button", { name: "Delete data" })).toBeFocused();
   await page.keyboard.press("Enter");
   // The app starts again at its start, empty, still signed in.
@@ -528,4 +540,48 @@ test("Check your email offers a Gmail address its inbox, by keyboard, after Sign
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Open Gmail (opens in a new tab)" })).toBeFocused();
   await context.close();
+});
+
+test("a reader changes their password in Settings, and their other devices are signed out", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the phone's sheets are screens; the flow is the same");
+  // Decision 0200: the current password, then the new one, with only the keyboard.
+  const email = `change-${testInfo.project.name}-${Date.now()}@example.com`;
+  const laptop = await newReader(browser, email);
+  const phone = await browser.newContext({ baseURL: MAIL_APP });
+  const other = await phone.newPage();
+  await other.goto("/");
+  await other.getByLabel("Email").fill(email);
+  await other.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
+  await other.getByRole("button", { name: "Sign in" }).click();
+  await expect(other.locator("#sidebar")).toBeAttached();
+
+  await laptop.goto("/settings");
+  const change = laptop.getByRole("button", { name: "Change… password" });
+  await change.focus();
+  await laptop.keyboard.press("Enter");
+  const sheet = laptop.getByRole("dialog", { name: "Change password" });
+  await expect(sheet.getByLabel("Current password")).toBeFocused();
+  await expect(sheet.getByLabel("Current password")).toHaveAttribute("autocomplete", "current-password");
+  await expect(sheet.getByRole("textbox", { name: "New password" })).toHaveAttribute("autocomplete", "new-password");
+  // A wrong current password changes nothing.
+  await laptop.keyboard.type("not my password at all");
+  await laptop.keyboard.press("Tab");
+  await laptop.keyboard.type(NEW_PASSWORD);
+  await laptop.keyboard.press("Enter");
+  await expect(sheet.getByRole("status").filter({ hasText: "That isn't your password." })).toBeVisible();
+  await sheet.getByLabel("Current password").fill(READER_PASSWORD);
+  await sheet.getByLabel("Current password").press("Enter");
+  // Done: the sheet closes, the keyboard goes back to Change…, and Settings says so.
+  await expect(sheet).toHaveCount(0);
+  await expect(change).toBeFocused();
+  await expect(laptop.getByText("Your password is changed. Your other devices are signed out.")).toBeVisible();
+  expect((await laptop.evaluate(async () => (await fetch("/api/session")).json())).signed_in).toBe(true);
+  // The other device is signed out; the new password signs in, the old one doesn't.
+  expect((await other.evaluate(async () => (await fetch("/api/session")).json())).signed_in).toBe(false);
+  const signIn = async (password: string) =>
+    (await other.request.post("/api/sign-in", { data: { email, password } })).status();
+  expect(await signIn(READER_PASSWORD)).toBe(401);
+  expect(await signIn(NEW_PASSWORD)).toBe(204);
+  await laptop.context().close();
+  await phone.close();
 });

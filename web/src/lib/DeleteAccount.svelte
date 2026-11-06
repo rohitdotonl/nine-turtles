@@ -2,7 +2,8 @@
   "Delete your account?" (SPEC section 18, decision 0088), opened from
   Settings › Account by any reader but the owner. It is the one "Are you
   sure?": it first offers the reader's two downloads (their feeds and folders
-  as OPML, their starred articles), then Delete account, which deletes the
+  as OPML, their starred articles), then asks for their password (decision
+  0200, so a device left signed in can't delete anything), then Delete account, which deletes the
   reader and everything theirs at once and for good, with no waiting period
   (the owner's choice, decision 0088), and signs this device out. Cancel,
   Escape or the X keeps everything.
@@ -23,7 +24,7 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import { edge } from "./edge";
-  import { deleteAccount, deleteData } from "./accounts";
+  import { deleteAccount, deleteData, explainConfirm } from "./accounts";
   import { forget } from "./offline";
   import { stars } from "./stars.svelte";
 
@@ -47,12 +48,17 @@
 
   let busy = $state(false);
   let message = $state("");
+  let password = $state("");
+  let refused = $state(false);
+  let passwordField: HTMLInputElement | undefined = $state();
 
-  async function remove() {
+  async function remove(event: SubmitEvent) {
+    event.preventDefault();
     if (busy) return;
     busy = true;
     message = "";
-    const deleted = await (data ? deleteData() : deleteAccount());
+    const result = await (data ? deleteData(password) : deleteAccount(password));
+    const deleted = result.ok;
     if (deleted && data) {
       // This device's copies were of what's gone; the app opens again, empty, at its start.
       await forget();
@@ -60,8 +66,17 @@
       return;
     }
     busy = false;
-    if (deleted) onDeleted();
-    else message = `Your ${data ? "data" : "account"} couldn't be deleted. Nothing has changed. Try again in a moment.`;
+    if (result.ok) {
+      onDeleted();
+      return;
+    }
+    message = explainConfirm(
+      result,
+      `Your ${data ? "data" : "account"} couldn't be deleted. Nothing has changed. Try again in a moment.`,
+    );
+    refused = result.reason === "wrong-password" || result.reason === "password-needed" || result.reason === "wait";
+    if (result.reason === "wrong-password") password = "";
+    if (refused) passwordField?.focus();
   }
 
   const WHAT = $derived(
@@ -74,17 +89,16 @@
 
 {#snippet remover(look: string)}
   <button
-    type="button"
+    type="submit"
     aria-disabled={busy}
     aria-describedby="delete-account-help"
     title={WHAT}
-    onclick={remove}
     class={look}>{data ? "Delete data" : "Delete account"}</button
   >
 {/snippet}
 
 {#snippet body()}
-  <div class={["flex flex-col gap-5", !sheet && "flex-1"]}>
+  <form onsubmit={remove} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <p id="delete-account-help">
       {#if data}
         Your feeds, folders, read and starred articles, notes and rules go for good. This can't
@@ -113,7 +127,21 @@
         Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.
       </p>
     </div>
-    <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
+    <!-- Asked for, as for a new email, so a device left signed in can't delete anything (decision 0200). -->
+    <label class="flex flex-col gap-1.5">
+      <span class="text-small text-ink-2">Your password</span>
+      <input
+        bind:this={passwordField}
+        bind:value={password}
+        type="password"
+        autocomplete="current-password"
+        required
+        aria-describedby="delete-account-message"
+        aria-invalid={refused ? "true" : undefined}
+        class="field"
+      />
+    </label>
+    <p id="delete-account-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
     </p>
     {#if sheet}
@@ -126,7 +154,7 @@
         {@render remover("inset-row inset-action text-danger font-semibold")}
       </div>
     {/if}
-  </div>
+  </form>
 {/snippet}
 
 {#if sheet}

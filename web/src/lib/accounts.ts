@@ -176,7 +176,7 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
 
 export type ChangeResult =
   | { ok: true; sentTo: string }
-  | { ok: false; reason: "email" | "same" | "wrong-password" | "too-many" | "no-email" | "unreachable" }
+  | { ok: false; reason: "email" | "same" | "password-needed" | "wrong-password" | "too-many" | "no-email" | "unreachable" }
   | { ok: false; reason: "wait"; waitSeconds: number };
 
 /** Asks to move to a new email: a link goes there, and nothing changes until it's followed. */
@@ -192,6 +192,7 @@ export async function changeEmail(email: string, password: string): Promise<Chan
   switch (error) {
     case "email":
     case "same":
+    case "password-needed":
     case "wrong-password":
     case "too-many":
     case "no-email":
@@ -210,6 +211,8 @@ export function explainChange(result: ChangeResult): string {
       return "That doesn't look like an email address.";
     case "same":
       return "That's already your email.";
+    case "password-needed":
+      return "Type your password first.";
     case "wrong-password":
       return "That isn't your password.";
     case "wait":
@@ -223,14 +226,70 @@ export function explainChange(result: ChangeResult): string {
   }
 }
 
-/** Deletes the signed-in reader's account and everything theirs, for good. */
-export async function deleteAccount(): Promise<boolean> {
-  const response = await send("/api/people/me/delete", {});
-  return response?.ok === true;
+/**
+ * What a change made with the reader's own password answered (decision 0200):
+ * a new password, deleting the account, deleting the data.
+ */
+export type ConfirmResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reason: "password-needed" | "wrong-password" | "password-short" | "password-long" | "plan" | "unreachable";
+    }
+  | { ok: false; reason: "wait"; waitSeconds: number };
+
+async function confirmed(path: string, body: unknown): Promise<ConfirmResult> {
+  const response = await send(path, body);
+  if (!response) return { ok: false, reason: "unreachable" };
+  if (response.ok) return { ok: true };
+  const answer: unknown = await response.json().catch(() => null);
+  const error = isRecord(answer) ? answer.error : undefined;
+  if (error === "wait" && isRecord(answer) && typeof answer.wait_seconds === "number") {
+    return { ok: false, reason: "wait", waitSeconds: answer.wait_seconds };
+  }
+  switch (error) {
+    case "password-needed":
+    case "wrong-password":
+    case "password-short":
+    case "password-long":
+    case "plan":
+      return { ok: false, reason: error };
+    default:
+      return { ok: false, reason: "unreachable" };
+  }
 }
 
-/** Empties the signed-in reader's account, for good, keeping them signed in (decision 0117). */
-export async function deleteData(): Promise<boolean> {
-  const response = await send("/api/people/me/data/delete", {});
-  return response?.ok === true;
+/** Settings › Account › Change password…: the current password, then the new one. */
+export function changePassword(current: string, password: string): Promise<ConfirmResult> {
+  return confirmed("/api/people/me/password", { current, password });
+}
+
+/** Deletes the signed-in reader's account and everything theirs, for good, once their password is typed. */
+export function deleteAccount(password: string): Promise<ConfirmResult> {
+  return confirmed("/api/people/me/delete", { password });
+}
+
+/** Empties the signed-in reader's account, for good, keeping them signed in (decision 0117), once their password is typed. */
+export function deleteData(password: string): Promise<ConfirmResult> {
+  return confirmed("/api/people/me/data/delete", { password });
+}
+
+/** What to say when a change made with the reader's password didn't happen; `failed` says what was kept. */
+export function explainConfirm(result: Exclude<ConfirmResult, { ok: true }>, failed: string): string {
+  switch (result.reason) {
+    case "password-needed":
+      return "Type your password first.";
+    case "wrong-password":
+      return "That isn't your password.";
+    case "wait":
+      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+    case "password-short":
+      return `Choose a new password of at least ${PASSWORD_MINIMUM} characters.`;
+    case "password-long":
+      return "That new password is too long.";
+    case "unreachable":
+      return UNREACHABLE;
+    case "plan":
+      return failed;
+  }
 }

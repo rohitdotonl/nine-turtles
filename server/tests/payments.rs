@@ -91,10 +91,14 @@ async fn start_with_payments() -> (String, nine_turtles::AppState, Asked) {
 }
 
 /// A reader with an email, as signing up makes them.
+/// The password `reader` signs in with, asked for before deleting (decision 0200).
+const READER_PASSWORD: &str = "slow mornings, long reads";
+
 async fn reader(state: &nine_turtles::AppState) -> (i64, String) {
     let (person, cookie) = common::another_reader(state).await;
-    sqlx::query("UPDATE people SET email = ? WHERE id = ?")
+    sqlx::query("UPDATE people SET email = ?, password_hash = ? WHERE id = ?")
         .bind(format!("reader{person}@example.com"))
+        .bind(nine_turtles::password::hash(READER_PASSWORD).unwrap())
         .bind(person)
         .execute(&state.db)
         .await
@@ -403,7 +407,13 @@ async fn deleting_an_account_cancels_its_plan_first() {
     let active = subscription("subscription.active", person, "active", next, false);
     assert_eq!(message(&base, "msg_1", &active, true).await.status(), 200);
 
-    let deleted = post(&base, &cookie, "/api/people/me/delete", json!({})).await;
+    let deleted = post(
+        &base,
+        &cookie,
+        "/api/people/me/delete",
+        json!({ "password": READER_PASSWORD }),
+    )
+    .await;
     assert_eq!(deleted.status(), 204);
     let (method, path, body) = asked.lock().unwrap().last().unwrap().clone();
     assert_eq!(
@@ -538,7 +548,13 @@ async fn deleting_waits_if_dodo_cant_be_reached_but_not_if_the_plan_is_already_o
                 .status(),
             200
         );
-        let deleted = post(&base, &cookie, "/api/people/me/delete", json!({})).await;
+        let deleted = post(
+            &base,
+            &cookie,
+            "/api/people/me/delete",
+            json!({ "password": READER_PASSWORD }),
+        )
+        .await;
         assert_eq!(deleted.status(), answer, "{id}");
         let left: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM people WHERE id = ?")
             .bind(person)

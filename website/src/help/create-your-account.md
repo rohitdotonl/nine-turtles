@@ -59,8 +59,10 @@ Your other devices are signed out, so they'll ask for the new password.
 
 ## Change your password or email
 
-- **Password:** there's no separate setting. Sign out (**Settings ›
-  Account › Sign out**), then use **Forgot?** as above.
+- **Password:** in **Settings › Account**, press **Change…** beside
+  Password, type your current password and a new one, and press **Change
+  password**. Your other devices are signed out; this one stays signed in.
+  Lost your password? Use **Forgot?** as above.
 - **Email:** in **Settings › Account**, press **Change…** beside Email, type
   the new address and your password, and press **Send link**. Open the link
   sent to the new address within 24 hours and press **Confirm email**. The
