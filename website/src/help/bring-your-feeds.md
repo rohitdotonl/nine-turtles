@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 16
-updated: 2026-11-03
+updated: 2026-11-06
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -42,6 +42,8 @@ Your data**, press **Import YouTube subscriptions…** and choose the
 
 ## Good to know
 
+- Each feed brings its five newest articles into **Unread**; older ones are
+  on its page, already marked read.
 - Importing twice is safe: anything you already follow isn't added again.
 - If the file puts folders inside folders, each feed goes into the folder
   closest to it.

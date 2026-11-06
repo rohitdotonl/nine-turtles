@@ -130,6 +130,35 @@ pub async fn enter_stored(
     rules::apply_to(connection, person, feed_id, &unread).await
 }
 
+/// Gives a reader who followed a feed from a file, without fetching it,
+/// their own entries for what's stored of it already (for other readers):
+/// the newest `UNREAD_ON_FOLLOWING` unread, the rest read, as when adding
+/// one (decision 0194). Their rules then act on the unread ones.
+pub async fn enter_newest(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    feed_id: i64,
+) -> Result<(), sqlx::Error> {
+    let unread: Vec<i64> = sqlx::query_scalar(concat!(
+        "INSERT OR IGNORE INTO entries (person_id, article_id, feed_id, sort_at)
+         SELECT subscriptions.person_id, articles.id, articles.feed_id, articles.sort_at
+         FROM articles JOIN subscriptions ON subscriptions.feed_id = articles.feed_id
+         WHERE subscriptions.person_id = ? AND articles.feed_id = ? AND ",
+        shown!(),
+        " AND NOT EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id
+               AND entries.article_id = articles.id)
+         ORDER BY articles.sort_at DESC, articles.id DESC LIMIT ?
+         RETURNING article_id"
+    ))
+    .bind(person)
+    .bind(feed_id)
+    .bind(UNREAD_ON_FOLLOWING)
+    .fetch_all(&mut *connection)
+    .await?;
+    enter_read(connection, person, feed_id).await?;
+    rules::apply_to(connection, person, feed_id, &unread).await
+}
+
 /// Gives the reader their own entry, already read, for each article of
 /// this feed stored for other readers that they don't have an entry for yet.
 pub async fn enter_read(
@@ -146,6 +175,42 @@ pub async fn enter_read(
     ))
     .bind(person)
     .bind(feed_id)
+    .execute(connection)
+    .await?;
+    Ok(())
+}
+
+/// How many of a newly followed feed's articles arrive unread: its newest
+/// five. Older ones are kept in its own list, already read, so following
+/// someone never floods Unread (decision 0194).
+pub const UNREAD_ON_FOLLOWING: i64 = 5;
+
+/// Marks read every unread article of this feed but the newest
+/// `UNREAD_ON_FOLLOWING`, for one reader (`Some`) or, after a feed's first
+/// check, for each reader following it now (`None`): just after they follow
+/// it. A reader waiting for Undo, or one who left long ago, keeps their marks
+/// (decision 0086), and a starred article is left as it is.
+pub async fn keep_newest_unread(
+    connection: &mut sqlx::SqliteConnection,
+    person: Option<i64>,
+    feed_id: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE entries SET read = 1
+         WHERE feed_id = ?1 AND read = 0 AND starred = 0 AND (?2 IS NULL OR person_id = ?2)
+             AND person_id IN (SELECT person_id FROM subscriptions
+                               WHERE feed_id = ?1 AND unsubscribed_at IS NULL)
+             AND (person_id, article_id) IN (
+                 SELECT person_id, article_id FROM (
+                     SELECT person_id, article_id, ROW_NUMBER() OVER (
+                         PARTITION BY person_id ORDER BY sort_at DESC, article_id DESC) AS place
+                     FROM entries
+                     WHERE feed_id = ?1 AND read = 0 AND (?2 IS NULL OR person_id = ?2))
+                 WHERE place > ?3)",
+    )
+    .bind(feed_id)
+    .bind(person)
+    .bind(UNREAD_ON_FOLLOWING)
     .execute(connection)
     .await?;
     Ok(())
