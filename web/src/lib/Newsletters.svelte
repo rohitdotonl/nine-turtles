@@ -7,9 +7,11 @@
   (`name+label@…`) are listed with a switch that turns their mail away.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import NoteLine from "./NoteLine.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
-  import { type Label, TooLate, copyAddress, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
+  import { type Label, COPIED, TooLate, copyAddress, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
 
   let on = $state(false);
   let address = $state("");
@@ -17,6 +19,8 @@
   /** The address New address replaced, while Undo can bring it back. */
   let previous: string | null = $state(null);
   let message = $state("");
+  /** The message says something failed: oxblood, with the alert icon. */
+  let refusal = $state(false);
   let busy = $state(false);
 
   newslettersStatus().then(
@@ -32,13 +36,14 @@
 
   async function copy() {
     message = await copyAddress(address);
+    refusal = message !== COPIED;
     // Undo for New address stays on the line: copying changes nothing.
   }
 
   async function replace() {
     if (busy) return;
     busy = true;
-    message = "";
+    [message, refusal] = ["", false];
     try {
       const made = await newAddress();
       address = made.address;
@@ -47,7 +52,7 @@
       labels = [];
       message = "You have a new address. Email to the old one is now refused.";
     } catch {
-      message = "A new address couldn't be made. Try again in a moment.";
+      [message, refusal] = ["A new address couldn't be made. Try again in a moment.", true];
     }
     busy = false;
   }
@@ -65,10 +70,10 @@
       previous = null;
     } catch (error) {
       if (error instanceof TooLate) {
-        message = "It's been over an hour, so the old address can't come back.";
+        [message, refusal] = ["It's been over an hour, so the old address can't come back.", true];
         previous = null;
       } else {
-        message = UNDO_FAILED;
+        [message, refusal] = [UNDO_FAILED, true];
       }
     }
     busy = false;
@@ -76,20 +81,28 @@
 
   async function toggle(label: Label, on: boolean) {
     // The switch shows the change at once, and goes back if it couldn't be saved.
+    // New address's Undo stays, as it does for Copy: once it's gone the old address can't come back.
     label.on = on;
     try {
       await switchLabel(label.label, on);
-      message = on ? `${label.address} takes email again.` : `Email to ${label.address} is now turned away.`;
+      [message, refusal] = [on ? `${label.address} takes email again.` : `Email to ${label.address} is now turned away.`, false];
     } catch {
       label.on = !on;
-      message = `${label.address} couldn't be changed. Try again in a moment.`;
+      [message, refusal] = [`${label.address} couldn't be changed. Try again in a moment.`, true];
     }
+  }
+
+  /** × on the line: it goes, Undo with it, and the keyboard's place goes to the group's heading. */
+  async function closeNote() {
+    [message, refusal, previous] = ["", false, null];
+    await tick();
+    document.getElementById("newsletters-heading")?.focus();
   }
 </script>
 
 {#if on}
   <section aria-labelledby="newsletters-heading">
-    <h3 id="newsletters-heading" class="inset-head">Newsletters</h3>
+    <h3 id="newsletters-heading" tabindex="-1" class="inset-head">Newsletters</h3>
     <div class="inset-group">
       <div class="inset-row">
         <p class="min-w-0">
@@ -119,11 +132,8 @@
         >New address<span class="row-glyph"><Icon name="refresh" size={18} /></span></button
       >
     </div>
-    <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
-      <span>{message}</span>
-      {#if previous}
-        <button type="button" class="btn btn-small" aria-disabled={busy} onclick={undo}>Undo</button>
-      {/if}
+    <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
+      <NoteLine announce {message} {refusal} {busy} onUndo={previous ? undo : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
       Sign up to newsletters with this address and each one arrives as its own feed. Unsubscribing from a feed also

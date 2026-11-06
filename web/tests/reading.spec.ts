@@ -40,6 +40,18 @@ test.describe("on a wide window", () => {
     await expect(articleProblem).toHaveCount(0);
     await expect(article(page).locator("h2.article-title")).toBeFocused();
 
+    // The list itself: Try again asks for it again from the top, the keyboard waiting on the list's heading.
+    let listFailing = true;
+    await page.route(/\/api\/(items|articles)\?/, (route) => (listFailing ? route.fulfill({ status: 500 }) : route.fallback()));
+    await page.keyboard.press("r");
+    const listProblem = page.getByRole("status").filter({ hasText: "The articles couldn't be loaded." });
+    await expect(listProblem).toBeVisible();
+    listFailing = false;
+    await tabTo(page, listProblem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
+    await expect(listProblem).toHaveCount(0);
+    await expect(page.locator("#list-heading")).toBeFocused();
+
     let feedsFailing = true;
     await page.route("**/api/feeds", (route) =>
       feedsFailing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback(),

@@ -12,6 +12,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import { refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
   import { UNDONE } from "./messages";
   import { headline, listSick, reason, type Sick } from "./health";
@@ -118,7 +119,7 @@
 
 <span id="health-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
 {#if failed}
-  <p role="status" class="text-ink-2">Who isn't working couldn't be checked. Try again in a moment.</p>
+  <LoadFailed words="Who isn't working couldn't be checked." heading="your-feeds-heading" onRetry={() => ((failed = false), reload())} />
 {:else if rows}
   {#each groups as group (group.id)}
     {#if group.rows.length > 0}

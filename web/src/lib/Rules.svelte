@@ -12,6 +12,8 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
+  import NoteLine from "./NoteLine.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
   import { rowFor } from "./people";
   import type { Feed } from "./shapes";
@@ -44,6 +46,8 @@
   let empty = $state(false);
   /** The line under the group: what just happened, and Undo while it can be undone. */
   let message = $state("");
+  /** The line says something failed: oxblood, with the alert icon. */
+  let refusal = $state(false);
   let undo: (() => Promise<void>) | undefined = $state();
   let busy = $state(false);
   let field: HTMLInputElement | undefined = $state();
@@ -73,9 +77,17 @@
     if (forFeed !== undefined) tick().then(() => field?.focus());
   });
 
-  function say(text: string, then?: () => Promise<void>) {
+  function say(text: string, then?: () => Promise<void>, failure = false) {
     message = text;
     undo = then;
+    refusal = failure;
+  }
+
+  /** × on the line: it goes, and the keyboard's place goes to the group's heading. */
+  async function closeNote() {
+    say("");
+    await tick();
+    document.getElementById("rules-heading")?.focus();
   }
 
   async function add(event: SubmitEvent) {
@@ -107,7 +119,7 @@
     const made = await createRule({ words: typed, feedId, days: length });
     busy = false;
     if (typeof made === "string") {
-      say(ruleRefused(made));
+      say(ruleRefused(made), undefined, true);
       return;
     }
     words = "";
@@ -118,7 +130,8 @@
       const removed = await deleteRule(made.id);
       const unhid = made.ids.length > 0 ? await setMuted(made.ids, false) : undefined;
       const refusal = [removed, unhid].find((answer) => answer !== undefined && answer !== "gone");
-      say(refusal === undefined ? UNDONE : refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal));
+      if (refusal === undefined) say(UNDONE);
+      else say(refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal), undefined, true);
       await reload();
     });
     field?.focus();
@@ -129,14 +142,15 @@
     if (busy) return;
     const refusal = await deleteRule(rule.id);
     if (refusal && refusal !== "gone") {
-      say(ruleRefused(refusal, "The word couldn't be removed."));
+      say(ruleRefused(refusal, "The word couldn't be removed."), undefined, true);
       return;
     }
     await reload();
     say(`Removed ${wordShown(rule)}.`, async () => {
       // Made again under a new number: harmless, as the order never decides what's hidden.
       const made = await createRule({ ...rule, restore: true });
-      say(made === "gone" ? `${wordShown(rule)}'s time was up.` : made === "trouble" ? UNDO_FAILED : typeof made === "string" ? ruleRefused(made) : UNDONE);
+      if (typeof made !== "string") say(UNDONE);
+      else say(made === "gone" ? `${wordShown(rule)}'s time was up.` : made === "trouble" ? UNDO_FAILED : ruleRefused(made), undefined, true);
       await reload();
     });
     // The keyboard goes to the next word's Remove, or back to the field.
@@ -214,16 +228,11 @@
     {#if empty}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>Type a word or phrase first.{/if}
   </p>
   <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
-    {#if message}
-      <p>{message}</p>
-      {#if undo}
-        <button type="button" class="btn btn-small" aria-disabled={busy} onclick={runUndo}>Undo</button>
-      {/if}
-    {/if}
+    <NoteLine {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onClose={closeNote} />
   </div>
-  <p role="alert" class={["inset-foot flex items-start gap-1.5 text-danger", !failed && "sr-only"]}>
-    {#if failed}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>What's hidden couldn't be loaded. Try again in a moment.{/if}
-  </p>
+  {#if failed}
+    <LoadFailed class="inset-foot" words="What's hidden couldn't be loaded." heading="rules-heading" onRetry={() => ((failed = false), reload())} />
+  {/if}
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>
 
