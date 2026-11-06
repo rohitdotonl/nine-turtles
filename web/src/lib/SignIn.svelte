@@ -216,7 +216,7 @@
       <p id="link-sent" role="status" class="break-words">
         If <span class="font-semibold">{sent}</span> has an account here, a link is on its way. It works once, within {SIGN_IN_LINK_MINUTES} minutes.
       </p>
-      <SendAgain onSend={askAgain} />
+      <SendAgain to={sent} onSend={askAgain} />
       <a href="/" class="btn rounded-lg" onclick={(event) => switchTo(event, false)}>Back to sign in</a>
     </div>
   {:else}

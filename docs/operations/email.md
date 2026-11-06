@@ -6,7 +6,7 @@ may choose a new password (decision 0122), and the link that confirms a
 changed address, and the weekly email for readers who turn it on (SPEC
 section 39, decision 0150). (The older "A new password for nine turtles" link is no
 longer offered on the sign-in page; one already sent still works.) It also sends the link that finishes signing up by confirming the
-new reader's address (decision 0154). Without email, none of these work,
+new reader's address (decision 0154), and, when someone signs up with an address that already has an account, a note saying so instead ("You already have a nine turtles account", decision 0195). Without email, none of these work,
 and sign-up makes the account at once without confirming the address. This page sets it up with **Brevo**. Any other email
 service that offers "SMTP" works the same way: only the five settings change.
 

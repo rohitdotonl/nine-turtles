@@ -48,6 +48,38 @@ async function send(path: string, body: unknown): Promise<Response | undefined> 
 /** After a link is sent, "Send again" waits this long; the server sends one link of a kind a minute anyway. */
 export const RESEND_AFTER_SECONDS = 60;
 
+/** The webmail a few big providers' addresses read in, by the part after the @. */
+const INBOXES: { name: string; url: string; domains: string[] }[] = [
+  { name: "Gmail", url: "https://mail.google.com/", domains: ["gmail.com", "googlemail.com"] },
+  {
+    name: "Outlook",
+    url: "https://outlook.live.com/mail/",
+    domains: [
+      "outlook.com",
+      "outlook.co.uk",
+      "hotmail.com",
+      "hotmail.co.uk",
+      "hotmail.fr",
+      "hotmail.de",
+      "live.com",
+      "live.co.uk",
+      "msn.com",
+    ],
+  },
+  { name: "iCloud Mail", url: "https://www.icloud.com/mail/", domains: ["icloud.com", "me.com", "mac.com"] },
+  { name: "Proton Mail", url: "https://mail.proton.me/", domains: ["proton.me", "protonmail.com", "protonmail.ch", "pm.me"] },
+];
+
+/**
+ * Where the reader of `email` can open their inbox, when its address says
+ * (decision 0195), or nothing: offered as a link to press, never opened by itself.
+ */
+export function inboxFor(email: string): { name: string; url: string } | undefined {
+  const domain = email.trim().toLowerCase().split("@").pop() ?? "";
+  const inbox = INBOXES.find((inbox) => inbox.domains.includes(domain));
+  return inbox && { name: inbox.name, url: inbox.url };
+}
+
 export type AskResult = "asked" | "email" | "no-email" | "unreachable";
 
 /** How long a sign-in link works, in minutes (the server's `SIGN_IN_LIFETIME`). */
