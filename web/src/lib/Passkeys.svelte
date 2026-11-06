@@ -11,6 +11,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { UNDONE } from "./messages";
   import {
     type PasskeyRow,
     addPasskey,
@@ -136,7 +137,7 @@
     busy = false;
     if (result === "ok") {
       passkey.name = draft.trim() === "" ? null : draft.trim();
-      say("Saved the passkey's name.");
+      say("Passkey name saved.");
       await stopRename(passkey.id);
       return;
     }
@@ -157,9 +158,9 @@
     undo = async () => {
       if (await undoRemove(passkey.id)) {
         await reload();
-        say("The passkey is back.");
+        say(UNDONE);
       } else {
-        say("The passkey couldn't be brought back. Add it again instead.", true);
+        say("That couldn't be undone. Add the passkey again instead.", true);
       }
     };
     await tick();

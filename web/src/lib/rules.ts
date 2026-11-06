@@ -106,8 +106,8 @@ export function addedMessage(words: string, hid: number, days?: 7 | 30): string 
   return `Hid ${hid === 1 ? "1 unread article" : `${hid} unread articles`} about ${word}${when}.`;
 }
 
-/** What Settings says when a word wasn't saved. */
-export function ruleRefused(refusal: RuleRefusal): string {
+/** What Settings says when a word wasn't saved; `failed` names what couldn't be done, for trouble (BRAND.md → "Messages"). */
+export function ruleRefused(refusal: RuleRefusal, failed = "The word couldn't be added."): string {
   switch (refusal) {
     case "nothing-to-match":
       return "Write a word or phrase to hide articles about.";
@@ -120,7 +120,7 @@ export function ruleRefused(refusal: RuleRefusal): string {
     case "gone":
       return "This isn't here any more.";
     case "trouble":
-      return "That couldn't be saved. Try again in a moment.";
+      return `${failed} Try again in a moment.`;
   }
 }
 

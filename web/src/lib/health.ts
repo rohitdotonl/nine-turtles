@@ -125,7 +125,7 @@ export function reason(problem: string | null): string {
     case "slow-down":
       return "The site asked nine turtles to slow down, so it's waiting as asked.";
     case "not-allowed":
-      return "The address now points somewhere nine turtles never visits, such as a private network.";
+      return "The address now points somewhere nine turtles never visits.";
     case "not-an-address":
       return "Its address isn't a web address nine turtles can read.";
   }
@@ -190,6 +190,6 @@ export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): 
     case "gone":
       return "This feed isn't here any more.";
     case "trouble":
-      return "That didn't work just now. Try again in a moment.";
+      return doing === "find" ? "A new address couldn't be looked for. Try again in a moment." : "The feed couldn't be moved to that address. Try again in a moment.";
   }
 }

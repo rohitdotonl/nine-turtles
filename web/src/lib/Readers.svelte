@@ -21,7 +21,7 @@
 
   listPeople().then(
     (found) => (people = found),
-    () => (message = "Couldn't load the readers. Try again in a moment."),
+    () => (message = "The readers couldn't be loaded. Try again in a moment."),
   );
 </script>
 

@@ -86,6 +86,9 @@ test("Hide articles about… from someone's page hides what matches at once, and
   await expect(hidden.getByRole("status")).toHaveText("Unhidden. It's back in your lists, unread.");
   // Nothing moves: it stays, with Undo.
   await expect(hidden.getByRole("button", { name: "Undo unhiding Walking the long way home (2)" })).toBeFocused();
+  // Undo hides it again and says so in the house style (BRAND.md → "Messages").
+  await page.keyboard.press("Enter");
+  await expect(hidden.getByRole("status")).toHaveText("Undone.");
 
   // Escape goes back to Hiding (decision 0120).
   await page.keyboard.press("Escape");
@@ -151,7 +154,7 @@ test("a word hides an article as it arrives; a week says so, and Remove has Undo
   await expect(rules.getByRole("status")).toContainText("Removed “river”.");
   await expect(rules).not.toContainText(line);
   await rules.getByRole("button", { name: "Undo" }).click();
-  await expect(rules.getByRole("status")).toContainText("“river” is back.");
+  await expect(rules.getByRole("status")).toContainText("Undone.");
   await expect(rules.getByRole("button", { name: `Remove “river”, ${line}` })).toBeVisible();
 });
 
@@ -175,7 +178,7 @@ test("with the keyboard alone: a word added, then undone, keeps the keyboard's p
   await expect(field(page)).toBeFocused();
   await tabTo(page, rules.getByRole("button", { name: "Undo" }));
   await page.keyboard.press("Enter");
-  await expect(rules.getByRole("status")).toContainText("Put back the article about “commonplace”. It's no longer hidden.");
+  await expect(rules.getByRole("status")).toContainText("Undone.");
   await expect(field(page)).toBeFocused();
   const listed = await page.request.get(new URL(`/api/articles?feed=${id}&view=unread`, FEEDS_APP).href);
   expect(((await listed.json()).articles as unknown[]).length).toBe(3);

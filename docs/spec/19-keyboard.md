@@ -64,7 +64,7 @@
 4. Press `Shift+H`, `[`, `]`, `\`, `Shift+E`, `Shift+N` and `g` then `f` in a list: nothing happens (decision 0180).
 5. Open a long article and press Space a few times: it moves down a screen each time and stops at the end, staying on the same article. `Shift+Space` moves it back up. With the keyboard on the article's More button, Space opens its menu instead.
 6. Press `j` to choose an article, then `Enter`: the keyboard's place moves into the article.
-7. Press `Shift+A` in a feed: what's listed turns grey and the note says "Marked … articles as read" with Undo. Press `u`: they're unread again. `Shift+O` does nothing (decision 0171).
+7. Press `Shift+A` in a feed: what's listed turns grey and the note says "Marked … articles as read." with Undo. Press `u`: they're unread again. `Shift+O` does nothing (decision 0171).
 8. With an article open, press `c`: "Link copied." shows in the top bar, and pasting gives the publisher's address.
 9. In a feed inside a folder, press `o`: the folder closes in the sidebar; again, it opens. Press `i`: their page opens. Back in their list, press `e`: Edit opens; in a folder's list, `e` opens Edit folder.
 10. In Unread, press `Shift+J`: the next list in the sidebar opens; keep pressing and it goes on to the folders (each opens its combined list); `Shift+K` goes back. With a folder folded, its people are passed over and the next press goes to the next folder. In a feed, `End` chooses the last article loaded and `Home` the first. Open an article and press `End`: it scrolls to the article's end, and the same article stays chosen. On Settings, `End` scrolls the page. `g` then `,` opens Settings.

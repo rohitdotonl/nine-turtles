@@ -38,7 +38,7 @@ you paste.
   followed by its feed, exactly as an OPML import does (section 16): the same
   summary, nothing fetched until the background checks, a channel already
   followed not added twice. A file that isn't one says "That file doesn't
-  look like subscriptions.csv from Google Takeout."
+  look like a list of YouTube subscriptions."
 - **Videos sit with everything else.** A video arrives in Unread like a post;
   its list row's meta line ends with a small screen-and-play mark (screen
   readers hear "Video"). A video counts as read once opened, the same rule as

@@ -12,6 +12,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import { rowFor } from "./people";
   import type { Feed } from "./shapes";
   import { addedMessage, createRule, deleteRule, listRules, ruleLine, ruleRefused, setMuted, wordShown, type Rule } from "./rules";
@@ -117,12 +118,7 @@
       const removed = await deleteRule(made.id);
       const unhid = made.ids.length > 0 ? await setMuted(made.ids, false) : undefined;
       const refusal = [removed, unhid].find((answer) => answer !== undefined && answer !== "gone");
-      if (refusal) {
-        say(ruleRefused(refusal));
-        return;
-      }
-      const n = made.ids.length;
-      say(n > 0 ? `Put back the ${n === 1 ? "article" : `${n} articles`} about “${typed}”. It's no longer hidden.` : `“${typed}” is no longer hidden.`);
+      say(refusal === undefined ? UNDONE : refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal));
       await reload();
     });
     field?.focus();
@@ -133,14 +129,14 @@
     if (busy) return;
     const refusal = await deleteRule(rule.id);
     if (refusal && refusal !== "gone") {
-      say(ruleRefused(refusal));
+      say(ruleRefused(refusal, "The word couldn't be removed."));
       return;
     }
     await reload();
     say(`Removed ${wordShown(rule)}.`, async () => {
       // Made again under a new number: harmless, as the order never decides what's hidden.
       const made = await createRule({ ...rule, restore: true });
-      say(made === "gone" ? `${wordShown(rule)}'s time was up.` : typeof made === "string" ? ruleRefused(made) : `${wordShown(rule)} is back.`);
+      say(made === "gone" ? `${wordShown(rule)}'s time was up.` : made === "trouble" ? UNDO_FAILED : typeof made === "string" ? ruleRefused(made) : UNDONE);
       await reload();
     });
     // The keyboard goes to the next word's Remove, or back to the field.

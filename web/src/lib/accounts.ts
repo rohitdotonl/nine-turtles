@@ -12,6 +12,7 @@ import { PASSWORD_MINIMUM, errorOf } from "./readers";
 import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
+import { UNREACHABLE } from "./messages";
 
 /** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
@@ -66,7 +67,7 @@ export function explainAsked(result: AskResult, email: string): string {
     case "no-email":
       return "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 
@@ -131,13 +132,13 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
     case "already":
       return "That email already has an account. Sign in instead.";
     case "too-many":
-      return "Many people have signed up in the last hour. Try this link again later.";
+      return "Many people have signed up in the last hour. Try this link again in an hour.";
     case "password-short":
       return `Choose a password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":
       return "That password is too long.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 
@@ -186,7 +187,7 @@ export function explainChange(result: ChangeResult): string {
     case "no-email":
       return "This nine turtles can't send email yet, so your email can't be changed here.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 
