@@ -50,9 +50,10 @@ async function drag(page: Page, from: { x: number; y: number }, to: { x: number;
   if (held) await page.keyboard.up(held);
 }
 
-/** A point inside a row, brought into view first (unless `stay`), as other tests' folders may push it out of sight. */
+/** A point inside a row, brought to the sidebar's middle first (unless `stay`), as other tests' folders may push it out of sight. */
 async function middleOf(locator: Locator, stay = false) {
-  if (!stay) await locator.scrollIntoViewIfNeeded();
+  // In the middle of the sidebar, well away from its edges, where holding a row scrolls it.
+  if (!stay) await locator.evaluate((element) => element.scrollIntoView({ block: "center" }));
   const box = (await locator.boundingBox())!;
   return { x: box.x + 40, y: box.y + box.height / 2 };
 }
