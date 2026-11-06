@@ -12,6 +12,7 @@
   import Logo from "./Logo.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import TextButton from "./TextButton.svelte";
   import ListHead from "./ListHead.svelte";
   import PaneResizer from "./PaneResizer.svelte";
   import { onMount, tick, untrack } from "svelte";
@@ -306,9 +307,8 @@
     });
   });
 
-  // An article counts as read as soon as the reading area shows it (SPEC
-  // section 8). Only a newly shown article is marked, so `m` on the one
-  // already showing keeps it unread until you move away and back.
+  // An article counts as read as soon as the reading area shows it (SPEC section 8). Only a newly
+  // shown article is marked, so `m` on the one already showing keeps it unread until you move away and back.
   let lastShown: number | undefined;
   $effect(() => {
     const showing = panes.article ? selected : undefined;
@@ -1004,7 +1004,7 @@
         />
       {/if}
       {#if library.feedsFailed}
-        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-small">Your feeds couldn't be loaded.<button type="button" onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button></p>
+        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-small">Your feeds couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />

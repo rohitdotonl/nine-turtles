@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import TextButton from "./TextButton.svelte";
   import { tick } from "svelte";
   import { date } from "./admin";
   import { resubscribe } from "./feeds";
@@ -40,16 +41,26 @@
   let heading: HTMLHeadingElement | undefined = $state();
   const address = mcpAddress(location.origin);
 
-  listAssistants().then(
-    (list) => {
-      assistants = list.assistants;
-      unsubscribed = list.unsubscribed;
-    },
-    () => {
-      assistants = [];
-      failed = true;
-    },
-  );
+  function load() {
+    listAssistants().then(
+      (list) => {
+        assistants = list.assistants;
+        unsubscribed = list.unsubscribed;
+        failed = false;
+      },
+      () => {
+        assistants = [];
+        failed = true;
+      },
+    );
+  }
+  load();
+
+  /** Try again: the button goes as the list is asked for again, so the keyboard waits on the group's heading. */
+  function retry() {
+    heading?.focus();
+    load();
+  }
 
   async function copy(text: string, what: string) {
     try {
@@ -191,7 +202,10 @@
     </p>
   {/if}
   {#if failed}
-    <p role="status" class="inset-foot flex items-start gap-1.5 text-danger"><span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>The connected assistants couldn't be loaded. Try again in a moment.</p>
+    <p role="status" class="inset-foot flex items-center gap-1.5 text-danger">
+      <span class="shrink-0"><Icon name="alert" size={16} /></span>The connected assistants couldn't be loaded.
+      <TextButton class="-ml-1 px-1" onclick={retry}>Try again</TextButton>
+    </p>
   {/if}
   <p class="inset-foot">
     Connect an AI assistant such as Claude or ChatGPT to your nine turtles, so it can find, sort and tidy things for

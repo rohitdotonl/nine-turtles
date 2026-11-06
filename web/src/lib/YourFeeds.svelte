@@ -18,6 +18,8 @@
   import type { Folder } from "./shapes";
   import { deleteFolder, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
+  import NoteLine from "./NoteLine.svelte";
+  import TextButton from "./TextButton.svelte";
   import { pathFor } from "./router";
   import {
     folderNames,
@@ -58,6 +60,8 @@
   /** What the last action said, and its Undo until the next action. */
   let message = $state("");
   let undo: (() => Promise<void>) | undefined = $state();
+  /** The message says something failed: oxblood, with the alert icon. */
+  let refusal = $state(false);
   let moving = $state(false);
   /** Where Move to… sends them: "none" (no folder), a folder's number, "new", or "" until one is chosen, so Move never strips folders by default. */
   let destination = $state("");
@@ -106,7 +110,20 @@
 
   /** Undo lasts until your next action here. */
   function endUndo() {
-    [message, undo] = ["", undefined];
+    [message, undo, refusal] = ["", undefined, false];
+  }
+
+  /** × on the line: it goes, and the keyboard's place goes to Choose…. */
+  async function closeNote() {
+    endUndo();
+    await tick();
+    editButton?.focus();
+  }
+
+  /** Try again after the list couldn't load: the keyboard waits on the page's heading. */
+  async function retry() {
+    heading?.focus();
+    await load();
   }
 
   function toggleEditing() {
@@ -127,8 +144,7 @@
 
   /** An action finished: its words and Undo show, Choose ends, and the keyboard goes to Undo. */
   async function done(words: string, reverse: () => Promise<void>) {
-    message = words;
-    undo = reverse;
+    [message, undo, refusal] = [words, reverse, false];
     editing = false;
     chosen = [];
     onFeedsChanged();
@@ -142,10 +158,10 @@
     const going = picked();
     if (going.length === 0 || busy) return;
     busy = true;
-    const refusal = await unsubscribeAll(placeIds(going));
+    const why = await unsubscribeAll(placeIds(going));
     busy = false;
-    if (refusal) {
-      [message, undo] = [refused(refusal, "feed"), undefined];
+    if (why) {
+      [message, undo, refusal] = [refused(why, "feed"), undefined, true];
       return;
     }
     await done(unsubscribedMessage(going.map((feed) => feed.title)), async () => {
@@ -205,8 +221,8 @@
     try {
       await undo();
       [message, undo] = [UNDONE, undefined];
-    } catch (refusal) {
-      [message, undo] = [undoRefused(refusal === "too-late" ? "too-late" : "trouble", "feed"), undefined];
+    } catch (why) {
+      [message, undo, refusal] = [undoRefused(why === "too-late" ? "too-late" : "trouble", "feed"), undefined, true];
     }
     busy = false;
     onFeedsChanged();
@@ -228,15 +244,10 @@
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} />
       {#if failed}
-        <p role="status" class="text-ink-2">Everyone you follow couldn't be loaded. Try again in a moment.</p>
+        <p role="status" class="text-ink-2">Everyone you follow couldn't be loaded. <TextButton onclick={retry}>Try again</TextButton></p>
       {:else if feeds}
         <!-- What the last action did, with its Undo, until the next one. -->
-        <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", !message && "sr-only"]}>
-          <p role="status" class="text-ink">{message}</p>
-          {#if undo}
-            <button type="button" bind:this={undoButton} class="btn btn-small" aria-disabled={busy} onclick={takeBack}>Undo</button>
-          {/if}
-        </div>
+        <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />
 
         {#if listed.length === 0}
           <p class="text-ink-2">You don't follow anyone yet.</p>

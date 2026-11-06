@@ -12,6 +12,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
+  import TextButton from "./TextButton.svelte";
   import { refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
   import { UNDONE } from "./messages";
   import { headline, listSick, reason, type Sick } from "./health";
@@ -65,6 +66,12 @@
    * what took the button's place (`what`, a `data-focus` name in the feed's
    * row), so it never falls back to the top of the page.
    */
+  /** Try again: the button goes as the list is asked for again, so the keyboard waits on the page's heading. */
+  function retry() {
+    document.getElementById("your-feeds-heading")?.focus();
+    reload();
+  }
+
   async function focusIn(row: Row, what: string) {
     await tick();
     document.querySelector<HTMLElement>(`#health-feed-${row.feed.id} [data-focus="${what}"]`)?.focus();
@@ -118,7 +125,7 @@
 
 <span id="health-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
 {#if failed}
-  <p role="status" class="text-ink-2">Who isn't working couldn't be checked. Try again in a moment.</p>
+  <p role="status" class="text-ink-2">Who isn't working couldn't be checked. <TextButton onclick={retry}>Try again</TextButton></p>
 {:else if rows}
   {#each groups as group (group.id)}
     {#if group.rows.length > 0}

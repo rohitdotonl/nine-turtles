@@ -173,6 +173,31 @@ test("a rule hides an article as it arrives; rules pause, and Delete has Undo", 
   await rules.getByRole("button", { name: "Undo" }).click();
   await expect(rules.getByRole("status")).toContainText("Undone.");
   await expect(rules).toContainText(`${sentence} Paused.`);
+  // The line has a ×, as the list's note does: it goes, and the keyboard waits on the group's heading.
+  await rules.getByRole("button", { name: "Close the note" }).click();
+  await expect(rules.getByText("Undone.")).toBeHidden();
+  await expect(page.locator("#rules-heading")).toBeFocused();
+});
+
+test("when the rules couldn't load, Try again loads them, keeping the keyboard's place", async ({ page }) => {
+  await page.goto(new URL("/settings/hiding", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route("**/api/rules", (route) =>
+    failing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback(),
+  );
+  await page.reload();
+  await appReady(page);
+  const rules = page.getByRole("region", { name: "Hiding" }).last();
+  const problem = rules.getByRole("status").filter({ hasText: "What's hidden couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.locator("#rules-heading")).toBeFocused();
+  await expect(rules.getByRole("button", { name: "Hide articles about…" })).toBeVisible();
 });
 
 test("with the keyboard alone: a new rule, its switch, and Not now keep the keyboard's place", async ({ page }) => {

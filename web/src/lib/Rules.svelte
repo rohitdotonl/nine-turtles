@@ -12,6 +12,8 @@
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
+  import NoteLine from "./NoteLine.svelte";
+  import TextButton from "./TextButton.svelte";
   import type { Feed } from "./shapes";
   import {
     appliedMessage,
@@ -47,6 +49,8 @@
   let failed = $state(false);
   /** The line under the group: what just happened, and what can be done about it. */
   let message = $state("");
+  /** The message says something failed: oxblood, with the alert icon. */
+  let refusal = $state(false);
   let question: { id: number; count: number } | undefined = $state();
   let undo: (() => Promise<void>) | undefined = $state();
   let busy = $state(false);
@@ -69,6 +73,7 @@
 
   function clear() {
     message = "";
+    refusal = false;
     question = undefined;
     undo = undefined;
   }
@@ -89,9 +94,9 @@
   /** The editor's Delete: gone at once, with Undo making it again. */
   export async function remove(rule: Rule) {
     clear();
-    const refusal = await deleteRule(rule.id);
-    if (refusal && refusal !== "gone") {
-      message = ruleRefused(refusal, "The rule couldn't be deleted.");
+    const refused = await deleteRule(rule.id);
+    if (refused && refused !== "gone") {
+      [message, refusal] = [ruleRefused(refused, "The rule couldn't be deleted."), true];
       return;
     }
     await reload();
@@ -100,7 +105,7 @@
     undo = async () => {
       const made = await createRule({ ...rule, paused: rule.paused });
       if (typeof made === "string") {
-        message = made === "trouble" ? UNDO_FAILED : ruleRefused(made);
+        [message, refusal] = [made === "trouble" ? UNDO_FAILED : ruleRefused(made), true];
         return;
       }
       message = UNDONE;
@@ -122,13 +127,13 @@
     busy = false;
     question = undefined;
     if (!Array.isArray(ids)) {
-      message = ruleRefused(ids, "Those articles couldn't be hidden.");
+      [message, refusal] = [ruleRefused(ids, "Those articles couldn't be hidden."), true];
       return;
     }
     message = appliedMessage(ids.length);
     undo = async () => {
-      const refusal = await unapply(ids);
-      message = refusal === undefined ? UNDONE : refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal);
+      const refused = await unapply(ids);
+      [message, refusal] = refused === undefined ? [UNDONE, false] : [refused === "trouble" ? UNDO_FAILED : ruleRefused(refused), true];
       await reload();
     };
     await reload();
@@ -160,11 +165,23 @@
   async function toggle(rule: Rule, on: boolean) {
     clear();
     rule.paused = !on;
-    const refusal = await pauseRule(rule.id, !on);
-    if (refusal) {
+    const refused = await pauseRule(rule.id, !on);
+    if (refused) {
       rule.paused = on;
-      message = ruleRefused(refusal, on ? "The rule couldn't be switched on." : "The rule couldn't be paused.");
+      [message, refusal] = [ruleRefused(refused, on ? "The rule couldn't be switched on." : "The rule couldn't be paused."), true];
     }
+  }
+
+  /** × on the line: it goes, and the keyboard's place goes to the group's heading. */
+  async function closeNote() {
+    clear();
+    await keepPlace();
+  }
+
+  /** Try again after the rules couldn't load: the button goes, so the keyboard waits on the group's heading. */
+  async function retry() {
+    document.getElementById("rules-heading")?.focus();
+    await reload();
   }
 
   function edit(rule: Rule) {
@@ -219,15 +236,15 @@
         >
         <button type="button" class="btn btn-small" onclick={notNow}>Not now</button>
       </span>
-    {:else if message}
-      <p>{message}</p>
-      {#if undo}
-        <button type="button" class="btn btn-small" data-focus="undo" aria-disabled={busy} onclick={runUndo}>Undo</button>
-      {/if}
+    {:else}
+      <NoteLine {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onClose={closeNote} />
     {/if}
   </div>
   {#if failed}
-    <p role="status" class="inset-foot flex items-start gap-1.5 text-danger"><span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>What's hidden couldn't be loaded. Try again in a moment.</p>
+    <p role="status" class="inset-foot flex items-center gap-1.5 text-danger">
+      <span class="shrink-0"><Icon name="alert" size={16} /></span>What's hidden couldn't be loaded.
+      <TextButton class="-ml-1 px-1" onclick={retry}>Try again</TextButton>
+    </p>
   {/if}
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>

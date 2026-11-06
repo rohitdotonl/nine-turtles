@@ -39,6 +39,7 @@
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, writerOf, type OneSource } from "./people";
   import { UNDONE, UNDO_FAILED } from "./messages";
+  import TextButton from "./TextButton.svelte";
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
@@ -245,6 +246,13 @@
     if (focusWasInList && !rows.some((row) => row === document.activeElement)) {
       queueMicrotask(() => (rows[selectedIndex] ?? rows[0])?.focus());
     }
+  }
+
+  /** Try again after the list couldn't load: the button goes as the list is asked for again, so the keyboard waits on the list's heading. */
+  function retryList() {
+    document.getElementById("list-heading")?.focus({ preventScroll: true });
+    if (articles.length > 0 && next !== null) load(next);
+    else void refresh();
   }
 
   /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
@@ -655,7 +663,8 @@
   {/if}
 {/if}
 {#if problem}
-  <p role="status" class="mt-4">{problem}</p>
+  <!-- Try again only where it's the fix: never without a connection, which says when it works again. -->
+  <p role="status" class="mt-4">{problem}{#if !connection.offline}{" "}<TextButton onclick={retryList}>Try again</TextButton>{/if}</p>
 {/if}
 <!--
   What was just done (with Undo), "New articles · press r", or that nine turtles was
@@ -677,10 +686,10 @@
       <span role="status" class="min-w-0 py-2">{line}</span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
-        <button type="button" onclick={retryByButton} class="-mr-2 min-h-11 min-w-11 shrink-0 px-2 font-semibold text-ink underline underline-offset-4">Try again</button>
+        <TextButton onclick={retryByButton} class="-mr-2 px-2">Try again</TextButton>
       {/if}
       {#if undoLast && saying}
-        <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 shrink-0 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
+        <TextButton onclick={undoByButton} class="-mr-2 px-2">Undo</TextButton>
       {/if}
       {#if saying}
         <button type="button" onclick={closeByButton} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
@@ -689,14 +698,10 @@
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>
       <span role="status">{updates.otherReader ? OTHER_READER_MESSAGE : updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
       {#if updates.stranded || updates.otherReader}
-        <button type="button" onclick={() => location.reload()} class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
-          >Reload</button
-        >
+        <TextButton onclick={() => location.reload()} class="ml-2">Reload</TextButton>
       {:else if newWaiting && touch}
         <!-- No r key on a touch screen, and Refresh sits in the More menu: the note offers to show them. -->
-        <button type="button" onclick={() => refresh()} aria-label="Show new articles" class="ml-2 min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4"
-          >Show</button
-        >
+        <TextButton onclick={() => refresh()} aria-label="Show new articles" class="ml-2">Show</TextButton>
       {/if}
     </p>
   </div>
