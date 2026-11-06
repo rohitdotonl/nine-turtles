@@ -9,9 +9,11 @@
   blog's own title under it when that isn't their name (one source), then
   "Write to Tomas Berg", the solid button with the paper plane, with the
   address under it (WriteBack, the owner's core path, points 9 and 10), then
-  their sources, each by what it is (Blog, Video, Newsletter, Podcast) with a
-  link to the publisher's own site, and the reader's private note on them (SPEC section 42), then a quiet
-  "Hide articles about…" (SPEC section 27). No
+  the reader's private note on them (SPEC section 42), then Lately and Your
+  highlights from their writing (TheirReading, decision 0207), then their
+  sources, each by what it is (Blog, Video, Newsletter, Podcast) with a link
+  to the publisher's own site, then a quiet "Hide articles about…" (SPEC
+  section 27). No
   picture and no color. Edit turns the same page into its settings
   (WhoEdit), and a person's source opens its own settings (SourcePage).
 -->
@@ -20,13 +22,14 @@
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
   import SourcePage from "./SourcePage.svelte";
+  import TheirReading from "./TheirReading.svelte";
   import WhoEdit from "./WhoEdit.svelte";
   import type { Notice } from "./feeds";
   import type { Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf } from "./people";
   import type { Route } from "./router";
-  import type { Feed } from "./shapes";
+  import type { Article, Feed } from "./shapes";
 
   let {
     route,
@@ -40,6 +43,7 @@
     onMoved,
     onSaved,
     onFolders,
+    onOpen,
   }: {
     route: Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }>;
     /** Their row's place: the one their address and list open at. */
@@ -58,6 +62,8 @@
     onSaved: () => void;
     /** Edit put them in a folder just made or chosen: the sidebar opens it. */
     onFolders?: (folders: number[]) => void;
+    /** A piece of theirs pressed in Lately or Your highlights: it opens, in its list. */
+    onOpen?: (article: Article) => void;
   } = $props();
 
   let places = $derived(placesOf(feed, library.feeds ?? []));
@@ -114,6 +120,10 @@
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
       </div>
       <WriteBack feedId={feed.id} {library} />
+      <!-- The reader's private note on them (SPEC section 42). -->
+      <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
+      <!-- Lately and Your highlights from their writing (decision 0207). -->
+      {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
       <div class="flex flex-col gap-2">
         <h3 class="text-small text-ink-2">{places.length > 1 ? "Sources" : "Source"}</h3>
         <dl class="who-facts">
@@ -129,8 +139,6 @@
           {/each}
         </dl>
       </div>
-      <!-- The reader's private note on them (SPEC section 42). -->
-      <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
       <p class="text-small"><button type="button" class="text-link" onclick={onHide}>Hide articles about…</button></p>
     {/if}
   </div>
