@@ -383,7 +383,7 @@
         steps.sheetOpenedByBrowser();
       }
       route = next;
-      stopTrying(); // Back and Forward end the welcome's "Or try one" too (decision 0195).
+      stopTrying(); // Back and Forward end the welcome's "Or try one" too (decision 0198).
       if (isList(route)) lastPlace = route;
       if (!move.keepsArticle) {
         selected = undefined;
