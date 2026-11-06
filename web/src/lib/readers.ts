@@ -7,7 +7,7 @@
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { duration } from "./session";
-import { UNREACHABLE } from "./messages";
+import { UNREACHABLE, tooManyTries } from "./messages";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -161,7 +161,7 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
     case "password-needed":
       return "Type the password you chose when you signed up.";
     case "wait":
-      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+      return tooManyTries(duration(result.waitSeconds));
     case "expired":
       return "This link has expired or was already used. Sign up again for a new one.";
     case "already":

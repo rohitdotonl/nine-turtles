@@ -58,7 +58,7 @@
     refusedField =
       result.reason === "email" || result.reason === "same"
         ? "email"
-        : result.reason === "wrong-password" || result.reason === "wait"
+        : result.reason === "wrong-password" || result.reason === "password-needed" || result.reason === "wait"
           ? "password"
           : undefined;
     if (result.reason === "wrong-password") password = "";

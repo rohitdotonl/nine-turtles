@@ -34,10 +34,8 @@ use sqlx::SqlitePool;
 use crate::{
     AppState,
     auth::{
-        Account, OWNER, OWNER_PASSWORD_FROM, SignedIn, ask_password, database_problem, new_token,
-        remember_device, scramble, session_cookie, setting_fingerprint,
+        Account, SignedIn, database_problem, new_token, remember_device, scramble, session_cookie,
     },
-    config::PasswordSetting,
     email::SIGN_OFF,
     log, now,
     people::{self, plausible_email, too_many},
@@ -394,24 +392,9 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         Some(person) => (Account::Email(format!("reader {person}")), person),
         None => return refused(StatusCode::GONE, "expired"),
     };
-    let password = form.password;
-    let scrambled = {
-        // Only closed if the app is stopping.
-        let Ok(_turn) = state.password_checks.line_for(&account).acquire().await else {
-            return StatusCode::SERVICE_UNAVAILABLE.into_response();
-        };
-        tokio::task::spawn_blocking(move || crate::password::hash(&password)).await
-    };
-    let line = match scrambled {
-        Ok(Ok(line)) => line,
-        Ok(Err(error)) => {
-            log::problem(&error);
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-        Err(error) => {
-            log::problem(&format!("couldn't scramble a new password: {error}"));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
+    let line = match crate::own_password::scramble_new(&state, &account, form.password).await {
+        Ok(line) => line,
+        Err(refusal) => return *refusal,
     };
 
     let changed = async {
@@ -443,38 +426,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         let Some(person) = claimed.filter(|person| *person == waiting_for) else {
             return Ok::<_, sqlx::Error>(None);
         };
-        let email: Option<String> =
-            sqlx::query_scalar("UPDATE people SET password_hash = ? WHERE id = ? RETURNING email")
-                .bind(&line)
-                .bind(person)
-                .fetch_optional(&mut *transaction)
-                .await?
-                .flatten();
-        // Any other password link or sign-in link for them stops working,
-        // and every device signed in as them is signed out.
-        sqlx::query(
-            "UPDATE email_links SET used = 1
-             WHERE person_id = ? AND purpose IN ('reset', 'sign-in')",
-        )
-        .bind(person)
-        .execute(&mut *transaction)
-        .await?;
-        sqlx::query("DELETE FROM sessions WHERE person_id = ?")
-            .bind(person)
-            .execute(&mut *transaction)
-            .await?;
-        // The owner's own password lasts only while NINE_TURTLES_PASSWORD_HASH
-        // stays as it is now (`auth::owner_password_follows_setting`).
-        if person == OWNER {
-            sqlx::query(
-                "INSERT INTO settings (name, value) VALUES (?, ?)
-                 ON CONFLICT (name) DO UPDATE SET value = excluded.value",
-            )
-            .bind(OWNER_PASSWORD_FROM)
-            .bind(setting_fingerprint(&state.config.password))
-            .execute(&mut *transaction)
-            .await?;
-        }
+        let email = crate::own_password::store_new(&mut transaction, &state, person, &line).await?;
         transaction.commit().await?;
         Ok(Some((person, email)))
     }
@@ -484,19 +436,7 @@ async fn reset(State(state): State<AppState>, Json(form): Json<Reset>) -> Respon
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("setting a new password", &error),
     };
-    // Any other offer to choose a password, after a sign-in link, ends too.
-    state.password_choices.end_for(person);
-
-    // Earlier wrong tries for this account are forgotten: it has a new
-    // password. The owner has a count of their own for while they have no email.
-    let mut limiters = state.limiter.lock().await;
-    if email.is_some() {
-        limiters.right(&Account::named(email.as_deref()));
-    }
-    if person == OWNER {
-        limiters.right(&Account::Owner);
-    }
-    drop(limiters);
+    crate::own_password::after_new(&state, person, email.as_deref()).await;
     signed_in_as(&state.db, person, json!({ "done": "reset" })).await
 }
 
@@ -672,7 +612,7 @@ impl PasswordChoices {
     }
 
     /// Every offer for `person` stops working (a new password was set).
-    fn end_for(&self, person: i64) {
+    pub(crate) fn end_for(&self, person: i64) {
         let mut waiting = self
             .waiting
             .lock()
@@ -726,9 +666,6 @@ pub(crate) fn password_problem(password: &str) -> Option<Response> {
     None
 }
 
-/// A reader's email, own scrambled password, and whether they're the owner.
-type SigningIn = (Option<String>, Option<String>, bool);
-
 #[derive(Deserialize)]
 struct ChangeEmail {
     email: String,
@@ -750,38 +687,16 @@ async fn change_email(
     if !plausible_email(&email) {
         return refused(StatusCode::BAD_REQUEST, "email");
     }
-    let found: Result<Option<SigningIn>, sqlx::Error> =
-        sqlx::query_as("SELECT email, password_hash, owner FROM people WHERE id = ?")
-            .bind(person)
-            .fetch_optional(&state.db)
-            .await;
-    let (current, own_line, owner) = match found {
-        Ok(Some(found)) => found,
-        Ok(None) => return StatusCode::UNAUTHORIZED.into_response(),
-        Err(error) => return database_problem("finding a reader", &error),
+    // The password first, checked as sign-in checks it (decision 0200).
+    let current = match crate::own_password::confirm(&state, person, form.password).await {
+        Ok(current) => current,
+        Err(refusal) => return *refusal,
     };
     if current
         .as_deref()
         .is_some_and(|current| current.eq_ignore_ascii_case(&email))
     {
         return refused(StatusCode::BAD_REQUEST, "same");
-    }
-
-    // The password, checked as a sign-in by email checks it: the same count
-    // of wrong tries (under the reader's email, the owner's too) and the
-    // same bounded line for the check itself.
-    let account = match current.as_deref() {
-        Some(current) => Account::named(Some(current)),
-        // A reader with no email has no sign-in count of their own; this
-        // can't be anyone's email, so it never meets another's count.
-        None => Account::Email(format!("reader {person}")),
-    };
-    let stored = own_line.or(match &state.config.password {
-        PasswordSetting::Set(line) if owner => Some(line.clone()),
-        _ => None,
-    });
-    if let Some(refusal) = ask_password(&state, &account, form.password, stored).await {
-        return refusal;
     }
 
     let sent = (StatusCode::ACCEPTED, Json(json!({ "sent_to": email }))).into_response();
@@ -811,24 +726,42 @@ async fn change_email(
         &email,
         "Confirm your new email for nine turtles",
         format!(
-            "Hello,\n\nTo use this address for your nine turtles account, open this link:\n\n\
-             {link}\n\nIt works once, for the next 24 hours. Until then, your account keeps its \
-             old email. If you didn't ask for this, ignore this email.{SIGN_OFF}"
+            "Hello,\n\nSomeone, hopefully you, asked to use this email for a nine turtles \
+             account. To confirm it, open this link:\n\n{link}\n\nIt works once, for the next \
+             24 hours. Until then, the account keeps its old email. If you didn't ask, ignore \
+             this email: nothing changes.{SIGN_OFF}"
         ),
         "a link to confirm a new email",
     );
     sent
 }
 
+/// The reader's password, asked for before deleting.
+#[derive(Deserialize)]
+struct Confirm {
+    #[serde(default)]
+    password: String,
+}
+
 /// Deletes the signed-in reader's account and everything that is theirs,
 /// at once and for good (the owner's choice, decision 0088: one "Are you
-/// sure?" in the page, no waiting period). The owner's own account can't
+/// sure?" in the page, no waiting period), once their password is typed
+/// (decision 0200). The owner's own account can't
 /// be deleted here: nine turtles needs its owner.
-async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+async fn delete_me(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<Confirm>,
+) -> Response {
     match people::is_owner(&state.db, person).await {
         Ok(true) => return refused(StatusCode::FORBIDDEN, "owner"),
         Ok(false) => {}
         Err(error) => return database_problem("checking who's the owner", &error),
+    }
+    // Asked for, as for a new email: a device left signed in can't
+    // delete the account (decision 0200).
+    if let Err(refusal) = crate::own_password::confirm(&state, person, form.password).await {
+        return *refusal;
     }
     // A plan that would charge again is cancelled first; if Dodo can't be
     // reached, nothing is deleted, so nobody pays for an account that's gone.
@@ -854,7 +787,15 @@ async fn delete_me(SignedIn(person): SignedIn, State(state): State<AppState>) ->
 /// good (decision 0117: one "Are you sure?" in the page, no undo). Their
 /// feeds, folders, articles, stars, notes and rules
 /// go; they stay signed in, with their email, password and plan.
-async fn delete_my_data(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
+async fn delete_my_data(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Json(form): Json<Confirm>,
+) -> Response {
+    // Asked for, as for deleting the account (decision 0200).
+    if let Err(refusal) = crate::own_password::confirm(&state, person, form.password).await {
+        return *refusal;
+    }
     match people::delete_data(&state.db, person).await {
         Ok(()) => {
             log::info("a reader deleted their data");

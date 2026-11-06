@@ -118,6 +118,7 @@ is always said the same way.
 - **From** "nine turtles <hello@nineturtles.app>"; replies reach Rohit.
 - **Signed** on two lines: "Rohit", then "nine turtles".
 - The weekly email (the one a reader chooses, SPEC section 39) follows the same rules: plain text, signed by Rohit, never a count.
+- **Every email with a link** opens "Someone, hopefully you, asked to …" and ends "If you didn't ask, ignore this email: …", saying what happens if they do (Rohit's ask on 6 November 2026, decision 0200).
 - The "your email was changed" note ends: "Reply to this email and I'll help you get your account back."
 
 ## The website
