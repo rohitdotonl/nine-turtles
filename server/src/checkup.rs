@@ -36,7 +36,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// The longest the visit to the writer's site may take, both pages together.
-const LOOKING_FOR: Duration = Duration::from_secs(8);
+pub(crate) const LOOKING_FOR: Duration = Duration::from_secs(8);
 /// The longest name or title passed on.
 const LONGEST: usize = 300;
 

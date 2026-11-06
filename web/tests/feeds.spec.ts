@@ -786,7 +786,7 @@ test("Settings gives a computer a bookmark button to drag, built from this nine 
 test("a site with no feed offers to ask them for one: Write to finds their address on their site", async ({ page }) => {
   // Decision 0212: no dead ends.
   await openApp(page, "/add-feed");
-  await field(page).fill(`${NO_FEED_SITE}/asking/`);
+  await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toContainText("couldn't find a way to follow this site");
   const ask = page.getByRole("region", { name: "Ask them for a feed" });

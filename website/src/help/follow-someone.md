@@ -98,7 +98,7 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
   (such as RSS Bridge or OpenRSS) can give you one: paste the address it
   gives you, and nine turtles follows it like any other.
   Or ask them for one: press **Write to** under "Ask them for a feed".
-  nine turtles looks on the page you gave (and its contact page) for their
+  nine turtles looks on the site's home page (and its contact page) for their
   email address, and your email app opens with a short note you can change.
 - **"That site didn't answer."** It may be down for a moment. Try again
   later.

@@ -11,9 +11,13 @@ when known, else the same small box, with the one look on their site of
 decision 0168). Publications get neither. A search that found nothing in
 one place offers **Search all articles**, the same words everywhere, at
 once. And when Add finds no feed on a site, **Ask them for a feed** offers
-**Write to june.example**: nine turtles reads the page the reader gave and,
+**Write to june.example**: nine turtles reads that site's home page and,
 only if that shows no address, the one contact or about page it links to
 (the blog checkup's visit, decision 0178, under the feed finder's limits),
+never the page given, which may be an article. One reader may ask only a
+few times in half an hour, so an account can't be used to gather
+addresses from many sites; unlike the blog checkup, the address found is
+shown, because the reader is about to write to it,
 and the reader's email app opens with a short request they can change.
 Nothing is kept. The owner chose all three on 6 November 2026 from the
 "aha" mockups (idea 4), and said ship it; that is their yes to the new

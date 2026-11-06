@@ -1,7 +1,8 @@
 //! Ask them for a feed (SPEC section 3, decision 0212): for a site with no
-//! feed, nine turtles looks on the page the reader pasted, and only if that
-//! shows no address, the one contact page it links to; never any other
-//! page, and not again within half an hour. Tested against a real
+//! feed, nine turtles looks on its home page, and only if that shows no
+//! address, the one contact page it links to; never the page pasted (an
+//! article, say), not again within half an hour, and only a few times in
+//! half an hour for one reader. Tested against a real
 //! running nine turtles and a made-up site that counts its visitors.
 
 mod common;
@@ -70,8 +71,8 @@ async fn a_site_with_no_feed_gives_its_address_from_its_home_and_contact_pages_o
     let cookie = common::signed_in(&base).await;
     let (site, [home, contact, article]) = site().await;
 
-    // The page pasted, then its contact page; never the article it also links to.
-    let (status, found) = ask(&base, Some(&cookie), &format!("{site}/")).await;
+    // Asked about an article's page: its site's home page, then its contact page, never the article.
+    let (status, found) = ask(&base, Some(&cookie), &format!("{site}/notes/tea")).await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         found,
@@ -82,7 +83,7 @@ async fn a_site_with_no_feed_gives_its_address_from_its_home_and_contact_pages_o
     assert_eq!(article.load(Ordering::SeqCst), 0);
 
     // Asked again: the same answer, and the site isn't visited again.
-    let (_, again) = ask(&base, Some(&cookie), &format!("{site}/")).await;
+    let (_, again) = ask(&base, Some(&cookie), &format!("{site}/notes/tea")).await;
     assert_eq!(again, found);
     assert_eq!(home.load(Ordering::SeqCst), 1);
     assert_eq!(contact.load(Ordering::SeqCst), 1);
@@ -97,4 +98,18 @@ async fn only_a_signed_in_reader_can_ask_and_nonsense_is_not_looked_at() {
     let (status, answer) = ask(&base, Some(&cookie), "not an address").await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(answer, json!({ "address": null, "looked": false }));
+}
+
+#[tokio::test]
+async fn one_reader_asks_only_a_few_times_in_half_an_hour() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (site, [home, ..]) = site().await;
+    for _ in 0..6 {
+        ask(&base, Some(&cookie), "not an address").await;
+    }
+    let (status, answer) = ask(&base, Some(&cookie), &site).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(answer, json!({ "address": null, "looked": false }));
+    assert_eq!(home.load(Ordering::SeqCst), 0);
 }

@@ -136,7 +136,7 @@ impl Finder {
     }
 
     /// Counts a lookup of `site` at `now`, or says which limit is used up.
-    fn try_one(&self, site: &str, now: Instant) -> Result<(), Problem> {
+    pub(crate) fn try_one(&self, site: &str, now: Instant) -> Result<(), Problem> {
         let Ok(mut inner) = self.inner.lock() else {
             return Err(Problem::Busy);
         };

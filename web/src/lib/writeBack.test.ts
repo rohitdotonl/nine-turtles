@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { addressFor, askForFeedLink, looksLikeAddress, quotedBody, replySubject, siteName, siteOf, writeBackLink, writesBack } from "./writeBack";
+import { addressFor, askForFeedLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], ...changes };
@@ -70,14 +70,8 @@ describe("writing back", () => {
 });
 
 describe("asking a site for a feed", () => {
-  it("names the site as a reader says it", () => {
-    expect(siteName("https://www.june.example/notes/tea")).toBe("june.example");
-    expect(siteName("june.example")).toBe("june.example");
-    expect(siteName("  not a site ")).toBe("not a site");
-  });
-
   it("writes a short, plain request", () => {
-    const link = askForFeedLink("june@june.example", "https://june.example/notes");
+    const link = askForFeedLink("june@june.example", "june.example");
     expect(link.startsWith("mailto:june@june.example?subject=A%20feed%20for%20june.example%3F&body=")).toBe(true);
     expect(decodeURIComponent(link.split("body=")[1] ?? "")).toContain("couldn't find a feed for it");
   });

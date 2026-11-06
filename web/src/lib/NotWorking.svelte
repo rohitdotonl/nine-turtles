@@ -144,7 +144,7 @@
                 <p class="what text-ink-2">
                   <span class="font-semibold">{headline(row.feed)}.</span>
                   {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
-                  {#if row.group === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
+                  {#if row.feed.state === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
                 </p>
               {/if}
               <p role="status" class={["status text-ink", !row.message && "sr-only"]}>{row.message}</p>
@@ -174,7 +174,7 @@
                     onclick={() => !row.busy && leave(row)}>Unsubscribe</button
                   >
                 </div>
-                {#if row.group === "dead" && !row.choosing && aPerson(row.feed)}
+                {#if row.feed.state === "dead" && !row.choosing && aPerson(row.feed)}
                   <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). -->
                   <div class="write-to"><WriteBack feedId={row.feed.id} {library} quiet /></div>
                 {/if}

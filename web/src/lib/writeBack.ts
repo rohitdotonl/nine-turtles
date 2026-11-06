@@ -162,19 +162,8 @@ function siteGave({ answer }: { answer?: Record<string, unknown> }): SiteGave {
   };
 }
 
-/** A site's name as a reader says it: "june.example", without "www.". */
-export function siteName(site: string): string {
-  const href = /^https?:\/\//i.test(site.trim()) ? site.trim() : `https://${site.trim()}`;
-  try {
-    return new URL(href).hostname.replace(/^www\./, "");
-  } catch {
-    return site.trim();
-  }
-}
-
-/** The email asking `site`'s writer for a feed: a short, plain request the reader can change. */
-export function askForFeedLink(address: string, site: string): string {
-  const name = siteName(site);
+/** The email asking the writer of the site `name` ("june.example") for a feed: a short, plain request the reader can change. */
+export function askForFeedLink(address: string, name: string): string {
   const to = address.split("@").map(encodeURIComponent).join("@");
   const subject = `A feed for ${name}?`;
   const body = `Hello,\n\nI'd like to follow ${name} in my feed reader, but couldn't find a feed for it (RSS or Atom). Would you add one?\n\nThank you.\n`;

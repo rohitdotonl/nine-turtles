@@ -1201,7 +1201,7 @@
                   {source}
                   order={settings.sort}
                   {notice}
-                  empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => searching.everywhere()) : emptyText(under, currentFeed?.checkedAt ?? null)}
+                  empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => (searching.everywhere(), queueMicrotask(() => searchBar?.focus()))) : emptyText(under, currentFeed?.checkedAt ?? null)}
                   bold={searching.shown ? searchedTerms(searching.shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}

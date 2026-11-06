@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, nothingToPickUp, signIn } from "./screens";
+import { appReady, follow, nothingToPickUp, signIn, tabTo } from "./screens";
 
 // SPEC section 14 (search), "How to check it", done by a browser, with the
 // keyboard only. Each test uses blogs and a folder of its own, since every
@@ -306,9 +306,11 @@ test("a search that found nothing in one place offers Search all articles, which
   await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toBeVisible();
   const wider = page.getByRole("button", { name: "Search all articles" });
   await expect(wider).toBeVisible();
-  await wider.click();
-  // The same words, everywhere: nothing more to offer when that finds nothing too.
+  await tabTo(page, wider);
+  await page.keyboard.press("Enter");
+  // The same words, everywhere, with the keyboard back in the search field: nothing more to offer when that finds nothing too.
   await expect(field(page)).toHaveValue("zzyzxquux");
+  await expect(field(page)).toBeFocused();
   await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toHaveCount(0);
   await expect(page.getByText(/^Nothing found for “zzyzxquux”/)).toBeVisible();
   await expect(wider).toHaveCount(0);
