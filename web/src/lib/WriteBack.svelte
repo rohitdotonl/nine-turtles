@@ -32,18 +32,21 @@
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Article } from "./shapes";
-  import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, siteOf, writeBackLink, writesBack } from "./writeBack";
+  import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
 
   let {
     article,
     feedId,
     library,
+    quotes = () => [],
   }: {
     /** The article it writes back about; none on their page, where it writes to them. */
     article?: Article;
     /** On their page: their row's place. */
     feedId?: number;
     library: LoadedLibrary;
+    /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
+    quotes?: () => string[];
   } = $props();
 
   let source = $derived(library.feeds?.find((feed) => feed.id === (article?.feedId ?? feedId)));
@@ -55,6 +58,9 @@
   /** On their page: "Write to", an empty subject, under their name on the page's left edge. */
   let verb = $derived(article ? "Write back to" : "Write to");
   let subject = $derived(article?.title ?? "");
+  /** What the email starts with: the words of Write back about this, else every highlight. */
+  let chosen: string[] | undefined = $state();
+  let quoted = $derived(article ? (chosen ?? quotes()) : []);
 
   let asking = $state(false);
   /** Looking on their site for the address, what it found, that it found none, or couldn't look. */
@@ -76,13 +82,16 @@
     looked = undefined;
     typed = "";
     message = "";
+    chosen = undefined;
   });
 
-  /** Write back: the email app, or the box asking for their address. */
-  export async function start() {
+  /** Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight. */
+  export async function start(about?: string[]) {
     if (!place) return;
+    chosen = about;
     if (address) {
-      window.location.href = writeBackLink(address, subject);
+      window.location.href = writeBackLink(address, subject, quoted);
+      chosen = undefined;
       return;
     }
     asking = true;
@@ -109,6 +118,7 @@
 
   async function notNow() {
     asking = false;
+    chosen = undefined;
     looked = undefined;
     message = "";
     await tick();
@@ -125,7 +135,8 @@
       return;
     }
     // The email app opens while the press still counts as the reader's own; the address is kept meanwhile.
-    window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), subject);
+    window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), subject, quoted);
+    chosen = undefined;
     busy = true;
     const problem = await keepAddress(place.id, typed);
     if (problem) {
@@ -184,10 +195,11 @@
         <p class="text-small text-ink-2">It sends from your own email.</p>
       </form>
     {:else if address}
-      <a class="btn-primary" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject)}><Icon name="send" size={18} />{verb} {name}</a>
+      <a class="btn-primary" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} />{verb} {name}</a>
       <p class="to">{address}</p>
+      {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
     {:else}
-      <button type="button" class="btn-primary" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={start}><Icon name="send" size={18} />{verb} {name}</button>
+      <button type="button" class="btn-primary" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} />{verb} {name}</button>
     {/if}
   </div>
 {/if}

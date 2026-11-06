@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, choose, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 42 (decision 0164), "How to check it", in a browser: words
 // chosen in an article are highlighted from the small menu beside them, a
@@ -14,28 +14,6 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const NEWEST = "On keeping a commonplace book (3)";
-
-/** Chooses `words` in the open article's text, as a reader does with the mouse. */
-async function choose(page: Page, words: string): Promise<void> {
-  // The heading shows before the article's text arrives: wait for the words themselves.
-  await expect(page.locator(".article-text")).toContainText(words);
-  await page.evaluate((wanted) => {
-    const text = document.querySelector(".article-text")!;
-    const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const at = (node as Text).data.indexOf(wanted);
-      if (at === -1) continue;
-      const range = document.createRange();
-      range.setStart(node, at);
-      range.setEnd(node, at + wanted.length);
-      getSelection()!.removeAllRanges();
-      getSelection()!.addRange(range);
-      text.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
-      return;
-    }
-    throw new Error(`"${wanted}" isn't in the article`);
-  }, words);
-}
 
 async function openNewest(page: Page, blog: string): Promise<number> {
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);

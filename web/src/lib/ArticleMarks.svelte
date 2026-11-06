@@ -33,6 +33,7 @@
     phone = false,
     media,
     say,
+    writeBack,
   }: {
     article: Article;
     full: FullArticle;
@@ -43,6 +44,8 @@
     media?: { now: () => number | null; jump: (seconds: number) => void };
     /** Says what was done in the reading area's top bar ("Highlighted."), as Copy link does. */
     say: (words: string) => void;
+    /** Write back about some words: the email starts with them quoted. None when the writer is a publication. */
+    writeBack?: (quote: string) => void;
   } = $props();
 
   // Each article has its own: the reading area makes this anew for each article it opens.
@@ -209,6 +212,19 @@
     box?.setSelectionRange(draft.length, draft.length);
   }
 
+  /** The words the reader highlighted, in the order they were made: Write back starts the email with them. */
+  export function quotes(): string[] {
+    return marks.highlights.flatMap((each) => (each.quote ? [each.quote] : []));
+  }
+
+  /** Write back about this: the words chosen or pressed, quoted at the top of the email. */
+  function writeBackAbout() {
+    const words = menu?.highlight?.quote ?? menu?.quote?.quote;
+    close();
+    getSelection()?.removeAllRanges();
+    if (words && writeBack) writeBack(words);
+  }
+
   /** h: highlights the words chosen. */
   export function highlight() {
     void highlightChosen();
@@ -309,6 +325,7 @@
     onSaveNote={saveNote}
     onCopy={() => menu?.highlight && copy(menu.highlight)}
     onRemove={() => menu?.highlight && remove(menu.highlight)}
+    onWriteBack={writeBack && writeBackAbout}
     onClose={close}
   />
 {/if}

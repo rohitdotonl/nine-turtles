@@ -608,3 +608,25 @@ export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<
   }
   throw new Error("Tab never reached the element");
 }
+
+/** Chooses `words` in the open article's text, as a reader does with the mouse. */
+export async function choose(page: Page, words: string): Promise<void> {
+  // The heading shows before the article's text arrives: wait for the words themselves.
+  await expect(page.locator(".article-text")).toContainText(words);
+  await page.evaluate((wanted) => {
+    const text = document.querySelector(".article-text")!;
+    const walker = document.createTreeWalker(text, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const at = (node as Text).data.indexOf(wanted);
+      if (at === -1) continue;
+      const range = document.createRange();
+      range.setStart(node, at);
+      range.setEnd(node, at + wanted.length);
+      getSelection()!.removeAllRanges();
+      getSelection()!.addRange(range);
+      text.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+      return;
+    }
+    throw new Error(`"${wanted}" isn't in the article`);
+  }, words);
+}
