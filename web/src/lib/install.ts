@@ -35,7 +35,8 @@ export function deviceOf({ userAgent, maxTouchPoints }: Browser): Device {
 }
 
 /** One device's steps: where they're for, and each press in order (or none, where it can't install). */
-export type Guide = { where: string; steps: string[]; foot?: string };
+/** `ways`: the steps are alternatives (one per browser), not presses in order, so they aren't numbered. */
+export type Guide = { where: string; steps: string[]; foot?: string; ways?: boolean };
 
 const HOME_SCREEN = "nine turtles is on your home screen: open it from there.";
 const OWN_WINDOW = "nine turtles opens in its own window, from your apps.";
@@ -61,7 +62,8 @@ const BROWSER: Record<BrowserName, string> = { safari: "Safari", chrome: "Chrome
 export function guideFor({ platform, browser }: Device): Guide {
   if (platform === "iphone" || platform === "ipad") {
     const where = platform === "iphone" ? "iPhone" : "iPad";
-    return { where: browser === "safari" ? where : `${where}, in ${BROWSER[browser]}`, steps: APPLE_PHONE, foot: HOME_SCREEN };
+    const named = browser === "safari" || browser === "other" ? where : `${where}, in ${BROWSER[browser]}`;
+    return { where: named, steps: APPLE_PHONE, foot: HOME_SCREEN };
   }
   if (platform === "android") {
     return {
@@ -88,7 +90,8 @@ export function guideFor({ platform, browser }: Device): Guide {
     };
   }
   if (browser === "firefox") {
-    return { where, steps: [], foot: `Firefox on a ${COMPUTER[platform]} can't install nine turtles yet. Open this page in Chrome or Edge to install it.` };
+    const others = platform === "mac" ? "Safari, Chrome or Edge" : "Chrome or Edge";
+    return { where, steps: [], foot: `Firefox on a ${COMPUTER[platform]} can't install nine turtles yet. Open this page in ${others} to install it.` };
   }
   return { where, steps: ["Open your browser's menu.", "Choose Install, Add to home screen or Add to Dock, whichever it offers."] };
 }
@@ -113,8 +116,9 @@ export function guideForKind(kind: Kind): Guide {
   if (kind === "apple") return { where: "iPhone or iPad", steps: APPLE_PHONE, foot: HOME_SCREEN };
   return {
     where: "computer",
+    ways: true,
     steps: [
-      "In Chrome or Edge, click the install icon at the right end of the address bar.",
+      "In Chrome or Edge, click the install icon at the right end of the address bar, then Install.",
       "In Safari on a Mac, choose File, then Add to Dock.",
       "In Firefox on Windows, click the web apps button in the address bar.",
     ],
@@ -124,5 +128,5 @@ export function guideForKind(kind: Kind): Guide {
 
 /** The key that shows the bookmarks bar where it's hidden. */
 export function bookmarksBarKey({ platform }: Device): string {
-  return platform === "mac" ? "⌘ Shift B" : "Ctrl Shift B";
+  return platform === "mac" ? "Command Shift B" : "Ctrl Shift B";
 }

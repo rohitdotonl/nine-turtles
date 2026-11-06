@@ -64,7 +64,8 @@ You can follow a site you're looking at without copying its address:
 - **A computer:** in **Settings › Install the app on any device**, on the
   **Computer** tab, drag the **Add to nine turtles** button to your
   bookmarks bar, then press it on any blog. No bookmarks bar? Press
-  **⌘ Shift B** on a Mac, or **Ctrl Shift B** elsewhere.
+  **Command Shift B** on a Mac, or **Ctrl Shift B** elsewhere. Can't drag?
+  Paste the blog's address into **+ Add**.
 
 nine turtles asks "Follow…?" first, and follows only when you say so.
 

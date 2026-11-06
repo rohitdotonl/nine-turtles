@@ -199,6 +199,16 @@ test("Install the app on any device says what an installed app is, then the step
   await expect(page.getByRole("heading", { level: 4, name: "On an iPhone or iPad" })).toBeVisible();
   await expect(install.getByText("Copy the blog's address, then paste it into + Add.")).toBeVisible();
   await tabs.getByText(phone ? "Android" : "Computer").click();
+  // With the keyboard alone: the arrow keys move between the tabs, with a visible focus.
+  const own = tabs.getByRole("radio", { name: phone ? "Android" : "Computer" });
+  await own.focus();
+  await page.keyboard.press("ArrowRight");
+  const next = tabs.getByRole("radio", { name: phone ? "iPhone & iPad" : "Android" });
+  await expect(next).toBeChecked();
+  await expect(next).toBeFocused();
+  await expect(tabs.getByText(phone ? "iPhone & iPad" : "Android", { exact: true })).not.toHaveCSS("outline-style", "none");
+  await page.keyboard.press("ArrowLeft");
+  await expect(own).toBeChecked();
 
   // When the browser offers to install, one press shows its own dialog, and the page then says it's done.
   const offer = (outcome: string) =>

@@ -13,8 +13,11 @@ steps for any browser, so a reader on a Mac still sees that their phone can
 have nine turtles. Each tab ends with how to follow the blog you're on there:
 the bookmarks-bar button on a computer, Share on Android, + Add on iPhone.
 
-**Gone.** The bookmark's raw `javascript:` code and its Copy button: nobody
-types code into a bookmark by choice, and + Add takes any address. The list
+**Gone.** The bookmark's raw `javascript:` code and its Copy button
+(decision 0177 kept Copy for anyone who can't drag): nobody types code into
+a bookmark by choice. Dragging needs a pointer, so the page says "Can't
+drag? Paste the blog's address into + Add.", which does the same job by
+keyboard alone. The list
 of one line per other device, which the tabs replace. The old address
 `/settings/add-from-anywhere` opens the new page.
 

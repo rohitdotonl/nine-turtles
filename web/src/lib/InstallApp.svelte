@@ -78,7 +78,13 @@
         </div>
         <p class="inset-foot">Your browser asks once more before it installs. Or, step by step:</p>
       {/if}
-      {#if guide.steps.length > 0}
+      {#if guide.ways}
+        <ul role="list" class="inset-group">
+          {#each guide.steps as way (way)}
+            <li class="inset-row step"><span class="min-w-0">{way}</span></li>
+          {/each}
+        </ul>
+      {:else if guide.steps.length > 0}
         <!-- role="list" keeps the numbered list a list for VoiceOver, which drops it once the markers are hidden. -->
         <ol role="list" class="inset-group">
           {#each guide.steps as step, index (step)}
@@ -111,10 +117,12 @@
         <p class="inset-row min-w-0">Copy the blog's address, then paste it into + Add.</p>
       {/if}
     </div>
-    <p role="status" class={["inset-foot text-ink", !dragNote && "sr-only"]}>{dragNote}</p>
+    <p role="status" class={["inset-foot text-ink", !(dragNote && chosen === "computer") && "sr-only"]}>{chosen === "computer" ? dragNote : ""}</p>
     <p class="inset-foot">
-      {#if chosen === "computer" && mine === "computer"}No bookmarks bar? Press {bookmarksBarKey(device)}.{:else if chosen === "computer"}No
-        bookmarks bar? Press Ctrl Shift B, or ⌘ Shift B on a Mac.{/if}
+      {#if chosen === "computer"}
+        No bookmarks bar? Press {mine === "computer" ? bookmarksBarKey(device) : "Ctrl Shift B, or Command Shift B on a Mac"}. Can't drag?
+        Paste the blog's address into + Add.
+      {/if}
       nine turtles always asks before following anyone.
     </p>
   </div>

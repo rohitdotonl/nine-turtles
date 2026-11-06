@@ -119,7 +119,7 @@ a plan; nothing is built until Rohit says go.
 - [ ] **Start the friction log** (above).
 - [ ] **Publish the "Add to nine turtles" Shortcut to iCloud and send the
   link** (steps in `docs/operations/apple-shortcut.md`). The iPhone
-  row in Settings › Add from anywhere, and its Help line, go in when you do
+  row in Settings › Install the app on any device, and its Help line, go in when you do
   (decision 0177).
 
 ### Starter people, replacing the five starter feeds

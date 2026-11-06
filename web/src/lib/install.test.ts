@@ -54,7 +54,7 @@ describe("the tabs", () => {
 
 describe("bookmarksBarKey", () => {
   it("names the Mac's key on a Mac and Ctrl elsewhere", () => {
-    expect(bookmarksBarKey({ platform: "mac", browser: "safari" })).toBe("⌘ Shift B");
+    expect(bookmarksBarKey({ platform: "mac", browser: "safari" })).toBe("Command Shift B");
     expect(bookmarksBarKey({ platform: "windows", browser: "edge" })).toBe("Ctrl Shift B");
   });
 });
