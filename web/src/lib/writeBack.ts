@@ -54,11 +54,36 @@ export function replySubject(title: string): string {
   return /^re:/i.test(plain) ? plain : `Re: ${plain}`;
 }
 
-/** The link that opens the reader's email app, writing to `address` about the article `title`. */
-export function writeBackLink(address: string, title: string): string {
+/** The most of the reader's highlights an email starts with: some email apps refuse a longer link. */
+const LONGEST_QUOTES = 1500;
+
+/**
+ * How the email starts when the reader highlighted words (decision 0205): each
+ * quote on lines of its own beginning "> ", as email apps quote, a blank line
+ * after each, then room to write. Quotes past 1,500 characters are left out.
+ */
+export function quotedBody(quotes: string[]): string {
+  const kept: string[] = [];
+  let size = 0;
+  for (const quote of quotes) {
+    if (!quote.trim()) continue;
+    const lines = quote.trim().split(/\n+/).map((line) => `> ${line.trim()}`).join("\n");
+    if (size + lines.length > LONGEST_QUOTES) continue;
+    kept.push(lines);
+    size += lines.length;
+  }
+  return kept.length ? `${kept.join("\n\n")}\n\n` : "";
+}
+
+/** The link that opens the reader's email app, writing to `address` about the article `title`, starting with any `quotes`. */
+export function writeBackLink(address: string, title: string, quotes: string[] = []): string {
   const to = address.split("@").map(encodeURIComponent).join("@");
+  const parts: string[] = [];
   const subject = replySubject(title);
-  return subject ? `mailto:${to}?subject=${encodeURIComponent(subject)}` : `mailto:${to}`;
+  if (subject) parts.push(`subject=${encodeURIComponent(subject)}`);
+  const body = quotedBody(quotes);
+  if (body) parts.push(`body=${encodeURIComponent(body)}`);
+  return parts.length ? `mailto:${to}?${parts.join("&")}` : `mailto:${to}`;
 }
 
 /**

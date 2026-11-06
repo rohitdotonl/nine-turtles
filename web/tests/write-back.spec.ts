@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, choose, follow, signIn } from "./screens";
 
 // SPEC section 37 (writing back), "How to check it", done by a browser: an
 // article of someone whose feed gives no address asks for it once, keeps it on
@@ -69,6 +69,19 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   // The More menu has it too.
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(page.getByRole("menuitem", { name: /Write back/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Words chosen offer Write back about this (decision 0205); once highlighted, Write back starts the email with them, quoted.
+  await choose(page, "made-up summary");
+  const words = page.getByRole("menu", { name: "Chosen words" });
+  await expect(words.getByRole("menuitem", { name: "Write back about this" })).toBeVisible();
+  await words.getByRole("menuitem", { name: /Highlight/ }).click();
+  await page.getByRole("menu", { name: "Highlight" }).getByRole("menuitem", { name: "Done" }).click();
+  await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20.*&body=%3E%20made-up%20summary%0A%0A$/);
+  await expect(pane(page)).toContainText("Your email starts with the words you highlighted.");
+  // A highlight pressed offers it too.
+  await pane(page).locator("mark.highlight").click();
+  await expect(page.getByRole("menu", { name: "Highlight" }).getByRole("menuitem", { name: "Write back about this" })).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Their page keeps it, and Edit can change it.
