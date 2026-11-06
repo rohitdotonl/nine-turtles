@@ -64,7 +64,7 @@
   <div use:edge tabindex="0" role="region" aria-label="Readers and how this nine turtles is doing" class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
-        <p role="status" class="text-ink-2">The readers couldn't be loaded. Only the owner can see them; if that's you, try again in a moment.</p>
+        <p role="status" class="text-ink-2">The readers couldn't be loaded. Try again in a moment. Only the owner can see them.</p>
       {:else if overview}
         <section aria-labelledby="readers-totals-heading">
           <h3 id="readers-totals-heading" class="inset-head">This nine turtles</h3>

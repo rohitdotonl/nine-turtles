@@ -60,23 +60,23 @@ export type KeptSession = {
 // ---- The words the screens say ------------------------------------------
 
 export const SHOWING_KEPT =
-  "Offline. Showing the articles saved on this device.";
+  "You're offline. Showing the articles saved on this device.";
 export const NOTHING_KEPT_HERE =
   "Nothing here is saved on this device. It will show when you're back online.";
 export const END_OF_KEPT = "That's everything saved on this device.";
 export const NOT_KEPT =
   "This article isn't saved on this device. It opens when you're back online.";
 export const SEARCH_NEEDS_CONNECTION =
-  "Search needs a connection. It works again once you're back online.";
+  "You're offline. Search works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION =
-  "Refresh needs a connection. This is what's saved on this device.";
+  "You're offline. This is what's saved on this device.";
 export const NOTES_NEED_CONNECTION =
-  "Notes need a connection. They show once you're back online.";
+  "You're offline. Notes show once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
 export const EPISODE_OFFLINE =
   "The episode plays here when you're back online.";
 export const SETTINGS_NEED_CONNECTION =
-  "Settings need a connection. They open once you're back online.";
+  "You're offline. Settings open once you're back online.";
 
 /** Thrown for what can't be done without a connection; its message says so. */
 export class NeedsConnection extends Error {}

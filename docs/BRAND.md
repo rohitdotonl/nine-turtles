@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 5 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185).*
+*Every brand decision on one page. Last updated: 6 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185, 0197).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -95,6 +95,22 @@ A glance at an icon tells the reader, without doubt, what it's for.
 - **The welcome:** "Hello." then "Who would you like to read?"
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
 - Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".
+
+## Messages (Live, decision 0197)
+
+Every line the app says after you do something, or when something fails:
+the floating note at the bottom of a list, the line under a form or a
+group in Settings, the line in a sheet. One house style, so the same thing
+is always said the same way.
+
+- **Something you did:** one full sentence, with a full stop, naming what changed. "Starred.", "Marked 3 articles as read.", "Unsubscribed from Mira Okafor.", "Deleted the folder Essays."
+- **Something failed:** name the thing, then what to do. "*The thing* couldn't be *done*. Try again in a moment." ("The star couldn't be saved. Try again in a moment.") Never a vague "That couldn't be saved.", "That didn't work just now." or "Couldn't change that."
+- **When to try again:** "Try again in a moment." when nine turtles itself had trouble; "Try again later." when another site didn't answer; "Try again in *2 minutes*." when the wait is known. When trying again won't help, say what will instead ("Select the address and copy it yourself.").
+- **nine turtles can't be reached:** "nine turtles can't be reached right now. Try again in a moment."
+- **No connection:** "You're offline." first, then what it means here ("You're offline. Adding a feed works again once you're back online.").
+- **Undo:** a successful undo always says "Undone.", nothing more. An undo that failed says "That couldn't be undone. Try again in a moment."
+- **Plain words:** no file formats, commands or network terms in a message ("That file doesn't look like a list of feeds.", never "…an OPML file."). Help can name them. The lines said in many places are written once, in `web/src/lib/messages.ts`.
+- **Never** "Oops", "Sorry", "Error", "Failed", "Success" or an exclamation mark. Errors are oxblood with the alert icon and words that say what (see "Color").
 
 ## Emails (Live, decision 0142)
 

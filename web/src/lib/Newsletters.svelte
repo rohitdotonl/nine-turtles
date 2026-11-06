@@ -8,6 +8,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import { type Label, TooLate, newAddress, newslettersStatus, switchLabel, undoNewAddress } from "./newsletters";
 
   let on = $state(false);
@@ -34,7 +35,7 @@
       await navigator.clipboard.writeText(address);
       message = "Address copied.";
     } catch {
-      message = "Couldn't copy. Select the address and copy it yourself.";
+      message = "The address couldn't be copied. Select it and copy it yourself.";
     }
     // Undo for New address stays on the line: copying changes nothing.
   }
@@ -51,7 +52,7 @@
       labels = [];
       message = "You have a new address. Email to the old one is now refused.";
     } catch {
-      message = "Couldn't make a new address. Try again in a moment.";
+      message = "A new address couldn't be made. Try again in a moment.";
     }
     busy = false;
   }
@@ -65,14 +66,14 @@
         (status) => (labels = status.labels),
         () => {},
       );
-      message = "Your old address works again.";
+      message = UNDONE;
       previous = null;
     } catch (error) {
       if (error instanceof TooLate) {
         message = "It's been over an hour, so the old address can't come back.";
         previous = null;
       } else {
-        message = "Couldn't bring the old address back. Try again in a moment.";
+        message = UNDO_FAILED;
       }
     }
     busy = false;
@@ -86,7 +87,7 @@
       message = on ? `${label.address} takes email again.` : `Email to ${label.address} is now turned away.`;
     } catch {
       label.on = !on;
-      message = "Couldn't change that. Try again in a moment.";
+      message = `${label.address} couldn't be changed. Try again in a moment.`;
     }
   }
 </script>

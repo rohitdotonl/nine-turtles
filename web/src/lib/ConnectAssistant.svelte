@@ -13,6 +13,7 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import { UNREACHABLE } from "./messages";
   import { answerRequest, connectRequest, shortName, type ConnectRequest } from "./assistants";
 
   let { onSignedOut }: { onSignedOut: () => void } = $props();
@@ -25,7 +26,7 @@
   let heading: HTMLHeadingElement | undefined = $state();
 
   const INVALID = "This connection link isn't valid. Start again from your assistant.";
-  const TROUBLE = "nine turtles couldn't be reached. Try again in a moment.";
+  const TROUBLE = UNREACHABLE;
 
   async function load() {
     request = await connectRequest(search);

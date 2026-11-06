@@ -165,7 +165,7 @@ function befores(list: unknown): Before[] {
 /** The line and Undo after joining places: "Alpha is one person now · Undo". */
 export function joinedNotice(name: string, before: Before[], reload: () => Promise<void>): Notice {
   return {
-    message: `${name} is one person now`,
+    message: `${name} is one person now.`,
     undo: async () => {
       const problem = await putBack(before);
       await reload();

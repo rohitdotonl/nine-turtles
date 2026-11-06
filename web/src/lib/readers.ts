@@ -7,6 +7,7 @@
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { duration } from "./session";
+import { UNREACHABLE } from "./messages";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -88,9 +89,9 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
     case "already":
       return "That email already has an account. Sign in instead.";
     case "too-many":
-      return "Many people have signed up in the last hour. Try again later.";
+      return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 
@@ -166,9 +167,9 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
     case "already":
       return "That email already has an account. Sign in instead.";
     case "too-many":
-      return "Many people have signed up in the last hour. Try this link again later.";
+      return "Many people have signed up in the last hour. Try this link again in an hour.";
     case "unreachable":
-      return "nine turtles can't be reached right now. Try again in a moment.";
+      return UNREACHABLE;
   }
 }
 

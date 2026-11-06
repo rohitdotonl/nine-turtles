@@ -8,10 +8,10 @@
 
 **Without a connection**
 - nine turtles opens as usual, signed in (on an iPhone, reliably once it's added to the home screen: in a Safari tab the phone may clear the copies after about a week without a visit).
-- Unread, Starred, All articles, each feed and each folder list the kept articles, with a quiet line above the list: "Offline. Showing the articles saved on this device." Such a list ends with "That's everything saved on this device."; one with nothing kept says "Nothing here is saved on this device. It will show when you're back online." The sidebar shows the feeds and folders as they were last seen, its dots following what's marked here.
+- Unread, Starred, All articles, each feed and each folder list the kept articles, with a quiet line above the list: "You're offline. Showing the articles saved on this device." Such a list ends with "That's everything saved on this device."; one with nothing kept says "Nothing here is saved on this device. It will show when you're back online." The sidebar shows the feeds and folders as they were last seen, its dots following what's marked here.
 - Articles open from their copy. One that isn't kept says "This article isn't saved on this device. It opens when you're back online."
 - **Reading, marking read or unread, and starring work as usual**, with nothing said: each mark waits on the device and is sent once the connection is back. Each says when it was made, and **the latest mark wins**: a mark made offline at 10:00 doesn't undo one made on another device at 11:00. Undo works too.
-- **What waits for a connection says so:** search ("Search needs a connection. It works again once you're back online."), adding a feed ("Adding a feed needs a connection. Try again once you're back online."), Settings ("Settings need a connection. They open once you're back online."), Refresh ("Refresh needs a connection. This is what's saved on this device.").
+- **What waits for a connection says so:** each starts "You're offline." (BRAND.md → "Messages"): search ("You're offline. Search works again once you're back online."), adding a feed ("You're offline. Adding a feed works again once you're back online."), Settings ("You're offline. Settings open once you're back online."), Refresh ("You're offline. This is what's saved on this device.").
 
 **Always on, and privacy**
 - Keeping articles is always on, on phones and computers alike, with no switch (decision 0187; it was Settings › Your data › Keep articles for reading offline). Without a connection, Settings shows only its line.
@@ -21,9 +21,9 @@
 
 **How to check it**
 1. Open nine turtles online and wait a minute. Switch on airplane mode.
-2. Open Unread and Starred: the line says "Offline. Showing the articles saved on this device." and your articles are there. Open one: its words are there, with a short line where each image was.
+2. Open Unread and Starred: the line says "You're offline. Showing the articles saved on this device." and your articles are there. Open one: its words are there, with a short line where each image was.
 3. Read one, star another, mark one unread. Nothing complains.
-4. Try search, + Add, Settings and Refresh: each says it needs a connection.
+4. Try search, + Add, Settings and Refresh: each says you're offline and what that means there.
 5. Close nine turtles and open it again, still in airplane mode: it opens with the same articles.
 6. Switch airplane mode off. On another device (or after a reload), the marks from step 3 are there.
 7. Sign out, then switch airplane mode on and open nine turtles: it says it can't be reached, because the copies are gone.

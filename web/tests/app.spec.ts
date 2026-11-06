@@ -665,7 +665,7 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await page.getByRole("button", { name: "Copy address" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Address copied" })).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.getByRole("status").filter({ hasText: "Your old address works again" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
   await expect(address).toHaveText(old);
   await expect(label).toBeChecked();
 });

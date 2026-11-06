@@ -151,7 +151,7 @@
         <div class="flex flex-col gap-1">
           <p id="write-back-title" class="text-base font-semibold text-ink">{verb} {name}</p>
           <p class="text-small text-ink-2" aria-live="polite">
-            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {article ? "Write back" : "Write"}.{:else if looked === "none"}No email address on their site. Paste it here and it's saved.{:else if looked === "couldn't"}nine turtles couldn't look on their site just now. Paste it here and it's saved.{:else}nine turtles doesn't have their address yet. Paste it here and it's saved.{/if}
+            {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {article ? "Write back" : "Write"}.{:else if looked === "none"}No email address on their site. Paste it here and it's saved.{:else if looked === "couldn't"}Their site couldn't be checked for an address. Paste it here and it's saved.{:else}nine turtles doesn't have their address yet. Paste it here and it's saved.{/if}
           </p>
         </div>
         {#if site && !showingFound}

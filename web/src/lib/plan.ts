@@ -122,7 +122,7 @@ export function canSubscribe(plan: Standing): boolean {
 }
 
 /** What went wrong reaching Dodo Payments, in a calm sentence. */
-export const UNREACHABLE = "Payments can't be reached just now. Try again in a moment.";
+export const UNREACHABLE = "Payments can't be reached right now. Try again in a moment.";
 
 /** nine turtles said no, for a reason trying again won't change; its sentence. */
 export class Refused extends Error {}

@@ -161,7 +161,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
   await expect(results(page)).toHaveCount(1);
   await results(page).first().getByRole("button").focus();
   await page.keyboard.press("Shift+A");
-  await expect(page.getByText("Marked 1 article as read")).toBeVisible();
+  await expect(page.getByText("Marked 1 article as read.")).toBeVisible();
   await expect(count(2)).toBeVisible();
   await page.keyboard.press("u");
   await expect(page.getByText("Undone.")).toBeVisible();

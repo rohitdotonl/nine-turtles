@@ -47,7 +47,7 @@
     const refusal = await setMuted([row.article.id], muted);
     row.busy = false;
     if (refusal) {
-      row.message = ruleRefused(refusal);
+      row.message = refusal === "trouble" ? `The article couldn't be ${muted ? "hidden" : "unhidden"}. Try again in a moment.` : ruleRefused(refusal);
       return;
     }
     row.unmuted = !muted;

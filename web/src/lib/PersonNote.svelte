@@ -51,7 +51,7 @@
     busy = false;
     if (!refusal) return done();
     message =
-      refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That's longer than a note can be. Make it shorter." : "That couldn't be saved. Try again in a moment.";
+      refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That note is too long. Make it shorter." : "The note couldn't be saved. Try again in a moment.";
   }
 </script>
 

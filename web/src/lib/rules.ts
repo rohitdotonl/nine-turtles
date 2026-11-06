@@ -148,7 +148,7 @@ export function ruleRefused(refusal: RuleRefusal): string {
     case "gone":
       return "This isn't here any more.";
     case "trouble":
-      return "That couldn't be saved. Try again in a moment.";
+      return "The rule couldn't be saved. Try again in a moment.";
   }
 }
 

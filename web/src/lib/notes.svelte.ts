@@ -112,10 +112,10 @@ async function send(change: Waiting): Promise<Sent | "offline"> {
 
 /** Why a change wasn't kept, in plain words (shown, never silently dropped). */
 export function notKept(refusal: string): string {
-  if (refusal === "too-long") return "That note is longer than a note can be. Make it shorter.";
+  if (refusal === "too-long") return "That note is too long. Make it shorter.";
   if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
   if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
-  return "That couldn't be saved. Try again in a moment.";
+  return "The highlight or note couldn't be saved. Try again in a moment.";
 }
 
 let sending = false;

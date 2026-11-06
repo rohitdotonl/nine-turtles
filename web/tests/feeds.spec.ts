@@ -86,7 +86,7 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   await importLink.click();
   await chooser;
   await choose(page, "not a list");
-  await expect(reading.getByRole("status").filter({ hasText: "OPML" })).toHaveText("That file doesn't look like an OPML file.");
+  await expect(reading.getByRole("status").filter({ hasText: "list of feeds" })).toHaveText("That file doesn't look like a list of feeds.");
   await expect(page).toHaveURL(/\/unread$/);
   // A list that brings no one in says so in the same place; the welcome and the keyboard's place stay.
   const again = page.waitForEvent("filechooser");
@@ -237,7 +237,7 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await sheet.getByRole("checkbox", { name: /The Marginalian/ }).check();
   await sheet.getByRole("checkbox", { name: /kottke\.org/ }).check();
   await addChosen.click();
-  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added just now. Try again later.");
+  await expect(sheet.getByRole("status")).toHaveText("Those feeds couldn't be added. Try again later.");
   expect(asked).toEqual(["https://www.themarginalian.org/feed/", "https://feeds.kottke.org/main"]);
   await expect(sheet.getByRole("checkbox", { name: /kottke\.org/ })).toBeChecked();
   // Escape closes it, back to the welcome, with the keyboard back on the link that opened it.
@@ -446,7 +446,7 @@ test("without a connection, adding says so without marking the address as wrong"
   await field(page).fill(`${FEED_SITE}/blog/${newBlog()}/`);
   await context.setOffline(true);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("Adding a feed needs a connection. Try again once you're back online.");
+  await expect(page.locator("#feed-address-status")).toHaveText("You're offline. Adding a feed works again once you're back online.");
   await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
   await context.setOffline(false);
 });

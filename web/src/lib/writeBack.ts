@@ -107,6 +107,6 @@ export async function keepAddress(feed: number, address: string): Promise<string
     case "gone":
       return "You don't follow them any more, so there's nowhere to keep it.";
     case "trouble":
-      return "That couldn't be saved. Try again in a moment.";
+      return "The address couldn't be saved. Try again in a moment.";
   }
 }

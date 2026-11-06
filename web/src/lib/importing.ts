@@ -33,7 +33,7 @@ export async function importOpml(file: File, youtube = false): Promise<ImportSum
     };
   }
   if (isRecord(body) && body.error === "not-opml") {
-    return youtube ? "That file doesn't look like subscriptions.csv from Google Takeout." : "That file doesn't look like an OPML file.";
+    return youtube ? "That file doesn't look like a list of YouTube subscriptions." : "That file doesn't look like a list of feeds.";
   }
   if (isRecord(body) && body.error === "plan-ended") return PLAN_ENDED;
   if (isRecord(body) && body.error === "too-many") {
