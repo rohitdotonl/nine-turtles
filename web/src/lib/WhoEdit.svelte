@@ -84,7 +84,8 @@
     if (busy) return;
     message = "";
     // A wrong address is caught before anything is saved, keeping what was typed.
-    const newAddress = address.trim() !== knownAddress;
+    // A publication has no address to keep (decision 0192): its field is hidden, so nothing typed there counts.
+    const newAddress = who === "person" && address.trim() !== knownAddress;
     if (newAddress && address.trim() && !looksLikeAddress(address)) {
       message = "That doesn't look like an email address. Check it and try again.";
       return;
@@ -156,13 +157,6 @@
       <span class="text-small text-ink-2">Name</span>
       <input bind:value={title} type="text" autocomplete="off" class="field" />
     </label>
-    <div class="flex flex-col gap-1.5">
-      <label class="flex flex-col gap-1.5">
-        <span class="text-small text-ink-2">Email address</span>
-        <input bind:value={address} type="text" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" class="field" aria-describedby="{formId}-address" />
-      </label>
-      <span id="{formId}-address" class="field-help mt-0">Write back opens your own email app with this address.</span>
-    </div>
 
     {#if chooses}
       <!-- Someone or something (decision 0163): a choice of two, as Settings draws one. -->
@@ -174,6 +168,18 @@
         </div>
         <span class="field-help mt-0">{who === "person" ? "Listed under People." : "Listed under Publications."}</span>
       </fieldset>
+    {/if}
+
+    <!-- Where Write back writes: a person only, as a publication has no Write back (decision 0192). Under This is, so choosing
+      A publication takes away only what's below the choice, and nothing above the pointer moves. -->
+    {#if who === "person"}
+    <div class="flex flex-col gap-1.5">
+      <label class="flex flex-col gap-1.5">
+        <span class="text-small text-ink-2">Email address</span>
+        <input bind:value={address} type="text" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" class="field" aria-describedby="{formId}-address" />
+      </label>
+      <span id="{formId}-address" class="field-help mt-0">Write back opens your own email app with this address.</span>
+    </div>
     {/if}
 
     <fieldset class="flex min-w-0 flex-col gap-1.5">

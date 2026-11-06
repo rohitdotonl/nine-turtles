@@ -133,7 +133,7 @@ pub async fn enter_stored(
 /// Gives a reader who followed a feed from a file, without fetching it,
 /// their own entries for what's stored of it already (for other readers):
 /// the newest `UNREAD_ON_FOLLOWING` unread, the rest read, as when adding
-/// one (decision 0192). Their rules then act on the unread ones.
+/// one (decision 0194). Their rules then act on the unread ones.
 pub async fn enter_newest(
     connection: &mut sqlx::SqliteConnection,
     person: i64,
@@ -182,7 +182,7 @@ pub async fn enter_read(
 
 /// How many of a newly followed feed's articles arrive unread: its newest
 /// five. Older ones are kept in its own list, already read, so following
-/// someone never floods Unread (decision 0192).
+/// someone never floods Unread (decision 0194).
 pub const UNREAD_ON_FOLLOWING: i64 = 5;
 
 /// Marks read every unread article of this feed but the newest

@@ -298,7 +298,7 @@ async fn worked(
     let (every, etag, last_modified) = match changed {
         Some((fetched, parsed)) => {
             // Never checked yet: followed from a file, so its followers get
-            // only its newest few unread, as when adding one (decision 0192).
+            // only its newest few unread, as when adding one (decision 0194).
             let first: bool =
                 sqlx::query_scalar("SELECT fetched_at IS NULL FROM feeds WHERE id = ?")
                     .bind(feed_id)

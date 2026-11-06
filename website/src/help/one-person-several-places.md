@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-05
+updated: 2026-11-06
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -30,7 +30,7 @@ Choose them in the sidebar, then press their name at the top of their list
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 
-Under their name is **Write to Maya Chen**, which opens your own email app
+Under a person's name is **Write to Maya Chen**, which opens your own email app
 to write to them (with their address under it, once nine turtles knows it;
 see <a href="/help/write-back/">Write back to a writer</a>). Then each of
 their sources, with a link to its own website.
@@ -41,10 +41,10 @@ Press **Edit** beside their name. There
 you can:
 
 - change their **Name**,
-- add their **Email address**, for
-  <a href="/help/write-back/">writing back</a>,
 - choose whether **This is** a person or a publication (while they have one
-  source),
+  source; a publication has no Write back),
+- add a person's **Email address**, for
+  <a href="/help/write-back/">writing back</a>,
 - choose their **Folders** (type a name to make a new one; it opens in the
   sidebar when you press Done),
 - **Pause for a while**, while they have one source,

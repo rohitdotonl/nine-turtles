@@ -330,7 +330,7 @@ async fn follow(
             return Err(NotAdded::Already(feed_id));
         }
     };
-    // Only their newest few arrive unread (decision 0192).
+    // Only their newest few arrive unread (decision 0194).
     keep_newest_unread(&mut transaction, Some(person), feed_id).await?;
     let unread = sqlx::query_scalar(
         "SELECT COUNT(*) FROM entries WHERE person_id = ? AND feed_id = ? AND read = 0",

@@ -6,6 +6,10 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
+// nine turtles' own addresses: links to them aren't links to another site.
+const OWN_HOSTS = new Set(["nineturtles.app", "www.nineturtles.app", "app.nineturtles.app"]);
+const NEW_TAB = '<span class="sr-only"> (opens in a new tab)</span>';
+
 export default function (eleventyConfig) {
   // A short fingerprint of the styles, added to their address on every
   // page (style.css?v=…), so a browser that kept yesterday's styles fetches
@@ -67,6 +71,17 @@ export default function (eleventyConfig) {
     list.filter((item) => path.split(".").reduce((field, key) => field?.[key], item) === value),
   );
 
+  // A link to another site opens in a new tab, and tells a screen reader so
+  // (the owner, 6 November 2026). Links within the website, and to the app
+  // (Open the app, Start reading: the way in), stay in the same tab.
+  eleventyConfig.addTransform("outsideLinks", function (html) {
+    if (!this.page.outputPath?.endsWith(".html")) return html;
+    return html.replace(/<a\s([^>]*?)href="(https?:\/\/[^"]+)"([^>]*)>([\s\S]*?)<\/a>/g, (link, before, href, after, words) => {
+      if (OWN_HOSTS.has(new URL(href).hostname) || /\starget=/.test(before + after)) return link;
+      const rest = (before + after).replace(/\s*rel="[^"]*"/, "").trim();
+      return `<a href="${href}" target="_blank" rel="noopener"${rest ? " " + rest : ""}>${words}${NEW_TAB}</a>`;
+    });
+  });
 
   return {
     dir: { input: "src", output: "_site" },

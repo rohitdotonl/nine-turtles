@@ -79,7 +79,7 @@ impl Reader {
             .post("/api/feeds", json!({ "address": publisher().await }))
             .await;
         assert_eq!(status, StatusCode::CREATED);
-        // Only the newest five arrive unread (decision 0192); these tests
+        // Only the newest five arrive unread (decision 0194); these tests
         // start from all 120 unread, as if every one were new since.
         assert_eq!(added["feed"]["unread"], 5);
         reader.feed = added["feed"]["id"].as_i64().unwrap();

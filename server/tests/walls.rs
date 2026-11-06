@@ -938,7 +938,7 @@ async fn a_second_reader_imports_opml_without_a_second_copy_of_a_shared_feed() {
 
     // One copy of the shared feed; the other reader has it, by their name,
     // in their folder, its articles so far unread (all three: no more than
-    // the newest five, decision 0192), whatever the owner marked.
+    // the newest five, decision 0194), whatever the owner marked.
     assert_eq!(count(&state, "SELECT COUNT(*) FROM feeds").await, 2);
     assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 3);
     let theirs = other.get("/api/feeds").await;

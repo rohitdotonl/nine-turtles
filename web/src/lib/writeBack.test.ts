@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { addressFor, looksLikeAddress, replySubject, siteOf, writeBackLink } from "./writeBack";
+import { addressFor, looksLikeAddress, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], ...changes };
 }
 
 describe("writing back", () => {
+  it("is for people only, never a publication", () => {
+    expect(writesBack(place(1, { kind: "person" }))).toBe(true);
+    expect(writesBack(place(2))).toBe(true);
+    expect(writesBack(place(3, { kind: "publication" }))).toBe(false);
+    expect(writesBack(undefined)).toBe(false);
+  });
+
   it("writes to the reader's own address first, then this place's, then another place's", () => {
     const blog = place(1, { person: 7, addedAt: 1, email: "blog@alpha.example" });
     const letters = place(2, { person: 7, addedAt: 2, email: "letters@alpha.example" });

@@ -9,7 +9,7 @@
 //! (they join the file's folders). A feed another reader already follows
 //! isn't stored twice: the reader gets their own subscription to it, its
 //! newest five articles so far unread and the rest read; a feed new to nine
-//! turtles gets the same at its first check (decision 0192). Exporting writes each feed the reader
+//! turtles gets the same at its first check (decision 0194). Exporting writes each feed the reader
 //! follows under every folder of theirs it's in. The subscriptions file
 //! Google Takeout gives for YouTube is read here too (`youtube::takeout`).
 
@@ -263,7 +263,7 @@ async fn follow_one(
     subscribe(connection, person, id, &title, now).await?;
     // Nothing is fetched here: of what's already stored (for other readers),
     // the newest few are unread and the rest read. A feed new to nine turtles
-    // gets the same at its first check (decision 0192).
+    // gets the same at its first check (decision 0194).
     enter_newest(connection, person, id).await?;
     summary.added += 1;
     Ok(id)

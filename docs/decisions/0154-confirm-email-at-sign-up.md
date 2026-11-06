@@ -1,5 +1,7 @@
 # 0154: Confirm the email address at sign-up
 
+*Changed by [0193](0193-confirm-in-the-same-browser.md): in the browser that signed up, the link asks no password.*
+
 *3 November 2026. The owner's choice, in their own words: "Confirm at
 sign-up". Replaces decision 0115's "no email to confirm the address"; the
 rest of 0115 stands (sign-up is always open, no switch, no invite).*
