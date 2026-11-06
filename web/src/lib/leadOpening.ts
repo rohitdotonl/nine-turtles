@@ -10,17 +10,25 @@ export interface Opening {
   id: number;
   opening: string;
   author?: string;
+  /** The article's language, for screen readers' voice. */
+  language?: string;
+}
+
+/** The author, unless they're who the byline already names (Hal Brennan, once). */
+export function authorBesides(author: string | null | undefined, source: string): string | undefined {
+  const name = author?.trim();
+  return name && name.toLowerCase() !== source.trim().toLowerCase() ? name : undefined;
 }
 
 /** The article's first paragraph and author; empty words when it can't be fetched just now. */
 export async function openingFor(article: Article): Promise<Opening> {
   try {
     const full = await readArticle(article.id);
-    const author = full.author?.trim();
     return {
       id: article.id,
       opening: firstParagraph(full.content) || plain(full.summary),
-      author: author && author.toLowerCase() !== article.feedTitle.trim().toLowerCase() ? author : undefined,
+      author: authorBesides(full.author, article.feedTitle),
+      language: full.language ?? undefined,
     };
   } catch {
     return { id: article.id, opening: "" };

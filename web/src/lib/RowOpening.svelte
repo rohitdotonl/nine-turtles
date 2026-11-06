@@ -2,23 +2,30 @@
   Start reading on a phone (SPEC section 7, decision 0206): where there's no reading area, the
   list's first row, when unread, is begun: under its line, its first paragraph in the reading face
   (four lines at most) and Start reading, the solid button's look, since pressing anywhere on the
-  row opens it (the row is the button, so screen readers hear the row as before).
+  row opens it. The row is the button, and the paragraph and the button's look are hidden from
+  screen readers, so they hear the row's title and line as before, with "Newest unread" above it.
 -->
 <script lang="ts">
   import { openingFor, type Opening } from "./leadOpening";
   import type { Article } from "./shapes";
 
-  let { article }: { article: Article } = $props();
+  /** `paragraph` false: an untitled post already shows its opening words in the title's place (decision 0196). */
+  let { article, paragraph = true }: { article: Article; paragraph?: boolean } = $props();
 
   let found = $state<Opening>();
   let shown = $derived(found?.id === article.id ? found : undefined);
 
   $effect(() => {
-    void openingFor(article).then((each) => (found = each));
+    const id = article.id;
+    // An answer for an article no longer shown (the list moved on) is let go.
+    void openingFor(article).then((each) => {
+      if (each.id === id) found = each;
+    });
   });
 </script>
 
-{#if shown?.opening}<span class="opening">{shown.opening}</span>{/if}
+<!-- A look at the words, not part of the row's name: screen readers hear the row as every other. -->
+{#if paragraph && shown?.opening}<span class="opening" aria-hidden="true" lang={shown.language}>{shown.opening}</span>{/if}
 <span class="btn-primary start" aria-hidden="true">Start reading</span>
 
 <style>

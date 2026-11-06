@@ -17,18 +17,22 @@
   let shown = $derived(found?.id === article.id ? found : undefined);
 
   $effect(() => {
-    void openingFor(article).then((each) => (found = each));
+    const id = article.id;
+    // An answer for an article no longer shown (the list moved on) is let go.
+    void openingFor(article).then((each) => {
+      if (each.id === id) found = each;
+    });
   });
 </script>
 
 <div class="lead">
   <p class="label">{order === "oldest" ? "Oldest" : "Newest"} unread</p>
-  <h2 class="article-title">{article.title || "Untitled"}</h2>
+  <h2 class="article-title" lang={shown?.language}>{article.title || "Untitled"}</h2>
   <p class="article-byline">
     <span class="publisher">{article.feedTitle}</span>{#if shown?.author}&nbsp;· {shown.author}{/if}
     · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
   </p>
-  {#if shown?.opening}<p class="opening">{shown.opening}</p>{/if}
+  {#if shown?.opening}<p class="opening" lang={shown?.language}>{shown.opening}</p>{/if}
   <button type="button" class="btn-primary start" onclick={onOpen}>Start reading</button>
 </div>
 

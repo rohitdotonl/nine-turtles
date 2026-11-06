@@ -266,7 +266,7 @@
       queueMicrotask(() => placeFocus(home)?.focus());
     });
   });
-  /** How many articles the list shows, so the empty reading area offers j only when there's one to open. */
+  /** The list's first article: the empty reading area begins it when unread (decision 0206), and offers j only when there's one to open. */
   let listFirst: Article | undefined = $state();
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");

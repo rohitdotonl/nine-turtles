@@ -25,6 +25,7 @@
   within thumb reach, above a hairline; one that can't act is faded in place.
 -->
 <script lang="ts">
+  import { authorBesides } from "./leadOpening";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
@@ -121,8 +122,7 @@
   });
   /** Where "Read on …" goes, by the site's own name ("Garden Letters", not the person's), else its address. */
   let site = $derived(library.feeds?.find((feed) => feed.id === article.feedId)?.siteTitle ?? siteName(full?.siteUrl ?? null) ?? article.feedTitle);
-  /** The author, unless they're who the byline already names (Hal Brennan, once). */
-  let author = $derived(full?.author && full.author.trim().toLowerCase() !== article.feedTitle.trim().toLowerCase() ? full.author : undefined);
+  let author = $derived(authorBesides(full?.author, article.feedTitle));
 
   /** A long video description shows its first paragraph, the rest behind "Show the full description" (decision 0144). */
   let unfoldedFor: number | undefined = $state();

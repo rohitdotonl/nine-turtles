@@ -643,7 +643,7 @@
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
           </span>
-          {#if begun}<RowOpening {article} />{/if}
+          {#if begun}<RowOpening {article} paragraph={opening === undefined} />{/if}
         </button>
       </li>
     {/each}
