@@ -12,7 +12,6 @@ export interface Headings {
   sheet?: HTMLHeadingElement;
   welcome?: HTMLHeadingElement;
   settings?: HTMLHeadingElement;
-  health?: HTMLHeadingElement;
   yourFeeds?: HTMLHeadingElement;
   muted?: HTMLHeadingElement;
   readers?: HTMLHeadingElement;
@@ -38,7 +37,6 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
     // Back from one of its pages: to the row that opened it, if it's there.
     return (scene.returnRow && settingsRow(scene.returnRow)) || headings.settings;
   }
-  if (place.kind === "feed-health") return headings.health;
   if (place.kind === "your-feeds") return headings.yourFeeds;
   if (place.kind === "muted") return headings.muted;
   if (place.kind === "readers") return headings.readers;

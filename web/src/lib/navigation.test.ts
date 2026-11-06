@@ -9,7 +9,7 @@ const addFeed: Route = { kind: "add-feed" };
 const editFeed: Route = { kind: "edit-feed", id: 7 };
 const about: Route = { kind: "about", id: 7 };
 const settings: Route = { kind: "settings" };
-const health: Route = { kind: "feed-health" };
+const following: Route = { kind: "your-feeds" };
 
 /** On a computer, at `route`, over `lastPlace` if it's a sheet. */
 function here(route: Route, lastPlace: Route = unread, phone = false): Here {
@@ -77,14 +77,14 @@ describe("moveTo", () => {
   });
 
   it("going back from a page opened from Settings names the row that opened it", () => {
-    expect(moveTo(here(health), settings).returnRow).toBe("feed-health");
-    expect(moveTo(here(health), unread).returnRow).toBeUndefined();
-    expect(moveTo(here(settings), health).returnRow).toBeUndefined();
+    expect(moveTo(here(following), settings).returnRow).toBe("feeds");
+    expect(moveTo(here(following), unread).returnRow).toBeUndefined();
+    expect(moveTo(here(settings), following).returnRow).toBeUndefined();
   });
 
   it("knows a page opened from where you are", () => {
-    expect(opensFromHere(settings, health)).toBe(true);
-    expect(opensFromHere(unread, health)).toBe(false);
+    expect(opensFromHere(settings, following)).toBe(true);
+    expect(opensFromHere(unread, following)).toBe(false);
     expect(opensFromHere(settings, unread)).toBe(false);
   });
 });
@@ -137,7 +137,7 @@ describe("stepFor", () => {
   it("adds a step when the address or the screen changes, and none when both stay", () => {
     expect(stepFor(feed, "list", "/", false)).toEqual({ screen: "list", back: "list", fromParent: false });
     expect(stepFor(settings, "list", "/people/7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
-    expect(stepFor(health, "page", "/settings", true)).toEqual({ screen: "page", back: "page", fromParent: true });
+    expect(stepFor(following, "page", "/settings", true)).toEqual({ screen: "page", back: "page", fromParent: true });
     // The same place, from the article (a phone) or the feeds (home): back to its list is a step.
     expect(stepFor(feed, "article", "/people/7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
     expect(stepFor(feed, "list", "/people/7", false)).toBeUndefined();

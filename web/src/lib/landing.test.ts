@@ -26,7 +26,7 @@ function stubPage() {
 
 /** Each heading as its own spot, named for where it is. */
 const headings = Object.fromEntries(
-  ["list", "sheet", "welcome", "settings", "health", "yourFeeds", "muted", "readers", "who", "add"].map((name) => [name, new Spot(name)]),
+  ["list", "sheet", "welcome", "settings", "yourFeeds", "muted", "readers", "who", "add"].map((name) => [name, new Spot(name)]),
 ) as unknown as Headings;
 
 const computer: LandingScene = { phone: false, sheetShown: false, welcome: false };
@@ -38,7 +38,6 @@ describe("where the keyboard lands", () => {
   it("lands on each page's own heading, and on the add field when adding a feed", () => {
     stubPage();
     expect(landing({ kind: "settings" })).toBe("settings");
-    expect(landing({ kind: "feed-health" })).toBe("health");
     expect(landing({ kind: "your-feeds" })).toBe("yourFeeds");
     expect(landing({ kind: "muted" })).toBe("muted");
     expect(landing({ kind: "readers" })).toBe("readers");
@@ -134,9 +133,9 @@ describe("arriving back", () => {
   });
 
   it("waits only for a Settings row", () => {
-    const go = arrive({ kind: "feed-health" }, () => "rules");
+    const go = arrive({ kind: "your-feeds" }, () => "rules");
     go(computer);
-    expect((page.activeElement as Spot).name).toBe("health");
+    expect((page.activeElement as Spot).name).toBe("yourFeeds");
     expect(frames).toHaveLength(0);
   });
 });

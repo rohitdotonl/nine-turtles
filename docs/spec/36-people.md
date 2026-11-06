@@ -11,8 +11,8 @@ PLAN.md → V1, item 1.*
   or NASA's picture of the day). A person has one or more **sources**: a
   blog, a YouTube channel, a newsletter, a podcast. A **folder** is a group
   of people and publications. On these screens nine turtles never says
-  "feed"; the word stays only in technical spots (Feed health, importing or
-  exporting a feed list).
+  "feed"; the word stays only in technical spots (importing or exporting a
+  feed list).
 - **Two headings.** In the sidebar, rows not in a folder sit under
   **People**, then **Publications**, each A to Z by name. Folders hold
   both. "Publications" names that sidebar heading only: a person's blog or
@@ -109,7 +109,7 @@ PLAN.md → V1, item 1.*
   Video, a feed with any episode is Podcast, anything else Blog; no longer
   the reader's to correct, decision 0183): YouTube's Include Shorts and Include live streams (section 38), Pause for a
   while, **Find new address** while it's
-  failing (section 17), and at the foot **Take out of Alpha**: it becomes a
+  failing (section 15), and at the foot **Take out of Alpha**: it becomes a
   person or publication of its own, guessed afresh, with Undo. Done saves
   and goes back to Edit.
 - **+ Add a source** opens in place: choose someone already followed, or

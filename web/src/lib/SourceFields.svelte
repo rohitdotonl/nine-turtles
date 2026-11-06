@@ -36,7 +36,7 @@
   const id = $props.id();
 </script>
 
-<!-- Only while it isn't working, as the feed health page would list it: one quiet line and Find new address. -->
+<!-- Only while it isn't working, as Everyone you follow would list it: one quiet line and Find new address. -->
 <FailingLine {feed} label="Find new address" {onMoved} />
 
 <div class="flex min-w-0 flex-col gap-1.5">

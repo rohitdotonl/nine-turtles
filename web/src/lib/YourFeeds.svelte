@@ -1,61 +1,56 @@
 <!--
-  Your feeds (SPEC section 15), opened from Settings › Feeds: every feed, A
-  to Z, with when it last posted and its folders, for tidying many at once.
-  "Show" narrows it to the quiet ones, those with nothing posted for 6 months
-  or a year. Edit, as in Apple Books, puts a tick box on each row; with some
+  Everyone you follow (SPEC section 15, decision 0186), opened from
+  Settings. Who isn't working comes first (NotWorking.svelte). Then
+  everyone, A to Z, People and Publications apart as in the sidebar, each
+  row saying the title of their newest piece and when it came, or "Quiet
+  since …" after six months, and their folders. A row opens their page.
+  Choose…, as Edit in Apple Books, puts a tick box on each row; with some
   chosen, the bar at the foot moves them to one folder or unsubscribes from
-  them all, in one go, with one Undo until your next action. Out of Edit, a
-  row opens that feed's list.
+  them all, in one go, with one Undo until your next action.
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import NotWorking from "./NotWorking.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import type { Folder } from "./shapes";
   import { deleteFolder, refused } from "./feeds";
+  import { pathFor } from "./router";
   import {
     folderNames,
-    lastPostedWords,
     listTended,
     moveAll,
     movedMessage,
+    placeIds,
     resubscribeAll,
     restoreFolders,
-    shown,
+    rowLine,
     unsubscribeAll,
     unsubscribedMessage,
-    type Showing,
     type Tended,
   } from "./tidy";
 
   let {
     heading = $bindable(),
     onClose,
-    onOpenFeed,
+    onOpenPerson,
     onFeedsChanged,
     besideToggle = false,
   }: {
     heading?: HTMLHeadingElement;
     onClose: () => void;
-    /** A feed's row was chosen, out of Edit: its list opens. */
-    onOpenFeed: (event: MouseEvent, id: number) => void;
+    /** A row was chosen, out of Choose: their page opens. */
+    onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
     besideToggle?: boolean;
   } = $props();
 
-  const SHOWING: { value: Showing; label: string }[] = [
-    { value: "all", label: "All feeds" },
-    { value: "6", label: "Quiet for 6 months" },
-    { value: "12", label: "Quiet for a year" },
-  ];
-
   let feeds: Tended[] | undefined = $state();
   let folders: Folder[] = $state([]);
   let failed = $state(false);
-  let showing: Showing = $state("all");
   let editing = $state(false);
   let chosen: number[] = $state([]);
   let busy = $state(false);
@@ -71,10 +66,29 @@
   let moveHeading: HTMLHeadingElement | undefined = $state();
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
+  let notWorking: NotWorking | undefined = $state();
 
-  const now = Date.now() / 1000;
-  let listed = $derived(shown(feeds ?? [], showing, now));
+  let listed = $derived(feeds ?? []);
+  /** People, then Publications, as the sidebar lists them; a group with nobody in it isn't shown. */
+  let groups = $derived(
+    [
+      { id: "people", name: count(listed.filter((feed) => feed.kind === "person").length, "person", "people"), kind: "person" },
+      { id: "publications", name: count(listed.filter((feed) => feed.kind === "publication").length, "publication", "publications"), kind: "publication" },
+    ]
+      .map((group) => ({ ...group, rows: listed.filter((feed) => feed.kind === group.kind) }))
+      .filter((group) => group.rows.length > 0),
+  );
   let allChosen = $derived(listed.length > 0 && listed.every((feed) => chosen.includes(feed.id)));
+
+  function count(how: number, one: string, many: string): string {
+    return `${how} ${how === 1 ? one : many}`;
+  }
+
+  /** Someone at the top was unsubscribed from, brought back or moved: the list below follows. */
+  function healthChanged() {
+    onFeedsChanged();
+    load();
+  }
 
   async function load() {
     try {
@@ -105,18 +119,19 @@
     endUndo();
   }
 
-  /** The chosen feeds that are still listed (a filter may have hidden some). */
+  /** The chosen ones. */
   function picked(): Tended[] {
     return listed.filter((feed) => chosen.includes(feed.id));
   }
 
-  /** An action finished: its words and Undo show, Edit ends, and the keyboard goes to Undo. */
+  /** An action finished: its words and Undo show, Choose ends, and the keyboard goes to Undo. */
   async function done(words: string, reverse: () => Promise<void>) {
     message = words;
     undo = reverse;
     editing = false;
     chosen = [];
     onFeedsChanged();
+    notWorking?.reload();
     await load();
     await tick();
     undoButton?.focus();
@@ -126,14 +141,14 @@
     const going = picked();
     if (going.length === 0 || busy) return;
     busy = true;
-    const refusal = await unsubscribeAll(going.map((feed) => feed.id));
+    const refusal = await unsubscribeAll(placeIds(going));
     busy = false;
     if (refusal) {
       [message, undo] = [refused(refusal, "feed"), undefined];
       return;
     }
     await done(unsubscribedMessage(going.map((feed) => feed.title)), async () => {
-      const refusal = await resubscribeAll(going.map((feed) => feed.id));
+      const refusal = await resubscribeAll(placeIds(going));
       if (refusal) throw refusal;
     });
   }
@@ -160,7 +175,7 @@
       return;
     }
     const going = picked();
-    const before = going.map((feed) => ({ id: feed.id, folders: [...feed.folders] }));
+    const before = going.flatMap((feed) => feed.places.map((place) => ({ id: place.id, folders: [...place.folders] })));
     const folder = destination === "none" || destination === "new" ? null : Number(destination);
     const naming = destination === "new" ? newFolder.trim() : "";
     if (destination === "new" && !naming) {
@@ -168,11 +183,7 @@
       return;
     }
     busy = true;
-    const answer = await moveAll(
-      going.map((feed) => feed.id),
-      folder,
-      naming,
-    );
+    const answer = await moveAll(placeIds(going), folder, naming);
     busy = false;
     if (typeof answer === "string") {
       moveProblem = refused(answer, "folder");
@@ -198,6 +209,7 @@
     }
     busy = false;
     onFeedsChanged();
+    notWorking?.reload();
     await load();
     await tick();
     editButton?.focus();
@@ -210,24 +222,13 @@
 </script>
 
 <section aria-labelledby="your-feeds-heading" class="flex flex-1 flex-col bg-paper">
-  <PageHead title="Your feeds" id="your-feeds-heading" bind:heading {onClose} closeLabel="Close your feeds" {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onClose} closeLabel="Close everyone you follow" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
+      <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} />
       {#if failed}
-        <p role="status" class="text-ink-2">Your feeds couldn't be loaded. Try again in a moment.</p>
+        <p role="status" class="text-ink-2">Everyone you follow couldn't be loaded. Try again in a moment.</p>
       {:else if feeds}
-        <fieldset class="flex flex-col gap-1.5">
-          <legend class="mb-1.5 text-small text-ink-2">Show</legend>
-          <div class="choices self-start" style="--phone-columns: 3">
-            {#each SHOWING as choice (choice.value)}
-              <label class="choice">
-                <input type="radio" name="showing" value={choice.value} bind:group={showing} onchange={() => ((chosen = []), endUndo())} />
-                {choice.label}
-              </label>
-            {/each}
-          </div>
-        </fieldset>
-
         <!-- What the last action did, with its Undo, until the next one. -->
         <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", !message && "sr-only"]}>
           <p role="status" class="text-ink">{message}</p>
@@ -236,47 +237,40 @@
           {/if}
         </div>
 
-        <section aria-labelledby="your-feeds-list">
-          <div class="mb-1.5 flex min-h-11 items-center justify-between gap-3">
-            <h3 id="your-feeds-list" class="inset-head mb-0">
-              {#if showing === "all"}{feeds.length === 1 ? "1 feed" : `${feeds.length} feeds`}{:else}{listed.length === 1
-                  ? "1 quiet feed"
-                  : `${listed.length} quiet feeds`}{/if}
-            </h3>
-            <div class="flex items-center gap-2">
-              {#if editing && listed.length > 0}
-                <button type="button" class="btn btn-small" onclick={chooseAll}>{allChosen ? "Choose none" : "Choose all"}</button>
-              {/if}
-              {#if listed.length > 0}
-                <button type="button" bind:this={editButton} class="btn btn-small" onclick={toggleEditing}
-                  >{editing ? "Done" : "Edit"}</button
-                >
+        {#if listed.length === 0}
+          <p class="text-ink-2">You don't follow anyone yet.</p>
+        {/if}
+        {#each groups as group, index (group.id)}
+          <section aria-labelledby={`following-${group.id}`}>
+            <div class="mb-1.5 flex min-h-11 items-center justify-between gap-3">
+              <h3 id={`following-${group.id}`} class="inset-head mb-0">{group.name}</h3>
+              {#if index === 0}
+                <div class="flex items-center gap-2">
+                  {#if editing}
+                    <button type="button" class="btn btn-small" onclick={chooseAll}>{allChosen ? "Choose none" : "Choose all"}</button>
+                  {/if}
+                  <button type="button" bind:this={editButton} class="btn btn-small" onclick={toggleEditing}>{editing ? "Done" : "Choose…"}</button>
+                </div>
               {/if}
             </div>
-          </div>
-          {#if listed.length === 0}
-            <p class="text-ink-2">
-              {#if showing === "all"}You don't follow any feeds yet.{:else}Every feed has posted within {showing === "6" ? "the last 6 months" : "the last year"}.{/if}
-            </p>
-          {:else}
             <ul class="inset-group">
-              {#each listed as feed (feed.id)}
-                {@const names = folderNames(feed, folders)}
+              {#each group.rows as feed (feed.id)}
+                {@const line = rowLine(feed, folderNames(feed, folders))}
                 <li class="contents">
                   {#if editing}
                     <label class="inset-row check-row tended">
                       <input type="checkbox" value={feed.id} bind:group={chosen} />
-                      <span class="flex min-w-0 flex-col py-1.5">
+                      <span class="flex min-w-0 flex-1 flex-col py-1.5">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted">{lastPostedWords(feed)}{#if names.length > 0}{" · "}{names.join(", ")}{/if}</span>
+                        <span class="text-meta text-muted break-words">{line}</span>
                       </span>
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
                     </label>
                   {:else}
-                    <a href={`/feeds/${feed.id}`} onclick={(event) => onOpenFeed(event, feed.id)} class="inset-row inset-action tended">
-                      <span class="flex min-w-0 flex-col py-1.5">
+                    <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
+                      <span class="flex min-w-0 flex-1 flex-col py-1.5">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted">{lastPostedWords(feed)}{#if names.length > 0}{" · "}{names.join(", ")}{/if}</span>
+                        <span class="text-meta text-muted break-words">{line}</span>
                       </span>
                       <span class="row-glyph"><Icon name="chevron-right" size={18} /></span>
                     </a>
@@ -284,22 +278,24 @@
                 </li>
               {/each}
             </ul>
-            <p class="inset-foot">
-              {#if showing === "all"}Edit lets you choose several feeds, then move them to a folder or unsubscribe from them in one go.{:else}Feeds
-                with nothing new for a long time. Some blogs pause and come back; others have stopped for good.{/if}
-            </p>
-          {/if}
-        </section>
+            {#if index === groups.length - 1}
+              <p class="inset-foot">
+                Each one opens their page, to write back, keep a note about them, or edit how you follow them. Choose lets you move
+                several to a folder, or unsubscribe from them, in one go.
+              </p>
+            {/if}
+          </section>
+        {/each}
       {/if}
 
-      <!-- With Edit on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->
+      <!-- With Choose on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->
       {#if editing}
         <div class="tidy-bar">
-          <p class="text-small text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose feeds" : `${chosen.length} chosen`}</p>
+          <p class="text-small text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
           <button
             type="button"
             class="btn-danger text-small"
-            title="Stops following these feeds and removes their articles; starred ones stay. You can undo it straight afterwards."
+            title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
             aria-describedby="your-feeds-unsubscribe-help"
             aria-disabled={chosen.length === 0 || busy}
             onclick={leave}>Unsubscribe</button
@@ -316,7 +312,7 @@
 
 {#if moving}
   <div role="presentation" onkeydown={keepEscape}>
-    <Sheet title={chosen.length === 1 ? "Move 1 feed" : `Move ${chosen.length} feeds`} bind:heading={moveHeading} onClose={closeMove}>
+    <Sheet title="Move to a folder" bind:heading={moveHeading} onClose={closeMove}>
       <form onsubmit={move} class="flex flex-col gap-5">
         <fieldset class="flex min-w-0 flex-col gap-1.5">
           <legend class="mb-1.5 text-small text-ink-2">To</legend>
@@ -347,7 +343,7 @@
               </label>
             {/if}
           </div>
-          <span class="field-help mt-0">Each feed leaves the folders it was in.</span>
+          <span class="field-help mt-0">Each one leaves the folders they were in.</span>
         </fieldset>
         <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
         <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !moveProblem && "sr-only"]}>
@@ -363,12 +359,12 @@
 {/if}
 
 <style>
-  /* A feed's row is two lines: its name, then when it last posted and its folders. */
+  /* A row is two lines: their name, then their newest title, when it came, and their folders. */
   .tended {
     min-height: 3.5rem;
   }
   /*
-    Edit's bar stays at the foot of the page while the list scrolls under it,
+    Choose's bar stays at the foot of the page while the list scrolls under it,
     solid in the page's color with a hairline above, so a row cut there reads
     as scrolling (DESIGN.md → Visual language → Rules).
   */

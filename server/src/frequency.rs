@@ -1,7 +1,7 @@
-//! How often a feed posts, in plain words (SPEC sections 15 and 17,
+//! How often a feed posts, in plain words (SPEC section 15,
 //! decision 0105): "Posts about 3 times a week", "Posts about once a
-//! month", "Hasn't posted in 4 months", "Too new to tell". Shown quietly on
-//! the feed health page and, as a feed is chosen, in Add. Rounded words only: no chart, no
+//! month", "Hasn't posted in 4 months", "Too new to tell". Told to assistants by
+//! their feed health tool and shown, as a feed is chosen, in Add. Rounded words only: no chart, no
 //! decimals, no judgement.
 //!
 //! Counted from the feed's articles of the last 90 days by the time the list

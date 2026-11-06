@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn, tabTo } from "./screens";
 
-// SPEC section 17: a feed that stops working is listed on the feed health
-// page in plain words, and Find new address moves it to where the site now
+// SPEC section 15: a feed that stops working is listed at the top of
+// Everyone you follow in plain words, and Find new address moves it to where the site now
 // keeps it. The test nine turtles checks every feed every two seconds, so a
 // moved feed fails twice within moments. Each run follows a blog of its own.
 
@@ -16,12 +16,12 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await follow(page, `${FEED_SITE}/blog/${name}/`);
   expect((await page.request.get(`${FEED_SITE}/move/${name}`)).ok()).toBe(true);
 
-  // Settings › Feeds › Feed health.
+  // Settings › Everyone you follow.
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
-  await page.getByRole("link", { name: "Feed health" }).click();
-  await expect(page.getByRole("heading", { name: "Feed health", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings\/feed-health$/);
+  await page.getByRole("link", { name: "Everyone you follow" }).click();
+  await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
+  await expect(page).toHaveURL(/\/settings\/feeds$/);
 
   const feed = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
   await expect(async () => {
@@ -31,34 +31,24 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   }).toPass({ timeout: 30_000 });
   // Grouped under words, never by color alone, and explained without codes.
   await expect(page.getByRole("heading", { name: "Having trouble" })).toBeVisible();
-  await expect(feed).toContainText("Not found for less than a day.");
+  await expect(feed).toContainText("Nothing has come through since earlier today.");
   await expect(feed).toContainText("The site says the feed isn't there any more.");
   // A word on its own: the title carries a timestamp, which may end in 404.
   await expect(feed).not.toContainText(/\b404\b/);
-  // A card (decision 0118): its name, what happened, then Address and Last worked, on a computer and a phone alike.
+  // A card (decision 0118): its name and what happened, with no address or codes, on a computer and a phone alike.
   await expect(feed).toHaveCSS("border-top-left-radius", "12px");
-  await expect(feed.locator("dt")).toHaveText(["Address", "Last worked"]);
-  const tried = feed.locator("dd.tried");
-  await expect(tried).toHaveText(`${FEED_SITE}/blog/${name}/feed.xml`);
-  await expect(tried).toHaveCSS("font-family", /Mono|monospace/);
-  await expect(feed.locator("dd").nth(1)).toHaveText(/^(Today|\d+ \w+|Not since you added it)/);
-  const [triedSize, nameSize] = await Promise.all([
-    tried.evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
-    feed.getByRole("heading", { name: title }).evaluate((element) => parseFloat(getComputedStyle(element).fontSize)),
-  ]);
-  expect(triedSize).toBeLessThan(nameSize);
-  // Find new address first and filled, then Retry, then Unsubscribe; every one at least 44px tall.
+  await expect(feed.locator("dt")).toHaveCount(0);
+  await expect(feed).not.toContainText(FEED_SITE);
+  // Find new address first and filled, then Unsubscribe, with no Retry; each at least 44px tall.
   const find = feed.getByRole("button", { name: `Find new address for ${title}` });
-  const retry = feed.getByRole("button", { name: `Retry ${title}` });
   const leave = feed.getByRole("button", { name: `Unsubscribe from ${title}` });
-  await expect(feed.locator(".actions > button")).toHaveText(["Find new address", "Retry", "Unsubscribe"]);
+  await expect(feed.locator(".actions > button")).toHaveText(["Find new address", "Unsubscribe"]);
   await expect(find).toHaveClass(/btn-primary/);
-  const [findBox, retryBox, leaveBox, cardBox] = await Promise.all([find.boundingBox(), retry.boundingBox(), leave.boundingBox(), feed.boundingBox()]);
-  for (const box of [findBox!, retryBox!, leaveBox!]) expect(box.height).toBeGreaterThanOrEqual(44);
+  const [findBox, leaveBox, cardBox] = await Promise.all([find.boundingBox(), leave.boundingBox(), feed.boundingBox()]);
+  for (const box of [findBox!, leaveBox!]) expect(box.height).toBeGreaterThanOrEqual(44);
   if (cardBox!.width < 24 * 16) {
-    // A narrow card: the two buttons share their row equally, and Unsubscribe has a line of its own below.
-    expect(Math.abs(findBox!.width - retryBox!.width)).toBeLessThanOrEqual(1);
-    expect(Math.abs(findBox!.y - retryBox!.y)).toBeLessThanOrEqual(1);
+    // A narrow card: Find new address fills its row, and Unsubscribe has a line of its own below.
+    expect(findBox!.width).toBeGreaterThan(cardBox!.width - 2 * 18 - 2);
     expect(leaveBox!.y).toBeGreaterThan(findBox!.y + findBox!.height - 1);
     expect(leaveBox!.width).toBeGreaterThan(cardBox!.width - 2 * 18 - 2);
   } else {
@@ -78,16 +68,16 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   // It stays where it was until the page is opened again; then it's gone.
   await page.reload();
   await appReady(page);
-  await expect(page.getByRole("heading", { name: "Feed health", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
 
   // Closing goes back to Settings.
-  await page.getByRole("button", { name: "Close feed health" }).click();
+  await page.getByRole("button", { name: "Close everyone you follow" }).click();
   await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
 });
 
 test("a failing feed says so above its list, and Find its new address moves it with one question", async ({ page }) => {
-  // Decision 0106: where the reader already is, not only on the health page.
+  // Decision 0106: where the reader already is, not only in Everyone you follow.
   const name = `moving-line-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
@@ -133,9 +123,10 @@ test("a failing feed says so above its list, and Find its new address moves it w
   expect(await failingSince()).toBeNull();
 });
 
-test("with the keyboard alone: Retry, Unsubscribe and Undo, Find new address and back, Escape", async ({ page }) => {
+test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, Escape", async ({ page }) => {
   const name = `moving-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
+  // The old Feed health address opens Everyone you follow.
   await page.goto(new URL("/settings/feed-health", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
@@ -149,11 +140,6 @@ test("with the keyboard alone: Retry, Unsubscribe and Undo, Find new address and
   }).toPass({ timeout: 30_000 });
   // The feed's own status line (Find new address has one of its own, after it).
   const status = feed.getByRole("status").first();
-
-  // Retry: checked again at once, and still broken.
-  await tabTo(page, feed.getByRole("button", { name: `Retry ${title}` }));
-  await page.keyboard.press("Enter");
-  await expect(status).toHaveText("Tried again just now: it still isn't working.");
 
   // Unsubscribe: the keyboard moves to Undo, and Undo brings it back.
   await tabTo(page, feed.getByRole("button", { name: `Unsubscribe from ${title}` }));
@@ -183,7 +169,7 @@ test("with the keyboard alone: Retry, Unsubscribe and Undo, Find new address and
   await expect(page).toHaveURL(/\/settings$/);
 });
 
-/** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until the health page would list it. */
+/** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until Everyone you follow would list it. */
 async function failing(page: Page, name: string, how: "move" | "break"): Promise<number> {
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
@@ -271,7 +257,7 @@ test("moving a feed to a new number (others follow the old address) keeps Edit a
   await expect(nameField).toHaveValue("Typed before the move");
 });
 
-test("moving a dead feed on the health page keeps its place and its confirmation", async ({ page }) => {
+test("moving a dead feed in Everyone you follow keeps its place and its confirmation", async ({ page }) => {
   // A feed is dead only after a week; the page's list is changed to call this one dead.
   const name = `moving-dead-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
@@ -281,15 +267,15 @@ test("moving a dead feed on the health page keeps its place and its confirmation
     for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/settings/feed-health", FEEDS_APP).href);
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
   await appReady(page);
   const dead = page.getByRole("region", { name: "Not working" });
   const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
   await expect(feed).toBeVisible();
   await feed.getByRole("button", { name: `Find new address for ${title}` }).click();
   await feed.getByRole("button", { name: "Use it" }).click();
-  // It stays under Not working, saying it moved, with the keyboard on Retry.
+  // It stays under Not working, saying it moved, with the keyboard on Find new address.
   await expect(feed.getByText("It now reads from its new address and works again.", { exact: false })).toBeVisible();
   await expect(feed).toContainText("Working again.");
-  await expect(feed.getByRole("button", { name: `Retry ${title}` })).toBeFocused();
+  await expect(feed.getByRole("button", { name: `Find new address for ${title}` })).toBeFocused();
 });

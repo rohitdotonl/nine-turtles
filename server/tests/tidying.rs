@@ -1,5 +1,5 @@
-//! Tidying many feeds at once (SPEC section 15, "Your feeds"): when each
-//! feed last posted, and moving or unsubscribing from several feeds in one
+//! Everyone you follow (SPEC section 15): each feed's newest article and
+//! when it was published, and moving or unsubscribing from several feeds in one
 //! go, each with one Undo, tested against a real running nine turtles and a
 //! made-up publisher.
 
@@ -140,7 +140,7 @@ fn row(title: &str, folders: &[&str]) -> (String, Vec<String>) {
 }
 
 #[tokio::test]
-async fn each_feed_says_when_it_last_posted() {
+async fn each_feed_says_what_it_last_posted_and_when() {
     let reader = Reader::new().await;
     let quiet = reader.follow("quiet-2020").await;
     let busy = reader.follow("busy-2026").await;
@@ -158,6 +158,76 @@ async fn each_feed_says_when_it_last_posted() {
     assert_eq!(last_posted(quiet), Some(1_577_880_000));
     assert_eq!(last_posted(busy), Some(1_767_268_800));
     assert!(listed["feeds"][0]["added_at"].as_i64().unwrap() > 1_767_268_800);
+    // Its newest article's title, and whether it's a person or a publication
+    // (a person until the reader or nine turtles says otherwise).
+    let busy_row = listed["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|feed| feed["id"] == busy)
+        .unwrap();
+    assert_eq!(busy_row["last_title"], "busy post");
+    assert_eq!(busy_row["kind"], "person");
+    assert!(busy_row["person"].is_null());
+}
+
+/// A place joined into a person is listed as theirs, under People, whatever
+/// it was guessed before; a newest title the reader hid isn't shown.
+#[tokio::test]
+async fn joined_places_say_whose_they_are_and_hidden_titles_stay_hidden() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog-2026").await;
+    let channel = reader.follow("channel-2026").await;
+    let hidden = reader.follow("hidden-2026").await;
+    let db = &reader.state.db;
+    let (me,): (i64,) = sqlx::query_as("SELECT person_id FROM subscriptions WHERE feed_id = ?")
+        .bind(blog)
+        .fetch_one(db)
+        .await
+        .unwrap();
+    let (writer,): (i64,) = sqlx::query_as(
+        "INSERT INTO writers (person_id, name, created_at) VALUES (?, 'June Park', 0) RETURNING id",
+    )
+    .bind(me)
+    .fetch_one(db)
+    .await
+    .unwrap();
+    sqlx::query("UPDATE subscriptions SET writer_id = ? WHERE feed_id IN (?, ?)")
+        .bind(writer)
+        .bind(blog)
+        .bind(channel)
+        .execute(db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE subscriptions SET kind = 'publication' WHERE feed_id IN (?, ?)")
+        .bind(channel)
+        .bind(hidden)
+        .execute(db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE entries SET muted = 1 WHERE feed_id = ?")
+        .bind(hidden)
+        .execute(db)
+        .await
+        .unwrap();
+    let listed = reader.get("/api/tidy/feeds").await;
+    let row = |id: i64| {
+        listed["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|feed| feed["id"] == id)
+            .unwrap()
+            .clone()
+    };
+    for place in [blog, channel] {
+        assert_eq!(row(place)["person"], writer);
+        assert_eq!(row(place)["person_name"], "June Park");
+        assert_eq!(row(place)["kind"], "person");
+    }
+    assert_eq!(row(hidden)["kind"], "publication");
+    assert!(row(hidden)["last_title"].is_null());
+    assert!(row(hidden)["last_posted"].as_i64().is_some());
 }
 
 #[tokio::test]

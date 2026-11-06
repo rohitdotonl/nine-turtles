@@ -372,7 +372,7 @@ enum Failure {
 }
 
 impl Failure {
-    /// A short word for the logs (and the V2 feed health page). Never the
+    /// A short word for the logs (and who isn't working, in Everyone you follow). Never the
     /// feed's address or name.
     fn word(&self) -> String {
         match self {

@@ -1,36 +1,39 @@
 ---
 title: Find out why someone stopped updating
-description: When a blog or site seems quiet, Feed health says what's wrong, and can often find its new address.
+description: When a blog or site seems quiet, Everyone you follow says what's wrong, and can often find its new address.
 groupId: keeping-things-tidy
 order: 5
-spec: 17
-updated: 2026-11-03
+spec: 15
+updated: 2026-11-06
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
 <p class="lede">
   Sites move and break. nine turtles keeps checking, and when one stops
-  working, it says so in Feed health, in plain words.
+  working, it tells you in plain words, at the top of Everyone you follow.
 </p>
 
-## Look at Feed health
+## Look at Everyone you follow
 
-Open **Settings › Feed health**. Anything that isn't working is listed,
-**Not working** first, then **Having trouble**. Each one says what the site
-answered and when it last worked, for example: "Not found for 8 days. The
-site says the feed isn't there any more. It may have moved."
+Open **Settings › Everyone you follow**. Anything that isn't working is at
+the top, **Not working** first, then **Having trouble**. Each one says when
+something last came through and why, for example: "Nothing has come
+through since 1 November. The site says the feed isn't there any more. It
+may have moved."
 
-If nothing's listed, it says **All feeds are working.**
+If everything's working, the page starts straight with everyone you follow.
 
 ## Fix it
 
-Each one has three buttons:
+Each one has two buttons:
 
 - **Find new address**: nine turtles looks once at the website for a feed
   under a new address. If it finds one, press **Use it**. Their name,
   folders, articles and stars all stay.
-- **Retry**: try again now, if you think the site is back.
-- **Unsubscribe**: let it go.
+- **Unsubscribe**: let it go. **Undo** brings it back.
+
+There's no need to try again yourself: nine turtles keeps checking, and
+picks up anything new as soon as the site is back.
 
 You'll also see a line above a broken one's list, such as "This feed hasn't
 worked since 12 October.", with a button to find its new address.
@@ -44,5 +47,6 @@ worked since 12 October.", with a button to find its new address.
   comes back.
 - How often nine turtles checks depends on how often someone writes: from
   once an hour to once a day. When a site asks it to slow down, it does.
-- Quiet isn't broken: some people write once a year. **Settings › Your
-  feeds** can show who's been quiet for six months or a year.
+- Quiet isn't broken: some people write once a year. In **Settings ›
+  Everyone you follow**, someone with nothing new for six months says
+  "Quiet since" and the date.

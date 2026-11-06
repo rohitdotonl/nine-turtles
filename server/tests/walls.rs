@@ -1503,7 +1503,7 @@ async fn articles_carried_to_a_new_address_stay_walled_from_the_old_feeds_follow
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     let (status, _) = other
-        .post(&format!("/api/health/{feed}/retry"), json!({}))
+        .post(&format!("/api/health/{feed}/find"), json!({}))
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 

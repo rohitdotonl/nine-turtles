@@ -1,6 +1,7 @@
-//! Tidying many feeds at once (SPEC section 15, "Your feeds"): every feed
-//! with when it last posted, so the quiet ones can be found, and moving or
-//! unsubscribing from several feeds in one go, each with one Undo.
+//! Everyone you follow (SPEC section 15, decision 0186): every feed with its
+//! newest article's title and when it was published, so the quiet ones show
+//! themselves, and moving or unsubscribing from several in one go, each with
+//! one Undo.
 //!
 //! Unsubscribing several feeds works as unsubscribing one does (`folders`):
 //! they're hidden at once and kept for a few minutes, so one Undo brings
@@ -44,22 +45,40 @@ struct Listed {
     /// When its newest article was published (never later than it arrived),
     /// or null if it has none.
     last_posted: Option<i64>,
+    /// The title of that newest article, if it has one.
+    last_title: Option<String>,
+    /// "person" or "publication" (decision 0163).
+    kind: String,
+    /// The person it was joined into (SPEC section 36), and their name.
+    person: Option<i64>,
+    person_name: Option<String>,
     added_at: i64,
     #[sqlx(skip)]
     folders: Vec<i64>,
 }
 
-/// Each feed the reader follows, by their name for it, with when they
-/// followed it and its newest article, found from the
-/// `articles_newest_by_feed` index alone. Takes the reader.
+/// Each feed the reader follows, by their name for it, whether it's a
+/// person or a publication (as the sidebar decides it, `feeds::FEEDS`), the
+/// person it was joined into, if any, with that person's name, when they
+/// followed it and its newest article's date and title, both found from the
+/// `articles_newest_by_feed` index. A title the reader hid (a rule or their
+/// own Hide) isn't shown. Takes the reader.
 const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
-        subscriptions.added_at,
+        subscriptions.added_at, subscriptions.writer_id AS person,
+        (SELECT name FROM writers WHERE writers.id = subscriptions.writer_id) AS person_name,
+        CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
+             ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
         (SELECT MAX(sort_at) FROM articles WHERE articles.feed_id = subscriptions.feed_id)
-            AS last_posted
+            AS last_posted,
+        (SELECT CASE WHEN EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id
+                    AND entries.article_id = newest.id AND entries.muted = 1) THEN NULL
+                ELSE NULLIF(TRIM(newest.title), '') END
+            FROM articles AS newest WHERE newest.feed_id = subscriptions.feed_id
+            ORDER BY newest.sort_at DESC, newest.id DESC LIMIT 1) AS last_title
      FROM subscriptions WHERE person_id = ? AND unsubscribed_at IS NULL
      ORDER BY title COLLATE NOCASE, feed_id";
 
-/// Every followed feed, A to Z, with when it last posted and its folders,
+/// Every followed feed, A to Z, with its newest article and its folders,
 /// and every folder.
 async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed: Result<(Vec<Listed>, Vec<Folder>), sqlx::Error> = async {

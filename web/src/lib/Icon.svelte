@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "heart-pulse" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -144,14 +144,10 @@
     <path d="M3.25 9.5h13.5M3.25 12.75h13.5M3.25 16h8" />
     <path d="M3.25 4.5h13.5M5.5 2.5 3.25 4.5 5.5 6.5M14.5 2.5l2.25 2-2.25 2" />
   {:else if name === "feed"}
-    <!-- Settings › Your feeds: a feed's waves. -->
+    <!-- Settings › Everyone you follow: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
-  {:else if name === "heart-pulse"}
-    <!-- Settings › Feed health: a heart with its beat running through it. -->
-    <path d="M10 16.25S2.75 12.4 2.75 7.6A3.35 3.35 0 0 1 10 5.9a3.35 3.35 0 0 1 7.25 1.7c0 4.8-7.25 8.65-7.25 8.65Z" />
-    <path d="M4.5 10.25h2.75l1.25-2 2 4 1.25-2h3.75" />
   {:else if name === "sidebar-check"}
     <!-- Settings › Show in the sidebar: the sidebar's window with a check, choosing what shows. -->
     <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />

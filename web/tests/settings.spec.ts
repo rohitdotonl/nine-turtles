@@ -27,7 +27,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Font and line width are one page further in.
   await expect(page.getByRole("group", { name: "Reading font" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["font", "feeds", "feed-health", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
+  const expected = ["font", "feeds", "sidebar", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
@@ -115,11 +115,11 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("link", { name: /^Font and line width/ })).toBeFocused();
 
-  // Feed health keeps its X; it and Escape go back to its row too.
-  await page.getByRole("link", { name: "Feed health", exact: true }).click();
-  await expect(page).toHaveURL(/\/settings\/feed-health$/);
+  // Everyone you follow keeps its X; it and Escape go back to its row too.
+  await page.getByRole("link", { name: "Everyone you follow", exact: true }).click();
+  await expect(page).toHaveURL(/\/settings\/feeds$/);
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("link", { name: "Feed health", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Everyone you follow", exact: true })).toBeFocused();
 
   if (testInfo.project.name === "phone") {
     // On a phone, a control sits under its name, across the row.

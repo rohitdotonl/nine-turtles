@@ -699,7 +699,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   }
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
   // Rows that open a page are full-width rows, at least 44px tall, in the text color, ending in ›, never the accent (decision 0042).
-  for (const row of [page.getByRole("link", { name: "Your feeds" }), page.getByRole("link", { name: "Feed health" }), page.getByRole("link", { name: "Your data" })]) {
+  for (const row of [page.getByRole("link", { name: "Everyone you follow" }), page.getByRole("link", { name: "Your data" })]) {
     const box = (await row.boundingBox())!;
     expect(Math.round(box.width)).toBe(boxes[0]![1]);
     expect(box.height).toBeGreaterThanOrEqual(44);

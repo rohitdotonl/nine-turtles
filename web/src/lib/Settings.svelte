@@ -11,8 +11,8 @@
   device). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
-  Font and line width; Your library (Your feeds and Feed health,
-  pages of their own, then Show in the sidebar and Your data); More
+  Font and line width; Your library (Everyone you follow, a page of
+  its own, then Show in the sidebar and Your data); More
   (Add from anywhere, Install the app, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
@@ -80,7 +80,6 @@
     onOpen,
     onBack,
     onImported,
-    onFeedHealth,
     onYourFeeds,
     onMuted,
     onReaders,
@@ -121,9 +120,7 @@
     onBack: () => void;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
-    /** Opens the feed health page. */
-    onFeedHealth: (event: MouseEvent) => void;
-    /** Opens Your feeds. */
+    /** Opens Everyone you follow. */
     onYourFeeds: (event: MouseEvent) => void;
     /** Opens the Hidden articles page. */
     onMuted: (event: MouseEvent) => void;
@@ -498,8 +495,7 @@
       <section aria-labelledby="library-heading">
         <h3 id="library-heading" class="settings-head">Your library</h3>
         <div class="inset-group">
-          {@render pageRow("feeds", "/settings/feeds", "Your feeds", "feed", onYourFeeds)}
-          {@render pageRow("feed-health", "/settings/feed-health", "Feed health", "heart-pulse", onFeedHealth)}
+          {@render pageRow("feeds", "/settings/feeds", "Everyone you follow", "feed", onYourFeeds)}
           {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "sidebar-check", open("sidebar"))}
           {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
         </div>
