@@ -22,13 +22,11 @@
   lined up with the first line of its name, and a setting's description
   sits straight under its name (S1, decision 0120).
 
-  The groups' own components, each saying where it's described: AddAnywhere,
-  InstallApp, Rules and RuleEditor, Newsletters, Assistants,
+  The groups' own components, each saying where it's described: InstallApp, Rules and RuleEditor, Newsletters, Assistants,
   Readers, Plan, Passkeys, ChangeEmail and DeleteAccount.
 -->
 <script lang="ts">
   import { edge } from "./edge";
-  import AddAnywhere from "./AddAnywhere.svelte";
   import ChangeEmail from "./ChangeEmail.svelte";
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
@@ -445,7 +443,6 @@
       <section aria-labelledby="more-heading">
         <h3 id="more-heading" class="settings-head">More</h3>
         <div class="inset-group">
-          {@render pageRow("add-from-anywhere", "/settings/add-from-anywhere", SETTINGS_PAGES["add-from-anywhere"], "bookmark-plus", open("add-from-anywhere"))}
           {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone-download", open("install"))}
           {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "eye-off", open("hiding"))}
           {#if newslettersOn}
@@ -545,8 +542,6 @@
           Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
         </p>
       </section>
-      {:else if page === "add-from-anywhere"}
-        <AddAnywhere />
       {:else if page === "install"}
         <InstallApp />
       {:else if page === "hiding"}

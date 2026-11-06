@@ -15,7 +15,7 @@ describe("addresses", () => {
     expect(parse("/settings/readers/all")).toEqual({ kind: "readers" });
     expect(parse("/settings/readers")).toEqual({ kind: "settings", page: "readers" });
     expect(parse("/settings/hiding")).toEqual({ kind: "settings", page: "hiding" });
-    expect(parse("/settings/add-from-anywhere/")).toEqual({ kind: "settings", page: "add-from-anywhere" });
+    expect(parse("/settings/add-from-anywhere/")).toEqual({ kind: "settings", page: "install" });
     expect(parse("/settings/install")).toEqual({ kind: "settings", page: "install" });
     // Pages that went (decision 0187) open Settings itself.
     expect(parse("/settings/font")).toEqual({ kind: "settings" });
