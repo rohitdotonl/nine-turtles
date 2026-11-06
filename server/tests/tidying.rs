@@ -167,7 +167,67 @@ async fn each_feed_says_what_it_last_posted_and_when() {
         .find(|feed| feed["id"] == busy)
         .unwrap();
     assert_eq!(busy_row["last_title"], "busy post");
-    assert!(["person", "publication"].contains(&busy_row["kind"].as_str().unwrap()));
+    assert_eq!(busy_row["kind"], "person");
+    assert!(busy_row["person"].is_null());
+}
+
+/// A place joined into a person is listed as theirs, under People, whatever
+/// it was guessed before; a newest title the reader hid isn't shown.
+#[tokio::test]
+async fn joined_places_say_whose_they_are_and_hidden_titles_stay_hidden() {
+    let reader = Reader::new().await;
+    let blog = reader.follow("blog-2026").await;
+    let channel = reader.follow("channel-2026").await;
+    let hidden = reader.follow("hidden-2026").await;
+    let db = &reader.state.db;
+    let (me,): (i64,) = sqlx::query_as("SELECT person_id FROM subscriptions WHERE feed_id = ?")
+        .bind(blog)
+        .fetch_one(db)
+        .await
+        .unwrap();
+    let (writer,): (i64,) = sqlx::query_as(
+        "INSERT INTO writers (person_id, name, created_at) VALUES (?, 'June Park', 0) RETURNING id",
+    )
+    .bind(me)
+    .fetch_one(db)
+    .await
+    .unwrap();
+    sqlx::query("UPDATE subscriptions SET writer_id = ? WHERE feed_id IN (?, ?)")
+        .bind(writer)
+        .bind(blog)
+        .bind(channel)
+        .execute(db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE subscriptions SET kind = 'publication' WHERE feed_id IN (?, ?)")
+        .bind(channel)
+        .bind(hidden)
+        .execute(db)
+        .await
+        .unwrap();
+    sqlx::query("UPDATE entries SET muted = 1 WHERE feed_id = ?")
+        .bind(hidden)
+        .execute(db)
+        .await
+        .unwrap();
+    let listed = reader.get("/api/tidy/feeds").await;
+    let row = |id: i64| {
+        listed["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|feed| feed["id"] == id)
+            .unwrap()
+            .clone()
+    };
+    for place in [blog, channel] {
+        assert_eq!(row(place)["person"], writer);
+        assert_eq!(row(place)["person_name"], "June Park");
+        assert_eq!(row(place)["kind"], "person");
+    }
+    assert_eq!(row(hidden)["kind"], "publication");
+    assert!(row(hidden)["last_title"].is_null());
+    assert!(row(hidden)["last_posted"].as_i64().is_some());
 }
 
 #[tokio::test]

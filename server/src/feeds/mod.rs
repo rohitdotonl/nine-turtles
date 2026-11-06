@@ -56,7 +56,7 @@ struct FeedRow {
     unread: i64,
     /// When the reader paused it, if it's paused.
     paused_at: Option<i64>,
-    /// When its checks began failing, while the feed health page lists it
+    /// When its checks began failing, while Everyone you follow lists it
     /// as not working (`health::LISTED_AFTER` failures in a row), so its
     /// list can say so and offer Find new address (decision 0106).
     failing_since: Option<i64>,

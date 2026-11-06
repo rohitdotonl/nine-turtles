@@ -4,7 +4,7 @@
 // this file turns it into sentences, and no error code is ever shown.
 
 import type { Choice } from "./feeds";
-import { when } from "./times";
+import { longDay, when } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 
@@ -62,7 +62,7 @@ async function post(path: string, body: unknown): Promise<Answer> {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
-      // Retry and Find new address wait for a publisher, who may be slow.
+      // Find new address and Use this address wait for a publisher, who may be slow.
       signal: AbortSignal.timeout(45_000),
     });
   } catch {
@@ -98,14 +98,10 @@ function toSick(feed: Record<string, unknown>): Sick {
   };
 }
 
-const DAY_MONTH = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
-const DAY_MONTH_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-/** "since 12 October", "since 3 December 2025" or "since earlier today", in the device's time zone. */
+/** "since 12 October", "since 3 December 2025" or "since earlier today". */
 function since(at: number, now: Date): string {
-  const date = new Date(at * 1000);
-  if (date.toDateString() === now.toDateString()) return "since earlier today";
-  return `since ${(date.getFullYear() === now.getFullYear() ? DAY_MONTH : DAY_MONTH_YEAR).format(date)}`;
+  const day = longDay(at, now);
+  return day === "today" ? "since earlier today" : `since ${day}`;
 }
 
 /** The first line about a feed: "Nothing has come through since 1 November", or "Working again" once it has moved. */

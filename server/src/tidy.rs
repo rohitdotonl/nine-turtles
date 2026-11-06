@@ -49,21 +49,32 @@ struct Listed {
     last_title: Option<String>,
     /// "person" or "publication" (decision 0163).
     kind: String,
+    /// The person it was joined into (SPEC section 36), and their name.
+    person: Option<i64>,
+    person_name: Option<String>,
     added_at: i64,
     #[sqlx(skip)]
     folders: Vec<i64>,
 }
 
 /// Each feed the reader follows, by their name for it, whether it's a
-/// person or a publication, with when they followed it and its newest
-/// article's date and title, both found from the `articles_newest_by_feed`
-/// index. Takes the reader.
+/// person or a publication (as the sidebar decides it, `feeds::FEEDS`), the
+/// person it was joined into, if any, with that person's name, when they
+/// followed it and its newest article's date and title, both found from the
+/// `articles_newest_by_feed` index. A title the reader hid (a rule or their
+/// own Hide) isn't shown. Takes the reader.
 const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
-        subscriptions.added_at, COALESCE(subscriptions.kind, 'person') AS kind,
+        subscriptions.added_at, subscriptions.writer_id AS person,
+        (SELECT name FROM writers WHERE writers.id = subscriptions.writer_id) AS person_name,
+        CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
+             ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
         (SELECT MAX(sort_at) FROM articles WHERE articles.feed_id = subscriptions.feed_id)
             AS last_posted,
-        (SELECT NULLIF(TRIM(title), '') FROM articles WHERE articles.feed_id = subscriptions.feed_id
-            ORDER BY sort_at DESC, id DESC LIMIT 1) AS last_title
+        (SELECT CASE WHEN EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id
+                    AND entries.article_id = newest.id AND entries.muted = 1) THEN NULL
+                ELSE NULLIF(TRIM(newest.title), '') END
+            FROM articles AS newest WHERE newest.feed_id = subscriptions.feed_id
+            ORDER BY newest.sort_at DESC, newest.id DESC LIMIT 1) AS last_title
      FROM subscriptions WHERE person_id = ? AND unsubscribed_at IS NULL
      ORDER BY title COLLATE NOCASE, feed_id";
 

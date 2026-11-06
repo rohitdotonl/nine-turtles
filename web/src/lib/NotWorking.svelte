@@ -10,7 +10,7 @@
   to list, it shows nothing.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import { refused, resubscribe, unsubscribe } from "./feeds";
   import { headline, listSick, reason, type Sick } from "./health";
@@ -39,9 +39,11 @@
   let rows: Row[] | undefined = $state();
   let failed = $state(false);
 
-  $effect(() => {
+  /** Lists who isn't working: when the page opens, and again after the list below unsubscribes, moves or undoes. */
+  export function reload() {
     listSick()
       .then((feeds) => {
+        failed = false;
         rows = feeds.map((feed, key) => ({
           key,
           group: feed.state === "dead" ? "dead" : "trouble",
@@ -53,7 +55,9 @@
         }));
       })
       .catch(() => (failed = true));
-  });
+  }
+
+  onMount(reload);
 
   /**
    * An action replaced the button the keyboard was on: its place moves to

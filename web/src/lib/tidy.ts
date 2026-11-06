@@ -6,9 +6,13 @@ import type { Folder } from "./shapes";
 import { change, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { longDay } from "./times";
 
+/** One row: a person with every place they were joined from, or a place on its own. */
 export type Tended = {
+  /** The place the row opens: a person's first place, as the sidebar's row. */
   id: number;
+  /** The person's name, or the place's. */
   title: string;
   /** When its newest article was published, or null if it has none. */
   lastPosted: number | null;
@@ -17,10 +21,16 @@ export type Tended = {
   /** Listed under People or Publications, as in the sidebar (decision 0163). */
   kind: "person" | "publication";
   addedAt: number;
-  /** The folders it's in, by number. */
+  /** The folders any of its places are in, by number. */
   folders: number[];
+  /** Its places, each with its own folders, for Choose and Undo. */
+  places: { id: number; folders: number[] }[];
 };
 
+/** A place as the server lists it, with the person it was joined into, if any. */
+type Place = Omit<Tended, "places"> & { person: number | null; personName: string | null };
+
+/** Everyone, one row per person, as the sidebar's rows; see `foldPeople`. */
 export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[] }> {
   const response = await api("/api/tidy/feeds", { cache: "no-store" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
@@ -28,17 +38,55 @@ export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]
   const feeds = isRecord(body) && Array.isArray(body.feeds) ? body.feeds : [];
   const folders = isRecord(body) && Array.isArray(body.folders) ? body.folders : [];
   return {
-    feeds: feeds.filter(isRecord).map((feed) => ({
-      id: Number(feed.id),
-      title: String(feed.title ?? ""),
-      lastPosted: typeof feed.last_posted === "number" ? feed.last_posted : null,
-      lastTitle: typeof feed.last_title === "string" && feed.last_title.trim() !== "" ? feed.last_title.trim() : null,
-      kind: feed.kind === "publication" ? "publication" : "person",
-      addedAt: Number(feed.added_at ?? 0),
-      folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
-    })),
+    feeds: foldPeople(
+      feeds.filter(isRecord).map((feed) => ({
+        id: Number(feed.id),
+        title: String(feed.title ?? ""),
+        lastPosted: typeof feed.last_posted === "number" ? feed.last_posted : null,
+        lastTitle: typeof feed.last_title === "string" && feed.last_title.trim() !== "" ? feed.last_title.trim() : null,
+        kind: feed.kind === "publication" ? "publication" : "person",
+        addedAt: Number(feed.added_at ?? 0),
+        folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
+        person: typeof feed.person === "number" ? feed.person : null,
+        personName: typeof feed.person_name === "string" ? feed.person_name : null,
+      })),
+    ),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
   };
+}
+
+/**
+ * One row per person, A to Z, as `rowsOf` makes the sidebar's: a person's
+ * row takes their name, their first place's number, their newest piece across
+ * every place, and every folder any place is in. A place on its own is its
+ * own row.
+ */
+export function foldPeople(places: Place[]): Tended[] {
+  const rows: Tended[] = [];
+  const done = new Set<number>();
+  for (const place of places) {
+    const { person, personName, ...own } = place;
+    if (person === null) {
+      rows.push({ ...own, places: [{ id: own.id, folders: own.folders }] });
+      continue;
+    }
+    if (done.has(person)) continue;
+    done.add(person);
+    const theirs = places.filter((each) => each.person === person).sort((one, other) => one.addedAt - other.addedAt || one.id - other.id);
+    const first = theirs[0]!;
+    const newest = theirs.reduce((best, each) => ((each.lastPosted ?? -1) > (best.lastPosted ?? -1) ? each : best));
+    rows.push({
+      id: first.id,
+      title: personName ?? first.title,
+      lastPosted: newest.lastPosted,
+      lastTitle: newest.lastTitle,
+      kind: "person",
+      addedAt: first.addedAt,
+      folders: [...new Set(theirs.flatMap((each) => each.folders))],
+      places: theirs.map((each) => ({ id: each.id, folders: each.folders })),
+    });
+  }
+  return rows.sort((one, other) => one.title.localeCompare(other.title, undefined, { sensitivity: "base" }) || one.id - other.id);
 }
 
 const DAY = 24 * 60 * 60;
@@ -52,16 +100,6 @@ export function isQuiet(feed: Tended, now: number): boolean {
   return now - since >= 182 * DAY;
 }
 
-const DAY_MONTH = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
-const DAY_MONTH_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-/** "today", "4 November", or "14 March 2025", in the device's time zone. */
-function day(at: number, now: Date): string {
-  const date = new Date(at * 1000);
-  if (date.toDateString() === now.toDateString()) return "today";
-  return (date.getFullYear() === now.getFullYear() ? DAY_MONTH : DAY_MONTH_YEAR).format(date);
-}
-
 /**
  * A row's second line: their newest title and when it came ("“On walking”,
  * 4 November"), "Quiet since 14 March: “On walking”" after six months, and
@@ -71,7 +109,7 @@ export function rowLine(feed: Tended, folders: string[], now: Date = new Date())
   let line: string;
   if (feed.lastPosted === null) line = "Nothing written yet";
   else {
-    const when = day(feed.lastPosted, now);
+    const when = longDay(feed.lastPosted, now);
     const title = feed.lastTitle ? `“${feed.lastTitle}”` : null;
     if (isQuiet(feed, now.getTime() / 1000)) line = title ? `Quiet since ${when}: ${title}` : `Quiet since ${when}`;
     else if (title) line = `${title}, ${when}`;
@@ -121,6 +159,11 @@ export async function moveAll(
   const { refusal, answer } = await change("/api/tidy/move", { feeds: ids, folder, new_folder: newFolder });
   if (refusal) return refusal;
   return { folder: typeof answer?.folder === "number" ? answer.folder : null, created: answer?.created === true };
+}
+
+/** Every place of the chosen rows. */
+export function placeIds(rows: Tended[]): number[] {
+  return rows.flatMap((row) => row.places.map((place) => place.id));
 }
 
 /** Undo for moving: each feed goes back to the folders it was in. */

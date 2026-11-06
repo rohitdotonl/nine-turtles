@@ -1059,7 +1059,7 @@
         <YourFeeds
           bind:heading={headings.yourFeeds}
           onClose={closeSettingsPage}
-          onOpenPerson={(event, id) => follow(event, { kind: "about", id })}
+          onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />

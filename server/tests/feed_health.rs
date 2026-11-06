@@ -1,4 +1,4 @@
-//! The feed health page (SPEC section 17), tested against a real nine
+//! Who isn't working, in Everyone you follow (SPEC section 15), tested against a real nine
 //! turtles and a made-up publisher whose feeds break when a test says so.
 
 mod common;

@@ -1,9 +1,12 @@
 // Times and dates in the words the screens show: an article's time, Recently
-// read's day headings, and when a feed was paused.
+// read's day headings, when a feed was paused, and the long day Everyone you
+// follow says.
 
 const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
 const DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const LONG_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+const LONG_DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
 /**
  * An article's time, in the device's time zone, in words that never change
@@ -34,4 +37,11 @@ export function lastChecked(at: number, now: Date = new Date()): string {
     date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   if (sameDay) return `Last checked today at ${TIME.format(date)}.`;
   return `Last checked on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
+}
+
+/** A day spelled out, in the device's time zone: "today", "4 November" this year, "14 March 2025" before. */
+export function longDay(at: number, now: Date = new Date()): string {
+  const date = new Date(at * 1000);
+  if (date.toDateString() === now.toDateString()) return "today";
+  return (date.getFullYear() === now.getFullYear() ? LONG_DAY : LONG_DAY_AND_YEAR).format(date);
 }

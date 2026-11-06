@@ -23,6 +23,7 @@
     listTended,
     moveAll,
     movedMessage,
+    placeIds,
     resubscribeAll,
     restoreFolders,
     rowLine,
@@ -65,6 +66,7 @@
   let moveHeading: HTMLHeadingElement | undefined = $state();
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
+  let notWorking: NotWorking | undefined = $state();
 
   let listed = $derived(feeds ?? []);
   /** People, then Publications, as the sidebar lists them; a group with nobody in it isn't shown. */
@@ -129,6 +131,7 @@
     editing = false;
     chosen = [];
     onFeedsChanged();
+    notWorking?.reload();
     await load();
     await tick();
     undoButton?.focus();
@@ -138,14 +141,14 @@
     const going = picked();
     if (going.length === 0 || busy) return;
     busy = true;
-    const refusal = await unsubscribeAll(going.map((feed) => feed.id));
+    const refusal = await unsubscribeAll(placeIds(going));
     busy = false;
     if (refusal) {
       [message, undo] = [refused(refusal, "feed"), undefined];
       return;
     }
     await done(unsubscribedMessage(going.map((feed) => feed.title)), async () => {
-      const refusal = await resubscribeAll(going.map((feed) => feed.id));
+      const refusal = await resubscribeAll(placeIds(going));
       if (refusal) throw refusal;
     });
   }
@@ -172,7 +175,7 @@
       return;
     }
     const going = picked();
-    const before = going.map((feed) => ({ id: feed.id, folders: [...feed.folders] }));
+    const before = going.flatMap((feed) => feed.places.map((place) => ({ id: place.id, folders: [...place.folders] })));
     const folder = destination === "none" || destination === "new" ? null : Number(destination);
     const naming = destination === "new" ? newFolder.trim() : "";
     if (destination === "new" && !naming) {
@@ -180,11 +183,7 @@
       return;
     }
     busy = true;
-    const answer = await moveAll(
-      going.map((feed) => feed.id),
-      folder,
-      naming,
-    );
+    const answer = await moveAll(placeIds(going), folder, naming);
     busy = false;
     if (typeof answer === "string") {
       moveProblem = refused(answer, "folder");
@@ -210,6 +209,7 @@
     }
     busy = false;
     onFeedsChanged();
+    notWorking?.reload();
     await load();
     await tick();
     editButton?.focus();
@@ -225,7 +225,7 @@
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onClose} closeLabel="Close everyone you follow" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
-      <NotWorking onFeedsChanged={healthChanged} />
+      <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} />
       {#if failed}
         <p role="status" class="text-ink-2">Everyone you follow couldn't be loaded. Try again in a moment.</p>
       {:else if feeds}

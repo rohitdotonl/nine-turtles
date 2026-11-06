@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folderNames, isQuiet, movedMessage, rowLine, unsubscribedMessage, type Tended } from "./tidy";
+import { foldPeople, folderNames, isQuiet, movedMessage, rowLine, unsubscribedMessage, type Tended } from "./tidy";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -12,6 +12,7 @@ const feed = (change: Partial<Tended>): Tended => ({
   kind: "person",
   addedAt: NOW - 400 * DAY,
   folders: [],
+  places: [{ id: 1, folders: [] }],
   ...change,
 });
 
@@ -32,6 +33,34 @@ describe("everyone you follow", () => {
     expect(rowLine(feed({ lastPosted: at(new Date(2025, 9, 3)), lastTitle: null }), [], now)).toBe("Quiet since 3 October 2025");
     expect(rowLine(feed({ lastPosted: at(new Date(2026, 9, 3)), lastTitle: null }), ["A", "B"], now)).toBe("Last wrote on 3 October · A, B");
     expect(rowLine(feed({ lastPosted: null }), [], now)).toBe("Nothing written yet");
+  });
+
+  it("folds a person's places into one row, as the sidebar does", () => {
+    const place = (id: number, title: string, change: object) => ({
+      id,
+      title,
+      lastPosted: NOW - id * DAY,
+      lastTitle: `post ${id}`,
+      kind: "publication" as const,
+      addedAt: NOW - 100 * DAY + id,
+      folders: [] as number[],
+      person: null,
+      personName: null,
+      ...change,
+    });
+    const rows = foldPeople([
+      place(3, "June's channel", { person: 9, personName: "June Park", folders: [5] }),
+      place(2, "June's blog", { person: 9, personName: "June Park", folders: [4], lastPosted: NOW, addedAt: NOW - 200 * DAY }),
+      place(1, "Garden Letters", {}),
+    ]);
+    expect(rows.map((row) => row.title)).toEqual(["Garden Letters", "June Park"]);
+    const june = rows[1]!;
+    expect(june).toMatchObject({ id: 2, kind: "person", lastPosted: NOW, lastTitle: "post 2", folders: [4, 5] });
+    expect(june.places).toEqual([
+      { id: 2, folders: [4] },
+      { id: 3, folders: [5] },
+    ]);
+    expect(rows[0]!.kind).toBe("publication");
   });
 
   it("names a feed's folders A to Z", () => {
