@@ -12,7 +12,7 @@
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
   Your library (Everyone you follow, a page of its own, then Your data); More
-  (Add from anywhere, Install the app, Rules,
+  (Install the app on any device, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
   (Your plan while nine turtles takes payments, Email with Change…, Weekly

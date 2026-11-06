@@ -1,5 +1,5 @@
 <!--
-  Install the app (SPEC section 20, decisions 0151 and 0104), a page of
+  Install the app on any device (SPEC section 20, decisions 0151 and 0104), a page of
   Settings: three tabs, Computer, Android and iPhone & iPad, with this
   device's already chosen (lib/install.ts guesses which). This device's tab
   names its browser and has the Install button where the browser offers one
@@ -44,7 +44,7 @@
 </script>
 
 <section aria-labelledby="install-heading" class="flex flex-col gap-8">
-  <h3 id="install-heading" class="inset-head">Install the app</h3>
+  <h3 id="install-heading" class="inset-head">Install the app on any device</h3>
   <p class="lead">
     Installed, nine turtles has its own icon and window, like any other app, with nothing to download from an app
     store. Sign in once on each device; what you follow and what you've read are the same everywhere.

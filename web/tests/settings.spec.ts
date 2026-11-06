@@ -27,7 +27,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // One line width for everyone (decision 0187).
   await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["feeds", "data", "add-from-anywhere", "install", "hiding", "newsletters", "assistants", "readers"];
+  const expected = ["feeds", "data", "install", "hiding", "newsletters", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
   // No Sign-up row: sign-up is always open (decision 0115).
@@ -68,7 +68,7 @@ test("each row's icon sits on the centre of its name's first line", async ({ pag
       }),
   );
   // Rows with a description under the name (Unread, Email) and rows without one.
-  expect(offsets.length).toBeGreaterThan(15);
+  expect(offsets.length).toBeGreaterThan(14);
   for (const { row, off } of offsets) expect(off, row ?? "").toBeLessThanOrEqual(1);
 });
 
@@ -96,14 +96,14 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await expect(page.getByRole("link", { name: "Connected assistants", exact: true })).toBeFocused();
 
   // The browser's Back and Forward.
-  await page.getByRole("link", { name: "Add from anywhere", exact: true }).click();
-  await expect(page.getByText("On a computer")).toBeVisible();
+  await page.getByRole("link", { name: "Install the app on any device", exact: true }).click();
+  await expect(page.getByText("Follow the blog you're on")).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(/\/settings$/);
-  await expect(page.getByRole("link", { name: "Add from anywhere", exact: true })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Install the app on any device", exact: true })).toBeFocused();
   await page.goForward();
-  await expect(page).toHaveURL(/\/settings\/add-from-anywhere$/);
-  await expect(page.getByText("On a computer")).toBeVisible();
+  await expect(page).toHaveURL(/\/settings\/install$/);
+  await expect(page.getByText("Follow the blog you're on")).toBeVisible();
 
   // An address opens its page straight away, and ‹ Settings still goes back.
   await page.goto("/settings/data");
@@ -178,23 +178,27 @@ test("a setting's description sits straight under its name, and group names are 
   await expect(page.locator("#reading-heading")).toHaveCSS("text-transform", "uppercase");
 });
 
-test("Install the app says what an installed app is, then the steps for this device", async ({ page }, testInfo) => {
+test("Install the app on any device says what an installed app is, then the steps for this device, with a tab for each other", async ({ page }, testInfo) => {
   await openSettings(page);
-  await page.getByRole("link", { name: "Install the app", exact: true }).click();
+  await page.getByRole("link", { name: "Install the app on any device", exact: true }).click();
   await expect(page).toHaveURL(/\/settings\/install$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Install the app" })).toBeVisible();
-  await expect(page.getByText("It updates itself each time you open it.", { exact: false })).toBeVisible();
-  // Desktop Chrome and the Pixel each get their own steps, numbered, and the other devices one line each.
+  await expect(page.getByRole("heading", { level: 2, name: "Install the app on any device" })).toBeVisible();
+  await expect(page.getByText("Sign in once on each device", { exact: false })).toBeVisible();
+  // Desktop Chrome and the Pixel each open on their own tab, with their own steps, numbered.
   const phone = testInfo.project.name === "phone";
-  await expect(page.getByRole("heading", { level: 4, name: phone ? "On this Android phone" : "On this computer, in Chrome" })).toBeVisible();
+  const tabs = page.getByRole("group", { name: "Device" });
+  await expect(tabs.getByRole("radio", { name: phone ? "Android" : "Computer" })).toBeChecked();
+  await expect(page.getByRole("heading", { level: 4, name: phone ? "On this Android phone" : /^On this (Linux computer|computer|Mac|Windows computer), in Chrome$/ })).toBeVisible();
   const install = page.locator('section[aria-labelledby="install-heading"]');
   // The numbered steps are the page's one ordered list.
   const steps = install.locator("ol").getByRole("listitem");
   await expect(steps).toHaveCount(3);
   await expect(steps.last()).toHaveText(phone ? "3Tap Install." : "3Click Install.");
-  const others = install.locator("ul").getByRole("listitem");
-  await expect(others).toHaveCount(3);
-  await expect(others.first()).toContainText("iPhone and iPad");
+  // Another device's tab gives its steps for any browser, and its own way to follow a blog.
+  await tabs.getByText("iPhone & iPad").click();
+  await expect(page.getByRole("heading", { level: 4, name: "On an iPhone or iPad" })).toBeVisible();
+  await expect(install.getByText("Copy the blog's address, then paste it into + Add.")).toBeVisible();
+  await tabs.getByText(phone ? "Android" : "Computer").click();
 
   // When the browser offers to install, one press shows its own dialog, and the page then says it's done.
   const offer = (outcome: string) =>
@@ -223,11 +227,11 @@ test("Install the app says what an installed app is, then the steps for this dev
   await expect(steps).toHaveCount(0);
 });
 
-test("in the installed app, Install the app says it's installed instead of the steps", async ({ page }) => {
+test("in the installed app, Install the app on any device says it's installed instead of the steps", async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }));
   await openSettings(page, "/settings/install");
   await expect(page.getByText("You're using the installed app now.")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 4, name: "On other devices" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Device" })).toBeVisible();
 });
 
 test("the foot of Settings links to Help on the website, in a tab of its own, reached by the keyboard", async ({ page }) => {

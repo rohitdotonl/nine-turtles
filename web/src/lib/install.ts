@@ -93,7 +93,7 @@ export function guideFor({ platform, browser }: Device): Guide {
   return { where, steps: ["Open your browser's menu.", "Choose Install, Add to home screen or Add to Dock, whichever it offers."] };
 }
 
-/** The three tabs of Settings › Install the app, each a kind of device. */
+/** The three tabs of Settings › Install the app on any device, each a kind of device. */
 export type Kind = "computer" | "android" | "apple";
 export const KINDS: { kind: Kind; label: string }[] = [
   { kind: "computer", label: "Computer" },

@@ -12,7 +12,7 @@ if (!target) throw new Error("nine turtles: the #app element is missing from ind
 apply(load());
 mount(App, { target });
 
-// Keeps the browser's offer to install nine turtles for Settings › Install the app.
+// Keeps the browser's offer to install nine turtles for Settings › Install the app on any device.
 listenForInstall();
 
 // Whether the reader is using the keyboard right now, so a row the app moves

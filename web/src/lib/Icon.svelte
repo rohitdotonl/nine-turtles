@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -147,12 +147,8 @@
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
-  {:else if name === "bookmark-plus"}
-    <!-- Settings › Add from anywhere: a bookmark and a plus. -->
-    <path d="M4.25 3.75h6v12.5l-3-2.5-3 2.5Z" />
-    <path d="M14.5 7.25v5.5M11.75 10h5.5" />
   {:else if name === "phone-download"}
-    <!-- Settings › Install the app: a phone with an arrow down onto its screen. -->
+    <!-- Settings › Install the app on any device: a phone with an arrow down onto its screen. -->
     <rect x="5.5" y="2.75" width="9" height="14.5" rx="2" />
     <path d="M10 6v5.5M7.75 9.25 10 11.5l2.25-2.25" />
     <path d="M8.75 14.75h2.5" />
