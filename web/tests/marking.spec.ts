@@ -171,6 +171,34 @@ test.describe("on a wide window", () => {
     await expect(page.locator(".item-row:focus")).toHaveCount(1);
   });
 
+  test("the note goes once you move on or close it, never on a timer, and u still undoes", async ({ page }) => {
+    const blog = await openBlog(page);
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText("Marked 3 articles as read");
+    const undo = page.getByRole("button", { name: "Undo" });
+    const close = page.getByRole("button", { name: "Close the note" });
+    // The words on the left, Undo and × on the right, side by side, centred on one another.
+    const [words, undoBox, closeBox] = await Promise.all([line(page).boundingBox(), undo.boundingBox(), close.boundingBox()]);
+    expect(undoBox!.x).toBeGreaterThan(words!.x + words!.width - 1);
+    expect(closeBox!.x).toBeGreaterThan(undoBox!.x);
+    expect(Math.abs(undoBox!.y + undoBox!.height / 2 - (words!.y + words!.height / 2))).toBeLessThan(2);
+    expect(closeBox!.height).toBeGreaterThanOrEqual(44);
+
+    // Opening an article is moving on: the note goes, but u still undoes, and says so.
+    await page.keyboard.press("j");
+    await expect(undo).toHaveCount(0);
+    await expect(close).toHaveCount(0);
+    await page.keyboard.press("u");
+    await expect(line(page)).toHaveText("Undone.");
+    await expect(close).toBeVisible();
+    await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, unread/);
+
+    // × puts it away at once, and the keyboard stays on the list.
+    await close.click();
+    await expect(close).toHaveCount(0);
+    await expect(page.locator(".item-row:focus")).toHaveCount(1);
+  });
+
   test("the More menu: arrow keys move through it, Escape closes it and goes back to its button", async ({ page }) => {
     await openBlog(page);
     const more = page.getByRole("button", { name: "More", exact: true });

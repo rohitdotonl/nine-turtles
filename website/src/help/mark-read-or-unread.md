@@ -4,7 +4,7 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-04
+updated: 2026-11-06
 related: [unread-on-or-off, star-an-article, find-your-way-around]
 ---
 
@@ -33,8 +33,9 @@ After you mark or star something, a note at the bottom of the list says
 what happened, with an **Undo** button. Press it, or <kbd>U</kbd>, to put
 things back as they were.
 
-Undo stays until you do something else that can be undone, or leave the list.
-It works for marking read and unread, starring, unfollowing someone and
+The note goes when you open another article, press its **×**, or leave the
+list; it never disappears on a timer. Until you leave the list, <kbd>U</kbd>
+still undoes, even after the note has gone. Undo works for marking read and unread, starring, unfollowing someone and
 deleting a folder.
 
 ## Let old articles go
