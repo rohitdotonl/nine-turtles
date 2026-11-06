@@ -229,14 +229,8 @@ body {
   }
 }
 
-/*
-  The sidebar's section names (Folders, Feeds), and the welcome's small headings
-  (decision 0195): small spaced capitals, semibold, muted, as Settings' group
-  names are (decision 0123).
-*/
-.sidebar-section {
-  padding: 1.5rem 1.25rem 0.5rem;
-}
+/* Small spaced capitals, semibold, muted: the sidebar's section names, as Settings' group names (decision 0123), and the welcome's small headings (decision 0195). */
+.sidebar-section { padding: 1.5rem 1.25rem 0.5rem; }
 .sidebar-section,
 .small-caps {
   font-size: 0.6875rem;
