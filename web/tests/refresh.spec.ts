@@ -87,6 +87,17 @@ test("on a phone, the note offers Show, which shows new items; Refresh in the Mo
   await expect(row(page, NEW_ARTICLE)).toBeVisible();
 });
 
+test("on a phone, the feeds screen's dots catch up as you arrive on it", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone layout only");
+  const blog = await openBlog(page);
+  const blogRow = page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${blog} unread` });
+  await publishAndWait(page, blog, "New articles");
+  // Back to the feeds screen without pressing Show: there's no Refresh there, and none is needed.
+  await page.getByRole("button", { name: "Back to Feeds" }).click();
+  await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("button", { name: "Refresh" })).toHaveCount(0);
+  await expect(blogRow.and(page.locator(`[data-unread="4"]`))).toBeVisible();
+});
+
 test("reopening the app shows what arrived, without pressing anything", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   const blog = await openBlog(page);
