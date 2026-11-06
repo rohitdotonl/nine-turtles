@@ -16,6 +16,12 @@
 //! own computer) the account is made at once, as before, with its address
 //! not confirmed.
 //!
+//! Sign-up never tells whether an address has an account (decision 0195,
+//! which replaced decision 0115's accepted give-away): an address that has
+//! one gets the same "Check your email" answer, and an email saying so
+//! instead of a link, within the same limits. Only without the email
+//! settings, where nothing can be sent, does sign-up still say it.
+//!
 //! At most `SIGN_UPS_PER_HOUR` sign-up tries are taken in any hour, for the
 //! whole app, counting tries with an email that's already taken as well as
 //! new accounts, and at most as many accounts are made: behind the host's
@@ -59,7 +65,10 @@ use crate::{
 };
 
 /// New accounts allowed in any hour, for the whole app.
-pub const SIGN_UPS_PER_HOUR: i64 = 20;
+/// Generous, so a busy day isn't turned away (decision 0195): an account is
+/// made only once its emailed link is followed, and each address keeps its
+/// own email limits.
+pub const SIGN_UPS_PER_HOUR: i64 = 100;
 /// Finishing a sign-up checks the password against at most this many of
 /// the address's waiting sign-ups, the newest, so one wrong try costs at
 /// most this many checks on sign-in's shared line.
@@ -93,8 +102,9 @@ pub const HEARD_ABOUT: &[&str] = &["blog", "friend", "search", "ai", "reddit", "
 
 /// Signs up: emails a link that makes the account (202, `sent_to`), or,
 /// without the email settings, makes it at once and signs this device in
-/// (204). An address that already has an account is said to (decision
-/// 0115 accepted that every sign-up page does).
+/// (204). An address that already has an account is answered the same as a
+/// new one, cookie and all, and is emailed to say so (decision 0195); only
+/// without the email settings, where nothing can be sent, is it said on the page.
 async fn sign_up(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -166,16 +176,29 @@ async fn sign_up(
             .bind(&email)
             .fetch_one(&state.db)
             .await;
-    match taken {
-        Ok(false) => {}
-        Ok(true) => return refused(StatusCode::CONFLICT, "already"),
+    let taken = match taken {
+        Ok(taken) => taken,
         Err(error) => return database_problem("finding a reader", &error),
-    }
+    };
     // A browser keeps one secret for all its sign-ups, so a link sent before
-    // "Use another email" still needs only one press here.
+    // "Use another email" still needs only one press here. Given to a taken
+    // address's browser too, so the answers can't be told apart.
     let Some(secret) = browser::secret_in(&headers).or_else(browser::new_secret) else {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
+    if taken {
+        // The same work and the same answer as for a new address, so neither
+        // tells: an email instead of a link, within the address's limits.
+        let emailed = match note_already(&state.db, &email).await {
+            Ok(emailed) => emailed,
+            Err(error) => return database_problem("making an email link", &error),
+        };
+        drop(tries);
+        if emailed {
+            send_already(&mailer, &email);
+        }
+        return sent(&email, &secret);
+    }
     let waiting = wait_for_confirming(&state.db, &email, &line, heard_about.as_deref(), &secret);
     let ticket = match waiting.await {
         Ok(Some(ticket)) => ticket,
@@ -198,6 +221,23 @@ async fn sign_up(
         "a link to confirm a new account",
     );
     sent(&email, &secret)
+}
+
+/// The email an address with an account gets when someone signs up with it:
+/// no link, nothing to undo, only where to go.
+fn send_already(mailer: &crate::email::Mailer, email: &str) {
+    let home = mailer.home();
+    mailer.send_later(
+        email,
+        "You already have a nine turtles account",
+        format!(
+            "Hello,\n\nSomeone, hopefully you, tried to sign up for nine turtles with this email. \
+             You already have an account, so nothing new was made. To sign in, go to:\n\n\
+             {home}\n\nand type your password, or press Forgot? there if you've lost it. \
+             If it wasn't you, ignore this email: nothing has changed.{SIGN_OFF}"
+        ),
+        "a note that an account already exists",
+    );
 }
 
 /// The link is on its way; this browser keeps the secret that lets its
@@ -255,6 +295,43 @@ async fn wait_for_confirming(
     .await?;
     transaction.commit().await?;
     Ok(emailed.then_some(ticket))
+}
+
+/// Counts a sign-up with an address that has an account as one of the
+/// address's emails, as `wait_for_confirming` counts a link, in the same
+/// steps: answers whether to email it (not past the hour's emails, nor
+/// within a minute of the last sign-up email). Its line is saved either way
+/// (`emailed` says whether it went), keeps no password and is spent at
+/// once, so it can never finish a sign-up.
+async fn note_already(db: &SqlitePool, email: &str) -> Result<bool, sqlx::Error> {
+    let ticket = match new_token() {
+        Ok(ticket) => ticket,
+        Err(error) => {
+            log::problem(&format!("couldn't make an email link: {error}"));
+            return Err(sqlx::Error::Protocol("no random ticket".into()));
+        }
+    };
+    let now = now();
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    tidy_links_in(&mut transaction, now).await?;
+    let this_hour = emails_to_address(&mut transaction, email, now - 60 * 60).await?;
+    let lately = emailed_lately(&mut transaction, Purpose::SignUp, email, now).await?;
+    let emailed = this_hour < EMAILS_PER_ADDRESS_PER_HOUR && !lately;
+    sqlx::query(
+        "INSERT INTO email_links
+             (purpose, person_id, email, password_hash, token_hash, created_at, expires_at,
+              used, emailed)
+         VALUES ('sign-up', NULL, ?, '', ?, ?, ?, 1, ?)",
+    )
+    .bind(email)
+    .bind(&scramble(&ticket)[..])
+    .bind(now)
+    .bind(now + CONFIRM_LIFETIME)
+    .bind(emailed)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(emailed)
 }
 
 #[derive(Deserialize)]

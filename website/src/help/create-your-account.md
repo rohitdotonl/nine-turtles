@@ -29,8 +29,13 @@ related: [follow-someone, install-the-app, delete-your-account]
 You're in, and signed in on that device. The link works once, within 24
 hours.
 
-No email? Look in your spam folder, or press **Send again**. Typed the
-address wrong? Press **Use another email**.
+If your address is a Gmail, Outlook, iCloud or Proton one, **Open Gmail**
+(or your provider's name) takes you to your inbox. No email? Look in your
+spam folder, or press **Send again**. Typed the address wrong? Press **Use
+another email**.
+
+Already have an account with that address? The email says so instead,
+and how to sign in.
 
 ## Sign in on another device
 

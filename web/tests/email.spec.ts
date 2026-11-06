@@ -74,6 +74,8 @@ test("anyone can sign up by confirming their email, with only the keyboard", asy
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
   await expect(page.getByText(`A link is on its way to ${email}.`)).toBeVisible();
   await expect(page.getByText("Didn't get it? Look in your spam folder.")).toBeVisible();
+  // An address that doesn't say where its inbox is gets no inbox link (decision 0195).
+  await expect(page.getByRole("link", { name: /^Open / })).toHaveCount(0);
   expect((await page.evaluate(async () => (await fetch("/api/session")).json())).signed_in).toBe(false);
   // Send again within the minute sends nothing and says so.
   await page.getByRole("button", { name: "Send again" }).click();
@@ -497,4 +499,33 @@ test("Your data says when there's nothing starred or no notes, and offers each e
   await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveAttribute("href", "/api/notes/export");
   await expect(data.getByText("Nothing starred yet", { exact: true })).toHaveCount(0);
   await page.context().close();
+});
+
+test("Check your email offers a Gmail address its inbox, by keyboard, after Sign up and Forgot?", async ({ browser }, testInfo) => {
+  // Decision 0195: one quiet link, pressed or not, opening a new tab; never followed by itself.
+  const context = await browser.newContext({ baseURL: MAIL_APP });
+  const page = await context.newPage();
+  const email = `inbox-${testInfo.project.name}-${Date.now()}@gmail.com`;
+  await page.goto("/sign-up");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  const inbox = page.getByRole("link", { name: "Open Gmail (opens in a new tab)" });
+  await page.keyboard.press("Tab");
+  await expect(inbox).toBeFocused();
+  await expect(inbox).toHaveAttribute("href", "https://mail.google.com/");
+  await expect(inbox).toHaveAttribute("target", "_blank");
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Send again" })).toBeFocused();
+
+  // After Forgot?, the same link, whether or not the address has an account.
+  await page.goto("/");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("link", { name: "Forgot?" }).click();
+  await page.getByRole("button", { name: "Email me a link" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Open Gmail (opens in a new tab)" })).toBeFocused();
+  await context.close();
 });

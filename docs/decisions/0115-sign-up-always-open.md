@@ -2,7 +2,9 @@
 
 > **Partly replaced by [0154](0154-confirm-email-at-sign-up.md):** sign-up
 > emails a link that confirms the address, and only following it makes the
-> account. Sign-up stays open to anyone, with no switch or invite.
+> account. Sign-up stays open to anyone, with no switch or invite. And
+> **[0195](0195-sign-up-never-says-who-has-an-account.md)** ends the accepted
+> "That email already has an account." and raises the hour's 20 to 100.
 
 *October 2026.*
 
