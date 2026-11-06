@@ -3,7 +3,7 @@
   quiet line in the second ink, "This feed hasn't worked since 12 October.",
   and a text button that runs Find new address (NewAddress.svelte), above
   the feed's own list (SPEC section 6) and in Edit feed (section 15). Only
-  while the feed health page would list it as not working; nothing is
+  while Everyone you follow would list it as not working; nothing is
   fetched until the reader presses the button (decision 0016). Once the feed
   has moved, the line says so, and stays until the reader leaves.
 -->

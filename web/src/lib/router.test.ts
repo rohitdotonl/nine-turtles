@@ -7,7 +7,7 @@ describe("addresses", () => {
     expect(parse("/starred/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/all")).toEqual({ kind: "view", view: "all" });
     expect(parse("/settings")).toEqual({ kind: "settings" });
-    expect(parse("/settings/feed-health")).toEqual({ kind: "feed-health" });
+    expect(parse("/settings/feed-health")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/feeds")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/hidden")).toEqual({ kind: "muted" });
     expect(parse("/settings/muted")).toEqual({ kind: "muted" });
@@ -57,10 +57,8 @@ describe("addresses", () => {
     expect(pathFor({ kind: "settings" })).toBe("/settings");
     expect(titleFor({ kind: "view", view: "all" })).toBe("All articles · nine turtles");
     expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
-    expect(pathFor({ kind: "feed-health" })).toBe("/settings/feed-health");
-    expect(titleFor({ kind: "feed-health" })).toBe("Feed health · nine turtles");
     expect(pathFor({ kind: "your-feeds" })).toBe("/settings/feeds");
-    expect(titleFor({ kind: "your-feeds" })).toBe("Your feeds · nine turtles");
+    expect(titleFor({ kind: "your-feeds" })).toBe("Everyone you follow · nine turtles");
     expect(pathFor({ kind: "muted" })).toBe("/settings/hidden");
     expect(titleFor({ kind: "muted" })).toBe("Hidden articles · nine turtles");
     expect(pathFor({ kind: "readers" })).toBe("/settings/readers/all");
@@ -104,8 +102,6 @@ describe("Settings' pages", () => {
   it("go back to the page that opened them, and to the row that did", () => {
     expect(parentOf({ kind: "settings", page: "hiding" })).toEqual({ kind: "settings" });
     expect(rowFor({ kind: "settings", page: "hiding" })).toBe("hiding");
-    expect(parentOf({ kind: "feed-health" })).toEqual({ kind: "settings" });
-    expect(rowFor({ kind: "feed-health" })).toBe("feed-health");
     expect(parentOf({ kind: "your-feeds" })).toEqual({ kind: "settings" });
     expect(rowFor({ kind: "your-feeds" })).toBe("feeds");
     expect(parentOf({ kind: "muted" })).toEqual({ kind: "settings", page: "hiding" });

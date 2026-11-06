@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 15, 23, 36 and 42
-updated: 2026-11-05
+updated: 2026-11-06
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -34,8 +34,9 @@ them all. To let go of one source only, press › beside it in Edit, then
 
 ## Unfollow many at once
 
-Open **Settings › Your feeds**, press **Edit**, tick everyone you'd like to
-let go, and press **Unsubscribe**.
+Open **Settings › Everyone you follow**, press **Choose…**, tick everyone
+you'd like to let go, and press **Unsubscribe**. One **Undo** brings them
+all back.
 
 ## Good to know
 
@@ -44,5 +45,6 @@ let go, and press **Unsubscribe**.
 - For a newsletter, nine turtles also asks the sender to stop, once the ten
   minutes to undo have passed. See
   <a href="/help/newsletters/">Read your newsletters here</a>.
-- **Settings › Your feeds** can also show who's been quiet for six months or
-  a year, if you'd like to tidy up.
+- **Settings › Everyone you follow** also shows who's been quiet: after six
+  months with nothing new, it says "Quiet since" and the date, if you'd like
+  to tidy up.

@@ -29,7 +29,6 @@
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
-  import FeedHealth from "./FeedHealth.svelte";
   import YourFeeds from "./YourFeeds.svelte";
   import Welcome from "./Welcome.svelte";
   import Muted from "./Muted.svelte";
@@ -151,7 +150,7 @@
   const headings: Headings = $state({});
   /** "Hide articles about…" on an article or a person's page: Settings › Hiding opens with a new rule for them. */
   let ruleForFeed: number | undefined = $state();
-  /** Feed health, Your feeds, Hidden articles or Readers was opened from Settings, so closing it is a step back in history. */
+  /** Everyone you follow, Hidden articles or Readers was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -614,12 +613,7 @@
     go(next);
   }
 
-  /** Settings › Feed health. */
-  function goHealth(event: MouseEvent) {
-    follow(event, { kind: "feed-health" });
-  }
-
-  /** Settings › Your feeds. */
+  /** Settings › Everyone you follow. */
   function goYourFeeds(event: MouseEvent) {
     follow(event, { kind: "your-feeds" });
   }
@@ -666,11 +660,11 @@
   }
 
   /**
-   * Close a page opened from Settings (Feed health, Your feeds, Hidden articles, All readers, and
+   * Close a page opened from Settings (Everyone you follow, Hidden articles, All readers, and
    * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
    * step back in history when it came from there.
    */
-  function closeHealth() {
+  function closeSettingsPage() {
     const parent = parentOf(route);
     if (!parent) return;
     if (cameFromSettings) steps.goBack();
@@ -835,7 +829,7 @@
   }
 
   function escape() {
-    if (parentOf(route)) closeHealth();
+    if (parentOf(route)) closeSettingsPage();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-folder") edited(false);
     else if (isWho(route)) whoBack();
@@ -1036,7 +1030,7 @@
         <Settings
           page={route.page}
           onOpen={(event, page) => follow(event, { kind: "settings", page })}
-          onBack={closeHealth}
+          onBack={closeSettingsPage}
           bind:preferences
           sort={settings.sort}
           onSort={(next) => settings.changeSort(next)}
@@ -1053,7 +1047,6 @@
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}
-          onFeedHealth={goHealth}
           onYourFeeds={goYourFeeds}
           onMuted={goMuted}
           onReaders={goReaders}
@@ -1062,20 +1055,18 @@
           bind:ruleForFeed
           besideToggle={!phone && !panes.sidebar}
         />
-      {:else if route.kind === "feed-health"}
-        <FeedHealth bind:heading={headings.health} onClose={closeHealth} onFeedsChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "your-feeds"}
         <YourFeeds
           bind:heading={headings.yourFeeds}
-          onClose={closeHealth}
-          onOpenFeed={(event, id) => follow(event, { kind: "feed", id })}
+          onClose={closeSettingsPage}
+          onOpenPerson={(event, id) => follow(event, { kind: "about", id })}
           onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "muted"}
-        <Muted bind:heading={headings.muted} onClose={closeHealth} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
+        <Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} besideToggle={!phone && !panes.sidebar} />
       {:else if route.kind === "readers"}
-        <ReadersPage bind:heading={headings.readers} onClose={closeHealth} besideToggle={!phone && !panes.sidebar} />
+        <ReadersPage bind:heading={headings.readers} onClose={closeSettingsPage} besideToggle={!phone && !panes.sidebar} />
       {:else if !sheet && editing}
         {@render editor(false)}
       {:else if whoShown && phone}

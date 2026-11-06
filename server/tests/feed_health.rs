@@ -217,7 +217,7 @@ impl Reader {
 }
 
 #[tokio::test]
-async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
+async fn broken_feeds_are_listed_worst_first_and_leave_once_they_work() {
     let reader = Reader::new().await;
     let old = reader.follow("/old.xml").await;
     let other = reader.follow("/other.xml").await;
@@ -273,32 +273,14 @@ async fn broken_feeds_are_listed_worst_first_and_retry_checks_now() {
         ]
     );
 
-    // Retry while it's still gone: checked again at once, still dead.
-    let asked = reader.published.lock().unwrap().asked.len();
-    let (status, answer) = reader
-        .post(&format!("/api/health/{old}/retry"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::OK, "{answer}");
-    assert_eq!(answer["feed"]["state"], "dead");
-    assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
-
-    // Back again, a few minutes later (Retry asks at most every five):
-    // Retry says it's working, and the page no longer lists it.
+    // Back again: the next check finds it, and it's no longer listed.
     reader.change(|site| site.old_gone = false);
-    reader.state.retried.lock().unwrap().clear();
-    let (_, answer) = reader
-        .post(&format!("/api/health/{old}/retry"), json!({}))
-        .await;
-    assert_eq!(answer["feed"]["state"], "working");
+    reader.check(old, now + 9 * DAY).await;
     assert_eq!(
         reader.listed().await,
         [(other, "trouble".to_owned(), "unreachable".to_owned())]
     );
     assert_eq!(reader.failing_since(old).await, None);
-
-    // A feed that isn't followed can't be retried.
-    let (status, _) = reader.post("/api/health/999/retry", json!({})).await;
-    assert_eq!(status, StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]
@@ -549,61 +531,6 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
             .await
             .unwrap();
     assert!(marked > 0, "the star's time was lost");
-}
-
-#[tokio::test]
-async fn pressing_retry_again_and_again_doesnt_hammer_the_publisher() {
-    let reader = Reader::new().await;
-    // A working feed, just fetched when it was added: Retry doesn't ask the
-    // publisher again within half an hour (fetch politely).
-    let working = reader.follow("/other.xml").await;
-    let asked = reader.published.lock().unwrap().asked.len();
-    for _ in 0..5 {
-        let (status, answer) = reader
-            .post(&format!("/api/health/{working}/retry"), json!({}))
-            .await;
-        assert_eq!(status, StatusCode::OK, "{answer}");
-        assert_eq!(answer["feed"]["state"], "working");
-    }
-    assert_eq!(reader.published.lock().unwrap().asked.len(), asked);
-
-    // A failing feed: the first Retry asks at once, the next few minutes'
-    // presses answer with how that went.
-    let old = reader.follow("/old.xml").await;
-    reader.change(|site| site.old_gone = true);
-    reader.check(old, nine_turtles::now()).await;
-    let asked = reader.published.lock().unwrap().asked.len();
-    for _ in 0..5 {
-        let (status, answer) = reader
-            .post(&format!("/api/health/{old}/retry"), json!({}))
-            .await;
-        assert_eq!(status, StatusCode::OK, "{answer}");
-        assert_eq!(answer["feed"]["state"], "trouble");
-    }
-    assert_eq!(reader.published.lock().unwrap().asked.len(), asked + 1);
-}
-
-#[tokio::test]
-async fn retry_waits_when_the_publisher_asked_to_slow_down() {
-    let reader = Reader::new().await;
-    let busy = reader.follow("/busy.xml").await;
-    reader.change(|site| site.busy = true);
-    let now = nine_turtles::now();
-    reader.check(busy, now).await;
-    reader.check(busy, now).await;
-    assert_eq!(
-        reader.listed().await,
-        [(busy, "trouble".to_owned(), "slow-down".to_owned())]
-    );
-    let asked = reader.published.lock().unwrap().asked.len();
-    let (status, answer) = reader
-        .post(&format!("/api/health/{busy}/retry"), json!({}))
-        .await;
-    assert_eq!(status, StatusCode::CONFLICT);
-    assert_eq!(answer["error"], "asked-to-wait");
-    assert!(answer["until"].as_i64().unwrap() >= now + HOUR);
-    // The publisher wasn't asked again.
-    assert_eq!(reader.published.lock().unwrap().asked.len(), asked);
 }
 
 #[tokio::test]

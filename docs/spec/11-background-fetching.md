@@ -22,4 +22,4 @@
 **How to check it**
 Most of this is checked by the automatic tests rather than by eye. You can see it working:
 1. Leave the app closed for a day, then open it: the feeds you follow have new articles that arrived on their own.
-2. When a feed keeps failing for three days or more, the daily check mentions it ("Some feeds keep failing"), without naming it; the feed health page (section 17) names it.
+2. When a feed keeps failing for three days or more, the daily check mentions it ("Some feeds keep failing"), without naming it; the top of Settings › Everyone you follow (section 15) names it.

@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 15
-updated: 2026-11-05
+updated: 2026-11-06
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -27,7 +27,7 @@ someone in it.
 
 ## Move many at once
 
-1. Open **Settings › Your feeds** and press **Edit**.
+1. Open **Settings › Everyone you follow** and press **Choose…**.
 2. Tick everyone you'd like to move.
 3. Press **Move to…**, choose a folder (or **New folder**, or **No folder**),
    and press **Move**.

@@ -283,24 +283,16 @@ export const SCREENS: Screen[] = [
     signedIn: true,
     library: true,
     open: async (page) => {
-      await page.getByRole("button", { name: "Edit" }).click();
+      await page.getByRole("button", { name: "Choose…" }).click();
       await page.getByRole("checkbox").first().check();
       await expect(page.getByText("1 chosen")).toBeVisible();
     },
   },
   {
-    name: "feed-health-all-working",
-    path: "/settings/feed-health",
-    signedIn: true,
-    open: async (page) => {
-      await expect(page.getByText("All feeds are working.")).toBeVisible();
-    },
-  },
-  {
-    // Two broken feeds, one of each kind, as the server would describe them,
-    // so the library the screenshots follow stays healthy.
-    name: "feed-health",
-    path: "/settings/feed-health",
+    // Everyone you follow with two broken feeds at the top, one of each kind,
+    // as the server would describe them, so the library the screenshots follow stays healthy.
+    name: "your-feeds-not-working",
+    path: "/settings/feeds",
     signedIn: true,
     library: true,
     open: async (page) => {

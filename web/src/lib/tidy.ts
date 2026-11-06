@@ -1,10 +1,9 @@
-// Tidying many feeds at once (SPEC section 15, "Your feeds"): every feed
-// with when it last posted, the quiet ones, and moving or unsubscribing from
-// several feeds in one go, each with one Undo.
+// Everyone you follow (SPEC section 15, decision 0186): everyone, with the
+// title of their newest piece and when it came, the quiet ones saying so,
+// and moving or unsubscribing from several in one go, each with one Undo.
 
 import type { Folder } from "./shapes";
 import { change, type Refusal } from "./feeds";
-import { when } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 
@@ -13,13 +12,14 @@ export type Tended = {
   title: string;
   /** When its newest article was published, or null if it has none. */
   lastPosted: number | null;
+  /** That article's title, if it has one. */
+  lastTitle: string | null;
+  /** Listed under People or Publications, as in the sidebar (decision 0163). */
+  kind: "person" | "publication";
   addedAt: number;
   /** The folders it's in, by number. */
   folders: number[];
 };
-
-/** Which feeds the page shows: all of them, or those quiet for 6 or 12 months. */
-export type Showing = "all" | "6" | "12";
 
 export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[] }> {
   const response = await api("/api/tidy/feeds", { cache: "no-store" });
@@ -32,6 +32,8 @@ export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]
       id: Number(feed.id),
       title: String(feed.title ?? ""),
       lastPosted: typeof feed.last_posted === "number" ? feed.last_posted : null,
+      lastTitle: typeof feed.last_title === "string" && feed.last_title.trim() !== "" ? feed.last_title.trim() : null,
+      kind: feed.kind === "publication" ? "publication" : "person",
       addedAt: Number(feed.added_at ?? 0),
       folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
     })),
@@ -42,24 +44,40 @@ export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]
 const DAY = 24 * 60 * 60;
 
 /**
- * Quiet: nothing posted for about 6 (or 12) months. A feed that has never
- * posted counts from when you added it.
+ * Quiet: nothing new for about six months. One that has never written
+ * counts from when you followed it.
  */
-export function isQuiet(feed: Tended, months: 6 | 12, now: number): boolean {
+export function isQuiet(feed: Tended, now: number): boolean {
   const since = feed.lastPosted ?? feed.addedAt;
-  return now - since >= (months === 6 ? 182 : 365) * DAY;
+  return now - since >= 182 * DAY;
 }
 
-export function shown(feeds: Tended[], showing: Showing, now: number): Tended[] {
-  if (showing === "all") return feeds;
-  return feeds.filter((feed) => isQuiet(feed, showing === "6" ? 6 : 12, now));
+const DAY_MONTH = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+const DAY_MONTH_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+/** "today", "4 November", or "14 March 2025", in the device's time zone. */
+function day(at: number, now: Date): string {
+  const date = new Date(at * 1000);
+  if (date.toDateString() === now.toDateString()) return "today";
+  return (date.getFullYear() === now.getFullYear() ? DAY_MONTH : DAY_MONTH_YEAR).format(date);
 }
 
-/** "Last posted today", "Last posted on 3 Oct 2025", or "Nothing posted yet". */
-export function lastPostedWords(feed: Tended, now: Date = new Date()): string {
-  if (feed.lastPosted === null) return "Nothing posted yet";
-  const at = when(feed.lastPosted, now);
-  return /^\d\d:\d\d$/.test(at) ? "Last posted today" : `Last posted on ${at}`;
+/**
+ * A row's second line: their newest title and when it came ("“On walking”,
+ * 4 November"), "Quiet since 14 March: “On walking”" after six months, and
+ * the folders it's in after a dot.
+ */
+export function rowLine(feed: Tended, folders: string[], now: Date = new Date()): string {
+  let line: string;
+  if (feed.lastPosted === null) line = "Nothing written yet";
+  else {
+    const when = day(feed.lastPosted, now);
+    const title = feed.lastTitle ? `“${feed.lastTitle}”` : null;
+    if (isQuiet(feed, now.getTime() / 1000)) line = title ? `Quiet since ${when}: ${title}` : `Quiet since ${when}`;
+    else if (title) line = `${title}, ${when}`;
+    else line = when === "today" ? "Last wrote today" : `Last wrote on ${when}`;
+  }
+  return folders.length > 0 ? `${line} · ${folders.join(", ")}` : line;
 }
 
 /** The folders' names, A to Z as the sidebar lists them. */
@@ -67,9 +85,9 @@ export function folderNames(feed: Tended, folders: Folder[]): string[] {
   return folders.filter((folder) => feed.folders.includes(folder.id)).map((folder) => folder.name);
 }
 
-/** "Alpha", or "3 feeds". */
+/** "Alpha", or "3". */
 function howMany(titles: string[]): string {
-  return titles.length === 1 && titles[0] ? titles[0] : `${titles.length} feeds`;
+  return titles.length === 1 && titles[0] ? titles[0] : `${titles.length}`;
 }
 
 export function movedMessage(titles: string[], folder: string | null): string {

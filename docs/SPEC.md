@@ -36,9 +36,9 @@ A few words used throughout:
 | 12 | [WebSub (instant updates from publishers who offer it)](spec/12-websub.md) |
 | 13 | [Refresh: the view waits for you](spec/13-refresh.md) |
 | 14 | [Search](spec/14-search.md) |
-| 15 | [Folders and managing feeds](spec/15-folders-and-feeds.md) |
+| 15 | [Folders, managing feeds and Everyone you follow](spec/15-folders-and-feeds.md) |
 | 16 | [OPML import and export](spec/16-opml-import-and-export.md) |
-| 17 | [Feed health page](spec/17-feed-health-page.md) |
+| 17 | *Retired: the feed health page joined Everyone you follow, section 15 (decision 0186)* |
 | 18 | [Settings and appearance](spec/18-settings-and-appearance.md) |
 | 19 | [Keyboard](spec/19-keyboard.md) |
 | 20 | [Phones and installing the app](spec/20-phones-and-installing.md) |

@@ -16,7 +16,6 @@ export type Route =
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
   | { kind: "settings"; page?: SettingsPage }
-  | { kind: "feed-health" }
   | { kind: "your-feeds" }
   | { kind: "muted" }
   | { kind: "readers" };
@@ -84,8 +83,8 @@ function whoPath(id: number): string {
 export function parse(path: string): Route {
   const name = path.replace(/^\/+|\/+$/g, "");
   if (name === "settings") return { kind: "settings" };
-  if (name === "settings/feed-health") return { kind: "feed-health" };
-  if (name === "settings/feeds") return { kind: "your-feeds" };
+  // The old Feed health page is part of Everyone you follow now (decision 0186).
+  if (name === "settings/feeds" || name === "settings/feed-health") return { kind: "your-feeds" };
   // The old addresses (decision 0173) still open their pages.
   if (name === "settings/hidden" || name === "settings/muted") return { kind: "muted" };
   if (name === "settings/rules") return { kind: "settings", page: "hiding" };
@@ -119,8 +118,6 @@ export function pathFor(route: Route): string {
   switch (route.kind) {
     case "settings":
       return route.page ? `/settings/${route.page}` : "/settings";
-    case "feed-health":
-      return "/settings/feed-health";
     case "your-feeds":
       return "/settings/feeds";
     case "muted":
@@ -153,10 +150,8 @@ export function nameFor(route: Route, placeName?: string): string {
   switch (route.kind) {
     case "settings":
       return route.page ? SETTINGS_PAGES[route.page] : "Settings";
-    case "feed-health":
-      return "Feed health";
     case "your-feeds":
-      return "Your feeds";
+      return "Everyone you follow";
     case "muted":
       return "Hidden articles";
     case "readers":
@@ -187,12 +182,12 @@ export function titleFor(route: Route, placeName?: string): string {
 }
 
 /**
- * The page a Settings page goes back to (decision 0120): Settings itself for its own pages, Feed
- * health and Your feeds; Hiding for Hidden articles; Readers for All readers. Nothing elsewhere.
+ * The page a Settings page goes back to (decision 0120): Settings itself for its own pages and
+ * Everyone you follow; Hiding for Hidden articles; Readers for All readers. Nothing elsewhere.
  */
 export function parentOf(route: Route): Route | undefined {
   if (route.kind === "settings") return route.page ? { kind: "settings" } : undefined;
-  if (route.kind === "feed-health" || route.kind === "your-feeds") return { kind: "settings" };
+  if (route.kind === "your-feeds") return { kind: "settings" };
   if (route.kind === "muted") return { kind: "settings", page: "hiding" };
   if (route.kind === "readers") return { kind: "settings", page: "readers" };
   return undefined;
@@ -201,7 +196,6 @@ export function parentOf(route: Route): Route | undefined {
 /** The row on its parent page that opens a place (its `data-settings-row`), so the keyboard goes back to it. */
 export function rowFor(route: Route): string | undefined {
   if (route.kind === "settings") return route.page;
-  if (route.kind === "feed-health") return "feed-health";
   if (route.kind === "your-feeds") return "feeds";
   if (route.kind === "muted") return "muted";
   if (route.kind === "readers") return "all-readers";

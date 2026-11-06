@@ -1,15 +1,12 @@
-//! The feed health page (SPEC section 17): the feeds that aren't working,
-//! worst first, each with what went wrong and three ways to deal with it.
+//! The feeds that aren't working, at the top of Everyone you follow (SPEC
+//! section 15, decision 0186): worst first, each with what went wrong and
+//! two ways to deal with it. nine turtles keeps checking them by itself.
 //!
 //! - **Which feeds:** a feed is listed once two checks in a row have failed
 //!   (one failure is usually a blip that the next check clears). It's
 //!   **dead** after a week of "not found" or three weeks of any failure,
 //!   and still checked once a day in case it comes back; otherwise it's
 //!   **having trouble**. Dead feeds come first, then the longest failing.
-//! - **Retry** checks the feed straight away, exactly as background
-//!   checking would (`checking::check`), unless the publisher asked nine
-//!   turtles to slow down and that wait isn't over: respecting it comes
-//!   first.
 //! - **Find new address** visits the feed's site (the home page its feed
 //!   names, or the feed address's own home page) once, because the reader
 //!   asked, and lists the feeds that page names (decision 0016). It never
@@ -49,14 +46,9 @@ use crate::{
 /// Failed checks in a row before a feed is listed.
 pub const LISTED_AFTER: i64 = 2;
 
-/// Retry asks a failing feed's publisher at most once in this long; presses
-/// in between answer with how the last try went (fetch politely).
-pub const RETRY_GAP: i64 = 5 * 60;
-
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/health", get(list))
-        .route("/api/health/{id}/retry", post(retry))
         .route("/api/health/{id}/find", post(find))
         .route("/api/health/{id}/address", post(move_to))
 }
@@ -198,65 +190,6 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
         Ok(feeds) => Json(json!({ "feeds": feeds })).into_response(),
         Err(error) => database_problem("listing the feeds that aren't working", &error),
     }
-}
-
-/// Retry: checks the feed now, unless that would be impolite (`may_ask`),
-/// and answers how it's doing afterwards.
-async fn retry(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Response {
-    let now = now();
-    let before = match entry(&state.db, person, id, now).await {
-        Ok(Some(before)) => before,
-        Ok(None) => return StatusCode::NOT_FOUND.into_response(),
-        Err(error) => return database_problem("retrying a feed", &error),
-    };
-    // The publisher asked for a pause that isn't over: Retry waits too.
-    if before.problem.as_deref() == Some("slow-down") && before.next_check_at > now {
-        return (
-            StatusCode::CONFLICT,
-            Json(json!({ "error": "asked-to-wait", "until": before.next_check_at })),
-        )
-            .into_response();
-    }
-    if may_ask(&state, &before, now)
-        && let Err(error) = checking::check(&state, id, now).await
-    {
-        return database_problem("retrying a feed", &error);
-    }
-    let after = entry(&state.db, person, id, now).await;
-    match after {
-        Ok(Some(after)) => Json(json!({ "feed": after })).into_response(),
-        Ok(None) => StatusCode::NOT_FOUND.into_response(),
-        Err(error) => database_problem("retrying a feed", &error),
-    }
-}
-
-/// Whether Retry may ask the publisher now: a working feed only when it
-/// wasn't fetched in the last hour (as background checking waits), and
-/// any feed at most once every `RETRY_GAP`, whoever presses it. Claims the
-/// try, so two presses at once ask only once.
-fn may_ask(state: &AppState, feed: &Entry, now: i64) -> bool {
-    let working = feed.failures == 0;
-    if working
-        && feed
-            .fetched_at
-            .is_some_and(|at| at > now - checking::SHORTEST_WAIT)
-    {
-        return false;
-    }
-    let mut retried = state
-        .retried
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner());
-    retried.retain(|_, at| *at > now - RETRY_GAP);
-    if retried.contains_key(&feed.id) {
-        return false;
-    }
-    retried.insert(feed.id, now);
-    true
 }
 
 /// The page Find new address visits: the site the feed names, or the feed

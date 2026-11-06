@@ -48,7 +48,7 @@
     if (overview.totals.feedsFailing > 0) {
       const many = overview.totals.feedsFailing;
       lines.push(
-        `${plural(many, "feed has", "feeds have")} failed for three days or more. Each reader sees theirs on their own Feed health page.`,
+        `${plural(many, "feed has", "feeds have")} failed for three days or more. Each reader sees theirs at the top of Settings › Everyone you follow.`,
       );
     }
     return lines;

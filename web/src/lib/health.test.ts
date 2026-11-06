@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brokenSince, forHowLong, found, headline, lastWorked, reason, refusalMessage, type Sick } from "./health";
+import { brokenSince, found, headline, reason, refusalMessage, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -13,25 +13,19 @@ const sick = (change: Partial<Sick>): Sick => ({
   missingSince: null,
   fetchedAt: NOW - 3 * DAY,
   state: "trouble",
-  frequency: null,
   ...change,
 });
 
-describe("the feed health page's words", () => {
-  it("says how long in days, weeks or months", () => {
-    expect(forHowLong(3600)).toBe("for less than a day");
-    expect(forHowLong(DAY)).toBe("for a day");
-    expect(forHowLong(8 * DAY)).toBe("for 8 days");
-    expect(forHowLong(21 * DAY)).toBe("for 3 weeks");
-    expect(forHowLong(90 * DAY)).toBe("for 3 months");
-  });
-
-  it("leads with how long it hasn't worked, or hasn't been found", () => {
-    expect(headline(sick({ failingSince: NOW - 21 * DAY }), NOW)).toBe("Hasn't worked for 3 weeks");
-    expect(headline(sick({ problem: "not-found", missingSince: NOW - 8 * DAY, state: "dead" }), NOW)).toBe(
-      "Not found for 8 days",
-    );
-    expect(headline(sick({ state: "working" }), NOW)).toBe("Working again");
+describe("the words for who isn't working", () => {
+  it("leads with since when nothing has come through", () => {
+    const now = new Date(2026, 10, 6, 12, 0);
+    const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
+    expect(headline(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("Nothing has come through since 1 November");
+    expect(
+      headline(sick({ problem: "not-found", failingSince: at(2026, 9, 1, 9), missingSince: at(2026, 9, 20, 9), state: "dead" }), now),
+    ).toBe("Nothing has come through since 20 October");
+    expect(headline(sick({ failingSince: at(2026, 10, 6, 8) }), now)).toBe("Nothing has come through since earlier today");
+    expect(headline(sick({ state: "working" }), now)).toBe("Working again");
   });
 
   it("explains every problem in plain words, never with a code", () => {
@@ -42,15 +36,6 @@ describe("the feed health page's words", () => {
       expect(words).not.toMatch(/\d{3}|-/);
     }
     expect(reason("answered-403")).toBe("The site refuses to share this feed.");
-  });
-
-  it("says when it last worked", () => {
-    const now = new Date(2026, 9, 25, 12, 0);
-    const today = new Date(2026, 9, 25, 9, 0).getTime() / 1000;
-    const earlier = new Date(2026, 9, 3, 9, 0).getTime() / 1000;
-    expect(lastWorked(sick({ fetchedAt: today }), now)).toBe("Today");
-    expect(lastWorked(sick({ fetchedAt: earlier }), now)).toBe("3 Oct");
-    expect(lastWorked(sick({ fetchedAt: null }), now)).toBe("Not since you added it");
   });
 
   it("says plainly why an action didn't work", () => {

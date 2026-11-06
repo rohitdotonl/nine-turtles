@@ -1,5 +1,5 @@
-//! Tidying many feeds at once (SPEC section 15, "Your feeds"): when each
-//! feed last posted, and moving or unsubscribing from several feeds in one
+//! Everyone you follow (SPEC section 15): each feed's newest article and
+//! when it was published, and moving or unsubscribing from several feeds in one
 //! go, each with one Undo, tested against a real running nine turtles and a
 //! made-up publisher.
 
@@ -140,7 +140,7 @@ fn row(title: &str, folders: &[&str]) -> (String, Vec<String>) {
 }
 
 #[tokio::test]
-async fn each_feed_says_when_it_last_posted() {
+async fn each_feed_says_what_it_last_posted_and_when() {
     let reader = Reader::new().await;
     let quiet = reader.follow("quiet-2020").await;
     let busy = reader.follow("busy-2026").await;
@@ -158,6 +158,16 @@ async fn each_feed_says_when_it_last_posted() {
     assert_eq!(last_posted(quiet), Some(1_577_880_000));
     assert_eq!(last_posted(busy), Some(1_767_268_800));
     assert!(listed["feeds"][0]["added_at"].as_i64().unwrap() > 1_767_268_800);
+    // Its newest article's title, and whether it's a person or a publication
+    // (a person until the reader or nine turtles says otherwise).
+    let busy_row = listed["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|feed| feed["id"] == busy)
+        .unwrap();
+    assert_eq!(busy_row["last_title"], "busy post");
+    assert!(["person", "publication"].contains(&busy_row["kind"].as_str().unwrap()));
 }
 
 #[tokio::test]
