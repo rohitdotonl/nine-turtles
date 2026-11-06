@@ -90,7 +90,7 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** Whether Unread is on, the sort order and the hidden lists (reading-settings.svelte.ts). */
+  /** Whether Unread is on, and the sort order (reading-settings.svelte.ts). */
   const settings = new ReadingSettings();
   let unreadOff = $derived(!settings.unread);
   /** Where the app opens: Unread, or All with Unread off. */

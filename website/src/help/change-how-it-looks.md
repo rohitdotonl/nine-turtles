@@ -39,5 +39,5 @@ Open **Settings**. Under **Look and feel**:
 - Each page has one color, and it marks only what's yours to look at: the
   dot beside an unread article, and what a search found. It's blue on White
   and Night, and brown on Paper.
-- Every article has the same comfortable line width, about 70 letters
+- Every article has the same comfortable line width, about 71 letters
   across. A larger text size makes the lines shorter by itself.

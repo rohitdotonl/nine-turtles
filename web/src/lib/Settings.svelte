@@ -637,7 +637,7 @@
     line-height: 1.2;
     text-wrap: balance;
   }
-  /* What a row that opens a page is set to (the reading font, the plan), before its ›. */
+  /* What a row that opens a page is set to (the plan), before its ›. */
   .setting-value {
     font-size: var(--text-meta);
   }

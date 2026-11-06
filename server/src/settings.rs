@@ -1,6 +1,6 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
 //! sort order and whether Unread is on (SPEC section 10). Reader controls such
-//! as the page and the font belong to each device and stay in its browser.
+//! as the page, font and text size belong to each device and stay in its browser.
 //! The sidebar always shows every list now (decision 0187): a `hidden` row
 //! saved before is left in place and never read.
 
