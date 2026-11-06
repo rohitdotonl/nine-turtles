@@ -27,7 +27,8 @@ test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
   test("an article or the feeds that couldn't be loaded say so, aloud too, with Try again", async ({ page }) => {
-    await openRoom(page);
+    // All read, so Start reading (decision 0206) hasn't already fetched the first article.
+    await openRoom(page, 1280, { read: true });
     let failing = true;
     await page.route(/\/api\/articles\/[0-9]+$/, (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
     await page.keyboard.press("j");
