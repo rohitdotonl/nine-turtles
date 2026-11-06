@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-05
+updated: 2026-11-06
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -23,7 +23,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | Key | What it does |
 |---|---|
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
-| <kbd>W</kbd> | Write back |
+| <kbd>W</kbd> | Write back (a person's article) |
 | <kbd>Enter</kbd> | Open the article |
 | <kbd>S</kbd> | Star or unstar |
 | <kbd>H</kbd> | Highlight chosen words |
