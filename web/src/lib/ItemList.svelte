@@ -125,11 +125,21 @@
   let actions = 0;
   /** After a mark couldn't be saved: what Try again sends again. */
   let retryLast: (() => void) | undefined = $state();
+  /**
+   * The note was put away: by its Close button, or by opening an article on a
+   * screen with a keyboard (the reader has moved on). `u` still undoes until the list is left; whatever
+   * the line says next brings the note back. A failed save is never put away
+   * by moving on: it still matters.
+   */
+  let closed = $state(false);
+  /** What the note's first line shows: nothing once it's put away. */
+  let saying = $derived(!closed && !!(line || undoLast));
   // The notice is read when the list opens, and again when a move brings a new one to the same list.
   $effect(() => {
     if (!notice || !firstShowing(notice)) return;
     const { message, undo } = notice;
     line = undoMessage = message;
+    closed = false;
     if (undo) {
       undoLast = () => {
         undo().then(
@@ -266,6 +276,9 @@
   function select(index: number) {
     const article = articles[index];
     if (!article) return;
+    // Opening an article is moving on: the note goes (Undo stays on `u`).
+    // Not on a touch screen, which has no `u`: there the note's Undo is the only way back.
+    if (article.id !== selected?.id && !retryLast && !touch) closed = true;
     selected = article;
     prefetch(article.id);
     const following = articles[index + 1];
@@ -383,6 +396,8 @@
         else {
           line = failed;
           retryLast = retry;
+          // A failure always shows, even if the note was put away.
+          closed = false;
         }
       },
     );
@@ -417,6 +432,7 @@
     line = message;
     undoLast = undefined;
     retryLast = retry;
+    closed = false;
   }
 
   /**
@@ -428,6 +444,7 @@
     line = undoMessage = message;
     undoLast = reverse;
     retryLast = undefined;
+    closed = false;
     actions++;
   }
 
@@ -495,14 +512,22 @@
     const retry = retryLast;
     settled();
     retry?.();
-    // The button is gone; keep the keyboard's place nearby, as Undo does.
-    if (selectedIndex !== -1) focusSelected();
-    else rows[0]?.focus();
+    keepPlaceNearby();
+  }
+
+  /** The note's Close button: it goes now; Undo stays on `u`, and the keyboard's place stays nearby. */
+  function closeByButton() {
+    closed = true;
+    keepPlaceNearby();
   }
 
   function undoByButton() {
     undo();
-    // The button is gone; keep the keyboard's place nearby: the chosen article, or the first.
+    keepPlaceNearby();
+  }
+
+  /** A note's button is gone once pressed: the keyboard's place stays nearby, on the chosen article or the first. */
+  function keepPlaceNearby() {
     if (selectedIndex !== -1) focusSelected();
     else rows[0]?.focus();
   }
@@ -640,21 +665,25 @@
   (decision 0048). Empty, it's hidden but stays for screen readers, which
   hear each message as it arrives.
 -->
-<div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(line || undoLast || updates.stranded || updates.otherReader || newWaiting) && "toast-band-shown"]}>
+<div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(saying || updates.stranded || updates.otherReader || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
       "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border px-4 text-small text-ink-2",
-      !(line || undoLast || updates.stranded || updates.otherReader || newWaiting) && "sr-only",
+      !(saying || updates.stranded || updates.otherReader || newWaiting) && "sr-only",
     ]}
   >
-    <p class={["flex flex-wrap items-center gap-x-2", !(line || undoLast) && "sr-only"]}>
-      <span role="status">{line}</span>
+    <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->
+    <p class={["flex items-center gap-x-2", !saying && "sr-only"]}>
+      <span role="status" class="min-w-0 py-2">{line}</span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
-        <button type="button" onclick={retryByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Try again</button>
+        <button type="button" onclick={retryByButton} class="-mr-2 min-h-11 min-w-11 shrink-0 px-2 font-semibold text-ink underline underline-offset-4">Try again</button>
       {/if}
-      {#if undoLast}
-        <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
+      {#if undoLast && saying}
+        <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 shrink-0 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
+      {/if}
+      {#if saying}
+        <button type="button" onclick={closeByButton} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
       {/if}
     </p>
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>

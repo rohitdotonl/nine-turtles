@@ -22,7 +22,7 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 4. nine turtles asks what they are: "Maya Chen is…", with their site
    and newest title. Choose **A person** (someone you might write back to)
    or **A publication** (anything you only read or watch, such as a
-   magazine). Its guess is already chosen. Press **Done**.
+   magazine, with no Write back). Its guess is already chosen. Press **Done**.
 
 When a blog signs every article with one writer's name, nine turtles calls
 them by that name, with the blog's title under it on their page. Want a
