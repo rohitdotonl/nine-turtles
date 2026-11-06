@@ -439,3 +439,92 @@ async fn deleting_the_reader_removes_their_notes() {
         0
     );
 }
+
+#[tokio::test]
+async fn their_page_lists_the_highlights_from_their_writing() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let address = publisher().await;
+    let (feed, ids) = follow(&base, &cookie, &address).await;
+    // Two highlights in Soup 3, one in Soup 1 (the newest), and a note on a whole article, which isn't a highlight.
+    for (article, quote, note) in [
+        (ids[2], "A warm", Some("First")),
+        (ids[2], "soup", None),
+        (ids[0], "number 1", None),
+    ] {
+        let (status, _) = send(
+            &base,
+            &cookie,
+            &format!("/api/articles/{article}/highlights"),
+            json!({ "quote": quote, "note": note }),
+        )
+        .await;
+        assert_eq!(status, StatusCode::CREATED);
+    }
+    send(
+        &base,
+        &cookie,
+        &format!("/api/articles/{}/note", ids[1]),
+        json!({ "note": "Whole" }),
+    )
+    .await;
+
+    let (status, found) = ask(&base, &cookie, &format!("/api/feeds/{feed}/highlights")).await;
+    assert_eq!(status, StatusCode::OK);
+    let listed: Vec<(String, String, Value)> = found["highlights"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|each| {
+            (
+                each["quote"].as_str().unwrap().to_owned(),
+                each["article"]["title"].as_str().unwrap().to_owned(),
+                each["note"].clone(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        listed,
+        vec![
+            ("number 1".into(), "Soup 1".into(), Value::Null),
+            ("A warm".into(), "Soup 3".into(), json!("First")),
+            ("soup".into(), "Soup 3".into(), Value::Null),
+        ]
+    );
+    // Each carries its article, as a list does, so the page can open it.
+    assert_eq!(found["highlights"][0]["article"]["id"], ids[0]);
+    assert_eq!(found["highlights"][0]["article"]["feed_id"], feed);
+
+    // Joined into one person with another place of theirs, their page lists that place's highlights too.
+    let (letters, more) = follow(&base, &cookie, &publisher().await).await;
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &format!("/api/articles/{}/highlights", more[4]),
+        json!({ "quote": "number 5", "note": null }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let (status, joined) = send(
+        &base,
+        &cookie,
+        "/api/writers/join",
+        json!({ "feeds": [feed, letters], "name": "Kitchen" }),
+    )
+    .await;
+    assert!(status.is_success(), "{joined}");
+    let (_, found) = ask(&base, &cookie, &format!("/api/feeds/{feed}/highlights")).await;
+    let quotes: Vec<&str> = found["highlights"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|each| each["quote"].as_str().unwrap())
+        .collect();
+    assert_eq!(quotes, ["number 1", "A warm", "soup", "number 5"]);
+
+    // Another reader following the same blog sees none of them.
+    let (_, other) = common::another_reader(&state).await;
+    let (theirs, _) = follow(&base, &other, &address).await;
+    let (_, found) = ask(&base, &other, &format!("/api/feeds/{theirs}/highlights")).await;
+    assert_eq!(found["highlights"], json!([]));
+}

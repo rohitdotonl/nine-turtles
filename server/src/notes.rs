@@ -32,6 +32,7 @@ use sqlx::SqliteConnection;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
+    feeds::ArticleRow,
     now, refused,
 };
 
@@ -50,6 +51,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/highlights/{id}/delete", post(unhighlight))
         .route("/api/feeds/{id}/note", post(note_on_person))
         .route("/api/feeds/{id}/kept", get(kept))
+        .route("/api/feeds/{id}/highlights", get(their_highlights))
         .route("/api/notes/export", get(export::download))
 }
 
@@ -361,17 +363,27 @@ pub struct Kept {
     pub note: bool,
 }
 
+/// The places of the person place `?2` belongs to, for reader `?1`: `places`,
+/// with each place's `feed_id` and the reader's `note` on it. Every place at
+/// once, as "Unsubscribe from …" leaves them all and their page lists them all.
+macro_rules! places_of {
+    () => {
+        "WITH places AS (
+             SELECT feed_id, note FROM subscriptions
+             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
+                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))"
+    };
+}
+
 pub async fn kept_by(
     db: &sqlx::SqlitePool,
     person: i64,
     feed: i64,
 ) -> Result<Option<Kept>, sqlx::Error> {
     // Every place of the person's at once, as "Unsubscribe from …" leaves them all.
-    let found: Option<(i64, i64, bool)> = sqlx::query_as(
-        "WITH places AS (
-             SELECT feed_id, note FROM subscriptions
-             WHERE person_id = ?1 AND unsubscribed_at IS NULL AND (feed_id = ?2 OR writer_id =
-                 (SELECT writer_id FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)))
+    let found: Option<(i64, i64, bool)> = sqlx::query_as(concat!(
+        places_of!(),
+        "
          SELECT
              (SELECT COUNT(*) FROM entries WHERE person_id = ?1 AND starred = 1
                   AND feed_id IN (SELECT feed_id FROM places)),
@@ -380,7 +392,7 @@ pub async fn kept_by(
               WHERE notes.person_id = ?1 AND entries.feed_id IN (SELECT feed_id FROM places)),
              EXISTS (SELECT 1 FROM places WHERE note IS NOT NULL)
          FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND unsubscribed_at IS NULL",
-    )
+    ))
     .bind(person)
     .bind(feed)
     .fetch_optional(db)
@@ -541,6 +553,68 @@ async fn kept(
         Ok(Some(kept)) => Json(kept).into_response(),
         Ok(None) => refused(StatusCode::NOT_FOUND, "not-found"),
         Err(error) => database_problem("counting what unsubscribing keeps", &error),
+    }
+}
+
+/// The most highlights their page lists: a page, not an archive (Notes has them all).
+pub const THEIR_HIGHLIGHTS: i64 = 20;
+
+/// A highlight from the person's writing, as their page lists it (decision
+/// 0211): the words, the reader's note on them, and the article they're in.
+#[derive(Serialize, sqlx::FromRow)]
+pub struct TheirHighlight {
+    #[sqlx(rename = "highlight_id")]
+    pub id: i64,
+    pub quote: String,
+    pub note: Option<String>,
+    #[sqlx(flatten)]
+    pub article: ArticleRow,
+}
+
+/// The reader's highlights in articles from every place of the person's,
+/// the newest article first and, within one, in the order they were made.
+pub async fn highlights_of(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    feed: i64,
+) -> Result<Vec<TheirHighlight>, sqlx::Error> {
+    sqlx::query_as(concat!(
+        places_of!(),
+        "
+         SELECT notes.id AS highlight_id, notes.quote, notes.note,
+             entries.article_id AS id, entries.feed_id,
+             COALESCE(writers.name, subscriptions.title) AS feed_title,
+             articles.title, articles.link, entries.sort_at AS at,
+             entries.read, entries.starred, entries.muted,
+             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
+        crate::feeds::untitled_body!(),
+        "
+         FROM notes
+             JOIN entries ON entries.person_id = notes.person_id AND entries.article_id = notes.article_id
+             JOIN articles ON articles.id = entries.article_id
+             JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                 AND subscriptions.feed_id = entries.feed_id
+             LEFT JOIN writers ON writers.id = subscriptions.writer_id
+         WHERE notes.person_id = ?1 AND notes.quote IS NOT NULL
+             AND entries.feed_id IN (SELECT feed_id FROM places)
+         ORDER BY entries.sort_at DESC, notes.made_at, notes.id
+         LIMIT ?3",
+    ))
+    .bind(person)
+    .bind(feed)
+    .bind(THEIR_HIGHLIGHTS)
+    .fetch_all(db)
+    .await
+}
+
+async fn their_highlights(
+    SignedIn(person): SignedIn,
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+) -> Response {
+    match highlights_of(&state.db, person, id).await {
+        Ok(found) => Json(json!({ "highlights": found })).into_response(),
+        Err(error) => database_problem("listing their highlights", &error),
     }
 }
 
