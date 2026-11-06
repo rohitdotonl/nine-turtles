@@ -151,13 +151,10 @@ pub struct Search {
     pub unread: bool,
     #[serde(default)]
     pub starred: bool,
-    /// Only articles the reader highlighted or wrote a note on (decision 0164).
+    /// Only articles the reader highlighted or wrote a note on (decision
+    /// 0164): searching from the Notes list (decision 0189).
     #[serde(default)]
     pub notes: bool,
-    /// Only articles from this time on, and only those before `until`
-    /// (seconds since 1970; the screen works out the reader's days).
-    pub since: Option<i64>,
-    pub until: Option<i64>,
     /// Only articles whose author's name holds this (any capitals). The
     /// search screen doesn't offer it yet; an assistant can (`mcp`).
     #[serde(default)]
@@ -177,8 +174,6 @@ impl Search {
             && !self.unread
             && !self.starred
             && !self.notes
-            && self.since.is_none()
-            && self.until.is_none()
             && self.author.is_none()
     }
 }
@@ -555,14 +550,6 @@ pub async fn find(
         query.push(" AND entries.article_id IN (SELECT article_id FROM notes WHERE person_id = ");
         query.push_bind(person);
         query.push(")");
-    }
-    if let Some(since) = search.since {
-        query.push(" AND entries.sort_at >= ");
-        query.push_bind(since);
-    }
-    if let Some(until) = search.until {
-        query.push(" AND entries.sort_at < ");
-        query.push_bind(until);
     }
     if let Some(author) = &search.author {
         // `instr` finds the name anywhere, with no wildcard characters to escape.

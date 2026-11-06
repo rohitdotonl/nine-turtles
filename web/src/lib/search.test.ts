@@ -34,8 +34,10 @@ describe("the results' title", () => {
 
 describe("chips", () => {
   it("say what's searched in plain words, as the options menu names it", () => {
-    const query: Query = { ...all, unread: true, starred: true, after: "2026-10-01", before: "2026-03-01" };
-    expect(chipsFor(query, library).map((chip) => chip.label)).toEqual(["Unread", "Starred", "After 1 Oct 2026", "Before 1 Mar 2026"]);
+    const query: Query = { ...emptyQuery({ kind: "folder", id: 7 }), starred: true };
+    expect(chipsFor(query, library).map((chip) => chip.label)).toEqual(["in: Tech", "Starred"]);
+    // Starred is the one thing to show only (decision 0189); its chip goes on its own.
+    expect(withoutChip(query, "starred")).toEqual({ ...query, starred: false });
   });
 });
 
@@ -67,23 +69,19 @@ describe("what the server is asked", () => {
     expect(searchParams({ ...all, words: "is:starred" }).starred).toBeUndefined();
   });
 
-
   it("includes the view a search started in", () => {
     expect(searchParams({ ...emptyQuery({ kind: "view", view: "unread" }), words: "slow" })).toEqual({
       q: "slow",
       unread: "true",
     });
+    // From Notes, only the articles the reader marked (decision 0189).
+    expect(searchParams({ ...emptyQuery({ kind: "view", view: "notes" }), words: "soup" })).toEqual({ q: "soup", notes: "true" });
+    expect(resultsTitle(emptyQuery({ kind: "view", view: "notes" }).scope, library)).toBe("Results in Notes");
     expect(searchParams({ ...emptyQuery({ kind: "folder", id: 7 }), words: "x", starred: true })).toEqual({
       q: "x",
       folder: "7",
       starred: "true",
     });
-  });
-
-  it("turns dates into this device's days: after the whole day, before its start", () => {
-    const params = searchParams({ ...all, after: "2026-01-31", before: "2026-03-01" });
-    expect(Number(params.since)).toBe(new Date(2026, 1, 1).getTime() / 1000);
-    expect(Number(params.until)).toBe(new Date(2026, 2, 1).getTime() / 1000);
   });
 });
 

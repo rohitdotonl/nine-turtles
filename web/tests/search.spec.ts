@@ -83,14 +83,14 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page).filter({ hasText: `Blog ${loose}` })).toHaveCount(1);
   await expect(results(page).filter({ hasText: `Blog ${filed}` })).toHaveCount(1);
 
-  // Another feed, chosen in the options, becomes the place chip.
+  // "This list", in the options, brings the place chip back (decision 0189).
   await page.getByRole("button", { name: "Search options" }).click();
-  await page.getByRole("combobox", { name: "Search in another feed or folder" }).selectOption({ label: `Blog ${loose}` });
+  await page.getByRole("radio", { name: `${folder} This list` }).check();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: `Remove in: Blog ${loose}` })).toBeVisible();
+  await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   await expect(field(page)).toHaveValue("walking");
   await expect(results(page)).toHaveCount(1);
-  await expect(results(page).first()).toContainText(`Blog ${loose}`);
+  await expect(results(page).first()).toContainText(`Blog ${filed}`);
 
   // Results behave like the list: j and s star the result.
   await results(page).first().getByRole("button").focus();
@@ -110,36 +110,27 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page)).toHaveCount(1);
   await expect(results(page).first()).toContainText("Walking the long way home");
 
-  // 4. The options panel writes the same filters: a date makes a chip.
+  // 4. The options panel, opened from the keyboard, shows the same choices.
   await page.getByRole("button", { name: "Search options" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("button", { name: "Search options" })).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeChecked();
   // It floats over the list instead of pushing it down.
   await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
-  // A menu of checkmark rows: the list search started from, All feeds, and the feed now
-  // searched (chosen above), which holds; Tab from the field lands on it.
+  // A short menu of checkmark rows: the list search started from and Everything, then Starred;
+  // nothing else (decision 0189). Tab from the field lands on the row chosen.
   await field(page).focus();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeFocused();
-  await expect(page.getByRole("radio", { name: `Blog ${loose}` })).toBeChecked();
-  await expect(page.getByRole("radio", { name: `${folder} This list` })).not.toBeChecked();
-  await expect(page.getByRole("radio", { name: "All feeds" })).not.toBeChecked();
-  await expect(page.getByRole("combobox", { name: "Search in another feed or folder" })).toBeVisible();
-  // It's drawn as a menu's submenu row, short words and a trailing chevron, not a drop-down among the checkmarks (decision 0048).
-  await expect(page.locator(".menu-row").filter({ has: page.getByRole("combobox", { name: "Search in another feed or folder" }) })).toContainText("Other feed or folder");
-  // Presets count back from today; Custom shows the two dates.
-  await page.getByRole("radio", { name: "Past week" }).check();
-  await expect(page.getByRole("button", { name: /^Remove After / })).toBeVisible();
-  await page.getByRole("radio", { name: "Any time" }).check();
-  await expect(page.getByRole("button", { name: /^Remove After / })).toHaveCount(0);
-  await expect(page.getByLabel("Published after")).toHaveCount(0);
-  await page.getByRole("radio", { name: "Custom" }).check();
-  await page.getByLabel("Published after").fill("2030-01-01");
-  await expect(page.getByRole("button", { name: "Remove After 1 Jan 2030", exact: true })).toBeVisible();
-  await expect(page.getByText(/^Nothing found/)).toBeVisible();
-  await page.getByRole("checkbox", { name: "Unread", exact: true }).press("Space");
-  await expect(page.getByRole("button", { name: "Remove Unread", exact: true })).toBeVisible();
+  await expect(page.getByRole("radio", { name: `${folder} This list` })).toBeFocused();
+  await expect(page.getByRole("radio", { name: `${folder} This list` })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Everything" })).not.toBeChecked();
+  await expect(page.locator("#search-options").getByRole("radio")).toHaveCount(2);
+  await expect(page.locator("#search-options").getByRole("checkbox")).toHaveCount(1);
+  await expect(page.locator("#search-options").getByRole("combobox")).toHaveCount(0);
+  // Everything takes the place chip away; the Starred chip stays.
+  await page.getByRole("radio", { name: "Everything" }).check();
+  await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
 
   // 5 is the Hindi test below. 6. Escape closes the options, then a second Escape: back exactly where you were, the search gone.
   await page.keyboard.press("Escape");
@@ -257,7 +248,7 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   await expect(reading).not.toContainText(/press j/i);
 });
 
-test("with many filters the search box wraps, and no chip slides under the options button", async ({ page }) => {
+test("with both chips the search box wraps, and no chip slides under the options button", async ({ page }) => {
   const blog = unique("chips");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
@@ -266,12 +257,9 @@ test("with many filters the search box wraps, and no chip slides under the optio
   await page.keyboard.press("j");
   await expect(page.getByRole("region", { name: "Article", exact: true }).locator(".article-title")).toBeVisible();
   await page.getByRole("button", { name: "Search options" }).click();
-  await page.getByRole("checkbox", { name: "Unread", exact: true }).check();
-  await page.getByRole("radio", { name: "Custom" }).check();
-  await page.getByLabel("Published after").fill("2020-01-01");
-  await page.getByLabel("Published before").fill("2030-01-01");
+  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(4);
+  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
   const options = (await page.getByRole("button", { name: "Search options" }).boundingBox())!;
   for (const chip of await page.getByRole("button", { name: /^Remove / }).all()) {
     // The chip itself (its remove button's 44px reaches a little past it, by design).
@@ -289,15 +277,10 @@ test("the search options float over the list; Escape closes them first, then the
   await button.click();
   const options = page.locator("#search-options");
   await expect(options).toBeVisible();
-  // Past month counts back thirty days; "after" is strictly after.
-  await page.getByRole("radio", { name: "Past month" }).check();
-  const day = new Date();
-  day.setDate(day.getDate() - 30);
-  // The chip says it in words ("After 24 Sept 2026") (decision 0048).
-  const words = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(day);
-  const remove = page.getByRole("button", { name: `Remove After ${words}`, exact: true });
+  // Starred becomes a chip at once.
+  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
+  const remove = page.getByRole("button", { name: "Remove Starred", exact: true });
   await expect(remove).toBeVisible();
-  await expect(page.getByTitle(`After ${words}`, { exact: true })).toHaveText(`After ${words}`);
   // The first Escape closes only the options, back to their button; the search stays.
   await page.keyboard.press("Escape");
   await expect(options).toBeHidden();

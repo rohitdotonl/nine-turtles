@@ -451,15 +451,6 @@ async fn search_is_fast_with_500_feeds_and_a_year_of_articles() {
             FAST_ENOUGH,
         ),
         (
-            "a date range, no words",
-            Search {
-                since: Some(NOW - YEAR / 2),
-                until: Some(NOW - YEAR / 3),
-                ..Search::default()
-            },
-            FAST_ENOUGH,
-        ),
-        (
             "a word in every article",
             words("paragraph"),
             WORD_IN_EVERY_ARTICLE,
