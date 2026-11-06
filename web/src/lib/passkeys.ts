@@ -8,7 +8,7 @@
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { UNREACHABLE } from "./messages";
+import { UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
 export type PasskeyRow = { id: number; name: string | null; createdAt: number; lastUsedAt: number | null };
@@ -212,9 +212,9 @@ export function explainAdd(result: Exclude<AddResult, { ok: true }>): string {
     case "password-needed":
       return "Type your password first, to add a passkey.";
     case "wrong-password":
-      return "That isn't your password.";
+      return WRONG_PASSWORD;
     case "wait":
-      return `Too many wrong tries. Try again in ${duration(result.waitSeconds)}.`;
+      return tooManyTries(duration(result.waitSeconds));
     case "cancelled":
       return "No passkey was added.";
     case "already":

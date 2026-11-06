@@ -35,7 +35,7 @@ const CEILINGS = {
   "web/src/app.css": 1763,
   "web/src/lib/Shell.svelte": 1323,
   "server/src/assistants.rs": 948,
-  "server/src/accounts.rs": 866,
+  "server/src/accounts.rs": 807,
   "server/src/payments.rs": 841,
   "server/src/auth.rs": 819,
 };

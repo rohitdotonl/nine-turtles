@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -174,6 +174,10 @@
     <!-- Settings › Passkeys: a key with one tooth. -->
     <circle cx="7" cy="13" r="3.5" />
     <path d="M9.5 10.5 16.5 3.5M14 6l2 2" />
+  {:else if name === "lock"}
+    <!-- Settings › Account › Password: a padlock, closed. -->
+    <rect x="4.25" y="9" width="11.5" height="8" rx="2" />
+    <path d="M6.75 9V6.5a3.25 3.25 0 0 1 6.5 0V9" />
   {:else if name === "people"}
     <!-- Settings › Readers: two people. -->
     <circle cx="7.5" cy="7.25" r="3" />

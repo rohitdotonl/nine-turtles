@@ -39,11 +39,7 @@ use webauthn_rs::prelude::{
 
 use crate::{
     AppState,
-    auth::{
-        Account, SignedIn, ask_password, database_problem, new_token, remember_device,
-        session_cookie,
-    },
-    config::PasswordSetting,
+    auth::{SignedIn, database_problem, new_token, remember_device, session_cookie},
     log, now, refused,
 };
 
@@ -230,8 +226,6 @@ fn checker(state: &AppState) -> Result<&Webauthn, Box<Response>> {
 
 /// A passkey as listed: number, name, added, last used.
 type Listed = (i64, Option<String>, i64, Option<i64>);
-/// A reader as their password is checked: email, own password, owner or not.
-type SigningIn = (Option<String>, Option<String>, bool);
 /// A reader's passkey when adding another: number, handle, removed.
 type Existing = (Vec<u8>, String, Option<i64>);
 
@@ -292,34 +286,10 @@ async fn add_start(
         Ok(webauthn) => webauthn,
         Err(refusal) => return *refusal,
     };
-    let found: Result<Option<SigningIn>, sqlx::Error> =
-        sqlx::query_as("SELECT email, password_hash, owner FROM people WHERE id = ?")
-            .bind(person)
-            .fetch_optional(&state.db)
-            .await;
-    let (email, own_line, owner) = match found {
-        Ok(Some(found)) => found,
-        Ok(None) => return StatusCode::UNAUTHORIZED.into_response(),
-        Err(error) => return database_problem("finding a reader", &error),
+    let email = match crate::own_password::confirm(&state, person, form.password).await {
+        Ok(email) => email,
+        Err(refusal) => return *refusal,
     };
-
-    // Counted where this reader's sign-in counts: under their email, or for
-    // an owner with none yet, the owner's own count (as `change_email`).
-    let account = match email.as_deref() {
-        Some(email) => Account::named(Some(email)),
-        None if owner => Account::Owner,
-        None => Account::Email(format!("reader {person}")),
-    };
-    let stored = own_line.or(match &state.config.password {
-        PasswordSetting::Set(line) if owner => Some(line.clone()),
-        _ => None,
-    });
-    if form.password.is_empty() {
-        return refused(StatusCode::BAD_REQUEST, "password-needed");
-    }
-    if let Some(refusal) = ask_password(&state, &account, form.password, stored).await {
-        return refusal;
-    }
 
     if let Err(error) = clear_removed(&state, person).await {
         return database_problem("clearing removed passkeys", &error);

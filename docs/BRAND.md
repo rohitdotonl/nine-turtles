@@ -91,7 +91,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 - **One shape for every empty list:** on the list's left edge, never centred. First the fact in Literata, in the second ink ("Nothing in this folder yet."). Then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."). A button only where one action is the obvious next step. No picture, no turtle, no icon.
 - **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Starred.").
 - **The end of a list:** every list ends "That's everything.", Unread too (decision 0187); search "No more results."
-- **The reading pane with nothing open:** one quiet line in Literata, at 40% of the pane's height. When you left an article part of the way through, the line offers it: "You were reading *{title}*, by {writer}.", the title a link in the text color (decision 0175); on a phone, the same line at the top of the list.
+- **The reading pane with nothing open:** one quiet line in Literata, at 40% of the pane's height. When you left an article part of the way through, the line offers it: "You were reading *{title}*, by {writer}.", the title a link in the text color (decision 0175); on a phone, the same line at the top of the list. Otherwise, when the list starts with something unread, the pane has already begun it: "Newest unread", its title, byline and first paragraph, and **Start reading** (decision 0210); on a phone, the list's first row is begun the same way.
 - **The welcome:** "Hello." then "Who would you like to read?"
 - **"Wrong turn?"** (the 404 page): everything on one left edge, "404 error" in sentence case, the turtle drawing unchanged.
 - Exact sizes: `spec/06-item-list.md` for lists, DESIGN.md Part 2 for "Wrong turn?".
@@ -118,6 +118,7 @@ is always said the same way.
 - **From** "nine turtles <hello@nineturtles.app>"; replies reach Rohit.
 - **Signed** on two lines: "Rohit", then "nine turtles".
 - The weekly email (the one a reader chooses, SPEC section 39) follows the same rules: plain text, signed by Rohit, never a count.
+- **Every email with a link** opens "Someone, hopefully you, asked to …" and ends "If you didn't ask, ignore this email: …", saying what happens if they do (Rohit's ask on 6 November 2026, decision 0200).
 - The "your email was changed" note ends: "Reply to this email and I'll help you get your account back."
 
 ## The website

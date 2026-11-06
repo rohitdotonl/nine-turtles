@@ -44,6 +44,7 @@ pub mod mcp;
 pub mod newsletter;
 pub mod newsletters;
 pub mod notes;
+pub mod own_password;
 pub mod owner_report;
 pub mod passkeys;
 pub mod password;
@@ -218,6 +219,7 @@ pub fn router(state: AppState) -> Router {
     let router = Router::new()
         .merge(auth::routes())
         .merge(accounts::routes())
+        .merge(own_password::routes())
         .merge(passkeys::routes())
         .merge(admin::routes())
         .merge(assistants::routes())
