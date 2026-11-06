@@ -43,7 +43,7 @@
   import type { Article, Feed, Folder, Source } from "./shapes";
   import { homeView } from "./reading";
   import { ReadingSettings } from "./reading-settings.svelte";
-  import { saveOpenFolders, savedOpenFolders, type Notice } from "./feeds";
+  import { type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
   import { createKeyReader, keyFor, tip } from "./keyboard";
   import { movePane, moveRow } from "./panes";
@@ -161,7 +161,7 @@
   let articleView: ArticleView | undefined = $state();
   let sidebarFeeds: SidebarFeeds | undefined = $state();
   /** Edit put someone in folders just made or chosen: they open in the sidebar, or stay open for when it shows (point 14). */
-  const showFolders = (ids: number[]) => (sidebarFeeds ? sidebarFeeds.openFolder(ids) : saveOpenFolders([...new Set([...savedOpenFolders(), ...ids])]));
+  const showFolders = (ids: number[]) => library.setOpen([...new Set([...library.openFolders, ...ids])]);
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
   /**

@@ -164,6 +164,36 @@ describe("the reader's library", () => {
     expect(await library.file(library.rows![0]!, null, folders[0]!, false)).toBeUndefined();
   });
 
+  it("takes a publication out of a folder onto People as a person, and Undo puts back both", async () => {
+    const folders = [{ id: 7, name: "News" }, { id: 8, name: "Later" }];
+    const publication = { ...feed(1, 0, [7, 8]), kind: "publication" as const };
+    server.listFeeds.mockResolvedValue({ feeds: [publication], folders });
+    const library = new LoadedLibrary();
+    await library.loadFeeds();
+    server.editFeed.mockResolvedValue(undefined);
+
+    const done = await library.file(library.rows![0]!, folders[0]!, null, false, "person");
+    if (typeof done !== "object") throw new Error(String(done));
+    expect(server.editFeed).toHaveBeenCalledWith(1, { folders: [8], kind: "person" });
+    expect(done.message).toBe("Took Feed 1 out of News. Feed 1 is now a person.");
+    await done.undo?.();
+    expect(server.restoreFolders).toHaveBeenCalledWith([{ id: 1, folders: [7, 8] }]);
+    expect(server.editFeed).toHaveBeenLastCalledWith(1, { kind: "publication" });
+  });
+
+  it("never says a folder went when it couldn't be deleted", async () => {
+    const folders = [{ id: 7, name: "Friends" }, { id: 8, name: "Design" }];
+    server.listFeeds.mockResolvedValueOnce({ feeds: [feed(1, 0, [7])], folders });
+    const library = new LoadedLibrary();
+    await library.loadFeeds();
+    server.editFeed.mockResolvedValue(undefined);
+    server.deleteFolder.mockResolvedValue("trouble");
+    server.listFeeds.mockResolvedValue({ feeds: [feed(1, 0, [8])], folders });
+
+    const done = await library.file(library.rows![0]!, folders[0]!, folders[1]!, false);
+    expect(typeof done === "object" && done.message).toBe("Moved Feed 1 to Design.");
+  });
+
   it("says why a removal or its Undo wasn't made", async () => {
     server.unsubscribeAll.mockResolvedValueOnce({ refusal: "You don't follow them any more.", left: [] });
     const library = new LoadedLibrary();

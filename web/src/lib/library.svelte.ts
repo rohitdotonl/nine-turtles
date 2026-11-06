@@ -8,7 +8,7 @@
 // nothing of one reader's is left for the next to see.
 
 import { filedAfter, saveOrder } from "./arranging";
-import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, undoRefused, type Notice, type Refusal } from "./feeds";
+import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, saveOpenFolders, savedOpenFolders, undoRefused, type Notice, type Refusal } from "./feeds";
 import { newestAnswer } from "./inorder";
 import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
@@ -22,6 +22,13 @@ export class LoadedLibrary {
   feeds: Feed[] | undefined = $state();
   /** Your folders, in your own order (decision 0207). */
   folders: Folder[] = $state([]);
+  /** The folders open in the sidebar, as this device remembers them. */
+  openFolders: number[] = $state(savedOpenFolders());
+  /** Opens and closes folders, remembered on this device. */
+  setOpen(ids: number[]) {
+    this.openFolders = ids;
+    saveOpenFolders(ids);
+  }
   /** The people you joined places into (SPEC section 36). */
   people: Person[] = $state([]);
   /** The sidebar's rows, A to Z: one per person, a person's places as one (`people.ts` → `rowsOf`). */
@@ -133,7 +140,9 @@ export class LoadedLibrary {
     const { refusal, answer } = await change("/api/folders", { name: folder.name, feeds });
     const made = (answer?.folder as Folder | undefined)?.id;
     if (refusal || made === undefined) return refusal ?? "trouble";
+    // Back in its place (if that can't be saved, it's back at the bottom), and open if it was.
     await saveOrder(order.map((id) => (id === folder.id ? made : id)));
+    if (this.openFolders.includes(folder.id)) this.setOpen([...this.openFolders, made]);
     return made;
   }
 
@@ -168,14 +177,17 @@ export class LoadedLibrary {
    * Files someone by dragging (SPEC section 5): into `to`, leaving `from` unless `keep`, or out
    * of `from` when `to` is null. Undefined when nothing changes.
    */
-  async file(row: Feed, from: Folder | null, to: Folder | null, keep: boolean): Promise<Removed | undefined> {
+  async file(row: Feed, from: Folder | null, to: Folder | null, keep: boolean, kind?: WhoKind): Promise<Removed | undefined> {
     const folders = filedAfter(row.folders, from?.id ?? null, to?.id ?? null, keep);
     if (!folders) return undefined;
     const before = this.#placed(row);
     const order = this.folders.map((each) => each.id);
-    if (await editFeed(row.id, { folders })) return `${row.title} couldn't be moved. Try again in a moment.`;
-    const said = to ? `${keep ? "Added" : "Moved"} ${row.title} to ${to.name}.` : `Took ${row.title} out of ${from?.name}.`;
-    return this.#filed(before, order, said);
+    const was = row.kind ?? "person";
+    const changing = kind !== undefined && kind !== was;
+    if (await editFeed(row.id, changing ? { folders, kind } : { folders })) return `${row.title} couldn't be moved. Try again in a moment.`;
+    let said = to ? `${keep ? "Added" : "Moved"} ${row.title} to ${to.name}.` : `Took ${row.title} out of ${from?.name}.`;
+    if (changing) said += ` ${row.title} is now a ${kind}.`;
+    return this.#filed(before, order, said, null, changing ? { id: row.id, kind: was } : null);
   }
 
   /** Moves someone to one folder, out of every other, as a handle's "Move to a folder" does (`null`: no folder). */
@@ -193,11 +205,19 @@ export class LoadedLibrary {
    * its last person does (`order` puts it back in its place on Undo), and a folder made for the
    * move goes on Undo.
    */
-  async #filed(before: { id: number; folders: number[] }[], order: number[], said: string, made: number | null = null): Promise<Notice> {
+  async #filed(
+    before: { id: number; folders: number[] }[],
+    order: number[],
+    said: string,
+    made: number | null = null,
+    kindBack: { id: number; kind: WhoKind } | null = null,
+  ): Promise<Notice> {
     await this.loadFeeds();
     const left = new Set(before.flatMap((place) => place.folders));
-    const emptied = this.folders.filter((folder) => left.has(folder.id) && !(this.feeds ?? []).some((feed) => feed.folders.includes(folder.id)));
-    for (const folder of emptied) await deleteFolder(folder.id);
+    const empty = this.folders.filter((folder) => left.has(folder.id) && !(this.feeds ?? []).some((feed) => feed.folders.includes(folder.id)));
+    // Only a folder that really went is said to have gone (and made again on Undo).
+    const emptied: Folder[] = [];
+    for (const folder of empty) if (!(await deleteFolder(folder.id))) emptied.push(folder);
     if (emptied.length > 0) await this.loadFeeds();
     const gone = emptied.map((folder) => ` ${folder.name} went too, as it's empty.`).join("");
     return {
@@ -210,7 +230,7 @@ export class LoadedLibrary {
           back = back.map((place) => ({ ...place, folders: place.folders.map((id) => (id === folder.id ? again : id)) }));
           order = order.map((id) => (id === folder.id ? again : id));
         }
-        const problem = await restoreFolders(back);
+        const problem = (await restoreFolders(back)) ?? (kindBack ? await editFeed(kindBack.id, { kind: kindBack.kind }) : undefined);
         if (!problem && made !== null) await deleteFolder(made);
         await this.loadFeeds();
         return problem ? undoRefused(problem, "feed") : undefined;

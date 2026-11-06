@@ -141,7 +141,10 @@ test("with only the keyboard: Edit, a folder's handle, Move to the top, then Don
   const handle = sidebar(page).getByRole("button", { name: `Move ${second}`, exact: true });
   await tabTo(page, handle);
   await page.keyboard.press("Enter");
-  await page.getByRole("menuitem", { name: "Move to the top" }).click();
+  const top = page.getByRole("menuitem", { name: "Move to the top" });
+  await page.keyboard.press("Home");
+  await expect(top).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(note(page)).toContainText(`Moved the folder ${second}.`);
   // The keyboard stays on the handle, and screen readers hear where the folder is now.
   await expect(handle).toBeFocused();
@@ -175,6 +178,66 @@ test("the headings are bold words in full ink, and Edit is quiet until the point
   await expect(edit).toHaveCSS("opacity", "0");
   await sidebar(page).hover();
   await expect(edit).toHaveCSS("opacity", "1");
+});
+
+/**
+ * Presses on `start` and carries it to `target`, holding it near the sidebar's edge first, to
+ * scroll there, if `target` is out of sight. The button is still down: the caller lets go.
+ */
+async function carry(page: Page, start: { x: number; y: number }, target: Locator) {
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x, start.y + 6, { steps: 2 });
+  const area = (await sidebar(page).locator(".scroller").boundingBox())!;
+  for (let tries = 0; tries < 300; tries++) {
+    const box = await target.boundingBox();
+    if (box && box.y > area.y + 50 && box.y + box.height < area.y + area.height - 50) break;
+    const below = !box || box.y > area.y;
+    await page.mouse.move(start.x, below ? area.y + area.height - 10 : area.y + 10);
+    await page.waitForTimeout(20);
+  }
+  await page.mouse.move(start.x, area.y + area.height / 2, { steps: 2 });
+  const box = (await target.boundingBox())!;
+  await page.mouse.move(start.x, box.y + Math.min(box.height / 2, 16), { steps: 4 });
+}
+
+/** Follows a blog of its own, in no folder: one row under People. */
+async function looseBlog(page: Page, name: string): Promise<number> {
+  return follow(page, `${FEED_SITE}/blog/${name}/`);
+}
+
+test("someone in no folder dragged onto Publications becomes one, and Undo makes them a person again", async ({ page }) => {
+  await blogsInFolders(page, [unique("Pub")]);
+  const blog = unique("arr-pub");
+  await looseBlog(page, blog);
+  await page.reload();
+  await appReady(page);
+  const row = sidebar(page).locator("[data-drop-loose='person']").getByRole("link", { name: new RegExp(`^Blog ${blog}`) });
+  await carry(page, await middleOf(row), sidebar(page).locator("[data-drop-loose='publication'] h2"));
+  await page.mouse.up();
+  await expect(note(page)).toContainText(`Blog ${blog} is now a publication.`);
+  await expect(sidebar(page).locator("[data-drop-loose='publication']").getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+  await sidebar(page).getByRole("button", { name: "Undo" }).click();
+  await expect(note(page)).toContainText("Undone.");
+  await expect(sidebar(page).locator("[data-drop-loose='person']").getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+});
+
+test("someone writing in several places, held over Publications, is told why they stay a person", async ({ page }) => {
+  await blogsInFolders(page, [unique("Sev")]);
+  const [one, two] = [unique("arr-sev"), unique("arr-sew")];
+  const ids = [await looseBlog(page, one), await looseBlog(page, two)];
+  const name = `Sev ${one}`;
+  expect((await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: ids, name } })).ok()).toBe(true);
+  await page.reload();
+  await appReady(page);
+  const row = sidebar(page).getByRole("link", { name: new RegExp(`^${name}`) });
+  await carry(page, await middleOf(row), sidebar(page).locator("[data-drop-loose='publication'] h2"));
+  const why = `${name} writes in more than one place, so stays under People.`;
+  await expect(sidebar(page).locator("[data-drop-loose='publication']")).toContainText(why);
+  await expect(sidebar(page).locator("[data-drop-loose='publication'][data-drop]")).toHaveCount(0);
+  await page.mouse.up();
+  await expect(note(page)).toContainText(why);
+  await expect(sidebar(page).locator("[data-drop-loose='person']").getByRole("link", { name: new RegExp(`^${name}`) })).toBeVisible();
 });
 
 test.describe("with a finger", () => {

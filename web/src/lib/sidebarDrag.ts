@@ -18,7 +18,8 @@
 // `data-folder-list` and `data-folder-item="3"` for the folders in order,
 // `data-drop-folder="3"` on a folder's row and `data-drop-loose="person"` or
 // `"publication"` on the lists under the folders. This file sets
-// `data-dragging`, `data-drop` and the line itself; the CSS is in app.css.
+// `data-dragging` (on the page: "folder", "person", or "copy" while Option or
+// Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
 /** What's being dragged. */
 export type Dragged = { kind: "folder"; id: number } | { kind: "person"; id: number; from: number | null };
@@ -91,7 +92,9 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     const target = event.target as HTMLElement;
     const source = target.closest<HTMLElement>("[data-drag]");
     if (!source || !node.contains(source)) return;
-    // Buttons on a row (a folder's arrow, Edit) do their own thing; a handle is the exception.
+    // Buttons on a row (a folder's arrow, Edit) do their own thing; a handle is the exception,
+    // but not the menu its press opens (Move up…), which is only a menu.
+    if (target.closest('[role="menu"]')) return;
     const handle = !!target.closest("[data-handle]");
     if (!handle && target.closest("button")) return;
     const dragged = readDragged(source.dataset.drag);
@@ -125,7 +128,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     if (!press) return;
     lifted = true;
     press.source.dataset.dragging = "";
-    document.documentElement.dataset.dragging = "";
+    document.documentElement.dataset.dragging = press.dragged.kind;
     ghost = document.createElement("div");
     ghost.className = "drag-ghost";
     ghost.setAttribute("aria-hidden", "true");
@@ -144,7 +147,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     if (!press || !ghost) return;
     ghost.style.left = `${pointer.x + 12}px`;
     ghost.style.top = `${pointer.y + 8}px`;
-    document.documentElement.dataset.dragging = keep && press.dragged.kind === "person" ? "copy" : "";
+    document.documentElement.dataset.dragging = keep && press.dragged.kind === "person" ? "copy" : press.dragged.kind;
     over = whereIs(press.dragged);
     mark();
   }

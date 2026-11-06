@@ -39,7 +39,7 @@
   import MoveSheet from "./MoveSheet.svelte";
   import TextButton from "./TextButton.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders } from "./feeds";
+  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName } from "./feeds";
   import { droppedBefore, placeWords, STEP_WORDS, stepped, stepsFor, type Step } from "./arranging";
   import type { LoadedLibrary, Removed } from "./library.svelte";
   import { UNDO_FAILED, UNDONE } from "./messages";
@@ -69,7 +69,8 @@
   let feeds: Feed[] = $derived(library.rows ?? []);
   let folders: Folder[] = $derived(library.folders);
   let order = $derived(folders.map((folder) => folder.id));
-  let open: number[] = $state(savedOpenFolders());
+  /** Which folders are open: the library keeps it, so a folder Undo makes again opens as it was. */
+  let open: number[] = $derived(library.openFolders);
   /** Edit: every row has a handle, for moving without dragging. */
   let editing = $state(false);
   /** Someone whose handle opened "Move to a folder". */
@@ -87,14 +88,12 @@
   }
 
   /** Edit put the person in these folders: they open, to show them there (the owner's core path, point 14). */
-  export function openFolder(ids: number[]) {
-    open = [...new Set([...open, ...ids])];
-    saveOpenFolders(open);
+  function openFolder(ids: number[]) {
+    library.setOpen([...new Set([...open, ...ids])]);
   }
 
   function toggle(id: number) {
-    open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
-    saveOpenFolders(open);
+    library.setOpen(open.includes(id) ? open.filter((each) => each !== id) : [...open, id]);
   }
 
   /**
@@ -123,13 +122,13 @@
     const row = rowNamed(dragged.id);
     if (!row || !over || over.kind === "between") return false;
     if (over.kind === "folder") return !row.folders.includes(over.id);
-    if (dragged.from !== null) return true;
-    return over.who !== (row.kind ?? "person") && !(over.who === "publication" && several(row));
+    if (over.who === "publication" && several(row)) return false;
+    return dragged.from !== null || over.who !== (row.kind ?? "person");
   }
 
   /** Held over Publications, someone in several places is told why they can't go there; let go anyway, the note says it too. */
   function refuse(dragged: Dragged, over: Over, dropped = false) {
-    const row = dragged.kind === "person" && dragged.from === null ? rowNamed(dragged.id) : undefined;
+    const row = dragged.kind === "person" ? rowNamed(dragged.id) : undefined;
     const why = row && over?.kind === "loose" && over.who === "publication" && several(row) ? `${row.title} writes in more than one place, so stays under People.` : "";
     refusal = dropped ? "" : why;
     if (dropped && why) {
@@ -152,7 +151,8 @@
       await arranged(library.file(row, from, to, keep));
       if (to) openFolder([to.id]);
     } else if (over.kind === "loose") {
-      await arranged(from ? library.file(row, from, null, false) : library.makeKind(row, over.who));
+      // Out of a folder onto People or Publications: out of it, and the one dropped on.
+      await arranged(from ? library.file(row, from, null, false, over.who) : library.makeKind(row, over.who));
     }
   }
 
@@ -192,6 +192,11 @@
     where = "";
     note = (await undoing().catch(() => UNDO_FAILED)) ?? UNDONE;
   }
+
+  // Edit ends with the last folder, as its Done goes with the Folders heading.
+  $effect(() => {
+    if (folders.length === 0) editing = false;
+  });
 
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
@@ -300,18 +305,21 @@
 {/snippet}
 
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
+<!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  {#if rows.length > 0}
-    <div data-drop-loose={who} class="drop-area mx-2 rounded-lg">
-      <h2 class="sidebar-section -mx-2">{heading}</h2>
-      {@render refused(who)}
+  <div data-drop-loose={who} class={["drop-area mx-2 rounded-lg", rows.length === 0 && "drop-empty"]}>
+    <h2 class="sidebar-section -mx-2">{heading}</h2>
+    {@render refused(who)}
+    {#if rows.length > 0}
       <ul class="-mx-2">
         {#each rows as feed (feed.id)}
           {@render feedRow(feed, null)}
         {/each}
       </ul>
-    </div>
-  {/if}
+    {:else}
+      <p class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</p>
+    {/if}
+  </div>
 {/snippet}
 
 <div
@@ -544,5 +552,12 @@
   /* The lists a person can be dropped on, marked as a folder is while one is held over it. */
   .drop-area {
     position: relative;
+  }
+  /* An empty People or Publications appears only while a person or publication is held. */
+  .drop-empty {
+    display: none;
+  }
+  :global(html:is([data-dragging="person"], [data-dragging="copy"])) .drop-empty {
+    display: block;
   }
 </style>
