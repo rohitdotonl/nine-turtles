@@ -126,8 +126,8 @@
   /** After a mark couldn't be saved: what Try again sends again. */
   let retryLast: (() => void) | undefined = $state();
   /**
-   * The note was put away: by its Close button, or by opening an article (the
-   * reader has moved on). `u` still undoes until the list is left; whatever
+   * The note was put away: by its Close button, or by opening an article on a
+   * screen with a keyboard (the reader has moved on). `u` still undoes until the list is left; whatever
    * the line says next brings the note back. A failed save is never put away
    * by moving on: it still matters.
    */
@@ -277,7 +277,8 @@
     const article = articles[index];
     if (!article) return;
     // Opening an article is moving on: the note goes (Undo stays on `u`).
-    if (article.id !== selected?.id && !retryLast) closed = true;
+    // Not on a touch screen, which has no `u`: there the note's Undo is the only way back.
+    if (article.id !== selected?.id && !retryLast && !touch) closed = true;
     selected = article;
     prefetch(article.id);
     const following = articles[index + 1];
@@ -395,6 +396,8 @@
         else {
           line = failed;
           retryLast = retry;
+          // A failure always shows, even if the note was put away.
+          closed = false;
         }
       },
     );
@@ -509,21 +512,22 @@
     const retry = retryLast;
     settled();
     retry?.();
-    // The button is gone; keep the keyboard's place nearby, as Undo does.
-    if (selectedIndex !== -1) focusSelected();
-    else rows[0]?.focus();
+    keepPlaceNearby();
   }
 
   /** The note's Close button: it goes now; Undo stays on `u`, and the keyboard's place stays nearby. */
   function closeByButton() {
     closed = true;
-    if (selectedIndex !== -1) focusSelected();
-    else rows[0]?.focus();
+    keepPlaceNearby();
   }
 
   function undoByButton() {
     undo();
-    // The button is gone; keep the keyboard's place nearby: the chosen article, or the first.
+    keepPlaceNearby();
+  }
+
+  /** A note's button is gone once pressed: the keyboard's place stays nearby, on the chosen article or the first. */
+  function keepPlaceNearby() {
     if (selectedIndex !== -1) focusSelected();
     else rows[0]?.focus();
   }
@@ -677,7 +681,7 @@
         <button type="button" onclick={undoByButton} class="-mr-2 min-h-11 min-w-11 shrink-0 px-2 font-semibold text-ink underline underline-offset-4">Undo</button>
       {/if}
       {#if saying}
-        <button type="button" onclick={closeByButton} aria-label="Close the note" title="Close" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
+        <button type="button" onclick={closeByButton} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
       {/if}
     </p>
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>

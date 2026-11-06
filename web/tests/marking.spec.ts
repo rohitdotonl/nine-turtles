@@ -193,10 +193,38 @@ test.describe("on a wide window", () => {
     await expect(close).toBeVisible();
     await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, unread/);
 
-    // × puts it away at once, and the keyboard stays on the list.
-    await close.click();
+    // × puts it away at once, from the keyboard too, and the keyboard stays on the list.
+    await tabTo(page, close);
+    await page.keyboard.press("Enter");
     await expect(close).toHaveCount(0);
     await expect(page.locator(".item-row:focus")).toHaveCount(1);
+  });
+
+  test("a save that fails after the note was put away brings it back, with Try again", async ({ page }) => {
+    const releases: (() => void)[] = [];
+    const held = [0, 1].map(() => new Promise<void>((resolve) => releases.push(resolve)));
+    let saves = 0;
+    await page.route("**/api/articles/read", async (route) => {
+      const which = saves++;
+      if (which > 1) return route.fallback();
+      await held[which];
+      return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
+    });
+    const blog = await openBlog(page);
+    await page.keyboard.press("j");
+    await expect.poll(() => saves).toBe(1);
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText("Marked 2 articles as read");
+    // Opening another article puts the note away; then the first save fails.
+    await page.keyboard.press("j");
+    await expect(page.getByRole("button", { name: "Close the note" })).toHaveCount(0);
+    releases[0]?.();
+    await expect(line(page)).toHaveText("An article couldn't be marked as read. It's still unread.");
+    await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    // The note itself is back on screen, not only heard: its × shows again.
+    await expect(page.getByRole("button", { name: "Close the note" })).toBeVisible();
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    releases[1]?.();
   });
 
   test("the More menu: arrow keys move through it, Escape closes it and goes back to its button", async ({ page }) => {

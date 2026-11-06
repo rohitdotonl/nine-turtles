@@ -33,8 +33,9 @@ After you mark or star something, a note at the bottom of the list says
 what happened, with an **Undo** button. Press it, or <kbd>U</kbd>, to put
 things back as they were.
 
-The note goes when you open another article, press its **×**, or leave the
-list; it never disappears on a timer. Until you leave the list, <kbd>U</kbd>
+The note goes when you open another article (on a computer; on a phone or
+tablet it stays, as Undo is your only way back there), press its **×**, or
+leave the list; it never disappears on a timer. Until you leave the list, <kbd>U</kbd>
 still undoes, even after the note has gone. Undo works for marking read and unread, starring, unfollowing someone and
 deleting a folder.
 
