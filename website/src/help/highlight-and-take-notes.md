@@ -24,6 +24,9 @@ To write a note on them instead, press **Add a note…** (or
 <kbd>N</kbd>), type it and press **Save**.
 
 Press a highlight to see its note, edit it, copy the words, or remove it.
+From someone you follow, both menus also offer **Write back about this**,
+which starts an email to them with those words quoted
+([Write back to a writer](/help/write-back/)).
 
 ## Write a note on an article
 

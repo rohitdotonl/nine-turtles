@@ -2,7 +2,8 @@
   The small menu beside words in an article (SPEC section 42). For words
   just chosen: Highlight (its key, h) and Add a note…. For a highlight that's
   pressed: its note, then Edit note (or Add a note…), Copy and Remove
-  highlight. A note is written in place, in a box with Save and Not now; on
+  highlight. Both end with Write back about this, set apart by a hairline,
+  when the article's writer is someone to write to (decision 0205). A note is written in place, in a box with Save and Not now; on
   a video or a podcast's episode it starts with the time it's playing at.
   It sits under the words (above them when there's no room below), inside
   the window, and closes with Escape or a press outside it.
@@ -26,6 +27,7 @@
     onSaveNote,
     onCopy,
     onRemove,
+    onWriteBack,
     onClose,
   }: {
     /** Where the words are on the screen. */
@@ -44,6 +46,8 @@
     onSaveNote: (note: string) => void;
     onCopy: () => void;
     onRemove: () => void;
+    /** Write back about these words: the email starts with them quoted. None for a publication. */
+    onWriteBack?: () => void;
     /** `giveBack`: the keyboard goes back to where it was. */
     onClose: (giveBack: boolean) => void;
   } = $props();
@@ -153,6 +157,10 @@
       <button type="button" role="menuitem" class="menu-item" onclick={onCopy}>Copy</button>
       <button type="button" role="menuitem" class="menu-item text-danger" onclick={onRemove}>Remove highlight</button>
     {/if}
+    {#if onWriteBack && !fresh}
+      <hr class="menu-rule" />
+      <button type="button" role="menuitem" class="menu-item" onclick={onWriteBack}>Write back about this</button>
+    {/if}
   {/if}
 </div>
 
@@ -205,6 +213,12 @@
     padding: 0.5rem 0.75rem 0.625rem;
     margin-bottom: 0.25rem;
     border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  /* Write back leaves the app for the reader's email, so it sits apart from what stays here. */
+  .menu-rule {
+    margin: 0.25rem 0;
+    border: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
   }
   .note-box {
     min-height: 6rem;

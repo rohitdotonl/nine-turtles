@@ -11,7 +11,9 @@ anywhere or counted.
 **Highlighting words in an article**
 - Choosing words in an article's text (with the mouse, a finger, or the
   keyboard where the browser allows it) opens a small menu beside them:
-  **Highlight** (its key, `h`) and **Add a note…**.
+  **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
+  article, **Write back about this** under a hairline (section 37,
+  decision 0205).
 - Right after highlighting, a small menu beside the words says
   **Highlighted**, with **Add a note…** (the note box opens there) and
   **Done** (the owner, 3 November 2026: a new reader shouldn't have to find
@@ -21,7 +23,8 @@ anywhere or counted.
   own. One with a note ends in a small page icon.
 - Pressing a highlight opens its own menu: its note (if any), **Edit note**
   (or **Add a note…**), **Copy** (the words in quotation marks, then the
-  publisher's name and the article's link) and **Remove highlight**. A
+  publisher's name and the article's link) and **Remove highlight**, then,
+  for a person's article, **Write back about this** under a hairline. A
   removed highlight shows "Highlight removed · Undo" at the article's foot
   until something else is done.
 - A note is written in a box in place, with **Save** and **Not now**. An

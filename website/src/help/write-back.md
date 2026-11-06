@@ -26,6 +26,17 @@ and choose **A person**.
    "Re:" and the article's title.
 3. Write what you'd like to say, and send it as you send any email.
 
+## Write back about a line
+
+Something they wrote stayed with you? Choose those words in the article.
+The small menu beside them ends with **Write back about this**. Press it,
+and your email starts with their words, quoted, so they know what you're
+answering.
+
+If you've highlighted words in the article, **Write back** starts your
+email with them too, and says so under the button: "Your email starts with
+the words you highlighted."
+
 ## When nine turtles doesn't know their address
 
 Many writers put their email address in their feed, or a "Reply by email"
