@@ -34,7 +34,7 @@
 6. Open Settings › Everyone you follow, press Choose…, tick two people and Move to… a new folder: both are in it, and nowhere else. Press Undo: they're back where they were, and the new folder is gone.
 7. Tick two people and press Unsubscribe, then Undo: both are back, with their read history.
 8. In Everyone you follow, each row names their newest piece and its day; someone with nothing new for six months says "Quiet since …". People and Publications are listed apart, and a row opens their page.
-9. In Edit for a blog on its own: Name, Email address, This is, Folders and Pause for a while, then Unsubscribe. No Kind of source, no Check for new articles, no Open articles on the website, and no line saying how often it posts.
+9. In Edit for a blog on its own: Name, This is, Email address (for a person), Folders and Pause for a while, then Unsubscribe. No Kind of source, no Check for new articles, no Open articles on the website, and no line saying how often it posts.
 10. In Edit for a blog on its own, tick "Pause for a while" and press Done. When it next posts, the new articles are in its own list as read, Unread doesn't grow, and no dot appears beside it. Open Edit again: it says when you paused it. Untick it and press Done: its newest three new articles are in Unread.
 11. Unsubscribe from the only person in a folder: the folder leaves the sidebar with them. Press Undo: both are back. Unsubscribe again and do something else: the folder is gone for good.
 12. Open Edit for a blog on its own that Everyone you follow lists as not working: it starts with "This feed hasn't worked since …" and **Find new address**. For a working feed, neither shows.
