@@ -62,6 +62,12 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
+  it("has the faintest grey (the list's dates, Add's share line) at AA (4.5 : 1) on the list and the page, the phone sheet's grounds", () => {
+    for (const background of ["paper", "list"]) {
+      expect(contrast(colors.faint!, colors[background]!), background).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it("has a second text color (read titles, labels) at AA everywhere, between text and muted grey", () => {
     for (const background of BACKGROUNDS) {
       expect(contrast(colors["ink-2"]!, colors[background]!), background).toBeGreaterThanOrEqual(4.5);

@@ -100,7 +100,7 @@ export const SCREENS: Screen[] = [
     open: async (page) => {
       await page.getByLabel("Their website's address").fill(`${FEED_SITE}/two/`);
       await page.keyboard.press("Enter");
-      await expect(page.getByText("This site offers more than one feed. Choose one:")).toBeVisible();
+      await expect(page.getByText("This site offers more than one feed. Choose which to follow:")).toBeVisible();
     },
   },
   {

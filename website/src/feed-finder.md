@@ -32,7 +32,7 @@ Most sites name their feed in a hidden line of their pages. The finder reads
 the page you give it, once. If that page names no feed, it tries the site's
 home page and the few addresses where feeds usually live (such as
 <code>/feed</code>), one at a time. It then looks inside each feed it found,
-once, to show you its newest titles and how often it posts. It never visits
+once, to show you its newest titles. It never visits
 the site's articles.
 
 Nothing about you is kept: no address you look up is written down. Each

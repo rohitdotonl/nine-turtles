@@ -14,10 +14,10 @@ import { UNDO_FAILED } from "./messages";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
- * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, how
- * often it posts and its newest title. `place` is the address as a person says it ("maralind.example/feed").
+ * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, its
+ * newest title. `place` is the address as a person says it ("maralind.example/feed").
  */
-export type Choice = { title: string; url: string; place?: string; posting?: string; latest?: string };
+export type Choice = { title: string; url: string; place?: string; latest?: string };
 
 export type AddResult =
   /** `latest`: their newest article's title, for Add's question ("Maya Chen is…"). */
@@ -194,7 +194,6 @@ export async function addFeed(address: string): Promise<AddResult> {
       title: String(choice.title ?? ""),
       url: String(choice.url ?? ""),
       ...(typeof choice.place === "string" ? { place: choice.place } : {}),
-      ...(typeof choice.posting === "string" ? { posting: choice.posting } : {}),
       ...(typeof choice.latest === "string" ? { latest: choice.latest } : {}),
     }));
     const asks = body.asks === "video" || body.asks === "playlist" ? body.asks : undefined;

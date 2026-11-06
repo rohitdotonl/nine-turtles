@@ -19,6 +19,15 @@ export const RESET_PAGE = "/reset-password";
 export const CONFIRM_PAGE = "/confirm-email";
 export const SIGN_IN_LINK_PAGE = "/sign-in-link";
 
+/** The sign-in and sign-up pages' own addresses (decision 0206). Signed in already, either opens nine turtles itself. */
+export const SIGN_IN_PAGE = "/sign-in";
+export const SIGN_UP_PAGE = "/sign-up";
+
+/** Where an address leads once signed in: the sign-in and sign-up pages give way to nine turtles' home, any other address stays. */
+export function signedInPath(path: string): string {
+  return path === SIGN_IN_PAGE || path === SIGN_UP_PAGE ? "/" : path;
+}
+
 /** The ticket after the # in a link's address, or "" if there's none. */
 export function ticketFrom(hash: string): string {
   return new URLSearchParams(hash.replace(/^#/, "")).get("ticket")?.trim() ?? "";

@@ -39,7 +39,7 @@ and how to sign in.
 
 ## Sign in on another device
 
-Go to <a href="{{ site.app }}">app.nineturtles.app</a>, type your email and
+Go to <a href="{{ site.app }}/sign-in">app.nineturtles.app/sign-in</a>, type your email and
 password, and press **Sign in**. Each device stays signed in for a year
 after you last used it.
 

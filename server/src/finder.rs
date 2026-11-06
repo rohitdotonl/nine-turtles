@@ -188,8 +188,6 @@ pub struct Found {
 struct FeedLink {
     title: String,
     url: String,
-    /// How often it posts, when the site has several (`lookup`).
-    posting: Option<String>,
     /// Its newest title, when the site has several.
     latest: Option<String>,
 }
@@ -330,7 +328,6 @@ async fn look(state: &AppState, url: &Url) -> Result<Answer, Problem> {
             let link = FeedLink {
                 title: parsed.title.chars().take(LONGEST_TITLE).collect(),
                 url: fetched.lasting_url.to_string(),
-                posting: None,
                 latest: None,
             };
             return Ok(Answer::Found(Found {
@@ -358,7 +355,6 @@ async fn look(state: &AppState, url: &Url) -> Result<Answer, Problem> {
             FeedLink {
                 title: choice.found.title,
                 url: choice.found.url.to_string(),
-                posting: inside.posting,
                 latest: inside.latest,
             }
         })

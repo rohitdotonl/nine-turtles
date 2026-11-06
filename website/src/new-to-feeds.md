@@ -62,8 +62,7 @@ The web is full of personal sites worth following. A few ways to find them:
 
 1. Press **+ Add** and paste a website's address.
 2. If the site offers more than one feed (say, articles and comments),
-   choose the one you want: each shows its newest title and how often it
-   posts.
+   tick the ones you want: each shows its newest title.
 3. Say what they are: **A person** (someone you might write back to) or
    **A publication** (anything you only read or watch, such as a magazine).
    nine turtles has already guessed.

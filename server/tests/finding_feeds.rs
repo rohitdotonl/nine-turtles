@@ -194,7 +194,7 @@ async fn nothing_anywhere_says_so_after_ten_addresses_at_most() {
 }
 
 #[tokio::test]
-async fn several_feeds_say_how_often_they_post_and_what_they_posted_last() {
+async fn several_feeds_say_what_they_posted_last() {
     let links = [
         link("Posts", "/feed"),
         link("Posts (Atom)", "/atom"),
@@ -221,7 +221,6 @@ async fn several_feeds_say_how_often_they_post_and_what_they_posted_last() {
         .collect();
     assert_eq!(titles, ["Posts", "Notes"]);
     assert_eq!(choices[0]["latest"], "river");
-    assert_eq!(choices[0]["posting"], "Posts about twice a week");
     assert_eq!(choices[1]["latest"], "swifts");
     assert!(
         choices[1]["place"]
