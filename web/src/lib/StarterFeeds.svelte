@@ -58,7 +58,7 @@
 <form onsubmit={submit} class={["flex flex-col", page && "flex-1"]}>
   <p>A feed is a website's list of its newest writing. Follow a few, and what they publish gathers here for you to read. Nobody else decides what you see.</p>
   <!-- The website's guide for newcomers, in a tab of its own; its words start on the margin. -->
-  <a href={GUIDE_URL} target="_blank" rel="noopener" class="text-link self-start">Here's how feeds work<span class="sr-only"> (on the nine turtles website)</span></a>
+  <a href={GUIDE_URL} target="_blank" rel="noopener" class="text-link self-start">Here's how feeds work<span class="sr-only"> (on the nine turtles website, opens in a new tab)</span></a>
   <fieldset class="m-0 mt-3 min-w-0 border-0 p-0">
     <legend class="inset-head">A few to start with</legend>
     <div class="inset-group">
