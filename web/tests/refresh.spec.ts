@@ -87,6 +87,35 @@ test("on a phone, the note offers Show, which shows new items; Refresh in the Mo
   await expect(row(page, NEW_ARTICLE)).toBeVisible();
 });
 
+test("on a phone, the feeds screen's dots catch up as you arrive on it, then stay still", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the phone layout only");
+  const blog = await openBlog(page);
+  const sidebar = page.getByRole("navigation", { name: "Sidebar" });
+  const blogRow = sidebar.getByRole("link", { name: `Blog ${blog} unread` });
+  const dots = (count: number) => blogRow.and(page.locator(`[data-unread="${count}"]`));
+  await page.getByRole("button", { name: "Back to Feeds" }).click();
+  await expect(sidebar.getByRole("button", { name: "Refresh" })).toHaveCount(0);
+  await expect(dots(3)).toBeVisible();
+
+  // Back from a list: the dots count what arrived while you were in it.
+  await blogRow.click();
+  await publishAndWait(page, blog, "New articles");
+  await page.getByRole("button", { name: "Back to Feeds" }).click();
+  await expect(dots(4)).toBeVisible();
+
+  // Another arrives while the feeds screen is showing: nothing changes under you…
+  await page.request.get(`${FEED_SITE}/grow/${blog}`);
+  await expect(async () => {
+    const answer = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).text();
+    expect(answer).toMatch(new RegExp(`${blog}[^}]*"unread":5`));
+  }).toPass({ timeout: 30_000 });
+  await page.clock.fastForward(61_000);
+  await expect(dots(4)).toBeVisible();
+  // …until you come back to the app.
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await expect(dots(5)).toBeVisible();
+});
+
 test("reopening the app shows what arrived, without pressing anything", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   const blog = await openBlog(page);

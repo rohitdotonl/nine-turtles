@@ -70,6 +70,17 @@ describe("the reader's library", () => {
     expect(library.feeds?.[0]?.unread).toBe(4);
   });
 
+  it("catching up quietly keeps the dots as they were when the server can't answer", async () => {
+    server.listFeeds.mockResolvedValueOnce({ feeds: [feed(1, 3)], folders: [] }).mockRejectedValueOnce(new Error("restarting"));
+    const library = new LoadedLibrary();
+    await library.loadFeeds();
+
+    await library.catchUp();
+
+    expect(library.feedsFailed).toBe(false);
+    expect(library.feeds?.[0]?.unread).toBe(3);
+  });
+
   it("puts a deleted folder back with its feeds on Undo", async () => {
     server.listFeeds.mockResolvedValue({ feeds: [feed(1, 0, [7]), feed(2)], folders: [{ id: 7, name: "News" }] });
     server.deleteFolder.mockResolvedValue(undefined);

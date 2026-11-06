@@ -8,9 +8,11 @@
 - **Refresh** (its key, `r`, shown beside it) is in the More (…) menu beside every list's title, on phones too (section 6).
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either.
 - Opening or reloading the app always shows the latest state.
+- On a phone, the feeds screen (section 20) has no Refresh of its own: its unread dots catch up as you arrive on it (back from a list, or coming back to the app), and then stay still while you look at it (decision 0188).
 - No pull-to-refresh on phones; there's Refresh in the list's More menu, and Show in the "New articles" note, instead.
 
 **How to check it**
 1. Leave the app open. When the "New articles" note appears at the bottom, check the list hasn't moved.
 2. Press `r`: new items appear at once, with no spinner.
 3. Close and reopen the app: you see everything new without pressing anything.
+4. On a phone, open a list, wait for "New articles", then go back: the feeds screen's dots already count the new articles, with no Refresh button there.
