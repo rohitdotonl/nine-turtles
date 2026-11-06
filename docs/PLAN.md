@@ -177,7 +177,6 @@ agreed yet):
 - Sort feeds by how much they post, or show one article from each.
 - Check feeds you rarely read less often. Careful: readers use RSS for
   control, and anything that smells of an algorithm drives them away.
-- Drag and drop to change a feed's folders.
 - Easier tidying: change folders, mute and unfollow in fewer steps.
 - Searching by meaning, not words ("about cycling, not just saying
   cycling"): needs AI to judge what an article is about, close to the
@@ -187,7 +186,7 @@ The command menu and the every-state check
 ([`RnD/design-principles.md`](RnD/design-principles.md)) are design work
 for the refinement rounds.
 
-**Done already:** "Follow this person?" when a page is shared (decision
+**Done already:** drag and drop to change a feed's folders, and folders in your own order (decision 0207); "Follow this person?" when a page is shared (decision
 0138). **Dropped:** a blogroll to show (the owner, 2 November 2026: it
 feels like social media).
 

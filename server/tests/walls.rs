@@ -263,6 +263,26 @@ async fn folders_stay_with_the_reader_who_made_them() {
         .post(&format!("/api/folders/{folder}/delete"), json!({}))
         .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
+    // Putting the owner's folder in order beside theirs moves neither.
+    let position = |id: i64| {
+        let db = state.db.clone();
+        async move {
+            sqlx::query_scalar::<_, i64>("SELECT position FROM folders WHERE id = ?")
+                .bind(id)
+                .fetch_one(&db)
+                .await
+                .unwrap()
+        }
+    };
+    let before = position(folder).await;
+    let (status, _) = other
+        .post(
+            "/api/folders/order",
+            json!({ "folders": [theirs["folder"]["id"], folder] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(position(folder).await, before);
     // Filing a feed in it, or moving feeds to it, doesn't either; and their
     // own filing never takes the feed out of the owner's folder.
     let (status, _) = other

@@ -32,6 +32,7 @@ use crate::{
     now, rules,
 };
 
+mod order;
 mod shared;
 pub use shared::{Deleted, Renamed, delete, named, put_back, rename};
 
@@ -51,6 +52,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/folders", post(create_folder))
         .route("/api/folders/{id}", post(rename_folder))
         .route("/api/folders/{id}/delete", post(delete_folder))
+        .route("/api/folders/order", post(order::save))
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -59,7 +61,7 @@ pub struct Folder {
     pub name: String,
 }
 
-/// A reader's folders, alphabetically (SPEC section 5). Takes the reader.
+/// A reader's folders, in their own order (SPEC section 5, decision 0207). Takes the reader.
 /// A folder whose every person the reader just unsubscribed from is left
 /// out: it goes with the last of them once Undo's time is up (`clear`), and
 /// Undo brings both back (the owner's core path, point 15). A folder with
@@ -71,7 +73,7 @@ pub const FOLDERS: &str = "SELECT id, name FROM folders WHERE person_id = ?
                                  AND subscriptions.feed_id = feed_folders.feed_id
                          WHERE feed_folders.folder_id = folders.id
                              AND subscriptions.unsubscribed_at IS NULL))
-     ORDER BY name COLLATE NOCASE, id";
+     ORDER BY position, name COLLATE NOCASE, id";
 
 /// Which feed the reader follows is in which of their folders, for the
 /// sidebar. Takes the reader.
@@ -98,7 +100,8 @@ pub async fn folder_named(
     name: &str,
 ) -> Result<(i64, bool), sqlx::Error> {
     let created: Option<i64> = sqlx::query_scalar(
-        "INSERT INTO folders (person_id, name) VALUES (?, ?)
+        "INSERT INTO folders (person_id, name, position)
+         VALUES (?1, ?2, (SELECT COALESCE(MAX(position), 0) + 1 FROM folders WHERE person_id = ?1))
          ON CONFLICT (person_id, name) DO NOTHING RETURNING id",
     )
     .bind(person)

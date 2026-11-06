@@ -1,5 +1,6 @@
 <!--
-  The sidebar's folders and feeds (SPEC section 5): folders A to Z, each
+  The sidebar's folders and feeds (SPEC section 5): folders in the reader's
+  own order (decision 0207), each
   with a small dot when any of its feeds has something unread, and a button that
   shows or hides the people and publications in it, then those in no
   folder, A to Z, under two headings: People, then Publications (decision
@@ -23,24 +24,38 @@
   whose name contains it takes their place.
 
   With Unread off (SPEC section 10) there are no dots.
+
+  Arranging (decision 0207): a folder drags up or down, and a person or
+  publication drags onto a folder, out of one, or between People and
+  Publications (sidebarDrag.ts: a mouse drags at once, a finger presses and
+  holds first). Edit, beside Folders, gives every row a handle for those who
+  don't drag: a folder's opens Move up, Move down…, a person's "Move to a
+  folder". What was done shows in a note at the sidebar's foot, with Undo.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import MoreMenu from "./MoreMenu.svelte";
+  import MoveSheet from "./MoveSheet.svelte";
+  import TextButton from "./TextButton.svelte";
   import type { Feed, Folder } from "./shapes";
-  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, saveOpenFolders, savedOpenFolders } from "./feeds";
+  import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName } from "./feeds";
+  import { droppedBefore, placeWords, STEP_WORDS, stepped, stepsFor, type Step } from "./arranging";
+  import type { LoadedLibrary, Removed } from "./library.svelte";
+  import { UNDO_FAILED, UNDONE } from "./messages";
   import { pathFor, type Route } from "./router";
+  import { dragValue, sidebarDrag, type Dragged, type Over } from "./sidebarDrag";
 
   let {
-    feeds,
-    folders,
+    library,
     route,
     search,
     follow,
     phone = false,
     unreadOff = false,
   }: {
-    feeds: Feed[];
-    folders: Folder[];
+    /** The reader's people and folders, and the ways to arrange them. */
+    library: LoadedLibrary;
     route: Route;
     /** What's typed in the sidebar search. */
     search: string;
@@ -51,7 +66,21 @@
     unreadOff?: boolean;
   } = $props();
 
-  let open: number[] = $state(savedOpenFolders());
+  let feeds: Feed[] = $derived(library.rows ?? []);
+  let folders: Folder[] = $derived(library.folders);
+  let order = $derived(folders.map((folder) => folder.id));
+  /** Which folders are open: the library keeps it, so a folder Undo makes again opens as it was. */
+  let open: number[] = $derived(library.openFolders);
+  /** Edit: every row has a handle, for moving without dragging. */
+  let editing = $state(false);
+  /** Someone whose handle opened "Move to a folder". */
+  let moving: Feed | undefined = $state();
+  /** What the last arranging did (with Undo), or a sentence saying why it didn't. */
+  let note: Removed | undefined = $state();
+  /** Said only to screen readers with the note: where a moved folder is now ("Friends is 2 of 5."). */
+  let where = $state("");
+  /** Why the person held over Publications can't go there, under its heading. */
+  let refusal = $state("");
 
   /** The folders open now: Shift+J and Shift+K pass over the feeds in the others (decision 0110). */
   export function openFolders(): number[] {
@@ -59,14 +88,12 @@
   }
 
   /** Edit put the person in these folders: they open, to show them there (the owner's core path, point 14). */
-  export function openFolder(ids: number[]) {
-    open = [...new Set([...open, ...ids])];
-    saveOpenFolders(open);
+  function openFolder(ids: number[]) {
+    library.setOpen([...new Set([...open, ...ids])]);
   }
 
   function toggle(id: number) {
-    open = open.includes(id) ? open.filter((each) => each !== id) : [...open, id];
-    saveOpenFolders(open);
+    library.setOpen(open.includes(id) ? open.filter((each) => each !== id) : [...open, id]);
   }
 
   /**
@@ -80,6 +107,96 @@
     toggle(id);
     if (inside) queueMicrotask(() => document.querySelector<HTMLElement>(`[data-folder-link="${id}"]`)?.focus());
   }
+
+  const folderNamed = (id: number | null) => folders.find((folder) => folder.id === id) ?? null;
+  const rowNamed = (id: number) => feeds.find((feed) => feed.id === id);
+
+  /** Someone in more than one place stays a person (section 36): they can't be a publication. */
+  function several(row: Feed): boolean {
+    return (row.places?.length ?? 1) > 1;
+  }
+
+  /** Whether letting go of `dragged` over `over` would change anything. */
+  function accepts(dragged: Dragged, over: Over): boolean {
+    if (dragged.kind === "folder") return over?.kind === "between" && droppedBefore(order, dragged.id, over.before).join() !== order.join();
+    const row = rowNamed(dragged.id);
+    if (!row || !over || over.kind === "between") return false;
+    if (over.kind === "folder") return !row.folders.includes(over.id);
+    if (over.who === "publication" && several(row)) return false;
+    return dragged.from !== null || over.who !== (row.kind ?? "person");
+  }
+
+  /** Held over Publications, someone in several places is told why they can't go there; let go anyway, the note says it too. */
+  function refuse(dragged: Dragged, over: Over, dropped = false) {
+    const row = dragged.kind === "person" ? rowNamed(dragged.id) : undefined;
+    const why = row && over?.kind === "loose" && over.who === "publication" && several(row) ? `${row.title} writes in more than one place, so stays under People.` : "";
+    refusal = dropped ? "" : why;
+    if (dropped && why) {
+      note = why;
+      where = "";
+    }
+  }
+
+  async function drop(dragged: Dragged, over: Over, keep: boolean) {
+    if (dragged.kind === "folder" && over?.kind === "between") {
+      const folder = folderNamed(dragged.id);
+      if (folder) await arranged(library.orderFolders(droppedBefore(order, folder.id, over.before), folder), folder);
+      return;
+    }
+    const row = dragged.kind === "person" ? rowNamed(dragged.id) : undefined;
+    if (!row || !over || dragged.kind !== "person") return;
+    const from = folderNamed(dragged.from);
+    if (over.kind === "folder") {
+      const to = folderNamed(over.id);
+      await arranged(library.file(row, from, to, keep));
+      if (to) openFolder([to.id]);
+    } else if (over.kind === "loose") {
+      // Out of a folder onto People or Publications: out of it, and the one dropped on.
+      await arranged(from ? library.file(row, from, null, false, over.who) : library.makeKind(row, over.who));
+    }
+  }
+
+  /** A handle's menu moved a folder: the keyboard stays on its handle. */
+  async function step(folder: Folder, how: Step) {
+    await arranged(library.orderFolders(stepped(order, folder.id, how), folder), folder);
+    await tick();
+    document.querySelector<HTMLElement>(`[data-folder-item="${folder.id}"] [data-handle] button`)?.focus();
+  }
+
+  /** A person's handle moved them with "Move to a folder". */
+  async function moveTo(folder: Folder | null, naming: string): Promise<string | undefined> {
+    if (!moving) return undefined;
+    const done = await library.moveTo(moving, folder, naming);
+    if (typeof done === "string") return done;
+    const handle = moving.id;
+    moving = undefined;
+    note = done;
+    where = "";
+    await tick();
+    document.querySelector<HTMLElement>(`[data-handle-for="${handle}"]`)?.focus();
+    return undefined;
+  }
+
+  /** An arranging finished: the note says what, with Undo, or why it couldn't be done. */
+  async function arranged(doing: Promise<Removed | undefined>, folder?: Folder) {
+    const done = await doing;
+    if (done === undefined) return;
+    note = done;
+    where = folder && typeof done !== "string" ? `${folder.name} is ${placeWords(order, folder.id)}.` : "";
+  }
+
+  async function undo() {
+    if (!note || typeof note === "string" || !note.undo) return;
+    const undoing = note.undo;
+    note = UNDONE;
+    where = "";
+    note = (await undoing().catch(() => UNDO_FAILED)) ?? UNDONE;
+  }
+
+  // Edit ends with the last folder, as its Done goes with the Folders heading.
+  $effect(() => {
+    if (folders.length === 0) editing = false;
+  });
 
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
@@ -113,14 +230,30 @@
 {/snippet}
 
 {#snippet leadsOn()}
-  {#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}
+  {#if phone && !editing}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}
 {/snippet}
 
-<!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. -->
-{#snippet feedRow(feed: Feed)}
+<!-- In Edit, a person's handle: drag it, or press it for "Move to a folder". -->
+{#snippet personHandle(feed: Feed)}
+  {#if editing}
+    <button
+      type="button"
+      data-handle
+      data-handle-for={feed.id}
+      aria-label={`Move ${feed.title}`}
+      title={`Move ${feed.title}`}
+      onclick={() => (moving = feed)}
+      class="handle btn-quiet absolute inset-y-0 right-2 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
+      ><Icon name="grip" size={phone ? 22 : 18} /></button
+    >
+  {/if}
+{/snippet}
+
+<!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
+{#snippet feedRow(feed: Feed, from: number | null)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   {@const here = !phone && (route.kind === "feed" || route.kind === "about" || route.kind === "edit-feed" || route.kind === "edit-source") && (feed.places ?? [feed.id]).includes(route.id)}
-  <li>
+  <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
     <a
       href={pathFor(place)}
       aria-current={here ? "page" : undefined}
@@ -128,13 +261,15 @@
       title={feed.title}
       data-unread={unreadOff ? undefined : feed.unread}
       class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3.5 text-ui pointer-fine:text-small",
+        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui pointer-fine:text-small",
         // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
         "pl-[38px]",
+        editing ? "pr-12" : "pr-3.5",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title), feed.unread)}{@render dot(feed.unread)}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title), feed.unread)}{#if !editing}{@render dot(feed.unread)}{/if}{@render leadsOn()}</a
     >
+    {@render personHandle(feed)}
   </li>
 {/snippet}
 
@@ -160,10 +295,38 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name, folderUnread(folder, feeds))}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{@render leadsOn()}</a
+    >{@render name(folder.name, folderUnread(folder, feeds))}{#if !editing}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{/if}{@render leadsOn()}</a
   >
 {/snippet}
 
+<!-- Under Publications while a person in several places is held over it: why they can't go there. -->
+{#snippet refused(who: "person" | "publication")}
+  {#if who === "publication" && refusal}<p role="status" class="px-5 pb-2 text-meta text-ink-2">{refusal}</p>{/if}
+{/snippet}
+
+<!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
+<!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
+{#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
+  <div data-drop-loose={who} class={["drop-area mx-2 rounded-lg", rows.length === 0 && "drop-empty"]}>
+    <h2 class="sidebar-section -mx-2">{heading}</h2>
+    {@render refused(who)}
+    {#if rows.length > 0}
+      <ul class="-mx-2">
+        {#each rows as feed (feed.id)}
+          {@render feedRow(feed, null)}
+        {/each}
+      </ul>
+    {:else}
+      <p class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</p>
+    {/if}
+  </div>
+{/snippet}
+
+<div
+  use:sidebarDrag={{ accepts, drop, refuse }}
+  class="arranging"
+  data-editing={editing || undefined}
+>
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
@@ -172,27 +335,45 @@
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
-        <li class="place mx-2 flex" data-here={here || undefined}>
+        <li class="place mx-2 flex" data-here={here || undefined} data-drop-folder={folder.id}>
           {@render folderLink(folder, true)}
         </li>
       {/each}
       {#each found.feeds as feed (feed.id)}
-        {@render feedRow(feed)}
+        {@render feedRow(feed, null)}
       {/each}
     </ul>
   {/if}
 {:else}
   {#if folders.length > 0}
-    <h2 class="sidebar-section">Folders</h2>
-    <ul>
+    <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
+    <div class="sidebar-section-row">
+      <h2 class="sidebar-section">Folders</h2>
+      <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
+    </div>
+    <ul data-folder-list class="relative">
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
         {@const shown = phone || open.includes(folder.id)}
-        <li>
-          <div class="place folder-row relative mx-2 flex" data-here={here || undefined}>
+        {@const steps = stepsFor(order, folder.id)}
+        <li data-folder-item={folder.id}>
+          <div class="place folder-row relative mx-2 flex" data-here={here || undefined} data-drag={dragValue({ kind: "folder", id: folder.id })} data-drop-folder={folder.id}>
             {@render folderLink(folder, false)}
-            {#if !phone}
+            {#if editing}
+              {#if steps.length > 0}
+                <!-- In Edit, the folder's handle: drag it, or press it for Move up, Move down… -->
+                <span data-handle class="handle absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center">
+                  <MoreMenu
+                    id={`move-folder-${folder.id}`}
+                    label={`Move ${folder.name}`}
+                    icon="grip"
+                    size={phone ? 22 : 18}
+                    groups={[{ label: `Move ${folder.name}`, items: steps.map((how) => ({ label: STEP_WORDS[how], onSelect: () => step(folder, how) })) }]}
+                  />
+                </span>
+              {/if}
+            {:else if !phone}
               <!--
                 The show-or-hide arrow at the row's right end, over the dot, shown when the
                 pointer is on the row, the keyboard is on it, or on a touch screen; the dot
@@ -221,7 +402,7 @@
           {#if shown}
             <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
               {#each inside as feed (feed.id)}
-                {@render feedRow(feed)}
+                {@render feedRow(feed, folder.id)}
               {:else}
                 <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No one in this folder yet.</li>
               {/each}
@@ -231,25 +412,50 @@
       {/each}
     </ul>
   {/if}
-  {#if people.length > 0}
-    <h2 class="sidebar-section">People</h2>
-    <ul>
-      {#each people as feed (feed.id)}
-        {@render feedRow(feed)}
-      {/each}
-    </ul>
-  {/if}
-  {#if publications.length > 0}
-    <h2 class="sidebar-section">Publications</h2>
-    <ul>
-      {#each publications as feed (feed.id)}
-        {@render feedRow(feed)}
-      {/each}
-    </ul>
-  {/if}
+  {@render looseList("person", people, "People")}
+  {@render looseList("publication", publications, "Publications")}
+{/if}
+
+<!--
+  What arranging did, with Undo, or why it couldn't: a note at the sidebar's foot, the list's
+  note in look (BRAND.md → "Messages"), which stays until it's closed or something else is done.
+-->
+{#if note}
+  <div class="sidebar-note-band sticky bottom-0 z-10 flex justify-center px-2 pt-3 pb-1">
+    <div class="toast flex min-h-11 max-w-full items-center gap-x-2 rounded-lg border pr-1 pl-4 text-small text-ink-2">
+      <span role="status" class="min-w-0 py-2">{typeof note === "string" ? note : note.message}<span class="sr-only">{" "}{where}</span></span>
+      {#if typeof note !== "string" && note.undo}
+        <TextButton onclick={undo} class="-mr-1 px-2">Undo</TextButton>
+      {/if}
+      <button type="button" onclick={() => (note = undefined)} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon shrink-0"><Icon name="close" size={18} /></button>
+    </div>
+  </div>
+{/if}
+</div>
+
+{#if moving}
+  <MoveSheet {folders} help="They leave the folders they're in." onMove={moveTo} onClose={() => (moving = undefined)} />
 {/if}
 
 <style>
+  /*
+    The sidebar's section names (Folders, People, Publications): bold words in
+    full ink (decision 0207, which replaced the small spaced capitals of
+    decision 0123), larger on a touch screen, where the rows are.
+  */
+  .sidebar-section {
+    padding: 1.5rem 1.25rem 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  @media (pointer: coarse) {
+    .sidebar-section {
+      padding-top: 1.75rem;
+      font-size: 1.25rem;
+    }
+  }
   /*
     The sidebar's dot (decision 0148): the list's unread dot (app.css
     .unread-dot: the accent, round, CanvasText in forced colors), a step
@@ -287,9 +493,71 @@
       opacity: 0;
     }
   }
+  /* A touch screen's arrow, or Edit's handle, takes the row's end: the name stops short of it. On a phone (no arrow) the dot and chevron line up with everyone else's. */
   @media (pointer: coarse) {
-    .folder-row > :global(a) {
+    .folder-row:has(.disclosure, .handle) > :global(a) {
       padding-right: 2.75rem;
     }
+  }
+  .folder-row:has(.handle) > :global(a) {
+    padding-right: 2.75rem;
+  }
+
+  /* Folders, and Edit at the same line's end (decision 0207). */
+  .sidebar-section-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .sidebar-section-row .sidebar-section {
+    flex: 1;
+  }
+  /*
+    Edit: quiet words in the muted grey, a step smaller than the heading, so the heading leads.
+    With a mouse it shows once the pointer is on the sidebar, or the keyboard reaches it; on a
+    touch screen it always shows. 44px to press on a touch screen.
+  */
+  .sidebar-edit {
+    margin-right: 0.5rem;
+    padding: 0 0.75rem;
+    min-height: 2rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .sidebar-edit[aria-pressed="true"] {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  @media (pointer: coarse) {
+    .sidebar-edit {
+      min-height: 2.75rem;
+      font-size: 0.875rem;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    :global(#sidebar:not(:hover)) .sidebar-edit:not(:focus-visible, [aria-pressed="true"]) {
+      opacity: 0;
+    }
+    .sidebar-edit:hover {
+      color: var(--ink);
+    }
+  }
+
+  /* The note at the sidebar's foot sits in a band of the sidebar's tone, so names scrolling under it end at its edge. */
+  .sidebar-note-band {
+    background-color: var(--color-sidebar);
+  }
+
+  /* The lists a person can be dropped on, marked as a folder is while one is held over it. */
+  .drop-area {
+    position: relative;
+  }
+  /* An empty People or Publications appears only while a person or publication is held. */
+  .drop-empty {
+    display: none;
+  }
+  :global(html:is([data-dragging="person"], [data-dragging="copy"])) .drop-empty {
+    display: block;
   }
 </style>

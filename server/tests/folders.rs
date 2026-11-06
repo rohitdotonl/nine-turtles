@@ -232,8 +232,8 @@ async fn a_feed_in_two_folders_appears_in_both_and_folders_can_be_renamed_and_de
                 row("Alpha renamed", 3, &["Tech", "news"]),
                 row("Beta blog", 3, &["Tech", "news"]),
             ],
-            // A to Z, whatever the capital letters.
-            vec!["news".to_owned(), "Tech".to_owned()],
+            // In the order they were made: a new folder joins at the bottom.
+            vec!["Tech".to_owned(), "news".to_owned()],
         )
     );
 
@@ -271,7 +271,7 @@ async fn a_feed_in_two_folders_appears_in_both_and_folders_can_be_renamed_and_de
         .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
 
-    // Renamed: its new place in the alphabet.
+    // Renamed: it stays where it was (decision 0207).
     let (status, _) = reader
         .post(
             &format!("/api/folders/{news}"),
@@ -311,6 +311,50 @@ async fn a_feed_in_two_folders_appears_in_both_and_folders_can_be_renamed_and_de
             row("Alpha renamed", 3, &["Tech", "World news"]),
             row("Beta blog", 3, &["Tech", "World news"]),
         ]
+    );
+}
+
+#[tokio::test]
+async fn folders_keep_the_order_the_reader_gives_them() {
+    let reader = Reader::new().await;
+    for name in ["Cooking", "Design", "Friends"] {
+        let (status, _) = reader.post("/api/folders", json!({ "name": name })).await;
+        assert_eq!(status, StatusCode::CREATED);
+    }
+    let (cooking, design, friends) = (
+        reader.folder_id("Cooking").await,
+        reader.folder_id("Design").await,
+        reader.folder_id("Friends").await,
+    );
+    // Friends dragged to the top.
+    let (status, _) = reader
+        .post(
+            "/api/folders/order",
+            json!({ "folders": [friends, cooking, design] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(reader.sidebar().await.1, ["Friends", "Cooking", "Design"]);
+    // A new folder joins at the bottom; renaming one leaves it in its place.
+    reader.post("/api/folders", json!({ "name": "Art" })).await;
+    reader
+        .post(
+            &format!("/api/folders/{friends}"),
+            json!({ "name": "Zebras" }),
+        )
+        .await;
+    assert_eq!(
+        reader.sidebar().await.1,
+        ["Zebras", "Cooking", "Design", "Art"]
+    );
+    // A number that isn't one of the reader's folders changes nothing.
+    let (status, _) = reader
+        .post("/api/folders/order", json!({ "folders": [99_999] }))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(
+        reader.sidebar().await.1,
+        ["Zebras", "Cooking", "Design", "Art"]
     );
 }
 
@@ -526,7 +570,7 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(answer["error"], "not-opml");
 
-    // Export: every feed, under each of its folders, as a download.
+    // Export: every feed, under each of its folders (in the reader's order), as a download.
     let response = reader.get_text("/api/opml").await;
     assert!(
         response.headers()["content-disposition"]
@@ -544,9 +588,9 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
     assert_eq!(
         listed,
         [
-            line("Alpha", Some("Favourites")),
             line("Alpha", Some("Tech")),
             line("Beta blog", Some("Tech")),
+            line("Alpha", Some("Favourites")),
             line("Gamma", None),
         ]
     );
