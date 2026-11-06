@@ -1,0 +1,76 @@
+/*
+  Arranging the sidebar by dragging (SPEC section 5, decision 0207; the
+  dragging itself is web/src/lib/sidebarDrag.ts). Nothing
+  slides: the row lifted under the pointer, the line where a folder will
+  land and the tone on what it will go into simply appear.
+*/
+.drag-ghost {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  max-width: 16rem;
+  overflow: hidden;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+  border-radius: 0.5rem;
+  background-color: var(--color-sidebar);
+  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
+  color: var(--ink);
+  font-size: var(--text-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* What's being dragged stays in its place, faded, until it's let go. */
+[data-dragging]:not(html) {
+  opacity: 0.4;
+}
+/* Where a folder will land: a line in the text color, with a small ring at its start. */
+.drop-line {
+  position: absolute;
+  left: 0.5rem;
+  right: 0.5rem;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--ink);
+  pointer-events: none;
+}
+.drop-line::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background-color: var(--color-sidebar);
+}
+/* The folder or list it will go into: a tone darker than where you are, never an outline (that's the keyboard's). */
+[data-drop] {
+  background-color: color-mix(in srgb, var(--ink) 16%, transparent) !important;
+}
+html[data-dragging] * {
+  cursor: grabbing !important;
+}
+html[data-dragging="copy"] * {
+  cursor: copy !important;
+}
+/* A press and hold lifts a row on a touch screen, so the browser's own long press (link preview, copy bubble, chosen text) does nothing there. A handle drags at once. */
+[data-drag] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+[data-handle] {
+  touch-action: none;
+}
+@media (forced-colors: active) {
+  .drop-line,
+  .drop-line::before {
+    background-color: CanvasText;
+    border-color: CanvasText;
+  }
+  [data-drop] {
+    outline: 2px dashed CanvasText;
+  }
+}

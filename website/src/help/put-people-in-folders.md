@@ -1,6 +1,6 @@
 ---
 title: Put people in folders
-description: Group the people you follow into folders, such as Friends or Cooking, one at a time or many at once.
+description: Group the people you follow into folders, such as Friends or Cooking, by dragging or many at once, and put the folders in your own order.
 groupId: keeping-things-tidy
 order: 1
 spec: 15
@@ -13,7 +13,34 @@ related: [one-person-several-places, unfollow-someone, hide-topics]
   Someone can be in more than one.
 </p>
 
-## Put one person in a folder
+## Drag someone into a folder
+
+In the sidebar, drag a person or publication onto a folder. They move there,
+out of the folder you dragged them from.
+
+- To keep them in both folders, hold **Option** on a Mac (**Ctrl** on
+  Windows and Linux) as you let go.
+- To take someone out of a folder, drag them onto **People** or
+  **Publications**.
+- On a phone or tablet, press and hold their name until it lifts, then move
+  it. A quick swipe still scrolls.
+
+Each move is said at the bottom of the sidebar, with **Undo**.
+
+## Put your folders in order
+
+Drag a folder up or down in the sidebar: a line shows where it will land.
+Your order is the same on every device. A new folder goes at the bottom, and
+renaming one keeps its place. People and publications are always A to Z.
+
+**Without dragging:** press **Edit** beside **Folders** (with a mouse it
+shows when the pointer is on the sidebar). Each row gets a handle at its end.
+Press a folder's handle and choose **Move up**, **Move down**, **Move to the
+top** or **Move to the bottom**; press a person's to choose their folder.
+Press **Done** when you've finished. This works with the keyboard and screen
+readers too.
+
+## Put one person in a folder from their page
 
 1. Choose the person in the sidebar, and press their name at the top of
    their list to open their page.
@@ -47,8 +74,8 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
 - Folders start closed in the sidebar. Press a folder's arrow to show the
   people in it; each device remembers which you opened. A folder you just
   made or chose in Edit opens, so you can see them in it.
-- Unsubscribing from the last person in a folder removes the folder too;
-  **Undo** brings both back.
+- Unsubscribing from the last person in a folder, or moving them out of it
+  in the sidebar, removes the folder too; **Undo** brings it back.
 - Someone in a folder is listed in the folder, not under **People** or
   **Publications**, which hold everyone who isn't in one.
 - A folder can hold people and publications alike.

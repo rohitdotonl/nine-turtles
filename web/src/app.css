@@ -229,9 +229,7 @@ body {
   }
 }
 
-/* Small spaced capitals, semibold, muted: the sidebar's section names, as Settings' group names (decision 0123), and the welcome's small headings (decision 0198). */
-.sidebar-section { padding: 1.5rem 1.25rem 0.5rem; }
-.sidebar-section,
+/* Small spaced capitals, semibold, muted: Settings' group names (decision 0123) and the welcome's small headings (decision 0198). */
 .small-caps {
   font-size: 0.6875rem;
   line-height: 1.3;

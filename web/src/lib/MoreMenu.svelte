@@ -33,10 +33,13 @@
     groups,
     size = 20,
     up = false,
+    icon = "more",
   }: {
     id: string;
     label?: string;
     groups: MenuGroup[];
+    /** The button's icon: More's three dots, or a row's handle in the sidebar's Edit. */
+    icon?: IconName;
     /** The icon's size: 22 in the phone's bottom bar. */
     size?: number;
     /** Opens upwards, from a bar at the bottom of the screen. */
@@ -131,7 +134,7 @@
     class={["btn-quiet btn-icon", open && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name="more" {size} /></span>
+    <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name={icon} {size} /></span>
   </button>
   {#if open}
     <!-- svelte-ignore a11y_interactive_supports_focus: the items inside take the keyboard, not the menu itself. -->

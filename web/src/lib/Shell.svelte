@@ -994,8 +994,7 @@
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
-          feeds={library.rows ?? []}
-          folders={library.folders}
+          {library}
           {route}
           {search}
           {follow}
