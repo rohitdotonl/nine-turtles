@@ -473,6 +473,8 @@ pub async fn find(
                 entries.starred, entries.muted, articles.episode_url IS NOT NULL AS episode,
                 articles.episode_seconds, page.in_title, articles.content, articles.summary, ",
         crate::feeds::publication_writer!(),
+        ", ",
+        crate::feeds::untitled_body!(),
         "
          FROM (SELECT * FROM (SELECT entries.article_id AS id, entries.sort_at AS at, ",
     ));
@@ -621,7 +623,10 @@ pub async fn find(
             .into_iter()
             .map(|each| {
                 // The text searched: the content, or the summary when the feed gives only that.
+                // An untitled article shows its opening instead of a title, with no line of
+                // its text under it (SPEC section 6).
                 let excerpt = match each.content.as_deref().or(each.summary.as_deref()) {
+                    _ if each.article.untitled_body.is_some() => None,
                     Some(html) if !searched.is_empty() => excerpt(&plain_words(html), &searched),
                     _ => None,
                 };

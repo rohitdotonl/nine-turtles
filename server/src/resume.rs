@@ -60,18 +60,22 @@ impl Place {
 /// The article, with its writer's name when known: the name the reader
 /// gave the person (SPEC section 36), else the article's own author. Only an
 /// article still listed (not muted, its feed still followed) is offered.
-const ARTICLE: &str = "SELECT entries.article_id AS id, entries.feed_id,
+const ARTICLE: &str = concat!(
+    "SELECT entries.article_id AS id, entries.feed_id,
             COALESCE(writers.name, subscriptions.title) AS feed_title,
             articles.title, articles.link, entries.sort_at AS at,
             entries.read, entries.starred, entries.muted,
             articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
-            NULLIF(TRIM(COALESCE(writers.name, articles.author, '')), '') AS signed_by
+            NULLIF(TRIM(COALESCE(writers.name, articles.author, '')), '') AS signed_by, ",
+    crate::feeds::untitled_body!(),
+    "
      FROM entries CROSS JOIN articles ON articles.id = entries.article_id
          CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
              AND subscriptions.feed_id = entries.feed_id
          LEFT JOIN writers ON writers.id = subscriptions.writer_id
      WHERE entries.person_id = ? AND entries.article_id = ? AND entries.muted = 0
-         AND subscriptions.unsubscribed_at IS NULL";
+         AND subscriptions.unsubscribed_at IS NULL"
+);
 
 #[derive(sqlx::FromRow)]
 struct Offered {

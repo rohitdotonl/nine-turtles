@@ -34,7 +34,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { onMount, tick } from "svelte";
-  import type { Article, Source } from "./shapes";
+  import { untitledOpening, type Article, type Source } from "./shapes";
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, writerOf, type OneSource } from "./people";
@@ -539,6 +539,7 @@
   <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
+      {@const opening = untitledOpening(article)}
       <li>
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
@@ -561,8 +562,9 @@
           {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
           <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
           <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
-          <span class={["title block font-serif text-(length:--row-title-size) leading-(--row-title-line)", unreadOff ? "text-ink" : !article.read ? "font-semibold text-ink" : current ? "text-ink" : "text-ink-2"]}
-            >{#each boldParts(article.title || "Untitled", bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
+          <!-- An untitled post shows its opening once instead (SPEC section 6, decision 0193): the same serif, never semibold so it doesn't pose as a title, two lines and then "…". -->
+          <span class={["title font-serif text-(length:--row-title-size) leading-(--row-title-line)", opening === undefined ? "block" : "line-clamp-2", unreadOff ? "text-ink" : !article.read ? [opening === undefined && "font-semibold", "text-ink"] : current ? "text-ink" : "text-ink-2"]}
+            >{#each boldParts(opening ?? article.title, bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
                   >{part.text}</mark
                 >{:else}{part.text}{/if}{/each}{#if !article.read && !unreadOff}<span class="sr-only">, unread</span>{/if}</span
           >
