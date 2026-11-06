@@ -33,9 +33,11 @@ newest articles are ready to read. From now on, new ones arrive by
 themselves.
 
 If the site offers more than one feed, such as one for everything and one
-per topic, nine turtles lists them, each with its newest title and how often
-it posts, so you can tell them apart: choose one and press **Add**. A feed
-that only repeats another in a different format isn't listed.
+per topic, nine turtles lists them, each with its newest title, so you can
+tell them apart. The first is ticked; tick any others you want and press
+**Follow**. Feeds you follow together from one site become one person, like a
+blog and its podcast. A feed that only repeats another in a different format
+isn't listed.
 
 Already follow their blog, and now want their channel too? Add it from
 their page instead, with **+ Add another place** in Edit: see

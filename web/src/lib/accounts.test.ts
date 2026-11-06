@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainAsked, explainChange, explainLink, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
+import { explainAsked, explainChange, explainLink, signedInPath, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
 
 describe("emailed links", () => {
   it("give their ticket to the page they open", () => {
@@ -7,6 +7,15 @@ describe("emailed links", () => {
     expect(ticketFrom("ticket=ab12")).toBe("ab12");
     expect(ticketFrom("#other=1")).toBe("");
     expect(ticketFrom("")).toBe("");
+  });
+});
+
+describe("the sign-in and sign-up pages' addresses", () => {
+  it("give way to nine turtles' home once signed in, and every other address stays (decision 0196)", () => {
+    expect(signedInPath("/sign-in")).toBe("/");
+    expect(signedInPath("/sign-up")).toBe("/");
+    expect(signedInPath("/people/3")).toBe("/people/3");
+    expect(signedInPath("/")).toBe("/");
   });
 });
 

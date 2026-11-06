@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-05
+updated: 2026-11-06
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -56,6 +56,12 @@ you can:
 Press **Done** to save, or **Cancel** to leave everything as it was.
 
 ## Join someone's sources
+
+When you add someone whose site offers several feeds (say, a blog and a
+podcast), tick each one you want and press **Follow**: they arrive already
+joined, as one person.
+
+To join sources you already follow:
 
 1. Open their page and press **Edit**.
 2. Press **+ Add another place** (or, for someone with two or more

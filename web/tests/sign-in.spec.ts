@@ -251,3 +251,20 @@ test("Show in the password field shows what's typed, and Hide hides it again (de
   await appReady(page);
   await expect(page.getByRole("button", { name: "Show password" })).toBeVisible();
 });
+
+test("/sign-in is the sign-in page's own address: signing in there opens your reading, and so does visiting it signed in", async ({ page }) => {
+  await page.goto("/sign-in");
+  await appReady(page);
+  await expect(page.getByRole("link", { name: "Sign up" })).toHaveAttribute("href", "/sign-up");
+  await signIn(page);
+  // Never "Wrong turn?" (decision 0196): the address becomes nine turtles' own.
+  await expect(page).not.toHaveURL(/sign-in/);
+  await expect(page.getByRole("heading", { name: "Wrong turn?" })).toHaveCount(0);
+  for (const address of ["/sign-in", "/sign-up"]) {
+    await page.goto(address);
+    await appReady(page);
+    await expect(page.locator("#sidebar")).toBeAttached();
+    await expect(page).not.toHaveURL(/sign-/);
+    await expect(page.getByRole("heading", { name: "Wrong turn?" })).toHaveCount(0);
+  }
+});

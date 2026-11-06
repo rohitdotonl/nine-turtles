@@ -1,5 +1,6 @@
 <!--
-  Decides between the sign-in page, the sign-up page (/sign-up, open
+  Decides between the sign-in page (shown signed out at any address, and at
+  /sign-in, decision 0196), the sign-up page (/sign-up, open
   to anyone, decision 0115), the pages an
   emailed link opens (/reset-password and /confirm-email, decision 0088;
   /sign-in-link, decision 0096; /finish-sign-up, decision 0154; /weekly-email, which
@@ -27,7 +28,7 @@
   import NotFound from "./lib/NotFound.svelte";
   import { knownPath } from "./lib/router";
   import { FINISH_SIGN_UP_PAGE } from "./lib/readers";
-  import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE } from "./lib/accounts";
+  import { CONFIRM_PAGE, RESET_PAGE, SIGN_IN_LINK_PAGE, SIGN_UP_PAGE, signedInPath } from "./lib/accounts";
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/articles";
@@ -64,10 +65,10 @@
       session = now;
       unreachable = false;
       path = location.pathname;
-      // Already signed in: the sign-up page opens nine turtles itself.
-      if (session.signedIn && path === "/sign-up") {
-        history.replaceState(null, "", "/");
-        path = "/";
+      // Signed in: the sign-in and sign-up pages open nine turtles itself, rather than "Wrong turn?".
+      if (session.signedIn && signedInPath(path) !== path) {
+        path = signedInPath(path);
+        history.replaceState(null, "", path);
       }
     } catch (problem) {
       const kept = noConnection(problem) ? await keptSession() : undefined;
@@ -118,7 +119,7 @@
     passkeys={session.passkeys ?? null}
     onSignedOut={signedOut}
   />
-{:else if session && path === "/sign-up"}
+{:else if session && path === SIGN_UP_PAGE}
   <SignUp onSignedIn={check} />
 {:else if session}
   <SignIn

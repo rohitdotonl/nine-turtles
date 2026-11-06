@@ -36,7 +36,6 @@ pub mod feeds;
 pub mod fetch;
 pub mod finder;
 pub mod folders;
-pub mod frequency;
 pub mod health;
 pub mod log;
 pub mod lookup;

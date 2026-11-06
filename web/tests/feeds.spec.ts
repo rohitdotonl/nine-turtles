@@ -72,11 +72,15 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Their website's address");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // "Bring your list from another app…", an underlined link in the text color just under the field and
-  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
+  // The two side doors, under the field (decision 0196): "New to feeds? Start here", then "Bring your list
+  // from another app…", underlined links in the text color centred under it, each 44px tall to touch
+  // (decisions 0045, 0048, 0055). Importing opens the file chooser at once (decision 0137).
+  const newLink = reading.getByRole("link", { name: "New to feeds? Start here" });
   const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
-  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
-  expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
+  const [fieldBox, newBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), newLink.boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
+  expect(newBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
+  expect(Math.abs(importBox!.y - (newBox!.y + newBox!.height))).toBeLessThan(2);
+  expect(newBox!.height).toBeGreaterThanOrEqual(44);
   expect(importBox!.height).toBeGreaterThanOrEqual(44);
   await expect(importLink).toHaveCSS("text-decoration-line", "underline");
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
@@ -371,31 +375,59 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 });
 
-test("a site with several feeds offers a choice", async ({ page }) => {
+test("a site with several feeds offers them with tick boxes, and those followed together become one person", async ({ page }) => {
   await openApp(page, "/add-feed");
   const name = newBlog("two");
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
-  // A choice of one: radio buttons, the first chosen, each row ending in a round mark that shows
-  // the choice by its dot, never by a tint alone (decision 0049).
-  const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
-  // Each row says what's inside (its newest title, how often it posts) and its address as a person says it (decision 0165).
+  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose which to follow:");
+  // A choice of any: tick boxes, the first ticked, each row ending in a square mark that shows
+  // the choice by its check, never by a tint alone (decision 0196).
+  const choices = page.getByRole("group", { name: "Feeds on this site" });
+  // Each row says what's inside (its newest title) and its address as a person says it (decision 0165), and never how often it posts.
   await expect(choices).toContainText("On keeping a commonplace book (3)");
   await expect(choices).toContainText("/blog/");
   await expect(choices).not.toContainText("http://");
-  const [first, comments] = [choices.getByRole("radio").first(), choices.getByRole("radio", { name: /^Comments/ })];
+  await expect(choices.getByText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/)).toHaveCount(0);
+  const [first, comments] = [choices.getByRole("checkbox").first(), choices.getByRole("checkbox", { name: /^Comments/ })];
   await expect(first).toBeChecked();
   await expect(comments).not.toBeChecked();
-  const dot = (radio: typeof first) => radio.locator("xpath=..").locator(".radio-mark").evaluate((mark) => getComputedStyle(mark, "::after").backgroundColor);
-  expect(await dot(comments)).toBe("rgba(0, 0, 0, 0)");
-  expect(await dot(first)).not.toBe("rgba(0, 0, 0, 0)");
+  // With nothing ticked, Follow says so and follows nothing.
+  await first.uncheck();
+  await page.getByRole("button", { name: "Follow", exact: true }).click();
+  await expect(page.locator("#feed-address-status")).toHaveText("Tick at least one first.");
+  // Both ticked: Follow follows both, as one person, and their list opens; nothing more is asked.
+  await first.check();
   await comments.check();
-  await expect(first).not.toBeChecked();
-  // Add adds the one chosen, then asks whether it is someone you might write to.
-  await page.getByRole("button", { name: "Add", exact: true }).click();
-  await page.getByRole("button", { name: "Done" }).click();
-  await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` })).toBeVisible();
+  await page.getByRole("button", { name: "Follow", exact: true }).click();
+  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  await expect(page.getByRole("button", { name: "Done" })).toHaveCount(0);
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${name}`) })).toHaveCount(1);
+  const together = async () => {
+    const all = (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()).feeds as { title: string; person: number | null }[];
+    const mine = all.filter((feed) => feed.title.startsWith(`Blog ${name}`));
+    return [mine.length, new Set(mine.map((feed) => feed.person)).size, mine.every((feed) => feed.person !== null)];
+  };
+  await expect.poll(together).toEqual([2, 1, true]);
+});
+
+test("in the welcome, the heading stays still as feeds are offered, Add steps aside, and Cancel puts them away", async ({ page }) => {
+  await newReader(page, 1280);
+  const heading = page.locator("#welcome-heading");
+  const top = async () => (await heading.boundingBox())!.y;
+  const before = await top();
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog("two")}/`);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("group", { name: "Feeds on this site" })).toBeVisible();
+  expect(await top()).toBe(before);
+  // The field's own Add steps aside: Cancel and Follow sit at the list's foot, and the side doors wait.
+  await expect(page.getByRole("button", { name: "Add", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "New to feeds? Start here" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByRole("group", { name: "Feeds on this site" })).toHaveCount(0);
+  await expect(field(page)).toBeFocused();
+  await expect(page.getByRole("button", { name: "Add", exact: true })).toBeVisible();
+  expect(await top()).toBe(before);
 });
 
 test("a page without a feed gets a calm, plain message", async ({ page }) => {
@@ -422,13 +454,13 @@ test("changing the address after a choice of feeds takes the old choices away", 
   await openApp(page, "/add-feed");
   await field(page).fill(`${FEED_SITE}/blog/${newBlog("two")}/`);
   await page.keyboard.press("Enter");
-  const choices = page.getByRole("radiogroup", { name: "Feeds on this site" });
+  const choices = page.getByRole("group", { name: "Feeds on this site" });
   await expect(choices).toBeVisible();
-  // The chosen feed fails for an address reason: the field is marked, and the choices stay to pick another.
+  // The ticked feed fails for an address reason: the field is marked, and the choices stay to pick another.
   await page.route("**/api/feeds", (route) =>
     route.request().method() === "POST" ? route.fulfill({ status: 422, json: { error: "not-found" } }) : route.continue(),
   );
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Follow", exact: true }).click();
   await expect(page.locator("#feed-address-status")).toHaveText("Nothing was found at that address.");
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   await page.unroute("**/api/feeds");
@@ -513,14 +545,18 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("a");
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose one:");
+  await expect(page.locator("#feed-address-status")).toHaveText("This site offers more than one feed. Choose which to follow:");
 
-  // Tab reaches the chosen feed (the first); an arrow key moves the choice; Add adds it.
+  // Tab reaches the first feed, ticked; Space unticks it, and the next is ticked the same way; Follow follows it.
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("radio").first()).toBeFocused();
-  await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("radio", { name: /^Comments/ })).toBeChecked();
-  await tabTo(page, page.getByRole("button", { name: "Add", exact: true }));
+  await expect(page.getByRole("checkbox").first()).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("checkbox").first()).not.toBeChecked();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("checkbox", { name: /^Comments/ })).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByRole("checkbox", { name: /^Comments/ })).toBeChecked();
+  await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }));
   await page.keyboard.press("Enter");
   // A person or a publication: an arrow key changes the answer, and Done opens it.
   await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();

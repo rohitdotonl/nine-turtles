@@ -15,6 +15,7 @@
   import Icon from "./Icon.svelte";
   import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
+  import { SIGN_IN_PAGE } from "./accounts";
   import { HEARD_ABOUT, PASSWORD_MINIMUM, explainSignUp, signUp, type HeardAbout } from "./readers";
 
   let { onSignedIn }: { onSignedIn: () => void } = $props();
@@ -77,7 +78,7 @@
 
   function signIn(event: MouseEvent) {
     event.preventDefault();
-    history.replaceState(null, "", "/");
+    history.pushState(null, "", SIGN_IN_PAGE);
     onSignedIn();
   }
 </script>
@@ -149,7 +150,7 @@
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
       <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Sign up</button>
-      <p class="text-center text-small">Have an account? <a href="/" onclick={signIn} class="text-link">Sign in</a></p>
+      <p class="text-center text-small">Have an account? <a href={SIGN_IN_PAGE} onclick={signIn} class="text-link">Sign in</a></p>
     </div>
   </form>
   {/if}
