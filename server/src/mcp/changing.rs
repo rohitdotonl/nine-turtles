@@ -250,6 +250,8 @@ pub(super) struct RuleAsked {
     paused: bool,
     #[serde(default)]
     place_gone: bool,
+    #[serde(default)]
+    until: Option<i64>,
 }
 
 pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) -> Answer {
@@ -259,13 +261,16 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         title_only: asked.title_only,
         paused: asked.paused,
         place_gone: asked.place_gone,
+        days: None,
+        until: asked.until,
+        restore: false,
     };
     match rules::make(state, person, &form).await {
         Ok(Ok((id, matching))) => Ok(json!({
             "done": true,
             "rule_id": id,
             "unread_articles_already_matching": matching,
-            "note": "It hides articles arriving from now on; the reader can hide those already here too, in Settings › Hiding.",
+            "note": "It hides articles arriving from now on.",
         })),
         Ok(Err("too-long")) => Err(format!(
             "The words are at most {} characters.",
@@ -274,6 +279,7 @@ pub(super) async fn add_rule(state: &AppState, person: i64, asked: RuleAsked) ->
         Ok(Err("nothing-to-match")) => {
             Err("Give a word or phrase to hide articles about.".to_owned())
         }
+        Ok(Err("gone")) => Err("Its time is already up: until is in the past.".to_owned()),
         Ok(Err(_)) => {
             Err("Give the feed_id of a person the reader follows, or none for everyone.".to_owned())
         }

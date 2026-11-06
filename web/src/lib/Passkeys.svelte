@@ -11,6 +11,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import NoteLine from "./NoteLine.svelte";
   import { UNDONE } from "./messages";
   import {
     type PasskeyRow,
@@ -44,6 +45,8 @@
   let refusal = $state(false);
   let undo: (() => Promise<void>) | undefined = $state();
   let busy = $state(false);
+  /** The list couldn't load: the line offers Try again. */
+  let loadFailed = $state(false);
   let line: HTMLElement | undefined = $state();
   let addButton: HTMLButtonElement | undefined = $state();
   let passwordField: HTMLInputElement | undefined = $state();
@@ -52,8 +55,10 @@
   async function reload() {
     try {
       passkeys = await listPasskeys();
+      loadFailed = false;
     } catch {
-      say("Your passkeys couldn't be loaded. Try again in a moment.", true);
+      say("Your passkeys couldn't be loaded.", true);
+      loadFailed = true;
     }
   }
 
@@ -65,6 +70,7 @@
     message = text;
     refusal = refused;
     undo = undefined;
+    loadFailed = false;
   }
 
   async function startAdding() {
@@ -167,6 +173,20 @@
     line?.querySelector<HTMLElement>("[data-focus=undo]")?.focus();
   }
 
+  /** × on the line: it goes, and the keyboard's place goes to the group's heading. */
+  async function closeNote() {
+    say("");
+    await tick();
+    document.getElementById("passkeys-heading")?.focus();
+  }
+
+  /** Try again after the passkeys couldn't load: the keyboard waits on the group's heading. */
+  async function retry() {
+    say("");
+    document.getElementById("passkeys-heading")?.focus();
+    await reload();
+  }
+
   async function runUndo() {
     if (!undo || busy) return;
     const doing = undo;
@@ -264,15 +284,9 @@
     <div
       bind:this={line}
       id="passkeys-message"
-      role="status"
       class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}
     >
-      {#if message}
-        <p class="flex items-start gap-1.5">{#if refusal}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
-        {#if undo}
-          <button type="button" class="btn btn-small" data-focus="undo" aria-disabled={busy} onclick={runUndo}>Undo</button>
-        {/if}
-      {/if}
+      <NoteLine announce {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onRetry={loadFailed ? retry : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
       Sign in with your fingerprint, face or device PIN instead of a password. Adding a passkey asks for your password.
