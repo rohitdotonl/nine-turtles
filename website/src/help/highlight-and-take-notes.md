@@ -41,7 +41,8 @@ person or folder** finds them.
 
 - **Notes** in the sidebar lists every article you highlighted or wrote a
   note on. It appears after your first one.
-- Search looks through your highlights and notes too.
+- Search looks through your highlights and notes too. Search from **Notes**
+  to look only through the articles you marked.
 - **Settings › Your data › Export notes and highlights** saves them all as
   one Markdown file.
 

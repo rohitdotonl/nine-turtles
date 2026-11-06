@@ -18,12 +18,15 @@ asked for a suggestion and chose it.
   **Starred**.
 - **Other feed or folder**, **Unread**, **With notes** and **Published**
   (the dates) go. No folder list is added. Searching from the Unread list
-  still searches only unread articles, since that's the list it started in.
-- The web app's search no longer sends notes or dates, and the server no
-  longer reads them. The assistants' search tools (SPEC section 33) keep
+  still searches only unread articles, and searching from the Notes list
+  only the articles the reader marked, since that's the list it started in.
+  In the Starred list, Show only: Starred is left out: it would only repeat
+  This list.
+- The web app's search no longer sends dates, and the server no longer
+  reads them; notes are sent only for a search from the Notes list. The assistants' search tools (SPEC section 33) keep
   their own feed, folder, unread and starred choices; MCP is left as it is
   for now.
 
 **Consequences.** Fewer choices to understand, one way to search a person
 or folder (open it, then search), and less code. A reader who searched by
-date sorts the list instead; the Notes list replaces With notes.
+date sorts the list instead; a search from the Notes list replaces With notes.

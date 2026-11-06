@@ -162,6 +162,8 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     let (_, found) = ask(&base, &cookie, "/api/search?q=barley").await;
     assert_eq!(titles(&found), ["Soup 4"]);
     assert_eq!(found["articles"][0]["excerpt_from"], "note");
+    let (_, found) = ask(&base, &cookie, "/api/search?notes=true").await;
+    assert_eq!(titles(&found), ["Soup 2", "Soup 4"]);
     // Accents and capitals in any language match as in articles, at a word's start only.
     send(
         &base,

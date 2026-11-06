@@ -151,6 +151,10 @@ pub struct Search {
     pub unread: bool,
     #[serde(default)]
     pub starred: bool,
+    /// Only articles the reader highlighted or wrote a note on (decision
+    /// 0164): searching from the Notes list (decision 0188).
+    #[serde(default)]
+    pub notes: bool,
     /// Only articles whose author's name holds this (any capitals). The
     /// search screen doesn't offer it yet; an assistant can (`mcp`).
     #[serde(default)]
@@ -169,6 +173,7 @@ impl Search {
             && self.folder.is_none()
             && !self.unread
             && !self.starred
+            && !self.notes
             && self.author.is_none()
     }
 }
@@ -540,6 +545,11 @@ pub async fn find(
     }
     if search.starred {
         query.push(" AND entries.starred = 1");
+    }
+    if search.notes {
+        query.push(" AND entries.article_id IN (SELECT article_id FROM notes WHERE person_id = ");
+        query.push_bind(person);
+        query.push(")");
     }
     if let Some(author) = &search.author {
         // `instr` finds the name anywhere, with no wildcard characters to escape.

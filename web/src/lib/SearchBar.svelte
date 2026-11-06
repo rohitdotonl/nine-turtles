@@ -110,7 +110,7 @@
     }
   }
 
-  /** The scope list's value for a scope, and back. */
+  /** A scope as one comparable value, to tell which row holds. */
   function scopeValue(scope: Scope): string {
     if (scope.kind === "all") return "all";
     if (scope.kind === "view") return `view:${scope.view}`;
@@ -253,15 +253,18 @@
           <span class="min-w-0 flex-1 truncate">Everything</span>
         </label>
       </fieldset>
-      <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
-      <fieldset class="min-w-0">
-        <legend class="menu-head">Show only</legend>
-        <label class="menu-row">
-          <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
-          <span class="menu-check"><Icon name="check" size={16} /></span>
-          <span class="flex-1">Starred</span>
-        </label>
-      </fieldset>
+      <!-- In the Starred list, Starred would only repeat This list. -->
+      {#if scopeNow !== "view:starred"}
+        <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
+        <fieldset class="min-w-0">
+          <legend class="menu-head">Show only</legend>
+          <label class="menu-row">
+            <input type="checkbox" checked={query.starred} onchange={(event) => onChange({ ...query, starred: event.currentTarget.checked }, true)} />
+            <span class="menu-check"><Icon name="check" size={16} /></span>
+            <span class="flex-1">Starred</span>
+          </label>
+        </fieldset>
+      {/if}
       <!--
         How many were found, at the menu's foot, only where the menu would cover the line above the
         results that says it (a list narrower than 26rem: the menu is 17rem from the right, the count

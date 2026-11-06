@@ -5,7 +5,7 @@ import type { Library } from "./shapes";
 import type { Route } from "./router";
 
 /** Where to search: everywhere, one of the views, one feed or one folder. */
-export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred" } | { kind: "feed"; id: number } | { kind: "folder"; id: number };
+export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred" | "notes" } | { kind: "feed"; id: number } | { kind: "folder"; id: number };
 
 /**
  * Everything searched for: `words` is what's typed outside the chips, then
@@ -24,7 +24,7 @@ export type Chip = { key: "scope" | "starred"; label: string };
 export function scopeFor(route: Route): Scope {
   if (route.kind === "feed") return { kind: "feed", id: route.id };
   if (route.kind === "folder") return { kind: "folder", id: route.id };
-  if (route.kind === "view" && (route.view === "unread" || route.view === "starred")) return { kind: "view", view: route.view };
+  if (route.kind === "view" && route.view !== "all") return { kind: "view", view: route.view };
   return { kind: "all" };
 }
 
@@ -40,9 +40,9 @@ export function isSearching(query: Query): boolean {
 export function scopeName(scope: Scope, library: Library): string {
   switch (scope.kind) {
     case "all":
-      return "all your articles";
+      return "All articles";
     case "view":
-      return scope.view === "unread" ? "Unread" : "Starred";
+      return { unread: "Unread", starred: "Starred", notes: "Notes" }[scope.view];
     case "feed":
       return library.feeds.find((feed) => feed.id === scope.id)?.title ?? "A feed";
     case "folder":
@@ -52,7 +52,7 @@ export function scopeName(scope: Scope, library: Library): string {
 
 /** The list's title while it shows search results (SPEC section 14): "Results in All articles", or "Results in Tech". */
 export function resultsTitle(scope: Scope, library: Library): string {
-  return `Results in ${scope.kind === "all" ? "All articles" : scopeName(scope, library)}`;
+  return `Results in ${scopeName(scope, library)}`;
 }
 
 /** The chips inside the field, in a fixed order, so the field shows exactly what's searched. */
@@ -82,6 +82,7 @@ export function searchParams(query: Query): Record<string, string> {
   if (scope.kind === "feed") params.feed = String(scope.id);
   if (scope.kind === "folder") params.folder = String(scope.id);
   if (scope.kind === "view" && scope.view === "unread") params.unread = "true";
+  if (scope.kind === "view" && scope.view === "notes") params.notes = "true";
   if (query.starred || (scope.kind === "view" && scope.view === "starred")) params.starred = "true";
   return params;
 }

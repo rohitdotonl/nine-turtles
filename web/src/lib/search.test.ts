@@ -69,12 +69,14 @@ describe("what the server is asked", () => {
     expect(searchParams({ ...all, words: "is:starred" }).starred).toBeUndefined();
   });
 
-
   it("includes the view a search started in", () => {
     expect(searchParams({ ...emptyQuery({ kind: "view", view: "unread" }), words: "slow" })).toEqual({
       q: "slow",
       unread: "true",
     });
+    // From Notes, only the articles the reader marked (decision 0188).
+    expect(searchParams({ ...emptyQuery({ kind: "view", view: "notes" }), words: "soup" })).toEqual({ q: "soup", notes: "true" });
+    expect(resultsTitle(emptyQuery({ kind: "view", view: "notes" }).scope, library)).toBe("Results in Notes");
     expect(searchParams({ ...emptyQuery({ kind: "folder", id: 7 }), words: "x", starred: true })).toEqual({
       q: "x",
       folder: "7",
