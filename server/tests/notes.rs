@@ -461,7 +461,13 @@ async fn their_page_lists_the_highlights_from_their_writing() {
         .await;
         assert_eq!(status, StatusCode::CREATED);
     }
-    send(&base, &cookie, &format!("/api/articles/{}/note", ids[1]), json!({ "note": "Whole" })).await;
+    send(
+        &base,
+        &cookie,
+        &format!("/api/articles/{}/note", ids[1]),
+        json!({ "note": "Whole" }),
+    )
+    .await;
 
     let (status, found) = ask(&base, &cookie, &format!("/api/feeds/{feed}/highlights")).await;
     assert_eq!(status, StatusCode::OK);
