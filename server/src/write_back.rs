@@ -29,11 +29,13 @@ use crate::{
 };
 
 pub(crate) mod site;
+mod unfollowed;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/feeds/{id}/write-to", post(set_address))
         .merge(site::routes())
+        .merge(unfollowed::routes())
 }
 
 /// The longest address there is (RFC 5321's path limit, less its brackets).

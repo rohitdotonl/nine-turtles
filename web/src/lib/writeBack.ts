@@ -139,13 +139,46 @@ export function looksLikeAddress(text: string): boolean {
  * the same writer. `looked` is false when it couldn't look just now (their
  * site didn't answer, it's already looking, or nine turtles can't be reached).
  */
-export async function lookOnTheirSite(feed: number): Promise<{ address?: string; looked: boolean }> {
-  const { answer } = await sendChange(`/api/feeds/${feed}/look-for-address`, {}, []);
+export async function lookOnTheirSite(feed: number): Promise<SiteGave> {
+  return siteGave(await sendChange(`/api/feeds/${feed}/look-for-address`, {}, []));
+}
+
+/**
+ * Ask them for a feed (decision 0212): the address a site with no feed gives,
+ * looked for the same way, on its home page and one contact or about page,
+ * only because the reader pressed Write to. Nothing is kept: they don't follow it.
+ */
+export async function lookOnSite(site: string): Promise<SiteGave> {
+  return siteGave(await sendChange("/api/sites/look-for-address", { site }, []));
+}
+
+type SiteGave = { address?: string; looked: boolean };
+
+function siteGave({ answer }: { answer?: Record<string, unknown> }): SiteGave {
   const address = answer?.address;
   return {
     address: typeof address === "string" && looksLikeAddress(address) ? address : undefined,
     looked: answer?.looked === true,
   };
+}
+
+/** A site's name as a reader says it: "june.example", without "www.". */
+export function siteName(site: string): string {
+  const href = /^https?:\/\//i.test(site.trim()) ? site.trim() : `https://${site.trim()}`;
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    return site.trim();
+  }
+}
+
+/** The email asking `site`'s writer for a feed: a short, plain request the reader can change. */
+export function askForFeedLink(address: string, site: string): string {
+  const name = siteName(site);
+  const to = address.split("@").map(encodeURIComponent).join("@");
+  const subject = `A feed for ${name}?`;
+  const body = `Hello,\n\nI'd like to follow ${name} in my feed reader, but couldn't find a feed for it (RSS or Atom). Would you add one?\n\nThank you.\n`;
+  return `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 /** Why an address wasn't kept, in the reader's words; undefined once it was. */

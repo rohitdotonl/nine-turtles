@@ -85,7 +85,11 @@ impl Answer {
         match self {
             // A checkup whose site didn't answer is a failure for its contact page.
             Self::Checked(checkup) if !checkup.site_looked => FAILURE_REMEMBERED_FOR,
-            Self::Found(_) | Self::Checked(_) | Self::Problem(Problem::NoFeed) => REMEMBERED_FOR,
+            Self::Address { looked: false, .. } => FAILURE_REMEMBERED_FOR,
+            Self::Found(_)
+            | Self::Checked(_)
+            | Self::Address { .. }
+            | Self::Problem(Problem::NoFeed) => REMEMBERED_FOR,
             Self::Problem(_) => FAILURE_REMEMBERED_FOR,
         }
     }
@@ -215,6 +219,11 @@ pub(crate) enum Answer {
     Found(Found),
     /// The blog checkup's (`checkup`).
     Checked(Box<crate::checkup::Checkup>),
+    /// Ask them for a feed's (`write_back::unfollowed`): the address their site gives, and whether it was looked at.
+    Address {
+        address: Option<String>,
+        looked: bool,
+    },
     Problem(Problem),
 }
 
@@ -255,7 +264,7 @@ async fn find_feeds(State(state): State<AppState>, Query(asked): Query<Asked>) -
         Ok(Answer::Found(found)) => Ok(found),
         Ok(Answer::Problem(problem)) | Err(problem) => Err(problem),
         // Never: the finder's answers are kept apart from the checkup's.
-        Ok(Answer::Checked(_)) => Err(Problem::Busy),
+        Ok(Answer::Checked(_) | Answer::Address { .. }) => Err(Problem::Busy),
     })
 }
 

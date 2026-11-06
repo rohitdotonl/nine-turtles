@@ -10,6 +10,8 @@
 //                      127.0.0.1), it is the only page there: the site's
 //                      home page and the usual feed addresses aren't there,
 //                      so nine turtles finds no feed anywhere (decision 0165)
+//   /asking/           the same, as localhost, but linking a contact page
+//                      with an address (Ask them for a feed, decision 0212)
 //   /reading/          Reading Room's home page, naming /reading.xml: one
 //                      full article (headings, a quote, code, a table, an
 //                      image and a tracking image), one summary only, and
@@ -372,6 +374,8 @@ createServer((request, response) => {
 
   if (request.headers.host?.startsWith("localhost")) {
     if (path === "/plain/") return html(page("Just a page", []));
+    if (path === "/asking/") return html(`<!doctype html><title>June's notes</title><a href="/asking/contact">Contact</a>`);
+    if (path === "/asking/contact") return html(`<!doctype html><title>Contact</title><p>Write to me: <a href="mailto:june@june.example">june@june.example</a></p>`);
     response.writeHead(404);
     return response.end();
   }
