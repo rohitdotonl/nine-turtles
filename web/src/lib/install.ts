@@ -34,11 +34,6 @@ export function deviceOf({ userAgent, maxTouchPoints }: Browser): Device {
   return { platform: platformOf(userAgent, maxTouchPoints), browser: browserOf(userAgent) };
 }
 
-/** Whether this is a computer, with a bookmarks bar to drag a button to. */
-export function isComputer({ platform }: Device): boolean {
-  return platform === "mac" || platform === "windows" || platform === "linux" || platform === "other";
-}
-
 /** One device's steps: where they're for, and each press in order (or none, where it can't install). */
 export type Guide = { where: string; steps: string[]; foot?: string };
 
@@ -46,7 +41,7 @@ const HOME_SCREEN = "nine turtles is on your home screen: open it from there.";
 const OWN_WINDOW = "nine turtles opens in its own window, from your apps.";
 
 const APPLE_PHONE = [
-  "Tap Share: the square with an arrow pointing up. In the newest Safari, it's under More (…).",
+  "Tap Share: the square with an arrow pointing up. In Safari it may be under More (…).",
   "Scroll down if you need to, and tap Add to Home Screen.",
   "Tap Add.",
 ];
@@ -66,8 +61,7 @@ const BROWSER: Record<BrowserName, string> = { safari: "Safari", chrome: "Chrome
 export function guideFor({ platform, browser }: Device): Guide {
   if (platform === "iphone" || platform === "ipad") {
     const where = platform === "iphone" ? "iPhone" : "iPad";
-    if (browser !== "safari") return { where, steps: [], foot: `On ${where}, nine turtles installs from Safari. Open this page in Safari to install it.` };
-    return { where, steps: APPLE_PHONE, foot: HOME_SCREEN };
+    return { where: browser === "safari" ? where : `${where}, in ${BROWSER[browser]}`, steps: APPLE_PHONE, foot: HOME_SCREEN };
   }
   if (platform === "android") {
     return {
@@ -99,21 +93,36 @@ export function guideFor({ platform, browser }: Device): Guide {
   return { where, steps: ["Open your browser's menu.", "Choose Install, Add to home screen or Add to Dock, whichever it offers."] };
 }
 
-/** Every device, one line each, in this order; the reader's own is left out, since its steps are above. */
-const OTHERS: { platforms: Platform[]; name: string; line: string }[] = [
-  { platforms: ["iphone", "ipad"], name: "iPhone and iPad", line: "In Safari, tap Share, then Add to Home Screen." },
-  { platforms: ["android"], name: "Android", line: "In Chrome, open the menu (⋮), then Add to home screen." },
-  { platforms: ["mac"], name: "Mac", line: "In Safari, choose File, then Add to Dock. In Chrome or Edge, click the install icon in the address bar." },
-  { platforms: ["windows"], name: "Windows", line: "In Chrome or Edge, click the install icon in the address bar. In Firefox, the web apps button there." },
-  { platforms: ["linux"], name: "Linux", line: "In Chrome or Edge, click the install icon in the address bar." },
+/** The three tabs of Settings › Install the app, each a kind of device. */
+export type Kind = "computer" | "android" | "apple";
+export const KINDS: { kind: Kind; label: string }[] = [
+  { kind: "computer", label: "Computer" },
+  { kind: "android", label: "Android" },
+  { kind: "apple", label: "iPhone & iPad" },
 ];
 
-export function otherDevices({ platform }: Device): { name: string; line: string }[] {
-  return OTHERS.filter((other) => !other.platforms.includes(platform));
+export function kindOf({ platform }: Device): Kind {
+  if (platform === "android") return "android";
+  if (platform === "iphone" || platform === "ipad") return "apple";
+  return "computer";
+}
+
+/** A kind's steps when the reader isn't on it: every browser's way, since we can't know which they'll use there. */
+export function guideForKind(kind: Kind): Guide {
+  if (kind === "android") return guideFor({ platform: "android", browser: "chrome" });
+  if (kind === "apple") return { where: "iPhone or iPad", steps: APPLE_PHONE, foot: HOME_SCREEN };
+  return {
+    where: "computer",
+    steps: [
+      "In Chrome or Edge, click the install icon at the right end of the address bar.",
+      "In Safari on a Mac, choose File, then Add to Dock.",
+      "In Firefox on Windows, click the web apps button in the address bar.",
+    ],
+    foot: "Firefox on a Mac or Linux can't install it yet: use Chrome or Edge there.",
+  };
 }
 
 /** The key that shows the bookmarks bar where it's hidden. */
-export function bookmarksBarKey({ platform, browser }: Device): string {
-  if (platform === "mac") return browser === "safari" ? "⌘ Shift B" : "⌘ Shift B";
-  return "Ctrl Shift B";
+export function bookmarksBarKey({ platform }: Device): string {
+  return platform === "mac" ? "⌘ Shift B" : "Ctrl Shift B";
 }

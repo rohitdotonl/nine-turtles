@@ -1,24 +1,26 @@
 <!--
   Install the app (SPEC section 20, decisions 0151 and 0104), a page of
-  Settings: the steps for this device (lib/install.ts guesses which), with an
-  Install button where the browser offers one press
-  (lib/installing.svelte.ts), then a line for every other device. Under it,
-  "Follow the blog you're on": on a computer, a button to drag to the
-  bookmarks bar (a "bookmarklet"); on a phone, the way that phone does it.
+  Settings: three tabs, Computer, Android and iPhone & iPad, with this
+  device's already chosen (lib/install.ts guesses which). This device's tab
+  names its browser and has the Install button where the browser offers one
+  press (lib/installing.svelte.ts); the others give every browser's way.
+  Each tab ends with "Follow the blog you're on": the bookmarks-bar button
+  (a "bookmarklet") on a computer, Share on Android, + Add on iPhone.
 -->
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import { bookmarksBarKey, deviceOf, guideFor, isComputer, otherDevices } from "./install";
+  import { bookmarksBarKey, deviceOf, guideFor, guideForKind, KINDS, kindOf, type Kind } from "./install";
   import { install, installing, runningInstalled } from "./installing.svelte";
   import { bookmarklet, SHORTCUT_LINK } from "./share";
 
   const device = deviceOf(navigator);
-  const guide = guideFor(device);
-  const computer = isComputer(device);
-  const apple = device.platform === "iphone" || device.platform === "ipad";
+  const mine = kindOf(device);
   const bookmark = bookmarklet(location.origin);
   const here = runningInstalled();
+  let chosen: Kind = $state(mine);
+  const own = $derived(chosen === mine);
+  const guide = $derived(own ? guideFor(device) : guideForKind(chosen));
   /** What came of pressing Install nine turtles, when it didn't install. */
   let message = $state("");
   const said = $derived(installing.justInstalled ? "Installed. Open nine turtles from its icon." : message);
@@ -48,18 +50,29 @@
     store. Sign in once on each device; what you follow and what you've read are the same everywhere.
   </p>
 
+  <div role="group" aria-label="Device" class="choices kinds" style="--phone-columns: 3">
+    {#each KINDS as kind (kind.kind)}
+      <label class="choice">
+        <input type="radio" name="install-kind" value={kind.kind} bind:group={chosen} />
+        {kind.label}
+      </label>
+    {/each}
+  </div>
+
   <div>
-    <h4 class="inset-head">{here || installing.justInstalled ? "This device" : `On this ${guide.where}`}</h4>
-    <!-- Always here, so screen readers hear it the moment it's filled in. -->
-    <p bind:this={answer} tabindex="-1" role="status" class={said ? "inset-group inset-row done" : "sr-only"}>
-      {#if installing.justInstalled}<span class="text-muted"><Icon name="check" size={18} /></span>{/if}<span class="min-w-0">{said}</span>
-    </p>
-    {#if here}
+    <h4 class="inset-head">{own ? `On this ${guide.where}` : `On ${chosen === "computer" ? "a" : "an"} ${guide.where}`}</h4>
+    {#if own}
+      <!-- Always here, so screen readers hear it the moment it's filled in. -->
+      <p bind:this={answer} tabindex="-1" role="status" class={said ? "inset-group inset-row done" : "sr-only"}>
+        {#if installing.justInstalled}<span class="text-muted"><Icon name="check" size={18} /></span>{/if}<span class="min-w-0">{said}</span>
+      </p>
+    {/if}
+    {#if own && here}
       <p class="inset-group inset-row done">
         <span class="text-muted"><Icon name="check" size={18} /></span><span class="min-w-0">You're using the installed app now.</span>
       </p>
-    {:else if !installing.justInstalled}
-      {#if installing.offer}
+    {:else if !(own && installing.justInstalled)}
+      {#if own && installing.offer}
         <div class="inset-group">
           <button type="button" class="inset-row inset-action" onclick={press}>Install nine turtles</button>
         </div>
@@ -78,27 +91,18 @@
   </div>
 
   <div>
-    <h4 class="inset-head">On your other devices</h4>
-    <ul role="list" class="inset-group">
-      {#each otherDevices(device) as other (other.name)}
-        <li class="inset-row other"><span class="min-w-0"><span class="name">{other.name}</span><br /><span class="text-muted">{other.line}</span></span></li>
-      {/each}
-    </ul>
-  </div>
-
-  <div>
     <h4 class="inset-head">Follow the blog you're on</h4>
     <div class="inset-group">
-      {#if computer}
+      {#if chosen === "computer"}
         <div class="inset-row drag">
           <p class="min-w-0">Drag this to your bookmarks bar, then press it on any blog.</p>
           <a class="btn btn-small" href={bookmark} onclick={pressed}>Add to nine turtles</a>
         </div>
-      {:else if device.platform === "android"}
+      {:else if chosen === "android"}
         <p class="inset-row min-w-0">Once nine turtles is installed, tap Share on any blog, then nine turtles.</p>
-      {:else if apple && SHORTCUT_LINK}
+      {:else if SHORTCUT_LINK}
         <div class="inset-row">
-          <p class="min-w-0">Get the Shortcut once, then on any blog in Safari tap Share › Add to nine turtles.</p>
+          <p class="min-w-0">Get the Shortcut once, then on any blog tap Share › Add to nine turtles.</p>
           <a class="btn btn-small" href={SHORTCUT_LINK} target="_blank" rel="noopener noreferrer"
             >Get the Shortcut<span class="sr-only"> (opens Apple's page)</span></a
           >
@@ -109,11 +113,8 @@
     </div>
     <p role="status" class={["inset-foot text-ink", !dragNote && "sr-only"]}>{dragNote}</p>
     <p class="inset-foot">
-      {#if computer}
-        No bookmarks bar? Press {bookmarksBarKey(device)}. On Android, share a blog to the installed app.
-      {:else}
-        On a computer, this page has a button for the bookmarks bar.
-      {/if}
+      {#if chosen === "computer" && mine === "computer"}No bookmarks bar? Press {bookmarksBarKey(device)}.{:else if chosen === "computer"}No
+        bookmarks bar? Press Ctrl Shift B, or ⌘ Shift B on a Mac.{/if}
       nine turtles always asks before following anyone.
     </p>
   </div>
@@ -124,10 +125,12 @@
     margin: 0 1rem;
     line-height: 1.5;
   }
+  .kinds {
+    align-self: flex-start;
+  }
   /* A step: its number in a narrow column, the words beside it, never split to the row's two ends. */
   .step,
-  .done,
-  .other {
+  .done {
     flex-wrap: nowrap;
     align-items: baseline;
     justify-content: flex-start;
@@ -148,8 +151,5 @@
   /* The drag button stays beside its sentence, never wrapped under it. */
   .drag {
     flex-wrap: nowrap;
-  }
-  .name {
-    font-weight: 500;
   }
 </style>
