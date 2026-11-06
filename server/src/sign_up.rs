@@ -6,7 +6,10 @@
 //! waits in a `sign-up` link (`email_links`), and a link goes to the
 //! address. Only following it and typing the password chosen at sign-up
 //! makes the account, marks its address confirmed and signs that device in
-//! (`finish_sign_up`). The link proves the address is theirs; the password
+//! (`finish_sign_up`). In the browser that signed up, the password isn't
+//! asked again (decision 0193): Sign up leaves a random secret in that
+//! browser's cookie (`browser`), and the link plus that secret is proof
+//! enough. The link proves the address is theirs; the password
 //! says which waiting sign-up is theirs, so a stranger who signs up with
 //! the same address can't hand them an account with the stranger's
 //! password. Without the email settings (a nine turtles on someone's
@@ -29,13 +32,15 @@ use std::{
 use axum::{
     Json, Router,
     extract::State,
-    http::{StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
     routing::post,
 };
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::{SqliteConnection, SqlitePool};
+
+mod browser;
 
 use crate::{
     AppState,
@@ -67,6 +72,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/sign-up", post(sign_up))
         .route("/api/sign-up/finish", post(finish_sign_up))
+        .route("/api/sign-up/check", post(check_link))
 }
 
 #[derive(Deserialize)]
@@ -161,12 +167,16 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         Ok(true) => return refused(StatusCode::CONFLICT, "already"),
         Err(error) => return database_problem("finding a reader", &error),
     }
-    let ticket = match wait_for_confirming(&state.db, &email, &line, heard_about.as_deref()).await {
+    let Some(secret) = browser::new_secret() else {
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
+    let waiting = wait_for_confirming(&state.db, &email, &line, heard_about.as_deref(), &secret);
+    let ticket = match waiting.await {
         Ok(Some(ticket)) => ticket,
         // Past the address's emails for the hour, or one went less than a
         // minute ago: kept, but not emailed. The link already sent works
-        // with this password too, so the answer is the same.
-        Ok(None) => return sent(&email),
+        // with this password, or from this browser, too, so the answer is the same.
+        Ok(None) => return sent(&email, &secret),
         Err(error) => return database_problem("making an email link", &error),
     };
     drop(tries);
@@ -176,16 +186,23 @@ async fn sign_up(State(state): State<AppState>, Json(form): Json<SignUp>) -> Res
         "Confirm your email for nine turtles",
         format!(
             "Hello,\n\nTo finish signing up for nine turtles, open this link and type the \
-             password you chose:\n\n{link}\n\nIt works once, for the next 24 hours. If you didn't sign up, \
+             password you chose (in the browser you signed up in, it won't ask):\n\n{link}\n\nIt works once, for the next 24 hours. If you didn't sign up, \
              ignore this email and no account is made.{SIGN_OFF}"
         ),
         "a link to confirm a new account",
     );
-    sent(&email)
+    sent(&email, &secret)
 }
 
-fn sent(email: &str) -> Response {
-    (StatusCode::ACCEPTED, Json(json!({ "sent_to": email }))).into_response()
+/// The link is on its way; this browser keeps the secret that lets its
+/// link finish without the password.
+fn sent(email: &str, secret: &str) -> Response {
+    (
+        StatusCode::ACCEPTED,
+        [(header::SET_COOKIE, browser::cookie(secret))],
+        Json(json!({ "sent_to": email })),
+    )
+        .into_response()
 }
 
 /// Saves a waiting sign-up, behind SQLite's one writer at a time, keeping
@@ -199,6 +216,7 @@ async fn wait_for_confirming(
     email: &str,
     line: &str,
     heard_about: Option<&str>,
+    secret: &str,
 ) -> Result<Option<String>, sqlx::Error> {
     let ticket = match new_token() {
         Ok(ticket) => ticket,
@@ -216,8 +234,8 @@ async fn wait_for_confirming(
     sqlx::query(
         "INSERT INTO email_links
              (purpose, person_id, email, password_hash, token_hash, created_at, expires_at, emailed,
-              heard_about)
-         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?, ?, ?)",
+              heard_about, browser_hash)
+         VALUES ('sign-up', NULL, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(email)
     .bind(line)
@@ -226,6 +244,7 @@ async fn wait_for_confirming(
     .bind(now + CONFIRM_LIFETIME)
     .bind(emailed)
     .bind(heard_about)
+    .bind(&scramble(secret)[..])
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
@@ -235,7 +254,45 @@ async fn wait_for_confirming(
 #[derive(Deserialize)]
 struct Finish {
     ticket: String,
+    /// Empty in the browser that signed up: its cookie stands in for it.
+    #[serde(default)]
     password: String,
+}
+
+#[derive(Deserialize)]
+struct Check {
+    ticket: String,
+}
+
+/// The address a sign-up's link was sent to, while the link still works.
+async fn link_email(db: &SqlitePool, ticket: &str) -> Result<Option<String>, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT email FROM email_links
+         WHERE token_hash = ? AND purpose = 'sign-up' AND used = 0 AND expires_at > ?",
+    )
+    .bind(&scramble(ticket.trim())[..])
+    .bind(now())
+    .fetch_optional(db)
+    .await
+}
+
+/// Asks, without using the link up, whether it still works and whether
+/// this is the browser that signed up (then the page asks no password):
+/// `{ "same_browser": bool }`, or 410 "expired".
+async fn check_link(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(form): Json<Check>,
+) -> Response {
+    let email = match link_email(&state.db, &form.ticket).await {
+        Ok(Some(email)) => email,
+        Ok(None) => return refused(StatusCode::GONE, "expired"),
+        Err(error) => return database_problem("finding a sign-up link", &error),
+    };
+    match browser::waiting(&state.db, &email, &headers).await {
+        Ok(found) => Json(json!({ "same_browser": found.is_some() })).into_response(),
+        Err(error) => database_problem("finding a sign-up link", &error),
+    }
 }
 
 /// A waiting sign-up: its line in `email_links`, the scrambled password and
@@ -248,21 +305,26 @@ type Waiting = (i64, String, Option<String>);
 /// address's waiting sign-ups is theirs (there can be a stranger's too).
 /// The password is checked as sign-in checks it: the same bounded line and
 /// the same count of wrong tries for the address.
-async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>) -> Response {
+async fn finish_sign_up(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(form): Json<Finish>,
+) -> Response {
     let now = now();
-    let email: Result<Option<String>, sqlx::Error> = sqlx::query_scalar(
-        "SELECT email FROM email_links
-         WHERE token_hash = ? AND purpose = 'sign-up' AND used = 0 AND expires_at > ?",
-    )
-    .bind(&scramble(form.ticket.trim())[..])
-    .bind(now)
-    .fetch_optional(&state.db)
-    .await;
-    let email = match email {
+    let email = match link_email(&state.db, &form.ticket).await {
         Ok(Some(email)) => email,
         Ok(None) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("finding a sign-up link", &error),
     };
+    // The browser that signed up: its secret picks the waiting sign-up, as
+    // the password would, and no password is asked or counted.
+    if form.password.is_empty() {
+        return match browser::waiting(&state.db, &email, &headers).await {
+            Ok(Some(chosen)) => make_from_link(&state, &email, chosen).await,
+            Ok(None) => refused(StatusCode::UNAUTHORIZED, "password-needed"),
+            Err(error) => database_problem("finding a sign-up link", &error),
+        };
+    }
     let account = Account::named(Some(&email));
     let wrong = || refused(StatusCode::UNAUTHORIZED, "wrong-password");
     if form.password.len() > crate::password::MAXIMUM_LENGTH {
@@ -305,7 +367,16 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
     };
     limiters.right(&account);
     drop(limiters);
+    make_from_link(&state, &email, (id, line, heard_about)).await
+}
 
+/// Makes the account a chosen waiting sign-up was for, spending its link,
+/// and signs this device in (forgetting the browser's sign-up secret).
+async fn make_from_link(
+    state: &AppState,
+    email: &str,
+    (id, line, heard_about): Waiting,
+) -> Response {
     let mut transaction = match state.db.begin().await {
         Ok(transaction) => transaction,
         Err(error) => return database_problem("making an account", &error),
@@ -319,9 +390,16 @@ async fn finish_sign_up(State(state): State<AppState>, Json(form): Json<Finish>)
         Ok(_) => return refused(StatusCode::GONE, "expired"),
         Err(error) => return database_problem("making an account", &error),
     }
-    match finish(&mut transaction, &email, &line, heard_about.as_deref()).await {
+    match finish(&mut transaction, email, &line, heard_about.as_deref()).await {
         Ok(Ok(person)) => match transaction.commit().await {
-            Ok(()) => signed_in_as(&state.db, person, json!({ "done": "signed-up" })).await,
+            Ok(()) => {
+                let mut signed_in =
+                    signed_in_as(&state.db, person, json!({ "done": "signed-up" })).await;
+                signed_in
+                    .headers_mut()
+                    .append(header::SET_COOKIE, browser::forget());
+                signed_in
+            }
             Err(error) => database_problem("making an account", &error),
         },
         // The address has an account now: the link stays spent.
