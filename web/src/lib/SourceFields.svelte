@@ -66,7 +66,7 @@
       <span class="setting-words">
         <span class="setting-name">Pause for a while</span>
         <span id="{id}-pause-hint" class="setting-hint"
-          >New articles skip Unread until you untick it; then its newest three come back.{#if feed.pausedAt != null}
+          >Their new articles wait until you untick this.{#if feed.pausedAt != null}
             {pausedSince(feed.pausedAt)}{/if}</span
         >
       </span>

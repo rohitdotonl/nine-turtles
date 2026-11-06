@@ -7,12 +7,11 @@
 
   Its first page keeps only the everyday settings (decision 0120): Reading
   (Unread on or off and sort order, shared across
-  the reader's devices) and Look and feel (Page and Text size, for this
-  device). Everything else is a row ending in › that opens a page of its own
+  the reader's devices) and Look and feel (Page, Text size and Font, for
+  this device). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
-  Font and line width; Your library (Everyone you follow, a page of
-  its own, then Show in the sidebar and Your data); More
+  Your library (Everyone you follow, a page of its own, then Your data); More
   (Add from anywhere, Install the app, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
@@ -50,12 +49,12 @@
   import { PAGES } from "./themes";
   import type { Feed } from "./shapes";
   import type { Order } from "./reading";
-  import { HELP_URL, SETTINGS_PAGES, type Hideable, type SettingsPage } from "./router";
-  import { LINE_WIDTHS, READING_FONTS, type Preferences } from "./preferences";
+  import { HELP_URL, SETTINGS_PAGES, type SettingsPage } from "./router";
+  import { READING_FONTS, type Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { SETTINGS_NEED_CONNECTION, keeping, sendWaiting, setKeeping } from "./offline";
+  import { SETTINGS_NEED_CONNECTION, sendWaiting } from "./offline";
   import { newslettersStatus } from "./newsletters";
   import { browserHasPasskeys, passkeysHere } from "./passkeys";
   import { describe, loadPlan } from "./plan";
@@ -67,8 +66,6 @@
     onSort,
     unread,
     onUnread,
-    hidden,
-    onHidden,
     heading = $bindable(),
     version,
     owner = false,
@@ -99,9 +96,6 @@
     unread: boolean;
     /** Switches Unread on or off; fails if it couldn't be saved. */
     onUnread: (unread: boolean) => Promise<void>;
-    /** The lists the sidebar leaves out (decision 0105). */
-    hidden: Hideable[];
-    onHidden: (hidden: Hideable[]) => Promise<void>;
     heading?: HTMLHeadingElement;
     version: string;
     /** Only the owner sees Readers. */
@@ -140,28 +134,6 @@
     { value: "newest", label: "Newest first" },
     { value: "oldest", label: "Oldest first" },
   ] as const;
-
-  /** The lists the sidebar can leave out, as its rows name them. Unread, folders and feeds always show. */
-  const SIDEBAR_LISTS: { value: Hideable; label: string }[] = [
-    { value: "starred", label: "Starred" },
-    { value: "notes", label: "Notes" },
-    { value: "all", label: "All articles" },
-  ];
-
-  let sidebarMessage = $state("");
-
-  async function showInSidebar(list: Hideable, box: HTMLInputElement) {
-    sidebarMessage = "";
-    const shown = box.checked;
-    const next = shown ? hidden.filter((each) => each !== list) : [...hidden, list];
-    try {
-      await onHidden(next);
-    } catch {
-      // Back as it was, tick box included.
-      box.checked = !shown;
-      sidebarMessage = "That couldn't be saved. Try again in a moment.";
-    }
-  }
 
   /** The rule editor, while open: a rule to change, or a new one (perhaps for a feed). */
   let editing: { rule?: Rule; feedId?: number } | undefined = $state();
@@ -251,14 +223,6 @@
     }
   }
 
-  /** Whether this device keeps articles for reading offline (SPEC section 32): on unless switched off here. */
-  let keepingOffline = $state(keeping());
-
-  function switchKeeping(on: boolean) {
-    keepingOffline = on;
-    void setKeeping(on);
-  }
-
   async function leave() {
     try {
       // Marks made offline go first: signing out deletes this device's copies (SPEC section 32).
@@ -315,30 +279,6 @@
   </a>
 {/snippet}
 
-{#snippet keepSwitch()}
-  <!-- A switch, as Apple draws one (decision 0077): this device's copies for reading offline. -->
-  <div class="inset-row setting">
-    <p class="setting-name" aria-hidden="true">Keep articles for reading offline</p>
-    <label class="switch-target -my-2 -mr-2">
-      <input
-        type="checkbox"
-        role="switch"
-        class="switch"
-        aria-label="Keep articles for reading offline"
-        aria-describedby="keep-offline-foot"
-        checked={keepingOffline}
-        onchange={(event) => switchKeeping(event.currentTarget.checked)}
-      />
-    </label>
-  </div>
-{/snippet}
-
-{#snippet keepFoot()}
-  <p id="keep-offline-foot" class="inset-foot">
-    On this device only: the words of your first 200 unread and newest 200 starred articles, without images, so
-    you can read, mark and star them without a connection. Switching this off, or signing out, deletes them.
-  </p>
-{/snippet}
 
 {#if editing}
   {#key editing}
@@ -390,15 +330,6 @@
       {#if connection.offline}
         <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 32). -->
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
-        {#if !page || page === "data"}
-          <!-- The one setting that needs no connection: this device's own copies, which switching off deletes. -->
-          <section aria-label="Reading offline">
-            <div class="inset-group">
-              {@render keepSwitch()}
-            </div>
-            {@render keepFoot()}
-          </section>
-        {/if}
       {:else if !page}
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="settings-head">Reading</h3>
@@ -483,20 +414,30 @@
               <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
             </div>
           </div>
-          {@render pageRow("font", "/settings/font", SETTINGS_PAGES.font, "text-width", open("font"), READING_FONTS[preferences.readingFont].label)}
+          <!-- The reading font: each name set in its own font, so the choice shows itself. Articles keep one line width (decision 0187). -->
+          <div class="inset-row setting has-control">
+            <div class="setting-label">
+              {@render icon("text")}
+              <div class="setting-words"><p id="reading-font-name" class="setting-name">Font</p></div>
+            </div>
+            <div role="group" aria-labelledby="reading-font-name" class="choices setting-control" style="--columns: 3">
+              {#each Object.entries(READING_FONTS) as [value, font] (value)}
+                <label class="choice" style:font-family={font.family}>
+                  <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
+                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
+                </label>
+              {/each}
+            </div>
+          </div>
         </div>
         <!-- The same preferences as the Aa panel above an article (decision 0034). -->
-        <p class="inset-foot">
-          These apply to this device only. Match device switches between the day and night versions as the
-          device does. The Aa button above an article changes these too, while you read.
-        </p>
+        <p class="inset-foot">Apply to this device only. The Aa button above an article changes these too.</p>
       </section>
 
       <section aria-labelledby="library-heading">
         <h3 id="library-heading" class="settings-head">Your library</h3>
         <div class="inset-group">
           {@render pageRow("feeds", "/settings/feeds", "Everyone you follow", "feed", onYourFeeds)}
-          {@render pageRow("sidebar", "/settings/sidebar", SETTINGS_PAGES.sidebar, "sidebar-check", open("sidebar"))}
           {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
         </div>
       </section>
@@ -583,73 +524,9 @@
         {/if}
         <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website)</span></a> · <span translate="no">Version {version}</span></p>
       </section>
-      {:else if page === "font"}
-      <section aria-labelledby="settings-heading">
-        <div class="inset-group">
-          <!-- A passage set as articles will be: the group's first row, 16px in, a hairline below; never a card in a card (decision 0055). -->
-          <figure class="inset-row reading-sample" style:--sample-share={`${(LINE_WIDTHS[preferences.lineWidth].ch / LINE_WIDTHS.wide.ch) * 100}%`}>
-            <figcaption class="sr-only">Preview</figcaption>
-            <p>
-              Most writing on the open web was never meant to be skimmed. It was written slowly, by someone who
-              cared, for whoever would read it to the end. A reader can be built the same way: it shows you what is
-              there, and then it lets you go.
-            </p>
-          </figure>
-          <div class="inset-row setting has-control">
-            <p id="reading-font-name" class="setting-name">Reading font</p>
-            <div role="group" aria-labelledby="reading-font-name" class="choices setting-control" style="--columns: 3">
-              {#each Object.entries(READING_FONTS) as [value, font] (value)}
-                <!-- Each name is set in its own font, so the choice shows itself. -->
-                <label class="choice" style:font-family={font.family}>
-                  <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
-                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
-                </label>
-              {/each}
-            </div>
-          </div>
-          <div class="inset-row setting has-control">
-            <p id="line-width-name" class="setting-name">Line width</p>
-            <div role="group" aria-labelledby="line-width-name" class="choices setting-control" style="--columns: 3">
-              {#each Object.entries(LINE_WIDTHS) as [value, width] (value)}
-                <label class="choice">
-                  <input type="radio" name="line-width" {value} bind:group={preferences.lineWidth} />
-                  {width.label}
-                </label>
-              {/each}
-            </div>
-          </div>
-        </div>
-        <p class="inset-foot">
-          These apply to this device only. The Aa button above an article changes these too, while you read.
-        </p>
-      </section>
-      {:else if page === "sidebar"}
-      <!-- Which lists the sidebar shows (decision 0105): a tick box row each, as in Edit feed; shared across devices. -->
-      <section aria-labelledby="settings-heading">
-        <div class="inset-group" role="group" aria-labelledby="settings-heading" aria-describedby="sidebar-help">
-          {#each SIDEBAR_LISTS as list (list.value)}
-            <label class="inset-row check-row">
-              <input
-                type="checkbox"
-                checked={!hidden.includes(list.value)}
-                disabled={sort === undefined}
-                onchange={(event) => showInSidebar(list.value, event.currentTarget)}
-              />
-              <span class="setting-name min-w-0">{list.label}</span>
-              <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
-            </label>
-          {/each}
-        </div>
-        <p id="sidebar-help" class="inset-foot">
-          Unread, your folders and your feeds always show{unread ? "" : ", and so does All articles while Unread is off"}. A list you
-          hide still opens from its address and its keys. These apply on all your devices.
-        </p>
-        <p role="status" class={["inset-foot text-danger", !sidebarMessage && "sr-only"]}>{sidebarMessage}</p>
-      </section>
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
-          {@render keepSwitch()}
           <ImportOpml {onImported} bind:lines={importLines} />
           <ImportStars {onImported} bind:lines={importLines} />
           {#each [["/api/starred/export", "Export starred articles"], ["/api/notes/export", "Export notes and highlights"]] as [href, label] (href)}
@@ -661,7 +538,6 @@
             <p>{line}</p>
           {/each}
         </div>
-        {@render keepFoot()}
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
@@ -718,7 +594,7 @@
     line-height: 1.2;
     text-wrap: balance;
   }
-  /* What a row that opens a page is set to (the reading font, the plan), before its ›. */
+  /* What a row that opens a page is set to (the plan), before its ›. */
   .setting-value {
     font-size: var(--text-meta);
   }
@@ -736,25 +612,5 @@
     font-size: 0.66rem;
     letter-spacing: 0.05em;
     vertical-align: 1px;
-  }
-  /* The passage set as articles will be, 16px in on every side, its left edge on the rows' words. */
-  .reading-sample {
-    display: block;
-    margin: 0;
-    padding: 1rem;
-    font-family: var(--reading-font);
-    font-size: var(--reading-size);
-    font-weight: 400;
-    line-height: 1.6;
-  }
-  /* The row is narrower than any line width, so the sample's lines take the chosen width's share of Wide. */
-  .reading-sample p {
-    max-width: min(var(--reading-measure), var(--sample-share, 100%));
-  }
-  /* On a phone articles read a tenth smaller; so does the sample. */
-  @media (max-width: 40rem) {
-    .reading-sample {
-      font-size: calc(var(--reading-size) * 0.9);
-    }
   }
 </style>

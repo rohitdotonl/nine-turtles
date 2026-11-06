@@ -1,7 +1,7 @@
 <!--
   The reading area (SPEC section 7): the article exactly as the publisher's
-  feed gives it, cleaned by nine turtles and restyled in the reader's font, size
-  and line width. A quiet bar of icons sits at the top of the pane, anchored
+  feed gives it, cleaned by nine turtles and restyled in the reader's font and
+  size. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right as Apple Books keeps its reading
   toolbar (decision 0050): View original, Aa (the reading panel), Star and
@@ -259,7 +259,7 @@
   // Pictures that open larger (decision 0107): one the page shows clearly
   // smaller than it really is, once it has loaded, and not inside a link,
   // becomes a button. Looked at again whenever a picture loads or changes
-  // size (the window, the text size or the line width changing).
+  // size (the window or the text size changing).
   let opened: { src: string; alt: string; picture: HTMLImageElement } | undefined = $state();
 
   $effect(() => {
@@ -371,7 +371,7 @@
 </script>
 
 {#snippet aa(size: number, style: string)}
-  <!-- The reading panel's button: text size, theme, font and line width, one press from the text. -->
+  <!-- The reading panel's button: text size, theme and font, one press from the text. -->
   <button
     type="button"
     bind:this={aaButton}

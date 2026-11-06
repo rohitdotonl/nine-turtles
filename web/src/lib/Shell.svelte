@@ -90,7 +90,7 @@
     onSignedOut: () => void;
   } = $props();
 
-  /** Whether Unread is on, the sort order and the hidden lists (reading-settings.svelte.ts). */
+  /** Whether Unread is on, and the sort order (reading-settings.svelte.ts). */
   const settings = new ReadingSettings();
   let unreadOff = $derived(!settings.unread);
   /** Where the app opens: Unread, or All with Unread off. */
@@ -743,7 +743,7 @@
 
   /** Shift+J and Shift+K: the row after or before the place you're in, in the sidebar's order. */
   function rowAfter(step: 1 | -1): Route | undefined {
-    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, settings.hidden, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
+    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**
@@ -990,7 +990,7 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {unreadOff} hidden={settings.hidden} />
+      <SidebarViews {route} {follow} {phone} {unreadOff} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
@@ -1032,8 +1032,6 @@
           onSort={(next) => settings.changeSort(next)}
           unread={settings.unread}
           onUnread={(next) => settings.changeUnread(next)}
-          hidden={settings.hidden}
-          onHidden={(next) => settings.changeHidden(next)}
           bind:heading={headings.settings}
           {version}
           {owner}

@@ -228,10 +228,7 @@
   {#if failed}
     <p role="status" class="inset-foot text-danger">What's hidden couldn't be loaded. Try again in a moment.</p>
   {/if}
-  <p class="inset-foot">
-    New articles about these words are hidden as they arrive. Hidden articles are kept and marked read: search still finds
-    them.
-  </p>
+  <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>
 
 <style>

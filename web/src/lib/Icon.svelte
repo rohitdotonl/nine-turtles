@@ -7,7 +7,7 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text-width" | "feed" | "sidebar-check" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "bookmark-plus" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -139,20 +139,14 @@
     <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
-  {:else if name === "text-width"}
-    <!-- Settings › Font and line width: lines of text under a two-way arrow. -->
-    <path d="M3.25 9.5h13.5M3.25 12.75h13.5M3.25 16h8" />
-    <path d="M3.25 4.5h13.5M5.5 2.5 3.25 4.5 5.5 6.5M14.5 2.5l2.25 2-2.25 2" />
+  {:else if name === "text"}
+    <!-- Settings › Font: lines of text, the last one short. -->
+    <path d="M3.25 5h13.5M3.25 8.75h13.5M3.25 12.5h13.5M3.25 16.25h8" />
   {:else if name === "feed"}
     <!-- Settings › Everyone you follow: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
-  {:else if name === "sidebar-check"}
-    <!-- Settings › Show in the sidebar: the sidebar's window with a check, choosing what shows. -->
-    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
-    <path d="M7.75 3.75v12.5" />
-    <path d="m10.25 10.25 1.75 1.75 3-3.5" />
   {:else if name === "bookmark-plus"}
     <!-- Settings › Add from anywhere: a bookmark and a plus. -->
     <path d="M4.25 3.75h6v12.5l-3-2.5-3 2.5Z" />

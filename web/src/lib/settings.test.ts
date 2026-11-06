@@ -5,7 +5,6 @@ const server = vi.hoisted(() => ({
   loadSettings: vi.fn(),
   saveUnread: vi.fn(),
   saveSort: vi.fn(),
-  saveHidden: vi.fn(),
 }));
 
 vi.mock("./reading", async (actual) => ({
@@ -26,11 +25,11 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, hidden: ["all"] };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const save of [server.saveUnread, server.saveSort, server.saveHidden]) save.mockResolvedValue(undefined);
+  for (const save of [server.saveUnread, server.saveSort]) save.mockResolvedValue(undefined);
 });
 
 describe("the reading settings", () => {
@@ -39,7 +38,7 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     expect(settings.sort).toBeUndefined();
     await settings.load();
-    expect([settings.unread, settings.sort, settings.hidden]).toEqual([false, "oldest", ["all"]]);
+    expect([settings.unread, settings.sort]).toEqual([false, "oldest"]);
   });
 
   it("keep a change the reader made while the first answer was on its way", async () => {
@@ -48,12 +47,10 @@ describe("the reading settings", () => {
     const settings = new ReadingSettings();
     const loading = settings.load();
     await settings.changeUnread(true);
-    await settings.changeHidden(["starred"]);
     answer.resolve(ON_THE_SERVER);
     await loading;
     expect(settings.unread).toBe(true);
-    expect(settings.hidden).toEqual(["starred"]);
-    // The ones left alone take the server's word.
+    // The one left alone takes the server's word.
     expect(settings.sort).toBe("oldest");
   });
 
@@ -66,15 +63,15 @@ describe("the reading settings", () => {
     // One fails before the answer arrives, the other after.
     await expect(settings.changeUnread(true)).rejects.toThrow("not saved");
     const saving = later<void>();
-    server.saveHidden.mockReturnValue(saving.promise);
-    const hiding = settings.changeHidden(["starred"]);
+    server.saveSort.mockReturnValue(saving.promise);
+    const sorting = settings.changeSort("newest");
     answer.resolve(ON_THE_SERVER);
     await loading;
-    expect(settings.hidden).toEqual(["starred"]);
+    expect(settings.sort).toBe("newest");
     saving.reject(new Error("offline"));
-    await expect(hiding).rejects.toThrow("not saved");
+    await expect(sorting).rejects.toThrow("not saved");
     expect(settings.unread).toBe(false);
-    expect(settings.hidden).toEqual(["all"]);
+    expect(settings.sort).toBe("oldest");
   });
 
   it("show a change at once, and go back to what the server has when it can't be saved", async () => {

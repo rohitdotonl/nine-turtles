@@ -4,7 +4,7 @@ description: nine turtles keeps your newest unread and starred articles on each 
 groupId: reading
 order: 6
 spec: 32
-updated: 2026-11-04
+updated: 2026-11-06
 related: [install-the-app, star-an-article, mark-read-or-unread]
 ---
 
@@ -40,6 +40,6 @@ Search, adding someone new, Settings, refreshing and the Notes list.
 - On an iPhone or iPad, <a href="/help/install-the-app/">add nine turtles to
   your Home Screen</a> first. Safari can clear what a website keeps if you
   haven't visited for about a week; the installed app keeps it.
-- To stop keeping copies on a device, open **Settings › Your data** and turn
-  off **Keep articles for reading offline**. That device's copies are
-  deleted. Signing out deletes them too.
+- There's nothing to switch on: every device keeps copies by itself. On a
+  computer other people use, sign out when you're done: that deletes the
+  copies.

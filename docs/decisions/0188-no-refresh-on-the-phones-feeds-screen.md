@@ -1,4 +1,4 @@
-# 0187: No Refresh on the phone's feeds screen
+# 0188: No Refresh on the phone's feeds screen
 
 *6 November 2026.*
 

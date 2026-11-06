@@ -1,11 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, signIn } from "./screens";
 
-// SPEC sections 5, 15 and 18 (decisions 0105 and 0174), "How to check it",
-// done by a browser: hiding lists from the sidebar in Settings, and how often
-// a feed posts in Edit. On a wide window only: which lists the sidebar shows
-// is the reader's own setting, shared by every test signed in as them.
+// SPEC sections 5 and 18 (decisions 0174 and 0187), "How to check it", done
+// by a browser: the sidebar's lists, the same for everyone. On a wide window
+// only: the sidebar is the computer's.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 
@@ -27,66 +26,17 @@ test("Recently read is gone", async ({ page, isMobile }) => {
   await expect(page.getByRole("heading", { level: 1, name: "Wrong turn?" })).toBeVisible();
 });
 
-// The other lists, by keyboard alone. This page's settings are answered here
-// rather than saved, so hiding Starred and All never reaches another test
-// signed in as the same reader.
-test("Starred and All articles can be hidden by keyboard, and their keys still work", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the tick boxes are worked by keyboard, and g s / g a are a keyboard's");
-  let hidden: string[] = [];
-  let unread = true;
-  await page.route("**/api/settings", async (route) => {
-    if (route.request().method() === "POST") {
-      const sent = route.request().postDataJSON() as { hidden?: string[] };
-      if (sent.hidden) hidden = sent.hidden;
-    }
-    const real = await (await page.request.get(route.request().url())).json();
-    await route.fulfill({ json: { ...real, hidden, unread } });
-  });
+// Every list shows for everyone (decision 0187): the page that hid them is gone, and its address opens Settings.
+test("the sidebar shows every list, and Show in the sidebar is gone", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the sidebar is the computer's");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
+  await expect(page.getByRole("link", { name: /^Show in the sidebar/ })).toHaveCount(0);
   await page.goto(new URL("/settings/sidebar", FEEDS_APP).href);
   await appReady(page);
-
-  const nav = sidebar(page);
-  const group = page.getByRole("group", { name: "Show in the sidebar" });
-  // Tab reaches each tick box, Space unticks it, and the list leaves the sidebar.
-  for (const [name, gone] of [
-    ["Starred", nav.getByRole("link", { name: "Starred", exact: true })],
-    ["All articles", nav.getByRole("link", { name: "All articles", exact: true })],
-  ] as const) {
-    const box = group.getByRole("checkbox", { name, exact: true });
-    await expect(gone).toBeVisible();
-    await tabTo(page, box);
-    await page.keyboard.press("Space");
-    await expect(box).not.toBeChecked();
-    await expect(gone).toHaveCount(0);
-  }
-  expect([...hidden].sort()).toEqual(["all", "starred"]);
-  // Unread is still there.
-  await expect(nav.getByRole("link", { name: "Unread", exact: true })).toBeVisible();
-
-  // Their keys still go to them.
-  // Escape goes back to Settings, and again closes it.
-  await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/settings$/);
-  await page.keyboard.press("Escape");
-  await expect(page).not.toHaveURL(/\/settings$/);
-  await page.keyboard.press("g");
-  await page.keyboard.press("s");
-  await expect(page).toHaveURL(/\/starred$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
-  await page.keyboard.press("g");
-  await page.keyboard.press("a");
-  await expect(page).toHaveURL(/\/all$/);
-  await expect(page.getByRole("heading", { level: 2, name: "All articles" })).toBeVisible();
-
-  // With Unread off All is home, so it shows even though it's hidden.
-  unread = false;
-  await page.reload();
-  await appReady(page);
-  await expect(nav.getByRole("link", { name: "All articles", exact: true })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Starred", exact: true })).toHaveCount(0);
-  await expect(nav.getByRole("link", { name: "Unread", exact: true })).toHaveCount(0);
+  const nav = sidebar(page);
+  for (const name of ["Unread", "Starred", "All articles"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
 });

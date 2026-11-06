@@ -30,8 +30,6 @@ export const helpPage = (name: string) => `${HELP_URL}${name}/`;
  * /settings/<its name>, with "‹ Settings" to go back. The values are their titles.
  */
 export const SETTINGS_PAGES = {
-  font: "Font and line width",
-  sidebar: "Show in the sidebar",
   data: "Your data",
   "add-from-anywhere": "Add from anywhere",
   install: "Install the app",
@@ -51,17 +49,11 @@ function settingsPage(name: string): SettingsPage | undefined {
 export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All articles" };
 
 /**
- * The lists a reader can hide from the sidebar (Settings › Show in the sidebar, decisions 0105 and 0174). Unread, folders
- * and feeds always show; Notes only once the reader has highlighted or written a note on something (SPEC section 42).
+ * The lists the sidebar shows above the folders, top to bottom: every one, the same for everyone (decision 0187),
+ * except Unread while it's off, and Notes until the reader has highlighted or written a note on something (SPEC section 42).
  */
-export const HIDEABLE = ["starred", "notes", "all"] as const;
-export type Hideable = (typeof HIDEABLE)[number];
-
-/** The lists the sidebar shows above the folders, top to bottom. With Unread off, All always shows: it's the home. */
-export function sidebarViews(unreadOff: boolean, hidden: readonly Hideable[], anyNotes: boolean): View[] {
-  return VIEWS.filter(
-    (view) => !(unreadOff && view === "unread") && !((hidden as readonly string[]).includes(view) && !(unreadOff && view === "all")) && !(view === "notes" && !anyNotes),
-  );
+export function sidebarViews(unreadOff: boolean, anyNotes: boolean): View[] {
+  return VIEWS.filter((view) => !(unreadOff && view === "unread") && !(view === "notes" && !anyNotes));
 }
 
 /**
@@ -89,6 +81,8 @@ export function parse(path: string): Route {
   if (name === "settings/hidden" || name === "settings/muted") return { kind: "muted" };
   if (name === "settings/rules") return { kind: "settings", page: "hiding" };
   if (name === "settings/readers/all") return { kind: "readers" };
+  // Pages that went (decision 0187): Font is on Settings itself, and the sidebar shows every list.
+  if (name === "settings/font" || name === "settings/sidebar") return { kind: "settings" };
   const page = name.startsWith("settings/") ? settingsPage(name.slice("settings/".length)) : undefined;
   if (page) return { kind: "settings", page };
   if (name === "add" || name === "add-feed") return { kind: "add-feed" };

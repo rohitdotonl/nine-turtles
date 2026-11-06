@@ -10,15 +10,16 @@ function memory(): Storage {
 }
 
 describe("reader preferences", () => {
-  it("starts with DESIGN.md's defaults: Match device, Literata, medium size and width", () => {
+  it("starts with DESIGN.md's defaults: Match device, Literata, medium size", () => {
     expect(load(memory())).toEqual(DEFAULTS);
-    expect(DEFAULTS).toEqual({ page: "auto", readingFont: "literata", textSize: 2, lineWidth: "medium" });
+    expect(DEFAULTS).toEqual({ page: "auto", readingFont: "literata", textSize: 2 });
   });
 
   it("opens a choice from before the pages (decision 0176) as Match device, keeping the rest", () => {
     const storage = memory();
     storage.setItem("nine-turtles.preferences", JSON.stringify({ theme: "fountain-pen", appearance: "dark", lineWidth: "wide" }));
-    expect(load(storage)).toEqual({ ...DEFAULTS, lineWidth: "wide" });
+    // A line width saved before there was only one (decision 0187) is let go.
+    expect(load(storage)).toEqual(DEFAULTS);
     // A name that only looks like a page keeps the defaults.
     storage.setItem("nine-turtles.preferences", JSON.stringify({ page: "constructor" }));
     expect(load(storage)).toEqual(DEFAULTS);
@@ -26,19 +27,19 @@ describe("reader preferences", () => {
 
   it("remembers what was chosen on this device", () => {
     const storage = memory();
-    const chosen: Preferences = { page: "paper", readingFont: "atkinson", textSize: 4, lineWidth: "wide" };
+    const chosen: Preferences = { page: "paper", readingFont: "atkinson", textSize: 4 };
     save(chosen, storage);
     expect(load(storage)).toEqual(chosen);
-    const night: Preferences = { page: "night", readingFont: "system-serif", textSize: 2, lineWidth: "medium" };
+    const night: Preferences = { page: "night", readingFont: "system-serif", textSize: 2 };
     save(night, storage);
     expect(load(storage)).toEqual(night);
   });
 
   it("ignores anything it doesn't understand, keeping the defaults", () => {
     const storage = memory();
-    storage.setItem("nine-turtles.preferences", JSON.stringify({ page: "blue", textSize: 99, lineWidth: "huge" }));
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ page: "blue", textSize: 99 }));
     expect(load(storage)).toEqual(DEFAULTS);
-    storage.setItem("nine-turtles.preferences", JSON.stringify({ lineWidth: "constructor", readingFont: "toString" }));
+    storage.setItem("nine-turtles.preferences", JSON.stringify({ readingFont: "toString" }));
     expect(load(storage)).toEqual(DEFAULTS);
     storage.setItem("nine-turtles.preferences", "not json");
     expect(load(storage)).toEqual(DEFAULTS);
@@ -66,12 +67,11 @@ describe("reader preferences", () => {
     const set = new Map<string, string>();
     const root = { dataset: {} as DOMStringMap, style: { setProperty: (name: string, value: string) => set.set(name, value) } };
     const page = root as unknown as HTMLElement;
-    apply({ page: "night", readingFont: "atkinson", textSize: 0, lineWidth: "narrow" }, page, false);
+    apply({ page: "night", readingFont: "atkinson", textSize: 0 }, page, false);
     expect(root.dataset.theme).toBe("night");
     expect(root.dataset.mode).toBe("dark");
     expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible Next");
     expect(set.get("--reading-size")).toBe("1rem");
-    expect(set.get("--reading-measure")).toBe("52ch");
 
     // Paper is a day page, whatever the device.
     apply({ ...DEFAULTS, page: "paper" }, page, true);

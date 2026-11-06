@@ -261,7 +261,7 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
-  test("the Aa panel changes text size, appearance, font and line width at once; Escape closes it", async ({ page }) => {
+  test("the Aa panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
@@ -298,9 +298,11 @@ test.describe("on a wide window", () => {
       const box = (await choice.boundingBox())!;
       expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     }
-    const chosenWidth = panel.locator("label", { has: page.getByRole("radio", { name: "Medium" }) });
-    await expect(chosenWidth).toHaveCSS("font-weight", "600");
-    await expect(chosenWidth).toHaveCSS("text-decoration-line", "underline");
+    const chosenFont = panel.locator("label", { has: page.getByRole("radio", { name: "Literata" }) });
+    await expect(chosenFont).toHaveCSS("font-weight", "600");
+    await expect(chosenFont).toHaveCSS("text-decoration-line", "underline");
+    // One line width for everyone (decision 0187): there's no choice of it.
+    await expect(panel.getByRole("group", { name: "Line width" })).toHaveCount(0);
     for (const name of ["White", "Paper", "Night", "Match device"]) await expect(pages.getByText(name, { exact: true })).toBeVisible();
     await expect(pages.getByRole("radio", { name: "Match device" })).toBeChecked();
     await expect(panel.locator(".swatch-name", { hasText: "Match device" })).toHaveCSS("font-weight", "600");
@@ -334,7 +336,7 @@ test.describe("on a wide window", () => {
         return weight;
       });
     await expect.poll(strongWeight).toBe("600");
-    // Fonts are named in their own face; line width has three steps.
+    // Fonts are named in their own face.
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("Atkinson");
     // rohit.onl's font: the device's own serif (decision 0063).
@@ -342,10 +344,6 @@ test.describe("on a wide window", () => {
     await expect.poll(() => root.evaluate((html) => html.style.getPropertyValue("--reading-font"))).toContain("ui-serif");
     await panel.getByRole("radio", { name: "Atkinson Hyperlegible" }).check();
     await expect(text).toHaveCSS("font-weight", "400");
-    const measure = () => root.evaluate((html) => html.style.getPropertyValue("--reading-measure"));
-    const medium = await measure();
-    await panel.getByRole("radio", { name: "Wide" }).check();
-    await expect.poll(measure).not.toBe(medium);
 
     // The keyboard's outline is in the text color, never the accent.
     await panel.getByRole("radio", { name: "White", exact: true }).focus();
@@ -372,8 +370,7 @@ test.describe("on a wide window", () => {
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
     await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
-    await page.getByRole("link", { name: /^Font and line width/ }).click();
-    await expect(page.getByRole("radio", { name: "Wide" })).toBeChecked();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toBeChecked();
   });
 
   test("a footnote link stays inside the article", async ({ page }) => {
