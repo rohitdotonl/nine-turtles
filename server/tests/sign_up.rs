@@ -198,7 +198,7 @@ async fn when_the_hours_accounts_are_made_the_same_link_works_later() {
     let email = "later@example.com";
     sign_up(&base, email, PASSWORD).await;
     let (_, ticket) = newest_link(&outbox, email);
-    // Twenty accounts made in the last hour.
+    // The hour's accounts made.
     for number in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR {
         sqlx::query("INSERT INTO people (owner, email, created_at) VALUES (0, ?, ?)")
             .bind(format!("someone{number}@example.com"))
@@ -222,13 +222,42 @@ async fn when_the_hours_accounts_are_made_the_same_link_works_later() {
 }
 
 #[tokio::test]
-async fn an_address_with_an_account_is_said_and_gets_nothing() {
-    let (base, _, outbox) = start_with_mail(common::config()).await;
+async fn an_address_with_an_account_is_answered_as_any_other_and_emailed_to_say_so() {
+    let (base, state, outbox) = start_with_mail(common::config()).await;
     signed_in(&base).await;
+    // Answered exactly as a new address is (decision 0195).
     let taken = sign_up(&base, common::OWNER_EMAIL, PASSWORD).await;
-    assert_eq!(taken.status(), StatusCode::CONFLICT);
-    assert_eq!(error_of(taken).await, "already");
-    assert!(emails_to(&outbox, common::OWNER_EMAIL).is_empty());
+    let new = sign_up(&base, "new@example.com", PASSWORD).await;
+    assert_eq!(taken.status(), StatusCode::ACCEPTED);
+    assert_eq!(taken.status(), new.status());
+    assert_eq!(
+        taken.headers().get("set-cookie").is_some(),
+        new.headers().get("set-cookie").is_some()
+    );
+    assert_eq!(json_of(taken).await["sent_to"], common::OWNER_EMAIL);
+
+    // The address gets a note, with no link in it, and nothing changes.
+    let sent = emails_to(&outbox, common::OWNER_EMAIL);
+    assert_eq!(sent.len(), 1);
+    assert_eq!(sent[0].subject, "You already have a nine turtles account");
+    assert!(sent[0].body.contains("Forgot?"));
+    assert!(!sent[0].body.contains("ticket="));
+    assert_eq!(
+        sign_in(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+
+    // It keeps the address's limits: one a minute, three an hour.
+    sign_up(&base, common::OWNER_EMAIL, PASSWORD).await;
+    assert_eq!(emails_to(&outbox, common::OWNER_EMAIL).len(), 1);
+    for _ in 0..4 {
+        a_minute_passes(&state.db).await;
+        assert_eq!(
+            sign_up(&base, common::OWNER_EMAIL, PASSWORD).await.status(),
+            StatusCode::ACCEPTED
+        );
+    }
+    assert_eq!(emails_to(&outbox, common::OWNER_EMAIL).len(), 3);
 }
 
 #[tokio::test]

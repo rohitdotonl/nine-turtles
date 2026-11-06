@@ -222,7 +222,7 @@ async fn an_email_already_used_is_refused_and_so_are_poor_details() {
 }
 
 #[tokio::test]
-async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
+async fn no_more_than_the_hours_accounts_are_made() {
     let (base, state) = common::start_with_state(common::config()).await;
     common::signed_in(&base).await;
     for number in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR {
@@ -251,7 +251,7 @@ async fn no_more_than_twenty_accounts_are_made_in_an_hour() {
 }
 
 #[tokio::test]
-async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
+async fn tries_with_a_taken_email_count_towards_the_hours_share() {
     let (base, state) = common::start_with_state(common::config()).await;
     common::signed_in(&base).await;
     assert_eq!(
@@ -260,7 +260,7 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
             .status(),
         StatusCode::NO_CONTENT
     );
-    // Eighteen more tries this hour (one account is made already).
+    // All but one of the hour's tries used (one account is made already).
     {
         let mut tries = state.sign_ups.lock().await;
         for _ in 0..nine_turtles::sign_up::SIGN_UPS_PER_HOUR - 2 {
@@ -268,7 +268,8 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
         }
     }
 
-    // The twentieth: a taken email, with the same answer as always.
+    // The last: a taken email. Without email settings nothing can be sent,
+    // so it's said (decision 0195).
     let taken = sign_up(&base, "Mira@example.com", READER_PASSWORD).await;
     assert_eq!(taken.status(), StatusCode::CONFLICT);
     assert_eq!(taken.text().await.unwrap(), r#"{"error":"already"}"#);
@@ -282,7 +283,7 @@ async fn tries_with_a_taken_email_count_towards_the_hours_twenty() {
 }
 
 #[tokio::test]
-async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_twenty() {
+async fn sign_ups_sent_together_go_one_at_a_time_and_stop_at_the_hours_share() {
     let (base, state) = common::start_with_state(common::config()).await;
     common::signed_in(&base).await;
     {

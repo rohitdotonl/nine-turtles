@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainAsked, explainChange, explainLink, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
+import { explainAsked, explainChange, explainLink, inboxFor, ticketFrom, type ChangeResult, type LinkResult } from "./accounts";
 
 describe("emailed links", () => {
   it("give their ticket to the page they open", () => {
@@ -57,5 +57,19 @@ describe("the messages about email", () => {
   it("send the reader back the right way when a link has run out", () => {
     expect(explainLink("expired", "reset")).toContain("sign-in page");
     expect(explainLink("expired", "confirm")).toContain("Change your email again");
+  });
+});
+
+describe("inboxFor", () => {
+  it("knows the big providers' inboxes, whatever the capitals", () => {
+    expect(inboxFor("mira@gmail.com")?.name).toBe("Gmail");
+    expect(inboxFor(" Kai@Hotmail.co.uk ")?.name).toBe("Outlook");
+    expect(inboxFor("ana@me.com")?.name).toBe("iCloud Mail");
+    expect(inboxFor("li@pm.me")?.url).toBe("https://mail.proton.me/");
+  });
+  it("offers nothing for any other address", () => {
+    expect(inboxFor("someone@example.com")).toBeUndefined();
+    expect(inboxFor("gmail.com@example.com")).toBeUndefined();
+    expect(inboxFor("")).toBeUndefined();
   });
 });
