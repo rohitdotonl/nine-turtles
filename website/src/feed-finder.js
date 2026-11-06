@@ -141,7 +141,9 @@ function link(href, text) {
   if (typeof href === "string" && /^https?:\/\//i.test(href)) {
     const anchor = element("a", null, text);
     anchor.href = href;
-    anchor.rel = "noreferrer";
+    anchor.rel = "noopener noreferrer";
+    anchor.target = "_blank";
+    anchor.append(element("span", "sr-only", " (opens in a new tab)"));
     return anchor;
   }
   return document.createTextNode(text);

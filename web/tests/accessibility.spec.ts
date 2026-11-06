@@ -21,6 +21,23 @@ for (const screen of SCREENS) {
       expect(results.violations).toEqual([]);
     });
   }
+
+  // Every link to another site opens in a new tab and tells a screen reader
+  // so (the owner, 6 November 2026), in its words or through aria-describedby.
+  test(`${screen.name}: links to other sites open in a new tab and say so`, async ({ page }) => {
+    await openScreen(page, screen, "white");
+    const wrong = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLAnchorElement>("a[href^='http']")]
+        .filter((link) => link.origin !== location.origin)
+        .filter((link) => {
+          const note = document.getElementById(link.getAttribute("aria-describedby") ?? "")?.textContent ?? "";
+          const says = `${link.textContent} ${link.getAttribute("aria-label") ?? ""} ${note}`.toLowerCase();
+          return link.target !== "_blank" || !link.relList.contains("noopener") || !says.includes("new tab");
+        })
+        .map((link) => link.href),
+    );
+    expect(wrong).toEqual([]);
+  });
 }
 
 // The default: nothing chosen, so Match device: White by day, Night by night.

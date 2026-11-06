@@ -120,7 +120,7 @@
           </div>
         {/each}
       </div>
-      <p class="mt-4 text-right"><a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website)</span></a></p>
+      <p class="mt-4 text-right"><a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website, opens in a new tab)</span></a></p>
     </div>
   </div>
 </dialog>
