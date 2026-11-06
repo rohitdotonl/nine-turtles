@@ -1004,7 +1004,7 @@
         />
       {/if}
       {#if library.feedsFailed}
-        <p class="px-4 pt-4 text-small">Your feeds couldn't be loaded. Reload the page to try again.</p>
+        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-small">Your feeds couldn't be loaded.<button type="button" onclick={loadFeeds} class="min-h-11 min-w-11 font-semibold text-ink underline underline-offset-4">Try again</button></p>
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />

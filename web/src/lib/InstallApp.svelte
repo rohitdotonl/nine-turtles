@@ -31,7 +31,7 @@
   async function press() {
     const outcome = await install();
     if (outcome === "dismissed") message = "Not installed. The steps below still work, any time.";
-    if (outcome === "failed") message = "Your browser didn't open its Install. Follow the steps below instead.";
+    if (outcome === "failed") message = "Your browser didn't offer to install it. Follow the steps below instead.";
     await tick();
     answer?.focus();
   }

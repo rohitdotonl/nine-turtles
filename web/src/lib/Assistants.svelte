@@ -10,6 +10,7 @@
   kept for 30 days and listed below, each with Bring back.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { tick } from "svelte";
   import { date } from "./admin";
   import { resubscribe } from "./feeds";
@@ -190,7 +191,7 @@
     </p>
   {/if}
   {#if failed}
-    <p role="status" class="inset-foot text-danger">The connected assistants couldn't be loaded. Try again in a moment.</p>
+    <p role="status" class="inset-foot flex items-start gap-1.5 text-danger"><span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>The connected assistants couldn't be loaded. Try again in a moment.</p>
   {/if}
   <p class="inset-foot">
     Connect an AI assistant such as Claude or ChatGPT to your nine turtles, so it can find, sort and tidy things for
