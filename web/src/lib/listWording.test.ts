@@ -66,6 +66,9 @@ describe("emptyText", () => {
 describe("nothingFound", () => {
   it("says what a search looked for, and where", () => {
     expect(nothingFound(" walking ", "Starred")).toEqual({ fact: "Nothing found for “walking” in Starred." });
+    // In one place, it offers to look everywhere (decision 0212).
+    const wider = () => undefined;
+    expect(nothingFound("walking", "Starred", wider).wider).toBe(wider);
     expect(nothingFound("", "Unread")).toEqual({ fact: "Nothing found in Unread." });
   });
 });

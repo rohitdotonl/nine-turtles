@@ -13,16 +13,27 @@
   import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import LoadFailed from "./LoadFailed.svelte";
-  import { refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
+  import { plainSourceName, refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
   import { UNDONE } from "./messages";
   import { headline, listSick, reason, type Sick } from "./health";
+  import type { LoadedLibrary } from "./library.svelte";
+  import WriteBack from "./WriteBack.svelte";
+  import { writesBack } from "./writeBack";
 
   let {
     onFeedsChanged,
+    library,
   }: {
     /** A feed was unsubscribed from, brought back or moved: the sidebar and the list below reload. */
     onFeedsChanged: () => void;
+    /** For Write to on a person's card (decision 0212): they may not know their feed stopped. */
+    library: LoadedLibrary;
   } = $props();
+
+  /** A person, not a publication: someone to write to (decision 0192). */
+  const aPerson = (feed: Sick) => writesBack(library.feeds?.find((each) => each.id === feed.id));
+  /** Their name as the sidebar shows it, for "Ines Duarte may not know." */
+  const plainName = (feed: Sick) => plainSourceName(library.shownAs(library.feeds?.find((each) => each.id === feed.id))?.title ?? feed.title);
 
   type Row = {
     /** The row's own identity and group, fixed when the page opens: a moved feed may change number and state, but stays put. */
@@ -133,6 +144,7 @@
                 <p class="what text-ink-2">
                   <span class="font-semibold">{headline(row.feed)}.</span>
                   {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
+                  {#if row.feed.state === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
                 </p>
               {/if}
               <p role="status" class={["status text-ink", !row.message && "sr-only"]}>{row.message}</p>
@@ -162,6 +174,10 @@
                     onclick={() => !row.busy && leave(row)}>Unsubscribe</button
                   >
                 </div>
+                {#if row.feed.state === "dead" && !row.choosing && aPerson(row.feed)}
+                  <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). -->
+                  <div class="write-to"><WriteBack feedId={row.feed.id} {library} quiet /></div>
+                {/if}
               {/if}
             </li>
           {/each}
@@ -219,6 +235,9 @@
     margin-top: 0.875rem;
     padding-top: 0.875rem;
     border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  }
+  .write-to {
+    margin-top: 0.5rem;
   }
   .actions[hidden] {
     display: none;

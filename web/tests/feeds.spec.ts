@@ -782,3 +782,24 @@ test("Settings gives a computer a bookmark button to drag, built from this nine 
   await expect(group.getByRole("link", { name: /Get the Shortcut/ })).toHaveCount(0);
   await expect(group.getByText("Copy the blog's address, then paste it into + Add.")).toBeVisible();
 });
+
+test("a site with no feed offers to ask them for one: Write to finds their address on their site", async ({ page }) => {
+  // Decision 0212: no dead ends.
+  await openApp(page, "/add-feed");
+  await field(page).fill(`${NO_FEED_SITE}/plain/`);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toContainText("couldn't find a way to follow this site");
+  const ask = page.getByRole("region", { name: "Ask them for a feed" });
+  const write = ask.getByRole("button", { name: "Write to localhost" });
+  // An everyday button: Add stays the sheet's one solid button.
+  await expect(write).not.toHaveClass(/btn-primary/);
+  await tabTo(page, write);
+  await page.keyboard.press("Enter");
+  const address = ask.getByLabel("Their email address");
+  await expect(address).toHaveValue("june@june.example");
+  await expect(ask).toContainText("Found on their site. Check it, then press Write.");
+  await expect(ask.getByRole("button", { name: "Write", exact: true })).toBeVisible();
+  // Not now puts it back, with the keyboard on Write to.
+  await ask.getByRole("button", { name: "Not now" }).click();
+  await expect(write).toBeFocused();
+});

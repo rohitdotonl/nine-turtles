@@ -70,6 +70,11 @@ export class Searching {
     else this.#timer = setTimeout(run, SEARCH_AFTER);
   }
 
+  /** Search all articles, after nothing was found in one place (decision 0212): the same words, everywhere, at once. */
+  everywhere() {
+    this.changed({ ...this.query, scope: { kind: "all" } }, true);
+  }
+
   /** Escape: back to `place`'s own list; answers what had the keyboard before `/`, if anything. */
   close(place: Route): Element | null {
     this.reset(place);
