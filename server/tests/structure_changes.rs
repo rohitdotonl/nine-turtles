@@ -2931,3 +2931,58 @@ async fn other_apps_go_and_twice_a_week_becomes_weekly_once_said() {
         ]
     );
 }
+
+#[tokio::test]
+async fn ordering_folders_keeps_every_folder_in_its_a_to_z_place() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before folders had an order (structure change 45):
+    // reader 1 has three folders made out of A to Z order, reader 2 one.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(45, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO people (id, email, created_at) VALUES (2, 'two@example.com', 1)",
+        "INSERT INTO folders (id, person_id, name) VALUES
+             (1, 1, 'weekend'), (2, 1, 'Cooking'), (3, 1, 'design'), (4, 2, 'Zoo')",
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Roses', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Roses', 1)",
+        "INSERT INTO feed_folders (folder_id, feed_id) VALUES (1, 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let placed: Vec<(i64, String, i64)> = sqlx::query_as(
+        "SELECT person_id, name, position FROM folders ORDER BY person_id, position",
+    )
+    .fetch_all(&db)
+    .await
+    .unwrap();
+    assert_eq!(
+        placed,
+        [
+            (1, "Cooking".to_owned(), 1),
+            (1, "design".to_owned(), 2),
+            (1, "weekend".to_owned(), 3),
+            (2, "Zoo".to_owned(), 1),
+        ]
+    );
+    let pairs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM feed_folders")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(pairs, 1);
+}

@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "a-plus" | "text" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
@@ -123,6 +123,9 @@
     <!-- A YouTube video (decision 0144): a screen with a play mark, line only, as plain signs are. -->
     <rect x="2.75" y="4.25" width="14.5" height="11.5" rx="2" />
     <path d="M8.5 7.6v4.8l4-2.4Z" />
+  {:else if name === "grip"}
+    <!-- A row's handle in the sidebar's Edit: three short lines, as iOS draws the handle to reorder a list. -->
+    <path d="M4.25 6.5h11.5M4.25 10h11.5M4.25 13.5h11.5" />
   {:else if name === "more"}
     <!-- More: three dots in a row. -->
     <circle cx="4.5" cy="10" r="1.25" fill="currentColor" stroke="none" />

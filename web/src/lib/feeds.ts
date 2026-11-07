@@ -263,11 +263,6 @@ export async function deleteFolder(id: number): Promise<Refusal | undefined> {
   return (await change(`/api/folders/${id}/delete`, {})).refusal;
 }
 
-/** Creates a folder with these feeds in it: Undo for deleting one. */
-export async function createFolder(name: string, feeds: number[]): Promise<Refusal | undefined> {
-  return (await change("/api/folders", { name, feeds })).refusal;
-}
-
 /** What an edit page says when a change wasn't made. */
 export function refused(refusal: Refusal, what: "feed" | "folder"): string {
   switch (refusal) {

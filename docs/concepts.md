@@ -179,6 +179,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
 - The sidebar's fixed lists: Unread, Starred, Notes and All articles, which show (`SidebarViews.svelte`)
 - The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
+- Arranging the sidebar: the folders' own order, its steps and filing someone (`arranging.ts`), dragging with a mouse, finger or handle (`sidebarDrag.ts`), and the Move sheet (`MoveSheet.svelte`)
 
 ## Data and the database
 

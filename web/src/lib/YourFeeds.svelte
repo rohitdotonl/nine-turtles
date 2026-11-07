@@ -15,7 +15,7 @@
   import Icon from "./Icon.svelte";
   import NotWorking from "./NotWorking.svelte";
   import PageHead from "./PageHead.svelte";
-  import Sheet from "./Sheet.svelte";
+  import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
   import { deleteFolder, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
@@ -67,12 +67,6 @@
   /** The message says something failed: oxblood, with the alert icon. */
   let refusal = $state(false);
   let moving = $state(false);
-  /** Where Move to… sends them: "none" (no folder), a folder's number, "new", or "" until one is chosen, so Move never strips folders by default. */
-  let destination = $state("");
-  let newFolder = $state("");
-  /** Why the Move sheet couldn't move them, in its own words. */
-  let moveProblem = $state("");
-  let moveHeading: HTMLHeadingElement | undefined = $state();
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
   let notWorking: NotWorking | undefined = $state();
@@ -170,9 +164,6 @@
 
   function openMove() {
     if (picked().length === 0) return;
-    destination = "";
-    newFolder = "";
-    moveProblem = "";
     moving = true;
   }
 
@@ -182,35 +173,21 @@
     document.querySelector<HTMLElement>("[data-focus='move']")?.focus();
   }
 
-  async function move(event: SubmitEvent) {
-    event.preventDefault();
-    if (busy) return;
-    if (!destination) {
-      moveProblem = "Choose where they go first.";
-      return;
-    }
+  /** Move to…'s sheet moves them: to a folder, no folder, or a new one. Answers a problem to say, if any. */
+  async function move(folder: Folder | null, naming: string): Promise<string | undefined> {
     const going = picked();
     const before = going.flatMap((feed) => feed.places.map((place) => ({ id: place.id, folders: [...place.folders] })));
-    const folder = destination === "none" || destination === "new" ? null : Number(destination);
-    const naming = destination === "new" ? newFolder.trim() : "";
-    if (destination === "new" && !naming) {
-      moveProblem = "Give the new folder a name.";
-      return;
-    }
     busy = true;
-    const answer = await moveAll(placeIds(going), folder, naming);
+    const answer = await moveAll(placeIds(going), folder?.id ?? null, naming);
     busy = false;
-    if (typeof answer === "string") {
-      moveProblem = refused(answer, "folder");
-      return;
-    }
+    if (typeof answer === "string") return refused(answer, "folder");
     moving = false;
-    const name = naming || (folders.find((each) => each.id === answer.folder)?.name ?? null);
-    await done(movedMessage(going.map((feed) => feed.title), answer.folder === null ? null : name), async () => {
+    await done(movedMessage(going.map((feed) => feed.title), answer.folder === null ? null : naming || (folder?.name ?? null)), async () => {
       const refusal = await restoreFolders(before);
       if (refusal) throw refusal;
       if (answer.created && answer.folder !== null) await deleteFolder(answer.folder);
     });
+    return undefined;
   }
 
   async function takeBack() {
@@ -230,10 +207,6 @@
     editButton?.focus();
   }
 
-  /** Escape inside the Move sheet closes only the sheet. */
-  function keepEscape(event: KeyboardEvent) {
-    event.stopPropagation();
-  }
 </script>
 
 <section aria-labelledby="your-feeds-heading" class="flex flex-1 flex-col bg-paper">
@@ -321,51 +294,7 @@
 </section>
 
 {#if moving}
-  <div role="presentation" onkeydown={keepEscape}>
-    <Sheet title="Move to a folder" bind:heading={moveHeading} onClose={closeMove}>
-      <form onsubmit={move} class="flex flex-col gap-5">
-        <fieldset class="flex min-w-0 flex-col gap-1.5">
-          <legend class="mb-1.5 text-small text-ink-2">To</legend>
-          <!-- A choice of one: a round mark at each row's end, as a Mac draws a radio button. -->
-          <div class="inset-group">
-            <label class="inset-row check-row">
-              <input type="radio" name="destination" value="none" bind:group={destination} />
-              <span class="min-w-0 break-words">No folder</span>
-              <span aria-hidden="true" class="radio-mark shrink-0"></span>
-            </label>
-            {#each folders as folder (folder.id)}
-              <label class="inset-row check-row">
-                <input type="radio" name="destination" value={String(folder.id)} bind:group={destination} />
-                <span class="min-w-0 break-words">{folder.name}</span>
-                <span aria-hidden="true" class="radio-mark shrink-0"></span>
-              </label>
-            {/each}
-            <label class="inset-row check-row">
-              <input type="radio" name="destination" value="new" bind:group={destination} />
-              <span class="min-w-0 break-words">New folder</span>
-              <span aria-hidden="true" class="radio-mark shrink-0"></span>
-            </label>
-            {#if destination === "new"}
-              <label class="inset-row">
-                <span class="sr-only">New folder's name</span>
-                <!-- svelte-ignore a11y_autofocus -->
-                <input bind:value={newFolder} type="text" autocomplete="off" placeholder="Name" class="inset-input" autofocus />
-              </label>
-            {/if}
-          </div>
-          <span class="field-help mt-0">Each one leaves the folders they were in.</span>
-        </fieldset>
-        <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
-        <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !moveProblem && "sr-only"]}>
-          {#if moveProblem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{moveProblem}{/if}
-        </p>
-        <div class="sheet-actions">
-          <button type="button" onclick={closeMove} class="btn">Cancel</button>
-          <button type="submit" aria-disabled={busy} class="btn-primary">Move</button>
-        </div>
-      </form>
-    </Sheet>
-  </div>
+  <MoveSheet {folders} help="Each one leaves the folders they were in." onMove={move} onClose={closeMove} />
 {/if}
 
 <style>
