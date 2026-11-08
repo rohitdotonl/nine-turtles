@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-06
+updated: 2026-11-08
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -26,7 +26,9 @@ nine turtles makes a guess when you follow them, and asks you to finish
 ## Their page
 
 Choose them in the sidebar, then press their name at the top of their list
-("Alpha ›"), or choose **More › Info about Alpha**, or press <kbd>I</kbd>. On a
+("Alpha ›") or their name under one of their articles' titles, or choose
+**More › Info about Alpha**, or press <kbd>I</kbd> (in any list, it opens the
+page of whoever wrote the chosen article). On a
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 

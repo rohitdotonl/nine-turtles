@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-06
+updated: 2026-11-08
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -24,6 +24,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
 | <kbd>W</kbd> | Write back (a person's article) |
+| <kbd>Shift</kbd> <kbd>F10</kbd> or the Menu key | An article's own menu in the list: star, mark read, write back, their page |
 | <kbd>Enter</kbd> | Open the article |
 | <kbd>S</kbd> | Star or unstar |
 | <kbd>H</kbd> | Highlight chosen words |
@@ -53,7 +54,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>←</kbd> / <kbd>→</kbd> | Move between the sidebar, the list and the article |
 | <kbd>E</kbd> | Edit this person, publication or folder |
 | <kbd>O</kbd> | Open or close this folder |
-| <kbd>I</kbd> | Info about this person or publication: their page |
+| <kbd>I</kbd> | Info about this person or publication: their page (in any other list, the chosen article's writer's) |
 | <kbd>F</kbd> | Full-screen reading: hide the sidebar and the list |
 | <kbd>A</kbd> | Add a person or publication |
 

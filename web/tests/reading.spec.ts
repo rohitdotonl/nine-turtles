@@ -188,8 +188,10 @@ test.describe("on a wide window", () => {
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-    // Credit: the source links to the publisher, with the author and time.
-    await expect(article(page).getByRole("link", { name: "Reading Room (opens in a new tab)", exact: true })).toHaveAttribute("href", "https://reading-room.example/");
+    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0214).
+    const writer = article(page).locator(".article-byline").getByRole("button", { name: "Reading Room" });
+    await expect(writer).toHaveAttribute("title", "Info about Reading Room (I)");
+    expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
     await expect(article(page).locator("article")).toHaveAttribute("lang", "en-gb");
@@ -264,21 +266,21 @@ test.describe("on a wide window", () => {
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
     // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first,
-    // then Aa, Star and More (decision 0038).
+    // then Aa, Star, Write back (a person's, decision 0214) and More (decision 0038).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["View original", "Reading appearance", "Star", "More actions"]);
+    expect(order).toEqual(["View original", "Reading appearance", "Star", "Write back", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note, Write back and Hide articles about…, their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Write back/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -515,13 +517,13 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
     // readers, but no ring: a title can't be pressed (decision 0047). The
-    // next Tab lands on the byline's link to the publisher, which rings.
+    // next Tab lands on the writer's name in the byline, which rings.
     await page.keyboard.press("Enter");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
     await page.keyboard.press("Tab");
-    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
+    const publisher = article(page).locator(".article-byline").getByRole("button", { name: "Reading Room" });
     await expect(publisher).toBeFocused();
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
@@ -547,7 +549,7 @@ test.describe("on a wide window", () => {
     const first = (await article(page).getByRole("link", { name: "View original" }).first().boundingBox())!;
     const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
     expect(first.x).toBeGreaterThan(text.x + text.width);
-    expect(last.x - (first.x + first.width)).toBeLessThan(2 * 44 + 3 * 8 + 1);
+    expect(last.x - (first.x + first.width)).toBeLessThan(3 * 44 + 4 * 8 + 1);
     expect(pane.x + pane.width - (last.x + last.width)).toBeLessThan(40);
     expect(last.x + last.width).toBeGreaterThan(text.x + text.width + 100);
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
@@ -618,7 +620,7 @@ test.describe("on a wide window", () => {
     const byline = article(page).locator(".article-byline");
     await expect(byline).toHaveCSS("font-size", "14px");
     await expect(byline).toHaveCSS("margin-top", "0px");
-    const publisher = byline.getByRole("link", { name: "Reading Room" });
+    const publisher = byline.getByRole("button", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "600");
     const [inkColor, bylineColor, publisherColor] = await Promise.all([
       page.evaluate(() => getComputedStyle(document.body).color),

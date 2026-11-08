@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 37
-updated: 2026-11-06
+updated: 2026-11-08
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -20,8 +20,11 @@ and choose **A person**.
 ## Write back
 
 1. Read to the end of the article and press **Write back to Tomas Berg**
-   (their name as it is in your sidebar). You can also choose **More › Write back**, or press
-   <kbd>W</kbd>.
+   (their name as it is in your sidebar). You don't have to scroll there:
+   the paper plane beside **Star** at the top of the article (on a phone,
+   in the bar at the bottom) does the same, and so does <kbd>W</kbd>. In a
+   list, right-click an article (or press and hold it on a phone) and
+   choose **Write back**.
 2. Your own email app opens with their address, and a subject line of
    "Re:" and the article's title.
 3. Write what you'd like to say, and send it as you send any email.

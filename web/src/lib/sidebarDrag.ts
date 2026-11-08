@@ -42,9 +42,9 @@ export type DragOptions = {
 
 /** How far a mouse moves before a press becomes a drag, and a finger may wander while it holds. */
 const MOUSE_SLOP = 4;
-const FINGER_SLOP = 8;
+export const FINGER_SLOP = 8;
 /** How long a finger holds a row before it lifts. */
-const HOLD_MS = 500;
+export const HOLD_MS = 500;
 /** How near the sidebar's top or bottom edge the pointer scrolls it, and by how much each frame. */
 const EDGE = 40;
 const SCROLL_STEP = 10;

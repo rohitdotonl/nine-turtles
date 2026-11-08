@@ -4,7 +4,7 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-06
+updated: 2026-11-08
 related: [unread-on-or-off, star-an-article, find-your-way-around]
 ---
 
@@ -18,11 +18,16 @@ related: [unread-on-or-off, star-an-article, find-your-way-around]
 Open it, then press <kbd>M</kbd>, or choose **More › Mark unread**. It gets
 its dot back and waits in Unread again.
 
+Or, without opening it: right-click it in the list (on a phone, press and
+hold it) and choose **Mark as read** or **Mark as unread**. The same menu
+stars it, writes back, or opens the writer's page.
+
 ## Mark a whole list as read
 
 1. Open the list: Unread, a person, a folder or a search.
 2. Open the list's **More** menu and choose **Mark all as read**
-   (or press <kbd>Shift</kbd> <kbd>A</kbd>).
+   (or press <kbd>Shift</kbd> <kbd>A</kbd>). Or, once you've reached the
+   end of the list, press **Mark all as read** under "That's everything."
 
 It happens at once, with no question first. Only the articles in the list
 you're looking at are marked: anything that arrived since stays unread.

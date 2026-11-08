@@ -48,6 +48,7 @@
   import { createKeyReader, keyFor, tip } from "./keyboard";
   import { movePane, moveRow } from "./panes";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
+  import { writerItems } from "./rowMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
@@ -792,12 +793,8 @@
 
   /** Back from the article to its row in the list. */
   function backToList() {
-    if (reading) {
-      steps.back("list");
-      return;
-    }
-    if (!panes.list) return;
-    itemList?.focusSelected();
+    if (reading) steps.back("list");
+    else if (panes.list) itemList?.focusSelected();
   }
 
   /** Search starts afresh, limited to where you are. */
@@ -856,6 +853,7 @@
       feed: currentFeed?.id,
       folder: currentFolder?.id,
       feedsFolder: currentFeed?.folders[0],
+      writer: selected && library.feeds?.some((feed) => feed.id === selected?.feedId) ? library.rowOf(selected.feedId) : undefined,
       textSize: preferences.textSize,
     };
   }
@@ -1204,15 +1202,13 @@
                   bold={searching.shown ? searchedTerms(searching.shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}
-                  onRefresh={() => {
-                    loadFeeds();
-                    keeper.refreshed();
-                  }}
+                  onRefresh={() => (loadFeeds(), keeper.refreshed())}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {unreadOff} lead={!panes.article}
                   bind:first={listFirst}
                   bind:found={listFound}
+                  rowActions={(article) => writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) })}
                 />
               {/key}
             {/if}
@@ -1233,6 +1229,7 @@
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onHide={hideFrom}
+              onWriter={(id) => go({ kind: "about", id })}
               beforeToolbar={nowPlayingAboveToolbar}
               phone={phone
                 ? {
