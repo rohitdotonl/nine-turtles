@@ -4,7 +4,7 @@ description: Follow a YouTube channel and watch its new videos in nine turtles, 
 groupId: reading
 order: 9
 spec: 38
-updated: 2026-11-03
+updated: 2026-11-08
 related: [follow-someone, listen-to-podcasts, one-person-several-places]
 ---
 
@@ -18,8 +18,8 @@ related: [follow-someone, listen-to-podcasts, one-person-several-places]
 1. Press **+ Add**.
 2. Paste the address of the channel, or of any video of theirs. For a video,
    nine turtles asks whether to follow the channel that made it. For a
-   playlist, it asks whether you'd like the whole channel or only the
-   playlist.
+   playlist, it asks whether you'd like only the playlist or every video
+   from its channel.
 
 Following lots of channels already? In **Settings › Your data**, **Import
 YouTube subscriptions…** takes the <code>subscriptions.csv</code> file that

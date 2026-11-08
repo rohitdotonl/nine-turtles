@@ -24,17 +24,27 @@ use crate::{
     discover::Found,
     feed,
     fetch::{self, FetchError},
+    lookup,
 };
 use addresses::{Link, channel_feed, channel_in_page, playlist_feed, playlist_owner};
 
 /// What to ask the reader before following: the channel behind a video,
-/// or a playlist's channel and the playlist itself, the channel first.
+/// or a playlist and its channel, the playlist first (it's what was pasted).
 pub struct Question {
     /// "video" or "playlist", for the screen's words.
     pub asks: &'static str,
     /// The channel's name.
     pub maker: String,
-    pub choices: Vec<Found>,
+    pub choices: Vec<Offered>,
+}
+
+/// One thing to follow, as the reader sees it: its name, its newest title,
+/// and where it lives as a person says it ("youtube.com/@ted"), never the
+/// feed's own address.
+pub struct Offered {
+    pub found: Found,
+    pub place: String,
+    pub latest: Option<String>,
 }
 
 /// The question for a video's or a playlist's address; none if the
@@ -60,51 +70,114 @@ pub async fn ask(
         Link::Channel(_) | Link::Other => return Ok(None),
     };
     let page = fetch::get(&state.http, video, local).await?;
-    let Some(channel) = channel_in_page(&String::from_utf8_lossy(&page.body)) else {
+    let page = String::from_utf8_lossy(&page.body);
+    let Some(channel) = channel_in_page(&page) else {
         return Ok(None);
     };
-    let feed_url = channel_feed(&channel);
-    let Some(maker) = feed_title(state, &feed_url).await else {
+    let Some(mut offered) = look(state, &channel_feed(&channel)).await else {
         return Ok(None);
     };
+    if let Some(handle) = handle_in_page(&page) {
+        offered.place = format!("youtube.com/{handle}");
+    }
     Ok(Some(Question {
         asks: "video",
-        choices: vec![found(maker.clone(), &feed_url)],
-        maker,
+        maker: offered.found.title.clone(),
+        choices: vec![offered],
     }))
 }
 
 async fn playlist(state: &AppState, list: &str) -> Option<Question> {
     let address = playlist_feed(list);
-    let fetched = fetch::get(&state.http, &Url::parse(&address).ok()?, false)
-        .await
-        .ok()?;
+    let url = Url::parse(&address).ok()?;
+    let fetched = fetch::get(&state.http, &url, false).await.ok()?;
     let parsed = feed::parse(&fetched.body, &fetched.final_url)?;
     let (channel, name) = playlist_owner(&String::from_utf8_lossy(&fetched.body))?;
     let maker = name.unwrap_or_else(|| parsed.title.clone());
+    let only = Offered {
+        found: found(format!("Only “{}”", parsed.title), &address),
+        place: "youtube.com".to_owned(),
+        latest: lookup::newest_title(&parsed),
+    };
+    state.looked.keep(&url, fetched);
+    let every = match look(state, &channel_feed(&channel)).await {
+        Some(channel) => Offered {
+            found: found("Every video".to_owned(), channel.found.url.as_str()),
+            ..channel
+        },
+        None => Offered {
+            found: found("Every video".to_owned(), &channel_feed(&channel)),
+            place: "youtube.com".to_owned(),
+            latest: None,
+        },
+    };
     Some(Question {
         asks: "playlist",
-        choices: vec![
-            found(format!("All of {maker}’s videos"), &channel_feed(&channel)),
-            found(format!("Only the playlist “{}”", parsed.title), &address),
-        ],
+        choices: vec![only, every],
         maker,
     })
 }
 
-/// The name a feed gives itself (a channel's feed: the channel's name).
-async fn feed_title(state: &AppState, address: &str) -> Option<String> {
-    let fetched = fetch::get(&state.http, &Url::parse(address).ok()?, false)
-        .await
-        .ok()?;
-    feed::parse(&fetched.body, &fetched.final_url)
-        .map(|parsed| parsed.title)
-        .filter(|title| !title.trim().is_empty())
+/// A channel's feed, looked at: its name and newest title. The copy is kept
+/// a few minutes, so Follow needn't ask YouTube again.
+async fn look(state: &AppState, address: &str) -> Option<Offered> {
+    let url = Url::parse(address).ok()?;
+    let fetched = fetch::get(&state.http, &url, false).await.ok()?;
+    let parsed = feed::parse(&fetched.body, &fetched.final_url)?;
+    let title = parsed.title.trim();
+    if title.is_empty() {
+        return None;
+    }
+    let offered = Offered {
+        found: found(title.to_owned(), address),
+        place: "youtube.com".to_owned(),
+        latest: lookup::newest_title(&parsed),
+    };
+    state.looked.keep(&url, fetched);
+    Some(offered)
+}
+
+/// The channel's handle ("@ted") as the video's page names its owner.
+fn handle_in_page(html: &str) -> Option<String> {
+    const MARK: &str = r#""ownerProfileUrl":""#;
+    let start = html.find(MARK)? + MARK.len();
+    let address: String = html[start..]
+        .chars()
+        .take_while(|char| *char != '"')
+        .collect();
+    let handle = address.rsplit_once("youtube.com/")?.1;
+    let plain = handle.len() > 1
+        && handle.len() <= 40
+        && handle.starts_with('@')
+        && handle[1..]
+            .chars()
+            .all(|char| char.is_alphanumeric() || matches!(char, '.' | '_' | '-'));
+    plain.then(|| handle.to_owned())
 }
 
 fn found(title: String, address: &str) -> Found {
     Found {
         title,
         url: Url::parse(address).expect("YouTube's feed addresses are well formed"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::handle_in_page;
+
+    #[test]
+    fn a_videos_page_names_its_channels_handle() {
+        let page = r#"..."ownerProfileUrl":"http://www.youtube.com/@3blue1brown","externalChannelId":"UCYO_jab_esuFRV4b17AJtAw"..."#;
+        assert_eq!(handle_in_page(page).as_deref(), Some("@3blue1brown"));
+        assert_eq!(
+            handle_in_page(r#""ownerProfileUrl":"http://www.youtube.com/channel/UC1""#),
+            None
+        );
+        assert_eq!(handle_in_page("no owner here"), None);
+        assert_eq!(
+            handle_in_page(r#""ownerProfileUrl":"https://www.youtube.com/@TED""#).as_deref(),
+            Some("@TED")
+        );
     }
 }

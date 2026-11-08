@@ -22,9 +22,11 @@ PLAN.md → V1, item 1.*
 - **Which is which.** A source joined to others is always a person. For a
   source on its own, nine turtles guesses once, from the feed alone (it never
   fetches a page to find out):
+  - a YouTube channel or playlist: a publication, never guessed (decision
+    0213);
   - one author name on its articles: a person; several names: a publication;
   - no names: a place of someone's own on a site many people share (a
-    Substack, Medium, a YouTube channel, a Bluesky account and the like): a
+    Substack, Medium, a Bluesky account and the like): a
     person;
   - a site whose own name is a whole word of the feed's title (NASA at
     apod.nasa.gov, "NASA Picture of the Day"): a publication, unless the title

@@ -78,8 +78,8 @@ describe("talking to YouTube's player", () => {
 
 describe("following a YouTube link", () => {
   it("asks about the channel behind a video or a playlist", () => {
-    expect(question("video", "Walks")).toBe("This video is by Walks. Follow Walks?");
-    expect(question("playlist", "Walks")).toBe("This playlist is by Walks. Follow all of Walks’s videos, or only the playlist?");
+    expect(question("video", "Walks")).toBe("Follow Walks?");
+    expect(question("playlist", "Walks")).toBe("This playlist is by Walks. Follow only the playlist, or every video?");
   });
 });
 

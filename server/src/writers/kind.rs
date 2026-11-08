@@ -5,10 +5,12 @@
 //! guesses what kind of source each place is too: a newsletter, a video
 //! channel, a podcast or a blog.
 //!
+//! A YouTube channel or playlist isn't guessed: it's a publication.
+//!
 //! The guess, in order:
 //! 1. One name wrote every article: a person. Several names: a publication.
 //! 2. No names: a place of someone's own on a site many people share (a
-//!    Substack, a YouTube channel, a Bluesky account) is a person; a site
+//!    Substack, a Bluesky account) is a person; a site
 //!    the feed's own name matches (NASA at nasa.gov) is a publication.
 //! 3. Still unclear: a person, since nine turtles is for people worth
 //!    knowing. The reader sees the guess when adding and can change it.
@@ -18,6 +20,7 @@
 //! not the blog's title ("Tomas Berg", not "Notes from Tomas"). A name the
 //! reader gave them stays.
 
+use reqwest::Url;
 use serde::Deserialize;
 use sqlx::SqliteConnection;
 
@@ -41,7 +44,6 @@ impl Kind {
 /// Sites where each person has a place of their own, so a feed there is
 /// someone's, not a publication's.
 const PERSONAL_SITES: &[&str] = &[
-    "youtube.com",
     "medium.com",
     "substack.com",
     "wordpress.com",
@@ -65,6 +67,12 @@ const PERSONAL_SITES: &[&str] = &[
 /// "person" or "publication", from the names on its articles, its address,
 /// its website and its title.
 pub fn kind_from(authors: &[String], url: &str, site: Option<&str>, title: &str) -> &'static str {
+    // A YouTube channel isn't guessed (the owner, 8 November 2026): its feed
+    // signs every video with the channel's name, which can't tell a vlogger
+    // from a company. It starts as a publication; the reader can change it.
+    if Url::parse(url).is_ok_and(|url| crate::youtube::addresses::is_feed(&url)) {
+        return "publication";
+    }
     let mut names: Vec<String> = authors
         .iter()
         .map(|name| name.trim().to_lowercase())
@@ -326,6 +334,20 @@ mod tests {
     }
 
     #[test]
+    fn a_youtube_channel_starts_as_a_publication() {
+        let feed = "https://www.youtube.com/feeds/videos.xml?channel_id=UC123";
+        assert_eq!(
+            kind_from(
+                &names(&["Sony LIV"]),
+                feed,
+                Some("https://www.youtube.com/channel/UC123"),
+                "Sony LIV"
+            ),
+            "publication"
+        );
+    }
+
+    #[test]
     fn with_no_names_the_site_decides() {
         let none = names(&[]);
         assert_eq!(
@@ -334,15 +356,6 @@ mod tests {
                 "https://jane.substack.com/feed",
                 None,
                 "Jane's Letters"
-            ),
-            "person"
-        );
-        assert_eq!(
-            kind_from(
-                &none,
-                "https://www.youtube.com/feeds/videos.xml?channel_id=a",
-                None,
-                "Jane"
             ),
             "person"
         );
