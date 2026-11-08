@@ -32,6 +32,9 @@ use crate::{
     },
 };
 
+/// The longest adding a feed may take, start to finish.
+const ADDING_LIMIT: std::time::Duration = std::time::Duration::from_secs(60);
+
 #[derive(Deserialize)]
 pub(super) struct AddFeed {
     address: String,
@@ -111,7 +114,12 @@ pub(super) async fn add_feed(
     State(state): State<AppState>,
     Json(form): Json<AddFeed>,
 ) -> Response {
-    match add(&state, person, &form.address, true).await {
+    // Cut short before anything in front of nine turtles (Cloudflare gives up
+    // at 100 seconds) does, so a site that answers slowly, as YouTube can, is
+    // said plainly rather than as a broken answer. Nothing half-done is kept:
+    // the database work is one transaction, undone when it's cut short.
+    let adding = tokio::time::timeout(ADDING_LIMIT, add(&state, person, &form.address, true));
+    match adding.await.unwrap_or(Err(NotAdded::Unreachable)) {
         Ok(Added::Feed(feed)) => {
             (StatusCode::CREATED, Json(json!({ "feed": feed }))).into_response()
         }
@@ -125,7 +133,14 @@ pub(super) async fn add_feed(
             "choices": question
                 .choices
                 .iter()
-                .map(|found| json!({ "title": found.title, "url": found.url.as_str() }))
+                .map(|offered| {
+                    json!({
+                        "title": offered.found.title,
+                        "url": offered.found.url.as_str(),
+                        "place": offered.place,
+                        "latest": offered.latest,
+                    })
+                })
                 .collect::<Vec<_>>(),
         }))
         .into_response(),
@@ -238,7 +253,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
             None => return Err(NotAdded::NoFeed),
         },
         Ok(Added::Ask(youtube::Question { choices, .. })) => match choices.into_iter().next() {
-            Some(first) => first.url,
+            Some(first) => first.found.url,
             None => return Err(NotAdded::NoFeed),
         },
     };

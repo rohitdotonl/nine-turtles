@@ -383,34 +383,48 @@
         too long, never cut off or broken mid-word (decision 0191). In a sheet a
         long list scrolls inside itself, so Cancel and Follow never leave the
         window. On a phone the list is a card on the screen's margin, the field's
-        own edges (decision 0206).
+        own edges (decision 0206). A YouTube video's question has one answer,
+        its channel: the row shows who it is, with no mark, and Follow follows.
       -->
-      <div
-        role={oneOnly ? "radiogroup" : "group"}
-        aria-label="Feeds on this site"
-        aria-describedby="feed-address-status"
-        class={["inset-group self-stretch text-left", framed && "mb-2", !page && "choices-scroll"]}
-      >
-        {#each choices as choice (choice.url)}
-          <label class="inset-row check-row flex-nowrap">
-            {#if oneOnly}
-              <input type="radio" name="feed-choice" value={choice.url} bind:group={chosen} />
-            {:else}
-              <input type="checkbox" name="feed-choice" value={choice.url} bind:group={ticked} />
-            {/if}
+      {#if oneOnly && choices.length === 1}
+        {@const only = choices[0]!}
+        <div class={["inset-group self-stretch text-left", framed && "mb-2"]}>
+          <div class="inset-row flex-nowrap">
             <span class="flex min-w-0 flex-col py-2.5">
-              <span class="break-words">{choice.title}</span>
-              {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
-              <span class="mt-0.5 truncate text-small text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
+              <span class="break-words">{only.title}</span>
+              {#if only.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{only.latest}</span>{/if}
+              <span class="mt-0.5 truncate text-small text-muted">{only.place ?? only.url}</span>
             </span>
-            {#if oneOnly}
-              <span aria-hidden="true" class="radio-mark shrink-0"></span>
-            {:else}
-              <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
-            {/if}
-          </label>
-        {/each}
-      </div>
+          </div>
+        </div>
+      {:else}
+        <div
+          role={oneOnly ? "radiogroup" : "group"}
+          aria-label="Feeds on this site"
+          aria-describedby="feed-address-status"
+          class={["inset-group self-stretch text-left", framed && "mb-2", !page && "choices-scroll"]}
+        >
+          {#each choices as choice (choice.url)}
+            <label class="inset-row check-row flex-nowrap">
+              {#if oneOnly}
+                <input type="radio" name="feed-choice" value={choice.url} bind:group={chosen} />
+              {:else}
+                <input type="checkbox" name="feed-choice" value={choice.url} bind:group={ticked} />
+              {/if}
+              <span class="flex min-w-0 flex-col py-2.5">
+                <span class="break-words">{choice.title}</span>
+                {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
+                <span class="mt-0.5 truncate text-small text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
+              </span>
+              {#if oneOnly}
+                <span aria-hidden="true" class="radio-mark shrink-0"></span>
+              {:else}
+                <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+              {/if}
+            </label>
+          {/each}
+        </div>
+      {/if}
       {#if !framed}
         <!--
           In the welcome, the list's own row of actions at its foot, 20px under it: Cancel, then

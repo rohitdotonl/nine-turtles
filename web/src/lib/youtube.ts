@@ -98,8 +98,8 @@ export function toPlayer(event: "listening" | "command", func?: string, args: un
 /** What Add a feed asks about a YouTube video's or playlist's address (decision 0144). */
 export function question(asks: "video" | "playlist", maker: string): string {
   return asks === "video"
-    ? `This video is by ${maker}. Follow ${maker}?`
-    : `This playlist is by ${maker}. Follow all of ${maker}’s videos, or only the playlist?`;
+    ? `Follow ${maker}?`
+    : `This playlist is by ${maker}. Follow only the playlist, or every video?`;
 }
 
 /** One chapter of a video: where it starts, in seconds, and its name. */
