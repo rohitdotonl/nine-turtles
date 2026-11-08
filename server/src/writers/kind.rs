@@ -5,9 +5,10 @@
 //! guesses what kind of source each place is too: a newsletter, a video
 //! channel, a podcast or a blog.
 //!
+//! A YouTube channel or playlist isn't guessed: it's a publication.
+//!
 //! The guess, in order:
 //! 1. One name wrote every article: a person. Several names: a publication.
-//! 0. A YouTube channel or playlist is a publication, without guessing.
 //! 2. No names: a place of someone's own on a site many people share (a
 //!    Substack, a Bluesky account) is a person; a site
 //!    the feed's own name matches (NASA at nasa.gov) is a publication.
@@ -19,6 +20,7 @@
 //! not the blog's title ("Tomas Berg", not "Notes from Tomas"). A name the
 //! reader gave them stays.
 
+use reqwest::Url;
 use serde::Deserialize;
 use sqlx::SqliteConnection;
 
@@ -68,7 +70,7 @@ pub fn kind_from(authors: &[String], url: &str, site: Option<&str>, title: &str)
     // A YouTube channel isn't guessed (the owner, 8 November 2026): its feed
     // signs every video with the channel's name, which can't tell a vlogger
     // from a company. It starts as a publication; the reader can change it.
-    if url.contains("youtube.com/feeds/") {
+    if Url::parse(url).is_ok_and(|url| crate::youtube::addresses::is_feed(&url)) {
         return "publication";
     }
     let mut names: Vec<String> = authors
