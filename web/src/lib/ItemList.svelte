@@ -15,7 +15,11 @@
   fetched in advance.
 
   Refresh and "Mark all as read" (which marks only the articles listed here)
-  sit beside the list's title, in Shell; search results say how many above
+  sit in the list's More menu, in Shell; Mark all as read waits at the end of
+  a list with unread articles too (decision 0213). A row's own menu (a
+  right-click, a long press, or the Menu key) stars it, marks it read or
+  unread, writes back, or goes to the page about its writer (`rowMenu.ts`).
+  Search results say how many above
   the list. "New articles · press r" and "Marked 23 articles as read"
   with Undo appear in a note floating at the bottom of the list, so nothing
   shifts. Every mark
@@ -47,6 +51,10 @@
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
   import RowOpening from "./RowOpening.svelte";
+  import RowMenu from "./RowMenu.svelte";
+  import { rowMenu } from "./rowMenu";
+  import { longPress } from "./longPress";
+  import type { MenuItem } from "./MoreMenu.svelte";
   import { pickUp } from "./resume.svelte";
   import type { EmptyWords } from "./listWording";
   import { boldParts } from "./search";
@@ -70,6 +78,7 @@
     first = $bindable(),
     lead = false,
     found = $bindable(""),
+    rowActions = () => [],
   }: {
     source: Source;
     order: Order;
@@ -97,6 +106,8 @@
     lead?: boolean;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
     found?: string;
+    /** A row's menu, after its star and read: writing back and the page about its writer (`rowMenu.ts` → `writerItems`). */
+    rowActions?: (article: Article) => MenuItem[];
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -484,17 +495,15 @@
     tick().then(() => (spoken = "Marked as read."));
   }
 
-  /** `m` and "Mark unread": the selected article is unread again. */
-  export function markUnread() {
-    const article = selected;
-    if (!article || !article.read) return;
-    did("Marked as unread.", () => setRead([article], true));
-    setRead([article], false);
+  /** `m`, "Mark unread", and a row's menu: the article (the selected one) is unread again, or read. */
+  export function markUnread(article = selected, read = false) {
+    if (!article || article.read === read) return;
+    did(read ? "Marked as read." : "Marked as unread.", () => setRead([article], !read));
+    setRead([article], read);
   }
 
-  /** `s` and the star control: stars or unstars the selected article. */
-  export function toggleStar() {
-    const article = selected;
+  /** `s`, the star control and a row's menu: stars or unstars the article (the selected one). */
+  export function toggleStar(article = selected) {
     if (!article) return;
     const starred = !article.starred;
     did(starred ? "Starred." : "Unstarred.", () => setStarred(article, !starred));
@@ -545,7 +554,29 @@
     else rows[0]?.focus();
   }
 
-  function arrows(event: KeyboardEvent) {
+  /** A row's menu: which row, and where it was pressed. */
+  let menuAt: { index: number; x: number; y: number } | undefined = $state();
+  let menuArticle = $derived(menuAt && articles[menuAt.index]);
+
+  /** Opens a row's menu where it was pressed, or (by the keyboard) under the start of its title. */
+  function openMenu(index: number, x?: number, y?: number) {
+    if (menuAt?.index === index) return;
+    const box = rows[index]?.getBoundingClientRect();
+    menuAt = { index, x: x ?? (box?.left ?? 0) + 24, y: y ?? (box?.top ?? 0) + 40 };
+  }
+
+  function closeMenu(giveBack: boolean) {
+    const index = menuAt?.index;
+    menuAt = undefined;
+    if (giveBack && index !== undefined) rows[index]?.focus();
+  }
+
+  function arrows(event: KeyboardEvent, index: number) {
+    if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) {
+      event.preventDefault();
+      openMenu(index);
+      return;
+    }
     // The arrow keys work like j and k while the keyboard is in the list.
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
@@ -595,7 +626,13 @@
             // A click made with Enter has no mouse position.
             onChoose(event.detail === 0);
           }}
-          onkeydown={arrows}
+          onkeydown={(event) => arrows(event, index)}
+          oncontextmenu={(event) => {
+            event.preventDefault();
+            // A press has a place; the keyboard's (where the browser sends it) is the row's.
+            openMenu(index, event.clientX || undefined, event.clientY || undefined);
+          }}
+          use:longPress={(x, y) => openMenu(index, x, y)}
           class={[
             "item-row place block cursor-pointer pr-4 text-left",
           ]}
@@ -670,7 +707,13 @@
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
     <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
+    <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0213). -->
+    {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={markAllRead}>Mark all as read</button>{/if}
   {/if}
+{/if}
+{#if menuAt && menuArticle}
+  {@const article = menuArticle}
+  <RowMenu label={`Actions for ${article.title || "Untitled"}`} at={menuAt} onClose={closeMenu} groups={rowMenu(article, unreadOff, { star: toggleStar, read: markUnread }, rowActions(article))} />
 {/if}
 {#if problem}
   <!-- Try again only where it's the fix: never without a connection, which says when it works again. -->
@@ -735,44 +778,6 @@
   }
   /* In the muted line of text, the searched words are in full ink too. */
   .excerpt .match {
-    color: var(--ink);
-  }
-  /*
-    The source, time and star on one line (decision 0048): the source shrinks
-    and ends in "…"; the time and the star keep their room. Figures are
-    proportional, as in running text, so the digits in a name and a date set
-    as tightly as they do in the sidebar.
-  */
-  .row-meta {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 0.35em;
-    white-space: nowrap;
-    font-variant-numeric: proportional-nums;
-  }
-  /* The publisher's name a step stronger than the time, so the credit reads first (decision 0123). */
-  .row-feed {
-    color: var(--muted);
-    display: flex;
-    min-width: 0;
-    flex: 0 1 auto;
-  }
-  /* Its box is narrowed to the letters shown and the "…" (hug.ts), so the "·" after it never drifts. */
-  .row-feed-name {
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .row-date,
-  .row-muted,
-  .row-star {
-    flex: none;
-  }
-  .row-star {
-    display: flex;
-    /* The theme's ink, as every star is (decision 0143); the filled shape says it. */
     color: var(--ink);
   }
 </style>

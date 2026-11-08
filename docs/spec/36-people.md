@@ -70,8 +70,9 @@ PLAN.md → V1, item 1.*
 - **Their page,** the same for a person and a publication (but a
   publication has no Write to, decision 0192)
   (`/people/12/about`): opened by pressing their name at the top of their
-  list ("Alpha ›"), by **Info about Alpha** in the list's More menu, or by the
-  `i` key. On a computer it opens in the reading area beside their list,
+  list ("Alpha ›"), by their name under an article's title, by **Info about
+  Alpha** in the list's More menu or a row's own menu, or by the `i` key
+  (in any list, for the chosen article's writer; decision 0213). On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with an **Edit** button beside it; for one
   source whose own title isn't their name, that title under it, in the

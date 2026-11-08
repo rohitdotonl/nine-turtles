@@ -49,7 +49,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
 
   // Something that isn't an address is refused, in words, keeping what was typed.
   await field.fill("ivy at home");
-  await pane(page).getByRole("button", { name: "Write back", exact: true }).click();
+  await pane(page).locator("form").getByRole("button", { name: "Write back", exact: true }).click();
   await expect(pane(page).getByRole("status").filter({ hasText: "doesn't look like an email address" })).toBeVisible();
   await expect(field).toHaveValue("ivy at home");
 
@@ -59,16 +59,17 @@ test("Write back asks once for an address, keeps it on their page, then opens th
 
   await page.keyboard.press("Enter");
   await field.fill("ivy@ivy.example");
-  await pane(page).getByRole("button", { name: "Write back", exact: true }).click();
+  await pane(page).locator("form").getByRole("button", { name: "Write back", exact: true }).click();
   const link = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
   await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20/);
   // The keyboard stays on Write back, now a link to the email app.
   await expect(link).toBeFocused();
   await expect(pane(page)).toContainText("ivy@ivy.example");
 
-  // The More menu has it too.
+  // The paper plane beside Star has it too, one press from the text (decision 0213); More doesn't any more.
+  await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toHaveAttribute("title", "Write back (W)");
   await page.getByRole("button", { name: "More actions" }).click();
-  await expect(page.getByRole("menuitem", { name: /Write back/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Write back/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
 
   // Words chosen offer Write back about this (decision 0205); once highlighted, Write back starts the email with them, quoted.
@@ -146,13 +147,14 @@ test("A publication has no Write back, no Write to and no email address in Edit;
   await expect(who().getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
 
-  // Its article ends with no Write back, More doesn't offer it, and W (which would ask for the
+  // Its article ends with no Write back, there's no paper plane, and W (which would ask for the
   // unknown address, as in the first test) does nothing.
   await page.goto(new URL(`/publications/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
   await expect(pane(page).getByText(/^Write back/)).toHaveCount(0);
+  await expect(pane(page).getByRole("button", { name: "Write back" })).toHaveCount(0);
   await page.locator(".item-row").first().focus();
   await page.keyboard.press("w");
   await expect(pane(page).getByRole("textbox", { name: "Their email address" })).toHaveCount(0);

@@ -4,7 +4,9 @@
   40px down from where the list starts (under its search field); how to
   start, when there is something to do, in the interface's text, muted, 8px
   under it; at most 300px wide, on the list's left edge, never centred.
-  The closing caption sits 40px under the last row with 96px of room below.
+  The closing caption sits 40px under the last row with 96px of room below;
+  in a list with unread articles, "Mark all as read" sits 12px under it and
+  takes the room below (decision 0213).
 */
 .list-empty {
   max-width: 18.75rem;
@@ -29,4 +31,52 @@
   font-size: var(--text-base);
   line-height: 1.5rem;
   color: var(--muted);
+}
+.list-end:has(+ .list-end-action) {
+  margin-bottom: 0.75rem;
+}
+.list-end-action {
+  align-self: flex-start;
+  width: max-content;
+  margin-bottom: 6rem;
+}
+
+/* An article's row in the list (ItemList.svelte). */
+/*
+  The source, time and star on one line (decision 0048): the source shrinks
+  and ends in "…"; the time and the star keep their room. Figures are
+  proportional, as in running text, so the digits in a name and a date set
+  as tightly as they do in the sidebar.
+*/
+.row-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35em;
+  white-space: nowrap;
+  font-variant-numeric: proportional-nums;
+}
+/* The publisher's name a step stronger than the time, so the credit reads first (decision 0123). */
+.row-feed {
+  color: var(--muted);
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+/* Its box is narrowed to the letters shown and the "…" (hug.ts), so the "·" after it never drifts. */
+.row-feed-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-date,
+.row-muted,
+.row-star {
+  flex: none;
+}
+.row-star {
+  display: flex;
+  /* The theme's ink, as every star is (decision 0143); the filled shape says it. */
+  color: var(--ink);
 }

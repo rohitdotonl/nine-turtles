@@ -34,6 +34,8 @@ export type KeyScene = {
   feed?: number;
   folder?: number;
   feedsFolder?: number;
+  /** The chosen article's writer, someone followed: their row's place, for the page about them. */
+  writer?: number;
   /** The article text size, as a place in `TEXT_SIZES`. */
   textSize: number;
 };
@@ -156,7 +158,9 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       if (scene.sidebar) hands.moveRow(action.step);
       break;
     case "about":
+      // Their list's page, else the chosen article's writer's, as their name under its title opens (decision 0213).
       if (scene.onList && !scene.searching && scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed });
+      else if (scene.selected && scene.writer !== undefined) hands.go({ kind: "about", id: scene.writer });
       break;
     case "star":
       if (scene.selected && scene.onList) hands.star();

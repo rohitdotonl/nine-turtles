@@ -13,13 +13,15 @@ V1, item 2). Its look gets a refinement round.*
   in full, by the name in the sidebar ("Write back to Maya Chen"; the
   owner's core path, points 6 and 7, decision 0183; the first-name rule
   went), with the address
-  it writes to under it in small muted type. It's also in
-  the article's More menu (**Write back**) and on the keyboard, **`w`**
-  (section 19). An article of a place you no longer follow (one kept only
+  it writes to under it in small muted type. It's also one press from the
+  text, a paper plane beside Star in the article's top bar (on a phone, in
+  its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
+  own menu in the list, which opens the article and starts it (section 6;
+  decision 0213). An article of a place you no longer follow (one kept only
   in Starred) has none: there's no person to write to.
 - **Not for publications** (decision 0192, the owner's choice): a
   publication is something you only read or watch, so its articles end with
-  no Write back, its More menu has none, `w` does nothing there, its page
+  no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page
   has no Write to, and its Edit has no Email address. Making it **A person**
   in Edit brings all of them back, with any address kept from before.
 - **Write to, on their page** (the owner's core path, point 9): the same

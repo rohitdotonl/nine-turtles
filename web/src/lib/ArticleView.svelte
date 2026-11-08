@@ -4,10 +4,12 @@
   size. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right as Apple Books keeps its reading
-  toolbar (decision 0050): View original, Aa (the reading panel), Star and
-  More (…). More holds Copy
-  link (Share on phones), Mark unread and Write back (SPEC
-  sections 7, 8, 9, 21, 33 and 37). Write back also ends the article. The
+  toolbar (decision 0050): View original, Aa (the reading panel), Star,
+  Write back (a paper plane, for a person only, decision 0213) and More (…).
+  More holds Copy link (Share on phones), Mark unread, Add a note and Hide
+  (SPEC sections 7, 8, 9, 21, 33 and 37). Write back also ends the article.
+  The writer's name under the title opens the page about them (decision
+  0213), as their name at the top of the list does. The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
   source is always credited and linked. A feed that gives only a summary
@@ -21,7 +23,7 @@
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and View original;
-  Previous, Next, Aa, Star and More sit as icons in a toolbar at the bottom,
+  Previous, Next, Aa, Star, Write back (for a person) and More sit as icons in a toolbar at the bottom,
   within thumb reach, above a hairline; one that can't act is faded in place.
 -->
 <script lang="ts">
@@ -38,7 +40,7 @@
   import ArticleMarks from "./ArticleMarks.svelte";
   import type { LoadedLibrary } from "./library.svelte";
   import { siteName } from "./people";
-  import type { Snippet } from "svelte";
+  import { tick, type Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
@@ -62,6 +64,7 @@
     onStar,
     onMarkUnread,
     onHide,
+    onWriter,
     beforeToolbar,
     library,
   }: {
@@ -85,14 +88,24 @@
     onMarkUnread: () => void;
     /** "Hide articles about…": Settings › Hiding, with a new rule for whoever wrote it (SPEC section 27). */
     onHide: (feed: number) => void;
+    /** The writer's name under the title: the page about them (their row's place, `library.rowOf`). */
+    onWriter: (row: number) => void;
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
     library: LoadedLibrary;
   } = $props();
 
-  /** Write back, at the article's end; the More menu and `w` start it too. */
+  /** Write back, at the article's end; the paper plane and `w` start it too. */
   let writeBack: WriteBack | undefined = $state();
+  /** Write back asked for before the article's text arrived (from a row's menu): it starts once it's there. */
+  let writeBackFor: number | undefined = $state();
+  $effect(() => {
+    if (writeBack && writeBackFor === article.id) {
+      writeBackFor = undefined;
+      void tick().then(() => writeBack?.start());
+    }
+  });
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
@@ -145,14 +158,13 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, writing back, and hiding others like it. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, and hiding others like it. */
   let more: MenuGroup[] = $derived([
     {
       items: [
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
-        ...(writable && full ? [{ label: "Write back", shortcut: phone ? undefined : keyFor("write-back"), onSelect: () => act("write-back") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
       ],
     },
@@ -368,13 +380,15 @@
   }
 
   /**
-   * `w`, and Write back in More: the reader's email app, or the box asking
+   * `w`, and the paper plane: the reader's email app, or the box asking
    * for the writer's address. `h`: the words chosen are highlighted.
    * N, and Add a note… in More: a note on them, or on the whole article (SPEC section 42).
    */
   export function act(what: "write-back" | "highlight" | "note") {
-    if (what === "write-back") void writeBack?.start();
-    else if (what === "highlight") marks?.highlight();
+    if (what === "write-back") {
+      if (writeBack) void writeBack.start();
+      else writeBackFor = article.id;
+    } else if (what === "highlight") marks?.highlight();
     else marks?.note();
   }
 
@@ -419,6 +433,11 @@
 {#snippet starIcon(size: number)}
   <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
   <Icon name="star" {size} filled={article.starred} />
+{/snippet}
+
+{#snippet writeBackButton(size: number, style: string)}
+  <!-- Write back, one press from the text (decision 0213): a paper plane, for a person only. -->
+  <button type="button" aria-label="Write back" title={phone ? "Write back" : tip("Write back", "write-back")} onclick={() => act("write-back")} class={style}><Icon name="send" {size} /></button>
 {/snippet}
 
 {#snippet original(size: number)}
@@ -469,6 +488,7 @@
         <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
           {@render starIcon(20)}
         </button>
+        {#if writable}{@render writeBackButton(20, "btn-quiet btn-icon")}{/if}
         <MoreMenu id="article-menu" label="More actions" groups={more} />
       </div>
     </div>
@@ -483,7 +503,12 @@
       <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
-        {#if full?.siteUrl}
+        {#if followed}
+          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0213); no "›" here, where the "·" follows. -->
+          <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
+            >{article.feedTitle}</button
+          ><span id="byline-about" class="sr-only">Opens the page about them.</span>
+        {:else if full?.siteUrl}
           <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}<span class="sr-only"> (opens in a new tab)</span></a>
         {:else}
           <span class="publisher">{article.feedTitle}</span>
@@ -599,6 +624,7 @@
       <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
         {@render starIcon(22)}
       </button>
+      {#if writable}{@render writeBackButton(22, "")}{/if}
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
       <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up />
     </div>
@@ -643,7 +669,8 @@
     }
   }
   /*
-    The phone's bottom toolbar: five equal places of quiet icons, each at
+    The phone's bottom toolbar: five equal places of quiet icons (six with
+    Write back, for a person), each at
     least 44px square, in the second ink (a starred star in full ink).
   */
   .toolbar {
@@ -673,6 +700,18 @@
   /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
   .toolbar > [aria-disabled="true"] > :global(svg) {
     opacity: 0.35;
+  }
+  /* The writer's name under the title: a 44px target to touch, taller than its line without moving it. */
+  .writer-link {
+    padding-block: 0.75rem;
+    margin-block: -0.75rem;
+    cursor: pointer;
+  }
+  @media (hover: hover) {
+    .writer-link:hover {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
   }
   /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */
   .folded > :global(:not(:first-child)) {

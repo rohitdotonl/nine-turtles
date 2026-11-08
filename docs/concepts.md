@@ -170,6 +170,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar and list toggles and their dragged widths, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
 - The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
+- A row's own menu in the article list: right-click, long press or the Menu key; star, read, write back, their page (`rowMenu.ts`, `RowMenu.svelte`, `longPress.ts`), sharing More's menu (`MenuList.svelte`)
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
 - The welcome's "Or try one": three example addresses followed in one press (`welcomeTry.svelte.ts`, `TryOne.svelte`); no feed found offers your newsletter address (`ByEmail.svelte`)

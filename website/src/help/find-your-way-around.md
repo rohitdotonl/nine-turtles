@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-06
+updated: 2026-11-08
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -42,13 +42,16 @@ Older articles load as you reach the bottom, and every list ends with
 The list's **More** menu (the three dots) holds what you can do to the whole
 list: mark it all as read, refresh it, or sort it oldest first. In a
 person's or publication's list it also has **Info about …**, their page, which
-opens too when you press their name at the top of the list.
+opens too when you press their name at the top of the list. Each article
+has a menu of its own too: right-click it (on a phone, press and hold it)
+to star it, mark it read or unread, write back, or see the writer's page.
 
 ## Reading
 
 Choose an article and it opens on the right. Across its top are **Open
-original** (the publisher's own page), **Aa** (how the text looks), **Star**
-and **More**. On a phone they're in the bar at the bottom, with Previous and
+original** (the publisher's own page), **Aa** (how the text looks), **Star**,
+**Write back** (a paper plane, for a person) and **More**. The writer's name
+under the title opens their page. On a phone they're in the bar at the bottom, with Previous and
 Next. A long article opens where you stopped last time.
 
 When you come back with nothing open, the reading pane offers the article
