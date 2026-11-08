@@ -382,6 +382,67 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 });
 
+// A YouTube video's address asks about its channel over one plain row (decision 0213): its name, newest video
+// and youtube.com/@handle, never the feed's address. Reached and followed with the keyboard alone.
+test("a YouTube video asks \"Follow {channel}?\" over one row, and Follow by keyboard follows the channel", async ({ page }) => {
+  const CHANNEL = "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw";
+  const sent: string[] = [];
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "POST") return route.fallback();
+    const address = (route.request().postDataJSON() as { address: string }).address;
+    sent.push(address);
+    if (sent.length === 1) {
+      return route.fulfill({
+        json: { asks: "video", maker: "3Blue1Brown", choices: [{ title: "3Blue1Brown", url: CHANNEL, place: "youtube.com/@3blue1brown", latest: "But what is a neural network?" }] },
+      });
+    }
+    return route.fulfill({ status: 502, json: { error: "unreachable" } });
+  });
+  await openApp(page, "/add-feed");
+  await field(page).fill("https://www.youtube.com/watch?v=aircAruvnKk");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("Follow 3Blue1Brown?");
+  const row = page.locator("#feed-only-choice");
+  await expect(row).toContainText("But what is a neural network?");
+  await expect(row).toContainText("youtube.com/@3blue1brown");
+  await expect(page.getByText(CHANNEL)).toHaveCount(0);
+  // One answer, so no radio button and no group to choose in.
+  await expect(page.getByRole("radio")).toHaveCount(0);
+  const followButton = page.getByRole("button", { name: "Follow", exact: true });
+  await expect(followButton).toHaveAccessibleDescription(/3Blue1Brown.*But what is a neural network\?.*youtube\.com\/@3blue1brown/);
+  await tabTo(page, followButton);
+  await page.keyboard.press("Enter");
+  await expect.poll(() => sent).toEqual(["https://www.youtube.com/watch?v=aircAruvnKk", CHANNEL]);
+  await expect(page.locator("#feed-address-status")).toHaveText("The site didn't answer. Try again later.");
+});
+
+// A playlist offers only the playlist first, chosen, then every video (decision 0213).
+test("a YouTube playlist offers Only the playlist first, then Every video", async ({ page }) => {
+  await page.route("**/api/feeds", (route) =>
+    route.request().method() !== "POST"
+      ? route.fallback()
+      : route.fulfill({
+          json: {
+            asks: "playlist",
+            maker: "Walks",
+            choices: [
+              { title: "Only “Rivers”", url: "https://www.youtube.com/feeds/videos.xml?playlist_id=PL0123456789", place: "youtube.com", latest: "The Thames" },
+              { title: "Every video", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw", place: "youtube.com", latest: "A hill" },
+            ],
+          },
+        }),
+  );
+  await openApp(page, "/add-feed");
+  await field(page).fill("https://www.youtube.com/playlist?list=PL0123456789");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("This playlist is by Walks. Follow only the playlist, or every video?");
+  const radios = page.getByRole("radiogroup", { name: "Feeds on this site" }).getByRole("radio");
+  await expect(radios).toHaveCount(2);
+  await expect(radios.first()).toHaveAccessibleName(/^Only “Rivers”/);
+  await expect(radios.first()).toBeChecked();
+  await expect(radios.nth(1)).toHaveAccessibleName(/^Every video/);
+});
+
 test("a site with several feeds offers them with tick boxes, and those followed together become one person", async ({ page }) => {
   await openApp(page, "/add-feed");
   const name = newBlog("two");

@@ -32,6 +32,21 @@ use crate::{
     },
 };
 
+/// The longest adding a feed may take, start to finish.
+const ADDING_LIMIT: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// Cut short before anything in front of nine turtles (Cloudflare gives up
+/// at 100 seconds) does, so a site that answers slowly, as YouTube can, is
+/// said plainly rather than as a broken answer. Following's database work is
+/// one transaction, undone if it's cut short before it commits; cut in the
+/// moment after, the feed is followed though "didn't answer" was said, and
+/// adding it again says it's already followed.
+async fn in_time<T>(adding: impl Future<Output = Result<T, NotAdded>>) -> Result<T, NotAdded> {
+    tokio::time::timeout(ADDING_LIMIT, adding)
+        .await
+        .unwrap_or(Err(NotAdded::Unreachable))
+}
+
 #[derive(Deserialize)]
 pub(super) struct AddFeed {
     address: String,
@@ -111,7 +126,7 @@ pub(super) async fn add_feed(
     State(state): State<AppState>,
     Json(form): Json<AddFeed>,
 ) -> Response {
-    match add(&state, person, &form.address, true).await {
+    match in_time(add(&state, person, &form.address, true)).await {
         Ok(Added::Feed(feed)) => {
             (StatusCode::CREATED, Json(json!({ "feed": feed }))).into_response()
         }
@@ -125,7 +140,14 @@ pub(super) async fn add_feed(
             "choices": question
                 .choices
                 .iter()
-                .map(|found| json!({ "title": found.title, "url": found.url.as_str() }))
+                .map(|offered| {
+                    json!({
+                        "title": offered.found.title,
+                        "url": offered.found.url.as_str(),
+                        "place": offered.place,
+                        "latest": offered.latest,
+                    })
+                })
                 .collect::<Vec<_>>(),
         }))
         .into_response(),
@@ -229,7 +251,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
     if let Some(id) = bring_back(state, person, &url, false).await? {
         return Ok(id);
     }
-    let address = match add(state, person, url.as_str(), false).await {
+    let address = match in_time(add(state, person, url.as_str(), false)).await {
         Ok(Added::Feed(feed)) => return Ok(feed.id),
         Err(NotAdded::Already(id)) => return Ok(id),
         Err(not_added) => return Err(not_added),
@@ -238,7 +260,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
             None => return Err(NotAdded::NoFeed),
         },
         Ok(Added::Ask(youtube::Question { choices, .. })) => match choices.into_iter().next() {
-            Some(first) => first.url,
+            Some(first) => first.found.url,
             None => return Err(NotAdded::NoFeed),
         },
     };

@@ -6,7 +6,7 @@
   under it; at most 300px wide, on the list's left edge, never centred.
   The closing caption sits 40px under the last row with 96px of room below;
   in a list with unread articles, "Mark all as read" sits 12px under it and
-  takes the room below (decision 0213).
+  takes the room below (decision 0214).
 */
 .list-empty {
   max-width: 18.75rem;

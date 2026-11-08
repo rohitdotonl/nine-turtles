@@ -282,7 +282,7 @@ fn newest_links(parsed: &feed::ParsedFeed) -> Vec<String> {
     links
 }
 
-fn newest_title(parsed: &feed::ParsedFeed) -> Option<String> {
+pub fn newest_title(parsed: &feed::ParsedFeed) -> Option<String> {
     parsed
         .articles
         .iter()

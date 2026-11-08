@@ -1,4 +1,4 @@
-// A row's menu in the article list (SPEC section 6, decision 0213): what the
+// A row's menu in the article list (SPEC section 6, decision 0214): what the
 // reader does most to one article, without opening it. Right-click on a
 // computer, a long press on a touch screen, or the Menu key (Shift+F10) with
 // the keyboard on the row. The same actions have their keys and places

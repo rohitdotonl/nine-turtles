@@ -15,14 +15,27 @@ you paste.
     feed, without reading the page; an `@handle` or `/c/` address reads that
     one page to find its feed, as any website does;
   - a video's address (a watch page, `youtu.be/…`, a Short or a live video)
-    reads that one page to find its channel, then asks **"This video is by
-    {channel}. Follow {channel}?"** with the channel as the one choice;
+    reads that one page to find its channel, then asks **"Follow
+    {channel}?"** over one row with no mark: the channel's name, its newest
+    video's title and where it lives as a person says it ("youtube.com/@ted",
+    from the video's page; "youtube.com" when the page doesn't say), never the
+    feed's own address. **Follow** follows it from the copy just looked at, so
+    YouTube isn't asked twice;
   - a playlist's address (`/playlist?list=…`, or a video played from one)
-    asks **"This playlist is by {channel}. Follow all of {channel}'s videos,
-    or only the playlist?"**, the whole channel first. A playlist that has no
+    asks **"This playlist is by {channel}. Follow only the playlist, or every
+    video?"** with two rows, each with its newest title: **Only "{playlist}"**,
+    chosen, since it's what was pasted, then **Every video** (decision 0213).
+    A playlist that has no
     feed (a mix made for you, Watch later, a private one) follows the video's
     channel instead, when there's a video.
   The feed is named for the channel (or the playlist), never "YouTube".
+  A channel or playlist starts as a **publication**, without guessing (its
+  feed signs every video with the channel's name, which can't tell a vlogger
+  from a company); "… is…" after Follow shows it chosen, and the reader can
+  pick A person there or later in Edit (section 36, decision 0213).
+- **YouTube can be slow to answer nine turtles' server;** adding then gives
+  up plainly rather than hanging (section 3). A channel whose feed holds a
+  video with an empty description is followed as any other (decision 0213).
 - **Shorts and live streams are left out by default.** A YouTube channel's settings (section
   36) have two more ticks: **Include Shorts** and
   **Include live streams** (streams, and their recordings once they end),
@@ -91,10 +104,11 @@ remembers whether captions are on; Safari may forget that if nine turtles
 goes unused for a while (decision 0156).
 
 **How to check it**
-1. In + Add, paste a YouTube video's address: it asks "This video is by
-   … Follow …?" with the channel; Add follows the channel, named for it.
-2. Paste a playlist's address: it offers all of the channel's videos (chosen)
-   or only the playlist.
+1. In + Add, paste a YouTube video's address: it asks "Follow …?" over one
+   row with the channel's name, its newest video and "youtube.com/@…";
+   Follow follows the channel, named for it, and "… is…" has A publication
+   chosen.
+2. Paste a playlist's address: it offers Only "…" (chosen) or Every video.
 3. Open a channel's settings (Edit on its page): Include Shorts and Include live streams are
    there, both off. A new Short from that channel doesn't arrive in Unread.
 4. In Google Takeout, export YouTube's subscriptions; in Settings › Your

@@ -91,7 +91,62 @@ pub fn raw(body: &[u8], feed_url: &Url) -> Option<feed_rs::model::Feed> {
         .base_uri(Some(feed_url.as_str()))
         .id_generator(|_, _, _| String::new())
         .build();
-    parser.parse(with_itunes_kept(body).as_ref()).ok()
+    let body = without_empty_media(body);
+    parser.parse(with_itunes_kept(&body).as_ref()).ok()
+}
+
+/// feed-rs refuses a whole feed over one empty `<media:description>`, which
+/// YouTube sends for a video without a description: one such video stopped
+/// its channel from being followed at all. An empty one says nothing, so it's
+/// left out first.
+fn without_empty_media(body: &[u8]) -> Cow<'_, [u8]> {
+    const OPEN: &[u8] = b"<media:description";
+    const CLOSE: &[u8] = b"</media:description>";
+    if !body.windows(OPEN.len()).any(|window| window == OPEN) {
+        return Cow::Borrowed(body);
+    }
+    // How long the empty tag starting at `at` is, if it is one:
+    // `<media:description/>`, `<media:description />` or an open and close
+    // tag with only spaces between.
+    let empty = |at: usize| -> Option<usize> {
+        let rest = body.get(at + OPEN.len()..)?;
+        let spaces = rest
+            .iter()
+            .take_while(|byte| byte.is_ascii_whitespace())
+            .count();
+        let rest = &rest[spaces..];
+        if rest.starts_with(b"/>") {
+            return Some(OPEN.len() + spaces + 2);
+        }
+        let rest = rest.strip_prefix(b">")?;
+        let inside = rest
+            .iter()
+            .take_while(|byte| byte.is_ascii_whitespace())
+            .count();
+        rest[inside..]
+            .starts_with(CLOSE)
+            .then_some(OPEN.len() + spaces + 1 + inside + CLOSE.len())
+    };
+    let mut out = Vec::with_capacity(body.len());
+    let mut at = 0;
+    let mut changed = false;
+    while at < body.len() {
+        match empty(at).filter(|_| body[at..].starts_with(OPEN)) {
+            Some(length) => {
+                at += length;
+                changed = true;
+            }
+            None => {
+                out.push(body[at]);
+                at += 1;
+            }
+        }
+    }
+    if changed {
+        Cow::Owned(out)
+    } else {
+        Cow::Borrowed(body)
+    }
 }
 
 /// Reads a feed file. `None` means it isn't a feed (often a web page).
@@ -631,6 +686,43 @@ Second paragraph</media:description>
         assert!(content.starts_with("<p>First line &lt;b&gt;not bold&lt;/b&gt;<br>More at <a href=\"https://example.com/notes\""), "{content}");
         assert!(content.contains("noopener"), "{content}");
         assert!(content.ends_with("<p>Second paragraph</p>"), "{content}");
+    }
+
+    #[test]
+    fn a_youtube_video_without_a_description_keeps_its_channel_followable() {
+        let atom = br#"<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
+ <title>A Channel</title>
+ <entry>
+  <id>yt:video:dQw4w9WgXcQ</id>
+  <title>No description</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"/>
+  <published>2026-10-01T10:00:00+00:00</published>
+  <media:group><media:title>No description</media:title><media:description></media:description></media:group>
+ </entry>
+ <entry>
+  <id>yt:video:jNQXAC9IVRw</id>
+  <title>Self-closed</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=jNQXAC9IVRw"/>
+  <published>2026-09-01T10:00:00+00:00</published>
+  <media:group><media:description /></media:group>
+ </entry>
+ <entry>
+  <id>yt:video:aircAruvnKk</id>
+  <title>Only spaces</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=aircAruvnKk"/>
+  <published>2026-08-01T10:00:00+00:00</published>
+  <media:group><media:description>
+  </media:description></media:group>
+ </entry>
+</feed>"#;
+        let feed = parse(
+            atom,
+            &url("https://www.youtube.com/feeds/videos.xml?channel_id=UC123"),
+        )
+        .expect("an empty description doesn't stop the feed");
+        assert_eq!(feed.title, "A Channel");
+        assert_eq!(feed.articles.len(), 3);
     }
 
     #[test]

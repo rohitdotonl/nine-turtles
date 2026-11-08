@@ -5,11 +5,11 @@
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right as Apple Books keeps its reading
   toolbar (decision 0050): View original, Aa (the reading panel), Star,
-  Write back (a paper plane, for a person only, decision 0213) and More (…).
+  Write back (a paper plane, for a person only, decision 0214) and More (…).
   More holds Copy link (Share on phones), Mark unread, Add a note and Hide
   (SPEC sections 7, 8, 9, 21, 33 and 37). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
-  0213), as their name at the top of the list does. The
+  0214), as their name at the top of the list does. The
   bar is solid, in the page's own color, above the scrolling text, with a
   hairline under it only once the text has scrolled (decision 0040). The
   source is always credited and linked. A feed that gives only a summary
@@ -438,7 +438,7 @@
 {/snippet}
 
 {#snippet writeBackButton(size: number, style: string)}
-  <!-- Write back, one press from the text (decision 0213): a paper plane, for a person only. -->
+  <!-- Write back, one press from the text (decision 0214): a paper plane, for a person only. -->
   <button type="button" aria-label="Write back" title={phone ? "Write back" : tip("Write back", "write-back")} onclick={() => act("write-back")} class={style}><Icon name="send" {size} /></button>
 {/snippet}
 
@@ -506,7 +506,7 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
         {#if followed}
-          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0213); no "›" here, where the "·" follows. -->
+          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows. -->
           <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
             >{article.feedTitle}</button
           ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>

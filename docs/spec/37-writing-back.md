@@ -17,7 +17,7 @@ V1, item 2). Its look gets a refinement round.*
   text, a paper plane beside Star in the article's top bar (on a phone, in
   its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
   own menu in the list, which opens the article and starts it (section 6;
-  decision 0213). An article of a place you no longer follow (one kept only
+  decision 0214). An article of a place you no longer follow (one kept only
   in Starred) has none: there's no person to write to.
 - **Not for publications** (decision 0192, the owner's choice): a
   publication is something you only read or watch, so its articles end with

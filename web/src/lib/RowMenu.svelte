@@ -1,5 +1,5 @@
 <!--
-  A row's menu in the article list (SPEC section 6, decision 0213): the same
+  A row's menu in the article list (SPEC section 6, decision 0214): the same
   menu as More's (`MenuList.svelte`), opened where the row was pressed and
   kept on the screen. The keyboard starts on its first choice; Escape or a
   choice (or Tab) gives the keyboard back to the row; a press anywhere

@@ -16,7 +16,7 @@
 
   Refresh and "Mark all as read" (which marks only the articles listed here)
   sit in the list's More menu, in Shell; Mark all as read waits at the end of
-  a list with unread articles too (decision 0213). A row's own menu (a
+  a list with unread articles too (decision 0214). A row's own menu (a
   right-click, a long press, or the Menu key) stars it, marks it read or
   unread, writes back, or goes to the page about its writer (`rowMenu.ts`).
   Search results say how many above
@@ -707,7 +707,7 @@
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
     <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
-    <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0213). -->
+    <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0214). -->
     {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={() => (markAllRead(), keepPlaceNearby())}>Mark all as read</button>{/if}
   {/if}
 {/if}

@@ -1,4 +1,4 @@
-// A long press on a touch screen (SPEC section 6, decision 0213): a row's
+// A long press on a touch screen (SPEC section 6, decision 0214): a row's
 // menu opens after half a second held still, as on a phone's own lists. The
 // tap that ends it doesn't also open the row, and the phone's own callout
 // (copy, share) stays away. A computer's right-click is the browser's own.

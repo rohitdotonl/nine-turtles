@@ -166,7 +166,7 @@ describe("carryOut", () => {
   it("goes to the page of the person whose list this is, else the chosen article's writer", () => {
     expect(run({ kind: "about" }, scene({ feed: 9 }))).toEqual([["go", { kind: "about", id: 9 }]]);
     expect(run({ kind: "about" }, scene())).toEqual([]);
-    // Elsewhere, the chosen article's writer (decision 0213).
+    // Elsewhere, the chosen article's writer (decision 0214).
     expect(run({ kind: "about" }, scene({ folder: 3, selected: true, writer: 7 }))).toEqual([["go", { kind: "about", id: 7 }]]);
     expect(run({ kind: "about" }, scene({ feed: 9, searching: true, selected: true, writer: 7 }))).toEqual([["go", { kind: "about", id: 7 }]]);
     expect(run({ kind: "about" }, scene({ folder: 3, selected: false, writer: 7 }))).toEqual([]);

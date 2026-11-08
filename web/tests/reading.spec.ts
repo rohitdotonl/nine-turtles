@@ -188,7 +188,7 @@ test.describe("on a wide window", () => {
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0213).
+    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0214).
     const writer = article(page).locator(".article-byline").getByRole("button", { name: "Reading Room" });
     await expect(writer).toHaveAttribute("title", "Info about Reading Room (I)");
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -266,7 +266,7 @@ test.describe("on a wide window", () => {
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
     // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first,
-    // then Aa, Star, Write back (a person's, decision 0213) and More (decision 0038).
+    // then Aa, Star, Write back (a person's, decision 0214) and More (decision 0038).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
@@ -914,16 +914,20 @@ test.describe("on a wide window", () => {
     await row(page, "A river at dawn").click();
     const resume = article(page).getByRole("button", { name: "Resume from 4:00: A river at dawn, for an hour" });
     await expect(resume).toContainText("Resume from 4:00");
+    // This stand-in ends at once when started from 4:00, so the frame may already be gone by the time
+    // it's looked for: what was asked of YouTube is the proof it started from there.
     await resume.click();
-    await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
+    await expect.poll(() => asked.at(-1)).toMatch(/&start=240&/);
     const again = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
     await expect(again).toBeFocused();
     await expect(article(page).locator("iframe")).toHaveCount(0);
 
     // A chapter, from the keyboard alone, plays the video from there (and this stand-in ends it there).
     await article(page).getByRole("list", { name: "Chapters" }).getByRole("button", { name: "4:00 The heron" }).focus();
+    const before = asked.length;
     await page.keyboard.press("Enter");
-    await expect(article(page).locator("iframe")).toHaveAttribute("src", /&start=240&/);
+    await expect.poll(() => asked.length).toBe(before + 1);
+    expect(asked.at(-1)).toMatch(/&start=240&/);
     await expect(again).toBeFocused();
   });
 
@@ -1100,10 +1104,13 @@ test.describe("your place in an article (decision 0060)", () => {
     await page.setViewportSize({ width: 1280, height: 400 });
     await row(page, "The pleasure of a slow letter").click();
     await expect(article(page).locator("table")).toBeAttached();
+    // Where you left off reaches the server a moment after scrolling stops; leaving before it has would
+    // test nothing (a busy computer can take longer than any fixed wait).
+    const kept = page.waitForResponse((answer) => answer.url().endsWith("/api/resume") && answer.request().method() === "PUT");
     await scroller(page).hover();
     await page.mouse.wheel(0, 300);
     await expect.poll(() => top(page)).toBeGreaterThan(250);
-    await page.waitForTimeout(600);
+    await kept;
     const stopped = await top(page);
     // Another device: this one's own bookmarks are gone, but the server still knows.
     await page.evaluate(() => localStorage.removeItem("nine-turtles.places"));

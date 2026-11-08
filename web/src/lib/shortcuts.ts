@@ -158,7 +158,7 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       if (scene.sidebar) hands.moveRow(action.step);
       break;
     case "about":
-      // Their list's page, else the chosen article's writer's, as their name under its title opens (decision 0213).
+      // Their list's page, else the chosen article's writer's, as their name under its title opens (decision 0214).
       if (scene.onList && !scene.searching && scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed });
       else if (scene.selected && scene.writer !== undefined) hands.go({ kind: "about", id: scene.writer });
       break;

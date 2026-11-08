@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// Fewer steps for what readers do most (decision 0213), done by a browser: a
+// Fewer steps for what readers do most (decision 0214), done by a browser: a
 // row's own menu (SPEC section 6), Mark all as read at the end of a list, and
 // the writer's name under an article's title opening the page about them
 // (SPEC section 7). Each test follows a blog of its own, since every test

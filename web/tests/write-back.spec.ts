@@ -66,7 +66,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(link).toBeFocused();
   await expect(pane(page)).toContainText("ivy@ivy.example");
 
-  // The paper plane beside Star has it too, one press from the text (decision 0213); More doesn't any more.
+  // The paper plane beside Star has it too, one press from the text (decision 0214); More doesn't any more.
   await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toHaveAttribute("title", "Write back (W)");
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(page.getByRole("menuitem", { name: /Write back/ })).toHaveCount(0);

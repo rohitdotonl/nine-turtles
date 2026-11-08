@@ -22,9 +22,11 @@ PLAN.md → V1, item 1.*
 - **Which is which.** A source joined to others is always a person. For a
   source on its own, nine turtles guesses once, from the feed alone (it never
   fetches a page to find out):
+  - a YouTube channel or playlist: a publication, never guessed (decision
+    0213);
   - one author name on its articles: a person; several names: a publication;
   - no names: a place of someone's own on a site many people share (a
-    Substack, Medium, a YouTube channel, a Bluesky account and the like): a
+    Substack, Medium, a Bluesky account and the like): a
     person;
   - a site whose own name is a whole word of the feed's title (NASA at
     apod.nasa.gov, "NASA Picture of the Day"): a publication, unless the title
@@ -72,7 +74,7 @@ PLAN.md → V1, item 1.*
   (`/people/12/about`): opened by pressing their name at the top of their
   list ("Alpha ›"), by their name under an article's title, by **Info about
   Alpha** in the list's More menu or a row's own menu, or by the `i` key
-  (in any list, for the chosen article's writer; decision 0213). On a computer it opens in the reading area beside their list,
+  (in any list, for the chosen article's writer; decision 0214). On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with an **Edit** button beside it; for one
   source whose own title isn't their name, that title under it, in the
