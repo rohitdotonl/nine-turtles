@@ -28,6 +28,11 @@ V1, item 2). Its look gets a refinement round.*
   opens your email app with the address only and an empty subject. When no
   address is known, it opens the same box as Write back (below), whose
   button then says **Write**.
+- **Two more places** (decision 0212): a person's card under Not working
+  in Everyone you follow (section 15), and **Ask them for a feed** under
+  Add's no-feed message (section 3), which asks a site nobody follows yet.
+  In both, Write to and the box's Write are everyday bordered buttons, so
+  the place's own main button stays the only solid one.
 - **It opens your own email app,** with their address and the subject
   "Re: " and the article's title filled in (a title that already starts
   "Re:" keeps its own). nine turtles never sends that email and never sees

@@ -30,6 +30,7 @@
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import AskForFeed from "./AskForFeed.svelte";
   import ByEmail from "./ByEmail.svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
@@ -473,7 +474,7 @@
       </p>
     {/if}
 
-    {#if noFeed && !busy}<ByEmail site={noFeed} />{/if}
+    {#if noFeed && !busy}<AskForFeed site={noFeed} /><ByEmail site={noFeed} />{/if}
 
     {#if alternative && choices.length === 0 && !asking}{@render alternative()}{/if}
   </div>

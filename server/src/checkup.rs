@@ -36,7 +36,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// The longest the visit to the writer's site may take, both pages together.
-const LOOKING_FOR: Duration = Duration::from_secs(8);
+pub(crate) const LOOKING_FOR: Duration = Duration::from_secs(8);
 /// The longest name or title passed on.
 const LONGEST: usize = 300;
 
@@ -107,7 +107,7 @@ async fn check(State(state): State<AppState>, Query(asked): Query<Asked>) -> Res
         Ok(Answer::Checked(checkup)) => Ok(*checkup),
         Ok(Answer::Problem(problem)) | Err(problem) => Err(problem),
         // Never: the checkup's answers are kept apart from the finder's.
-        Ok(Answer::Found(_)) => Err(Problem::Busy),
+        Ok(Answer::Found(_) | Answer::Address { .. }) => Err(Problem::Busy),
     })
 }
 
@@ -221,16 +221,16 @@ fn name_in(feed: &Feed) -> Option<String> {
 }
 
 /// What the visit to the writer's site found.
-struct Seen {
-    looked: bool,
+pub(crate) struct Seen {
+    pub looked: bool,
     contact: Option<Url>,
-    address: Option<String>,
+    pub address: Option<String>,
     platform: Option<Platform>,
 }
 
 /// The home page (`page`, when the page given was it), then, only if it
 /// shows no address, the one contact or about page it links to.
-async fn visit(state: &AppState, home: &Url, page: Option<String>) -> Seen {
+pub(crate) async fn visit(state: &AppState, home: &Url, page: Option<String>) -> Seen {
     let local = state.config.local_feeds_allowed;
     let mut seen = Seen {
         looked: false,

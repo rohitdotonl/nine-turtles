@@ -279,4 +279,60 @@ test("moving a dead feed in Everyone you follow keeps its place and its confirma
   await expect(feed.getByText("It now reads from its new address and works again.", { exact: false })).toBeVisible();
   await expect(feed).toContainText("Working again.");
   await expect(feed.getByRole("button", { name: `Find new address for ${title}` })).toBeFocused();
+  // Working again, so nothing to write to them about (decision 0212).
+  await expect(feed).not.toContainText("may not know");
+  await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+});
+
+test("a person whose feed stopped may not know: their Not working card offers Write to them", async ({ page }) => {
+  // Decision 0212: no dead ends. A feed is dead only after a week; the page's list is changed to call this one dead.
+  const name = `write-dead-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  await failing(page, name, "break");
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await appReady(page);
+  const dead = page.getByRole("region", { name: "Not working" });
+  const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(feed).toContainText(`${title} may not know.`);
+  // The everyday button, not a second solid one: Find new address stays the main one.
+  const write = feed.getByRole("button", { name: `Write to ${title}` });
+  await expect(write).toBeVisible();
+  await expect(write).not.toHaveClass(/btn-primary/);
+  // From the keyboard: the box asks for their address in place, its Write an everyday button too.
+  await tabTo(page, write);
+  await page.keyboard.press("Enter");
+  const box = feed.getByRole("form", { name: `Write to ${title}` });
+  await expect(box.getByLabel("Their email address")).toBeFocused();
+  await expect(box.getByRole("button", { name: "Write", exact: true })).not.toHaveClass(/btn-primary/);
+  await box.getByRole("button", { name: "Not now" }).click();
+  await expect(write).toBeFocused();
+});
+
+test("a publication whose feed stopped gets no Write to", async ({ page }) => {
+  const name = `write-dead-pub-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
+    await route.fulfill({ json: real });
+  });
+  // This page alone sees it as a publication.
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.id === id) feed.kind = "publication";
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await appReady(page);
+  const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(feed).toBeVisible();
+  await expect(feed).not.toContainText("may not know");
+  await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
 });

@@ -1053,7 +1053,7 @@
           bind:heading={headings.yourFeeds}
           onClose={closeSettingsPage}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
-          onFeedsChanged={loadFeeds}
+          onFeedsChanged={loadFeeds} {library}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "muted"}
@@ -1200,7 +1200,7 @@
                   {source}
                   order={settings.sort}
                   {notice}
-                  empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names)) : emptyText(under, currentFeed?.checkedAt ?? null)}
+                  empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => (searching.everywhere(), queueMicrotask(() => searchBar?.focus()))) : emptyText(under, currentFeed?.checkedAt ?? null)}
                   bold={searching.shown ? searchedTerms(searching.shown.words) : []}
                   onChoose={chose}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}

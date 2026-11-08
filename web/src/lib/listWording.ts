@@ -51,7 +51,8 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
  * is said the same way, and a feed says when it was last checked, the fact a
  * reader wonders about ("is it broken, or just quiet?").
  */
-export type EmptyWords = { fact: string; how?: string };
+/** `wider`: a search in one place found nothing; pressing Search all articles looks everywhere (decision 0212). */
+export type EmptyWords = { fact: string; how?: string; wider?: () => void };
 
 export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {
   if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from this feed yet." } : { fact: "Nothing from this feed yet.", how: lastChecked(checkedAt, now) };
@@ -63,7 +64,7 @@ export function emptyText(place: Route, checkedAt: number | null = null, now: Da
 }
 
 /** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Starred." */
-export function nothingFound(words: string, where: string): EmptyWords {
+export function nothingFound(words: string, where: string, wider?: () => void): EmptyWords {
   const typed = words.trim();
-  return { fact: typed === "" ? `Nothing found in ${where}.` : `Nothing found for “${typed}” in ${where}.` };
+  return { fact: typed === "" ? `Nothing found in ${where}.` : `Nothing found for “${typed}” in ${where}.`, wider };
 }

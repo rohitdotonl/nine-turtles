@@ -9,6 +9,7 @@
   them all, in one go, with one Undo until your next action.
 -->
 <script lang="ts">
+  import type { LoadedLibrary } from "./library.svelte";
   import { onMount, tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
@@ -41,6 +42,7 @@
     onOpenPerson,
     onFeedsChanged,
     besideToggle = false,
+    library,
   }: {
     heading?: HTMLHeadingElement;
     onClose: () => void;
@@ -49,6 +51,8 @@
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
     besideToggle?: boolean;
+    /** Who's who, for Write to on a person's Not working card (decision 0212). */
+    library: LoadedLibrary;
   } = $props();
 
   let feeds: Tended[] | undefined = $state();
@@ -209,7 +213,7 @@
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onClose} closeLabel="Close everyone you follow" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
-      <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} />
+      <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} {library} />
       {#if failed}
         <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
       {:else if feeds}
