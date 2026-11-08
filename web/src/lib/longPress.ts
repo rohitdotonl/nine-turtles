@@ -3,9 +3,8 @@
 // tap that ends it doesn't also open the row, and the phone's own callout
 // (copy, share) stays away. A computer's right-click is the browser's own.
 
-const HOLD_MS = 500;
-/** How far a finger may drift before it counts as scrolling, not holding. */
-const DRIFT_PX = 10;
+// Held as long, and as still, as a row lifted in the sidebar's Edit (`sidebarDrag.ts`).
+import { FINGER_SLOP, HOLD_MS } from "./sidebarDrag";
 
 export function longPress(node: HTMLElement, onHold: (x: number, y: number) => void) {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -24,7 +23,7 @@ export function longPress(node: HTMLElement, onHold: (x: number, y: number) => v
     }, HOLD_MS);
   };
   const move = (event: PointerEvent) => {
-    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > DRIFT_PX) stop();
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > FINGER_SLOP) stop();
   };
   const click = (event: MouseEvent) => {
     if (!held) return;

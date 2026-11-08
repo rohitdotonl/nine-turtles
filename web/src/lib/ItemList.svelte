@@ -708,7 +708,7 @@
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
     <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
     <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0213). -->
-    {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={markAllRead}>Mark all as read</button>{/if}
+    {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={() => (markAllRead(), keepPlaceNearby())}>Mark all as read</button>{/if}
   {/if}
 {/if}
 {#if menuAt && menuArticle}

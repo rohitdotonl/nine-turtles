@@ -84,7 +84,7 @@ A glance at an icon tells the reader, without doubt, what it's for.
 6. **Judged at real size.** Every icon is chosen at 18px on White, Paper and Night, never only enlarged.
 7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners, the players' buttons too. One size per role: a row's › is always 18px.
 
-"View original" is an arrow with no box. **A person** is one head and shoulders (the Readers icon's single figure) and **a publication** a newspaper page with one solid picture, on Add's two tiles; **Write back** and **Write to** are a paper plane, on the one solid ink button in the reading pane (decision 0183). **Move** (a row's handle in the sidebar's Edit) is the grip, three short level lines, as a phone draws a row you can drag (decision 0207). A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
+"View original" is an arrow with no box. **A person** is one head and shoulders (the Readers icon's single figure) and **a publication** a newspaper page with one solid picture, on Add's two tiles; **Write back** and **Write to** are a paper plane, on the one solid ink button in the reading pane (decision 0183), and, for a person, a quiet icon beside Star in the article's top bar and the phone's bottom toolbar (decision 0213). **Move** (a row's handle in the sidebar's Edit) is the grip, three short level lines, as a phone draws a row you can drag (decision 0207). A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
 
 ## Empty screens and the ends of lists (Live, decision 0142)
 

@@ -101,6 +101,8 @@
   /** Write back asked for before the article's text arrived (from a row's menu): it starts once it's there. */
   let writeBackFor: number | undefined = $state();
   $effect(() => {
+    // Asked for about another article, left before it arrived: never started later by itself.
+    if (writeBackFor !== undefined && writeBackFor !== article.id) writeBackFor = undefined;
     if (writeBack && writeBackFor === article.id) {
       writeBackFor = undefined;
       void tick().then(() => writeBack?.start());
@@ -507,7 +509,7 @@
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0213); no "›" here, where the "·" follows. -->
           <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
             >{article.feedTitle}</button
-          ><span id="byline-about" class="sr-only">Opens the page about them.</span>
+          ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
         {:else if full?.siteUrl}
           <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}<span class="sr-only"> (opens in a new tab)</span></a>
         {:else}

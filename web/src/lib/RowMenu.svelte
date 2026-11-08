@@ -2,8 +2,8 @@
   A row's menu in the article list (SPEC section 6, decision 0213): the same
   menu as More's (`MenuList.svelte`), opened where the row was pressed and
   kept on the screen. The keyboard starts on its first choice; Escape or a
-  choice gives the keyboard back to the row, and a press anywhere outside
-  closes it.
+  choice (or Tab) gives the keyboard back to the row; a press anywhere
+  outside, or the list scrolling under it, closes it.
 -->
 <script lang="ts">
   import { onMount } from "svelte";
@@ -46,6 +46,10 @@
     if (!list?.holds(event.target as Node)) onClose(false);
   }}
   onresize={() => onClose(false)}
+  onwheel={(event) => {
+    if (!list?.holds(event.target as Node)) onClose(false);
+  }}
 />
 
-<MenuList bind:this={list} id={ID} {label} {groups} at={kept ?? at} {onClose} />
+<!-- It sits after the list, so Tab out of it goes back to the row too, not past the list. -->
+<MenuList bind:this={list} id={ID} {label} {groups} at={kept ?? at} onClose={() => onClose(true)} />

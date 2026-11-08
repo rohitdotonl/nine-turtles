@@ -54,6 +54,13 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
     await expect(rowMenu(page)).toHaveCount(0);
     await expect(second).toBeFocused();
+    // The Menu key does the same.
+    await page.keyboard.press("ContextMenu");
+    await expect(rowMenu(page).getByRole("menuitem").first()).toBeFocused();
+    // Tab leaves it for the row, not past the list.
+    await page.keyboard.press("Tab");
+    await expect(rowMenu(page)).toHaveCount(0);
+    await second.focus();
     await page.keyboard.press("Shift+F10");
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");
@@ -105,12 +112,20 @@ test.describe("on a wide window", () => {
     const button = (await end.boundingBox())!;
     expect(button.y).toBeGreaterThan(caption.y + caption.height);
     expect(button.height).toBeGreaterThanOrEqual(44);
-    await end.click();
+    // By the keyboard: the button goes once pressed, and the keyboard's place stays in the list.
+    await end.focus();
+    await page.keyboard.press("Enter");
     await expect(rows(page).locator(".unread-dot")).toHaveCount(0);
     await expect(end).toHaveCount(0);
+    await expect(rows(page).first()).toBeFocused();
     await page.getByRole("button", { name: "Undo" }).click();
     await expect(rows(page).locator(".unread-dot")).toHaveCount(3);
     await expect(end).toBeVisible();
+
+    // Not under search results, which end "No more results."
+    await page.getByRole("textbox", { name: "Search", exact: true }).fill("summary");
+    await expect(page.locator(".list-end")).toHaveText("No more results.");
+    await expect(end).toHaveCount(0);
   });
 });
 

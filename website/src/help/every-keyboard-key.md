@@ -24,7 +24,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
 | <kbd>W</kbd> | Write back (a person's article) |
-| <kbd>Shift</kbd> <kbd>F10</kbd> | An article's own menu in the list: star, mark read, write back, their page |
+| <kbd>Shift</kbd> <kbd>F10</kbd> or the Menu key | An article's own menu in the list: star, mark read, write back, their page |
 | <kbd>Enter</kbd> | Open the article |
 | <kbd>S</kbd> | Star or unstar |
 | <kbd>H</kbd> | Highlight chosen words |
