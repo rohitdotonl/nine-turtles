@@ -66,7 +66,8 @@ anywhere or counted.
 - **Notes** in the sidebar, under Starred, lists every article the reader
   highlighted or wrote a note on, in the reader's order, each with its first
   highlight ("Highlighted · …") or its note ("Your note · …") under the
-  title. The row appears once there's a first highlight or note.
+  title. The row is there from the first day (decision 0219): before any
+  highlight or note, its list says "No notes yet." and how to make one.
 - A marked article is kept like a starred one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).
 

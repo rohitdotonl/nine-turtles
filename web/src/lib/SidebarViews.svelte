@@ -4,8 +4,8 @@
   everyone (decision 0187). With Unread off there's no Unread, and All is
   home.
 
-  Notes shows once the reader has highlighted or written a note on
-  something (SPEC section 42).
+  Notes shows from the first day, empty or not, so its empty list can say
+  how to fill it (decision 0219).
 
   On a phone the feeds screen is the root of a stack: nothing is selected
   there, and each row leads on with a chevron (decision 0041). Nor while the
@@ -13,7 +13,6 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { noted } from "./notes.svelte";
   import { sidebarViews, VIEW_NAMES, pathFor, type Route } from "./router";
 
   let {
@@ -34,7 +33,7 @@
 
   const ICONS = { unread: "dot", starred: "star", notes: "note", all: "layers" } as const;
 
-  let views = $derived(sidebarViews(unreadOff, noted.any));
+  let views = $derived(sidebarViews(unreadOff));
 </script>
 
 <ul>

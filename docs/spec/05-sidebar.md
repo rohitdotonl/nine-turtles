@@ -4,7 +4,7 @@
 
 **What it does**
 - Fixed order, top to bottom:
-  1. **Unread · Starred · Notes · All articles** (Notes once there's a highlight or note, section 42)
+  1. **Unread · Starred · Notes · All articles** (Notes from the first day, empty or not, section 42; decision 0219)
   2. **Folders**, in your own order (a new folder goes at the bottom; decision 0207)
   3. **People and publications not in any folder**, alphabetically, under two headings, **People** then **Publications**: one row per person, however many sources they have (section 36)
   4. **+ Add** ("Add a person or publication", section 3), then **Keys** (icon and word) and **Settings** as an icon, in one row
@@ -27,7 +27,7 @@
 - Your current place is marked as in the list (section 6), a rounded pill of soft neutral grey set a little in from the sidebar's edges, with no color (decision 0057), its name semibold in full ink, and, its icon in full ink. Starred's star stays an outline there: a filled star only ever means an article is starred (decision 0182). When your place changes, its row scrolls into view in the sidebar if it was out of sight, at once and only as far as needed, never smoothly; it doesn't move when dots come and go. On a phone's feeds screen nothing is marked: it's where you start, not a place you're in. Nor while the welcome shows (section 2): you're on the welcome, not in Unread (decision 0191). Under the pointer a row gets a fainter, neutral tone, never the accent.
 - While Settings is open, its button at the foot of the sidebar shows as your place, with the same pill, and screen readers hear it as the current page. The shortcut list's button, while its list is open, sits on a faint ink tile instead (section 19). The fill is never the only sign (decision 0054).
 - A broken feed looks like any other feed in the sidebar; it just doesn't get new items. Everyone you follow (section 15, in Settings › Your library) lists the feeds that aren't working at its top, and the daily check mentions them too.
-- **The same lists for everyone** (decision 0187): Unread (while it's on), Starred, Notes (once there's a highlight or note) and All articles always show; none can be hidden. So Help, the screenshots and the keys always match what a reader sees.
+- **The same lists for everyone** (decision 0187): Unread (while it's on), Starred, Notes and All articles always show; none can be hidden. So Help, the screenshots and the keys always match what a reader sees.
 - Recently read, saved searches and collections were removed in favour of Starred (decision 0174); their old addresses lead to "Wrong turn?".
 - If the feeds can't be loaded, the sidebar says "Your feeds couldn't be loaded." (announced to screen readers) with a **Try again** button, which loads them again and, once they're back, puts the keyboard on the sidebar's first row.
 
