@@ -1439,8 +1439,8 @@ input {
 }
 
 .article-text blockquote {
-  padding-left: 1em;
-  border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  padding-inline-start: 1em;
+  border-inline-start: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
   color: var(--ink-2);
   font-style: italic;
 }

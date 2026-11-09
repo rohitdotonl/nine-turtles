@@ -204,6 +204,7 @@
       <label for="search-field" class="sr-only">Search articles</label>
       <input
         id="search-field"
+        dir="auto"
         bind:this={field}
         type="text"
         value={query.words}

@@ -59,7 +59,7 @@
   {#if writing}
     <form class="note-form flex flex-col gap-3" onsubmit={save}>
       <label class="text-base font-semibold text-ink" for="person-note">A note on {name}</label>
-      <textarea id="person-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" aria-describedby="person-note-message" class="field note-box"></textarea>
+      <textarea dir="auto" id="person-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" aria-describedby="person-note-message" class="field note-box"></textarea>
       <p class="text-small text-ink-2">Only you see it. It's kept for all their places, and Your data exports it.</p>
       <p id="person-note-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}

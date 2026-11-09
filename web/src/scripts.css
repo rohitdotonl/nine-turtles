@@ -1,0 +1,79 @@
+/*
+  Writing in other scripts, set with the same care as English (decision 0221).
+  Each article is marked with its language (the feed's, checked against its
+  letters, server/src/feeds/language.rs), and a few settings follow from it.
+  The column, the sizes and the reader's own font stay as they are; only what
+  a script needs changes. Languages are listed by name, since :lang() with a
+  list isn't in every browser nine turtles supports.
+*/
+
+/* Devanagari (Hindi, Marathi, Nepali…): its marks sit above the headline and
+   below the line, so the lines need more room, and the title is lighter. */
+.article:is(:lang(hi), :lang(mr), :lang(ne), :lang(sa), :lang(mai), :lang(bho), :lang(kok)) {
+  line-height: 1.8;
+}
+.article:is(:lang(hi), :lang(mr), :lang(ne), :lang(sa), :lang(mai), :lang(bho), :lang(kok)) .article-title {
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+/* Arabic, Persian, Urdu: more room between lines, and a touch larger, since
+   their letters sit small beside Latin ones at the same size. */
+.article:is(:lang(ar), :lang(fa), :lang(ur), :lang(ps), :lang(ckb), :lang(sd), :lang(ug), :lang(ku)) {
+  line-height: 1.8;
+}
+.article:is(:lang(ar), :lang(fa), :lang(ur), :lang(ps), :lang(ckb), :lang(sd), :lang(ug), :lang(ku)) .article-text {
+  font-size: 1.1em;
+}
+.article:is(:lang(ar), :lang(fa), :lang(ur), :lang(ps), :lang(ckb), :lang(sd), :lang(ug), :lang(ku)) .article-title {
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* Hebrew and Yiddish. */
+.article:is(:lang(he), :lang(iw), :lang(yi)) {
+  line-height: 1.7;
+}
+.article:is(:lang(he), :lang(iw), :lang(yi)) .article-title {
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+/* Chinese, Japanese and Korean: more room between lines, the title not
+   pulled in, and Japanese lines never starting with a small kana or a
+   closing mark (kinsoku). */
+.article:is(:lang(zh), :lang(ja), :lang(ko)) {
+  line-height: 1.8;
+  line-break: strict;
+}
+.article:is(:lang(zh), :lang(ja), :lang(ko)) .article-title {
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+/* No slanted letters where a script has no italics: a quotation is upright,
+   and emphasis is a step heavier, or dots beside the characters as in
+   Chinese and Japanese print. */
+.article:is(:lang(hi), :lang(mr), :lang(ne), :lang(sa), :lang(ar), :lang(fa), :lang(ur), :lang(he), :lang(yi), :lang(zh), :lang(ja), :lang(ko))
+  .article-text
+  blockquote {
+  font-style: normal;
+}
+.article:is(:lang(hi), :lang(mr), :lang(ne), :lang(sa), :lang(ar), :lang(fa), :lang(ur), :lang(he), :lang(yi)) .article-text :where(em, i) {
+  font-style: normal;
+  font-weight: 600;
+}
+.article:is(:lang(zh), :lang(ja)) .article-text :where(em, i) {
+  font-style: normal;
+  text-emphasis: filled dot;
+}
+.article:lang(zh) .article-text :where(em, i) {
+  text-emphasis-position: under;
+}
+
+/* Right to left: the title and the text share the right edge, and so does
+   the byline under them, though its words, nine turtles' own, stay English. */
+.article.rtl .article-byline {
+  text-align: right;
+}

@@ -43,4 +43,4 @@ up there, press **Search all articles** to look everywhere for the same words.
 - Search needs a connection.
 - **Mark all as read** works on what a search found.
 - Search understands English, other languages written in the Latin alphabet,
-  and Hindi.
+  Hindi and Arabic. More in <a href="/help/read-in-other-languages/">Read in other languages</a>.

@@ -29,6 +29,7 @@
 <script lang="ts">
   import { authorBesides } from "./byline";
   import { edge } from "./edge";
+  import { rightToLeft } from "./scripts";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
@@ -501,21 +502,22 @@
     bind:this={scroller}
     onscroll={scrolled}
     class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
-    <article lang={full?.language ?? undefined} class="article pt-3">
-      <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
+    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0221). -->
+    <article lang={full?.language ?? undefined} class={["article pt-3", rightToLeft(full?.language) && "rtl"]}>
+      <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rightToLeft(full?.language) ? "rtl" : "auto"}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
         {#if followed}
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows. -->
           <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
-            >{article.feedTitle}</button
+            ><bdi>{article.feedTitle}</bdi></button
           ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
         {:else if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only"> (opens in a new tab)</span></a>
         {:else}
-          <span class="publisher">{article.feedTitle}</span>
+          <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
         {/if}
-        {#if author}· {author}{/if}
+        {#if author}· <bdi>{author}</bdi>{/if}
         · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
       </p>
 

@@ -9,6 +9,7 @@
 
 mod adding;
 mod articles;
+mod language;
 mod lists;
 mod store;
 

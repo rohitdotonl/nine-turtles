@@ -124,7 +124,7 @@ fn date(number: u32) -> String {
 /// that gives only a summary.
 const FULL: &str = r#"<?xml version="1.0"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
-<title>Full Notes</title><link>https://full.example/</link><language>hi</language>
+<title>Full Notes</title><link>https://full.example/</link><language>en-GB</language>
 <item><title>Whole</title><link>https://full.example/whole</link><guid>whole</guid>
 <pubDate>02 Jan 2026 12:00:00 GMT</pubDate><author>a@full.example (Asha)</author>
 <description>Short version.</description>
@@ -375,7 +375,7 @@ async fn an_article_opens_with_its_cleaned_content_language_and_credit() {
     assert_eq!(whole["feed_title"], "Full Notes");
     assert_eq!(whole["site_url"], "https://full.example/");
     assert_eq!(whole["link"], "https://full.example/whole");
-    assert_eq!(whole["language"], "hi");
+    assert_eq!(whole["language"], "en-gb");
     assert_eq!(whole["author"], "Asha");
     let content = whole["content"].as_str().unwrap();
     assert!(content.contains("<h2>Heading</h2>"), "{content}");

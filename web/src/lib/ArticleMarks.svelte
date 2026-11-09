@@ -287,7 +287,7 @@
     {#if editingArticle}
       <form class="note-form flex flex-col gap-3" onsubmit={saveArticleNote}>
         <label class="text-base font-semibold text-ink" for="article-note">A note on this article</label>
-        <textarea id="article-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
+        <textarea dir="auto" id="article-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
         <p class="text-small text-ink-2">Only you see it. Search finds it, and Your data exports it.</p>
         <div class="flex flex-wrap gap-2">
           <button type="submit" class="btn-primary">Save</button>

@@ -84,7 +84,7 @@
             <label class="inset-row">
               <span class="sr-only">New folder's name</span>
               <!-- svelte-ignore a11y_autofocus -->
-              <input bind:value={newFolder} type="text" autocomplete="off" placeholder="Name" class="inset-input" autofocus />
+              <input dir="auto" bind:value={newFolder} type="text" autocomplete="off" placeholder="Name" class="inset-input" autofocus />
             </label>
           {/if}
         </div>

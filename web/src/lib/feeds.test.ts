@@ -53,6 +53,11 @@ describe("folders and the sidebar search", () => {
     expect(findByName({ feeds, folders }, "nothing like it")).toEqual({ feeds: [], folders: [] });
     expect(findByName({ feeds, folders }, " ")).toEqual({ feeds, folders });
   });
+
+  it("compares Hindi names letter by letter, vowel signs and all (decision 0221)", () => {
+    const hindi = [{ ...feeds[0]!, id: 7, title: "कत्था" }, { ...feeds[0]!, id: 8, title: "किताबें" }];
+    expect(findByName({ feeds: hindi, folders: [] }, "कित").feeds.map((each) => each.id)).toEqual([8]);
+  });
 });
 
 describe("source names in the article list", () => {

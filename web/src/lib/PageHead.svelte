@@ -43,11 +43,11 @@
       <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
         ><Icon name="back" size={20} />{backTo}</button
       >
-      <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words">{title}</h2>
+      <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>
     </div>
   {:else}
     <div class={["mx-auto flex min-h-11 w-full items-center justify-between gap-4", column]}>
-      <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words">{title}</h2>
+      <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>
       {#if onClose}
         <button type="button" onclick={onClose} aria-label={closeLabel ?? "Close"} title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size={20} /></button>
       {/if}

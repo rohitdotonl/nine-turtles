@@ -33,7 +33,8 @@ pub struct FullArticle {
     /// gives only a summary.
     pub content: Option<String>,
     pub summary: Option<String>,
-    /// The article's language, or its feed's; null if neither says.
+    /// The article's language: its own or its feed's when the letters agree,
+    /// otherwise its script's usual one; null if none can be told (decision 0221).
     pub language: Option<String>,
     /// Seconds since 1970 (UTC), as in the list.
     pub at: i64,
@@ -180,9 +181,12 @@ pub(crate) async fn full_articles(
         article.content = article.content.take().map(|html| stored_html(&html));
         article.summary = article.summary.take().map(|html| stored_html(&html));
         article.link = article.link.take().map(|link| stored_link(&link));
-        article.language = article.language.take().filter(|tag| is_language_tag(tag));
+        let body = article.content.as_deref().or(article.summary.as_deref());
+        // The feed's language, checked against the letters (decision 0221).
+        let tag = article.language.take().filter(|tag| is_language_tag(tag));
+        let text = body.map(crate::search::plain_words).unwrap_or_default();
+        article.language = super::language::of(tag.as_deref(), &article.title, &text);
         if article.title.trim().is_empty() {
-            let body = article.content.as_deref().or(article.summary.as_deref());
             article.opening = body.and_then(super::opening);
         }
     }

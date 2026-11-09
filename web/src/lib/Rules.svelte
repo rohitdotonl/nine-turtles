@@ -188,6 +188,7 @@
           <label for="hide-word" class="sr-only">{forName ? `Hide articles from ${forName} about` : "Hide articles about"}</label>
           <input
             id="hide-word"
+            dir="auto"
             bind:this={field}
             bind:value={words}
             oninput={() => (empty = false)}
