@@ -24,14 +24,20 @@ export const PAGES: { value: Page; label: string }[] = [
 ];
 
 /**
- * Each page's name, whether it is a day or a night page, and its color for
- * the browser's bar. contrast.test.ts checks the colors match themes.css.
+ * Each page's name, whether it is a day or a night page, its color (for the
+ * browser's bar and the choices' swatches) and its words' color (the "A" on
+ * Settings' paper squares). contrast.test.ts checks both match themes.css.
  */
-export const LOOKS: Record<Theme, { label: string; mode: Mode; page: string }> = {
-  white: { label: "White", mode: "light", page: "#ffffff" },
-  paper: { label: "Paper", mode: "light", page: "#f7f3ea" },
-  night: { label: "Night", mode: "dark", page: "#121212" },
+export const LOOKS: Record<Theme, { label: string; mode: Mode; page: string; ink: string }> = {
+  white: { label: "White", mode: "light", page: "#ffffff", ink: "#141414" },
+  paper: { label: "Paper", mode: "light", page: "#f7f3ea", ink: "#1f1a14" },
+  night: { label: "Night", mode: "dark", page: "#121212", ink: "#e8e8e8" },
 };
+
+/** A choice's swatch, the Aa panel's and Settings': the page it gives; Match device is half White, half Night. */
+export function swatch(page: Page): string {
+  return page === "auto" ? `linear-gradient(90deg, ${LOOKS.white.page} 50%, ${LOOKS.night.page} 50%)` : LOOKS[page].page;
+}
 
 export function isPage(value: unknown): value is Page {
   return typeof value === "string" && PAGES.some((choice) => choice.value === value);

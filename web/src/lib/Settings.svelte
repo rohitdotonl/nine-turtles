@@ -45,7 +45,7 @@
   import Rules from "./Rules.svelte";
   import PageHead from "./PageHead.svelte";
   import TextSize from "./TextSize.svelte";
-  import { PAGES } from "./themes";
+  import { LOOKS, PAGES, swatch } from "./themes";
   import type { Feed } from "./shapes";
   import type { Order } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type SettingsPage } from "./router";
@@ -357,8 +357,9 @@
             </div>
             <div role="group" aria-labelledby="page-name" class="choices setting-control" style="--columns: 4">
               {#each PAGES as choice (choice.value)}
-                <label class="choice">
+                <label class="choice page-choice">
                   <input type="radio" name="page" value={choice.value} bind:group={preferences.page} />
+                  <span aria-hidden="true" class={["paper", choice.value !== "auto" && "lettered"]} style:background={swatch(choice.value)} style:color={choice.value === "auto" ? undefined : LOOKS[choice.value].ink}></span>
                   {choice.label}
                 </label>
               {/each}
@@ -559,6 +560,36 @@
     text-align: center;
     line-height: 1.2;
     text-wrap: balance;
+  }
+  /*
+    Page's choices show the paper itself (decision 0223): a 28px square of each page with an "A" in
+    that page's own words' color, its name under it; Match device is half White, half Night. A faint
+    edge lets the white square show on white. The control, the chosen tile and the names are the
+    other segmented choices' own; the square is only a picture, the name says it.
+  */
+  .choices.setting-control :global(.page-choice) {
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-block: 0.5rem;
+  }
+  .paper {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.3125rem;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+    font: 600 0.75rem/1 var(--font-serif);
+  }
+  /* The "A" is drawn, not written, so the choice's name stays its word alone ("Paper", not "A Paper"). */
+  .paper.lettered::before {
+    content: "A";
+  }
+  @media (forced-colors: active) {
+    .paper {
+      forced-color-adjust: none;
+      outline: 1px solid CanvasText;
+    }
   }
   /* What a row that opens a page is set to (the plan), before its ›. */
   .setting-value {

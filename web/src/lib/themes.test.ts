@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOOKS, PAGES, THEMES, isPage, showing } from "./themes";
+import { LOOKS, PAGES, THEMES, isPage, showing, swatch } from "./themes";
 
 describe("pages", () => {
   it("has the three pages from DESIGN.md, White, Paper and Night, and Match device (decision 0176)", () => {
@@ -7,6 +7,11 @@ describe("pages", () => {
     expect(THEMES.map((theme) => LOOKS[theme].label)).toEqual(["White", "Paper", "Night"]);
     expect(PAGES.map((choice) => choice.label)).toEqual(["White", "Paper", "Night", "Match device"]);
     expect(THEMES.map((theme) => LOOKS[theme].mode)).toEqual(["light", "light", "dark"]);
+  });
+
+  it("draws each choice's swatch as the page it gives, Match device half White and half Night", () => {
+    expect(swatch("paper")).toBe(LOOKS.paper.page);
+    expect(swatch("auto")).toBe(`linear-gradient(90deg, ${LOOKS.white.page} 50%, ${LOOKS.night.page} 50%)`);
   });
 
   it("recognises only the choices it offers", () => {
