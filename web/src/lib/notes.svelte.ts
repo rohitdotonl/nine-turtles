@@ -27,7 +27,7 @@ export type Waiting =
   | { kind: "remove"; article: number; id: number }
   | { kind: "article-note"; article: number; note: string | null };
 
-/** Whether the reader has highlighted or written a note on anything: the sidebar's Notes shows from then on. */
+/** Whether the reader has highlighted or written a note on anything: Settings › Your data offers their export from then on. */
 export const noted = $state({ any: false });
 
 /** Changes still waiting, oldest first (kept for each reader, on this device). */

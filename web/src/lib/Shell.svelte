@@ -54,7 +54,6 @@
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, type Route } from "./router";
-  import { noted } from "./notes.svelte";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
@@ -744,7 +743,7 @@
 
   /** Shift+J and Shift+K: the row after or before the place you're in, in the sidebar's order. */
   function rowAfter(step: 1 | -1): Route | undefined {
-    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff, noted.any), phone, sidebarFeeds?.openFolders(), route, step);
+    return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff), phone, sidebarFeeds?.openFolders(), route, step);
   }
 
   /**

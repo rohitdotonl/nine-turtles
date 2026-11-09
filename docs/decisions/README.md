@@ -195,3 +195,4 @@ repository's history.
 | [0219](0219-one-reading-column.md) | On a computer, an article, Start reading and a person's page share one column (left edge, first line), so Start reading's title is where the article's will be and nothing jumps |
 | [0220](0220-one-quiet-opening.md) | Every list opens the same quiet way: no begun first article or Start reading on a phone or a computer; the newest is simply the first row, and the reading area shows its quiet line (replaces 0210) |
 | [0221](0221-one-sheet-of-paper.md) | The article list sits on the page itself, the same color as the article, parted by the pane line; only the sidebar is toned; the list's pill is mixed into the page (from the owner's Kenya Hara critique) |
+| [0222](0222-notes-from-the-first-day.md) | Notes shows in the sidebar from the first day, with its empty list saying how to make one (no longer only after a first highlight) |

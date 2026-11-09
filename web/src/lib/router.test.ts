@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, placeAddressesBy, rowFor, titleFor, type SettingsPage } from "./router";
+import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, placeAddressesBy, rowFor, sidebarViews, titleFor, type SettingsPage } from "./router";
 
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
@@ -126,5 +126,12 @@ describe("the Help pages' addresses (decision 0157)", () => {
   it("points at the website's Help, and one page by its file name", () => {
     expect(HELP_URL).toBe("https://nineturtles.app/help/");
     expect(helpPage("every-keyboard-key")).toBe("https://nineturtles.app/help/every-keyboard-key/");
+  });
+});
+
+describe("the sidebar's lists", () => {
+  it("shows Notes from the first day, so its empty list can say how to fill it (decision 0222)", () => {
+    expect(sidebarViews(false)).toEqual(["unread", "starred", "notes", "all"]);
+    expect(sidebarViews(true)).toEqual(["starred", "notes", "all"]);
   });
 });
