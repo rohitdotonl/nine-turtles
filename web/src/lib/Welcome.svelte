@@ -17,7 +17,6 @@
 
   let {
     start,
-    onList,
     covered,
     heading = $bindable(),
     field = $bindable(),
@@ -28,8 +27,6 @@
     onTried,
   }: {
     start: boolean;
-    /** In the list's place (a phone, or a medium window), on the list's grey: its cards are the page's color. */
-    onList: boolean;
     covered: boolean;
     heading?: HTMLHeadingElement;
     field?: HTMLInputElement;
@@ -65,7 +62,7 @@
       chooser at once (decision 0137); what came in is said on the list that follows, and a
       file that brought nothing is said here, under it.
     -->
-    <AddFeed bind:field bind:asked feeds={[]} {onAdded} {onOpen} {start} {onList}>
+    <AddFeed bind:field bind:asked feeds={[]} {onAdded} {onOpen} {start}>
       {#snippet alternative()}
         <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
         <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
