@@ -1070,6 +1070,10 @@ test.describe("your place in an article (decision 0060)", () => {
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
     const stopped = await top(page);
+    // Its row says how far, in words, while the place is kept (decision 0218).
+    const far = /^·\s(Just begun|A third read|Half read|Two-thirds read|Nearly finished)$/;
+    await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveText(far);
+    await expect(row(page, "Only the first page").locator(".row-place")).toHaveCount(0);
 
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
@@ -1081,6 +1085,7 @@ test.describe("your place in an article (decision 0060)", () => {
 
     await page.reload();
     await appReady(page);
+    await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveText(far);
     await row(page, "The pleasure of a slow letter").click();
     await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
     expect(await top(page)).toBeLessThan(stopped + 8);
@@ -1097,6 +1102,8 @@ test.describe("your place in an article (decision 0060)", () => {
     await expect(article(page).locator("table")).toBeAttached();
     await page.waitForTimeout(200);
     expect(await top(page)).toBe(0);
+    // Finished, its row no longer says how far.
+    await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveCount(0);
   });
 
   test("coming back, the article you left part of the way through is offered in one quiet line, and opens where you were (decision 0175)", async ({ page }) => {

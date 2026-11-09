@@ -11,9 +11,36 @@ import { isRecord } from "./http";
  * A place: which block of the article's text was at the top of the window
  * (a paragraph, a picture, a heading), and how far down that block, from 0
  * to 1. Kept by block rather than by pixels, so it holds when pictures load
- * late or the text size changes.
+ * late or the text size changes. `read` is how much of the article has
+ * been in view, from 0 to 1 (the window's bottom, down the whole text), for
+ * the list's row (SPEC section 6, decision 0218); only the device that
+ * measured it knows it, so a place from another device has none.
  */
-export type Place = { block: number; within: number };
+export type Place = { block: number; within: number; read?: number };
+
+/** Who wants to know when a place is kept or forgotten (the article list's rows). */
+const listeners = new Set<() => void>();
+
+/** Calls `changed` whenever a place is kept or forgotten, so a list can show it. Returns how to stop. */
+export function onPlaces(changed: () => void): () => void {
+  listeners.add(changed);
+  return () => listeners.delete(changed);
+}
+
+/**
+ * The few words a list's row shows while a place is kept (decision 0218):
+ * how far through, in plain words, never a number. A place from another
+ * device, with no share, says only "Part read".
+ */
+export function placeWords(place: Place): string {
+  const read = place.read;
+  if (read === undefined) return "Part read";
+  if (read < 0.25) return "Just begun";
+  if (read < 0.42) return "A third read";
+  if (read < 0.58) return "Half read";
+  if (read < 0.75) return "Two-thirds read";
+  return "Nearly finished";
+}
 
 const KEY = "nine-turtles.places";
 /** Places for the most recent articles only, so storage never grows without end. */
@@ -40,14 +67,16 @@ function write(saved: Saved, storage: Pick<Storage, "setItem"> | undefined): voi
 
 function isPlace(value: unknown): value is Place {
   if (typeof value !== "object" || value === null) return false;
-  const { block, within } = value as Record<string, unknown>;
-  return typeof block === "number" && Number.isInteger(block) && block >= 0 && typeof within === "number" && within >= 0 && within <= 1;
+  const { block, within, read } = value as Record<string, unknown>;
+  const share = read === undefined || (typeof read === "number" && read >= 0 && read <= 1);
+  return share && typeof block === "number" && Number.isInteger(block) && block >= 0 && typeof within === "number" && within >= 0 && within <= 1;
 }
 
 /** Where you stopped in this article, if you stopped part of the way through. */
 export function placeOf(article: number, storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Place | undefined {
   const place = read(storage)[article];
-  return isPlace(place) ? { block: place.block, within: place.within } : undefined;
+  if (!isPlace(place)) return undefined;
+  return place.read === undefined ? { block: place.block, within: place.within } : { block: place.block, within: place.within, read: place.read };
 }
 
 /** Remembers where you are; `undefined` forgets it (at the top, or once you've reached the end). */
@@ -57,7 +86,10 @@ export function keepPlace(article: number, place: Place | undefined, storage: Pi
     if (!(article in saved)) return;
     delete saved[article];
   } else {
-    saved[article] = { ...place, at: now };
+    // The same place from the server (decision 0175) keeps the share this device measured.
+    const before = saved[article];
+    const read = place.read ?? (before && before.block === place.block && before.within === place.within ? before.read : undefined);
+    saved[article] = read === undefined ? { block: place.block, within: place.within, at: now } : { block: place.block, within: place.within, read, at: now };
     const ids = Object.keys(saved);
     if (ids.length > KEPT) {
       ids.sort((a, b) => (saved[a]?.at ?? 0) - (saved[b]?.at ?? 0));
@@ -65,6 +97,7 @@ export function keepPlace(article: number, place: Place | undefined, storage: Pi
     }
   }
   write(saved, storage);
+  for (const changed of listeners) changed();
 }
 
 /**
@@ -82,7 +115,8 @@ export function placeIn(scroller: HTMLElement, text: HTMLElement): Place | undef
     const box = blocks[block]!.getBoundingClientRect();
     if (box.bottom > top) {
       const within = box.height > 0 ? Math.min(1, Math.max(0, (top - box.top) / box.height)) : 0;
-      return { block, within };
+      const read = Math.min(1, (scroller.scrollTop + scroller.clientHeight) / scroller.scrollHeight);
+      return { block, within, read };
     }
   }
   return undefined;

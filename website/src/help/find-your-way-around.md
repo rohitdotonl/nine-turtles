@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-08
+updated: 2026-11-09
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -52,7 +52,7 @@ Choose an article and it opens on the right. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
 under the title opens their page. On a phone they're in the bar at the bottom, with Previous and
-Next. A long article opens where you stopped last time.
+Next. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 When you come back with nothing open, the reading pane offers the article
 you last left part of the way through, in one quiet line: "You were reading
