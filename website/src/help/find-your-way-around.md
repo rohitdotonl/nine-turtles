@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-08
+updated: 2026-11-09
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -45,6 +45,8 @@ person's or publication's list it also has **Info about …**, their page, which
 opens too when you press their name at the top of the list. Each article
 has a menu of its own too: right-click it (on a phone, press and hold it)
 to star it, mark it read or unread, write back, or see the writer's page.
+While the menu is open, the article it belongs to stays shaded, so you can
+see which one you're about to change.
 
 ## Reading
 

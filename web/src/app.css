@@ -215,7 +215,7 @@ body {
   position: relative;
   border-radius: 0.5rem;
 }
-.place:is([aria-current], [data-here]) {
+.place:is([aria-current], [data-here], [data-held]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
 }
 /*
@@ -1212,7 +1212,7 @@ textarea {
 @media (forced-colors: active) {
   /* The pill's fill is dropped there, so "where you are" becomes an edge in the system's highlight. */
   [aria-current="page"],
-  [aria-current="true"] {
+  [aria-current="true"], .item-row[data-held] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }

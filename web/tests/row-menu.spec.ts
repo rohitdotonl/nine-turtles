@@ -137,6 +137,11 @@ test("on a phone, a long press on a row opens its menu, and the tap doesn't open
   const at = { pointerType: "touch", isPrimary: true, clientX: box.x + 40, clientY: box.y + 20 };
   await first.dispatchEvent("pointerdown", at);
   await expect(rowMenu(page)).toBeVisible();
+  // The pressed row is held in the selected row's pill, so it's clear which article the menu acts on.
+  await expect(first).toHaveAttribute("data-held", "");
+  await expect(rows(page).nth(1)).not.toHaveAttribute("data-held");
+  const pill = await page.locator(".item-row[data-held]").evaluate((row) => getComputedStyle(row).backgroundColor);
+  expect(pill).not.toBe("rgba(0, 0, 0, 0)");
   await first.dispatchEvent("pointerup", at);
   await first.dispatchEvent("click", at);
   await expect(pane(page)).toHaveCount(0);
@@ -145,4 +150,6 @@ test("on a phone, a long press on a row opens its menu, and the tap doesn't open
   expect(menu.x + menu.width).toBeLessThanOrEqual(412);
   await rowMenu(page).getByRole("menuitem", { name: "Star" }).click();
   await expect(first.locator(".row-star")).toBeVisible();
+  // Closed, the row lets go.
+  await expect(first).not.toHaveAttribute("data-held");
 });
