@@ -1,0 +1,33 @@
+/*
+  An article's own lists (SPEC section 7): bullets and numbers, and a little
+  room between items.
+*/
+.article-text :where(ul, ol) {
+  padding-left: 1.5em;
+}
+
+/*
+  On a computer, an article's own lists hang their numbers and bullets in the
+  margin, so a list's words start on the same left edge as every paragraph,
+  as a carefully set book does (decision 0218). Only from 48rem, where the
+  reading pane's side margins grow to 56px (ArticleView's md:px-14), room
+  enough for "10." at the largest text size; below that the margin is 20px,
+  so the numbers stay inside, as does a list inside a list.
+*/
+@media (min-width: 48rem) {
+  .article-text > :where(ul, ol) {
+    padding-inline-start: 0;
+  }
+}
+
+.article-text ul {
+  list-style: disc;
+}
+
+.article-text ol {
+  list-style: decimal;
+}
+
+.article-text li + li {
+  margin-top: 0.25em;
+}

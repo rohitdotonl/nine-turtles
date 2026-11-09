@@ -131,7 +131,7 @@ const FULL: &str = r#"<?xml version="1.0"?>
 <content:encoded><![CDATA[<h2>Heading</h2><p>Words <a href="/more">more</a><img src="https://pixel.example/o.gif" width="1" height="1"></p><img src="/photo.jpg" alt="Photo"><script>alert(1)</script>]]></content:encoded>
 </item>
 <item><title>Teaser</title><link>https://full.example/teaser</link><guid>teaser</guid>
-<pubDate>01 Jan 2026 12:00:00 GMT</pubDate><description>Only the start&lt;b&gt;.&lt;/b&gt;</description></item>
+<pubDate>01 Jan 2026 12:00:00 GMT</pubDate><description>Only the start&lt;b&gt;.&lt;/b&gt; &lt;a href="https://full.example/teaser"&gt;Read more&lt;/a&gt;</description></item>
 </channel></rss>"#;
 
 async fn atom() -> impl IntoResponse {
@@ -391,10 +391,13 @@ async fn an_article_opens_with_its_cleaned_content_language_and_credit() {
         assert!(!content.contains(gone), "{gone}: {content}");
     }
 
-    // A summary-only article has no content, only its summary.
+    // An RSS description cut short ("Read more") is a summary: no content, only its summary (decision 0218).
     let teaser = &reader.get(&format!("/api/articles/{}", id(1))).await["article"];
     assert_eq!(teaser["content"], Value::Null);
-    assert_eq!(teaser["summary"], "Only the start<b>.</b>");
+    assert_eq!(
+        teaser["summary"],
+        r#"Only the start<b>.</b> <a href="https://full.example/teaser" target="_blank" rel="noopener noreferrer">Read more</a>"#
+    );
 
     // An article that doesn't exist is simply not found.
     let response = Client::new()

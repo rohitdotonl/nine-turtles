@@ -71,7 +71,7 @@ test("an episode plays, and carries on where it stopped after a reload", async (
     const figures = (await button.locator("text").boundingBox())!;
     expect(figures.height).toBeGreaterThanOrEqual(8);
   }
-  // Its show notes end with a link to the episode's own page, on a row 44px tall.
+  // Its show notes are only a summary (they end "…"), so they end with a link to the episode's own page, on a row 44px tall.
   const page_ = article(page).getByRole("link", { name: /^Read the episode page on Podcast cast-/ });
   await expect(page_).toBeVisible();
   expect((await page_.boundingBox())!.height).toBeGreaterThanOrEqual(44);
