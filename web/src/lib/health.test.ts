@@ -20,10 +20,10 @@ describe("the words for who isn't working", () => {
   it("leads with since when nothing has come through", () => {
     const now = new Date(2026, 10, 6, 12, 0);
     const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
-    expect(headline(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("Nothing has come through since 1 November");
+    expect(headline(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("Nothing has come through since 1 Nov");
     expect(
       headline(sick({ problem: "not-found", failingSince: at(2026, 9, 1, 9), missingSince: at(2026, 9, 20, 9), state: "dead" }), now),
-    ).toBe("Nothing has come through since 20 October");
+    ).toBe("Nothing has come through since 20 Oct");
     expect(headline(sick({ failingSince: at(2026, 10, 6, 8) }), now)).toBe("Nothing has come through since earlier today");
     expect(headline(sick({ state: "working" }), now)).toBe("Working again");
   });
@@ -49,8 +49,8 @@ describe("a failing feed's line and Find new address (decision 0106)", () => {
   it("says since when the feed hasn't worked, in words", () => {
     const now = new Date(2026, 9, 27, 12, 0);
     const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
-    expect(brokenSince(at(2026, 9, 12, 9), now)).toBe("This feed hasn't worked since 12 October.");
-    expect(brokenSince(at(2025, 11, 3, 9), now)).toBe("This feed hasn't worked since 3 December 2025.");
+    expect(brokenSince(at(2026, 9, 12, 9), now)).toBe("This feed hasn't worked since 12 Oct.");
+    expect(brokenSince(at(2025, 11, 3, 9), now)).toBe("This feed hasn't worked since 3 Dec 2025.");
     expect(brokenSince(at(2026, 9, 27, 8), now)).toBe("This feed hasn't worked since earlier today.");
   });
 

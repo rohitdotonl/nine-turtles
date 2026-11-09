@@ -1,4 +1,4 @@
-# 0215: Clearer words and a safer Unsubscribe
+# 0216: Clearer words and a safer Unsubscribe
 
 *9 November 2026. The owner's choice, from the Don Norman critique.*
 

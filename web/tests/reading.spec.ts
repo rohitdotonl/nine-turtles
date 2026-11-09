@@ -428,7 +428,7 @@ test.describe("on a wide window", () => {
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
-    // At rest, the field says "Search articles", so it isn't mistaken for the sidebar's find field (decision 0215).
+    // At rest, the field says "Search articles", so it isn't mistaken for the sidebar's find field (decision 0216).
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
     await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toHaveAttribute("placeholder", "Search articles");
     // In the search, the scope chip sits in the box without making it taller (decision 0025).

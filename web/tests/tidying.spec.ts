@@ -66,7 +66,7 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   await page.getByRole("button", { name: "Choose…" }).click();
   await page.getByRole("checkbox", { name: new RegExp(first) }).check();
   await page.getByRole("checkbox", { name: new RegExp(second) }).check();
-  // Unsubscribe sits alone at the bar's left, far from Move to… at its right, so a slip can't land on it (decision 0215).
+  // Unsubscribe sits alone at the bar's left, far from Move to… at its right, so a slip can't land on it (decision 0216).
   const unsubscribeBox = (await page.getByRole("button", { name: "Unsubscribe", exact: true }).boundingBox())!;
   const countBox = (await page.getByText("2 chosen").boundingBox())!;
   const moveBox = (await page.getByRole("button", { name: "Move to…" }).boundingBox())!;

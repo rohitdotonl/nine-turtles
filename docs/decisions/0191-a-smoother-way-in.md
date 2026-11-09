@@ -29,4 +29,4 @@ meets, with no new feature:
 the owner chose to keep it (6 November 2026), because on a phone the Feeds
 screen is the way to Settings, Help and signing out while the welcome shows.
 (The button stays; only its word changed, to "‹ Home", at the owner's request on
-9 November 2026, decision 0215.)
+9 November 2026, decision 0216.)
