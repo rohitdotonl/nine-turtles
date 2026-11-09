@@ -186,6 +186,8 @@
   when a page shows those letters: a reader who never reads Hindi or Arabic
   never loads them. Chinese, Japanese and Korean fonts are megabytes, so those
   scripts keep the device's own. They follow Literata in --font-serif.
+  scripts/check-size.mjs lists their files by name and gives each its own
+  150 KB budget; a new one is added there too.
 */
 
 @font-face {

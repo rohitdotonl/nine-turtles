@@ -11,7 +11,7 @@ import { gzipSync } from "node:zlib";
 const KB = 1024;
 const BUDGET = { code: 200 * KB, fonts: 400 * KB, script: 150 * KB };
 // The other scripts' reading faces, by their files' names (web/src/fonts.css).
-const SCRIPT_FONT = /^noto-/;
+const SCRIPT_FONTS = new Set(["noto-serif-devanagari-wght.woff2", "noto-naskh-arabic-wght.woff2"]);
 const dist = join(import.meta.dirname, "..", "web", "dist");
 
 let code = 0;
@@ -20,7 +20,7 @@ const scriptFonts = [];
 for (const entry of readdirSync(dist, { recursive: true, withFileTypes: true })) {
   if (!entry.isFile()) continue;
   const data = readFileSync(join(entry.parentPath, entry.name));
-  if (/\.(woff2?|ttf|otf)$/.test(entry.name) && SCRIPT_FONT.test(entry.name)) {
+  if (/\.(woff2?|ttf|otf)$/.test(entry.name) && SCRIPT_FONTS.has(entry.name)) {
     scriptFonts.push([entry.name, data.length]);
   } else if (/\.(woff2?|ttf|otf)$/.test(entry.name)) {
     fonts += data.length; // Font files are already compressed.
