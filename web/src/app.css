@@ -1687,7 +1687,7 @@ dialog.dimmed::backdrop {
   iOS draws a page sheet: the screen behind dimmed as a sheet's dim is, a
   10px strip of it showing above the sheet, whose top corners are 12px. The
   sheet is a grouped ground, its groups (the folders, Unsubscribe) cards on
-  it: by day the list's grey with cards in the page's own color, as iOS sets
+  it: by day the grey one step off the page (--list) with cards in the page's own color, as iOS sets
   #f2f2f7 under white; by night the page itself with cards a step lighter
   (the group tone), as iOS lifts its dark cards. contrast.test.ts checks text
   and the field ring on both. Its title in the top line is a step smaller,

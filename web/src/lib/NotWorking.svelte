@@ -213,6 +213,10 @@
     color: var(--ink);
     font-size: var(--text-ui);
   }
+  /* On the card's tone, a new address's choices sit on the page's own color, so they stand apart from it. */
+  .card :global(.new-address .choices) {
+    --group: var(--paper);
+  }
   .card-name {
     font-size: 1.02rem;
     font-weight: 600;

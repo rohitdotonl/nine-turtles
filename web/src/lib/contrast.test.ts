@@ -102,7 +102,9 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(colors.star).toBeUndefined();
   });
 
-  it("tells the three areas apart by tone, deeper from reading area to sidebar", () => {
+  // The article list sits on the page (decision 0220); --list is the tone one step off it
+  // (code blocks, a phone sheet's ground), and the sidebar the step after.
+  it("orders the tones from the page, through one step off, to the sidebar", () => {
     const order = [colors.paper!, colors.list!, colors.sidebar!].map(luminance);
     const lightTheme = order[0]! > 0.5;
     expect(lightTheme ? order[0]! > order[1]! && order[1]! > order[2]! : order[0]! < order[1]! && order[1]! < order[2]!).toBe(true);
@@ -147,7 +149,7 @@ describe.each(Object.entries(THEMES))("the %s theme's search field", (_name, col
     const share = (name: string) =>
       Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
     const stacked = 1 - (1 - share("search-fill")) * (1 - share("tone"));
-    for (const background of ["list", "sidebar"]) {
+    for (const background of ["paper", "list", "sidebar"]) {
       expect(contrast(colors.ink!, mix(colors.ink!, colors[background]!, stacked)), background).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -171,7 +173,7 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  // The article list sits on the page itself (decision 0219), so its pill is mixed into the page.
+  // The article list sits on the page itself (decision 0220), so its pill is mixed into the page.
   it("is the text color mixed into the article list's page and the sidebar", () => {
     const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];
     expect(colors["tint-list"]).toBe(mix(from, colors.paper!, share));
@@ -236,7 +238,7 @@ describe.each(Object.entries(THEMES))("the %s theme's search highlight", (name, 
   it("keeps text at 7 : 1 and the second ink at 4.5 : 1, and stays a visible tone", () => {
     const share = markShare(name);
     expect(share).toBeGreaterThanOrEqual(0.06);
-    for (const background of ["list", "tint-list"]) {
+    for (const background of ["paper", "list", "tint-list"]) {
       const marked = mix(colors.accent!, colors[background]!, share);
       expect(contrast(colors.ink!, marked), background).toBeGreaterThanOrEqual(7);
       expect(contrast(colors["ink-2"]!, marked), background).toBeGreaterThanOrEqual(4.5);
@@ -298,7 +300,7 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
 });
 
 // A grouped list (Settings, Edit feed's folders) and a chosen segment on it
-// (decision 0042): in a light theme the group is the list's tone and the
+// (decision 0042): in a light theme the group is the tone one step off the page and the
 // segment the page's; in a dark one each is the text color mixed into the
 // page, read from the theme's block in app.css.
 function darkShare(selector: string, name: string): number | undefined {

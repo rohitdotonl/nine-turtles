@@ -504,7 +504,7 @@ test.describe("on a wide window", () => {
     await expect(note).toBeVisible();
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
-    // It sits in a band of the list's own tone across the pane, which the rows end above, so it
+    // It sits in a band of the pane's own color (the page, decision 0220) across the pane, which the rows end above, so it
     // never lies over the rows you're acting on (decision 0048).
     const band = note.locator("xpath=..");
     const [bandFill, paneFill] = await Promise.all([
