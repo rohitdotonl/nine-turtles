@@ -51,8 +51,8 @@ to star it, mark it read or unread, write back, or see the writer's page.
 Choose an article and it opens on the right. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
-under the title opens their page. On a phone they're in the bar at the bottom, with Previous and
-Next. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
+under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
+and Star on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 When you come back with nothing open, the reading pane offers the article
 you last left part of the way through, in one quiet line: "You were reading

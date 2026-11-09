@@ -10,9 +10,11 @@
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
   sits before its name, so every row's dot sits at the same right edge,
   in one column. There are no numbers (decision 0148): a dot says something
-  is new, never how much. Every name starts at one left edge, 46px into the
-  sidebar, where Unread, Starred and All start theirs; a folder's feeds
-  start one step further in (decision 0043).
+  is new, never how much. Unread, Starred and All start their names 46px
+  into the sidebar, after their icons; folders, and the people and
+  publications in no folder, start at the 20px margin; a folder's feeds
+  start one step in, on the 46px edge, so an indent always means "inside a
+  folder" (decisions 0043, 0219).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
   selected there, and every row ends in a chevron, after its dot, because
@@ -262,8 +264,9 @@
       data-unread={unreadOff ? undefined : feed.unread}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui pointer-fine:text-small",
-        // Every feed's name starts on the sidebar's one name edge, in a folder or not (decision 0123).
-        "pl-[38px]",
+        // Indent means inside (decision 0219): a folder's people start a step in, on the names' edge;
+        // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
+        from === null && !searching ? "pl-3" : "pl-[38px]",
         editing ? "pr-12" : "pr-3.5",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
