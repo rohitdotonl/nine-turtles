@@ -24,7 +24,7 @@ related: [search-everything, change-how-it-looks, highlight-and-take-notes]
   articles start on the right, title and all, with their lists and quotations
   on the right side too.
 - **Each script gets room to breathe.** Hindi and other Devanagari writing,
-  Arabic, Chinese and Japanese get more space between lines than English, so
+  Arabic, Hebrew, Chinese, Japanese and Korean get more space between lines than English, so
   their marks above and below the letters never crowd. Nothing is slanted
   into a fake italic where a script has none.
 - **Names stay whole.** A writer's name or a title in another script keeps its
@@ -39,5 +39,5 @@ in the direction of what you type.
 - Articles are never translated: you see what the writer wrote. Your browser
   can translate a page if you'd like.
 - <a href="/help/search-everything/">Search</a> understands English, other
-  languages written in the Latin alphabet, Hindi and Arabic. Chinese and
-  Japanese aren't searchable yet.
+  languages written in the Latin alphabet, and Hindi. Chinese and Japanese
+  aren't searchable yet.

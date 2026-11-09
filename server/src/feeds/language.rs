@@ -24,6 +24,7 @@ pub(crate) fn of(tag: Option<&str>, title: &str, text: &str) -> Option<String> {
         // script we know isn't this text's, so it's left out rather than kept wrong.
         (Some(tag), None)
             if mostly_other_letters(title, text)
+                && !ALSO_LATIN.contains(&primary(tag).as_str())
                 && SCRIPTS
                     .iter()
                     .any(|s| s.languages.contains(&primary(tag).as_str())) =>
@@ -42,8 +43,16 @@ struct Script {
     languages: &'static [&'static str],
 }
 
+/// Languages in the lists below that are often written in Latin letters too
+/// (Kurmanji Kurdish, Azerbaijani, Malay): their tag stands on Latin text.
+const ALSO_LATIN: &[&str] = &["ku", "az", "ms"];
+
+/// Where kana and Han sit in `SCRIPTS`, which Japanese detection counts together.
+const KANA: usize = 0;
+const HAN: usize = 2;
+
 const SCRIPTS: &[Script] = &[
-    // Kana before Han: Japanese mixes both, Chinese uses no kana.
+    // Kana before Han: Japanese mixes both, Chinese uses no kana. Keep KANA and HAN above in step.
     Script {
         ranges: &[(0x3040, 0x30FF), (0x31F0, 0x31FF), (0xFF66, 0xFF9F)],
         languages: &["ja"],
@@ -54,11 +63,13 @@ const SCRIPTS: &[Script] = &[
     },
     Script {
         ranges: &[(0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xF900, 0xFAFF)],
-        languages: &["zh", "ja", "yue"],
+        languages: &["zh", "ja", "yue", "nan", "hak", "wuu", "gan", "lzh"],
     },
     Script {
         ranges: &[(0x0900, 0x097F), (0xA8E0, 0xA8FF)],
-        languages: &["hi", "mr", "ne", "sa", "mai", "bho", "kok", "doi"],
+        languages: &[
+            "hi", "mr", "ne", "sa", "mai", "bho", "kok", "doi", "ks", "sd", "new",
+        ],
     },
     Script {
         ranges: &[
@@ -68,7 +79,9 @@ const SCRIPTS: &[Script] = &[
             (0xFB50, 0xFDFF),
             (0xFE70, 0xFEFF),
         ],
-        languages: &["ar", "fa", "ur", "ps", "ckb", "sd", "ug", "ku"],
+        languages: &[
+            "ar", "fa", "ur", "ps", "ckb", "sd", "ug", "ku", "pa", "ks", "az", "bal", "ms",
+        ],
     },
     Script {
         ranges: &[(0x0590, 0x05FF), (0xFB1D, 0xFB4F)],
@@ -96,7 +109,7 @@ const SCRIPTS: &[Script] = &[
     },
     Script {
         ranges: &[(0x0C80, 0x0CFF)],
-        languages: &["kn"],
+        languages: &["kn", "kok", "tcy"],
     },
     Script {
         ranges: &[(0x0D00, 0x0D7F)],
@@ -108,7 +121,7 @@ const SCRIPTS: &[Script] = &[
     },
     Script {
         ranges: &[(0x0370, 0x03FF), (0x1F00, 0x1FFF)],
-        languages: &["el"],
+        languages: &["el", "grc"],
     },
     Script {
         ranges: &[(0x10A0, 0x10FF)],
@@ -158,7 +171,7 @@ fn written_in(title: &str, text: &str) -> Option<&'static Script> {
     if total == 0 {
         return None;
     }
-    let (kana, han) = (0, 2);
+    let (kana, han) = (KANA, HAN);
     if counts[kana] > 0
         && (counts[kana] + counts[han]) * 2 > total
         && counts[kana] * 20 >= counts[han]
@@ -273,6 +286,34 @@ mod tests {
             )
             .as_deref(),
             Some("en")
+        );
+    }
+
+    #[test]
+    fn kana_and_han_are_where_japanese_detection_looks() {
+        assert_eq!(super::SCRIPTS[super::KANA].languages[0], "ja");
+        assert_eq!(super::SCRIPTS[super::HAN].languages[0], "zh");
+    }
+
+    #[test]
+    fn languages_that_share_a_script_keep_their_tag() {
+        assert_eq!(of(Some("pa"), "لاہور", "اج مینہ پیا").as_deref(), Some("pa"));
+        assert_eq!(
+            of(Some("kok"), "ಕೊಂಕಣಿ", "ಆಜ್ ಪಾವ್ಸ್ ಪಡ್ಲೊ").as_deref(),
+            Some("kok")
+        );
+        assert_eq!(of(Some("nan"), "台灣", "我愛讀冊").as_deref(), Some("nan"));
+        assert_eq!(
+            of(Some("grc"), "Ἰλιάς", "μῆνιν ἄειδε θεὰ").as_deref(),
+            Some("grc")
+        );
+    }
+
+    #[test]
+    fn a_language_also_written_in_latin_letters_keeps_its_tag_there() {
+        assert_eq!(
+            of(Some("ku"), "Rojbaş", "Îro baran barî.").as_deref(),
+            Some("ku")
         );
     }
 

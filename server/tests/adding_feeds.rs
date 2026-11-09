@@ -32,6 +32,7 @@ async fn publisher() -> (String, Arc<Mutex<Vec<String>>>) {
         .route("/feed.xml", get(|| async { xml(rss("Quiet Notes", 3)) }))
         .route("/long.xml", get(|| async { xml(rss("Long Feed", 120)) }))
         .route("/full.xml", get(|| async { xml(FULL.to_owned()) }))
+        .route("/arabic.xml", get(|| async { xml(ARABIC.to_owned()) }))
         .route(
             "/two/",
             get(|| async {
@@ -132,6 +133,13 @@ const FULL: &str = r#"<?xml version="1.0"?>
 </item>
 <item><title>Teaser</title><link>https://full.example/teaser</link><guid>teaser</guid>
 <pubDate>01 Jan 2026 12:00:00 GMT</pubDate><description>Only the start&lt;b&gt;.&lt;/b&gt; &lt;a href="https://full.example/teaser"&gt;Read more&lt;/a&gt;</description></item>
+</channel></rss>"#;
+
+/// A feed in Arabic that names no language, as many don't (decision 0223).
+const ARABIC: &str = r#"<?xml version="1.0"?>
+<rss version="2.0"><channel><title>دفتر الصباح</title><link>https://arabic.example/</link>
+<item><title>لماذا أكتب بخط اليد</title><link>https://arabic.example/1</link><guid>one</guid>
+<pubDate>02 Jan 2026 12:00:00 GMT</pubDate><description>منذ سنتين وأنا أبدأ يومي بصفحة واحدة في دفتر صغير.</description></item>
 </channel></rss>"#;
 
 async fn atom() -> impl IntoResponse {
@@ -360,6 +368,17 @@ async fn the_list_shows_fifty_at_a_time_and_has_an_end() {
         reader.titles(&format!("/api/articles?feed={id}")).await,
         ["A comment"]
     );
+}
+
+#[tokio::test]
+async fn an_article_whose_feed_names_no_language_is_marked_by_its_letters() {
+    let (site, _) = publisher().await;
+    let reader = Reader::new().await;
+    reader.add(&format!("{site}/arabic.xml")).await;
+    let list = reader.get("/api/articles").await;
+    let id = list["articles"][0]["id"].as_i64().unwrap();
+    let article = &reader.get(&format!("/api/articles/{id}")).await["article"];
+    assert_eq!(article["language"], "ar");
 }
 
 #[tokio::test]

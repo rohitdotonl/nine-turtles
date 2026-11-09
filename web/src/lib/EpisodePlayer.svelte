@@ -95,7 +95,7 @@
   }
 </script>
 
-<div class="episode" role="group" aria-label="Episode player" use:watch={article.id}>
+<div class="episode" lang="en" role="group" aria-label="Episode player" use:watch={article.id}>
   <div class="episode-controls">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
       <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
