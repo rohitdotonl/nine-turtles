@@ -80,3 +80,13 @@
   /* The theme's ink, as every star is (decision 0143); the filled shape says it. */
   color: var(--ink);
 }
+
+/*
+  A row whose own menu is open (SPEC section 6, decision 0214) keeps the
+  pointer's faint tone, so a touch screen shows which article the menu acts
+  on, as a mouse's hover already does; never the selection pill, which means
+  "where you are".
+*/
+.item-row[data-held]:not([aria-current]) {
+  background-color: var(--hover);
+}
