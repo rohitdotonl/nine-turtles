@@ -567,9 +567,9 @@
     edge lets the white square show on white. The control, the chosen tile and the names are the
     other segmented choices' own; the square is only a picture, the name says it.
   */
-  .choices.setting-control :global(.page-choice) {
+  .choices.setting-control .page-choice {
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.25rem;
     padding-block: 0.5rem;
   }
   .paper {
@@ -579,6 +579,7 @@
     height: 1.75rem;
     border-radius: 0.3125rem;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+    /* 12px, under the type scale on purpose: the "A" is part of the drawing, not text to read. */
     font: 600 0.75rem/1 var(--font-serif);
   }
   /* The "A" is drawn, not written, so the choice's name stays its word alone ("Paper", not "A Paper"). */
