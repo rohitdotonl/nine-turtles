@@ -51,7 +51,7 @@ export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "St
 
 /**
  * The lists the sidebar shows above the folders, top to bottom: every one, the same for everyone (decision 0187),
- * except Unread while it's off. Notes shows from the first day, so its empty list can say how to fill it (decision 0219).
+ * except Unread while it's off. Notes shows from the first day, so its empty list can say how to fill it (decision 0220).
  */
 export function sidebarViews(unreadOff: boolean): View[] {
   return VIEWS.filter((view) => !(unreadOff && view === "unread"));

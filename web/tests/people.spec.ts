@@ -60,6 +60,8 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     page.getByRole("button", { name: "Start reading" }),
   ).toBeVisible();
+  const desktop = test.info().project.name === "desktop";
+  const lead = desktop ? await page.getByRole("region", { name: "Article", exact: true }).locator(".article-title").boundingBox() : null;
 
   const name = page
     .locator("#list-heading")
@@ -71,6 +73,12 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
+  // On a computer their page keeps the article's column: Start reading's left edge and first line (decision 0219).
+  if (desktop) {
+    const heading = await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox();
+    expect(Math.abs(heading!.x - lead!.x)).toBeLessThan(1);
+    expect(Math.abs(heading!.y - lead!.y)).toBeLessThan(1);
+  }
   // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
   await expect(about).not.toContainText("A person");
   await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();

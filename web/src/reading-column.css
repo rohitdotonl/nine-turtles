@@ -1,0 +1,52 @@
+/*
+  The reading area's one column (decision 0219, after Vignelli): an article,
+  Start reading and a person's page share one left edge and one first line
+  (Start reading the article's right edge too; their page's own text keeps to
+  36rem), so nothing jumps when one becomes another. The column is
+  the article's (its measure counts in the reading face at the reader's
+  size), written once here for both; its first line is just under the
+  article's bar.
+*/
+:root {
+  --reading-top: calc(var(--bar-h) + 1px + 0.75rem);
+}
+.article,
+.reading-column {
+  max-width: var(--reading-measure);
+  margin-inline: auto;
+  font-family: var(--reading-font);
+  font-size: var(--reading-size);
+}
+.reading-column {
+  width: 100%;
+}
+.reading-top {
+  padding-top: var(--reading-top);
+}
+/*
+  Room for a scrollbar is kept, so the column doesn't shift between pages that
+  scroll and those that don't, nor between an article, Start reading and their
+  page. The track is see-through, so the gutter is the page's own color in
+  every theme, and the thumb a faint tone of the text (decision 0040).
+*/
+.scroll-gutter {
+  scrollbar-gutter: stable;
+  /* Muted grey: at least 3 : 1 against the page, as a control should be. */
+  scrollbar-color: var(--muted) transparent;
+}
+/*
+  Start reading: its small label (ReadingLead.svelte's .label, the small size
+  and its line height, 12px above the title) sits above the line, so the
+  title is where the article's will be.
+*/
+.lead-pane {
+  padding-top: calc(var(--reading-top) - var(--text-small) * var(--text-small--line-height) - 0.75rem);
+}
+
+/* On a narrow window the article's text is a tenth smaller, and so its column. */
+@media (max-width: 40rem) {
+  .article,
+  .reading-column {
+    font-size: calc(var(--reading-size) * 0.9);
+  }
+}

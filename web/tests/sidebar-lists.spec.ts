@@ -27,7 +27,7 @@ test("Recently read is gone", async ({ page, isMobile }) => {
 });
 
 // Every list shows for everyone (decision 0187): the page that hid them is gone, and its address opens Settings.
-test("the sidebar shows every list, Notes always (decision 0219), and Show in the sidebar is gone", async ({ page, isMobile }) => {
+test("the sidebar shows every list, Notes always (decision 0220), and Show in the sidebar is gone", async ({ page, isMobile }) => {
   test.skip(isMobile, "the sidebar is the computer's");
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/settings", FEEDS_APP).href);

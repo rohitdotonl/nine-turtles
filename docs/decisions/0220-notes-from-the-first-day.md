@@ -1,4 +1,4 @@
-# 0219: Notes in the sidebar from the first day
+# 0220: Notes in the sidebar from the first day
 
 *9 November 2026.*
 
