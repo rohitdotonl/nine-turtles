@@ -50,7 +50,9 @@
   .label {
     margin-bottom: 0.75rem;
     font-family: var(--font-sans);
+    /* Its size, line height and margin place the title on the article's line (reading-column.css → .lead-pane). */
     font-size: var(--text-small);
+    line-height: var(--text-small--line-height);
     color: var(--muted);
   }
   .opening {
