@@ -145,7 +145,7 @@ async fn episodes_are_found_and_only_their_address_is_kept() {
     assert_eq!(article["episode_seconds"], 1800);
     assert_eq!(article["episode_artwork"], "https://radio.example/show.jpg");
     assert!(
-        article["summary"]
+        article["content"]
             .as_str()
             .unwrap()
             .contains("Notes for one")

@@ -1,4 +1,4 @@
-# 0218: One column for the reading area
+# 0219: One column for the reading area
 
 *9 November 2026. The owner's pick from the Massimo Vignelli critique (Vignelli 1).*
 

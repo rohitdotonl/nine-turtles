@@ -637,6 +637,12 @@ test.describe("on a wide window", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await openRoom(page);
     await page.keyboard.press("j");
+    // A list's words start on the paragraphs' left edge, its numbers hanging in the margin (decision 0218).
+    const [paragraph, item] = await Promise.all([
+      article(page).locator(".article-text > p").first().boundingBox(),
+      article(page).locator(".article-text > ol > li").first().boundingBox(),
+    ]);
+    expect(Math.abs(item!.x - paragraph!.x)).toBeLessThanOrEqual(1);
     // The measure gives way before the margins do, as in Apple Books (decision 0044).
     const [text, scroller] = await Promise.all([
       article(page).locator(".article").boundingBox(),
@@ -650,7 +656,7 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("Only the beginning is shared here. Read on Reading Room");
+    await expect(note).toContainText("Only the beginning is shared here. Read the rest on Reading Room");
     // End matter, as in a book: small upright interface type, centred (decision 0040).
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
@@ -658,7 +664,7 @@ test.describe("on a wide window", () => {
     await expect(note).toHaveCSS("font-size", "14px");
     // Only the link is underlined.
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
-    const link = note.getByRole("link", { name: "Read on Reading Room" });
+    const link = note.getByRole("link", { name: "Read the rest on Reading Room" });
     await expect(link).toHaveCSS("text-decoration-line", "underline");
     // A row of its own under the sentence, centred, at least 44px tall to press, its words on one line where they fit.
     await expect(link).toHaveCSS("display", "flex");

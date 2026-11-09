@@ -1258,7 +1258,7 @@ input {
   Images never overflow.
 */
 .article {
-  /* Its column, face and size: reading-column.css (decision 0218). */
+  /* Its column, face and size: reading-column.css (decision 0219). */
   line-height: 1.55;
 }
 
@@ -1436,22 +1436,6 @@ input {
   color: currentColor;
   text-decoration: underline;
   text-underline-offset: 0.2em;
-}
-
-.article-text :where(ul, ol) {
-  padding-left: 1.5em;
-}
-
-.article-text ul {
-  list-style: disc;
-}
-
-.article-text ol {
-  list-style: decimal;
-}
-
-.article-text li + li {
-  margin-top: 0.25em;
 }
 
 .article-text blockquote {

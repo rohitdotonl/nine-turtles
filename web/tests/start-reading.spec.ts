@@ -46,7 +46,7 @@ test("the empty reading area begins the newest unread article, and Start reading
   await expect(start).toHaveClass(/btn-primary/);
   // Showing it marks nothing read.
   await expect(first).toContainText(", unread");
-  // The title already stands where the article's will (decision 0218): opening it moves nothing.
+  // The title already stands where the article's will (decision 0219): opening it moves nothing.
   const before = await pane(page).getByRole("heading", { level: 2, name: title }).boundingBox();
   // From the keyboard too: Start reading is a Tab stop, and Enter opens the article.
   await tabTo(page, start);

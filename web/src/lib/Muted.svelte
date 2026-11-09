@@ -11,7 +11,7 @@
   import PageHead from "./PageHead.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import { untitledOpening, type Article } from "./shapes";
-  import { when } from "./times";
+  import { exactly, when } from "./times";
   import { listMuted, ruleRefused, setMuted } from "./rules";
   import { UNDONE, UNDO_FAILED } from "./messages";
 
@@ -89,7 +89,7 @@
                   <!-- An untitled post shows its opening, never semibold, two lines and then "…" (SPEC section 6). -->
                   <span class={["break-words", opening !== undefined && "line-clamp-2", row.unmuted ? opening === undefined && "font-semibold" : "text-ink-2"]}>{opening ?? row.article.title}</span>
                   <span class="text-meta text-muted"
-                    >{row.article.feedTitle} · <time datetime={new Date(row.article.at * 1000).toISOString()}>{when(row.article.at)}</time></span
+                    >{row.article.feedTitle} · <time datetime={new Date(row.article.at * 1000).toISOString()} title={exactly(row.article.at)}>{when(row.article.at)}</time></span
                   >
                   <span role="status" class={["text-meta text-ink", !row.message && "sr-only"]}>{row.message}</span>
                 </span>

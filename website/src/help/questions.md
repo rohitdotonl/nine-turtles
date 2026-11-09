@@ -6,7 +6,7 @@ order: 6
 # The sections its answers explain: Help, fetching, newsletters, podcasts,
 # phones, accessibility, OPML, YouTube, writing back, the weekly email.
 spec: [40, 11, 28, 35, 20, 22, 16, 38, 37, 39]
-updated: 2026-11-05
+updated: 2026-11-09
 related: [bring-your-feeds, install-the-app, write-back]
 ---
 
@@ -56,7 +56,10 @@ hello@nineturtles.app.
 Some publishers put only the first paragraph in their feed, so readers
 visit their site for the rest. nine turtles respects that: it shows what
 the feed shares and links to the full article. It never copies the rest
-from their website.
+from their website. When the feed marks its text as a summary, or the text
+ends in "…" or a "Read more" link, the article ends with "Only the
+beginning is shared here." and a link to read the rest on their site;
+otherwise it's the whole article.
 
 ## Will it slow down or burden the sites I follow?
 

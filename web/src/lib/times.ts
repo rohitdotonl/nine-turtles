@@ -1,10 +1,20 @@
 // Times and dates in the words the screens show. Every date in the app has one
 // form, "20 Oct" (and "20 Oct 2025" for another year), decision 0215: an
-// article's time, when a feed was paused or last checked, Everyone you follow,
-// passkeys and the admin pages.
+// article's day, when a feed was paused or last checked, Everyone you follow,
+// passkeys and the admin pages. An article's day says the last week in words
+// first ("Today", "Yesterday", "Thursday"), decision 0218.
 
 const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 // Three letters each, always: the browser's own short months say "Sept" for September.
+const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
+const FULL = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "20 Oct", or with its year, "20 Oct 2025", in the device's time zone. */
@@ -37,15 +47,36 @@ function shortDay(date: Date, now: Date): string {
   return dayMonth(date, date.getFullYear() !== now.getFullYear());
 }
 
+/** Whole days from `date` to `now`, by the calendar in the device's time zone (0 today, 1 yesterday). */
+function daysAgo(date: Date, now: Date): number {
+  const start = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return Math.round((start(now) - start(date)) / 86_400_000);
+}
+
 /**
- * An article's time, in the device's time zone, in words that never change
- * while you look: "14:05" today, "23 Oct" this year, "23 Oct 2025" before.
+ * An article's day, in the device's time zone, in the words a person would
+ * say (decision 0218): "Today", "Yesterday", the weekday for the rest of this
+ * week ("Thursday"), then "23 Oct" this year and "23 Oct 2025" before. The
+ * exact time is in `exactly`, for the tooltip.
  */
 export function when(at: number, now: Date = new Date()): string {
   const date = new Date(at * 1000);
-  const sameDay =
-    date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
-  if (sameDay) return TIME.format(date);
+  const days = daysAgo(date, now);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return WEEKDAY.format(date);
+  return shortDay(date, now);
+}
+
+/** The exact day and time, for a date's tooltip: "Sunday, 8 November 2026 at 06:00". */
+export function exactly(at: number): string {
+  return FULL.format(new Date(at * 1000));
+}
+
+/** A moment later today or on another day, for a sentence: "14:05" today, "23 Oct" this year, "23 Oct 2025" before. */
+export function until(at: number, now: Date = new Date()): string {
+  const date = new Date(at * 1000);
+  if (date.toDateString() === now.toDateString()) return TIME.format(date);
   return shortDay(date, now);
 }
 
