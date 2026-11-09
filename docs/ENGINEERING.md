@@ -80,7 +80,7 @@ nine turtles must be able to move to any host in an afternoon.
 
 The engineering side of "slow app, fast interface." Speed is a requirement with numbers attached:
 - Interface actions under ~100 ms.
-- A small page download, with a size budget checked automatically: at most 200 KB (compressed) of app code and styles on first visit (raised from 150 KB by the owner, 2 November 2026, decision 0136), and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit). The build leaves notes for the next agent out of the files it copies from `web/public/` (the service worker, the page, the manifest and the icon), so they don't count against it (`web/vite.config.ts`).
+- A small page download, with a size budget checked automatically: at most 200 KB (compressed) of app code and styles on first visit (raised from 150 KB by the owner, 2 November 2026, decision 0136), and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit). The reading faces for Devanagari and Arabic (decision 0227) are downloaded only by readers of those scripts, so each has its own budget instead, at most 150 KB. The build leaves notes for the next agent out of the files it copies from `web/public/` (the service worker, the page, the manifest and the icon), so they don't count against it (`web/vite.config.ts`).
 - No database query that searches without an index.
 
 **Test:** Is the speed checked automatically, or are we hoping?
