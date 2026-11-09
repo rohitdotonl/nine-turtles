@@ -619,6 +619,7 @@
           bind:this={rows[index]}
           tabindex={current || (selectedIndex === -1 && index === 0) ? 0 : -1}
           aria-current={current ? "true" : undefined}
+          data-held={menuAt?.index === index ? "" : undefined /* held in the pointer's tone while its own menu is open, so it's clear which article the menu acts on (decision 0214) */}
           data-space-reads
           style:--row-title-size={begun ? "1.5rem" : undefined}
           style:--row-title-line={begun ? "1.15" : undefined}
