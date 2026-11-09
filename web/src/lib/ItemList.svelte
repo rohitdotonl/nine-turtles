@@ -50,12 +50,10 @@
   import { exactly, when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
-  import RowOpening from "./RowOpening.svelte";
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu } from "./rowMenu";
   import { longPress } from "./longPress";
   import type { MenuItem } from "./MoreMenu.svelte";
-  import { pickUp } from "./resume.svelte";
   import type { EmptyWords } from "./listWording";
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
@@ -76,7 +74,6 @@
     oneFeed = false,
     unreadOff = false,
     first = $bindable(),
-    lead = false,
     found = $bindable(""),
     rowActions = () => [],
   }: {
@@ -102,8 +99,6 @@
     unreadOff?: boolean;
     /** The first article listed, for the empty reading area. */
     first?: Article;
-    /** No reading area beside the list: an unread first article is begun in its row's place (decision 0210). */
-    lead?: boolean;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
     found?: string;
     /** A row's menu, after its star and read: writing back and the page about its writer (`rowMenu.ts` → `writerItems`). */
@@ -609,9 +604,7 @@
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       {@const opening = untitledOpening(article)}
-      {@const begun = index === 0 && lead && !results && !unreadOff && !article.read && pickUp.asked && !pickUp.offer}
       <li>
-        {#if begun}<p class="-mb-3 pt-3 pl-[var(--list-start,2rem)] text-small text-muted">{order === "oldest" ? "Oldest" : "Newest"} unread</p>{/if}
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
           type="button"
@@ -620,8 +613,6 @@
           aria-current={current ? "true" : undefined}
           data-held={menuAt?.index === index ? "" : undefined /* held in the pointer's tone while its own menu is open, so it's clear which article the menu acts on (decision 0214) */}
           data-space-reads
-          style:--row-title-size={begun ? "1.5rem" : undefined}
-          style:--row-title-line={begun ? "1.15" : undefined}
           onclick={(event) => {
             select(index);
             // A click made with Enter has no mouse position.
@@ -682,7 +673,6 @@
               <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
             {/if}
           </span>
-          {#if begun}<RowOpening {article} paragraph={opening === undefined} />{/if}
         </button>
       </li>
     {/each}

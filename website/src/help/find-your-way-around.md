@@ -64,10 +64,10 @@ you last left part of the way through, in one quiet line: "You were reading
 stopped, on any device you sign in on (on a phone, the line is at the top of
 the list). It goes once you open something else or finish it.
 
-Otherwise, when your list starts with something unread, the reading pane
-has already begun it: its title, who wrote it and its first paragraph, with
-**Start reading** under them. Press it to read on. Nothing is marked read
-until you do. On a phone, the first article in the list is begun the same way.
+Otherwise the reading pane rests on one quiet line until you choose
+something. Every list opens the same way: the newest article is simply the
+first in the list, with its dot if it's unread. Nothing is marked read until
+you open it.
 
 ## New articles wait for you
 

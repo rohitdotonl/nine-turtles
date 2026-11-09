@@ -525,7 +525,7 @@ test("on a phone, the welcome's offered feeds sit on a grouped card a tone off t
   await page.keyboard.press("Enter");
   const choices = page.getByRole("group", { name: "Feeds on this site" });
   await expect(choices).toBeVisible();
-  // A card, not bare text on the page (finding 12): the list sits on the page (decision 0220), so the card is a tone off it.
+  // A card, not bare text on the page (finding 12): the list sits on the page (decision 0221), so the card is a tone off it.
   const [card, ground] = await Promise.all([
     choices.evaluate((group) => getComputedStyle(group).backgroundColor),
     page.locator("#list-pane").evaluate((pane) => getComputedStyle(pane).backgroundColor),

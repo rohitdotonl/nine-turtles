@@ -27,7 +27,7 @@
   within thumb reach, above a hairline; one that can't act is faded in place.
 -->
 <script lang="ts">
-  import { authorBesides } from "./leadOpening";
+  import { authorBesides } from "./byline";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";

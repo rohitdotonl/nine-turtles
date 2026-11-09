@@ -102,7 +102,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(colors.star).toBeUndefined();
   });
 
-  // The article list sits on the page (decision 0220); --list is the tone one step off it
+  // The article list sits on the page (decision 0221); --list is the tone one step off it
   // (code blocks, a phone sheet's ground), and the sidebar the step after.
   it("orders the tones from the page, through one step off, to the sidebar", () => {
     const order = [colors.paper!, colors.list!, colors.sidebar!].map(luminance);
@@ -173,7 +173,7 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  // The article list sits on the page itself (decision 0220), so its pill is mixed into the page.
+  // The article list sits on the page itself (decision 0221), so its pill is mixed into the page.
   it("is the text color mixed into the article list's page and the sidebar", () => {
     const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];
     expect(colors["tint-list"]).toBe(mix(from, colors.paper!, share));

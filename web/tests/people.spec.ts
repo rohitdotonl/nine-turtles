@@ -55,13 +55,10 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
 }) => {
   const ana = unique("pp-ana");
   const [id] = await openPlaces(page, [`/blog/${ana}/feed.xml`]);
-  // An old address is tidied to the new one, and the reading area has begun their newest article (decision 0210).
+  // An old address is tidied to the new one.
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
-  await expect(
-    page.getByRole("button", { name: "Start reading" }),
-  ).toBeVisible();
+  await expect(page.locator(".item-row")).toHaveCount(3);
   const desktop = test.info().project.name === "desktop";
-  const lead = desktop ? await page.getByRole("region", { name: "Article", exact: true }).locator(".article-title").boundingBox() : null;
 
   const name = page
     .locator("#list-heading")
@@ -73,12 +70,7 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
-  // On a computer their page keeps the article's column: Start reading's left edge and first line (decision 0219).
-  if (desktop) {
-    const heading = await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox();
-    expect(Math.abs(heading!.x - lead!.x)).toBeLessThan(1);
-    expect(Math.abs(heading!.y - lead!.y)).toBeLessThan(1);
-  }
+  const heading = desktop ? await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox() : null;
   // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
   await expect(about).not.toContainText("A person");
   await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();
@@ -106,6 +98,14 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await page.getByRole("button", { name: "More", exact: true }).click();
   await page.getByRole("menuitem", { name: `Info about Blog ${ana}` }).click();
   await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  // On a computer their page keeps the article's column: an article's title has the same left edge and first line (decision 0219).
+  if (desktop) {
+    await page.keyboard.press("Escape");
+    await page.locator(".item-row").first().click();
+    const title = await page.getByRole("region", { name: "Article", exact: true }).locator(".article-title").boundingBox();
+    expect(Math.abs(heading!.x - title!.x)).toBeLessThan(1);
+    expect(Math.abs(heading!.y - title!.y)).toBeLessThan(1);
+  }
 });
 
 test("Edit makes someone a publication: listed under Publications, at its own address", async ({
