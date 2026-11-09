@@ -75,7 +75,7 @@ PLAN.md → V1, item 1.*
   list ("Alpha ›"), by their name under an article's title, by **Info about
   Alpha** in the list's More menu or a row's own menu, or by the `i` key
   (in any list, for the chosen article's writer; decision 0214). On a computer it opens in the reading area beside their list,
-  where an article would; on a phone it's a screen of its own, with ‹ back to
+  where an article would, in the article's own column (decision 0216); on a phone it's a screen of its own, with ‹ back to
   their list. It shows their name with **Edit** beside it, a quiet underlined
   word (44px tall and wide to touch), so Write to is the page's one strong button (decision 0215); for one
   source whose own title isn't their name, that title under it, in the

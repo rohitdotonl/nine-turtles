@@ -51,6 +51,7 @@
     margin-bottom: 0.75rem;
     font-family: var(--font-sans);
     font-size: var(--text-small);
+    line-height: 1.45;
     color: var(--muted);
   }
   .opening {

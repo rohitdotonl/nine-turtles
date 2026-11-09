@@ -1,6 +1,7 @@
 import "./app.css";
 import "./lists.css";
 import "./arranging.css";
+import "./reading-column.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";
