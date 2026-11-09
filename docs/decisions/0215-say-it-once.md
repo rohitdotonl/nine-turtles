@@ -9,13 +9,17 @@
    on a computer and one step back on a phone. Your highlights from their
    writing stay.
 2. **Edit is a quiet underlined word** beside their name (the `text-link`
-   style, 44px tall), not a bordered button, so **Write to** is the page's
+   style, small to the eye but 44px tall and wide to touch, as Forgot? on the
+   sign-in page), not a bordered button, so **Write to** is the page's
    one strong button.
-3. **Every date in the app has one form: "20 Oct"**, and "20 Oct 2025" for
-   another year: an article's time, Everyone you follow, Not working, a
-   paused or quiet feed, passkeys, your plan, the admin pages. Months are
+3. **Every date in the app has one form: "20 Oct"**, with its year after it
+   ("20 Oct 2025") when it isn't this year: an article's time, Everyone you
+   follow, Not working, a paused or quiet feed. Things that last always carry
+   their year, this year too: passkeys, your plan, a connected assistant, the
+   admin pages' readers and backups ("Passkey added 27 Oct 2026"). Months are
    always three letters, September too ("29 Sep", not the browser's "Sept").
-   The one way to write a date lives in `web/src/lib/times.ts`.
+   Every date is written by `web/src/lib/times.ts` (`when`, `dayOrToday`,
+   `date`, `dateOrToday`, `dayAndTime`); nothing else formats one.
 
 **Why.** Saying the same thing twice on one screen is noise, and two strong
 buttons compete for what the page is for, writing to them. Two date forms

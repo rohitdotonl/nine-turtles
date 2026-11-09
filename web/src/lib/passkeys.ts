@@ -8,33 +8,21 @@
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { dateWithYear } from "./times";
 import { UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
+import { date, dateOrToday } from "./times";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
 export type PasskeyRow = { id: number; name: string | null; createdAt: number; lastUsedAt: number | null };
 
-/** "27 Oct 2026", in this device's time zone. */
-export function day(seconds: number): string {
-  return dateWithYear(new Date(seconds * 1000));
-}
-
 /** What a passkey is called: the reader's name for it, or "Passkey added 27 Oct 2026". */
 export function passkeyName(passkey: PasskeyRow): string {
-  return passkey.name ?? `Passkey added ${day(passkey.createdAt)}`;
+  return passkey.name ?? `Passkey added ${date(passkey.createdAt)}`;
 }
 
 /** The muted line under a passkey's name: "Added 27 Oct 2026 · Last used today" (or "· Not used yet"). */
 export function passkeyDates(passkey: PasskeyRow, now: Date = new Date()): string {
-  const used = passkey.lastUsedAt === null ? "Not used yet" : `Last used ${dayOrToday(passkey.lastUsedAt, now)}`;
-  return `Added ${dayOrToday(passkey.createdAt, now)} · ${used}`;
-}
-
-function dayOrToday(seconds: number, now: Date): string {
-  const when = new Date(seconds * 1000);
-  const today =
-    when.getFullYear() === now.getFullYear() && when.getMonth() === now.getMonth() && when.getDate() === now.getDate();
-  return today ? "today" : day(seconds);
+  const used = passkey.lastUsedAt === null ? "Not used yet" : `Last used ${dateOrToday(passkey.lastUsedAt, now)}`;
+  return `Added ${dateOrToday(passkey.createdAt, now)} · ${used}`;
 }
 
 /** Bytes as base64url, without padding, as WebAuthn's JSON writes them. */

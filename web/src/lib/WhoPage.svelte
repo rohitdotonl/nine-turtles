@@ -117,7 +117,7 @@
         <div class="flex items-start justify-between gap-4">
           <!-- The page's heading, a step under the list's title, which also names them. -->
           <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-xlarge font-semibold break-words text-ink">{name}</h2>
-          <button type="button" class="text-link shrink-0" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
+          <button type="button" class="text-link min-w-11 shrink-0 justify-end" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
       </div>

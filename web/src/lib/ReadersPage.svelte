@@ -12,8 +12,8 @@
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
   import { label } from "./plan";
-  import { backupDay, count, date, lastHereDay, loadOverview, plural, size, type Overview } from "./admin";
-  import { dayAndTime } from "./times";
+  import { backupDay, count, loadOverview, plural, size, type Overview } from "./admin";
+  import { date, dateOrToday, dayAndTime } from "./times";
 
   let {
     heading = $bindable(),
@@ -124,7 +124,7 @@
                   <span class="text-meta text-muted"
                     >Joined {date(reader.createdAt)} · {plural(reader.feeds, "feed", "feeds")}</span
                   >
-                  <span class="text-meta text-muted">Last here {lastHereDay(reader.lastHere)}</span>
+                  <span class="text-meta text-muted">Last here {dateOrToday(reader.lastHere)}</span>
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
                   {/if}

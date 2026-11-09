@@ -17,7 +17,6 @@
     type PasskeyRow,
     addPasskey,
     browserHasPasskeys,
-    day,
     explainAdd,
     listPasskeys,
     passkeyDates,
@@ -27,6 +26,7 @@
     renamePasskey,
     undoRemove,
   } from "./passkeys";
+  import { date } from "./times";
 
   let { origin = null }: { /** Where passkeys work; null when they're off. */ origin?: string | null } = $props();
 
@@ -212,7 +212,7 @@
               id="passkey-name"
               type="text"
               maxlength="100"
-              placeholder={`Passkey added ${day(passkey.createdAt)}`}
+              placeholder={`Passkey added ${date(passkey.createdAt)}`}
               bind:value={draft}
               onkeydown={(event) => {
                 if (event.key === "Escape") {

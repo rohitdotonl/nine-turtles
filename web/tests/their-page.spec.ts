@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, choose, follow, signIn } from "./screens";
+import { appReady, choose, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 36, their page (decisions 0211 and 0215): after Write to and
 // your note on them, Your highlights from their writing, each one press from
@@ -32,7 +32,6 @@ test("their page shows the words you highlighted in their writing, each one pres
   await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
-  await expect(who.getByRole("region", { name: "Your highlights" })).toBeVisible();
   await expect(who.getByRole("region", { name: "Lately" })).toHaveCount(0);
   // Edit is a quiet underlined word: Write to is the one solid button.
   await expect(who.getByRole("button", { name: `Edit Blog ${name}` })).toHaveClass(/text-link/);
@@ -51,6 +50,27 @@ test("their page shows the words you highlighted in their writing, each one pres
   await highlights.getByRole("button", { name: title }).click();
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
 
+  // And from the keyboard alone: Tab reaches the title, Enter opens it.
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await tabTo(page, highlights.getByRole("button", { name: title }));
+  await page.keyboard.press("Enter");
+  await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
+
+});
+
+test("on a phone, their page's quiet Edit is still 44px each way to touch", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the touch floor is a phone's");
+  const name = `their-phone-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = await about(page, `Blog ${name}`).getByRole("button", { name: `Edit Blog ${name}` }).boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
 });
 
 test("when Your highlights can't be loaded, their page says so", async ({ page, isMobile }) => {

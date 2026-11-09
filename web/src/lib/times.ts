@@ -13,9 +13,17 @@ function dayMonth(date: Date, withYear: boolean): string {
   return withYear ? `${day} ${date.getFullYear()}` : day;
 }
 
-/** A date with its year, for things that last (a passkey, a reader's account): "27 Oct 2026". */
-export function dateWithYear(date: Date): string {
-  return dayMonth(date, true);
+/**
+ * A date with its year, always, for things that last (a passkey, a plan, a
+ * reader's account, a connected assistant, a backup): "27 Oct 2026".
+ */
+export function date(at: number): string {
+  return dayMonth(new Date(at * 1000), true);
+}
+
+/** The same, or "today": "Last used today", "Last here 24 Oct 2026". */
+export function dateOrToday(at: number, now: Date = new Date()): string {
+  return new Date(at * 1000).toDateString() === now.toDateString() ? "today" : date(at);
 }
 
 /** A day and its time, for the admin's list of problems: "29 Sep, 14:05". */

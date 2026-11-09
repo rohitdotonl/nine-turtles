@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dateWithYear, dayAndTime, dayOrToday, pausedSince, when } from "./times";
+import { date, dayAndTime, dayOrToday, pausedSince, when } from "./times";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -23,7 +23,7 @@ describe("article times", () => {
     expect(dayOrToday(at(new Date(2026, 9, 23, 7, 0)), now)).toBe("today");
     expect(dayOrToday(at(new Date(2026, 10, 4, 9, 0)), now)).toBe("4 Nov");
     expect(dayOrToday(at(new Date(2025, 2, 14, 9, 0)), now)).toBe("14 Mar 2025");
-    expect(dateWithYear(new Date(2026, 9, 27))).toBe("27 Oct 2026");
+    expect(date(at(new Date(2026, 9, 27, 9, 0)))).toBe("27 Oct 2026");
     expect(dayAndTime(at(new Date(2026, 8, 29, 14, 5)))).toBe("29 Sep, 14:05");
   });
 });
