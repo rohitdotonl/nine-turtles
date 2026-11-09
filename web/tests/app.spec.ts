@@ -289,7 +289,7 @@ test("Settings: appearance, font and size apply at once and are remembered on th
   const pages = page.getByRole("group", { name: "Page" }).getByRole("radio");
   await expect(pages).toHaveCount(4);
   await expect(page.getByLabel("Match device")).toBeChecked();
-  // Each choice shows its paper (decision 0223): a square in that page's color, named in words.
+  // Each choice shows its paper (decision 0226): a square in that page's color, named in words.
   const papers = page.getByRole("group", { name: "Page" }).locator(".paper");
   await expect(papers).toHaveCount(4);
   await expect(papers.nth(1)).toHaveCSS("background-color", "rgb(247, 243, 234)");

@@ -126,13 +126,20 @@ test.describe("on a phone", () => {
     const names = await toolbar(page)
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(names).toEqual(["Previous", "Next", "Reading appearance", "Star", "Write back", "More actions"]);
+    // Two groups by job, in order of use (decision 0225): acting on the article, then a hairline, then moving through the list at the right.
+    expect(names).toEqual(["More actions", "Reading appearance", "Write back", "Star", "Previous", "Next"]);
+    const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
+    expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
     // More opens upwards, over the article, with Share (or Copy link), Mark unread, Add a note and Hide articles about….
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
     await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add a note/, /^\s*Hide articles about/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
+    // More is at the bar's left end, so its menu opens from there, wholly on the screen.
+    const opened = (await menu.boundingBox())!;
+    expect(opened.x).toBeGreaterThanOrEqual(0);
+    expect(opened.x + opened.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);
     // Within thumb reach: at the bottom of the screen.
@@ -158,9 +165,9 @@ test.describe("on a phone", () => {
     expect(tops.length).toBeGreaterThanOrEqual(5);
     expect(new Set(tops).size).toBe(1);
     // The five places share the bar's width evenly.
-    const widths = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => Math.round(place.getBoundingClientRect().width)));
+    const widths = await toolbar(page).locator(":scope > :not(.toolbar-rule)").evaluateAll((places) => places.map((place) => Math.round(place.getBoundingClientRect().width)));
     expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1);
-    for (const control of await toolbar(page).locator(":scope > *").all()) {
+    for (const control of await toolbar(page).locator(":scope > :not(.toolbar-rule)").all()) {
       const place = (await control.boundingBox())!;
       expect(Math.min(place.width, place.height)).toBeGreaterThanOrEqual(44);
     }

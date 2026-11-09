@@ -562,7 +562,7 @@
     text-wrap: balance;
   }
   /*
-    Page's choices show the paper itself (decision 0223): a 28px square of each page with an "A" in
+    Page's choices show the paper itself (decision 0226): a 28px square of each page with an "A" in
     that page's own words' color, its name under it; Match device is half White, half Night. A faint
     edge lets the white square show on white. The control, the chosen tile and the names are the
     other segmented choices' own; the square is only a picture, the name says it.

@@ -90,7 +90,7 @@ export function placeKept(id: number, place: Place | undefined): void {
     return;
   }
   held = id;
-  send("/api/resume", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, ...place }) });
+  send("/api/resume", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, block: place.block, within: place.within }) });
 }
 
 /** The line's words around the title: "You were reading {title}, by {writer}." */

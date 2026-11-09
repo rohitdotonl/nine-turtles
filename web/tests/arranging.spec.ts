@@ -282,3 +282,21 @@ test.describe("with a finger", () => {
     expect(names.indexOf(second)).toBe(names.indexOf(first) - 1);
   });
 });
+
+test("an indent means inside a folder: people in none line up with the folders (decision 0225)", async ({ page }) => {
+  const folder = unique("Indent");
+  const [inside] = await blogsInFolders(page, [folder]);
+  const loose = `Blog ${unique("arr-loose")}`;
+  const id = await follow(page, `${FEED_SITE}/blog/${loose.slice(5)}/`);
+  await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { title: loose } });
+  await page.reload();
+  await appReady(page);
+  await sidebar(page).getByRole("button", { name: `What's in ${folder}` }).click();
+  // Where a row's name starts: its box plus its padding.
+  const nameStart = (link: Locator) => link.evaluate((element) => element.getBoundingClientRect().x + parseFloat(getComputedStyle(element).paddingLeft));
+  const folderAt = await nameStart(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }));
+  const insideAt = await nameStart(sidebar(page).getByRole("link", { name: new RegExp(`^${inside}`) }));
+  const looseAt = await nameStart(sidebar(page).getByRole("link", { name: new RegExp(`^${loose}`) }));
+  expect(Math.abs(looseAt - folderAt)).toBeLessThanOrEqual(1);
+  expect(insideAt - folderAt).toBeGreaterThanOrEqual(20);
+});
