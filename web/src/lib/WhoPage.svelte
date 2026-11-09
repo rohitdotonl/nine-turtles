@@ -83,7 +83,7 @@
 </script>
 
 <section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? "px-5 pt-3 pb-10" : "reading-top scroll-gutter px-5 pb-16 md:px-14"]}>
-  <!-- On a computer, the article's own column: its left edge and first line (decision 0217); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
+  <!-- On a computer, the article's own column: its left edge and first line (decision 0218); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : "reading-column"}>
   <div class="flex w-full max-w-[36rem] flex-col gap-6 font-sans text-base">
     {#if phone && route.kind === "about"}

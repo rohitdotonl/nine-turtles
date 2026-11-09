@@ -4,7 +4,7 @@ description: Find any article from the people you follow, in the list you're in 
 groupId: reading
 order: 5
 spec: 14
-updated: 2026-11-06
+updated: 2026-11-09
 related: [star-an-article, every-keyboard-key, find-your-way-around]
 ---
 
@@ -15,7 +15,7 @@ related: [star-an-article, every-keyboard-key, find-your-way-around]
 
 ## Search
 
-1. Press <kbd>/</kbd>, or choose the **Search** field above the list.
+1. Press <kbd>/</kbd>, or choose the **Search articles** field above the list.
 2. Type a few words. Matching articles appear, with the words picked out.
 
 Search starts in the list you're in, shown as a small label such as

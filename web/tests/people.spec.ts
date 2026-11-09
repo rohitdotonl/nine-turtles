@@ -73,7 +73,7 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
-  // On a computer their page keeps the article's column: Start reading's left edge and first line (decision 0217).
+  // On a computer their page keeps the article's column: Start reading's left edge and first line (decision 0218).
   if (desktop) {
     const heading = await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox();
     expect(Math.abs(heading!.x - lead!.x)).toBeLessThan(1);

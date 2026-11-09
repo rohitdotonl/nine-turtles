@@ -1258,7 +1258,7 @@ input {
   Images never overflow.
 */
 .article {
-  /* Its column, face and size: reading-column.css (decision 0217). */
+  /* Its column, face and size: reading-column.css (decision 0218). */
   line-height: 1.55;
 }
 

@@ -57,8 +57,8 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await expect(sidebar(page)).toBeHidden();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
-    await expect(list(page).getByRole("button", { name: "Back to Feeds" })).toBeVisible();
-    const listBack = (await list(page).getByRole("button", { name: "Back to Feeds" }).locator("svg").boundingBox())!;
+    await expect(list(page).getByRole("button", { name: "Back to Home" })).toBeVisible();
+    const listBack = (await list(page).getByRole("button", { name: "Back to Home" }).locator("svg").boundingBox())!;
     // One quiet More (…) beside the list's title; Refresh and "Info about …" are in its menu (decision 0038).
     const more = list(page).getByRole("button", { name: "More", exact: true });
     await expect(more).toBeVisible();
@@ -86,7 +86,7 @@ test.describe("on a phone", () => {
     // The back arrows go back one step each time.
     await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
-    await list(page).getByRole("button", { name: "Back to Feeds" }).click();
+    await list(page).getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
   });
@@ -113,7 +113,7 @@ test.describe("on a phone", () => {
     const link = sidebar(page).getByRole("link", { name: /^Reading Room/ });
     await page.goto(new URL((await link.getAttribute("href")) ?? "/", FEEDS_APP).href);
     await appReady(page);
-    await list(page).getByRole("button", { name: "Back to Feeds" }).click();
+    await list(page).getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
   });
 
