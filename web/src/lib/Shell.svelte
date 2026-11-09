@@ -878,8 +878,8 @@
   };
 </script>
 
-{#snippet welcome(start: boolean, onList: boolean)}
-  <Welcome {start} {onList} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
+{#snippet welcome(start: boolean)}
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
 {/snippet}
 
 {#snippet listHead()}
@@ -1121,7 +1121,7 @@
           hidden={!panes.list || welcomeWide}
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
-            "list-pane relative @container flex-col bg-list",
+            "list-pane relative @container flex-col bg-paper",
             phone && "phone",
             // 352px by default below 1280px, so on a window about 1024px wide feed names and titles have room (SPEC section 4).
             panes.article ? "w-[22rem] shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
@@ -1178,7 +1178,7 @@
                 margin (decision 0052). A medium window keeps it centred.
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
-              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone, true)}</div>
+              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined}
               {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
@@ -1245,7 +1245,7 @@
           {:else if welcoming && !missing}
             <!-- No feeds yet: the welcome has the reading area (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0206). -->
             <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center overflow-y-auto bg-paper px-5 pt-[28vh] pb-10 md:px-10">
-              {@render welcome(false, false)}
+              {@render welcome(false)}
             </section>
           {:else}
             <EmptyReading first={listFirst} order={settings.sort ?? "newest"} lead={!searching.shown && !unreadOff} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />

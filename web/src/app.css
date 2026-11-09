@@ -69,7 +69,7 @@
   --faint: #98989c;
     --danger: #e39aa4;
     --accent: #94b2e6;
-    --tint-list: #333333;
+    --tint-list: #2c2c2c;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
     --raised-edge: rgb(255 255 255 / 0.08);
@@ -1576,7 +1576,7 @@ input {
   box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
 }
 /*
-  The band the note sits in (decision 0048): the list's own tone, across the
+  The band the note sits in (decision 0048): the page, as under the list, across the
   pane's whole width, so rows scrolling up from below end at its top edge
   rather than running under the note. The note is centred on the pane, and
   the band takes no room while there's nothing to say.
@@ -1587,7 +1587,7 @@ input {
 }
 .toast-band-shown {
   padding-block: 0.75rem 1rem;
-  background-color: var(--color-list);
+  background-color: var(--color-paper);
 }
 
 /*

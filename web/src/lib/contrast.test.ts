@@ -171,9 +171,10 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it("is the text color mixed into the list and the sidebar", () => {
+  // The article list sits on the page itself (decision 0219), so its pill is mixed into the page.
+  it("is the text color mixed into the article list's page and the sidebar", () => {
     const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];
-    expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
+    expect(colors["tint-list"]).toBe(mix(from, colors.paper!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });
 
@@ -181,8 +182,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
   // neutral one, as Original's is, may take the accent's blue-grey.
   it.runIf(!dark)("keeps a warm pane's pill warm", () => {
     const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
-    for (const area of ["list", "sidebar"]) {
-      if (warmth(colors[area]!) > 0) expect(warmth(colors[`tint-${area}`]!), area).toBeGreaterThan(0);
+    for (const [area, pane] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      if (warmth(colors[pane]!) > 0) expect(warmth(colors[`tint-${area}`]!), area).toBeGreaterThan(0);
     }
   });
 
@@ -191,8 +192,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
   // on warm brown read as a clash, decision 0041).
   it.runIf(dark)("keeps the pane's temperature", () => {
     const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
-    for (const area of ["list", "sidebar"]) {
-      const [pane, pill] = [warmth(colors[area]!), warmth(colors[`tint-${area}`]!)];
+    for (const [area, under] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      const [pane, pill] = [warmth(colors[under]!), warmth(colors[`tint-${area}`]!)];
       if (pane === 0) expect(Math.abs(pill), area).toBeLessThanOrEqual(2);
       else expect(Math.sign(pill), area).toBe(Math.sign(pane));
     }
@@ -211,9 +212,9 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
 
   it("is clearly deeper than a row under the pointer, which stays neutral", () => {
     const share = Number(css.match(/--hover: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
-    for (const area of ["list", "sidebar"]) {
-      const hovered = mix(colors.ink!, colors[area]!, share);
-      expect(contrast(colors[`tint-${area}`]!, colors[area]!), area).toBeGreaterThan(contrast(hovered, colors[area]!) + 0.05);
+    for (const [area, pane] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      const hovered = mix(colors.ink!, colors[pane]!, share);
+      expect(contrast(colors[`tint-${area}`]!, colors[pane]!), area).toBeGreaterThan(contrast(hovered, colors[pane]!) + 0.05);
     }
   });
 });
