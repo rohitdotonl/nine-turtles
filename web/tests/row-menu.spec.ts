@@ -123,7 +123,7 @@ test.describe("on a wide window", () => {
     await expect(end).toBeVisible();
 
     // Not under search results, which end "No more results."
-    await page.getByRole("textbox", { name: "Search", exact: true }).fill("summary");
+    await page.getByRole("textbox", { name: "Search articles", exact: true }).fill("summary");
     await expect(page.locator(".list-end")).toHaveText("No more results.");
     await expect(end).toHaveCount(0);
   });
