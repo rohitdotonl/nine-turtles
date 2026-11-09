@@ -1160,6 +1160,9 @@ test("an unread first article waits in the list as every other does, in Unread t
       await expect(page.locator(".item-row").first()).toBeVisible();
     }
     await expect(page.locator(".item-row").first()).toContainText(", unread");
+    // The first row's title is the same size as the second's: it isn't drawn larger, as a begun row was.
+    const sizes = await page.locator(".item-row .title").evaluateAll((titles) => titles.slice(0, 2).map((each) => getComputedStyle(each).fontSize));
+    expect(sizes[0]).toBe(sizes[1]);
     await expect(page.getByText(/^(Newest|Oldest) unread$/)).toHaveCount(0);
     await expect(page.getByText("Start reading", { exact: true })).toHaveCount(0);
     if (!isMobile) await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
