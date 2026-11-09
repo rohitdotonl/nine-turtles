@@ -10,14 +10,17 @@
 //! YouTube player embedded in an article becomes a link to the video (SPEC
 //! section 7, decision 0072).
 //!
-//! Three parts: `parse` reads the file, `identity` gives fingerprints and
-//! takes tracking tags off links, and `clean` makes content safe to show.
+//! Four parts: `parse` reads the file, `identity` gives fingerprints and
+//! takes tracking tags off links, `clean` makes content safe to show, and
+//! `whole` tells a summary from a whole post sent as one (decision 0218).
 //! Everything is used as `feed::…`, whichever part it lives in.
 
 mod clean;
 mod identity;
 mod parse;
+mod whole;
 
 pub use clean::*;
 pub use identity::*;
 pub use parse::*;
+pub use whole::*;

@@ -274,7 +274,7 @@
       <!-- With Choose on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->
       {#if editing}
         <div class="tidy-bar">
-          <p class="text-small text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
+          <!-- Unsubscribe at the far left, apart from Move to… at the right, so a slip can't land on it (decision 0217). -->
           <button
             type="button"
             class="btn-danger text-small"
@@ -283,6 +283,7 @@
             aria-disabled={chosen.length === 0 || busy}
             onclick={leave}>Unsubscribe</button
           >
+          <p class="text-small text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
           <button type="button" class="btn-primary" data-focus="move" aria-disabled={chosen.length === 0 || busy} onclick={openMove}>Move to…</button>
           <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
         </div>
@@ -319,10 +320,8 @@
     border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
     background-color: var(--paper);
   }
-  .tidy-bar > p {
-    margin-right: auto;
-  }
+  /* Unsubscribe alone at the left; the count sits beside Move to… at the right. */
   .tidy-bar > .btn-danger {
-    margin-left: 0;
+    margin-right: auto;
   }
 </style>

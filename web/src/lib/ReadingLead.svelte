@@ -9,7 +9,7 @@
   import { openingFor, type Opening } from "./leadOpening";
   import type { Order } from "./reading";
   import type { Article } from "./shapes";
-  import { when } from "./times";
+  import { exactly, when } from "./times";
 
   let { article, order, onOpen }: { article: Article; order: Order; onOpen: () => void } = $props();
 
@@ -30,7 +30,7 @@
   <h2 class="article-title" lang={shown?.language}>{article.title || "Untitled"}</h2>
   <p class="article-byline">
     <span class="publisher">{article.feedTitle}</span>{#if shown?.author}&nbsp;· {shown.author}{/if}
-    · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
+    · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
   </p>
   {#if shown?.opening}<p class="opening" lang={shown?.language}>{shown.opening}</p>{/if}
   <button type="button" class="btn-primary start" onclick={onOpen}>Start reading</button>

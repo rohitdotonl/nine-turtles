@@ -34,9 +34,22 @@ test("Hide articles about… from someone's page hides what matches at once, and
 
   // For good is the usual choice. Adding hides at once what's unread and about it, with no question first.
   await expect(rules.getByRole("radio", { name: "For good" })).toBeChecked();
+  // A word that matches nothing says so, and lists nothing.
+  await field(page).fill("zzyzx");
+  await expect(rules).toContainText("“zzyzx” matches nothing unread now.");
+  await expect(rules.getByRole("listitem")).toHaveCount(0);
   await field(page).fill("Long Way");
+  // Before Add, it says what the word would hide: how many, each with who wrote it and where the word is (decision 0216).
+  await expect(rules).toContainText("“Long Way” would hide 1 unread article.");
+  await expect(rules.getByRole("listitem")).toHaveCount(1);
+  await expect(rules.getByRole("listitem")).toContainText("Walking the long way home (2)");
+  await expect(rules.getByRole("listitem")).toContainText(`${title} · in the title`);
+  await expect(rules).toContainText("Nothing is hidden until you press Add.");
   await page.keyboard.press("Enter");
   await expect(rules.getByRole("status")).toContainText("Hid 1 unread article about “Long Way”.");
+  // The field is empty again, and so is the preview.
+  await expect(rules.getByRole("listitem")).toHaveCount(0);
+  await expect(rules).not.toContainText("Nothing is hidden until you press Add.");
   await expect(field(page)).toBeFocused();
   await expect(field(page)).toHaveValue("");
   // Its row: the word, then whose and how long, and Remove, 44px to press.

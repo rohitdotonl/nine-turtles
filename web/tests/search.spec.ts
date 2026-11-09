@@ -8,7 +8,7 @@ import { appReady, follow, nothingToPickUp, signIn, tabTo } from "./screens";
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the list beside the sidebar");
 
-const field = (page: Page) => page.getByRole("textbox", { name: "Search", exact: true });
+const field = (page: Page) => page.getByRole("textbox", { name: "Search articles", exact: true });
 const heading = (page: Page) => page.locator("#list-heading");
 const results = (page: Page) => page.getByRole("region", { name: /^Results in / }).getByRole("listitem");
 
@@ -139,8 +139,8 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(heading(page)).toHaveText(folder);
   await expect(heading(page)).toBeFocused();
   await expect(field(page)).toHaveValue("");
-  // At rest the field just says "Search"; back in it, the search starts in the folder again.
-  await expect(field(page)).toHaveAttribute("placeholder", "Search");
+  // At rest the field says "Search articles"; back in it, the search starts in the folder again.
+  await expect(field(page)).toHaveAttribute("placeholder", "Search articles");
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
@@ -293,6 +293,34 @@ test("the search options float over the list; Escape closes them first, then the
   await expect(options).toBeVisible();
   await heading(page).focus();
   await expect(options).toBeHidden();
+});
+
+test("how many were found shows once: the options repeat it only while they cover the list's line", async ({ page }) => {
+  const blog = unique("count");
+  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
+  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await field(page).focus();
+  await page.keyboard.type("walking");
+  await page.keyboard.press("Enter");
+  const line = page.locator("[data-result-count]");
+  await expect(line).toHaveText("1 result");
+  await page.getByRole("button", { name: "Search options" }).click();
+  const options = page.locator("#search-options");
+  await expect(options).toBeVisible();
+  // The wide list leaves the line beside the options in view, so they don't repeat it.
+  const menu = (await options.boundingBox())!;
+  const words = await line.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getBoundingClientRect().right;
+  });
+  expect(words).toBeLessThan(menu.x - 8);
+  await expect(options).not.toContainText("result");
+  // Narrow enough that the options cover it, they say it at their foot instead.
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await expect(options).toBeVisible();
+  await expect.poll(async () => (await options.boundingBox())!.x).toBeLessThan(words + 8);
+  await expect(options).toContainText("1 result");
 });
 
 test("a search that found nothing in one place offers Search all articles, which looks everywhere", async ({ page }) => {

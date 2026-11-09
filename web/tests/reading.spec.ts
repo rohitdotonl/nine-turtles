@@ -428,11 +428,11 @@ test.describe("on a wide window", () => {
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
-    // At rest, the field just says "Search": the list's title above already names where you are.
+    // At rest, the field says "Search articles", so it isn't mistaken for the sidebar's find field (decision 0217).
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toHaveAttribute("placeholder", "Search");
+    await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toHaveAttribute("placeholder", "Search articles");
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
-    await page.getByRole("textbox", { name: "Search", exact: true }).focus();
+    await page.getByRole("textbox", { name: "Search articles", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     // Shift+Tab reaches the chip's Remove button, and the chip stays while it has the keyboard.
     await page.keyboard.press("Shift+Tab");
@@ -440,10 +440,10 @@ test.describe("on a wide window", () => {
     // Leaving an empty search puts the field back at rest.
     await page.locator("#list-heading").focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    // A click on the word "Search" opens the search without removing its scope.
-    await page.getByRole("textbox", { name: "Search", exact: true }).click({ position: { x: 60, y: 20 } });
+    // A click on the words "Search articles" opens the search without removing its scope.
+    await page.getByRole("textbox", { name: "Search articles", exact: true }).click({ position: { x: 60, y: 20 } });
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Search", exact: true })).toBeFocused();
+    await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toBeFocused();
     const box = (await page.locator(".search-box").boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(48);
     // The chip's remove button is small to look at but a full 44px to press.
@@ -637,6 +637,12 @@ test.describe("on a wide window", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await openRoom(page);
     await page.keyboard.press("j");
+    // A list's words start on the paragraphs' left edge, its numbers hanging in the margin (decision 0218).
+    const [paragraph, item] = await Promise.all([
+      article(page).locator(".article-text > p").first().boundingBox(),
+      article(page).locator(".article-text > ol > li").first().boundingBox(),
+    ]);
+    expect(Math.abs(item!.x - paragraph!.x)).toBeLessThanOrEqual(1);
     // The measure gives way before the margins do, as in Apple Books (decision 0044).
     const [text, scroller] = await Promise.all([
       article(page).locator(".article").boundingBox(),
@@ -650,7 +656,7 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
-    await expect(note).toContainText("Only the beginning is shared here. Read on Reading Room");
+    await expect(note).toContainText("Only the beginning is shared here. Read the rest on Reading Room");
     // End matter, as in a book: small upright interface type, centred (decision 0040).
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
@@ -658,7 +664,7 @@ test.describe("on a wide window", () => {
     await expect(note).toHaveCSS("font-size", "14px");
     // Only the link is underlined.
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
-    const link = note.getByRole("link", { name: "Read on Reading Room" });
+    const link = note.getByRole("link", { name: "Read the rest on Reading Room" });
     await expect(link).toHaveCSS("text-decoration-line", "underline");
     // A row of its own under the sentence, centred, at least 44px tall to press, its words on one line where they fit.
     await expect(link).toHaveCSS("display", "flex");
