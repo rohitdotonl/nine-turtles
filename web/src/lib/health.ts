@@ -4,7 +4,7 @@
 // this file turns it into sentences, and no error code is ever shown.
 
 import type { Choice } from "./feeds";
-import { longDay, when } from "./times";
+import { dayOrToday, until } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 
@@ -98,13 +98,13 @@ function toSick(feed: Record<string, unknown>): Sick {
   };
 }
 
-/** "since 12 October", "since 3 December 2025" or "since earlier today". */
+/** "since 12 Oct", "since 3 Dec 2025" or "since earlier today". */
 function since(at: number, now: Date): string {
-  const day = longDay(at, now);
+  const day = dayOrToday(at, now);
   return day === "today" ? "since earlier today" : `since ${day}`;
 }
 
-/** The first line about a feed: "Nothing has come through since 1 November", or "Working again" once it has moved. */
+/** The first line about a feed: "Nothing has come through since 1 Nov", or "Working again" once it has moved. */
 export function headline(feed: Sick, now: Date = new Date()): string {
   if (feed.state === "working") return "Working again";
   const from = feed.problem === "not-found" && feed.missingSince !== null ? feed.missingSince : feed.failingSince;
@@ -137,7 +137,7 @@ export function reason(problem: string | null): string {
 
 /**
  * The quiet line above a failing feed's list, and in Edit feed (decision
- * 0106): "This feed hasn't worked since 12 October." (with the year when it
+ * 0106): "This feed hasn't worked since 12 Oct." (with the year when it
  * isn't this one), in the device's time zone.
  */
 export function brokenSince(failingSince: number, now: Date = new Date()): string {
@@ -170,7 +170,7 @@ export const MOVED = "It now reads from its new address and works again. Its art
 export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): string {
   switch (refusal.error) {
     case "asked-to-wait":
-      return `The site asked nine turtles to wait until ${when(refusal.until)}, so it hasn't been asked again yet.`;
+      return `The site asked nine turtles to wait until ${until(refusal.until)}, so it hasn't been asked again yet.`;
     case "already":
       return "You already follow that feed.";
     case "kept-stars":

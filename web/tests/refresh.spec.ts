@@ -93,14 +93,14 @@ test("on a phone, the feeds screen's dots catch up as you arrive on it, then sta
   const sidebar = page.getByRole("navigation", { name: "Sidebar" });
   const blogRow = sidebar.getByRole("link", { name: `Blog ${blog} unread` });
   const dots = (count: number) => blogRow.and(page.locator(`[data-unread="${count}"]`));
-  await page.getByRole("button", { name: "Back to Feeds" }).click();
+  await page.getByRole("button", { name: "Back to Home" }).click();
   await expect(sidebar.getByRole("button", { name: "Refresh" })).toHaveCount(0);
   await expect(dots(3)).toBeVisible();
 
   // Back from a list: the dots count what arrived while you were in it.
   await blogRow.click();
   await publishAndWait(page, blog, "New articles");
-  await page.getByRole("button", { name: "Back to Feeds" }).click();
+  await page.getByRole("button", { name: "Back to Home" }).click();
   await expect(dots(4)).toBeVisible();
 
   // Another arrives while the feeds screen is showing: nothing changes under you…

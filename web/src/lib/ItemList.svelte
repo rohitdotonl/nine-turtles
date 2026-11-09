@@ -47,7 +47,7 @@
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
-  import { when } from "./times";
+  import { exactly, when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
   import RowPlace from "./RowPlace.svelte";
@@ -595,7 +595,7 @@
 
 {#if results}
   <!-- How many were found, quietly above the results. Present from the start and filled once they load, so screen readers hear it. -->
-  <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+  <p role="status" data-result-count class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
 {#if fromDevice}
@@ -671,10 +671,10 @@
             <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
             {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>&nbsp;·</span>{/if}
             <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
-            <time datetime={new Date(article.at * 1000).toISOString()} class="row-date">{when(article.at)}</time>
+            <time datetime={new Date(article.at * 1000).toISOString()} class="row-date" title={exactly(article.at)}>{when(article.at)}</time>
             <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
             <RowKind {article} />
-            <!-- Your place, while one is kept: "· Half read" (decision 0218). -->
+            <!-- Your place, while one is kept: "· Half read" (decision 0220). -->
             <RowPlace article={article.id} />
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->

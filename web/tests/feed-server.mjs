@@ -80,15 +80,16 @@ const TITLES = [
 ];
 
 // Article `number` keeps its title and date as later ones arrive: `first`
-// is how many the feed had to begin with.
-function rss(title, link, count, first = count) {
+// is how many the feed had to begin with. `more`, a second paragraph after
+// the summary's first (a start- blog's: Start reading shows only the first).
+function rss(title, link, count, first = count, more = "") {
   const items = Array.from({ length: count }, (_, index) => {
     const number = count - index;
     const place = (((first - number) % TITLES.length) + TITLES.length) % TITLES.length;
     const date = new Date(NEWEST - (first - number) * DAY).toUTCString();
     return `<item><title>${TITLES[place]} (${number})</title>
 <link>${link}${number}</link><guid>${link}${number}</guid><pubDate>${date}</pubDate>
-<description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;</description></item>`;
+<description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;${more && `&lt;p&gt;${more}&lt;/p&gt;`}</description></item>`;
   });
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
 <link>${link}</link>${items.join("\n")}</channel></rss>`;
@@ -105,6 +106,7 @@ A <a href="/letters">letter</a> can wait a week; a good essay can wait a year.</
 <img src="http://127.0.0.1:${port}/reading/pixel.gif" width="1" height="1" alt="">
 <h2>What a slow reader keeps</h2>
 <p>Three things, mostly: a notebook, a pencil and an afternoon with nothing in it.</p>
+<ol><li>A notebook</li><li>A pencil</li><li>An afternoon</li></ol>
 <blockquote><p>Reading is a conversation that never interrupts.</p></blockquote>
 <figure><img src="http://127.0.0.1:${port}/reading/river.svg" width="640" height="240" alt="A river drawn as three blue lines">
 <figcaption>The river near the allotment, drawn from memory.</figcaption></figure>
@@ -144,7 +146,7 @@ const reading = `<?xml version="1.0"?>
 <content:encoded><![CDATA[${WHOLE}]]></content:encoded></item>
 <item><title>Only the first page</title><link>${ROOM}first-page</link><guid>${ROOM}first-page</guid>
 <pubDate>${new Date(NEWEST - DAY).toUTCString()}</pubDate>
-<description>&lt;p&gt;This feed shares just the opening paragraph of each article.&lt;/p&gt;</description></item>
+<description>&lt;p&gt;This feed shares just the opening paragraph of each article…&lt;/p&gt;</description></item>
 <item><title>A third, shorter note</title><link>${ROOM}third</link><guid>${ROOM}third</guid>
 <pubDate>${new Date(NEWEST - 2 * DAY).toUTCString()}</pubDate>
 <description>&lt;p&gt;Three is a good number of articles.&lt;/p&gt;&lt;img src="http://127.0.0.1:${port}/reading/hills.svg" alt="Two hills at dusk, drawn in greys"&gt;&lt;a href="${ROOM}hills"&gt;&lt;img src="http://127.0.0.1:${port}/reading/hills.svg" alt="The same hills, as a link"&gt;&lt;/a&gt;&lt;img src="http://127.0.0.1:${port}/reading/stone.svg" alt="A small stone"&gt;&lt;img src="http://127.0.0.1:${port}/reading/field.svg" alt="A wide field"&gt;</description></item>
@@ -340,7 +342,7 @@ const AUDIO = { long: silence(60), short: silence(2) };
 
 function podcast(name, base) {
   const episodes = [
-    ["A long walk", "long", 60, "Notes for a walk: where we went, and what we saw."],
+    ["A long walk", "long", 60, "Notes for a walk: where we went, and what we saw…"],
     ["A short pause", "short", 2, "Notes for a pause."],
   ];
   const items = episodes.map(([title, file, seconds, notes], index) => {
@@ -488,7 +490,8 @@ createServer((request, response) => {
         return response.end("Not found");
       }
       if (name.startsWith("many-")) return xml(rss(`Blog ${name}`, home, 55));
-      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3));
+      const more = name.startsWith("start-") ? "Its second paragraph." : "";
+      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3, more));
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];

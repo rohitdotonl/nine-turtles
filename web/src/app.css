@@ -1442,22 +1442,6 @@ input {
   text-underline-offset: 0.2em;
 }
 
-.article-text :where(ul, ol) {
-  padding-left: 1.5em;
-}
-
-.article-text ul {
-  list-style: disc;
-}
-
-.article-text ol {
-  list-style: decimal;
-}
-
-.article-text li + li {
-  margin-top: 0.25em;
-}
-
 .article-text blockquote {
   padding-left: 1em;
   border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);

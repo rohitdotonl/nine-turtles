@@ -14,7 +14,7 @@
   into the sidebar, after their icons; folders, and the people and
   publications in no folder, start at the 20px margin; a folder's feeds
   start one step in, on the 46px edge, so an indent always means "inside a
-  folder" (decisions 0043, 0219).
+  folder" (decisions 0043, 0221).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
   selected there, and every row ends in a chevron, after its dot, because
@@ -264,7 +264,7 @@
       data-unread={unreadOff ? undefined : feed.unread}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui pointer-fine:text-small",
-        // Indent means inside (decision 0219): a folder's people start a step in, on the names' edge;
+        // Indent means inside (decision 0221): a folder's people start a step in, on the names' edge;
         // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
         from === null && !searching ? "pl-3" : "pl-[38px]",
         editing ? "pr-12" : "pr-3.5",

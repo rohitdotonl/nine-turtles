@@ -234,7 +234,7 @@ mod tests {
                 None
             )
         );
-        let summary = article.summary.as_deref().unwrap();
+        let summary = article.content.as_deref().unwrap();
         for kept in [
             r#"href="https://other.example/x?page=2""#,
             r#"href="https://example.com/y""#,

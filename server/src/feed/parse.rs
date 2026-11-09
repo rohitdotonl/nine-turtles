@@ -191,6 +191,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         });
 
     let email = crate::write_back::from_feed(&feed);
+    let kind = feed.feed_type.clone();
     let articles = feed
         .entries
         .into_iter()
@@ -236,6 +237,12 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .as_ref()
                 .map(|text| clean(&text.content, text.content_type.as_ref(), base))
                 .filter(|html| !html.trim().is_empty());
+            // An RSS post sent whole in its one text field is the article's
+            // text, not a summary (decision 0218).
+            let (content, summary) = match (content, summary) {
+                (None, Some(text)) if summary_is_whole(&kind, &text) => (Some(text), None),
+                both => both,
+            };
             let episode = episode(&entry, base, feed_artwork.as_deref());
             ParsedArticle {
                 // The fingerprint comes from the link as the feed wrote it,
@@ -547,7 +554,7 @@ mod tests {
         assert_eq!(feed.site_url.as_deref(), Some("https://example.com/"));
         let article = &feed.articles[0];
         assert_eq!(article.link.as_deref(), Some("https://example.com/first"));
-        let summary = article.summary.as_deref().unwrap();
+        let summary = article.content.as_deref().unwrap();
         for unsafe_part in ["script", "onclick", "iframe", "alert"] {
             assert!(!summary.contains(unsafe_part), "{summary}");
         }
@@ -596,7 +603,7 @@ mod tests {
 <description><![CDATA[<p>Words<sup><a href="#fn1" id="ref1">1</a></sup></p><p id="fn1">The note. <a href="#ref1">Back</a></p>]]></description>
 </item></channel></rss>"##;
         let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
-        let summary = feed.articles[0].summary.as_deref().unwrap();
+        let summary = feed.articles[0].content.as_deref().unwrap();
         for kept in [
             r##"href="#article-fn1""##,
             r#"id="article-fn1""#,
@@ -618,7 +625,7 @@ mod tests {
 <description><![CDATA[<img src="//cdn.example/x.png" alt="1"><img src="../pics/y.png" alt="2"><a href="more">c</a>]]></description>
 </item></channel></rss>"#;
         let feed = parse(rss, &url("http://feeds.example/blog/rss.xml")).unwrap();
-        let linked = feed.articles[0].summary.as_deref().unwrap();
+        let linked = feed.articles[0].content.as_deref().unwrap();
         for whole in [
             r#"src="https://cdn.example/x.png""#,
             r#"src="https://blog.example/posts/pics/y.png""#,
@@ -629,7 +636,7 @@ mod tests {
             assert!(linked.contains(whole), "{whole}: {linked}");
         }
         // With no link of its own, the feed's address is used.
-        let unlinked = feed.articles[1].summary.as_deref().unwrap();
+        let unlinked = feed.articles[1].content.as_deref().unwrap();
         for whole in [
             r#"src="http://cdn.example/x.png""#,
             r#"src="http://feeds.example/pics/y.png""#,
@@ -647,7 +654,7 @@ mod tests {
 <description><![CDATA[<p>Words<img src="https://pixel.example/p.gif?id=7" width="1" height="1" /></p><img src="/photo.jpg" alt="Photo">]]></description>
 </item></channel></rss>"#;
         let feed = parse(rss, &url("https://example.com/feed.xml")).unwrap();
-        let summary = feed.articles[0].summary.as_deref().unwrap();
+        let summary = feed.articles[0].content.as_deref().unwrap();
         assert!(!summary.contains("pixel.example"), "{summary}");
         assert!(
             summary.contains(r#"src="https://example.com/photo.jpg""#),
@@ -787,7 +794,7 @@ Second paragraph</media:description>
         // The show notes are the article's text, as for any article.
         assert!(
             feed.articles[0]
-                .summary
+                .content
                 .as_deref()
                 .unwrap()
                 .contains("Show notes")
@@ -808,7 +815,7 @@ Second paragraph</media:description>
 </item>
 </channel></rss>"#;
         let feed = parse(rss, &url("https://tips.example/feed.xml")).unwrap();
-        let notes = feed.articles[0].summary.as_deref().unwrap();
+        let notes = feed.articles[0].content.as_deref().unwrap();
         assert!(!notes.contains("<code>-"), "{notes}");
         assert!(!notes.contains("0:30:00"), "{notes}");
         // Outside the notes the workaround still works.

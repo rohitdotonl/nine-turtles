@@ -711,7 +711,7 @@ async fn an_edited_article_gets_the_new_words_quietly_and_stays_read() {
     assert_eq!(after["articles"][0]["read"], true);
     assert_eq!(after["articles"][0]["at"], before["articles"][0]["at"]);
     let article = reader.get(&format!("/api/articles/{newest}")).await;
-    assert_eq!(article["article"]["summary"], "<p>Better words.</p>");
+    assert_eq!(article["article"]["content"], "<p>Better words.</p>");
     // An edit isn't a new article.
     let latest = before["latest"].as_i64().unwrap();
     assert_eq!(

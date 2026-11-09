@@ -7,7 +7,7 @@ V1, item 2). Its look gets a refinement round.*
 **What it does**
 - **Write back on every article** of a person you follow (never a
   publication's, decision 0192): at the article's
-  end, under its closing rule (and under "Read on …" for a summary), one
+  end, under its closing rule (and under "Read the rest on …" for a summary), one
   centred button, **Write back to Tomas Berg**: the solid ink button with a
   paper-plane icon, the only solid button in the reading pane, naming them
   in full, by the name in the sidebar ("Write back to Maya Chen"; the

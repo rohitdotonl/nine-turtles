@@ -46,7 +46,7 @@
   import type { Preferences } from "./preferences";
   import type { Article, FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
-  import { when } from "./times";
+  import { exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { articleOpened, placeKept } from "./resume.svelte";
   import { connection } from "./connection.svelte";
@@ -135,7 +135,7 @@
     void arrivals;
     return articleNow(article.id);
   });
-  /** Where "Read on …" goes, by the site's own name ("Garden Letters", not the person's), else its address. */
+  /** Where "Read the rest on …" goes, by the site's own name ("Garden Letters", not the person's), else its address. */
   let site = $derived(library.feeds?.find((feed) => feed.id === article.feedId)?.siteTitle ?? siteName(full?.siteUrl ?? null) ?? article.feedTitle);
   let author = $derived(authorBesides(full?.author, article.feedTitle));
 
@@ -516,7 +516,7 @@
           <span class="publisher">{article.feedTitle}</span>
         {/if}
         {#if author}· {author}{/if}
-        · <time datetime={new Date(article.at * 1000).toISOString()}>{when(article.at)}</time>
+        · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
       </p>
 
       {#if video && connection.offline}
@@ -564,14 +564,14 @@
           <hr aria-hidden="true" class="article-end" />
           <!--
             End matter, under the closing rule as in a book: where the rest of it is. The sentence, then the
-            link to the publisher on a row of its own, 44px tall to press: "Read on {publisher} ›", or for a
-            podcast's episode "Read the episode page on {publisher} ›" (SPEC sections 7 and 35). The sentence
+            link to the publisher on a row of its own, 44px tall to press: "Read the rest on {publisher} ↗", or for a
+            podcast's episode "Read the episode page on {publisher} ↗" (SPEC sections 7 and 35; decision 0218). The sentence
             and the link each stay whole wherever they fit on a line, so a narrow column never strands a word
             (decision 0044).
           -->
           <p class="article-note" lang="en">
-            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer"
-                >{episode ? "Read the episode page on" : "Read on"} {site}<span aria-hidden="true">&nbsp;›</span><span class="sr-only"> (opens in a new tab)</span></a
+            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="gap-[0.25em]"
+                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" size={16} /><span class="sr-only"> (opens in a new tab)</span></a
               >{/if}
           </p>
         {:else if video || episode}
@@ -611,7 +611,7 @@
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a
       hairline so the text ends at an edge rather than being sliced. Two
-      groups by job, in order of use (decision 0219): what you do to this
+      groups by job, in order of use (decision 0221): what you do to this
       article on the left, the rarest furthest out (More, Aa, Write back,
       Star), then a short hairline, then moving through the list at the
       right, where a right thumb rests (Previous, Next). Previous on the

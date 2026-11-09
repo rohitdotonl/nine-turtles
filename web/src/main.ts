@@ -1,5 +1,6 @@
 import "./app.css";
 import "./lists.css";
+import "./article-lists.css";
 import "./arranging.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
