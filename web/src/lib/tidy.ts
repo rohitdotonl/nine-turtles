@@ -6,7 +6,7 @@ import type { Folder } from "./shapes";
 import { change, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { longDay } from "./times";
+import { dayOrToday } from "./times";
 
 /** One row: a person with every place they were joined from, or a place on its own. */
 export type Tended = {
@@ -102,14 +102,14 @@ export function isQuiet(feed: Tended, now: number): boolean {
 
 /**
  * A row's second line: their newest title and when it came ("“On walking”,
- * 4 November"), "Quiet since 14 March: “On walking”" after six months, and
+ * 4 Nov"), "Quiet since 14 Mar: “On walking”" after six months, and
  * the folders it's in after a dot.
  */
 export function rowLine(feed: Tended, folders: string[], now: Date = new Date()): string {
   let line: string;
   if (feed.lastPosted === null) line = "Nothing written yet";
   else {
-    const when = longDay(feed.lastPosted, now);
+    const when = dayOrToday(feed.lastPosted, now);
     const title = feed.lastTitle ? `“${feed.lastTitle}”` : null;
     if (isQuiet(feed, now.getTime() / 1000)) line = title ? `Quiet since ${when}: ${title}` : `Quiet since ${when}`;
     else if (title) line = `${title}, ${when}`;

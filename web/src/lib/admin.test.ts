@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { backupDay, count, date, lastHereDay, plural, size, toOverview } from "./admin";
+import { backupDay, count, plural, size, toOverview } from "./admin";
+import { date, dateOrToday } from "./times";
 
 describe("the owner's Readers page", () => {
   it("reads the server's answer, and anything missing as nothing", () => {
@@ -43,10 +44,10 @@ describe("the owner's Readers page", () => {
   it("says today, or the day, for a reader's last visit", () => {
     const now = new Date(2026, 9, 26, 15, 0);
     const seconds = (at: Date) => at.getTime() / 1000;
-    expect(lastHereDay(seconds(new Date(2026, 9, 26, 0, 5)), now)).toBe("today");
+    expect(dateOrToday(seconds(new Date(2026, 9, 26, 0, 5)), now)).toBe("today");
     const yesterday = seconds(new Date(2026, 9, 25, 23, 55));
-    expect(lastHereDay(yesterday, now)).toBe(date(yesterday));
-    expect(date(yesterday)).toBe("25 October 2026");
+    expect(dateOrToday(yesterday, now)).toBe(date(yesterday));
+    expect(date(yesterday)).toBe("25 Oct 2026");
   });
 
   it("writes counts and sizes as people read them", () => {
@@ -60,7 +61,7 @@ describe("the owner's Readers page", () => {
   });
 
   it("reads the day of the newest backup from its name", () => {
-    expect(backupDay("nightly/2026-10-25.sqlite")).toBe("25 October 2026");
+    expect(backupDay("nightly/2026-10-25.sqlite")).toBe("25 Oct 2026");
     expect(backupDay(null)).toBeNull();
     expect(backupDay("something else")).toBeNull();
   });

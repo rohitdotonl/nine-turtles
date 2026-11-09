@@ -5,12 +5,14 @@
   to their list. Opened by their name at the top of the list, "Info about …" in
   the list's More menu, or the i key.
 
-  Visiting: their name in Literata with an Edit button beside it, their
+  Visiting: their name in Literata with a quiet underlined Edit beside it, so
+  Write to is the page's one strong button (decision 0215), their
   blog's own title under it when that isn't their name (one source), then
   "Write to Tomas Berg", the solid button with the paper plane, with the
   address under it (WriteBack, the owner's core path, points 9 and 10), then
-  the reader's private note on them (SPEC section 42), then Lately and Your
-  highlights from their writing (TheirReading, decision 0211), then their
+  the reader's private note on them (SPEC section 42), then Your highlights
+  from their writing (TheirReading, decision 0211; Lately went in 0215, as
+  their list already shows their newest), then their
   sources, each by what it is (Blog, Video, Newsletter, Podcast) with a link
   to the publisher's own site, then a quiet "Hide articles about…" (SPEC
   section 27). No
@@ -62,7 +64,7 @@
     onSaved: () => void;
     /** Edit put them in a folder just made or chosen: the sidebar opens it. */
     onFolders?: (folders: number[]) => void;
-    /** A piece of theirs pressed in Lately or Your highlights: it opens, in its list. */
+    /** A piece of theirs pressed in Your highlights: it opens, in its list. */
     onOpen?: (article: Article) => void;
   } = $props();
 
@@ -115,14 +117,14 @@
         <div class="flex items-start justify-between gap-4">
           <!-- The page's heading, a step under the list's title, which also names them. -->
           <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-xlarge font-semibold break-words text-ink">{name}</h2>
-          <button type="button" class="btn shrink-0" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
+          <button type="button" class="text-link min-w-11 shrink-0 justify-end" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
       </div>
       <WriteBack feedId={feed.id} {library} />
       <!-- The reader's private note on them (SPEC section 42). -->
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
-      <!-- Lately and Your highlights from their writing (decision 0211). -->
+      <!-- Your highlights from their writing (decision 0211). -->
       {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
       <div class="flex flex-col gap-2">
         <h3 class="text-small text-ink-2">{places.length > 1 ? "Sources" : "Source"}</h3>

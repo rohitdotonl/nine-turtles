@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-06
+updated: 2026-11-09
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -29,9 +29,10 @@ them by that name, with the blog's title under it on their page. Want a
 different name? Change it in **Edit** on their page; yours always stays.
 
 Their page (press their name at the top of their list) keeps what's
-between you: **Write to** them, your own note on them, **Lately** (their
-three newest pieces) and **Your highlights**, the words you highlighted in
-their writing, each with the article it's from. Press a title to read it.
+between you: **Write to** them, your own note on them and **Your
+highlights**, the words you highlighted in their writing, each with the
+article it's from. Press a title to read it. Their newest pieces are in
+their list, right beside the page.
 
 They appear in your sidebar under **People** or **Publications**. Their
 five newest articles wait in **Unread**; anything older is on their page,
