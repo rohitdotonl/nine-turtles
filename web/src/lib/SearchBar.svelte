@@ -35,7 +35,7 @@
     folders: Folder[];
     /** Where search started: its row in the options reads "This list". */
     here: Scope;
-    /** How many the search found ("28 results"), empty until known; the options repeat it where they'd cover the list's own line. */
+    /** How many the search found ("28 results"), empty until known; the options repeat it only while they cover the list's own line. */
     found?: string;
     /** The query changed; `now` when the search should follow at once, not after a pause in typing. */
     onChange: (query: Query, now: boolean) => void;
@@ -45,6 +45,26 @@
   let panel: HTMLDivElement | undefined = $state();
   let optionsButton: HTMLButtonElement | undefined = $state();
   let panelOpen = $state(false);
+  /** The open options hide the list's own count line ("6 results"): only then do they repeat it, so the count is on screen once. */
+  let countHidden = $state(false);
+
+  /** Whether the open options cover the count line above the results, by where the two are drawn now. */
+  function measureCount() {
+    const line = document.querySelector("[data-result-count]");
+    if (!panelOpen || !found || !panel || !line) {
+      countHidden = false;
+      return;
+    }
+    const words = document.createRange();
+    words.selectNodeContents(line);
+    const text = words.getBoundingClientRect();
+    const menu = panel.getBoundingClientRect();
+    countHidden = text.right > menu.left - 8 && text.bottom > menu.top && text.top < menu.bottom;
+  }
+  $effect(() => {
+    void [panelOpen, found, panel];
+    measureCount();
+  });
 
   let library = $derived({ feeds, folders });
   let chips = $derived(chipsFor(query, library));
@@ -127,6 +147,7 @@
 
 <svelte:window
   onpointerup={pressEnded}
+  onresize={measureCount}
   onpointercancel={pressEnded}
   onpointerdown={(event) => {
     // A press anywhere outside the search closes its options, as a popover does.
@@ -266,13 +287,13 @@
         </fieldset>
       {/if}
       <!--
-        How many were found, at the menu's foot, only where the menu would cover the line above the
-        results that says it (a list narrower than 26rem: the menu is 17rem from the right, the count
-        needs about 6rem on the left), so changing a filter still shows its effect (decision 0054).
-        Screen readers already hear that line, so this copy is for the eyes only.
+        How many were found, at the menu's foot, only while the menu covers the line above the
+        results that says it (measured, so the count is never on screen twice), so changing a filter
+        still shows its effect (decision 0054). Screen readers already hear that line, so this copy
+        is for the eyes only.
       -->
-      {#if found}
-        <div aria-hidden="true" class="hidden @max-[26rem]:block">
+      {#if found && countHidden}
+        <div aria-hidden="true">
           <div class="mx-2 my-1.5 h-px bg-ink/10"></div>
           <p class="px-3 pt-0.5 pb-1 text-meta text-muted">{found}</p>
         </div>

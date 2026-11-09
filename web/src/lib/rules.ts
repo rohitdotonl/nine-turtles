@@ -67,6 +67,31 @@ export async function listMuted(): Promise<{ articles: Article[]; count: number 
   return { articles: articles.filter(isRecord).map(toArticle), count: isRecord(answer) ? Number(answer.count ?? 0) : 0 };
 }
 
+/** What a word would hide, seen before it's added (decision 0216): how many unread articles, the newest few, and which of those have it in the title. */
+export type Preview = { words: string; count: number; articles: Article[]; inTitle: number[] };
+
+/** Asks which unread articles `words` would hide now, from everyone or one person; it hides nothing. Undefined when it can't say. */
+export async function previewRule(words: string, feedId: number | null): Promise<Preview | undefined> {
+  const sent = await post("/api/rules/preview", { words, feed_id: feedId });
+  if (typeof sent === "string") return undefined;
+  const articles = Array.isArray(sent.articles) ? sent.articles.filter(isRecord).map(toArticle) : [];
+  const inTitle = Array.isArray(sent.in_title) ? sent.in_title.map(Number) : [];
+  return { words, count: Number(sent.count ?? 0), articles, inTitle };
+}
+
+/** The preview's first line: "“garden” would hide 5 unread articles", or that it matches nothing unread yet. */
+export function previewLine(preview: Pick<Preview, "words" | "count">): string {
+  const word = `“${preview.words}”`;
+  if (preview.count === 0) return `${word} matches nothing unread now.`;
+  return `${word} would hide ${preview.count === 1 ? "1 unread article" : `${preview.count} unread articles`}.`;
+}
+
+/** Under each article the preview lists: who wrote it, and where the word was found. */
+export function previewWhere(article: Pick<Article, "id" | "feedTitle" | "writer">, inTitle: number[]): string {
+  const who = article.writer ? `${article.writer} · ${article.feedTitle}` : article.feedTitle;
+  return `${who} · ${inTitle.includes(article.id) ? "in the title" : "in the text"}`;
+}
+
 /** Unhides articles (they come back unread), or hides them again (Undo). */
 export async function setMuted(ids: number[], muted: boolean): Promise<RuleRefusal | undefined> {
   const sent = await post("/api/articles/muted", { ids, muted });

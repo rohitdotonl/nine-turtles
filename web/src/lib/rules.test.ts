@@ -1,6 +1,6 @@
 import { describe as group, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { addedMessage, howLong, ruleLine, ruleRefused, wordShown, type Rule } from "./rules";
+import { addedMessage, howLong, previewLine, previewWhere, ruleLine, ruleRefused, wordShown, type Rule } from "./rules";
 
 const feed = (id: number, title: string, places?: number[]): Feed => ({ id, title, siteUrl: null, unread: 0, folders: [], places });
 /** The sidebar's rows: Alpha has two places (3 and 4), Garden Notes one. */
@@ -43,5 +43,19 @@ group("a word in Settings › Hiding", () => {
   it("never shows an error code", () => {
     expect(ruleRefused("nothing-to-match")).toBe("Write a word or phrase to hide articles about.");
     expect(ruleRefused("trouble")).not.toMatch(/[0-9]/);
+  });
+});
+
+group("seeing what a word would hide (decision 0216)", () => {
+  it("says how many unread articles, or that it matches nothing yet", () => {
+    expect(previewLine({ words: "garden", count: 5 })).toBe("“garden” would hide 5 unread articles.");
+    expect(previewLine({ words: "garden", count: 1 })).toBe("“garden” would hide 1 unread article.");
+    expect(previewLine({ words: "garden", count: 0 })).toBe("“garden” matches nothing unread now.");
+  });
+  it("names who wrote each one and where the word was found", () => {
+    expect(previewWhere({ id: 1, feedTitle: "Ravi Iyer" }, [1])).toBe("Ravi Iyer · in the title");
+    expect(previewWhere({ id: 2, feedTitle: "Garden Letters", writer: "Hal Brennan" }, [1])).toBe(
+      "Hal Brennan · Garden Letters · in the text",
+    );
   });
 });

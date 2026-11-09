@@ -594,7 +594,7 @@
 
 {#if results}
   <!-- How many were found, quietly above the results. Present from the start and filled once they load, so screen readers hear it. -->
-  <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+  <p role="status" data-result-count class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
 {#if fromDevice}

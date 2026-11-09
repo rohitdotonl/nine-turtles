@@ -80,15 +80,16 @@ const TITLES = [
 ];
 
 // Article `number` keeps its title and date as later ones arrive: `first`
-// is how many the feed had to begin with.
-function rss(title, link, count, first = count) {
+// is how many the feed had to begin with. `more`, a second paragraph after
+// the summary's first (a start- blog's: Start reading shows only the first).
+function rss(title, link, count, first = count, more = "") {
   const items = Array.from({ length: count }, (_, index) => {
     const number = count - index;
     const place = (((first - number) % TITLES.length) + TITLES.length) % TITLES.length;
     const date = new Date(NEWEST - (first - number) * DAY).toUTCString();
     return `<item><title>${TITLES[place]} (${number})</title>
 <link>${link}${number}</link><guid>${link}${number}</guid><pubDate>${date}</pubDate>
-<description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;</description></item>`;
+<description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;${more && `&lt;p&gt;${more}&lt;/p&gt;`}</description></item>`;
   });
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
 <link>${link}</link>${items.join("\n")}</channel></rss>`;
@@ -488,7 +489,8 @@ createServer((request, response) => {
         return response.end("Not found");
       }
       if (name.startsWith("many-")) return xml(rss(`Blog ${name}`, home, 55));
-      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3));
+      const more = name.startsWith("start-") ? "Its second paragraph." : "";
+      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3, more));
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];

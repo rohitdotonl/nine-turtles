@@ -274,7 +274,7 @@
       <!-- With Choose on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->
       {#if editing}
         <div class="tidy-bar">
-          <!-- Unsubscribe at the far left, apart from Move to… at the right, so a slip can't land on it (decision 0216). -->
+          <!-- Unsubscribe at the far left, apart from Move to… at the right, so a slip can't land on it (decision 0217). -->
           <button
             type="button"
             class="btn-danger text-small"
