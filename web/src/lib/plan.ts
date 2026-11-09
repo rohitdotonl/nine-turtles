@@ -2,7 +2,7 @@
 // plan, shown in Settings › Your plan, and the doors to Dodo Payments'
 // checkout and billing pages. nine turtles never sees a card.
 
-import { date } from "./admin";
+import { date } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 

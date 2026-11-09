@@ -27,11 +27,11 @@ describe("everyone you follow", () => {
   it("says what each one wrote last, and when", () => {
     const now = new Date(2026, 10, 6, 15, 0);
     const at = (date: Date) => Math.floor(date.getTime() / 1000);
-    expect(rowLine(feed({ lastPosted: at(new Date(2026, 10, 4, 9, 0)) }), [], now)).toBe("“On walking”, 4 November");
+    expect(rowLine(feed({ lastPosted: at(new Date(2026, 10, 4, 9, 0)) }), [], now)).toBe("“On walking”, 4 Nov");
     expect(rowLine(feed({ lastPosted: at(new Date(2026, 10, 6, 9, 0)) }), ["Friends"], now)).toBe("“On walking”, today · Friends");
-    expect(rowLine(feed({ lastPosted: at(new Date(2026, 2, 14)) }), [], now)).toBe("Quiet since 14 March: “On walking”");
-    expect(rowLine(feed({ lastPosted: at(new Date(2025, 9, 3)), lastTitle: null }), [], now)).toBe("Quiet since 3 October 2025");
-    expect(rowLine(feed({ lastPosted: at(new Date(2026, 9, 3)), lastTitle: null }), ["A", "B"], now)).toBe("Last wrote on 3 October · A, B");
+    expect(rowLine(feed({ lastPosted: at(new Date(2026, 2, 14)) }), [], now)).toBe("Quiet since 14 Mar: “On walking”");
+    expect(rowLine(feed({ lastPosted: at(new Date(2025, 9, 3)), lastTitle: null }), [], now)).toBe("Quiet since 3 Oct 2025");
+    expect(rowLine(feed({ lastPosted: at(new Date(2026, 9, 3)), lastTitle: null }), ["A", "B"], now)).toBe("Last wrote on 3 Oct · A, B");
     expect(rowLine(feed({ lastPosted: null }), [], now)).toBe("Nothing written yet");
   });
 

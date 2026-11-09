@@ -75,16 +75,16 @@ describe("what a passkey is called", () => {
 
   it("by the reader's name for it, or the day it was added", () => {
     expect(passkeyName({ id: 1, name: "Laptop", createdAt: added, lastUsedAt: null })).toBe("Laptop");
-    expect(passkeyName({ id: 1, name: null, createdAt: added, lastUsedAt: null })).toBe("Passkey added 27 October 2026");
+    expect(passkeyName({ id: 1, name: null, createdAt: added, lastUsedAt: null })).toBe("Passkey added 27 Oct 2026");
   });
 
   it("with when it was added and last used underneath", () => {
     const later = new Date(2026, 9, 30, 9);
     expect(passkeyDates({ id: 1, name: null, createdAt: added, lastUsedAt: null }, later)).toBe(
-      "Added 27 October 2026 · Not used yet",
+      "Added 27 Oct 2026 · Not used yet",
     );
     expect(passkeyDates({ id: 1, name: null, createdAt: added, lastUsedAt: later.getTime() / 1000 }, later)).toBe(
-      "Added 27 October 2026 · Last used today",
+      "Added 27 Oct 2026 · Last used today",
     );
   });
 });

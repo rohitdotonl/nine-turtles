@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-06
+updated: 2026-11-09
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -18,7 +18,7 @@ related: [unfollow-someone, follow-someone, one-person-several-places]
 Open **Settings › Everyone you follow**. Anything that isn't working is at
 the top, **Not working** first, then **Having trouble**. Each one says when
 something last came through and why, for example: "Nothing has come
-through since 1 November. The site says the feed isn't there any more. It
+through since 1 Nov. The site says the feed isn't there any more. It
 may have moved."
 
 If everything's working, the page starts straight with everyone you follow.
@@ -39,7 +39,7 @@ There's no need to try again yourself: nine turtles keeps checking, and
 picks up anything new as soon as the site is back.
 
 You'll also see a line above a broken one's list, such as "This feed hasn't
-worked since 12 October.", with a button to find its new address.
+worked since 12 Oct.", with a button to find its new address.
 
 ## Good to know
 

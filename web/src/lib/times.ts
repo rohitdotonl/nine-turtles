@@ -1,12 +1,41 @@
-// Times and dates in the words the screens show: an article's time, Recently
-// read's day headings, when a feed was paused, and the long day Everyone you
-// follow says.
+// Times and dates in the words the screens show. Every date in the app has one
+// form, "20 Oct" (and "20 Oct 2025" for another year), decision 0215: an
+// article's time, when a feed was paused or last checked, Everyone you follow,
+// passkeys and the admin pages.
 
 const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
-const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
-const DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
-const LONG_DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
-const LONG_DAY_AND_YEAR = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
+// Three letters each, always: the browser's own short months say "Sept" for September.
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "20 Oct", or with its year, "20 Oct 2025", in the device's time zone. */
+function dayMonth(date: Date, withYear: boolean): string {
+  const day = `${date.getDate()} ${MONTHS[date.getMonth()]}`;
+  return withYear ? `${day} ${date.getFullYear()}` : day;
+}
+
+/**
+ * A date with its year, always, for things that last (a passkey, a plan, a
+ * reader's account, a connected assistant, a backup): "27 Oct 2026".
+ */
+export function date(at: number): string {
+  return dayMonth(new Date(at * 1000), true);
+}
+
+/** The same, or "today": "Last used today", "Last here 24 Oct 2026". */
+export function dateOrToday(at: number, now: Date = new Date()): string {
+  return new Date(at * 1000).toDateString() === now.toDateString() ? "today" : date(at);
+}
+
+/** A day and its time, for the admin's list of problems: "29 Sep, 14:05". */
+export function dayAndTime(at: number): string {
+  const date = new Date(at * 1000);
+  return `${dayMonth(date, false)}, ${TIME.format(date)}`;
+}
+
+/** "20 Oct" this year, "20 Oct 2025" another. */
+function shortDay(date: Date, now: Date): string {
+  return dayMonth(date, date.getFullYear() !== now.getFullYear());
+}
 
 /**
  * An article's time, in the device's time zone, in words that never change
@@ -17,8 +46,7 @@ export function when(at: number, now: Date = new Date()): string {
   const sameDay =
     date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   if (sameDay) return TIME.format(date);
-  if (date.getFullYear() === now.getFullYear()) return DAY.format(date);
-  return DAY_AND_YEAR.format(date);
+  return shortDay(date, now);
 }
 
 /** When a paused feed was paused, for Edit feed: "Paused today.", "Paused on 23 Oct." (SPEC section 15). */
@@ -27,7 +55,7 @@ export function pausedSince(at: number, now: Date = new Date()): string {
   const sameDay =
     date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   if (sameDay) return "Paused today.";
-  return `Paused on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
+  return `Paused on ${shortDay(date, now)}.`;
 }
 
 /** An empty feed's second line (decision 0142): "Last checked today at 14:20.", or "Last checked on 3 Oct." */
@@ -36,12 +64,12 @@ export function lastChecked(at: number, now: Date = new Date()): string {
   const sameDay =
     date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   if (sameDay) return `Last checked today at ${TIME.format(date)}.`;
-  return `Last checked on ${(date.getFullYear() === now.getFullYear() ? DAY : DAY_AND_YEAR).format(date)}.`;
+  return `Last checked on ${shortDay(date, now)}.`;
 }
 
-/** A day spelled out, in the device's time zone: "today", "4 November" this year, "14 March 2025" before. */
-export function longDay(at: number, now: Date = new Date()): string {
+/** A day, in the device's time zone: "today", "4 Nov" this year, "14 Mar 2025" before. */
+export function dayOrToday(at: number, now: Date = new Date()): string {
   const date = new Date(at * 1000);
   if (date.toDateString() === now.toDateString()) return "today";
-  return (date.getFullYear() === now.getFullYear() ? LONG_DAY : LONG_DAY_AND_YEAR).format(date);
+  return shortDay(date, now);
 }
