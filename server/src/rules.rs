@@ -45,6 +45,7 @@ use crate::{
     now, search,
 };
 
+mod preview;
 mod shared;
 pub use shared::{delete, place_gone_for};
 
@@ -57,6 +58,7 @@ pub const MUTED_SHOWN: i64 = 200;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/rules", get(list_rules).post(create_rule))
+        .route("/api/rules/preview", post(preview::preview))
         .route("/api/rules/{id}/delete", post(delete_rule))
         .route("/api/muted", get(list_muted))
 }

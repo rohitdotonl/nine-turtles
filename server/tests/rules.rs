@@ -518,3 +518,75 @@ async fn undo_brings_a_removed_word_back_as_it_was_hiding_nothing_more() {
         .unwrap();
     assert_eq!(kept, 0);
 }
+
+#[tokio::test]
+async fn a_preview_shows_what_a_word_would_hide_and_hides_nothing() {
+    let reader = Reader::new().await;
+    reader.write("1", "My garden", "Jane Doe", "Tomatoes.");
+    reader.write("2", "A quiet week", "Jane Doe", "Mostly in the garden.");
+    reader.write("3", "Gardens of the world", "Jane Doe", "Elsewhere.");
+    reader.write("4", "Nothing here", "Jane Doe", "Words.");
+    let blog = reader.follow("blog.xml").await;
+
+    // The same whole-word matching as Add: "Gardens" isn't "garden".
+    let (status, seen) = reader
+        .post("/api/rules/preview", json!({ "words": "Garden" }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{seen}");
+    assert_eq!(seen["count"], 2);
+    let titles: Vec<&str> = seen["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| article["title"].as_str().unwrap())
+        .collect();
+    assert_eq!(titles.len(), 2, "{titles:?}");
+    assert!(titles.contains(&"My garden") && titles.contains(&"A quiet week"));
+    // Which of them it was found in the title of.
+    let in_title = seen["in_title"].as_array().unwrap();
+    assert_eq!(in_title.len(), 1);
+    let my_garden = seen["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|article| article["title"] == "My garden")
+        .unwrap();
+    assert_eq!(in_title[0], my_garden["id"]);
+
+    // Nothing was hidden, and no word was made.
+    assert_eq!(reader.unread_count(blog).await, 4);
+    assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
+
+    // For one person only, someone not followed is refused, and an empty word matches nothing.
+    let (status, seen) = reader
+        .post(
+            "/api/rules/preview",
+            json!({ "words": "garden", "feed_id": blog }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(seen["count"], 2);
+    let (status, _) = reader
+        .post(
+            "/api/rules/preview",
+            json!({ "words": "garden", "feed_id": blog + 1000 }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (status, refused) = reader
+        .post("/api/rules/preview", json!({ "words": " … " }))
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "nothing-to-match");
+
+    // Hidden articles are already read, so a later word doesn't count them again.
+    let (status, _) = reader
+        .post("/api/rules", json!({ "words": "tomatoes" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, seen) = reader
+        .post("/api/rules/preview", json!({ "words": "garden" }))
+        .await;
+    assert_eq!(seen["count"], 1);
+    assert_eq!(seen["articles"][0]["title"], "A quiet week");
+}

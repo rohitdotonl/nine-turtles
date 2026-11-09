@@ -4,7 +4,7 @@ description: A list of words keeps articles about them out of your lists, from e
 groupId: keeping-things-tidy
 order: 4
 spec: 27
-updated: 2026-11-06
+updated: 2026-11-09
 related: [put-people-in-folders, search-everything, newsletters]
 ---
 
@@ -17,9 +17,12 @@ related: [put-people-in-folders, search-everything, newsletters]
 
 1. Open **Settings › Hiding**.
 2. Type a word or phrase in **Hide articles about…**.
-3. Choose how long: **For a week**, **For a month** or **For good** (the
+3. Under the field, before anything is hidden, you see how many unread
+   articles it would hide, and the newest few, each with who wrote it and
+   whether the word is in the title or the text. Nothing is hidden yet.
+4. Choose how long: **For a week**, **For a month** or **For good** (the
    usual one).
-4. Press **Add**, or Return.
+5. Press **Add**, or Return.
 
 Unread articles you already have about it are hidden at once, and the line
 under the list says how many. **Undo** puts them back.
