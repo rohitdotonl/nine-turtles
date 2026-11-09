@@ -1,6 +1,6 @@
 <!--
   A failing feed says so where the reader already is (decision 0106): one
-  quiet line in the second ink, "This feed hasn't worked since 12 October.",
+  quiet line in the second ink, "This feed hasn't worked since 12 Oct.",
   and a text button that runs Find new address (NewAddress.svelte), above
   the feed's own list (SPEC section 6) and in Edit feed (section 15). Only
   while Everyone you follow would list it as not working; nothing is

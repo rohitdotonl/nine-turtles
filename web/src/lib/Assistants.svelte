@@ -12,7 +12,7 @@
 <script lang="ts">
   import LoadFailed from "./LoadFailed.svelte";
   import { tick } from "svelte";
-  import { date } from "./admin";
+  import { date } from "./times";
   import { resubscribe } from "./feeds";
   import {
     disconnect,
