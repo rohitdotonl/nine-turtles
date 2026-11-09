@@ -71,7 +71,7 @@ describe("your place in an article", () => {
   });
 });
 
-describe("how far, in words (decision 0222)", () => {
+describe("how far, in words (decision 0224)", () => {
   it("says it plainly, never as a number", () => {
     expect(howFarWords({ block: 1, within: 0, read: 0.1 })).toBe("Just begun");
     expect(howFarWords({ block: 1, within: 0, read: 0.33 })).toBe("A third read");

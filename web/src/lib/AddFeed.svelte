@@ -52,7 +52,6 @@
     onCancel,
     page = false,
     start = false,
-    onList = false,
     alternative,
   }: {
     field?: HTMLInputElement;
@@ -69,11 +68,6 @@
     page?: boolean;
     /** The welcome on a phone: left-aligned on the screen's margin, not centred (decision 0052). */
     start?: boolean;
-    /**
-     * The welcome in the list's place, on the list's grey: the feeds offered, what was found and the two
-     * tiles are cards in the page's color (by night, a step lighter), as a phone sheet's are (decision 0206).
-     */
-    onList?: boolean;
     /**
      * In the welcome: another way in (importing an OPML file), just under the
      * field, so it reads as an alternative to it rather than a footer.
@@ -310,7 +304,7 @@
   the field's name is said to screen readers and shown as its placeholder, so
   no line of it sits left-aligned. In a sheet its name stands above it.
 -->
-<form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1", onList && "on-list"]}>
+<form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
   {#if !asking}
   <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Their website's address</label>
   <!-- In the welcome, a container, so its hint can step down a size on a small phone (welcome-field in app.css). -->
@@ -568,12 +562,6 @@
     .tile:has(input:focus-visible) {
       outline-color: CanvasText;
     }
-  }
-  /* On the list's grey (the welcome in the list's place), cards in the phone sheet's card color. */
-  .on-list :global(.inset-group),
-  .on-list .found,
-  .on-list .tile {
-    background-color: var(--sheet-card);
   }
   /* The share line: the smallest size, in the faintest grey that keeps 4.5 : 1 on the sheet (contrast.test.ts). */
   .share-hint {

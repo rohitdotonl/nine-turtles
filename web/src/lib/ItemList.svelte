@@ -666,7 +666,7 @@
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date" title={exactly(article.at)}>{when(article.at)}</time>
             <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
             <RowKind {article} />
-            <!-- Your place, while one is kept: "· Half read" (decision 0222). -->
+            <!-- Your place, while one is kept: "· Half read" (decision 0224). -->
             <RowPlace article={article.id} />
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
@@ -716,7 +716,7 @@
 <!--
   What was just done (with Undo), "New articles · press r", or that nine turtles was
   updated: a small note at the foot of the list pane, so nothing in the list
-  moves when it appears. It sits in a band of the list's own tone that the
+  moves when it appears. It sits in a band of the page's color, as the list is, that the
   rows end above, so it never lies over the rows you're acting on
   (decision 0048). Empty, it's hidden but stays for screen readers, which
   hear each message as it arrives.

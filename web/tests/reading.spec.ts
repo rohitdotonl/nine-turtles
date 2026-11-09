@@ -504,7 +504,7 @@ test.describe("on a wide window", () => {
     await expect(note).toBeVisible();
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
-    // It sits in a band of the list's own tone across the pane, which the rows end above, so it
+    // It sits in a band of the pane's own color (the page, decision 0221) across the pane, which the rows end above, so it
     // never lies over the rows you're acting on (decision 0048).
     const band = note.locator("xpath=..");
     const [bandFill, paneFill] = await Promise.all([
@@ -1076,7 +1076,7 @@ test.describe("your place in an article (decision 0060)", () => {
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
     const stopped = await top(page);
-    // Its row says how far, in words, while the place is kept (decision 0222).
+    // Its row says how far, in words, while the place is kept (decision 0224).
     const far = /^·\s(Just begun|A third read|Half read|Two-thirds read|Nearly finished)$/;
     await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveText(far);
     await expect(row(page, "Only the first page").locator(".row-place")).toHaveCount(0);

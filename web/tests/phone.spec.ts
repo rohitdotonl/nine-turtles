@@ -126,7 +126,7 @@ test.describe("on a phone", () => {
     const names = await toolbar(page)
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    // Two groups by job, in order of use (decision 0223): acting on the article, then a hairline, then moving through the list at the right.
+    // Two groups by job, in order of use (decision 0225): acting on the article, then a hairline, then moving through the list at the right.
     expect(names).toEqual(["More actions", "Reading appearance", "Write back", "Star", "Previous", "Next"]);
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);

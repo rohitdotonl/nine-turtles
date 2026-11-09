@@ -611,7 +611,7 @@
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a
       hairline so the text ends at an edge rather than being sliced. Two
-      groups by job, in order of use (decision 0223): what you do to this
+      groups by job, in order of use (decision 0225): what you do to this
       article on the left, the rarest furthest out (More, Aa, Write back,
       Star), then a short hairline, then moving through the list at the
       right, where a right thumb rests (Previous, Next). Previous on the
