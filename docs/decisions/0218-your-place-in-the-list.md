@@ -22,7 +22,7 @@ in view, from 0 to 1 (the window's bottom down the whole text), measured when
 the place is written down. It stays on the device, like the place; the server
 still keeps only the block and how far into it. A place that comes back from
 the server unchanged keeps the share this device measured. The row's words
-come from `placeWords` (`web/src/lib/places.ts`) and are shown by
+come from `howFarWords` (`web/src/lib/places.ts`) and are shown by
 `RowPlace.svelte`, which listens for places being kept or forgotten.
 
 **Limits.** Words, never a bar, a percentage or a count: it describes one

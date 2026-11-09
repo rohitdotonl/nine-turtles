@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KEPT, keepPlace, onPlaces, placeOf, placeWords } from "./places";
+import { KEPT, keepPlace, onPlaces, placeOf, howFarWords } from "./places";
 
 function memory(): Storage {
   const items = new Map<string, string>();
@@ -73,14 +73,14 @@ describe("your place in an article", () => {
 
 describe("how far, in words (decision 0218)", () => {
   it("says it plainly, never as a number", () => {
-    expect(placeWords({ block: 1, within: 0, read: 0.1 })).toBe("Just begun");
-    expect(placeWords({ block: 1, within: 0, read: 0.33 })).toBe("A third read");
-    expect(placeWords({ block: 1, within: 0, read: 0.5 })).toBe("Half read");
-    expect(placeWords({ block: 1, within: 0, read: 0.66 })).toBe("Two-thirds read");
-    expect(placeWords({ block: 1, within: 0, read: 0.9 })).toBe("Nearly finished");
+    expect(howFarWords({ block: 1, within: 0, read: 0.1 })).toBe("Just begun");
+    expect(howFarWords({ block: 1, within: 0, read: 0.33 })).toBe("A third read");
+    expect(howFarWords({ block: 1, within: 0, read: 0.5 })).toBe("Half read");
+    expect(howFarWords({ block: 1, within: 0, read: 0.66 })).toBe("Two-thirds read");
+    expect(howFarWords({ block: 1, within: 0, read: 0.9 })).toBe("Nearly finished");
   });
 
   it("says only Part read for a place from another device", () => {
-    expect(placeWords({ block: 4, within: 0.5 })).toBe("Part read");
+    expect(howFarWords({ block: 4, within: 0.5 })).toBe("Part read");
   });
 });

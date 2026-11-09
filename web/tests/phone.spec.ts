@@ -136,6 +136,10 @@ test.describe("on a phone", () => {
     const menu = page.getByRole("menu", { name: "More actions" });
     await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add a note/, /^\s*Hide articles about/]);
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
+    // More is at the bar's left end, so its menu opens from there, wholly on the screen.
+    const opened = (await menu.boundingBox())!;
+    expect(opened.x).toBeGreaterThanOrEqual(0);
+    expect(opened.x + opened.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     await expect(menu).toHaveCount(0);
     // Within thumb reach: at the bottom of the screen.

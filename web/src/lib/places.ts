@@ -32,7 +32,7 @@ export function onPlaces(changed: () => void): () => void {
  * how far through, in plain words, never a number. A place from another
  * device, with no share, says only "Part read".
  */
-export function placeWords(place: Place): string {
+export function howFarWords(place: Place): string {
   const read = place.read;
   if (read === undefined) return "Part read";
   if (read < 0.25) return "Just begun";
@@ -72,11 +72,29 @@ function isPlace(value: unknown): value is Place {
   return share && typeof block === "number" && Number.isInteger(block) && block >= 0 && typeof within === "number" && within >= 0 && within <= 1;
 }
 
+/** A saved place as a Place, without its date, or `undefined` if it isn't one. */
+function asPlace(value: unknown): Place | undefined {
+  if (!isPlace(value)) return undefined;
+  return value.read === undefined ? { block: value.block, within: value.within } : { block: value.block, within: value.within, read: value.read };
+}
+
+/**
+ * This device's places, read once and shared by every row of a list
+ * (RowPlace.svelte) until a place is kept or forgotten here.
+ */
+let shared: Saved | undefined;
+
+/** Where you stopped in this article, as a list's row asks: from the shared copy, so a long list reads storage once. */
+export function keptPlace(article: number): Place | undefined {
+  shared ??= read(deviceStorage());
+  const place = shared[article];
+  return asPlace(place);
+}
+
 /** Where you stopped in this article, if you stopped part of the way through. */
 export function placeOf(article: number, storage: Pick<Storage, "getItem"> | undefined = deviceStorage()): Place | undefined {
   const place = read(storage)[article];
-  if (!isPlace(place)) return undefined;
-  return place.read === undefined ? { block: place.block, within: place.within } : { block: place.block, within: place.within, read: place.read };
+  return asPlace(place);
 }
 
 /** Remembers where you are; `undefined` forgets it (at the top, or once you've reached the end). */
@@ -97,6 +115,7 @@ export function keepPlace(article: number, place: Place | undefined, storage: Pi
     }
   }
   write(saved, storage);
+  shared = undefined;
   for (const changed of listeners) changed();
 }
 

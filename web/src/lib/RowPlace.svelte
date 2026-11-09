@@ -6,7 +6,7 @@
   the place itself does. Words, never a bar or a number.
 -->
 <script lang="ts">
-  import { onPlaces, placeOf, placeWords } from "./places";
+  import { howFarWords, keptPlace, onPlaces } from "./places";
 
   let { article }: { article: number } = $props();
 
@@ -15,8 +15,8 @@
   $effect(() => {
     const id = article;
     const look = () => {
-      const place = placeOf(id);
-      words = place ? placeWords(place) : undefined;
+      const place = keptPlace(id);
+      words = place ? howFarWords(place) : undefined;
     };
     look();
     return onPlaces(look);

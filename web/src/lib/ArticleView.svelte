@@ -621,7 +621,7 @@
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
-      <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up />
+      <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up start />
       {@render aa(22, "")}
       {#if writable}{@render writeBackButton(22, "")}{/if}
       <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
@@ -695,12 +695,6 @@
   .toolbar > :global(.text-ink) {
     color: var(--ink);
   }
-  /*
-    One that can't act right now (Previous on the first article) stays in
-    its place, its arrow faded, so the bar keeps its even places. A
-    control that can't be used is exempt from contrast (WCAG 1.4.11), and
-    it's named and said "dimmed" to screen readers, not shown by color alone.
-  */
   /* The hairline between the two groups: a mark, not a place to press. */
   .toolbar > .toolbar-rule {
     flex: none;
@@ -712,6 +706,12 @@
     margin-inline: 0.25rem;
     background: color-mix(in srgb, var(--ink) 18%, transparent);
   }
+  /*
+    One that can't act right now (Previous on the first article) stays in
+    its place, its arrow faded, so the bar keeps its even places. A
+    control that can't be used is exempt from contrast (WCAG 1.4.11), and
+    it's named and said "dimmed" to screen readers, not shown by color alone.
+  */
   .toolbar > [aria-disabled="true"] {
     cursor: default;
   }
