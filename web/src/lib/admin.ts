@@ -6,6 +6,7 @@
 import { type Standing, toStanding } from "./plan";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { dateWithYear } from "./times";
 
 export type Reader = {
   id: number;
@@ -103,14 +104,12 @@ export function size(bytes: number): string {
   return `${(bytes / (1000 * 1000 * 1000)).toFixed(1)} GB`;
 }
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-/** "25 October 2026", in this device's time zone. */
+/** "25 Oct 2026", in this device's time zone. */
 export function date(seconds: number): string {
-  return DATE.format(new Date(seconds * 1000));
+  return dateWithYear(new Date(seconds * 1000));
 }
 
-/** The day a reader was last here: "today", or "24 October 2026". */
+/** The day a reader was last here: "today", or "24 Oct 2026". */
 export function lastHereDay(seconds: number, now: Date = new Date()): string {
   const day = new Date(seconds * 1000);
   const sameDay =
@@ -118,12 +117,10 @@ export function lastHereDay(seconds: number, now: Date = new Date()): string {
   return sameDay ? "today" : date(seconds);
 }
 
-/** The nightly copy's day, from its name: "nightly/2026-10-25.sqlite" is "25 October 2026". */
+/** The nightly copy's day, from its name: "nightly/2026-10-25.sqlite" is "25 Oct 2026". */
 export function backupDay(name: string | null): string | null {
   const found = name?.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (!found) return null;
   const [year, month, day] = [Number(found[1]), Number(found[2]), Number(found[3])];
-  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
-    new Date(Date.UTC(year, month - 1, day)),
-  );
+  return dateWithYear(new Date(year, month - 1, day));
 }

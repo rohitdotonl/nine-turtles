@@ -8,24 +8,23 @@
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
+import { dateWithYear } from "./times";
 import { UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
 export type PasskeyRow = { id: number; name: string | null; createdAt: number; lastUsedAt: number | null };
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric" });
-
-/** "27 October 2026", in this device's time zone. */
+/** "27 Oct 2026", in this device's time zone. */
 export function day(seconds: number): string {
-  return DATE.format(new Date(seconds * 1000));
+  return dateWithYear(new Date(seconds * 1000));
 }
 
-/** What a passkey is called: the reader's name for it, or "Passkey added 27 October 2026". */
+/** What a passkey is called: the reader's name for it, or "Passkey added 27 Oct 2026". */
 export function passkeyName(passkey: PasskeyRow): string {
   return passkey.name ?? `Passkey added ${day(passkey.createdAt)}`;
 }
 
-/** The muted line under a passkey's name: "Added 27 October 2026 · Last used today" (or "· Not used yet"). */
+/** The muted line under a passkey's name: "Added 27 Oct 2026 · Last used today" (or "· Not used yet"). */
 export function passkeyDates(passkey: PasskeyRow, now: Date = new Date()): string {
   const used = passkey.lastUsedAt === null ? "Not used yet" : `Last used ${dayOrToday(passkey.lastUsedAt, now)}`;
   return `Added ${dayOrToday(passkey.createdAt, now)} · ${used}`;

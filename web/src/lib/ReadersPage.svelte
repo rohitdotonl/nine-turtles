@@ -13,6 +13,7 @@
   import PageHead from "./PageHead.svelte";
   import { label } from "./plan";
   import { backupDay, count, date, lastHereDay, loadOverview, plural, size, type Overview } from "./admin";
+  import { dayAndTime } from "./times";
 
   let {
     heading = $bindable(),
@@ -54,7 +55,6 @@
     return lines;
   });
 
-  const TIME = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 </script>
 
 <section aria-labelledby="readers-page-heading" class="flex flex-1 flex-col bg-paper">
@@ -102,7 +102,7 @@
               {#each overview.problems as problem, index (index)}
                 <li class="inset-row text-row">
                   <span class="flex min-w-0 flex-col">
-                    <time class="text-meta text-muted" datetime={new Date(problem.at * 1000).toISOString()}>{TIME.format(new Date(problem.at * 1000))}</time>
+                    <time class="text-meta text-muted" datetime={new Date(problem.at * 1000).toISOString()}>{dayAndTime(problem.at)}</time>
                     <span class="value text-ink-2">{problem.message}</span>
                   </span>
                 </li>

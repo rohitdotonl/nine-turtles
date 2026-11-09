@@ -43,7 +43,7 @@ test("Your plan shows the trial, works from the keyboard, and says why a door st
 
   const plan = page.getByRole("region", { name: "Your plan" });
   await expect(plan.getByText("Free trial")).toBeVisible();
-  await expect(plan.getByText("Your trial ends on 9 November 2026.")).toBeVisible();
+  await expect(plan.getByText("Your trial ends on 9 Nov 2026.")).toBeVisible();
   await expect(plan.getByText(/Test mode: no real money/)).toBeVisible();
   // No billing row before anything is bought.
   await expect(plan.getByRole("button", { name: /Billing/ })).toHaveCount(0);

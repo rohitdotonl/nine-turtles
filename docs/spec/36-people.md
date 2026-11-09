@@ -76,21 +76,23 @@ PLAN.md → V1, item 1.*
   Alpha** in the list's More menu or a row's own menu, or by the `i` key
   (in any list, for the chosen article's writer; decision 0214). On a computer it opens in the reading area beside their list,
   where an article would; on a phone it's a screen of its own, with ‹ back to
-  their list. It shows their name with an **Edit** button beside it; for one
+  their list. It shows their name with **Edit** beside it, a quiet underlined
+  word, so Write to is the page's one strong button (decision 0215); for one
   source whose own title isn't their name, that title under it, in the
   reading serif ("Notes from Tomas" under Tomas Berg); under that, for a
   person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
   address under it once nine turtles knows it (section 37; the owner's core
   path, point 9); then your private note on them (section 42); then
-  **Lately**, their three newest pieces, each a row with its title and day
-  that opens it; then **Your highlights**, the words you highlighted in their
+  **Your highlights**, the words you highlighted in their
   writing (the newest article first, at most 20; Notes has them all), each
   as at an article's end, with "From {title} · {day}" (the title opens the
-  article) and your note on it; each shows only when it has something, both
-  at once, an untitled piece by its opening words (section 6); if they can't
-  be loaded, one quiet line says "Their latest pieces and your highlights
+  article) and your note on it; it shows only when it has something, an
+  untitled piece by its opening words (section 6); if they can't
+  be loaded, one quiet line says "Your highlights from their writing
   couldn't be loaded. Open the page again to try once more." (decision
-  0211); then their sources, each by its kind (Blog, Video,
+  0211). There is no Lately, their newest pieces: their list already shows
+  them, beside the page on a computer and one step back on a phone
+  (decision 0215). Then their sources, each by its kind (Blog, Video,
   Newsletter, Podcast) with a link to the publisher's own site (a blog by its
   website, "alpha.example"; a channel or newsletter by its own name). The
   muted line that said what they are, their folders and since when ("A
@@ -183,6 +185,5 @@ PLAN.md → V1, item 1.*
 8. Visit an old `/feeds/N` address: the list opens and the address bar shows
    `/people/N` or `/publications/N`.
 9. Highlight words in an article of someone's, then open their page: under
-   Write to and your note, **Lately** lists their three newest pieces and
-   **Your highlights** shows those words, "From" the article's title. Press
-   the title, or a piece in Lately: the article opens.
+   Write to and your note, **Your highlights** shows those words, "From" the
+   article's title, and there is no Lately. Press the title: the article opens.

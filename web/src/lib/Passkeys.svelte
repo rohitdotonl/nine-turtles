@@ -2,7 +2,7 @@
   Passkeys (SPEC section 18, decision 0109), a group of Settings shown only
   where passkeys work: this is the address they belong to, and the browser
   has WebAuthn. Each of the reader's passkeys is a row: its name (theirs, or
-  "Passkey added 27 October 2026"), when it was added and last used, Rename
+  "Passkey added 27 Oct 2026"), when it was added and last used, Rename
   and Remove. Remove takes it away at once, with Undo straight afterwards;
   the password keeps working, so removing never locks anyone out. "Add a
   passkey" asks for the reader's password first, in a row of the group,
