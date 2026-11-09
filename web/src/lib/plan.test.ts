@@ -31,15 +31,15 @@ group("the reader's plan", () => {
   });
 
   it("says where the reader stands in plain words", () => {
-    // 26 November 2026, midday UTC.
+    // 26 Nov 2026, midday UTC.
     const day = Date.UTC(2026, 10, 26, 12) / 1000;
-    expect(describe({ standing: "trial", endsAt: day }).detail).toBe("Your trial ends on 26 November 2026.");
+    expect(describe({ standing: "trial", endsAt: day }).detail).toBe("Your trial ends on 26 Nov 2026.");
     expect(describe({ standing: "paid", until: day, renewsAt: day, ending: false, period: "monthly" })).toEqual({
       title: "Monthly plan",
-      detail: "Renews on 26 November 2026.",
+      detail: "Renews on 26 Nov 2026.",
     });
     expect(describe({ standing: "paid", until: day, renewsAt: null, ending: true, period: null }).detail).toBe(
-      "Cancelled. It lasts until 26 November 2026.",
+      "Cancelled. It lasts until 26 Nov 2026.",
     );
     expect(describe({ standing: "on-hold", until: day }).title).toBe("Your last payment didn't go through");
     expect(describe({ standing: "ended" }).title).toBe("Your free trial or plan has ended");
