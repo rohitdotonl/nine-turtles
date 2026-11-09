@@ -26,7 +26,7 @@ export async function openingFor(article: Article): Promise<Opening> {
     const full = await readArticle(article.id);
     return {
       id: article.id,
-      opening: firstParagraph(full.content) || plain(full.summary),
+      opening: firstParagraph(full.content) || firstParagraph(full.summary),
       author: authorBesides(full.author, article.feedTitle),
       language: full.language ?? undefined,
     };
@@ -35,10 +35,14 @@ export async function openingFor(article: Article): Promise<Opening> {
   }
 }
 
-/** The first paragraph with words in it, as plain text; else all the words. */
+/**
+ * The first paragraph with words in it, as plain text; else all the words,
+ * with a space where one block or line ends and the next begins, so two
+ * never run together ("…dinner.There is…").
+ */
 export function firstParagraph(content: string | null | undefined): string {
   if (!content) return "";
-  const page = new DOMParser().parseFromString(content, "text/html");
+  const page = new DOMParser().parseFromString(spaced(content), "text/html");
   for (const paragraph of page.querySelectorAll("p")) {
     const words = squeeze(paragraph.textContent);
     if (words) return words;
@@ -46,8 +50,8 @@ export function firstParagraph(content: string | null | undefined): string {
   return squeeze(page.body.textContent);
 }
 
-function plain(html: string | null | undefined): string {
-  return html ? squeeze(new DOMParser().parseFromString(html, "text/html").body.textContent) : "";
-}
+/** A space after each block's end and each line break, which plain text would otherwise lose. */
+export const spaced = (html: string) =>
+  html.replace(/<\/(?:p|div|li|h[1-6]|blockquote|pre|tr|td|th|dt|dd|figcaption)\s*>|<br\s*\/?>/gi, "$& ");
 
 const squeeze = (text: string | null | undefined) => text?.replace(/\s+/g, " ").trim() ?? "";

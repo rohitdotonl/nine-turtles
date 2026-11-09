@@ -184,6 +184,35 @@ macro_rules! publication_writer {
 }
 pub(crate) use publication_writer;
 
+/// The columns an `ArticleRow` is read from, one copy for every list of
+/// articles (the lists, Notes, Hidden articles, Hiding's preview).
+macro_rules! article_row {
+    () => {
+        concat!(
+            "entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
+                    articles.title, articles.link, entries.sort_at AS at,
+                    entries.read, entries.starred, entries.muted,
+                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
+            crate::feeds::publication_writer!(),
+            ", ",
+            crate::feeds::untitled_body!()
+        )
+    };
+}
+pub(crate) use article_row;
+
+/// Where `article_row!` reads from: the reader's entries, with each one's
+/// article, subscription and writer.
+macro_rules! article_row_joins {
+    () => {
+        "entries CROSS JOIN articles ON articles.id = entries.article_id
+                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
+                     AND subscriptions.feed_id = entries.feed_id
+                 LEFT JOIN writers ON writers.id = subscriptions.writer_id"
+    };
+}
+pub(crate) use article_row_joins;
+
 /// Writes an article's link without its tracking tags (`ArticleRow`).
 fn link_without_tracking<S: serde::Serializer>(
     link: &Option<String>,
@@ -326,20 +355,11 @@ fn parse_cursor(text: &str) -> Option<(i64, i64)> {
 macro_rules! list_query {
     ($filter:literal, $past:literal, $order:literal) => {
         concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
-                    articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,
-                    ",
-            publication_writer!(),
-            ", ",
-            untitled_body!(),
-            "
-             FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                     AND subscriptions.feed_id = entries.feed_id
-                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
-             WHERE entries.person_id = ? AND ",
+            "SELECT ",
+            article_row!(),
+            " FROM ",
+            article_row_joins!(),
+            " WHERE entries.person_id = ? AND ",
             $filter,
             " (entries.sort_at, entries.article_id) ",
             $past,
@@ -359,13 +379,8 @@ macro_rules! list_query {
 macro_rules! notes_query {
     ($past:literal, $order:literal) => {
         concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
-                    articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds, ",
-            publication_writer!(),
-            ", ",
-            untitled_body!(),
+            "SELECT ",
+            article_row!(),
             ",
                     (SELECT quote FROM notes AS first WHERE first.person_id = entries.person_id
                          AND first.article_id = entries.article_id AND first.quote IS NOT NULL
