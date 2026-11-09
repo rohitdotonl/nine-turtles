@@ -330,6 +330,26 @@ async fn folders_stay_with_the_reader_who_made_them() {
 #[tokio::test]
 async fn rules_stay_with_the_reader_who_made_them() {
     let (owner, other, _, feed) = two_readers().await;
+    // Seeing what a word would hide shows only the reader's own articles (decision 0216).
+    let (_, seen) = owner
+        .post("/api/rules/preview", json!({ "words": "tomatoes" }))
+        .await;
+    assert_eq!(seen["count"], 3);
+    let (status, seen) = other
+        .post("/api/rules/preview", json!({ "words": "tomatoes" }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(seen["count"], 0);
+    assert_eq!(seen["articles"], json!([]));
+    let (status, refused) = other
+        .post(
+            "/api/rules/preview",
+            json!({ "words": "tomatoes", "feed_id": feed }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "no-place");
+
     let (status, made) = owner
         .post("/api/rules", json!({ "words": "tomatoes" }))
         .await;

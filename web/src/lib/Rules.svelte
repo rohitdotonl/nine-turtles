@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import { tick } from "svelte";
+  import HidePreview from "./HidePreview.svelte";
   import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import NoteLine from "./NoteLine.svelte";
@@ -53,6 +54,9 @@
   let field: HTMLInputElement | undefined = $state();
   let now = $state(Date.now() / 1000);
 
+  /** The word as the server keeps it: no quote marks around it, one space between words. */
+  let tidied = $derived(words.trim().replace(/^["“]|["”]$/g, "").trim().split(/\s+/).join(" "));
+
   /** Who a new word is for: their name, or none for everyone. */
   let forName = $derived(forFeed === undefined ? undefined : rowFor(forFeed, people)?.title);
 
@@ -93,8 +97,7 @@
   async function add(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
-    // Tidied as the server keeps it: no quote marks around it, one space between words.
-    const typed = words.trim().replace(/^["“]|["”]$/g, "").trim().split(/\s+/).join(" ");
+    const typed = tidied;
     if (!typed) {
       say("");
       empty = true;
@@ -192,7 +195,7 @@
             autocomplete="off"
             placeholder="Hide articles about…"
             aria-invalid={empty}
-            aria-describedby={empty ? "hide-empty" : undefined}
+            aria-describedby={empty ? "hide-empty" : tidied ? "hide-preview" : undefined}
             class="field min-w-0 flex-1"
           />
           <button type="submit" class="btn" aria-disabled={busy}>Add</button>
@@ -205,6 +208,7 @@
             </label>
           {/each}
         </div>
+        <HidePreview words={tidied} feedId={forFeed ?? null} />
       </div>
     </form>
     {#each rules ?? [] as rule, index (rule.id)}

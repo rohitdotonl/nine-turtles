@@ -40,13 +40,13 @@ test("the empty reading area begins the newest unread article, and Start reading
   await expect(pane(page)).toContainText("Newest unread");
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
   await expect(pane(page).locator(".reading-empty")).toHaveCount(0);
-  // Its first paragraph, as plain text.
+  // Its first paragraph, as plain text: never run into the next one ("…article 3.Its second…").
   await expect(pane(page).getByText(/^A short made-up summary for article \d+\.$/)).toBeVisible();
   const start = pane(page).getByRole("button", { name: "Start reading" });
   await expect(start).toHaveClass(/btn-primary/);
   // Showing it marks nothing read.
   await expect(first).toContainText(", unread");
-  // The title already stands where the article's will (decision 0216): opening it moves nothing.
+  // The title already stands where the article's will (decision 0217): opening it moves nothing.
   const before = await pane(page).getByRole("heading", { level: 2, name: title }).boundingBox();
   // From the keyboard too: Start reading is a Tab stop, and Enter opens the article.
   await tabTo(page, start);

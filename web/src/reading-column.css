@@ -1,19 +1,24 @@
 /*
-  The reading area's one column (decision 0216, after Vignelli): an article,
-  Start reading and a person's page share one left edge, one right edge and
-  one first line, so nothing jumps when one becomes another. The column is
+  The reading area's one column (decision 0217, after Vignelli): an article,
+  Start reading and a person's page share one left edge and one first line
+  (Start reading the article's right edge too; their page's own text keeps to
+  36rem), so nothing jumps when one becomes another. The column is
   the article's (its measure counts in the reading face at the reader's
-  size); its first line is just under the article's bar.
+  size), written once here for both; its first line is just under the
+  article's bar.
 */
 :root {
   --reading-top: calc(var(--bar-h) + 1px + 0.75rem);
 }
+.article,
 .reading-column {
-  width: 100%;
   max-width: var(--reading-measure);
   margin-inline: auto;
   font-family: var(--reading-font);
   font-size: var(--reading-size);
+}
+.reading-column {
+  width: 100%;
 }
 .reading-top {
   padding-top: var(--reading-top);
@@ -29,13 +34,18 @@
   /* Muted grey: at least 3 : 1 against the page, as a control should be. */
   scrollbar-color: var(--muted) transparent;
 }
-/* Start reading: its small label sits above the line, so the title is where the article's will be. */
+/*
+  Start reading: its small label (ReadingLead.svelte's .label, the small size
+  and its line height, 12px above the title) sits above the line, so the
+  title is where the article's will be.
+*/
 .lead-pane {
-  padding-top: calc(var(--reading-top) - 0.875rem * 1.45 - 0.75rem);
+  padding-top: calc(var(--reading-top) - var(--text-small) * var(--text-small--line-height) - 0.75rem);
 }
 
-/* On a narrow window the article's text is a tenth smaller (app.css → .article), and so its column. */
+/* On a narrow window the article's text is a tenth smaller, and so its column. */
 @media (max-width: 40rem) {
+  .article,
   .reading-column {
     font-size: calc(var(--reading-size) * 0.9);
   }
