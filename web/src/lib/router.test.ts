@@ -130,7 +130,7 @@ describe("the Help pages' addresses (decision 0157)", () => {
 });
 
 describe("the sidebar's lists", () => {
-  it("shows Notes from the first day, so its empty list can say how to fill it (decision 0221)", () => {
+  it("shows Notes from the first day, so its empty list can say how to fill it (decision 0222)", () => {
     expect(sidebarViews(false)).toEqual(["unread", "starred", "notes", "all"]);
     expect(sidebarViews(true)).toEqual(["starred", "notes", "all"]);
   });

@@ -5,7 +5,7 @@
   home.
 
   Notes shows from the first day, empty or not, so its empty list can say
-  how to fill it (decision 0221).
+  how to fill it (decision 0222).
 
   On a phone the feeds screen is the root of a stack: nothing is selected
   there, and each row leads on with a chevron (decision 0041). Nor while the

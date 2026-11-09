@@ -4,7 +4,7 @@
 
 **What it does**
 - Fixed order, top to bottom:
-  1. **Unread · Starred · Notes · All articles** (Notes from the first day, empty or not, section 42; decision 0221)
+  1. **Unread · Starred · Notes · All articles** (Notes from the first day, empty or not, section 42; decision 0222)
   2. **Folders**, in your own order (a new folder goes at the bottom; decision 0207)
   3. **People and publications not in any folder**, alphabetically, under two headings, **People** then **Publications**: one row per person, however many sources they have (section 36)
   4. **+ Add** ("Add a person or publication", section 3), then **Keys** (icon and word) and **Settings** as an icon, in one row

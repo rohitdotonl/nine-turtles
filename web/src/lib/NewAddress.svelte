@@ -135,9 +135,8 @@
     align-items: center;
     margin-top: 0.25rem;
   }
-  /* The feeds the site names sit on the page's own color, so they stand apart from a grouped row. */
+  /* The feeds the site names: grouped rows a tone off the page (on Not working's card, the page's own color, NotWorking.svelte). */
   .choices {
-    --group: var(--paper);
     margin-top: 0.25rem;
   }
 </style>

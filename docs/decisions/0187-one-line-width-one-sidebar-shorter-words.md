@@ -20,7 +20,7 @@ can do. The owner agreed to all three.
   and line width page goes; `/settings/font` opens Settings.
 - **The sidebar is the same for everyone:** Show in the sidebar and its
   setting go. Starred and All articles always show, Notes once there's a
-  note (since decision 0221, from the first day), Unread while it's on. `/settings/sidebar` opens Settings. The server
+  note (since decision 0222, from the first day), Unread while it's on. `/settings/sidebar` opens Settings. The server
   no longer reads or saves the setting; rows saved before are left in place,
   unread (nothing a reader made is lost: it only ever hid a list).
 - **Reading offline is always on** (point 3 of the review): the Keep
