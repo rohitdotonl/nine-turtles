@@ -188,7 +188,7 @@
         value={query.words}
         oninput={typed}
         onkeydown={keydown}
-        placeholder={shownChips.length > 0 ? "" : "Search"}
+        placeholder={shownChips.length > 0 ? "" : "Search articles"}
         autocomplete="off"
         spellcheck="false"
         class="min-h-(--search-height) min-w-16 flex-1 basis-16 bg-transparent px-1 placeholder:text-muted"

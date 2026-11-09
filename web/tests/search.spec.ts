@@ -140,7 +140,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(heading(page)).toBeFocused();
   await expect(field(page)).toHaveValue("");
   // At rest the field just says "Search"; back in it, the search starts in the folder again.
-  await expect(field(page)).toHaveAttribute("placeholder", "Search");
+  await expect(field(page)).toHaveAttribute("placeholder", "Search articles");
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);

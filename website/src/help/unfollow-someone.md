@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 15, 23, 36 and 42
-updated: 2026-11-06
+updated: 2026-11-09
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -35,7 +35,7 @@ them all. To let go of one source only, press › beside it in Edit, then
 ## Unfollow many at once
 
 Open **Settings › Everyone you follow**, press **Choose…**, tick everyone
-you'd like to let go, and press **Unsubscribe**. One **Undo** brings them
+you'd like to let go, and press **Unsubscribe**, alone at the left of the bar at the bottom. One **Undo** brings them
 all back.
 
 ## Good to know
