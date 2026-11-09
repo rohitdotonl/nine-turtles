@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-06
+updated: 2026-11-09
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -23,7 +23,8 @@ only the size, press <kbd>+</kbd> or <kbd>-</kbd>.
 
 Open **Settings**. Under **Look and feel**:
 
-- **Page:** the page you read on.
+- **Page:** the page you read on. Each choice shows a small square of that
+  page, so you can see it before you pick it.
   - **White:** a plain white page.
   - **Paper:** a warm cream page, easier on some eyes.
   - **Night:** a near-black page with soft white words.
