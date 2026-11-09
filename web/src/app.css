@@ -1258,10 +1258,7 @@ input {
   Images never overflow.
 */
 .article {
-  max-width: var(--reading-measure);
-  margin-inline: auto;
-  font-family: var(--reading-font);
-  font-size: var(--reading-size);
+  /* Its column, face and size: reading-column.css (decision 0219). */
   line-height: 1.55;
 }
 
@@ -1369,7 +1366,6 @@ input {
 */
 @media (max-width: 40rem) {
   .article {
-    font-size: calc(var(--reading-size) * 0.9);
     line-height: 1.5;
   }
 }

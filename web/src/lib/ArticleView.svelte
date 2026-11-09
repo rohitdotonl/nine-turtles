@@ -647,17 +647,6 @@
 </section>
 
 <style>
-  /*
-    Room for a scrollbar is kept, so the article's centre doesn't shift between
-    pages that scroll and those that don't. The track is see-through, so the
-    gutter is the page's own color in every theme, and the thumb a faint tone
-    of the text (decision 0040).
-  */
-  .scroll-gutter {
-    scrollbar-gutter: stable;
-    /* Muted grey: at least 3 : 1 against the page, as a control should be. */
-    scrollbar-color: var(--muted) transparent;
-  }
   /* A footnote or heading the keyboard moves to stops a little below the top bar. */
   .reading-scroller {
     scroll-padding-top: 1rem;

@@ -46,11 +46,17 @@ test("the empty reading area begins the newest unread article, and Start reading
   await expect(start).toHaveClass(/btn-primary/);
   // Showing it marks nothing read.
   await expect(first).toContainText(", unread");
+  // The title already stands where the article's will (decision 0219): opening it moves nothing.
+  const before = await pane(page).getByRole("heading", { level: 2, name: title }).boundingBox();
   // From the keyboard too: Start reading is a Tab stop, and Enter opens the article.
   await tabTo(page, start);
   await page.keyboard.press("Enter");
   await expect(pane(page).getByRole("button", { name: "Start reading" })).toHaveCount(0);
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
+  const after = await pane(page).getByRole("heading", { level: 2, name: title }).boundingBox();
+  expect(Math.abs(after!.x - before!.x)).toBeLessThan(1);
+  expect(Math.abs(after!.y - before!.y)).toBeLessThan(1);
+  expect(Math.abs(after!.width - before!.width)).toBeLessThan(1);
   await expect(first).not.toContainText(", unread");
 
   // Back to the list: its first article is read now, so the quiet line is back.
