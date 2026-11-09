@@ -4,13 +4,14 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 15
-updated: 2026-11-06
+updated: 2026-11-09
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
 <p class="lede">
   A folder is a group of people and publications: Friends, Cooking, Read at the weekend.
-  Someone can be in more than one.
+  Someone can be in more than one. In the sidebar, the people in a folder are
+  set a step in under it; everyone in no folder lines up with the folders.
 </p>
 
 ## Drag someone into a folder

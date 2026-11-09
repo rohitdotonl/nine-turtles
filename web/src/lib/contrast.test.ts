@@ -442,8 +442,10 @@ it("before nine turtles' script runs, a page is White, or Night on a dark device
   expect(theme(":root,")).toEqual(THEMES.white);
 });
 
-it("each page's color in themes.ts matches themes.css, and the browser bar starts on White's and Night's", () => {
+it("each page's color and words' color in themes.ts match themes.css, and the browser bar starts on White's and Night's", () => {
   for (const name of THEME_NAMES) expect(LOOKS[name].page, name).toBe(THEMES[name]!.paper);
+  // The "A" on Settings' paper squares is each page's own text color, so it reads as that page does.
+  for (const name of THEME_NAMES) expect(LOOKS[name].ink, name).toBe(THEMES[name]!.ink);
   expect(html).toContain(`content="${LOOKS.white.page.toUpperCase()}" media="(prefers-color-scheme: light)"`);
   expect(html).toContain(`content="${LOOKS.night.page.toUpperCase()}" media="(prefers-color-scheme: dark)"`);
 });

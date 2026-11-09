@@ -15,7 +15,7 @@
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
-  import { LOOKS, PAGES, type Page } from "./themes";
+  import { PAGES, swatch } from "./themes";
   import { READING_FONTS, type Preferences } from "./preferences";
 
   let {
@@ -32,11 +32,6 @@
     /** `giveBack`: put the keyboard back on the Aa button. */
     onClose: (giveBack: boolean) => void;
   } = $props();
-
-  /** Each swatch is the page it gives; Match device is half White, half Night. */
-  function swatch(page: Page): string {
-    return page === "auto" ? `linear-gradient(90deg, ${LOOKS.white.page} 50%, ${LOOKS.night.page} 50%)` : LOOKS[page].page;
-  }
 
   let panel: HTMLDivElement | undefined = $state();
   let first: HTMLButtonElement | undefined = $state();
