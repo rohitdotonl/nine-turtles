@@ -32,6 +32,7 @@
     groups,
     size = 20,
     up = false,
+    start = false,
     icon = "more",
   }: {
     id: string;
@@ -43,6 +44,8 @@
     size?: number;
     /** Opens upwards, from a bar at the bottom of the screen. */
     up?: boolean;
+    /** Lines the menu up with the button's left edge, for a button at the screen's left (the phone's bottom bar). */
+    start?: boolean;
   } = $props();
 
   let open = $state(false);
@@ -93,6 +96,6 @@
     <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name={icon} {size} /></span>
   </button>
   {#if open}
-    <MenuList bind:this={list} {id} {label} {groups} place={up ? "right-0 bottom-full mb-1" : "right-0 top-full mt-1"} onClose={close} />
+    <MenuList bind:this={list} {id} {label} {groups} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
   {/if}
 </div>

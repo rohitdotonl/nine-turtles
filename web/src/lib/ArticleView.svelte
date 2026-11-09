@@ -610,25 +610,30 @@
   {#if phone}
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a
-      hairline so the text ends at an edge rather than being sliced. Previous
-      on the first article (or Next on the last) keeps its arrow and its place,
+      hairline so the text ends at an edge rather than being sliced. Two
+      groups by job, in order of use (decision 0225): what you do to this
+      article on the left, the rarest furthest out (More, Aa, Write back,
+      Star), then a short hairline, then moving through the list at the
+      right, where a right thumb rests (Previous, Next). Previous on the
+      first article (or Next on the last) keeps its arrow and its place,
       faded, as iOS dims a toolbar button, so the bar never shows a hole; it
       says "dimmed" to screen readers and does nothing (decision 0047).
     -->
     <div role="group" aria-label="Article actions" class="toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]">
+      <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
+      <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up start />
+      {@render aa(22, "")}
+      {#if writable}{@render writeBackButton(22, "")}{/if}
+      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
+        {@render starIcon(22)}
+      </button>
+      <span aria-hidden="true" class="toolbar-rule"></span>
       <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>
         <Icon name="chevron-up" size={22} />
       </button>
       <button type="button" aria-label="Next" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()}>
         <Icon name="chevron-down" size={22} />
       </button>
-      {@render aa(22, "")}
-      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
-        {@render starIcon(22)}
-      </button>
-      {#if writable}{@render writeBackButton(22, "")}{/if}
-      <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
-      <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up />
     </div>
   {/if}
 
@@ -679,9 +684,20 @@
   .toolbar > :global(.text-ink) {
     color: var(--ink);
   }
+  /* The hairline between the two groups: a mark, not a place to press. */
+  .toolbar > .toolbar-rule {
+    flex: none;
+    min-width: 1px;
+    width: 1px;
+    min-height: 0;
+    height: 1.5rem;
+    align-self: center;
+    margin-inline: 0.25rem;
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
+  }
   /*
     One that can't act right now (Previous on the first article) stays in
-    its place, its arrow faded, so the bar keeps its five even places. A
+    its place, its arrow faded, so the bar keeps its even places. A
     control that can't be used is exempt from contrast (WCAG 1.4.11), and
     it's named and said "dimmed" to screen readers, not shown by color alone.
   */

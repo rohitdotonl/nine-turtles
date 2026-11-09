@@ -50,6 +50,7 @@
   import { exactly, when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
+  import RowPlace from "./RowPlace.svelte";
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu } from "./rowMenu";
   import { longPress } from "./longPress";
@@ -665,6 +666,8 @@
             <time datetime={new Date(article.at * 1000).toISOString()} class="row-date" title={exactly(article.at)}>{when(article.at)}</time>
             <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
             <RowKind {article} />
+            <!-- Your place, while one is kept: "· Half read" (decision 0224). -->
+            <RowPlace article={article.id} />
             {#if article.muted}
               <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
               <span class="row-muted">· Hidden</span>
