@@ -1,5 +1,5 @@
 <!--
-  Your place, shown in the list (SPEC section 6, decision 0220): while an
+  Your place, shown in the list (SPEC section 6, decision 0222): while an
   article is kept part of the way through (places.ts), its row's meta line
   says how far, in a few plain words ("· Half read"), in the source name's
   muted grey. It goes once you reach the end or scroll back to the top, as

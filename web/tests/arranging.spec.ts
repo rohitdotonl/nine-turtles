@@ -283,7 +283,7 @@ test.describe("with a finger", () => {
   });
 });
 
-test("an indent means inside a folder: people in none line up with the folders (decision 0221)", async ({ page }) => {
+test("an indent means inside a folder: people in none line up with the folders (decision 0223)", async ({ page }) => {
   const folder = unique("Indent");
   const [inside] = await blogsInFolders(page, [folder]);
   const loose = `Blog ${unique("arr-loose")}`;

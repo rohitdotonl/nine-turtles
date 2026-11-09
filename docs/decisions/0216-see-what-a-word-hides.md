@@ -1,5 +1,7 @@
 # 0216: See what a word will hide, and Start reading keeps its paragraphs
 
+*Point 2 no longer applies: Start reading was removed by decision 0220.*
+
 *9 November 2026. The owner asked for both ("Implement V3 and V6") from the
 Bret Victor critique (`critique-24/designer-03-bret-victor.html` in the
 project's files).*

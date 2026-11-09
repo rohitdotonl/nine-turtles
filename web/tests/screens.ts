@@ -504,7 +504,6 @@ export async function follow(page: Page, address: string): Promise<number> {
 export async function openReadingRoom(page: Page, { unread = false, read = false } = {}): Promise<void> {
   const id = await follow(page, `${FEED_SITE}/reading/`);
   if (unread) await unmark(page, id);
-  // All read: the empty reading area shows its quiet line, not Start reading (decision 0210).
   if (read) await unmark(page, id, [["read", true]]);
   await page.goto(new URL(`/people/${id}`, page.url()).href);
   await appReady(page);

@@ -13,7 +13,7 @@ import { isRecord } from "./http";
  * to 1. Kept by block rather than by pixels, so it holds when pictures load
  * late or the text size changes. `read` is how much of the article has
  * been in view, from 0 to 1 (the window's bottom, down the whole text), for
- * the list's row (SPEC section 6, decision 0220); only the device that
+ * the list's row (SPEC section 6, decision 0222); only the device that
  * measured it knows it, so a place from another device has none.
  */
 export type Place = { block: number; within: number; read?: number };
@@ -28,7 +28,7 @@ export function onPlaces(changed: () => void): () => void {
 }
 
 /**
- * The few words a list's row shows while a place is kept (decision 0220):
+ * The few words a list's row shows while a place is kept (decision 0222):
  * how far through, in plain words, never a number. A place from another
  * device, with no share, says only "Part read".
  */
