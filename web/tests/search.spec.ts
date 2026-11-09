@@ -8,7 +8,7 @@ import { appReady, follow, nothingToPickUp, signIn, tabTo } from "./screens";
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the list beside the sidebar");
 
-const field = (page: Page) => page.getByRole("textbox", { name: "Search", exact: true });
+const field = (page: Page) => page.getByRole("textbox", { name: "Search articles", exact: true });
 const heading = (page: Page) => page.locator("#list-heading");
 const results = (page: Page) => page.getByRole("region", { name: /^Results in / }).getByRole("listitem");
 
@@ -139,7 +139,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(heading(page)).toHaveText(folder);
   await expect(heading(page)).toBeFocused();
   await expect(field(page)).toHaveValue("");
-  // At rest the field just says "Search"; back in it, the search starts in the folder again.
+  // At rest the field says "Search articles"; back in it, the search starts in the folder again.
   await expect(field(page)).toHaveAttribute("placeholder", "Search articles");
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();

@@ -66,6 +66,13 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   await page.getByRole("button", { name: "Choose…" }).click();
   await page.getByRole("checkbox", { name: new RegExp(first) }).check();
   await page.getByRole("checkbox", { name: new RegExp(second) }).check();
+  // Unsubscribe sits alone at the bar's left, far from Move to… at its right, so a slip can't land on it (decision 0215).
+  const unsubscribeBox = (await page.getByRole("button", { name: "Unsubscribe", exact: true }).boundingBox())!;
+  const countBox = (await page.getByText("2 chosen").boundingBox())!;
+  const moveBox = (await page.getByRole("button", { name: "Move to…" }).boundingBox())!;
+  expect(unsubscribeBox.x + unsubscribeBox.width).toBeLessThan(countBox.x);
+  expect(countBox.x + countBox.width).toBeLessThan(moveBox.x);
+  expect(moveBox.x - (unsubscribeBox.x + unsubscribeBox.width)).toBeGreaterThan(100);
   await page.getByRole("button", { name: "Unsubscribe", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Unsubscribed" })).toHaveText("Unsubscribed from 2.");
   await expect(yours(page).getByRole("link", { name: new RegExp(first) })).toHaveCount(0);

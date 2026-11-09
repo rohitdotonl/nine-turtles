@@ -180,7 +180,7 @@
           </button>
         </span>
       {/each}
-      <label for="search-field" class="sr-only">Search</label>
+      <label for="search-field" class="sr-only">Search articles</label>
       <input
         id="search-field"
         bind:this={field}
