@@ -6,9 +6,14 @@
   whether it is a day or a night page to data-mode. Before the script runs
   there are neither, so the page is White, or Night on a dark device.
 
+  --list is the tone one step off the page: code blocks in articles, the
+  ground behind a phone's sheets, grouped rows. The article list itself sits
+  on the page, the same paper as the article, parted from it by a hairline;
+  only the sidebar, the desk, is toned (decision 0221).
+
   --tint-list and --tint-sidebar are the selection pill's fill: a neutral
-  grey, the text color mixed into the list or sidebar (8% by day, 12% by
-  night), with no color (decision 0057). The star has no color of its own: it is drawn in --ink, filled when starred (decision 0143). --danger is oxblood, for what removes something and for errors.
+  grey, the text color mixed into the page (for the article list) or the
+  sidebar (8% by day, 12% by night), with no color (decision 0057). The star has no color of its own: it is drawn in --ink, filled when starred (decision 0143). --danger is oxblood, for what removes something and for errors.
   contrast.test.ts recomputes each and checks every text color on it.
 
   --surface-raised is what floats over the page: the sheets, the shortcut
@@ -32,11 +37,11 @@
   --ink: #141414;
   --ink-2: #3c3c40;
   --muted: #5f5f64;
-  /* A step fainter than muted, for the list's dates: 4.9 : 1 on the list, never used on the selected row's tint. */
+  /* A step fainter than muted, for the list's dates: 5.3 : 1 on the page, never used on the selected row's tint. */
   --faint: #6b6b70;
   --danger: #8c2f39;
   --accent: #2c4f8c;
-  --tint-list: #e5e5e5;
+  --tint-list: #ececec;
   --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
 }
@@ -53,7 +58,7 @@
   --faint: #5c5345;
   --danger: #8c2f39;
   --accent: #8c5500;
-  --tint-list: #ded9cf;
+  --tint-list: #e6e2d9;
   --tint-sidebar: #d5cfc3;
   --surface-raised: #f7f3ea;
 }
@@ -70,7 +75,7 @@
   --faint: #98989c;
   --danger: #e39aa4;
   --accent: #94b2e6;
-  --tint-list: #333333;
+  --tint-list: #2c2c2c;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
 }

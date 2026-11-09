@@ -102,7 +102,9 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(colors.star).toBeUndefined();
   });
 
-  it("tells the three areas apart by tone, deeper from reading area to sidebar", () => {
+  // The article list sits on the page (decision 0221); --list is the tone one step off it
+  // (code blocks, a phone sheet's ground), and the sidebar the step after.
+  it("orders the tones from the page, through one step off, to the sidebar", () => {
     const order = [colors.paper!, colors.list!, colors.sidebar!].map(luminance);
     const lightTheme = order[0]! > 0.5;
     expect(lightTheme ? order[0]! > order[1]! && order[1]! > order[2]! : order[0]! < order[1]! && order[1]! < order[2]!).toBe(true);
@@ -147,7 +149,7 @@ describe.each(Object.entries(THEMES))("the %s theme's search field", (_name, col
     const share = (name: string) =>
       Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
     const stacked = 1 - (1 - share("search-fill")) * (1 - share("tone"));
-    for (const background of ["list", "sidebar"]) {
+    for (const background of ["paper", "list", "sidebar"]) {
       expect(contrast(colors.ink!, mix(colors.ink!, colors[background]!, stacked)), background).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -171,9 +173,10 @@ describe.each(Object.entries(THEMES))("the %s theme's keyboard outline on rows",
 
 describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, colors) => {
   const dark = luminance(colors.paper!) < 0.5;
-  it("is the text color mixed into the list and the sidebar", () => {
+  // The article list sits on the page itself (decision 0221), so its pill is mixed into the page.
+  it("is the text color mixed into the article list's page and the sidebar", () => {
     const [from, share] = [colors.ink!, dark ? 0.12 : 0.08];
-    expect(colors["tint-list"]).toBe(mix(from, colors.list!, share));
+    expect(colors["tint-list"]).toBe(mix(from, colors.paper!, share));
     expect(colors["tint-sidebar"]).toBe(mix(from, colors.sidebar!, share));
   });
 
@@ -181,8 +184,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
   // neutral one, as Original's is, may take the accent's blue-grey.
   it.runIf(!dark)("keeps a warm pane's pill warm", () => {
     const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
-    for (const area of ["list", "sidebar"]) {
-      if (warmth(colors[area]!) > 0) expect(warmth(colors[`tint-${area}`]!), area).toBeGreaterThan(0);
+    for (const [area, pane] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      if (warmth(colors[pane]!) > 0) expect(warmth(colors[`tint-${area}`]!), area).toBeGreaterThan(0);
     }
   });
 
@@ -191,8 +194,8 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
   // on warm brown read as a clash, decision 0041).
   it.runIf(dark)("keeps the pane's temperature", () => {
     const warmth = (hex: string) => parseInt(hex.slice(1, 3), 16) - parseInt(hex.slice(5, 7), 16);
-    for (const area of ["list", "sidebar"]) {
-      const [pane, pill] = [warmth(colors[area]!), warmth(colors[`tint-${area}`]!)];
+    for (const [area, under] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      const [pane, pill] = [warmth(colors[under]!), warmth(colors[`tint-${area}`]!)];
       if (pane === 0) expect(Math.abs(pill), area).toBeLessThanOrEqual(2);
       else expect(Math.sign(pill), area).toBe(Math.sign(pane));
     }
@@ -211,9 +214,9 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
 
   it("is clearly deeper than a row under the pointer, which stays neutral", () => {
     const share = Number(css.match(/--hover: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
-    for (const area of ["list", "sidebar"]) {
-      const hovered = mix(colors.ink!, colors[area]!, share);
-      expect(contrast(colors[`tint-${area}`]!, colors[area]!), area).toBeGreaterThan(contrast(hovered, colors[area]!) + 0.05);
+    for (const [area, pane] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
+      const hovered = mix(colors.ink!, colors[pane]!, share);
+      expect(contrast(colors[`tint-${area}`]!, colors[pane]!), area).toBeGreaterThan(contrast(hovered, colors[pane]!) + 0.05);
     }
   });
 });
@@ -235,7 +238,7 @@ describe.each(Object.entries(THEMES))("the %s theme's search highlight", (name, 
   it("keeps text at 7 : 1 and the second ink at 4.5 : 1, and stays a visible tone", () => {
     const share = markShare(name);
     expect(share).toBeGreaterThanOrEqual(0.06);
-    for (const background of ["list", "tint-list"]) {
+    for (const background of ["paper", "list", "tint-list"]) {
       const marked = mix(colors.accent!, colors[background]!, share);
       expect(contrast(colors.ink!, marked), background).toBeGreaterThanOrEqual(7);
       expect(contrast(colors["ink-2"]!, marked), background).toBeGreaterThanOrEqual(4.5);
@@ -297,7 +300,7 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
 });
 
 // A grouped list (Settings, Edit feed's folders) and a chosen segment on it
-// (decision 0042): in a light theme the group is the list's tone and the
+// (decision 0042): in a light theme the group is the tone one step off the page and the
 // segment the page's; in a dark one each is the text color mixed into the
 // page, read from the theme's block in app.css.
 function darkShare(selector: string, name: string): number | undefined {

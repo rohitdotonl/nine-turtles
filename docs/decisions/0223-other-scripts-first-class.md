@@ -1,4 +1,4 @@
-# 0221: Other scripts set with the same care as English
+# 0223: Other scripts set with the same care as English
 
 *9 November 2026. Approved by the owner ("just implement your suggestions"),
 after the critique in the project files (`critique-24/other-scripts.html`,

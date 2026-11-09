@@ -54,7 +54,7 @@ describe("folders and the sidebar search", () => {
     expect(findByName({ feeds, folders }, " ")).toEqual({ feeds, folders });
   });
 
-  it("compares Hindi names letter by letter, vowel signs and all (decision 0221)", () => {
+  it("compares Hindi names letter by letter, vowel signs and all (decision 0223)", () => {
     const hindi = [{ ...feeds[0]!, id: 7, title: "कत्था" }, { ...feeds[0]!, id: 8, title: "किताबें" }];
     expect(findByName({ feeds: hindi, folders: [] }, "कित").feeds.map((each) => each.id)).toEqual([8]);
   });

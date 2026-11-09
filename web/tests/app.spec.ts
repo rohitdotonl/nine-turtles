@@ -70,12 +70,12 @@ test("its button hides and shows the sidebar; its button sits on the sidebar, th
 });
 
 
-test("the sidebar lists Unread, Starred and All articles, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred, Notes (from the first day, decision 0222) and All articles, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   // Starred: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
   await openApp(page, "/starred");
   const links = sidebar(page).getByRole("list").getByRole("link");
-  await expect(links).toHaveText(["Unread", "Starred", "All articles"]);
+  await expect(links).toHaveText(["Unread", "Starred", "Notes", "All articles"]);
 
   const here = sidebar(page).getByRole("link", { name: "Starred" });
   await expect(here).toHaveAttribute("aria-current", "page");

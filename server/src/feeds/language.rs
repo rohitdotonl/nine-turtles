@@ -1,4 +1,4 @@
-//! An article's language, as the reading page marks it (decision 0221).
+//! An article's language, as the reading page marks it (decision 0223).
 //!
 //! Screen readers choose their voice by it, and browsers the shapes and
 //! spacing of a script, so it has to be right. Feeds often leave it out, and

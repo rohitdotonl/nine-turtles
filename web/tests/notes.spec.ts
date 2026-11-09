@@ -5,7 +5,7 @@ import { appReady, choose, follow, signIn, tabTo } from "./screens";
 // SPEC section 42 (decision 0164), "How to check it", in a browser: words
 // chosen in an article are highlighted from the small menu beside them, a
 // note is written on the whole article with N, both show at the
-// article's end and stay after a reload; Notes appears in the sidebar and
+// article's end and stay after a reload; Notes, always in the sidebar,
 // lists the article with its highlight; search finds it by the note's words;
 // without a connection a highlight is still made, with the quiet line until
 // it's sent; a person's page takes a note on them; and unsubscribing asks

@@ -4,7 +4,7 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-06
+updated: 2026-11-09
 related: [star-an-article, search-everything, download-everything]
 ---
 
@@ -43,7 +43,7 @@ person or folder** finds them.
 ## Find them again
 
 - **Notes** in the sidebar lists every article you highlighted or wrote a
-  note on. It appears after your first one.
+  note on. Until you make your first one, it says how.
 - Search looks through your highlights and notes too. Search from **Notes**
   to look only through the articles you marked.
 - **Settings › Your data › Export notes and highlights** saves them all as

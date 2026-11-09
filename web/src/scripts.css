@@ -1,5 +1,5 @@
 /*
-  Writing in other scripts, set with the same care as English (decision 0221).
+  Writing in other scripts, set with the same care as English (decision 0223).
   Each article is marked with its language (the feed's, checked against its
   letters, server/src/feeds/language.rs), and a few settings follow from it.
   The column, the sizes and the reader's own font stay as they are; only what

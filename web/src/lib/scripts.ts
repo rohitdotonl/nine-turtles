@@ -1,5 +1,5 @@
 /**
- * Writing in other scripts (decision 0221). The server marks each article
+ * Writing in other scripts (decision 0223). The server marks each article
  * with its language, checked against its letters (server/src/feeds/language.rs);
  * this says which of those languages are written right to left.
  */

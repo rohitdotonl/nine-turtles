@@ -502,7 +502,7 @@
     bind:this={scroller}
     onscroll={scrolled}
     class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
-    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0221). -->
+    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article lang={full?.language ?? undefined} class={["article pt-3", rightToLeft(full?.language) && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rightToLeft(full?.language) ? "rtl" : "auto"}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->

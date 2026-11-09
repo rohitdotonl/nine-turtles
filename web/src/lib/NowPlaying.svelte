@@ -54,7 +54,7 @@
 {/if}
 
 <style>
-  /* Solid, in the list's tone, with the same faint line above it as the phone's toolbar: it ends the page, never covers it. */
+  /* Solid, in the tone one step off the page (--list), with the same faint line above it as the phone's toolbar: it ends the page, never covers it. */
   .now-playing {
     flex: none;
     border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);

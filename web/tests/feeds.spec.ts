@@ -517,7 +517,7 @@ test("following several, one that can't be followed is named in the list's line,
   await expect(page.getByText(/couldn't be followed: The site didn't answer\. Try again later\./)).toBeVisible();
 });
 
-test("on a phone, the welcome's offered feeds sit on a card in the page's color, with Follow the list's full width", async ({ page }) => {
+test("on a phone, the welcome's offered feeds sit on a grouped card a tone off the page, with Follow the list's full width", async ({ page }) => {
   await newReader(page, 390);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
@@ -525,7 +525,7 @@ test("on a phone, the welcome's offered feeds sit on a card in the page's color,
   await page.keyboard.press("Enter");
   const choices = page.getByRole("group", { name: "Feeds on this site" });
   await expect(choices).toBeVisible();
-  // A card, not text on the list's grey (finding 12): its color is the page's, not the list's.
+  // A card, not bare text on the page (finding 12): the list sits on the page (decision 0221), so the card is a tone off it.
   const [card, ground] = await Promise.all([
     choices.evaluate((group) => getComputedStyle(group).backgroundColor),
     page.locator("#list-pane").evaluate((pane) => getComputedStyle(pane).backgroundColor),

@@ -715,7 +715,7 @@
 <!--
   What was just done (with Undo), "New articles · press r", or that nine turtles was
   updated: a small note at the foot of the list pane, so nothing in the list
-  moves when it appears. It sits in a band of the list's own tone that the
+  moves when it appears. It sits in a band of the page's color, as the list is, that the
   rows end above, so it never lies over the rows you're acting on
   (decision 0048). Empty, it's hidden but stays for screen readers, which
   hear each message as it arrives.
