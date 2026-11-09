@@ -4,7 +4,7 @@
 // this file turns it into sentences, and no error code is ever shown.
 
 import type { Choice } from "./feeds";
-import { dayOrToday, when } from "./times";
+import { dayOrToday, until } from "./times";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 
@@ -170,7 +170,7 @@ export const MOVED = "It now reads from its new address and works again. Its art
 export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): string {
   switch (refusal.error) {
     case "asked-to-wait":
-      return `The site asked nine turtles to wait until ${when(refusal.until)}, so it hasn't been asked again yet.`;
+      return `The site asked nine turtles to wait until ${until(refusal.until)}, so it hasn't been asked again yet.`;
     case "already":
       return "You already follow that feed.";
     case "kept-stars":

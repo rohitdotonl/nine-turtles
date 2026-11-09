@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-08
+updated: 2026-11-09
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -34,7 +34,9 @@ numbers: you never have a pile to clear.
 Choose anything in the sidebar and its articles appear, newest first. Unread
 articles are in bolder type with a dot beside them. A post with no title,
 such as a short note, shows its first words instead, in plain type, up to
-two lines. A star means you starred
+two lines. Under each title are who wrote it and when: "Today",
+"Yesterday" or the day of the week for the past week, then the date. Rest
+the pointer on it to see the exact day and time. A star means you starred
 it, headphones mean a podcast episode, and a small screen means a video.
 Older articles load as you reach the bottom, and every list ends with
 "That's everything."

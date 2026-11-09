@@ -12,7 +12,7 @@
   import { getJson, isRecord } from "./http";
   import NoteText from "./NoteText.svelte";
   import { toArticle, untitledOpening, type Article } from "./shapes";
-  import { when } from "./times";
+  import { exactly, when } from "./times";
 
   let { feed, onOpen }: { feed: number; onOpen: (article: Article) => void } = $props();
 
@@ -60,7 +60,7 @@
           <p class="font-serif text-ink">{each.quote}</p>
           <p class="from">
             From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
-            · <time datetime={new Date(each.article.at * 1000).toISOString()}>{when(each.article.at)}</time>
+            · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
           </p>
           {#if each.note}<div class="text-small"><NoteText note={each.note} /></div>{/if}
         </li>
