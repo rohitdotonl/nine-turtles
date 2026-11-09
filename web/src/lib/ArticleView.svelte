@@ -29,6 +29,7 @@
 <script lang="ts">
   import { authorBesides } from "./byline";
   import { edge } from "./edge";
+  import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
@@ -135,6 +136,8 @@
     void arrivals;
     return articleNow(article.id);
   });
+  /** Right-to-left writing reads right to left: the title and the text share the right edge (decision 0223). */
+  let rtl = $derived(rightToLeft(full?.language));
   /** Where "Read the rest on …" goes, by the site's own name ("Garden Letters", not the person's), else its address. */
   let site = $derived(library.feeds?.find((feed) => feed.id === article.feedId)?.siteTitle ?? siteName(full?.siteUrl ?? null) ?? article.feedTitle);
   let author = $derived(authorBesides(full?.author, article.feedTitle));
@@ -501,21 +504,22 @@
     bind:this={scroller}
     onscroll={scrolled}
     class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
-    <article lang={full?.language ?? undefined} class="article pt-3">
-      <h2 tabindex="-1" bind:this={heading} class="article-title">{article.title || "Untitled"}</h2>
+    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
+    <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
+      <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
         {#if followed}
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows. -->
           <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
-            >{article.feedTitle}</button
+            ><bdi>{article.feedTitle}</bdi></button
           ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
         {:else if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4">{article.feedTitle}<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only"> (opens in a new tab)</span></a>
         {:else}
-          <span class="publisher">{article.feedTitle}</span>
+          <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
         {/if}
-        {#if author}· {author}{/if}
+        {#if author}· <bdi>{author}</bdi>{/if}
         · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
       </p>
 
@@ -548,7 +552,7 @@
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
           <!-- Made anew for each article: highlights are drawn into it (ArticleMarks). -->
           {#key full.id}
-            <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir="auto">{@html full.content}</div>
+            <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir={rtl ? "rtl" : "auto"}>{@html full.content}</div>
           {/key}
           {#if video && foldable(full.content)}
             <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
@@ -559,7 +563,7 @@
           <hr aria-hidden="true" class="article-end" />
         {:else if full.summary}
           {#key full.id}
-            <div bind:this={text} class="article-text" dir="auto">{@html full.summary}</div>
+            <div bind:this={text} class="article-text" dir={rtl ? "rtl" : "auto"}>{@html full.summary}</div>
           {/key}
           <hr aria-hidden="true" class="article-end" />
           <!--

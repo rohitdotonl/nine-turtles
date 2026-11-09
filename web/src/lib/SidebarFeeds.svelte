@@ -227,7 +227,7 @@
 {#snippet name(text: string, unread = 0)}
   <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
   <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}
-    >{text}{#if !unreadOff && unread > 0}<span class="sr-only"> unread</span>{/if}</span
+    ><bdi>{text}</bdi>{#if !unreadOff && unread > 0}<span class="sr-only"> unread</span>{/if}</span
   >
 {/snippet}
 

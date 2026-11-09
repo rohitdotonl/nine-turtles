@@ -92,7 +92,7 @@
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">Name</span>
-      <input bind:value={name} type="text" autocomplete="off" class="field" />
+      <input dir="auto" bind:value={name} type="text" autocomplete="off" class="field" />
     </label>
     <!-- For a folder made to hold one person's places (their blog, their channel): it becomes that person. -->
     <div class="flex flex-col gap-1.5">

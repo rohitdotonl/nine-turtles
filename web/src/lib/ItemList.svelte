@@ -636,9 +636,11 @@
           <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
           <!-- An untitled post shows its opening once instead (SPEC section 6, decision 0196): the same serif, never semibold so it doesn't pose as a title, two lines and then "…". -->
           <span class={["title font-serif text-(length:--row-title-size) leading-(--row-title-line)", opening === undefined ? "block" : "line-clamp-2", unreadOff ? "text-ink" : !article.read ? [opening === undefined && "font-semibold", "text-ink"] : current ? "text-ink" : "text-ink-2"]}
-            >{#each boldParts(opening ?? article.title, bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
-                  >{part.text}</mark
-                >{:else}{part.text}{/if}{/each}{#if !article.read && !unreadOff}<span class="sr-only">, unread</span>{/if}</span
+            ><bdi
+              >{#each boldParts(opening ?? article.title, bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
+                    >{part.text}</mark
+                  >{:else}{part.text}{/if}{/each}</bdi
+            >{#if !article.read && !unreadOff}<span class="sr-only">, unread</span>{/if}</span
           >
           {#if article.excerpt && article.excerpt.length > 0}
             <!--

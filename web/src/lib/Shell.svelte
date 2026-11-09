@@ -971,7 +971,7 @@
         <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
         <label for="sidebar-search" class="sr-only">Find a person or folder</label>
         <input
-          id="sidebar-search"
+          id="sidebar-search" dir="auto"
           type="search"
           bind:value={search}
           placeholder="Find a person or folder"

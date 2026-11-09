@@ -132,7 +132,7 @@
   {#if writing}
     <form class="flex flex-col gap-3 p-3" onsubmit={save}>
       <label for="highlight-note" class="text-small font-semibold text-ink">{highlight?.note ? "Your note" : "A note on these words"}</label>
-      <textarea id="highlight-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
+      <textarea dir="auto" id="highlight-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
       <p class="text-meta text-muted">Only you see it.</p>
       <div class="flex flex-wrap gap-2">
         <button type="submit" class="btn-primary">Save</button>

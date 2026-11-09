@@ -179,11 +179,11 @@
         onNotNow={() => void notNow()}
       />
     {:else if address}
-      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} />{verb} {name}</a>
+      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></a>
       <p class="to">{address}</p>
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
     {:else}
-      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} />{verb} {name}</button>
+      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></button>
     {/if}
   </div>
 {/if}

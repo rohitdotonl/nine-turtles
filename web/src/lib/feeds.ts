@@ -10,6 +10,7 @@ import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
+import { fold } from "./search";
 import { UNDO_FAILED } from "./messages";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
@@ -83,10 +84,6 @@ export function findByName(library: Library, typed: string): Library {
     // A person is found by the reader's note on them too (SPEC section 42).
     feeds: library.feeds.filter((feed) => fold(feed.title).includes(wanted) || fold(feed.note ?? "").includes(wanted)),
   };
-}
-
-function fold(text: string): string {
-  return text.normalize("NFKD").replace(/\p{M}/gu, "").toLocaleLowerCase();
 }
 
 /** One row of the sidebar, as a place to go. */

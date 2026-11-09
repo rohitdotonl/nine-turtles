@@ -3,7 +3,7 @@
   room between items.
 */
 .article-text :where(ul, ol) {
-  padding-left: 1.5em;
+  padding-inline-start: 1.5em;
 }
 
 /*
