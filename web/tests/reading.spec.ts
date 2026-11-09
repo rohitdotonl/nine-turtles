@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
+import { appReady, follow, nothingToPickUp, openReadingRoom, signIn, tabTo } from "./screens";
 
 // SPEC section 7 (and 19 and 21), "How to check it", done by a browser, on
 // the made-up Reading Room blog (tests/feed-server.mjs).
@@ -27,7 +27,7 @@ test.describe("on a wide window", () => {
   test.skip(({ isMobile }) => isMobile, "the phone layout has its own test below");
 
   test("an article or the feeds that couldn't be loaded say so, aloud too, with Try again", async ({ page }) => {
-    // All read, so Start reading (decision 0210) hasn't already fetched the first article.
+    // All read, so nothing has fetched the first article yet.
     await openRoom(page, 1280, { read: true });
     let failing = true;
     await page.route(/\/api\/articles\/[0-9]+$/, (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
@@ -138,8 +138,8 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator(".reading-empty")).toBeVisible();
     await expect(article(page).locator(".shortcut-tip")).toHaveText("Press J to read. Press W to write back.");
     // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the accent;
-    // screen readers also hear, since the list has articles to open, how to open one. (A list that
-    // starts with something unread begins it instead: start-reading.spec.ts, decision 0210.)
+    // screen readers also hear, since the list has articles to open, how to open one. The same in
+    // every list, unread first or not (decision 0220).
     const empty = article(page).locator(".reading-empty");
     await expect(empty).toHaveText("Time to read something beautiful.");
     await expect(empty).toBeVisible();
@@ -1045,7 +1045,7 @@ test("the shortcut tip shows only until an article is first opened, then never a
   // Opened with a click, not a key: the tip has done its job either way.
   await row(page, "Only the first page").click();
   await expect(title(page, "Only the first page")).toBeVisible();
-  // Back to the same list, whose articles are read, so the quiet line shows (not Start reading, decision 0210).
+  // Back to the same list, whose articles are read, so the quiet line shows.
   await page.goto(room);
   await appReady(page);
   await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
@@ -1139,8 +1139,29 @@ test.describe("your place in an article (decision 0060)", () => {
     await page.waitForTimeout(300);
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
-    // The usual empty reading area: the quiet line, or Start reading when the list starts with something unread (decision 0210).
-    await expect(article(page).getByText(/^(Time to read something beautiful\.|Newest unread)$/)).toBeVisible();
+    // The usual empty reading area: the quiet line (decision 0220).
+    await expect(article(page).getByText("Time to read something beautiful.")).toBeVisible();
     await expect(article(page)).not.toContainText("You were reading");
   });
+});
+
+// Decision 0220: every list opens the same quiet way, its first article unread or not: no begun
+// first article, no Start reading; on a computer the reading area keeps its quiet line.
+test("an unread first article waits in the list as every other does, in Unread too", async ({ page, isMobile }) => {
+  await nothingToPickUp(page);
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await openReadingRoom(page, { unread: true });
+  for (const path of [null, "/unread"]) {
+    if (path) {
+      await page.goto(new URL(path, page.url()).href);
+      await appReady(page);
+      await expect(page.locator(".item-row").first()).toBeVisible();
+    }
+    await expect(page.locator(".item-row").first()).toContainText(", unread");
+    await expect(page.getByText(/^(Newest|Oldest) unread$/)).toHaveCount(0);
+    await expect(page.getByText("Start reading", { exact: true })).toHaveCount(0);
+    if (!isMobile) await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
+  }
 });

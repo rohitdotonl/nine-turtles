@@ -267,7 +267,7 @@
       queueMicrotask(() => placeFocus(home)?.focus());
     });
   });
-  /** The list's first article: the empty reading area begins it when unread (decision 0210), and offers j only when there's one to open. */
+  /** The list's first article: the empty reading area offers j only when there's one to open. */
   let listFirst: Article | undefined = $state();
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   let listFound = $state("");
@@ -1205,7 +1205,7 @@
                   onRefresh={() => (loadFeeds(), keeper.refreshed())}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
-                  {unreadOff} lead={!panes.article}
+                  {unreadOff}
                   bind:first={listFirst}
                   bind:found={listFound}
                   rowActions={(article) => writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) })}
@@ -1248,7 +1248,7 @@
               {@render welcome(false, false)}
             </section>
           {:else}
-            <EmptyReading first={listFirst} order={settings.sort ?? "newest"} lead={!searching.shown && !unreadOff} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
+            <EmptyReading first={listFirst} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
           {/if}
           </div>
         {/if}
