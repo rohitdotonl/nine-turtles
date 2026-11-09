@@ -19,7 +19,10 @@
    take a scroll to the end or a menu.
 3. **A row's own menu** in the article list (SPEC section 6): a right-click,
    a long press (half a second) on a touch screen, or the Menu key or
-   Shift+F10 opens a small menu where it was pressed: Star or Unstar, Mark
+   Shift+F10 opens a small menu where it was pressed (its row keeps the
+   pointer's faint tone while it's open, added 9 November 2026: on a phone
+   nothing else showed which article it acted on; never the selection pill,
+   so two rows never look chosen): Star or Unstar, Mark
    as read or unread (not with Unread off), then Write back (which opens
    the article and starts it) and Info about {name}. It is More's menu
    (the same look and keys, now one piece, `MenuList.svelte`), with no keys

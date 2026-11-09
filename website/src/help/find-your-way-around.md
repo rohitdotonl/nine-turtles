@@ -47,6 +47,8 @@ person's or publication's list it also has **Info about …**, their page, which
 opens too when you press their name at the top of the list. Each article
 has a menu of its own too: right-click it (on a phone, press and hold it)
 to star it, mark it read or unread, write back, or see the writer's page.
+While the menu is open, the article it belongs to stays shaded, so you can
+see which one you're about to change.
 
 ## Reading
 
