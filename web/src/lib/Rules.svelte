@@ -195,7 +195,7 @@
             autocomplete="off"
             placeholder="Hide articles about…"
             aria-invalid={empty}
-            aria-describedby={empty ? "hide-empty" : undefined}
+            aria-describedby={empty ? "hide-empty" : tidied ? "hide-preview" : undefined}
             class="field min-w-0 flex-1"
           />
           <button type="submit" class="btn" aria-disabled={busy}>Add</button>

@@ -579,6 +579,23 @@ async fn a_preview_shows_what_a_word_would_hide_and_hides_nothing() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(refused["error"], "nothing-to-match");
 
+    // Many matches: the newest five are listed, and all are counted.
+    for number in 5..=11 {
+        reader.write(
+            &number.to_string(),
+            &format!("Garden notes {number}"),
+            "Jane Doe",
+            "Words.",
+        );
+    }
+    reader.check(blog).await;
+    let (_, seen) = reader
+        .post("/api/rules/preview", json!({ "words": "garden" }))
+        .await;
+    assert_eq!(seen["count"], 9);
+    assert_eq!(seen["articles"].as_array().unwrap().len(), 5);
+    assert_eq!(seen["in_title"].as_array().unwrap().len(), 5);
+
     // Hidden articles are already read, so a later word doesn't count them again.
     let (status, _) = reader
         .post("/api/rules", json!({ "words": "tomatoes" }))
@@ -587,6 +604,12 @@ async fn a_preview_shows_what_a_word_would_hide_and_hides_nothing() {
     let (_, seen) = reader
         .post("/api/rules/preview", json!({ "words": "garden" }))
         .await;
-    assert_eq!(seen["count"], 1);
-    assert_eq!(seen["articles"][0]["title"], "A quiet week");
+    assert_eq!(seen["count"], 8);
+    assert!(
+        !seen["articles"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|article| article["title"] == "My garden")
+    );
 }

@@ -32,6 +32,8 @@ their way to the reader ("The writer comes first").
 
 **Limits.** Read-only: `POST /api/rules/preview` reads the reader's unread
 articles a batch at a time, outside any write, as Add's own matching does;
-the screen asks once per pause in typing and drops a late answer for an
-older word. No colour, no motion: the list appears and changes only as the
+the screen asks once typing rests for 400 ms and never twice at once (the
+latest word waits for the answer on its way), so a reader starts at most one
+scan at a time, and a late answer for an older word is dropped. When it
+can't say (offline, a word too long), it shows nothing. No colour, no motion: the list appears and changes only as the
 reader types.

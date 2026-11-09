@@ -56,6 +56,7 @@ pub(super) async fn preview(
             Err(refusal) => return Ok(Err(refusal)),
         };
         drop(connection);
+        // Never saved, only matched: id 0 is no rule's number.
         let rule = Rule {
             id: 0,
             person_id: person,
@@ -68,18 +69,11 @@ pub(super) async fn preview(
         };
         let ids = matching_now(&state.db, &rule).await?;
         let articles: Vec<ArticleRow> = sqlx::query_as(concat!(
-            "SELECT entries.article_id AS id, entries.feed_id, COALESCE(writers.name, subscriptions.title) AS feed_title,
-                    articles.title, articles.link, entries.sort_at AS at,
-                    entries.read, entries.starred, entries.muted,
-                    articles.episode_url IS NOT NULL AS episode, articles.episode_seconds,",
-            crate::feeds::publication_writer!(),
-            ", ",
-            crate::feeds::untitled_body!(),
+            "SELECT ",
+            crate::feeds::article_row!(),
+            " FROM ",
+            crate::feeds::article_row_joins!(),
             "
-             FROM entries CROSS JOIN articles ON articles.id = entries.article_id
-                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                     AND subscriptions.feed_id = entries.feed_id
-                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
              WHERE entries.person_id = ? AND entries.article_id IN (SELECT value FROM json_each(?))
              ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ?"
         ))
