@@ -1,6 +1,6 @@
 # 0210: Start reading
 
-*6 November 2026.*
+*6 November 2026. Replaced by decision 0220 (9 November 2026): every list now opens the same quiet way.*
 
 **Decision.** When nothing is open and there's nothing to pick up, and the
 list starts with an unread article, the empty reading area no longer says
