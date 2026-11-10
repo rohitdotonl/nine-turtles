@@ -45,6 +45,9 @@
   import WriteBack from "./WriteBack.svelte";
   import { writesBack } from "./writeBack";
   import ArticleMarks from "./ArticleMarks.svelte";
+  import FootnoteCard from "./FootnoteCard.svelte";
+  import { followAnchors, type Footnote } from "./footnotes";
+  import { setPunctuation, setsEnglishPunctuation } from "./punctuation";
   import type { LoadedLibrary } from "./library.svelte";
   import { siteName } from "./people";
   import { tick, type Snippet } from "svelte";
@@ -139,6 +142,8 @@
   let toolbar: HTMLDivElement | undefined = $state();
   /** The article's own text, whose blocks mark your place in it. */
   let text: HTMLDivElement | undefined = $state();
+  /** The article itself: a footnote's card is placed in it. */
+  let column: HTMLElement | undefined = $state();
   /** The Aa reading panel, and its button (there's one, on the top bar or the phone's bottom bar). */
   let panelOpen = $state(false);
   let aaButton: HTMLButtonElement | undefined = $state();
@@ -301,25 +306,25 @@
     };
   });
 
-  // Footnotes: a link to a place inside the article (cleaned to `#article-…`
-  // by nine turtles) scrolls there and moves the keyboard's place with it,
-  // rather than opening a new tab.
+  // Footnotes: a footnote's number opens its note in a card just under the
+  // line (FootnoteCard, decision 0247); any other link to a place inside the
+  // article scrolls there (footnotes.ts). A new article closes the card.
+  let footnote: { note: Footnote; top: number; link: HTMLAnchorElement } | undefined = $state();
   $effect(() => {
-    const area = scroller;
-    if (!area) return;
-    const followAnchor = (event: MouseEvent) => {
-      const link = event.target instanceof Element ? event.target.closest("a") : null;
-      const anchor = link?.getAttribute("href");
-      if (!anchor?.startsWith("#article-")) return;
-      event.preventDefault();
-      const place = document.getElementById(decodeURIComponent(anchor.slice(1)));
-      if (!place || !area.contains(place)) return;
-      place.setAttribute("tabindex", "-1");
-      place.scrollIntoView({ block: "start" });
-      place.focus({ preventScroll: true });
-    };
-    area.addEventListener("click", followAnchor);
-    return () => area.removeEventListener("click", followAnchor);
+    if (!scroller) return;
+    return followAnchors(scroller, (note, link) => {
+      if (column) footnote = { note, top: link.getBoundingClientRect().bottom - column.getBoundingClientRect().top + 4, link };
+    });
+  });
+  $effect(() => {
+    void article.id;
+    footnote = undefined;
+  });
+
+  // An English article's typewriter marks set properly as it's shown: curly
+  // quotes, dashes, ellipses (punctuation.ts, decision 0247).
+  $effect(() => {
+    if (text && setsEnglishPunctuation(full?.language)) setPunctuation(text);
   });
 
   // The article's own links open in a new tab (cleaned so by nine turtles);
@@ -527,7 +532,7 @@
     style:padding-bottom={bars.away ? `${bars.room.below}px` : undefined}
     class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
-    <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
+    <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
@@ -580,6 +585,9 @@
             <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
               >{folded ? "Show the full description" : "Show less"}</button
             >
+          {/if}
+          {#if footnote}
+            <FootnoteCard note={footnote.note} top={footnote.top} onclose={(back) => { if (back) footnote?.link.focus(); footnote = undefined; }} />
           {/if}
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
