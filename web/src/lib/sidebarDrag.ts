@@ -21,6 +21,8 @@
 // `data-dragging` (on the page: "folder", "person", or "copy" while Option or
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
+import { onMac } from "./keyboard";
+
 /** What's being dragged. */
 export type Dragged = { kind: "folder"; id: number } | { kind: "person"; id: number; from: number | null };
 
@@ -48,8 +50,6 @@ export const HOLD_MS = 500;
 /** How near the sidebar's top or bottom edge the pointer scrolls it, and by how much each frame. */
 const EDGE = 40;
 const SCROLL_STEP = 10;
-
-const onMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 /** Reads `data-drag` back into what's being dragged. */
 export function readDragged(value: string | undefined): Dragged | undefined {

@@ -11,6 +11,9 @@
 import { inSidebar, paneTo } from "./panes";
 import type { View } from "./router";
 
+/** A Mac (or iPhone, iPad) names the Command key; every other computer, Ctrl. */
+export const onMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
 export type Action =
   | { kind: "cheat-sheet" }
   | { kind: "toggle-both" }
@@ -89,6 +92,8 @@ export type Shortcut = {
   keys: string[];
   /** Each of its keys, with what it does. */
   bindings: readonly Binding[];
+  /** Its keys all do the same thing, so the cheat sheet says "or" between them ("U or Command Z"), not "/". */
+  either: boolean;
   unlisted: readonly Unlisted[];
 };
 
@@ -96,7 +101,8 @@ type Entry = [id: string, key: string, does: Action];
 
 function shortcut(group: ShortcutGroup, action: string, entries: Entry[], unlisted: Unlisted[] = []): Shortcut {
   const bindings = entries.map(([id, key, does]) => ({ id, key, does }));
-  return { action, group, keys: entries.map(([, key]) => key), bindings, unlisted };
+  const either = entries.length > 1 && entries.every(([, , does]) => JSON.stringify(does) === JSON.stringify(entries[0]![2]));
+  return { action, group, keys: entries.map(([, key]) => key), bindings, unlisted, either };
 }
 
 /** Every shortcut, in the cheat sheet's order. */
@@ -163,7 +169,11 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Tidying up", "Mark all as read", [["mark-all-read", "Shift+A", { kind: "mark-all-read" }]]),
   shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
-  shortcut("Tidying up", "Undo", [["undo", "u", { kind: "undo" }]]),
+  // Command Z (Ctrl Z off a Mac) as well as U: the undo every app has (decision 0231).
+  shortcut("Tidying up", "Undo", [
+    ["undo", "u", { kind: "undo" }],
+    ["undo-mod", "Mod+Z", { kind: "undo" }],
+  ]),
   shortcut("Tidying up", "Refresh (show new articles)", [["refresh", "r", { kind: "refresh" }]]),
   shortcut("Anywhere", "This list of shortcuts", [["cheat-sheet", "?", { kind: "cheat-sheet" }]]),
 ];
@@ -174,6 +184,12 @@ const BINDINGS = new Map(SHORTCUTS.flatMap((each) => each.bindings.map((binding)
 export function keyFor(kind: Action["kind"]): string | undefined {
   for (const each of SHORTCUTS) for (const binding of each.bindings) if (binding.does.kind === kind) return binding.key;
   return undefined;
+}
+
+/** A tooltip naming every key that does `kind`: "Undo (U or Command Z)". */
+export function tipEvery(label: string, kind: Action["kind"]): string {
+  const keys = SHORTCUTS.flatMap((each) => each.bindings).filter((binding) => binding.does.kind === kind).map((binding) => keyCap(binding.key));
+  return keys.length > 0 ? `${label} (${keys.join(" or ")})` : label;
 }
 
 /** The key of one binding, by its name ("text-smaller"). */
@@ -199,10 +215,14 @@ export function pressName(key: string): string {
   if (key === "→") return "ArrowRight";
   const shifted = /^Shift\+([a-z])$/i.exec(key);
   if (shifted) return shifted[1]!.toUpperCase();
+  const mod = /^Mod\+([a-z])$/i.exec(key);
+  if (mod) return `Mod+${mod[1]!.toLowerCase()}`;
   return key;
 }
 
 function nameOf(press: KeyPress): string {
+  // Command (or Ctrl) with a letter, and nothing else held: "Mod+z".
+  if (press.ctrlKey !== press.metaKey) return !press.shiftKey && /^[a-z]$/i.test(press.key) ? `Mod+${press.key.toLowerCase()}` : "";
   if (press.key === " " && press.shiftKey) return "Shift+ ";
   // Caps Lock changes a letter's case, but not which key it is.
   if (/^[a-z]$/i.test(press.key)) return press.shiftKey ? press.key.toUpperCase() : press.key.toLowerCase();
@@ -249,8 +269,14 @@ export function createKeyReader() {
       pending = undefined;
       return single.get("Escape");
     }
-    // Shortcuts never fire while typing, or alongside the browser's own keys.
-    if (isTyping(press.target) || press.ctrlKey || press.metaKey || press.altKey) return undefined;
+    // Shortcuts never fire while typing, or alongside the browser's own keys:
+    // with Command or Ctrl held, only the table's own (Command Z) count.
+    if (isTyping(press.target) || press.altKey || (press.ctrlKey && press.metaKey)) return undefined;
+    if (press.ctrlKey || press.metaKey) {
+      pending = undefined;
+      const name = nameOf(press);
+      return name.startsWith("Mod+") ? single.get(name) : undefined;
+    }
 
     if (pending !== undefined && now - pending.since <= SEQUENCE_MS) {
       const after = sequences.get(pending.first);
@@ -361,6 +387,8 @@ export function shortcutsFor(unreadOff: boolean): Shortcut[] {
  */
 export function keyCap(press: string): string {
   if (press === "-") return "−";
+  const mod = /^Mod\+(.)$/.exec(press);
+  if (mod) return `${onMac ? "Command" : "Ctrl"} ${mod[1]!.toUpperCase()}`;
   const shifted = /^Shift\+(Space|.)$/.exec(press);
   if (shifted) return `Shift ${shifted[1] === "Space" ? "Space" : shifted[1]!.toUpperCase()}`;
   if (/^[a-z]$/.test(press)) return press.toUpperCase();

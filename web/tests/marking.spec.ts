@@ -87,6 +87,8 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
+    // The browser tab names the open article (decision 0231).
+    await expect(page).toHaveTitle(`${NEWEST} · nine turtles`);
     // A screen reader hears it, though the line above the list stays quiet.
     await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read." })).toBeAttached();
     const title = row(page, blog, NEWEST).locator("span:not([aria-hidden])").first();
@@ -171,6 +173,29 @@ test.describe("on a wide window", () => {
       await expect(row(page, blog, title)).toHaveAccessibleName(/, unread/);
     }
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
+  });
+
+  test("Command Z (Ctrl Z) undoes as u does, but in a field it stays the field's own undo (decision 0231)", async ({ page }) => {
+    const blog = await openBlog(page);
+    await page.keyboard.press("Shift+A");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+
+    // Typing in a field: Command Z takes back the typing, not the marks.
+    const search = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
+    await search.focus();
+    await page.keyboard.type("abc");
+    await page.keyboard.press("ControlOrMeta+z");
+    await expect(search).not.toHaveValue("abc");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+
+    // Out of the field, it undoes.
+    await search.press("Escape");
+    await row(page, blog, MIDDLE).focus();
+    await page.keyboard.press("ControlOrMeta+z");
+    for (const title of [NEWEST, MIDDLE, OLDEST]) {
+      await expect(row(page, blog, title)).toHaveAccessibleName(/, unread/);
+    }
+    await expect(line(page)).toHaveText("Undone.");
   });
 
   test("with only the keyboard: the More menu's Mark all as read, and Undo, work too", async ({ page }) => {

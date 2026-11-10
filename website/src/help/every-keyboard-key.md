@@ -64,7 +64,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>Shift</kbd> <kbd>A</kbd> | Mark all as read |
 | <kbd>M</kbd> | Mark unread |
-| <kbd>U</kbd> | Undo |
+| <kbd>U</kbd> or <kbd>Command</kbd> <kbd>Z</kbd> (<kbd>Ctrl</kbd> <kbd>Z</kbd> on Windows and Linux) | Undo |
 | <kbd>R</kbd> | Refresh: show new articles |
 
 ## Good to know

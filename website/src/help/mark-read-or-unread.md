@@ -35,8 +35,9 @@ you're looking at are marked: anything that arrived since stays unread.
 ## Undo
 
 After you mark or star something, a note at the bottom of the list says
-what happened, with an **Undo** button. Press it, or <kbd>U</kbd>, to put
-things back as they were. If you're reading with the list out of sight (an
+what happened, with an **Undo** button. Press it, or <kbd>U</kbd> (or
+<kbd>Command</kbd> <kbd>Z</kbd>, <kbd>Ctrl</kbd> <kbd>Z</kbd> on Windows), to
+put things back as they were. If you're reading with the list out of sight (an
 article on a phone, or the list hidden on a computer), the same note shows
 at the bottom of the article instead. With nothing to undo, <kbd>U</kbd>
 says "Nothing to undo."

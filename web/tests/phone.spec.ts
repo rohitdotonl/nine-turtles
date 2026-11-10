@@ -74,6 +74,8 @@ test.describe("on a phone", () => {
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await expect(list(page)).toBeHidden();
+    // The browser tab names the article open on screen, and the list's name again once back (decision 0231).
+    await expect(page).toHaveTitle("The pleasure of a slow letter · nine turtles");
     // The back button says where it goes, in words as well as for screen readers.
     const back = article(page).getByRole("button", { name: "Back to Reading Room" });
     await expect(back).toBeVisible();
@@ -106,6 +108,18 @@ test.describe("on a phone", () => {
 
     await page.goForward();
     await expect(list(page)).toBeVisible();
+  });
+
+  test("the feeds' search also searches articles, opening All articles with the words (decision 0231)", async ({ page }) => {
+    await openHome(page);
+    const search = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
+    await search.fill("slow letter");
+    await sidebar(page).getByRole("button", { name: "Search articles for “slow letter”" }).click();
+    await expect(page).toHaveURL(/\/all$/);
+    await expect(sidebar(page)).toBeHidden();
+    const field = page.getByRole("textbox", { name: "Search articles", exact: true });
+    await expect(field).toHaveValue("slow letter");
+    await expect(page.getByRole("region", { name: "All articles" }).getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
   });
 
   test("arriving straight at a list, its back arrow still leads to the feeds", async ({ page }) => {
@@ -257,14 +271,15 @@ test.describe("on a phone", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
 
-    // Settings is one step on from the feeds; Escape and Close settings go back to them.
+    // Settings is one step on from the feeds; Escape and ‹ Home go back to them, as on every phone screen (decision 0231).
     await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(sidebar(page)).toBeVisible();
     await sidebar(page).getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("button", { name: "Close settings" }).click();
+    await expect(page.getByRole("button", { name: "Close settings" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
     // Back from the feeds leaves Settings behind: it doesn't reopen.
     await page.goBack();

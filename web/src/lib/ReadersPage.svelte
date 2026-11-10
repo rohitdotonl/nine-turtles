@@ -11,6 +11,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
+  import { SETTINGS_PAGES } from "./router";
   import { label } from "./plan";
   import { backupDay, count, loadOverview, plural, size, type Overview } from "./admin";
   import { date, dateOrToday, dayAndTime } from "./times";
@@ -58,7 +59,7 @@
 </script>
 
 <section aria-labelledby="readers-page-heading" class="flex flex-1 flex-col bg-paper">
-  <PageHead title="All readers" id="readers-page-heading" bind:heading {onClose} closeLabel="Close all readers" {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="All readers" id="readers-page-heading" bind:heading onBack={onClose} backTo={SETTINGS_PAGES.readers} {besideToggle} column="max-w-[35rem]" />
   <!-- A Tab stop of its own, so the page scrolls with the keyboard though it has nothing to press (axe: scrollable-region-focusable). -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div use:edge tabindex="0" role="region" aria-label="Readers and how this nine turtles is doing" class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">

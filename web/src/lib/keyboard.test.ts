@@ -11,6 +11,7 @@ import {
   pressName,
   shortcutsFor,
   tip,
+  tipEvery,
   withKey,
   type KeyPress,
 } from "./keyboard";
@@ -113,6 +114,28 @@ describe("keyboard shortcuts", () => {
     expect(read(press("j", { isComposing: true }), 0)).toBeUndefined();
   });
 
+  it("undoes with Command Z or Ctrl Z, as every app does, but not while typing, nor with Shift or Option", () => {
+    const read = createKeyReader();
+    expect(read(press("z", { metaKey: true }), 0)).toEqual({ kind: "undo" });
+    expect(read(press("z", { ctrlKey: true }), 0)).toEqual({ kind: "undo" });
+    expect(read(press("Z", { metaKey: true, shiftKey: false }), 0)).toEqual({ kind: "undo" });
+    expect(read(press("z", { metaKey: true, shiftKey: true }), 0)).toBeUndefined();
+    expect(read(press("z", { metaKey: true, altKey: true }), 0)).toBeUndefined();
+    expect(read(press("z", { metaKey: true, ctrlKey: true }), 0)).toBeUndefined();
+    expect(read(press("z"), 0)).toBeUndefined();
+    const field = typeof document === "undefined" ? null : document.createElement("input");
+    if (field) expect(read(press("z", { metaKey: true, target: field }), 0)).toBeUndefined();
+  });
+
+  it("says Undo's two keys with or, in the cheat sheet and its tooltip", () => {
+    const undo = SHORTCUTS.find((shortcut) => shortcut.action === "Undo")!;
+    expect(undo.keys).toEqual(["u", "Mod+Z"]);
+    expect(undo.either).toBe(true);
+    expect(SHORTCUTS.find((shortcut) => shortcut.action === "Next / previous article")!.either).toBe(false);
+    expect(["Command Z", "Ctrl Z"]).toContain(keyCap("Mod+Z"));
+    expect(tipEvery("Undo", "undo")).toBe(`Undo (U or ${keyCap("Mod+Z")})`);
+  });
+
   it("leaves the browser's own shortcuts alone", () => {
     const read = createKeyReader();
     expect(read(press("f", { metaKey: true }), 0)).toBeUndefined();
@@ -193,8 +216,11 @@ describe("the cheat sheet and the keys agree", () => {
     press(" "),
     press(" ", { shiftKey: true }),
     ...OTHER_KEYS.map((key) => press(key)),
+    // Each letter with Command, and with Ctrl: only Command Z (or Ctrl Z) may do anything.
+    ...Array.from({ length: 26 }, (_, index) => String.fromCharCode(97 + index)).flatMap((letter) => [press(letter, { metaKey: true }), press(letter, { ctrlKey: true })]),
   ].filter((each) => each.key.length > 0 && each.key !== "\u007f");
-  const spelled = (each: KeyPress) => (each.key === " " ? (each.shiftKey ? "Shift+ " : " ") : each.key);
+  const spelled = (each: KeyPress) =>
+    each.metaKey || each.ctrlKey ? `Mod+${each.key}` : each.key === " " ? (each.shiftKey ? "Shift+ " : " ") : each.key;
   const reader = () => createKeyReader();
 
   /** Every key the reader answers, as presses, alone or as the second after a first press that waits. */

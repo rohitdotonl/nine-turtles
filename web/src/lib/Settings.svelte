@@ -3,7 +3,7 @@
   centred column of grouped inset lists, each group with a small uppercase
   header above it (decision 0120). It fills the list and reading areas while
   the sidebar stays, so the reader never loses their place. "Close settings"
-  or Escape goes back.
+  (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
   (Unread on or off and sort order, shared across
@@ -281,6 +281,9 @@
 <section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex flex-1 flex-col bg-paper">
   {#if page}
     <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} backTo="Settings" {besideToggle} column="max-w-[35rem]" />
+  {:else if phone}
+    <!-- On a phone Settings is a screen you go into, so it goes back, as every other screen there does (decision 0231). -->
+    <PageHead title="Settings" id="settings-heading" bind:heading onBack={onClose} backTo="Home" column="max-w-[35rem]" />
   {:else}
     <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
   {/if}
