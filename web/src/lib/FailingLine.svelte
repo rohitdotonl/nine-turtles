@@ -60,7 +60,7 @@
   <div class={["failing", look]}>
     {#if !moved}
       <p class="text-meta text-ink-2">
-        {brokenSince(feed.failingSince ?? 0)}
+        <span class="dated">{brokenSince(feed.failingSince ?? 0)}</span>
         {#if !choosing}
           <button
             bind:this={button}

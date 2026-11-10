@@ -277,7 +277,7 @@
                       <input type="checkbox" value={feed.id} bind:group={chosen} />
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words">{line}</span>
+                        <span class="dated text-meta text-muted break-words">{line}</span>
                       </span>
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
@@ -285,7 +285,7 @@
                     <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words">{line}</span>
+                        <span class="dated text-meta text-muted break-words">{line}</span>
                       </span>
                       <span class="row-glyph"><Icon name="chevron-right" /></span>
                     </a>

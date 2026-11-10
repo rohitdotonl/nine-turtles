@@ -142,7 +142,7 @@
               <h4 class="card-name">{row.feed.title}</h4>
               {#if !row.unsubscribed}
                 <p class="what text-ink-2">
-                  <span class="font-semibold">{headline(row.feed)}.</span>
+                  <span class="dated font-semibold">{headline(row.feed)}.</span>
                   {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
                   {#if row.feed.state === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
                 </p>

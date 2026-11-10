@@ -19,7 +19,7 @@
         {@const name = shortName(row.title || "Untitled")}
         <li class="inset-row kept-row">
           <p class="min-w-0 flex-1 break-words">
-            {name}<br /><span class="text-meta text-muted">{keptLine(row)}</span>
+            {name}<br /><span class="dated text-meta text-muted">{keptLine(row)}</span>
           </p>
           <button type="button" data-kept={row.ids.join()} aria-disabled={busy} onclick={() => onBringBack(row)} class="btn btn-small"
             >Bring back<span class="sr-only"> {name}</span></button

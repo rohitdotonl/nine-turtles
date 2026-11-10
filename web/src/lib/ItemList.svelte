@@ -732,7 +732,7 @@
   >
     <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->
     <p class={["flex items-center gap-x-2", !saying && "sr-only"]}>
-      <span role="status" class="min-w-0 py-2">{line}</span>
+      <span role="status" class="dated min-w-0 py-2">{line}</span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
         <TextButton onclick={byButton(retryNow)} class="-mr-2 px-2">{retryWord}</TextButton>

@@ -67,7 +67,7 @@
         <span class="setting-name">Pause for a while</span>
         <span id="{id}-pause-hint" class="setting-hint"
           >Their new articles wait until you untick this.{#if feed.pausedAt != null}
-            {pausedSince(feed.pausedAt)}{/if}</span
+            <span class="dated">{pausedSince(feed.pausedAt)}</span>{/if}</span
         >
       </span>
       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
