@@ -72,5 +72,6 @@ which is what decides: nothing merges unless every test passes there.
 The container image's build keeps the libraries too: the Dockerfile builds
 them first, from `Cargo.toml` and `Cargo.lock` alone, and GitHub keeps that
 step in its package storage (the image's `buildcache` tag), so a merge
-rebuilds only nine turtles itself. Plain `docker buildx`, no new building
-block; a host without the kept copy simply builds everything, as before.
+rebuilds only nine turtles itself. It uses `docker buildx` with Docker's own
+builder, BuildKit, at a fixed version; a host without the kept copy simply
+builds everything, as before.

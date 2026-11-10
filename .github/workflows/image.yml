@@ -41,9 +41,10 @@ jobs:
 
       # The libraries' build (the Dockerfile's step 2a) is kept in GitHub's
       # package storage beside the image, as "buildcache", and reused until
-      # Cargo.toml, Cargo.lock or the Rust version changes, so only nine
-      # turtles itself is built: about a minute instead of three (decision
-      # 0114). Only main saves it; a pull request from this repository reads it.
+      # anything it's built from changes (Cargo.toml, Cargo.lock, the Rust
+      # image or the step itself), so only nine turtles itself is built: about
+      # a minute instead of three (decision 0114). Only main saves it; a pull
+      # request from this repository reads it.
       - name: Build the image
         if: steps.look.outputs.app == 'true'
         env:
@@ -59,12 +60,15 @@ jobs:
             && echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin; then
             cache=(--cache-from "type=registry,ref=$image:buildcache")
             if [ "$GITHUB_EVENT_NAME" = push ]; then
-              cache+=(--cache-to "type=registry,ref=$image:buildcache,mode=max")
+              # A failed save only warns: the deploy matters more than the kept copy.
+              cache+=(--cache-to "type=registry,ref=$image:buildcache,mode=max,ignore-error=true")
             fi
           fi
-          # A builder that can read and save a kept build; --load hands the
+          # A builder that can read and save a kept build (BuildKit, Docker's
+          # own builder, at a fixed version, decision 0002); --load hands the
           # image back to plain docker for the steps below.
-          docker buildx create --use --driver docker-container > /dev/null
+          docker buildx create --use --driver docker-container \
+            --driver-opt image=moby/buildkit:v0.34.1 > /dev/null
           docker buildx build --load "${cache[@]}" \
             --build-arg NINE_TURTLES_VERSION="$version" \
             --tag "$image:$version" --tag "$image:latest" .
