@@ -7,7 +7,7 @@ decision 0021).
 
 ## For the agent that built the change
 
-These steps keep each change to as few rounds of checks as it needs (decision 0251).
+These steps keep each change to as few rounds of checks as it needs (decision 0253).
 
 If the change needs no review (see "Which review" below), skip steps 3 to 5.
 

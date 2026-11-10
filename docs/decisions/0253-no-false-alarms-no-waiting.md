@@ -1,4 +1,4 @@
-# 0251: No false alarms, no waiting
+# 0253: No false alarms, no waiting
 
 **In one line:** Fewer rounds per change: browser tests wait for a save before leaving the page and never take "the first article" of a shared list; the building agent brings in main and goes through the reviewer's list before opening, hears the moment the checks finish (never a timer), renumbers a taken decision only in a push it needs anyway, and runs `node scripts/decisions.mjs --free` just before merging
 
