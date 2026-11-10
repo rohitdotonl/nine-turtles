@@ -37,7 +37,8 @@ pub const MOVED: &str = "This email now comes once a week, on Saturday mornings,
 /// The email's words. `moved` adds `MOVED`; `home` opens nine turtles;
 /// `stop` is the link that turns the email off.
 pub fn compose(people: &[Person], moved: bool, home: &str, stop: &str) -> String {
-    let mut body = String::from("Here's what the people you read wrote this week.\n");
+    let mut body =
+        String::from("Here's what's new from the people you read that you haven't read yet.\n");
     if moved {
         body.push('\n');
         body.push_str(MOVED);
@@ -139,7 +140,7 @@ mod tests {
             "https://app.test/",
             "https://app.test/weekly-email#ticket=ab",
         );
-        assert!(body.starts_with("Here's what the people you read wrote this week.\n\nAlpha\n\n  On walking\n  I walked to the sea.\n  https://alpha.example/walking\n"), "{body}");
+        assert!(body.starts_with("Here's what's new from the people you read that you haven't read yet.\n\nAlpha\n\n  On walking\n  I walked to the sea.\n  https://alpha.example/walking\n"), "{body}");
         assert!(
             body.contains("Read them in nine turtles: https://app.test/"),
             "{body}"
@@ -157,7 +158,7 @@ mod tests {
         let body = compose(&[], true, "h", "s");
         assert!(
             body.starts_with(&format!(
-                "Here's what the people you read wrote this week.\n\n{MOVED}\n"
+                "Here's what's new from the people you read that you haven't read yet.\n\n{MOVED}\n"
             )),
             "{body}"
         );
