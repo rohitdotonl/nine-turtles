@@ -61,7 +61,7 @@ Press **Done** to save, or **Cancel** to leave everything as it was. On a
 phone, Done is along the bottom of the screen, and the **×** at the top
 leaves everything as it was. If you
 leave Edit any other way, your changes wait there for you, marked **Not saved
-yet.**, until you press Done or Cancel.
+yet.**, until you press Done or Cancel (or the × on a phone).
 
 ## Join someone's sources
 

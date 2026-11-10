@@ -191,7 +191,7 @@
     <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
     {#if phone}
       <!-- The X stands for Cancel, as on a phone's Edit folder (decision 0235). -->
-      <button type="button" onclick={cancel} aria-label="Close" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={20} /></button>
+      <button type="button" onclick={cancel} aria-label="Close" title="Close without saving" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={20} /></button>
     {:else}
     <div class="flex shrink-0 gap-2">
       <button type="button" class="btn" onclick={cancel}>Cancel</button>

@@ -84,8 +84,9 @@
   const joined = (done: Notice, lead: number) => go({ kind: "feed", id: lead }, done);
 </script>
 
-<!-- On a phone, Edit and a source's settings end with Done at the screen's foot, so nothing pads below it (decision 0243). -->
-<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? ["px-5 pt-3", route.kind === "about" && "pb-10"] : "reading-top scroll-gutter px-5 pb-16 md:px-14"]}>
+<!-- On a phone, Edit and a source's settings end with Done at the screen's foot, so nothing pads below it, and a field the
+  keyboard reaches scrolls clear of Done rather than behind it (decision 0243, the first floor's visible focus). -->
+<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? ["px-5 pt-3", route.kind === "about" ? "pb-10" : "scroll-pb-24"] : "reading-top scroll-gutter px-5 pb-16 md:px-14"]}>
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : "reading-column"}>
   <div class={["flex w-full max-w-[36rem] flex-col gap-6 font-sans text-base", phone && "flex-1"]}>

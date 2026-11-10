@@ -29,7 +29,11 @@ where every sheet's main button goes.
   away; Escape and Back still keep them. A source's own settings, opened
   from Edit with ›, keep their "‹ Edit …" and have Done at the foot too,
   so the two screens of editing someone finish in the same place. A
-  computer keeps Cancel and Done beside the title.
+  computer keeps Cancel and Done beside the title. Edit stays their page
+  turned into settings, so its title and × scroll with the form rather
+  than sitting in a top line that never scrolls as Add's does; the page
+  keeps room at its foot so a field the keyboard reaches is never hidden
+  behind Done.
 
 **Not done.** A1 (a bottom bar for a list's Search and •••, Rohit chose to
 keep them in the title line), A3 (Edit and Choose… always at the top
