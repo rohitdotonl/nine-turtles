@@ -7,6 +7,7 @@
   opens FinishSignUp instead, decision 0154.)
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import { confirmEmail, explainLink, ticketFrom } from "./accounts";
@@ -67,7 +68,7 @@
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <button type="button" autofocus aria-disabled={busy} aria-describedby="confirm-help confirm-message" onclick={confirm} class="btn-primary rounded-lg">Confirm email</button>
+        <button type="button" autofocus aria-disabled={busy} aria-describedby="confirm-help confirm-message" onclick={confirm} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
       </div>
     {/if}
   </div>

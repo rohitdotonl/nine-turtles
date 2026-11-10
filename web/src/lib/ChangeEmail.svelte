@@ -8,6 +8,7 @@
   Send link at the screen's foot.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
@@ -103,11 +104,11 @@
     {#if sheet}
       <div class="sheet-actions">
         <button type="button" onclick={onCancel} class="btn">Cancel</button>
-        <button type="submit" aria-disabled={busy} class="btn-primary">Send link</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Send link" doing="Sending…" /></button>
       </div>
     {:else}
       <div class="page-action">
-        <button type="submit" aria-disabled={busy} class="btn-primary">Send link</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Send link" doing="Sending…" /></button>
       </div>
     {/if}
   </form>

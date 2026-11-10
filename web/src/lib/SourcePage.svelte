@@ -5,6 +5,7 @@
   and goes back to Edit; "‹ Edit Alpha" or Escape goes back unchanged.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import SourceFields from "./SourceFields.svelte";
   import { editFeed, refused, type Notice } from "./feeds";
@@ -85,7 +86,7 @@
       <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">
         {PLACE_NAMES[source.place ?? "blog"]}<span class="font-normal text-muted"> · {placeShownAs(source)}</span>
       </h2>
-      <button type="submit" form={formId} aria-disabled={busy} class="btn-primary shrink-0">Done</button>
+      <button type="submit" form={formId} aria-disabled={busy} class="btn-primary shrink-0"><Waiting {busy} word="Done" doing="Saving…" /></button>
     </div>
   </div>
 

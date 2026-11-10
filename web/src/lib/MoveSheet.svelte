@@ -7,6 +7,7 @@
   for one person. Cancel or Escape closes only the sheet.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import Sheet from "./Sheet.svelte";
   import type { Folder } from "./shapes";
@@ -96,7 +97,7 @@
       </p>
       <div class="sheet-actions">
         <button type="button" onclick={onClose} class="btn">Cancel</button>
-        <button type="submit" aria-disabled={busy} class="btn-primary">Move</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Move" doing="Moving…" /></button>
       </div>
     </form>
   </Sheet>

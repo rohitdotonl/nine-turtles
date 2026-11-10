@@ -17,6 +17,7 @@
   full width at the screen's foot (decision 0052).
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
@@ -108,12 +109,12 @@
 
   {#if page}
     <div class="page-action">
-      <button type="submit" aria-disabled={held} class="btn-primary">Follow</button>
+      <button type="submit" aria-disabled={held} class="btn-primary"><Waiting {busy} word="Follow" doing="Following…" /></button>
     </div>
   {:else if onCancel}
     <div class="sheet-actions">
       <button type="button" onclick={onCancel} class="btn">Not now</button>
-      <button type="submit" aria-disabled={held} class="btn-primary">Follow</button>
+      <button type="submit" aria-disabled={held} class="btn-primary"><Waiting {busy} word="Follow" doing="Following…" /></button>
     </div>
   {/if}
 </form>

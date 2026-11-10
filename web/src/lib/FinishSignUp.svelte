@@ -13,6 +13,7 @@
   run out says so calmly, and the keyboard goes to what it says.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
@@ -106,7 +107,7 @@
         <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
-        <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Confirm email</button>
+        <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
       </div>
     </form>
   {:else if here === "password"}
@@ -129,7 +130,7 @@
         <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
-        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Confirm email</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
         <p class="text-center text-small">Forgot it? <a href="/sign-up" onclick={signUpAgain} class="text-link">Sign up again</a></p>
       </div>
     </form>

@@ -8,6 +8,7 @@
   a Show button, as on the sign-in pages (decision 0191).
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import PasswordField from "./PasswordField.svelte";
@@ -101,11 +102,11 @@
     {#if sheet}
       <div class="sheet-actions">
         <button type="button" onclick={onCancel} class="btn">Cancel</button>
-        <button type="submit" aria-disabled={busy} class="btn-primary">Change password</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Change password" doing="Changing…" /></button>
       </div>
     {:else}
       <div class="page-action">
-        <button type="submit" aria-disabled={busy} class="btn-primary">Change password</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Change password" doing="Changing…" /></button>
       </div>
     {/if}
   </form>

@@ -30,6 +30,7 @@
   import { tick } from "svelte";
   import AddressBox from "./AddressBox.svelte";
   import Icon from "./Icon.svelte";
+  import TextButton from "./TextButton.svelte";
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Article } from "./shapes";
@@ -78,6 +79,27 @@
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
+  /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened.
+   * A polite live line, not a second "status": the toolbar's line is the pane's one status. */
+  let opening = $state(false);
+  let copied = $state("");
+  let copyFailed = $state(false);
+  // Back from the email app: the page was hidden while it opened, so the line has done its job.
+  $effect(() => {
+    const back = () => document.visibilityState === "visible" && (opening = false);
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  });
+
+  async function copyAddress() {
+    try {
+      await navigator.clipboard.writeText(address ?? "");
+      copied = "Copied.";
+    } catch {
+      copyFailed = true;
+      copied = "The address couldn't be copied. Select it above and copy it yourself.";
+    }
+  }
 
   // Another article starts with the button, not a half-typed address.
   $effect(() => {
@@ -87,6 +109,9 @@
     typed = "";
     message = "";
     chosen = undefined;
+    opening = false;
+    copied = "";
+    copyFailed = false;
   });
 
   /** Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight. */
@@ -96,6 +121,7 @@
     if (address) {
       window.location.href = writeBackLink(address, subject, quoted);
       chosen = undefined;
+      opening = true;
       return;
     }
     asking = true;
@@ -141,6 +167,7 @@
     // The email app opens while the press still counts as the reader's own; the address is kept meanwhile.
     window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), subject, quoted);
     chosen = undefined;
+    opening = true;
     busy = true;
     const problem = await keepAddress(place.id, typed);
     if (problem) {
@@ -179,9 +206,12 @@
         onNotNow={() => void notNow()}
       />
     {:else if address}
-      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></a>
+      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></a>
       <p class="to">{address}</p>
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
+      <p class={["opening", !opening && "sr-only"]} aria-live="polite">
+        {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-1.5", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
+      </p>
     {:else}
       <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></button>
     {/if}
@@ -211,6 +241,16 @@
     max-width: 100%;
     white-space: normal;
     text-align: center;
+  }
+  /* Once pressed: the email app is opening, and the way out if it didn't (decision 0229). */
+  .opening {
+    margin-top: 0.25rem;
+    color: var(--ink-2);
+    font-size: var(--text-meta);
+    text-align: center;
+  }
+  .on-page .opening {
+    text-align: start;
   }
   /* Where it goes, quietly, so the press holds no surprise. */
   .to {

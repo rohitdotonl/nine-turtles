@@ -32,6 +32,8 @@
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
+  import AwayNote from "./AwayNote.svelte";
+  import type { ListNote } from "./listNote";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
@@ -68,6 +70,7 @@
     onWriter,
     beforeToolbar,
     library,
+    listNote = false,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
@@ -95,6 +98,8 @@
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
     library: LoadedLibrary;
+    /** The list's note, while the list isn't on screen (decision 0229); undefined while the list shows it. */
+    listNote?: ListNote | false;
   } = $props();
 
   /** Write back, at the article's end; the paper plane and `w` start it too. */
@@ -503,7 +508,7 @@
     use:edge
     bind:this={scroller}
     onscroll={scrolled}
-    class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
+    class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-14", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
@@ -608,6 +613,7 @@
     </article>
   </div>
 
+  {#if listNote !== false}<AwayNote note={listNote} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
   {#if phone && beforeToolbar}
     {@render beforeToolbar()}
   {/if}

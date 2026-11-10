@@ -27,6 +27,7 @@
   import { placeLabels, placesOf, placesWatch, rowFor } from "./people";
   import FailingLine from "./FailingLine.svelte";
   import ItemList from "./ItemList.svelte";
+  import type { ListNote } from "./listNote";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
   import Settings from "./Settings.svelte";
@@ -170,10 +171,9 @@
    * never again on this device.
    */
   const TIP_KEY = "nine-turtles.shortcut-tip-seen";
-  let tipSeen = $state(readTipSeen());
-  function readTipSeen(): boolean {
-    return deviceText(TIP_KEY) !== null;
-  }
+  let tipSeen = $state(deviceText(TIP_KEY) !== null);
+  /** The list's note, drawn in the reading area while the list isn't on screen (decision 0229). */
+  let listNote: ListNote | undefined = $state();
   $effect(() => {
     if (tipSeen || (!selected && !cheatSheetOpen)) return;
     tipSeen = true;
@@ -336,7 +336,7 @@
   const menuHands: MenuHands = {
     shortcut: (kind) => (phone ? undefined : keyFor(kind)),
     markAllRead: () => itemList?.markAllRead(),
-    refresh: () => itemList?.refresh(),
+    refresh: () => itemList?.refresh(true),
     changeSort: (next) => settings.changeSort(next),
     say: (message) => itemList?.say(message),
     go: (place) => go(place),
@@ -872,7 +872,7 @@
     inArticle: (what) => articleView?.act(what),
     markUnread: () => itemList?.markUnread(),
     undo: () => itemList?.undo(),
-    refresh: () => itemList?.refresh(),
+    refresh: () => itemList?.refresh(true),
     setTextSize: (size) => (preferences.textSize = size),
   };
 </script>
@@ -1192,7 +1192,7 @@
               <!-- The list, with "New articles · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->
               {#key listKey}
                 <ItemList
-                  bind:this={itemList}
+                  bind:this={itemList} bind:note={listNote}
                   bind:selected
                   {source}
                   order={settings.sort}
@@ -1221,7 +1221,7 @@
           {:else if selected}
             <ArticleView
               bind:this={articleView}
-              article={selected} {library}
+              article={selected} {library} listNote={panes.list ? false : listNote}
               toggles={phone || panes.list ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences
