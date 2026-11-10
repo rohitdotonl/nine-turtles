@@ -24,7 +24,9 @@ would removing it make the task harder?
   and the line under each group says where the others are. `+` and `-`
   still change the text size anywhere.
 - **No words that repeat the screen** (P05-3): Edit loses "Listed under
-  People." and "Type a name to make a folder."; the paragraph and "+ Add
+  People." ("Type a name to make a folder." stays: the field's placeholder
+  disappears once you type, so the line is its visible name then, the
+  first floor); the paragraph and "+ Add
   another place" become one link, "+ Add their newsletter, videos or
   podcast"; Everyone you follow loses its closing paragraph. Lines that
   say something the screen can't show stay ("Write back opens your own
@@ -55,6 +57,9 @@ would removing it make the task harder?
   second copy.
 
 **Why.** Each double was small, and together they made a calm screen
-busy. Every removed copy has a better one that stays, so nothing a reader
-could do before is lost: searching starred articles is searching Starred,
-and the text settings change beside the text they change.
+busy. Almost every removed copy has a better one that stays: searching
+starred articles is searching Starred, and the text settings change beside
+the text they change. Two things go for good, on purpose: searching only
+the starred articles of one folder or person (search Starred instead and
+look at the bylines), and hiding the list alone while the sidebar stays
+(full-screen reading hides both).

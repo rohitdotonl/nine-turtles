@@ -274,7 +274,6 @@
   });
   /** The list's first article: the empty reading area offers j only when there's one to open. */
   let listFirst: Article | undefined = $state();
-  /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
   /** Who Add just found, while it asks whether they're a person or a publication: the sheet's title asks about them. */
@@ -662,7 +661,7 @@
     }
   }
 
-  /** \: hide the sidebar and the list together, for just the article; pressed again, both come back. */
+  /** Full-screen reading (`f`, the article's More menu, decision 0241): hide the sidebar and the list together; again, both come back. */
   function toggleBoth() {
     if (phone || !isList(route)) return;
     const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;

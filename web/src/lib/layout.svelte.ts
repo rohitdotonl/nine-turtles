@@ -154,7 +154,7 @@ export class ScreenLayout {
     return hiding;
   }
 
-  /** \: hides the sidebar and the list together, for just the article, or brings both back; answers whether they hid. */
+  /** Full-screen reading (`f`, or the article's More menu): hides the sidebar and the list together, for just the article, or brings both back; answers whether they hid. */
   toggleBoth(): boolean {
     const hiding = this.panes.sidebar || this.panes.list;
     this.sidebarChoice = hiding ? "hidden" : "shown";

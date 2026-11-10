@@ -72,15 +72,27 @@ test("a fresh nine turtles shows the welcome in the reading area: the paste fiel
   // readers), so no line sits left-aligned under the centred title.
   await expect(field(page)).toHaveAttribute("placeholder", "Their website's address");
   await expect(reading.locator("label[for='feed-address']")).toHaveClass(/sr-only/);
-  // "Bring your list from another app…", an underlined link in the text color just under the field and
-  // centred under it, 44px tall to touch (decisions 0045, 0048, 0055), opens the file chooser at once (decision 0137).
+  // "Bring your list from another app…", an underlined link in the text color, 44px tall to touch
+  // (decisions 0045, 0055), shares one line with "New to feeds?" at the foot, under the examples
+  // (decision 0241), and opens the file chooser at once (decision 0137).
   const importLink = reading.getByRole("button", { name: "Bring your list from another app…" });
-  const [fieldBox, importBox, addBox] = await Promise.all([field(page).boundingBox(), importLink.boundingBox(), reading.getByRole("button", { name: "Add", exact: true }).boundingBox()]);
-  expect(importBox!.y - (fieldBox!.y + fieldBox!.height)).toBeLessThanOrEqual(12);
+  const newTo = reading.getByRole("link", { name: "New to feeds? Start here" });
+  const [fieldBox, importBox, newBox, addBox, tryBox] = await Promise.all([
+    field(page).boundingBox(),
+    importLink.boundingBox(),
+    newTo.boundingBox(),
+    reading.getByRole("button", { name: "Add", exact: true }).boundingBox(),
+    reading.getByText("Or try one").boundingBox(),
+  ]);
+  expect(tryBox!.y).toBeGreaterThan(fieldBox!.y + fieldBox!.height);
+  expect(importBox!.y).toBeGreaterThan(tryBox!.y);
+  expect(Math.abs(importBox!.y - newBox!.y)).toBeLessThan(3);
   expect(importBox!.height).toBeGreaterThanOrEqual(44);
   await expect(importLink).toHaveCSS("text-decoration-line", "underline");
+  // The line is centred under the field and Add.
   const rowCentre = (fieldBox!.x + addBox!.x + addBox!.width) / 2;
-  expect(Math.abs(importBox!.x + importBox!.width / 2 - rowCentre)).toBeLessThan(3);
+  const lineCentre = (newBox!.x + importBox!.x + importBox!.width) / 2;
+  expect(Math.abs(lineCentre - rowCentre)).toBeLessThan(6);
   // A file that isn't a list is said under the link, and the welcome stays.
   const chooser = page.waitForEvent("filechooser");
   await importLink.click();

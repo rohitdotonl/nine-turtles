@@ -87,6 +87,22 @@ test.describe("on a wide window", () => {
     await page.getByRole("button", { name: "Sidebar and article list" }).click();
     await expect(list).toBeVisible();
     await expect(nav).toBeVisible();
+
+    // Full-screen reading is never only a key: an article's More menu has it, with the key named.
+    await page.keyboard.press("j");
+    const more = article(page).getByRole("button", { name: "More actions" });
+    await more.click();
+    await expect(page.getByRole("menuitem", { name: /^Full-screen reading/ })).toContainText("F");
+    await page.getByRole("menuitem", { name: /^Full-screen reading/ }).click();
+    await expect(list).toBeHidden();
+    await expect(nav).toBeHidden();
+    // From the keyboard: Enter opens the menu and the item, and both come back.
+    await more.focus();
+    await page.keyboard.press("Enter");
+    await page.getByRole("menuitem", { name: /^Leave full-screen reading/ }).focus();
+    await page.keyboard.press("Enter");
+    await expect(list).toBeVisible();
+    await expect(nav).toBeVisible();
   });
 
   test("the keyboard starts on the list's title, and Skip to articles is the first Tab stop", async ({ page }) => {
@@ -406,15 +422,15 @@ test.describe("on a wide window", () => {
     await expect(aa).toHaveAttribute("aria-expanded", "false");
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
 
-    // A press outside closes it too, and Settings shows the same choices.
+    // A press outside closes it too. Settings shows the same Page; text size and font are only here (decision 0241).
     await aa.click();
     await expect(panel).toBeVisible();
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toBeChecked();
+    await expect(page.getByText("Text size and font are in Aa, above any article.")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
   test("a footnote link stays inside the article", async ({ page }) => {

@@ -109,14 +109,10 @@
   >
     <!-- The one search field's look, shared with the sidebar's find field (decision 0051). -->
     <span class="flex w-4 shrink-0 justify-center text-muted"><Icon name="search" size={14} /></span>
-    <!--
-      One line for the usual one or two chips: they shrink and end in "…" (their whole text is in their
-      tooltip and their Remove button's name). With more, the row wraps so every chip stays readable.
-    -->
-    <div class={["flex min-w-0 flex-1 items-center gap-1", chips.length > 2 && "flex-wrap"]}>
+    <!-- One line: the chip shrinks and ends in "…" (its whole text is in its tooltip and its Remove button's name). -->
+    <div class="flex min-w-0 flex-1 items-center gap-1">
       {#each shownChips as chip (chip.key)}
-        <span class={["chip my-1.5 flex min-w-0 shrink items-center rounded-md bg-[var(--tone)] pl-2 text-small whitespace-nowrap", chips.length > 2 ? "max-w-full" : "max-w-[60%]"]}>
-          
+        <span class={["chip my-1.5 flex min-w-0 shrink items-center rounded-md bg-[var(--tone)] pl-2 text-small whitespace-nowrap max-w-[60%]"]}>
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={remove} class="-my-2.5 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" size={14} />

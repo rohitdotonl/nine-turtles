@@ -233,9 +233,11 @@
         {/each}
         <label class="inset-row">
           <span class="sr-only">New folder</span>
-          <input bind:value={newFolder} type="text" autocomplete="off" placeholder="New folder…" class="inset-input" />
+          <input bind:value={newFolder} type="text" autocomplete="off" placeholder="New folder…" class="inset-input" aria-describedby="{formId}-new-folder" />
         </label>
       </div>
+      <!-- Kept (decision 0241): a placeholder disappears once you type, so this is the field's visible name then (first floor). -->
+      <span id="{formId}-new-folder" class="field-help mt-0">Type a name to make a folder.</span>
     </fieldset>
 
     {#if one}
