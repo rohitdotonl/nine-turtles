@@ -14,7 +14,7 @@ related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
   see one at a time.
 </p>
 
-On an iPhone or iPad, tap the top of the screen (where the clock is) to go
+On an iPhone, tap the top of the screen (where the clock is) to go
 back to the top of the list or article you're in.
 
 ## The sidebar

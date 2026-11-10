@@ -8,19 +8,22 @@ Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"
 
 **Decision.**
 
-1. **On an iPhone or iPad, tapping the top of the screen** (the clock and
-   battery) scrolls the list, article or page on screen back to its top, as
-   in every app there. At once: nothing animates (DESIGN.md, "instant and
+1. **On an iPhone, tapping the top of the screen** (the clock and battery)
+   scrolls what's on screen back to its top, as in every app there: an open
+   sheet, or else the list, article or page (the list behind a sheet keeps
+   its place). At once: nothing animates (DESIGN.md, "instant and
    still").
 2. **How.** iOS scrolls only the page itself to the top, and nine turtles'
    screens scroll inside panes, so the tap did nothing. In the phone layout
-   on iOS, the page is one pixel taller than the screen and rests one pixel
-   down. When the page reaches its top with no finger on the screen (the
+   on iOS, the page has one spare pixel above the app and rests one pixel
+   down, so the app still fills the screen exactly. When the page reaches its top with no finger on the screen (the
    tap), the pane on screen goes to its top and the page goes back down its
    pixel. A move made by a finger, or while the page is still coasting just
-   after one, is put back without moving the pane.
-3. **Only iOS, only the phone layout.** Android and computers have no such
-   tap, so nothing changes there.
+   after one, or while the reader is typing (the keyboard closing moves the
+   page too), is put back without moving anything.
+3. **Only iOS, only the phone layout:** an iPhone, and an iPad showing one
+   screen at a time. A full-width iPad shows the three panes, where a tap
+   couldn't say which to scroll; Android and computers have no such tap.
 
 **Why.** A habit every iPhone reader's hands already have
 ("Fit what people already do").

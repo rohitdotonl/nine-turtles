@@ -11,7 +11,8 @@ test.skip(({ isMobile }) => !isMobile, "the phone layout only");
 
 /** Signs in on a phone that says it's an iPhone, and opens the feeds screen. */
 async function openOnIPhone(page: Page, iPhone: boolean) {
-  if (iPhone) await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "platform", { get: () => "iPhone" }));
+  const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+  if (iPhone) await page.addInitScript((agent) => Object.defineProperty(Navigator.prototype, "userAgent", { get: () => agent }), IPHONE);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
@@ -50,11 +51,29 @@ test("tapping the top of an iPhone's screen scrolls the pane to its top, and the
     dispatchEvent(new TouchEvent("touchstart", { touches: [new Touch({ identifier: 1, target: document.body, clientX: 10, clientY: 10 })] }));
     scrollTo(0, 0);
   });
+  expect(await paneTop(page)).toBe(600);
+  // The page waits for the finger to leave before going back down its pixel.
+  await page.evaluate(() => dispatchEvent(new TouchEvent("touchend", { touches: [] })));
   await expect.poll(() => page.evaluate(() => scrollY)).toBe(1);
+  expect(await paneTop(page)).toBe(600);
+
+  // With a sheet open, the tap takes the sheet to its top and leaves the list behind it where it was
+  // (once the page has stopped coasting after the finger left).
+  await page.waitForTimeout(900);
+  await page.evaluate(() => {
+    const sheet = document.createElement("dialog");
+    sheet.style.maxHeight = "50vh";
+    sheet.innerHTML = '<div style="height: 3000px">A long sheet</div>';
+    document.body.append(sheet);
+    sheet.showModal();
+    sheet.scrollTop = 300;
+    scrollTo(0, 0);
+  });
+  await expect.poll(() => page.evaluate(() => document.querySelector("dialog[open]")!.scrollTop)).toBe(0);
   expect(await paneTop(page)).toBe(600);
 });
 
 test("on other phones the page stays put", async ({ page }) => {
   await openOnIPhone(page, false);
-  expect(await page.evaluate(() => [scrollY, document.body.style.minHeight])).toEqual([0, ""]);
+  expect(await page.evaluate(() => [scrollY, document.body.style.paddingTop])).toEqual([0, ""]);
 });
