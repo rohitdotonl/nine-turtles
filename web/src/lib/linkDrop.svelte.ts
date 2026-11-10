@@ -18,6 +18,8 @@
 // when a person is dragged onto it (sidebarDrag.ts). A drop into a text
 // field, or while a sheet is open, is the browser's own.
 
+import { dropMarker } from "./dropMark";
+
 /** The folder a link was dropped on, for "Follow <name>?" to file them in once followed. */
 export const droppedOn: { folder: { id: number; name: string } | null } = $state({ folder: null });
 
@@ -61,7 +63,8 @@ export type LinkDropOptions = {
 /** Listens on the whole window; returns what stops listening. */
 export function listenForDrops(options: LinkDropOptions): () => void {
   const page = document.documentElement;
-  let marked: HTMLElement | undefined;
+  const folders = dropMarker();
+  const mark = folders.mark;
   /** A drag that began on this page: "away" for a link elsewhere, "own" for anything else (never ours). */
   let started: "away" | "own" | undefined;
 
@@ -71,13 +74,6 @@ export function listenForDrops(options: LinkDropOptions): () => void {
     (page.dataset.dragging !== undefined && !ours()) ||
     document.querySelector("dialog[open]") !== null ||
     (target instanceof Element && target.closest("input, textarea, [contenteditable]") !== null);
-
-  function mark(folder: HTMLElement | undefined) {
-    if (folder === marked) return;
-    delete marked?.dataset.drop;
-    marked = folder;
-    if (marked) marked.dataset.drop = "";
-  }
 
   function clear() {
     if (ours()) delete page.dataset.dragging;
@@ -113,7 +109,7 @@ export function listenForDrops(options: LinkDropOptions): () => void {
   function drop(event: DragEvent) {
     if (!ours()) return;
     event.preventDefault();
-    const folder = marked ? Number(marked.dataset.dropFolder) : null;
+    const folder = folders.marked ? Number(folders.marked.dataset.dropFolder) : null;
     clear();
     const file = feedListFile(event.dataTransfer?.files);
     if (file) return options.onFile(file);

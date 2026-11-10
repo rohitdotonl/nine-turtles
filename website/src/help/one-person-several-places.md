@@ -3,7 +3,7 @@ title: See everything one person makes in one place
 description: Each person and publication has a page of their own. When someone has a blog, a YouTube channel and a newsletter, join them so they're one person, with one list.
 groupId: keeping-things-tidy
 order: 2
-spec: 36
+spec: 5 and 36
 updated: 2026-11-10
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
@@ -77,7 +77,12 @@ To join sources you already follow:
 3. Choose someone you already follow, or paste the address of their blog,
    channel or newsletter.
 
-If the two were in different folders, nine turtles asks which folders to
+Or drag one onto the other in the sidebar: while you hold them over
+someone's row, the name you're holding says **One person with …**. Let go
+and they're one person, under the name of the one you dropped them on,
+in every folder either was in.
+
+If the two were in different folders, + Add a source asks which folders to
 keep. Their list now holds everything, newest first, each article marked
 **Blog**, **Video**, **Newsletter** or **Podcast**. Changed your mind?
 Press **Undo**.

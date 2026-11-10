@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, markAllFromMenu, settingsSaved, signIn, tabTo } from "./screens";
 
@@ -37,6 +37,24 @@ async function openBlog(page: Page, width = 1280): Promise<string> {
 /** One of the blog's rows, wherever it's listed. */
 function row(page: Page, blog: string, title: string) {
   return page.getByRole("button", { name: new RegExp(`${escape(title)}.*Blog ${blog}`) });
+}
+
+/**
+ * Scrolls Unread down until `target` has loaded: the tests share one nine
+ * turtles, so other tests' blogs can put this one's articles past the first
+ * page (older ones load as the list's end is reached).
+ */
+async function reach(page: Page, target: Locator) {
+  await expect
+    .poll(
+      async () => {
+        if ((await target.count()) > 0) return true;
+        await page.locator(".item-row").last().scrollIntoViewIfNeeded();
+        return false;
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true);
 }
 
 /** The blog's link in the sidebar, with its unread number kept unseen in data-unread. */
@@ -373,6 +391,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press("u");
     await expect(page).toHaveURL(/\/unread$/);
+    await reach(page, row(page, blog, MIDDLE));
     await row(page, blog, MIDDLE).click();
     await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, unread/);
     await expect(row(page, blog, MIDDLE)).toBeVisible();
@@ -382,6 +401,7 @@ test.describe("on a wide window", () => {
     await expect(row(page, blog, MIDDLE)).toBeVisible();
     await page.keyboard.press("g");
     await page.keyboard.press("u");
+    await reach(page, row(page, blog, NEWEST));
     await expect(row(page, blog, NEWEST)).toBeVisible();
     await expect(row(page, blog, MIDDLE)).toHaveCount(0);
   });

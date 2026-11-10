@@ -64,6 +64,7 @@
   import { longPress } from "./longPress";
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { opensElsewhere } from "./articleLinks";
+  import { carriesArticle, listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
   import ListArriving from "./ListArriving.svelte";
   import { askingEvery, bringsIn } from "./asking";
@@ -336,6 +337,11 @@
     // The sidebar follows the same asks, so names and "checking…" catch up, and never while the reader reads.
     if (filling) onChecking();
     void askForNew(filling);
+  }));
+  // A row let go on Starred is starred, as `s` does (decision 0250).
+  onMount(() => listenForStarring((id) => {
+    const article = articles.find((each) => each.id === id);
+    if (article && !article.starred) toggleStar(article);
   }));
 
   function select(index: number) {
@@ -693,6 +699,7 @@
           }}
           use:longPress={(x, y) => openMenu(index, x, y)}
           use:opensElsewhere={() => addressOf(article)}
+          use:carriesArticle={() => article}
           class="item-row place block cursor-pointer pr-4 text-left"
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
