@@ -124,6 +124,8 @@
   let arrivals = $state(0);
   let problem = $state(false);
   let copied = $state("");
+  /** A name set apart (Unicode's first-strong isolate), so a right-to-left one keeps the print credit's commas in order. */
+  const apart = (name: string) => `${String.fromCodePoint(0x2068)}${name}${String.fromCodePoint(0x2069)}`;
   let scroller: HTMLDivElement | undefined = $state();
   /** The article's own text, whose blocks mark your place in it. */
   let text: HTMLDivElement | undefined = $state();
@@ -598,7 +600,7 @@
         <WriteBack bind:this={writeBack} {article} {library} quotes={() => marks?.quotes() ?? []} />
       {/if}
       <!-- Only on paper (print.css, decision 0235): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
-      <p class="print-credit" lang="en" data-credit={`From ${article.feedTitle}${author ? `, by ${author}` : ""}, ${date(article.at)}.${article.link ? ` The original: ${article.link}` : ""}`}></p>
+      <p class="print-credit" lang="en" data-credit={`From ${apart(article.feedTitle)}${author ? `, by ${apart(author)}` : ""}, ${date(article.at)}.${article.link ? ` The original: ${article.link}` : ""}`}></p>
     </article>
   </div>
 

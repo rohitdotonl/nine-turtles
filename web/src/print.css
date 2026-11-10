@@ -17,6 +17,18 @@
     margin: 2cm;
   }
 
+  /* White's page with black ink, whichever theme is on screen, so what the
+     article draws in the ink (a highlight, the closing rule, a quotation's
+     line) prints dark on white too. */
+  :root {
+    color-scheme: light;
+    --paper: #fff !important;
+    --ink: #000 !important;
+    --ink-2: #3c3c40 !important;
+    --muted: #5f5f64 !important;
+    --faint: #6b6b70 !important;
+  }
+
   /* Everything that neither holds the article nor is inside it goes. */
   html:has(.article) body :not(:has(.article), .article, .article *) {
     display: none !important;
@@ -52,9 +64,24 @@
     padding: 0 !important;
   }
 
-  /* The app's own controls (Write back too) and the players, which can't play on paper. */
+  /* A highlight keeps a line under its words: a browser may leave the tone
+     behind them off the paper, and never color alone. Pictures print at
+     full brightness. */
+  .article mark.highlight {
+    text-decoration: underline 1.5px;
+    text-underline-offset: 0.15em;
+  }
+
+  .article img,
+  .article svg {
+    filter: none !important;
+  }
+
+  /* The app's own controls (Write back too) and the players, which can't
+     play on paper. The writer's name, a highlight's words at the end and a
+     note's times are the article's own, so they print as plain text. */
   .article .write-back,
-  .article button:not(.writer-link),
+  .article button:not(.writer-link, .quote > button, .time),
   .article iframe,
   .article audio,
   .article video,
@@ -64,7 +91,9 @@
     display: none !important;
   }
 
-  .article .writer-link {
+  .article .writer-link,
+  .article .quote > button,
+  .article .time {
     font: inherit;
     padding: 0;
     border: 0;

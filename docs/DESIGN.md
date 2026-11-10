@@ -313,6 +313,7 @@ Themes are named by the page they give (decision 0176): one setting, **Page**, w
 - **Three inks:** text (titles, where you are), a second ink (read titles, quieter actions); feed names in the sidebar are in full text color and muted grey (meta).
 - Article lines of roughly 65–75 characters, with generous leading.
 - **An article's lists hang in the margin** on a computer (decision 0218): their numbers and bullets sit left of the text, so a list's words start on the same edge as every paragraph, as a set book does. On a phone, and for a list inside a list, they stay inside.
+- **On paper** (decision 0235): printing an article prints it alone, as a page of a book: black ink on white in every theme, pictures at full brightness, a highlight keeping its line under its words and its words at the end, nothing of the app's own (no buttons, players or Write back), and a 10pt credit line at the end naming the publisher, the writer, the date and the original's address.
 
 #### Languages
 - **Interface:** English only in V1.
