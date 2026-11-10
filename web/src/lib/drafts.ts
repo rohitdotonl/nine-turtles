@@ -6,7 +6,7 @@
 // reader throws it away themselves (Discard, Cancel). Nothing is ever
 // dropped on a timer.
 
-import { deviceJson, setDeviceText } from "./device";
+import { deviceJson, deviceStorage, setDeviceText } from "./device";
 import { isRecord } from "./http";
 import { currentTabReader } from "./updates.svelte";
 
@@ -17,6 +17,18 @@ function key(): string {
 function all(): Record<string, unknown> {
   const saved = deviceJson(key());
   return isRecord(saved) ? saved : {};
+}
+
+/** Forgets every reader's drafts on this device: signed out, or another reader signed in, nothing of theirs is left behind (SPEC section 32). */
+export function forgetDrafts(): void {
+  try {
+    const storage = deviceStorage();
+    if (!storage) return;
+    const names = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter((name): name is string => name?.startsWith("nine-turtles.drafts.") === true);
+    for (const name of names) storage.removeItem(name);
+  } catch {
+    // Nothing was kept on this device to begin with.
+  }
 }
 
 /** The draft kept under `name`, if any. */

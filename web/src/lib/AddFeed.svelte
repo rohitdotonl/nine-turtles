@@ -211,6 +211,8 @@
 
   /** Followed: the question "… is…" a person or a publication, before it opens. */
   async function followed(feed: Feed, newest?: string) {
+    // Followed: the address it was typed as is done with.
+    keepDraft("add", undefined);
     // Closed while looking: nothing is left to ask in, so it only joins the sidebar.
     if (closed) {
       onAdded(feed, note);
@@ -270,6 +272,7 @@
     // A source joined to others is always a person (SPEC section 36), so nothing is asked.
     const { refusal } = await join(together.added.map((each) => each.feed.id));
     busy = false;
+    keepDraft("add", undefined);
     onAdded({ ...first.feed, kind: "person" }, [refusal, note].filter(Boolean).join(" ") || undefined);
   }
 

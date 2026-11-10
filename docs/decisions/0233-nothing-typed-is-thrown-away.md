@@ -35,8 +35,10 @@ suggestions 1, 2 and 3 of the critique through the principle "Forgiving"
    keeps these changes here for you." (Add simply has the address back in
    its field.) **Cancel** throws them away (on a phone's Edit folder, its
    X, which stands for Cancel there); Done or Save saves them, and
-   Unsubscribe or Delete forgets them. A source's own settings (only
-   switches) and the sheets that ask for a password or an email keep
+   Unsubscribe or Delete forgets them. Edit for one source keeps its switches
+   (Pause and YouTube's two) with the rest of the form; the separate page a
+   person's source opens on with › (`SourcePage.svelte`, only switches,
+   left by "‹ Edit …") keeps nothing, and the sheets that ask for a password or an email keep
    nothing: a password is never written down.
 
 The critique's message for a failed save said "Press Save again in a
@@ -56,5 +58,10 @@ for each reader, the way changes made offline are kept (`notes.svelte.ts`).
 A draft is written as it's typed, so it survives any way of leaving,
 a reload too, and forgotten once saved, cancelled or discarded; a form's
 draft is kept only while it differs from where it started. Nothing is ever
-dropped on a timer, and nothing reaches the server until it's saved.
+dropped on a timer, and nothing reaches the server until it's saved. Signing
+out, or another reader signing in on the device, forgets every draft
+(`forgetDrafts`, from `App.svelte`'s `forgetDevice`), so nothing typed is
+left behind on a shared computer (SPEC section 32). A draft whose article,
+person or folder is gone is never shown again; it stays small and goes at
+the next sign-out.
 Tests: `web/src/lib/drafts.test.ts` and `web/tests/drafts.spec.ts`.

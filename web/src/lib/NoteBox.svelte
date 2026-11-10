@@ -79,12 +79,12 @@
 <form class={["flex flex-col gap-3", small ? "p-3" : "note-form"]} onsubmit={save}>
   <label class={["font-semibold text-ink", small ? "text-small" : "text-base"]} for={id}>{label}</label>
   {#if kept}
-    <p class="kept text-small text-ink-2">
+    <p id="{id}-kept" class="kept text-small text-ink-2">
       <span><strong class="font-semibold text-ink">Not saved yet.</strong>{#if kept === "left"} Kept from when you left this {on}.{/if}</span>
       {#if onDiscard}<button type="button" class="text-link discard" onclick={onDiscard}>Discard</button>{/if}
     </p>
   {/if}
-  <textarea dir="auto" {id} bind:this={box} bind:value={words} maxlength={LONGEST_NOTE} rows="4" aria-describedby="{id}-message" class="field note-box"></textarea>
+  <textarea dir="auto" {id} bind:this={box} bind:value={words} maxlength={LONGEST_NOTE} rows="4" aria-describedby={kept ? `${id}-kept ${id}-message` : `${id}-message`} class="field note-box"></textarea>
   <p id="{id}-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
   </p>

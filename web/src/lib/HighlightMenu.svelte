@@ -94,7 +94,7 @@
   }
 
   // Kept once the box has its words: before that, an empty box would forget what was kept.
-  let started = false;
+  let started = $state(false);
   $effect(() => {
     if (writing && started) onWords?.(draft);
   });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { keepDraft, keepWhileChanged, keptDraft, keptWords, renameDraft, worthKeeping } from "./drafts";
+import { forgetDrafts, keepDraft, keepWhileChanged, keptDraft, keptWords, renameDraft, worthKeeping } from "./drafts";
 
 function storage(): Storage {
   const kept = new Map<string, string>();
@@ -49,6 +49,25 @@ describe("what the reader typed and hasn't saved (decision 0233)", () => {
     renameDraft("note:highlight:-5", "note:highlight:41");
     expect(keptWords("note:highlight:41")).toBe("A thought");
     expect(keptDraft("note:highlight:-5")).toBeUndefined();
+  });
+
+  it("forgets every reader's drafts, and nothing else, when the device is forgotten", () => {
+    const kept = new Map<string, string>([
+      ["nine-turtles.drafts.1", "{}"],
+      ["nine-turtles.drafts.2", "{}"],
+      ["nine-turtles.theme", "night"],
+    ]);
+    vi.stubGlobal("localStorage", {
+      getItem: (key: string) => kept.get(key) ?? null,
+      setItem: (key: string, value: string) => void kept.set(key, value),
+      removeItem: (key: string) => void kept.delete(key),
+      key: (index: number) => [...kept.keys()][index] ?? null,
+      get length() {
+        return kept.size;
+      },
+    });
+    forgetDrafts();
+    expect([...kept.keys()]).toEqual(["nine-turtles.theme"]);
   });
 
   it("reads words only as words", () => {

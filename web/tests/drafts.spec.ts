@@ -95,14 +95,16 @@ test("a note on highlighted words survives Escape, and waits at the article's en
   const menuBox = page.getByRole("textbox", { name: "A note on these words" });
   await expect(menuBox).toHaveValue("Compare with the spring list");
   await expect(page.getByText("Not saved yet.")).toBeVisible();
+  // What's typed there is kept too, however the box was opened.
+  await page.keyboard.type(", and the autumn one");
   await page.keyboard.press("Escape");
 
   // Coming back to the article, its box is open at the end, under the highlight.
   await page.getByRole("button", { name: button(OLDER) }).first().click();
   await page.getByRole("button", { name: button(NEWEST) }).first().click();
-  await expect(ends.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Compare with the spring list");
+  await expect(ends.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Compare with the spring list, and the autumn one");
   await ends.getByRole("button", { name: "Save" }).click();
-  await expect(ends.getByText("Compare with the spring list")).toBeVisible();
+  await expect(ends.getByText("Compare with the spring list, and the autumn one")).toBeVisible();
   await expect(ends.getByRole("textbox")).toHaveCount(0);
 });
 

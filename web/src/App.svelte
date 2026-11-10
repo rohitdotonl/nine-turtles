@@ -34,6 +34,7 @@
   import { forgetLoaded } from "./lib/articles";
   import { noConnection } from "./lib/connection.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
+  import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
 
   let session: Session | undefined = $state();
@@ -46,6 +47,7 @@
    * the articles fetched so far, and the copies kept for reading offline with their waiting marks.
    */
   async function forgetDevice() {
+    forgetDrafts();
     forgetListening();
     forgetLoaded();
     await forget();
