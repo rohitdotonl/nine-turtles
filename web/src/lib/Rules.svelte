@@ -224,13 +224,13 @@
     {/each}
     {#if muted > 0}
       <a href="/settings/hidden" onclick={onMuted} data-settings-row="muted" class="inset-row inset-action"
-        >Hidden articles<span class="row-glyph flex items-center"><Icon name="chevron-right" size={18} /></span></a
+        >Hidden articles<span class="row-glyph flex items-center"><Icon name="chevron-right" /></span></a
       >
     {/if}
   </div>
   <!-- Always here, so screen readers hear the words as they appear. -->
   <p id="hide-empty" role="alert" class={["inset-foot flex items-start gap-1.5 text-danger", !empty && "sr-only"]}>
-    {#if empty}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>Type a word or phrase first.{/if}
+    {#if empty}<span class="mt-px shrink-0"><Icon name="alert" /></span>Type a word or phrase first.{/if}
   </p>
   <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>
     <NoteLine {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onClose={closeNote} />

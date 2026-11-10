@@ -110,7 +110,8 @@ export function paint(root: Element, highlight: Quote & { id: number; note: stri
   return true;
 }
 
-const NOTE_ICON = `<svg aria-hidden="true" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.75 3.25h7.5l3 3v10.5h-10.5z"/><path d="M7.5 10h5M7.5 13h3.5"/></svg>`;
+// At the icon size beside a word, with its line 1.5px whatever the size (DESIGN.md → "The system").
+const NOTE_ICON = `<svg aria-hidden="true" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path vector-effect="non-scaling-stroke" d="M4.75 3.25h7.5l3 3v10.5h-10.5z"/><path vector-effect="non-scaling-stroke" d="M7.5 10h5M7.5 13h3.5"/></svg>`;
 
 /** Takes every highlight off the text, leaving it as the publisher's feed gave it. */
 export function unpaint(root: Element): void {

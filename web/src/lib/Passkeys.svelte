@@ -277,7 +277,7 @@
         </form>
       {:else}
         <button bind:this={addButton} type="button" class="inset-row inset-action" onclick={startAdding}
-          >Add a passkey<span class="row-glyph"><Icon name="plus" size={18} /></span></button
+          >Add a passkey<span class="row-glyph"><Icon name="plus" /></span></button
         >
       {/if}
     </div>

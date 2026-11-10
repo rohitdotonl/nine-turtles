@@ -33,7 +33,7 @@
     aria-label="Add a person or publication"
     title={tip("Add a person or publication", "add-feed")}
     onclick={(event) => follow(event, { kind: "add-feed" })}
-    class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-small text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" size={16} />Add</a
+    class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-meta text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" />Add</a
   >
   {#if !phone}
     <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->
@@ -44,8 +44,8 @@
       title="Keyboard shortcuts (?)"
       aria-haspopup="dialog"
       aria-expanded={keysOpen}
-      class={["btn-quiet gap-2.5 px-2.5 text-small text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", keysOpen && "bg-ink/10 text-ink"]}
-      ><Icon name="keyboard" size={16} /><span class="@max-[15rem]:hidden">Keys</span></button
+      class={["btn-quiet gap-2.5 px-2.5 text-meta text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", keysOpen && "bg-ink/10 text-ink"]}
+      ><Icon name="keyboard" /><span class="@max-[15rem]:hidden">Keys</span></button
     >
   {/if}
   <a
@@ -54,6 +54,6 @@
     title="Settings"
     aria-current={inSettings(route) ? "page" : undefined}
     onclick={(event) => follow(event, { kind: "settings" })}
-    class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size={18} /></a
+    class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size="alone" /></a
   >
 </div>

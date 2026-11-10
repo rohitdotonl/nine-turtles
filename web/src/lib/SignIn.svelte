@@ -232,7 +232,7 @@
         If <span class="font-semibold">{sent}</span> has an account here, a link is on its way. It works once, within {SIGN_IN_LINK_MINUTES} minutes.
       </p>
       <SendAgain to={sent} onSend={askAgain} />
-      <a href="/" class="btn rounded-lg" onclick={(event) => switchTo(event, false)}>Back to sign in</a>
+      <a href="/" class="btn" onclick={(event) => switchTo(event, false)}>Back to sign in</a>
     </div>
   {:else}
   <!--
@@ -243,7 +243,7 @@
   -->
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
     <div class="flex flex-col gap-1.5">
-      <label for="email" class="text-small text-ink-2">Email</label>
+      <label for="email" class="text-meta text-ink-2">Email</label>
       <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->
       <input
         id="email"
@@ -273,7 +273,7 @@
         Email, Password, Forgot?, Sign in; the grid only draws it on the name's line.
       -->
       <div class="-mt-3 grid grid-cols-[1fr_auto] items-end gap-x-3">
-        <label for="password" class="col-start-1 row-start-1 text-small text-ink-2">Password</label>
+        <label for="password" class="col-start-1 row-start-1 text-meta text-ink-2">Password</label>
         <PasswordField
           id="password"
           autocomplete="current-password"
@@ -301,19 +301,19 @@
       In red words after an icon, so it isn't told by color or place alone.
     -->
     <div class={["flex flex-col gap-3", asking ? "min-h-[8.5rem]" : offered ? "min-h-[13.75rem]" : "min-h-[10.5rem]"]}>
-      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small", "text-danger", !message && "sr-only"]}>
-        {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta", "text-danger", !message && "sr-only"]}>
+        {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
       </p>
       <!-- After "That email and password don't match.", a likely slip in the email, in the text color, centred under it. -->
       <EmailFix id="sign-in-fix" centred {fix} onUse={useFix} />
       <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). Its corners match the field's. -->
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word={asking ? "Email me a link" : "Sign in"} doing={asking ? "Sending…" : "Signing in…"} /></button>
+      <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word={asking ? "Email me a link" : "Sign in"} doing={asking ? "Sending…" : "Signing in…"} /></button>
       {#if asking}
         <p class="text-center"><a href="/" class="text-link" onclick={(event) => switchTo(event, false)}>Back to sign in</a></p>
       {:else}
         <!-- A passkey signs in without the fields: a quieter button, edged rather than filled. -->
-        {#if offered}<button type="button" class="btn rounded-lg" aria-disabled={busy} onclick={passkey}>Sign in with a passkey</button>{/if}
-        <p class="text-center text-small">New here? <a href={SIGN_UP_PAGE} class="text-link" onclick={signUp}>Sign up</a></p>
+        {#if offered}<button type="button" class="btn" aria-disabled={busy} onclick={passkey}>Sign in with a passkey</button>{/if}
+        <p class="text-center text-meta">New here? <a href={SIGN_UP_PAGE} class="text-link" onclick={signUp}>Sign up</a></p>
       {/if}
     </div>
   </form>
@@ -331,6 +331,6 @@
     justify-content: flex-end;
     min-width: 2.75rem;
     font-size: var(--text-meta);
-    line-height: var(--text-small--line-height);
+    line-height: var(--text-meta--line-height);
   }
 </style>

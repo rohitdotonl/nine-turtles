@@ -1,0 +1,60 @@
+/* The top lines of every pane, and the one top of every phone screen (DESIGN.md → "The system"). Moved out of app.css, which had reached its size limit. */
+
+/*
+  One top line across the window (decision 0043): the sidebar's wordmark, the
+  list's title and More, the article's tools, a page's title and X, and the
+  sidebar button all sit in a band of the same height, centred in it, so the
+  three panes' top lines end, and their hairlines fall, at the same height,
+  as Apple Books keeps every toolbar item on one line. A 44px button in it
+  has 6px clear above and below. It's a minimum, so text set larger by the
+  reader can still grow it.
+*/
+:root {
+  --bar-h: 3.5rem;
+}
+.pane-bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: var(--bar-h);
+}
+/*
+  A button in a top line rings just inside its own edge, with soft corners,
+  so the ring never reaches the window's top or the line's edge.
+*/
+.pane-bar :is(a, button):focus-visible,
+.bar-button:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--radius-press);
+}
+
+/*
+  The phone's back button (decision 0043): the same place and size on every
+  screen, its arrow on the screen's 20px edge, as iOS keeps its back button
+  still while the screens change.
+*/
+.nav-bar {
+  padding-inline: 0.75rem;
+}
+/*
+  One top for every phone screen below home (DESIGN.md → "The system"):
+  Back at the very top, in a row the top line's height (.top-back), its arrow
+  on the screen's 20px edge; then the place's title on the line under it, in
+  a 44px row, at the one title size (.top-title). A list, Settings and its
+  pages, a person's page and a source's settings all start this way, so
+  nothing jumps between screens.
+*/
+.top-back {
+  display: flex;
+  align-items: center;
+  min-height: var(--bar-h);
+}
+.top-title {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+.nav-back {
+  gap: 0.125rem;
+  padding-inline: 0.25rem 0.5rem;
+}

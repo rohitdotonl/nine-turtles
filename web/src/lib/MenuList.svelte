@@ -106,7 +106,7 @@
       {/if}
       <div role="group" aria-label={group.label}>
         {#if group.label}
-          <p aria-hidden="true" class="flex items-center gap-1.5 px-3 pt-1.5 pb-1 text-meta text-muted">{#if group.icon}<Icon name={group.icon} size={14} />{/if}{group.label}</p>
+          <p aria-hidden="true" class="flex items-center gap-1.5 px-3 pt-1.5 pb-1 text-meta text-muted">{#if group.icon}<Icon name={group.icon} />{/if}{group.label}</p>
         {/if}
         {#each group.items as item (item.label)}
           <button
@@ -120,7 +120,7 @@
           >
             {#if item.checked !== undefined}
               <!-- The tick shows the current choice without color; the weight says it too. -->
-              <span class="flex w-5 shrink-0 justify-center">{#if item.checked}<Icon name="check" size={16} />{/if}</span>
+              <span class="flex w-5 shrink-0 justify-center">{#if item.checked}<Icon name="check" />{/if}</span>
             {/if}
             <span class="min-w-0 flex-1">{item.label}</span>
             {#if item.shortcut}
@@ -141,7 +141,7 @@
     align-items: center;
     gap: 0.5rem;
     padding-inline: 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-press);
     color: var(--ink);
     font-size: var(--text-ui);
     text-align: left;

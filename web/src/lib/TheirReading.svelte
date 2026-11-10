@@ -48,7 +48,7 @@
 </script>
 
 {#if failed}
-  <p class="text-small text-ink-2">Your highlights from their writing couldn't be loaded. Open the page again to try once more.</p>
+  <p class="text-meta text-ink-2">Your highlights from their writing couldn't be loaded. Open the page again to try once more.</p>
 {/if}
 
 {#if highlights.length > 0}
@@ -62,7 +62,7 @@
             From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
             · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
           </p>
-          {#if each.note}<div class="text-small"><NoteText note={each.note} /></div>{/if}
+          {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
         </li>
       {/each}
     </ul>
@@ -70,14 +70,6 @@
 {/if}
 
 <style>
-  /* Small spaced capitals in the muted grey, as "Your note" and an article's end name theirs. */
-  .label {
-    color: var(--muted);
-    font-size: var(--text-meta);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
   /* Each highlight: its words in the reading serif, set off by a fine line at the left, as at an article's end. */
   .quote {
     display: flex;

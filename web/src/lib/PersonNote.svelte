@@ -98,7 +98,7 @@
       <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Add a note…</button>
     {/if}
     <!-- Discard's Undo, in place, until the box opens again. -->
-    <div class="flex flex-wrap items-center gap-x-3 text-small">
+    <div class="flex flex-wrap items-center gap-x-3 text-meta">
       <p role="status" class={discarded === undefined ? "sr-only" : undefined}>{discarded === undefined ? "" : "Note discarded."}</p>
       {#if discarded !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
     </div>
@@ -106,11 +106,4 @@
 </div>
 
 <style>
-  .label {
-    color: var(--muted);
-    font-size: var(--text-meta);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
 </style>

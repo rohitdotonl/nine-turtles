@@ -163,9 +163,9 @@
     />
   {:else}
     {#if fresh}
-      <p class="text-small text-ink-2 menu-note">Highlighted</p>
+      <p class="text-meta text-ink-2 menu-note">Highlighted</p>
     {:else if highlight?.note}
-      <div class="text-small menu-note"><NoteText note={highlight.note} {jump} /></div>
+      <div class="text-meta menu-note"><NoteText note={highlight.note} {jump} /></div>
     {/if}
     {#if !highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onHighlight}
@@ -208,7 +208,7 @@
     align-items: center;
     gap: 0.5rem;
     padding-inline: 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-press);
     color: var(--ink);
     font-size: var(--text-ui);
     text-align: left;

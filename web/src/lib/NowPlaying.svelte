@@ -44,10 +44,10 @@
         {/if}
       </button>
       <button type="button" class="now-playing-title" title="Open the episode" onclick={() => onOpen(current.article)}>
-        <span class="block truncate text-small text-ink"><span class="sr-only">Open the episode: </span>{current.article.title || "Untitled"}</span>
+        <span class="block truncate text-meta text-ink"><span class="sr-only">Open the episode: </span>{current.article.title || "Untitled"}</span>
         <span class="block truncate text-meta text-muted">{player.said || current.article.feedTitle}</span>
       </button>
-      <button type="button" class="btn-quiet btn-icon" aria-label="Close the player" title="Close the player" onclick={close}><Icon name="close" size={18} /></button>
+      <button type="button" class="btn-quiet btn-icon" aria-label="Close the player" title="Close the player" onclick={close}><Icon name="close" size="alone" /></button>
     </div>
     <p role="status" class="sr-only">{player.said}</p>
   </section>
@@ -68,7 +68,7 @@
     flex-direction: column;
     justify-content: center;
     padding-inline: 0.5rem;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-press);
     text-align: left;
     cursor: pointer;
   }

@@ -637,7 +637,8 @@ test.describe("on a wide window", () => {
     await expect(heading).toHaveCSS("letter-spacing", "-0.16px");
     await expect(heading).toHaveCSS("margin-bottom", "20px");
     const byline = article(page).locator(".article-byline");
-    await expect(byline).toHaveCSS("font-size", "14px");
+    // The meta size: 13px, or its touch screen twin, 15px (DESIGN.md → "The system").
+    await expect(byline).toHaveCSS("font-size", /^(13|15)px$/);
     await expect(byline).toHaveCSS("margin-top", "0px");
     const publisher = byline.getByRole("button", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "600");
@@ -680,7 +681,7 @@ test.describe("on a wide window", () => {
     expect(await note.evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Literata");
     await expect(note).toHaveCSS("font-style", "normal");
     await expect(note).toHaveCSS("text-align", "center");
-    await expect(note).toHaveCSS("font-size", "14px");
+    await expect(note).toHaveCSS("font-size", /^(13|15)px$/);
     // Only the link is underlined.
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
     const link = note.getByRole("link", { name: "Read the rest on Reading Room" });

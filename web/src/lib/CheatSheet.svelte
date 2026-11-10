@@ -80,7 +80,7 @@
   <div class="shortcuts-body flex flex-col pb-4">
     <div class={["shortcuts-head flex shrink-0 items-center justify-between gap-x-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
       <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title">Keyboard shortcuts</h2>
-      <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size={18} /></button>
+      <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size="alone" /></button>
     </div>
     <!-- A Tab stop of its own, so the list can be scrolled with the keyboard (axe: scrollable-region-focusable). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -100,7 +100,7 @@
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
                 <h3 id={`keys-${index}`} class="mb-1.5 text-base font-semibold text-ink">{group}</h3>
-                <table class="w-full text-left text-small">
+                <table class="w-full text-left text-meta">
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
                       <tr>

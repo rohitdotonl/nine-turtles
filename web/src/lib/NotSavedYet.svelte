@@ -4,4 +4,4 @@
   Going elsewhere keeps these changes here for you." Done saves them;
   Cancel throws them away.
 -->
-<p class="text-small text-ink-2"><strong class="font-semibold text-ink">Not saved yet.</strong> Going elsewhere keeps these changes here for you.</p>
+<p class="text-meta text-ink-2"><strong class="font-semibold text-ink">Not saved yet.</strong> Going elsewhere keeps these changes here for you.</p>

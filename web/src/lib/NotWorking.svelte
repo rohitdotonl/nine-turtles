@@ -208,7 +208,7 @@
     container: card / inline-size;
     min-width: 0;
     padding: 1rem 1.125rem;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
     color: var(--ink);
     font-size: var(--text-ui);
@@ -218,7 +218,7 @@
     --group: var(--paper);
   }
   .card-name {
-    font-size: 1.02rem;
+    font-size: var(--text-base);
     font-weight: 600;
     line-height: 1.35;
     overflow-wrap: anywhere;

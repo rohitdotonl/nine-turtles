@@ -96,11 +96,11 @@
       </div>
       {#if lapsed}
         <p bind:this={lapsedMessage} tabindex="-1" class="text-center">{message}</p>
-        <a href="/" onclick={leave} class="btn-primary rounded-lg">Open nine turtles</a>
+        <a href="/" onclick={leave} class="btn-primary">Open nine turtles</a>
       {:else}
         <form class="flex flex-col gap-3" onsubmit={choose}>
           <div class="flex flex-col gap-1.5">
-            <label for="password" class="text-small text-ink-2">New password</label>
+            <label for="password" class="text-meta text-ink-2">New password</label>
             <PasswordField
               id="password"
               autocomplete="new-password"
@@ -113,10 +113,10 @@
           </div>
           <!-- Room for a message kept at the foot, as on sign-in (decision 0045). -->
           <div class="flex min-h-[8.5rem] flex-col gap-3">
-            <p id="choose-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-              {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+            <p id="choose-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+              {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
             </p>
-            <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Set password" doing="Saving…" /></button>
+            <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Set password" doing="Saving…" /></button>
             <p class="text-center"><a href="/" onclick={leave} class="text-link">Not now</a></p>
           </div>
         </form>
@@ -126,15 +126,15 @@
   <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
     {#if spent}
       <p role="status">{message || explainLink("expired", "sign-in")}</p>
-      <a href="/" onclick={leave} class="btn rounded-lg">Sign in</a>
+      <a href="/" onclick={leave} class="btn">Sign in</a>
     {:else}
       <p id="link-help">Press Sign in to read on this device.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="link-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="link-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <button type="button" autofocus aria-disabled={busy} aria-describedby="link-help link-message" onclick={signIn} class="btn-primary rounded-lg"><Waiting {busy} word="Sign in" doing="Signing in…" /></button>
+        <button type="button" autofocus aria-disabled={busy} aria-describedby="link-help link-message" onclick={signIn} class="btn-primary"><Waiting {busy} word="Sign in" doing="Signing in…" /></button>
       </div>
     {/if}
   </div>

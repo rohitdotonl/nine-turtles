@@ -22,7 +22,7 @@
   <p class="reading-empty {classes}">
     {words.before}<button
       type="button"
-      class="relative inline rounded-sm text-ink underline before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-[''] underline decoration-[color-mix(in_srgb,currentColor_65%,transparent)] decoration-1 underline-offset-[3px] hover:decoration-current"
+      class="relative inline rounded-mark text-ink underline before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-[''] underline decoration-[color-mix(in_srgb,currentColor_65%,transparent)] decoration-1 underline-offset-[3px] hover:decoration-current"
       onclick={() => onOpen(offer.article)}>{offer.article.title || "Untitled"}</button
     >{words.after}
   </p>

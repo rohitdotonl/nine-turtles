@@ -64,12 +64,12 @@
     {#if own}
       <!-- Always here, so screen readers hear it the moment it's filled in. -->
       <p bind:this={answer} tabindex="-1" role="status" class={said ? "inset-group inset-row done" : "sr-only"}>
-        {#if installing.justInstalled}<span class="text-muted"><Icon name="check" size={18} /></span>{/if}<span class="min-w-0">{said}</span>
+        {#if installing.justInstalled}<span class="text-muted"><Icon name="check" /></span>{/if}<span class="min-w-0">{said}</span>
       </p>
     {/if}
     {#if own && here}
       <p class="inset-group inset-row done">
-        <span class="text-muted"><Icon name="check" size={18} /></span><span class="min-w-0">You're using the installed app now.</span>
+        <span class="text-muted"><Icon name="check" /></span><span class="min-w-0">You're using the installed app now.</span>
       </p>
     {:else if !(own && installing.justInstalled)}
       {#if own && installing.offer}

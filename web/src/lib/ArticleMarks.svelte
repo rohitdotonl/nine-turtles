@@ -426,7 +426,7 @@
             {#if box}
               <NoteBox id="kept-note-{each.id}" label="A note on these words" help="Only you see it." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
             {:else}
-            {#if each.note}<div class="text-small"><NoteText note={each.note} jump={media?.jump} /></div>{/if}
+            {#if each.note}<div class="text-meta"><NoteText note={each.note} jump={media?.jump} /></div>{/if}
             <div class="-ml-3 flex flex-wrap">
               <button type="button" class="btn-quiet" aria-label="{each.note ? 'Edit note' : 'Add a note'} on “{each.quote}”" onclick={(event) => (menu = { anchor: event.currentTarget.getBoundingClientRect(), highlight: each, writing: true, from: event.currentTarget })}
                 >{each.note ? "Edit note" : "Add a note…"}</button
@@ -508,11 +508,6 @@
   }
   .label {
     margin-top: 0.75rem;
-    color: var(--muted);
-    font-size: var(--text-meta);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
   }
   /* Each highlight: its words in the reading serif, set off by a fine line at the left, as a quotation is. */
   .quote {
@@ -526,7 +521,7 @@
   }
   .gone {
     color: var(--muted);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
     font-style: italic;
   }
   /* The quiet line at the foot of the article, staying in view while the article scrolls. */
@@ -541,7 +536,7 @@
     margin-top: 1.5rem;
     padding: 0.5rem 0.75rem 0.5rem 1rem;
     font-family: var(--font-sans);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
   }
   /*
     A highlight in the text: soft pencil (decision 0164), a faint tone of the
@@ -552,7 +547,7 @@
     color: inherit;
     background-color: color-mix(in srgb, var(--ink) 9%, transparent);
     box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 45%, transparent);
-    border-radius: 2px;
+    border-radius: var(--radius-mark);
     cursor: pointer;
   }
   :global(.highlight-icon) {

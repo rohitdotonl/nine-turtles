@@ -65,7 +65,7 @@
     is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
     (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
   -->
-  <span class={["row-meta mt-2 text-[0.75rem] tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
+  <span class={["row-meta mt-2 text-date tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
     <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
     {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>&nbsp;·</span>{/if}
     <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
@@ -79,7 +79,7 @@
       <span class="row-muted">· Hidden</span>
     {/if}
     {#if article.starred}
-      <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
+      <span class="row-star"><Icon name="star" filled /><span class="sr-only">, Starred</span></span>
     {/if}
   </span>
 
@@ -94,7 +94,7 @@
     padding: 0 1px;
     text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
     text-underline-offset: 0.2em;
-    border-radius: 3px;
+    border-radius: var(--radius-mark);
     background-color: var(--mark);
     color: inherit;
     font-weight: inherit;

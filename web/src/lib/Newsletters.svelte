@@ -129,7 +129,7 @@
         </div>
       {/each}
       <button type="button" aria-disabled={busy} onclick={replace} class="inset-row inset-action"
-        >New address<span class="row-glyph"><Icon name="refresh" size={18} /></span></button
+        >New address<span class="row-glyph"><Icon name="refresh" /></span></button
       >
     </div>
     <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>

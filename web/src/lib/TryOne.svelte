@@ -48,7 +48,7 @@
     {@const { feed, latest } = trying.current}
     <!-- Their newest post, right here: the moment a feed makes sense. -->
     <article aria-labelledby="tried-name" class="flex flex-col gap-2 border-l-2 border-ink pl-5">
-      <h3 id="tried-name" tabindex="-1" class="small-caps">{latest ? `Newest from ${feed.title}` : feed.title}</h3>
+      <h3 id="tried-name" tabindex="-1" class="label">{latest ? `Newest from ${feed.title}` : feed.title}</h3>
       {#if latest}
         <a
           href={`/people/${feed.id}`}
@@ -56,27 +56,27 @@
           class="font-serif text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_30%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
       {/if}
-      <p class="text-small text-ink-2">You're following {feed.title}. What they write next will be waiting for you here.</p>
+      <p class="text-meta text-ink-2">You're following {feed.title}. What they write next will be waiting for you here.</p>
     </article>
     <a href="/unread" onclick={(event) => follow(event, { kind: "view", view: "unread" })} class="btn self-start">Start reading</a>
   {/if}
   {#if left.length > 0}
     <section aria-labelledby="try-head" class="flex flex-col gap-2">
-      <h3 id="try-head" class="small-caps">{trying.current ? "Try another" : "Or try one"}</h3>
+      <h3 id="try-head" class="label">{trying.current ? "Try another" : "Or try one"}</h3>
       <ul class="m-0 flex list-none flex-col p-0">
         {#each left as example (example.address)}
           <li class="try-row">
             <button type="button" aria-disabled={busy !== ""} onclick={() => press(example)} class="group flex min-h-14 w-full cursor-pointer items-center gap-4 py-2 text-left">
-              <span class="small-caps w-24 shrink-0">{example.kind}</span>
+              <span class="w-24 shrink-0 text-meta text-muted">{example.kind}</span>
               <span class="min-w-0 flex-1 break-all text-ink">{example.address}</span>
-              <span class="try-word shrink-0 text-small text-ink-2">{busy === example.address ? "Adding…" : "Try"}</span>
+              <span class="try-word shrink-0 text-meta text-ink-2">{busy === example.address ? "Adding…" : "Try"}</span>
             </button>
           </li>
         {/each}
       </ul>
     </section>
   {/if}
-  <p role="status" class={["flex items-start gap-1.5 text-small", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
+  <p role="status" class={["flex items-start gap-1.5 text-meta", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
 </div>
 
 <style>

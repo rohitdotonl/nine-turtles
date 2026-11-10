@@ -48,15 +48,15 @@
           : "This link no longer works: the email is already off, or the link is from an older email. If weekly emails still come, turn them off in Settings."}
       </p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
-      <a href="/" onclick={leave} autofocus class="btn rounded-lg">Open nine turtles</a>
+      <a href="/" onclick={leave} autofocus class="btn">Open nine turtles</a>
     {:else}
       <p id="stop-help">Press Stop to turn the weekly email off.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="stop-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", result !== "trouble" && "sr-only"]}>
-          {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>The weekly email couldn't be turned off. Try again in a moment.{/if}
+        <p id="stop-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", result !== "trouble" && "sr-only"]}>
+          {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" /></span>The weekly email couldn't be turned off. Try again in a moment.{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <button type="button" autofocus aria-disabled={busy} aria-describedby="stop-help stop-message" onclick={stop} class="btn-primary rounded-lg"
+        <button type="button" autofocus aria-disabled={busy} aria-describedby="stop-help stop-message" onclick={stop} class="btn-primary"
           >{busy ? "Stopping…" : "Stop the weekly email"}</button
         >
       </div>

@@ -242,7 +242,7 @@
     width: 100%;
     aspect-ratio: var(--shape);
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--radius-hold);
   }
   /*
     The box before Play: the page's own faint tone, the title set large in

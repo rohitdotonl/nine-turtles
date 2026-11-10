@@ -913,9 +913,9 @@
       aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
       title={bothHidden ? tip("Show the sidebar and the article list", "toggle-both") : panes.sidebar ? "Hide the sidebar" : "Show the sidebar"}
       onclick={bothHidden ? toggleBoth : toggleSidebar}
-      class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
+      class="bar-button flex size-11 items-center justify-center rounded-press text-ink-2"
     >
-      <Icon name="sidebar" size={20} />
+      <Icon name="sidebar" size="alone" />
     </button>
   </div>
 
@@ -933,7 +933,7 @@
     -->
     <div class={["pane-bar gap-4", phone ? "pr-4 pl-5" : "pr-13 pl-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-xlarge" : "text-[1.375rem] leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
+        <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-wordmark-phone" : "text-wordmark leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
     </div>
     <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto pt-1 pb-4">
       <!--
@@ -943,7 +943,7 @@
       {#if library.feeds === undefined || library.feeds.length > 0}
       <!-- On the rows' grid (decision 0043): its icon in the column of the places' icons, its words where their names start. -->
       <div class="relative mx-2 pb-4">
-        <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" size={14} /></span>
+        <span class="pointer-events-none absolute top-0 left-3 flex h-(--search-height) w-4 items-center justify-center text-muted"><Icon name="search" /></span>
         <label for="sidebar-search" class="sr-only">Find a person or folder</label>
         <input
           id="sidebar-search" dir="auto"
@@ -977,7 +977,7 @@
         />
       {/if}
       {#if library.feedsFailed}
-        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-small">Your feeds couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
+        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-meta">Your feeds couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />
@@ -1090,7 +1090,7 @@
             <!-- The phone's top bar (SPEC section 20): back to Home, the feeds screen, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
               <button type="button" onclick={() => steps.back("home")} aria-label="Back to Home" class="btn-quiet nav-back"
-                ><Icon name="back" size={22} />Home</button
+                ><Icon name="back" size="alone" />Home</button
               >
             </div>
             <div class={welcomeAlone ? "sr-only" : "pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>

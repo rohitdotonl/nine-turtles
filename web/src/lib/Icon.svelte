@@ -8,17 +8,24 @@
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+  export type IconSize = "word" | "alone" | "tick" | "picture";
 </script>
 
 <script lang="ts">
-  // `filled` fills a shape that has an inside (the star, when starred).
-  let { name, size = 18, filled = false }: { name: IconName; size?: number; filled?: boolean } = $props();
+  // Two sizes (DESIGN.md → "The system"): "word" beside a word (16px, 18 on a
+  // touch screen), "alone" by itself in a button (20px, 22 on a touch screen).
+  // Two named exceptions: "tick" inside a tick box, "picture" in Add's question.
+  // The line stays 1.5px at every size. `filled` fills a shape that has an
+  // inside (the star, when starred).
+  let { name, size = "word", filled = false }: { name: IconName; size?: IconSize; filled?: boolean } = $props();
+  const px = $derived({ word: 16, alone: 20, tick: 14, picture: 36 }[size]);
 </script>
 
 <svg
   aria-hidden="true"
-  width={size}
-  height={size}
+  class={size}
+  width={px}
+  height={px}
   viewBox="0 0 20 20"
   fill="none"
   stroke="currentColor"
@@ -219,3 +226,24 @@
     <path d="M5.25 5.75l.75 9.5a1 1 0 0 0 1 .95h6a1 1 0 0 0 1-.95l.75-9.5" />
   {/if}
 </svg>
+
+<style>
+  svg {
+    flex: none;
+  }
+  /* The line is 1.5px on screen whatever the size, so a small icon never looks faint and a big one never heavy. */
+  svg :global(*) {
+    vector-effect: non-scaling-stroke;
+  }
+  /* Touch screens get the phone's twins, as text does (app.css). */
+  @media (pointer: coarse) {
+    .word {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+    .alone {
+      width: 1.375rem;
+      height: 1.375rem;
+    }
+  }
+</style>

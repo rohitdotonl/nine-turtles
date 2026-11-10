@@ -59,7 +59,7 @@
 {#if feed.failingSince != null || moved}
   <div class={["failing", look]}>
     {#if !moved}
-      <p class="text-small text-ink-2">
+      <p class="text-meta text-ink-2">
         {brokenSince(feed.failingSince ?? 0)}
         {#if !choosing}
           <button

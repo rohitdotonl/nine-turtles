@@ -56,16 +56,16 @@
 <form class="ask flex flex-col gap-4" aria-labelledby={`${id}-title`} {onsubmit}>
   <div class="flex flex-col gap-1">
     <p id={`${id}-title`} class="text-base font-semibold text-ink">{title}</p>
-    <p class="text-small text-ink-2" aria-live="polite">
+    <p class="text-meta text-ink-2" aria-live="polite">
       {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if looked === "none"}No email address on their site. {paste}{:else if looked === "couldn't"}Their site couldn't be checked for an address. {paste}{:else if saved}nine turtles doesn't have their address yet. {paste}{:else}{paste}{/if}
     </p>
   </div>
   {#if site && !showingFound}
     <!-- Left out once an address is filled in: it would only add a choice. -->
-    <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" size={16} />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
+    <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
   {/if}
   <div class="flex flex-col gap-1.5">
-    <label for={`${id}-address`} class="text-small text-ink-2">Their email address</label>
+    <label for={`${id}-address`} class="text-meta text-ink-2">Their email address</label>
     <input
       id={`${id}-address`}
       bind:this={field}
@@ -80,14 +80,14 @@
       class="field min-w-0"
     />
   </div>
-  <p id={`${id}-message`} role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-    {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+  <p id={`${id}-message`} role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   <div class="flex flex-wrap gap-2">
     <button type="submit" class={quiet ? "btn" : "btn-primary"} aria-disabled={busy}>{submit}</button>
     <button type="button" class="btn-quiet" onclick={onNotNow}>Not now</button>
   </div>
-  <p class="text-small text-ink-2">{foot}</p>
+  <p class="text-meta text-ink-2">{foot}</p>
 </form>
 
 <style>
@@ -96,7 +96,7 @@
     align-self: stretch;
     padding: 1rem 1.125rem;
     border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-hold);
     text-align: left;
   }
 </style>

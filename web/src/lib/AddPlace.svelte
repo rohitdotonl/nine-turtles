@@ -170,7 +170,7 @@
     type="button"
     class="btn self-start"
     bind:this={opener}
-    onclick={show}><Icon name="plus" size={16} />Add a source</button
+    onclick={show}><Icon name="plus" />Add a source</button
   >
 {:else}
   <div bind:this={group} class="add-place flex flex-col gap-4" role="group" aria-labelledby="add-place-title">
@@ -182,7 +182,7 @@
           <label class="inset-row check-row">
             <input type="checkbox" value={id} bind:group={keep} />
             <span class="min-w-0 break-words">{library.folders.find((folder) => folder.id === id)?.name ?? "A folder"}</span>
-            <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+            <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>
         {/each}
       </div>
@@ -195,7 +195,7 @@
             <input type="radio" name="add-place-choice" value={choice.url} bind:group={picked} />
             <span class="flex min-w-0 flex-col py-1">
               <span class="break-words">{choice.title}</span>
-              <span class="truncate text-small text-muted" title={choice.url}>{choice.url}</span>
+              <span class="truncate text-meta text-muted" title={choice.url}>{choice.url}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
@@ -204,7 +204,7 @@
       <button type="button" class="btn self-start" aria-disabled={busy} onclick={addAddress}>Follow and join</button>
     {:else if others.length > 0}
       <div class="flex flex-col gap-1.5">
-        <label for="add-place-who" class="text-small text-ink-2">Someone you already follow</label>
+        <label for="add-place-who" class="text-meta text-ink-2">Someone you already follow</label>
         <div class="flex flex-wrap gap-2">
           <select id="add-place-who" bind:value={chosen} class="field min-w-0 flex-1">
             <option value="">Choose…</option>
@@ -218,7 +218,7 @@
     {/if}
     {#if !asking && choices.length === 0}
     <div class="flex flex-col gap-1.5">
-      <label for="add-place-address" class="text-small text-ink-2">{others.length > 0 ? "Or the address of their blog, channel or newsletter" : "The address of their blog, channel or newsletter"}</label>
+      <label for="add-place-address" class="text-meta text-ink-2">{others.length > 0 ? "Or the address of their blog, channel or newsletter" : "The address of their blog, channel or newsletter"}</label>
       <div class="flex flex-wrap gap-2">
         <input
           id="add-place-address"
@@ -239,8 +239,8 @@
       </div>
     </div>
     {/if}
-    <p role="status" class={["flex items-start gap-1.5 text-small", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{:else if busy}Working…{/if}
+    <p role="status" class={["flex items-start gap-1.5 text-meta", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{:else if busy}Working…{/if}
     </p>
     <button type="button" class="btn-quiet self-start" onclick={hide}>Not now</button>
   </div>
@@ -250,6 +250,6 @@
   .add-place {
     padding: 1rem 1.125rem;
     border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-    border-radius: 0.75rem;
+    border-radius: var(--radius-hold);
   }
 </style>

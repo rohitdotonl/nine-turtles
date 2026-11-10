@@ -86,12 +86,13 @@
 
 <!-- On a phone, Edit and a source's settings end with Done at the screen's foot, so nothing pads below it, and a field the
   keyboard reaches scrolls clear of Done rather than behind it (decision 0243, the first floor's visible focus). -->
-<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? ["px-5 pt-3", route.kind === "about" ? "pb-10" : "scroll-pb-24"] : "reading-top scroll-gutter px-5 pb-16 md:px-14"]}>
+<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? ["px-5", route.kind === "edit-feed" && "pt-3", route.kind === "about" ? "pb-10" : "scroll-pb-24"] : "reading-top scroll-gutter px-5 pb-16 md:px-14"]}>
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : "reading-column"}>
   <div class={["flex w-full max-w-[36rem] flex-col gap-6 font-sans text-base", phone && "flex-1"]}>
     {#if phone && route.kind === "about"}
-      <button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 self-start text-ink-2"><Icon name="back" size={22} />{name}</button>
+      <!-- One top (DESIGN.md → "The system"): Back in the top line's height, the name on the line under it. -->
+      <div class="top-back -mb-6"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" />{name}</button></div>
     {/if}
     {#if route.kind === "edit-feed"}
       <WhoEdit
@@ -122,9 +123,9 @@
       {/key}
     {:else}
       <div class="flex flex-col gap-2">
-        <div class="flex items-start justify-between gap-4">
-          <!-- The page's heading, a step under the list's title, which also names them. -->
-          <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-xlarge font-semibold break-words text-ink">{name}</h2>
+        <div class={["flex justify-between gap-4", phone ? "top-title" : "items-start"]}>
+          <!-- The page's heading, at every place's title size (DESIGN.md → "The system"). -->
+          <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">{name}</h2>
           <button type="button" class="text-link min-w-11 shrink-0 justify-end" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
@@ -137,7 +138,7 @@
       <!-- Your highlights from their writing (decision 0211). -->
       {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
       <div class="flex flex-col gap-2">
-        <h3 class="text-small text-ink-2">{places.length > 1 ? "Sources" : "Source"}</h3>
+        <h3 class="label">{places.length > 1 ? "Sources" : "Source"}</h3>
         <dl class="who-facts">
           {#each places as place (place.id)}
             <dt>{PLACE_NAMES[place.place ?? "blog"]}</dt>
@@ -151,7 +152,7 @@
           {/each}
         </dl>
       </div>
-      <p class="text-small"><button type="button" class="text-link" onclick={onHide}>Hide articles about…</button></p>
+      <p class="text-meta"><button type="button" class="text-link" onclick={onHide}>Hide articles about…</button></p>
     {/if}
   </div>
   </div>

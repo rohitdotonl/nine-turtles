@@ -84,7 +84,7 @@
   {#if phone}
     <div class="-mt-1 -mr-2 flex items-center justify-between">
       <p aria-hidden="true" class="text-ui font-semibold">Appearance</p>
-      <button type="button" aria-label="Close" title="Close" onclick={() => onClose(true)} class="btn-quiet btn-icon"><Icon name="close" size={20} /></button>
+      <button type="button" aria-label="Close" title="Close" onclick={() => onClose(true)} class="btn-quiet btn-icon"><Icon name="close" size="alone" /></button>
     </div>
   {/if}
 
@@ -96,13 +96,13 @@
     second ink. Radio buttons underneath, so the arrow keys move along a line.
   -->
   <div class="aa-line">
-    <p id="aa-size-name" class="aa-name">Text size</p>
+    <p id="aa-size-name" class="aa-name label">Text size</p>
     <div class="min-w-0 flex-1"><TextSize bind:size={preferences.textSize} labelledby="aa-size-name" bind:first /></div>
   </div>
 
   <!-- The page itself (decision 0176): a swatch of each page, and one half White, half Night for Match device, each named under it. -->
   <fieldset class="aa-line">
-    <legend class="aa-name">Page</legend>
+    <legend class="aa-name label">Page</legend>
     <div class="aa-choices swatches">
       {#each PAGES as choice (choice.value)}
         <label class="swatch">
@@ -115,7 +115,7 @@
   </fieldset>
 
   <fieldset class="aa-line">
-    <legend class="aa-name">Font</legend>
+    <legend class="aa-name label">Font</legend>
     <div class="aa-choices">
       {#each Object.entries(READING_FONTS) as [value, font] (value)}
         <!-- Each name is set in its own font, so the choice shows itself. -->
@@ -145,7 +145,7 @@
     max-height: 85dvh;
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
     border-width: 1px 0 0;
-    border-radius: 1rem 1rem 0 0;
+    border-radius: var(--radius-hold) var(--radius-hold) 0 0;
   }
 
   /* A line: the setting's name in a fixed column, its choices after it. */
@@ -160,11 +160,6 @@
     flex: none;
     width: 5.5rem;
     padding: 0;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
   }
   .aa-choices {
     display: flex;
@@ -214,7 +209,7 @@
   .swatch:has(input:focus-visible) {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-press);
   }
   /* The page's swatches sit closer, each a column 56px wide (44px or more to press): the swatch, its name under it. */
   .swatches {

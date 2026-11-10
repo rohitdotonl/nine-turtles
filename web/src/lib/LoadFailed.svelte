@@ -33,6 +33,6 @@
 </script>
 
 <p role="status" class={["flex flex-wrap items-center gap-x-1.5 text-danger", extra]}>
-  <span class="shrink-0"><Icon name="alert" size={16} /></span>{words}
+  <span class="shrink-0"><Icon name="alert" /></span>{words}
   <TextButton class="px-1" onclick={retry}>Try again</TextButton>
 </p>

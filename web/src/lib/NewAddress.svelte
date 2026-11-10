@@ -102,7 +102,7 @@
           <input type="radio" name={`${id}-address`} value={choice.url} bind:group={chosen} />
           <span class="flex min-w-0 flex-col py-1">
             <span class="break-words">{choice.title}</span>
-            <span class="text-small break-all text-muted">{choice.url}</span>
+            <span class="text-meta break-all text-muted">{choice.url}</span>
           </span>
           <span aria-hidden="true" class="radio-mark shrink-0"></span>
         </label>

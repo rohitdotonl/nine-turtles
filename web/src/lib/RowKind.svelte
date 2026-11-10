@@ -15,9 +15,9 @@
 </script>
 
 {#if article.episode}
-  <span class="row-kind">·&nbsp;<Icon name="headphones" size={13} /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
+  <span class="row-kind">·&nbsp;<Icon name="headphones" /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
 {:else if youtubeVideo(article.link)}
-  <span class="row-kind">·&nbsp;<Icon name="video" size={13} /><span class="sr-only">Video</span></span>
+  <span class="row-kind">·&nbsp;<Icon name="video" /><span class="sr-only">Video</span></span>
 {/if}
 
 <style>

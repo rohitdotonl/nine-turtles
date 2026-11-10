@@ -123,7 +123,7 @@
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     {#if restored}<NotSavedYet />{/if}
     <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">Name</span>
+      <span class="text-meta text-ink-2">Name</span>
       <input dir="auto" bind:value={name} type="text" autocomplete="off" class="field" />
     </label>
     <!-- For a folder made to hold one person's places (their blog, their channel): it becomes that person. -->
@@ -137,13 +137,13 @@
               >Everything in it becomes one row, "{name.trim() || folder.name}", with one page. The folder goes; you can undo it straight afterwards.</span
             >
           </span>
-          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
         </label>
       </div>
     </div>
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
-    <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+    <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}
       <!-- One row at the foot: Delete in red words at the far left, then Cancel and Save at the right end. -->

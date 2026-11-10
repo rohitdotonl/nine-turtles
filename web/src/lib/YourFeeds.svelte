@@ -279,7 +279,7 @@
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words">{line}</span>
                       </span>
-                      <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+                      <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
                   {:else}
                     <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
@@ -287,7 +287,7 @@
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words">{line}</span>
                       </span>
-                      <span class="row-glyph"><Icon name="chevron-right" size={18} /></span>
+                      <span class="row-glyph"><Icon name="chevron-right" /></span>
                     </a>
                   {/if}
                 </li>
@@ -304,13 +304,13 @@
           <!-- Unsubscribe at the far left, apart from Move to… at the right, so a slip can't land on it (decision 0217). -->
           <button
             type="button"
-            class="btn-danger text-small"
+            class="btn-danger text-meta"
             title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
             aria-describedby="your-feeds-unsubscribe-help"
             aria-disabled={chosen.length === 0 || busy}
             onclick={leave}>Unsubscribe</button
           >
-          <p class="text-small text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
+          <p class="text-meta text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
           <button type="button" class="btn-primary" data-focus="move" aria-disabled={chosen.length === 0 || busy} onclick={openMove}>Move to…</button>
           <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
         </div>
