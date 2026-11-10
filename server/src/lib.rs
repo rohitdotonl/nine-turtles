@@ -31,6 +31,7 @@ pub mod db;
 pub mod discover;
 pub mod email;
 pub mod encoding;
+pub mod everything;
 pub mod feed;
 pub mod feeds;
 pub mod fetch;
@@ -68,6 +69,7 @@ pub mod weekly;
 pub mod write_back;
 pub mod writers;
 pub mod youtube;
+pub mod zip;
 
 use std::sync::{
     Arc,
@@ -229,6 +231,7 @@ pub fn router(state: AppState) -> Router {
         .merge(assistants::routes())
         .merge(mcp::routes())
         .merge(feeds::routes())
+        .merge(everything::routes())
         .merge(finder::routes())
         .merge(checkup::routes())
         .merge(folders::routes())
@@ -245,7 +248,6 @@ pub fn router(state: AppState) -> Router {
         .merge(rules::routes())
         .merge(search::routes())
         .merge(settings::routes())
-        .merge(starred::routes())
         .merge(star_import::routes())
         .merge(status::routes())
         .merge(owner_report::routes())

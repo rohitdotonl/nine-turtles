@@ -248,11 +248,9 @@ async fn starred_articles_appear_in_starred_and_leave_when_unstarred() {
 #[tokio::test]
 async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
     let reader = Reader::new().await;
-    let empty = reader.get("/api/starred/export").await;
+    let empty = common::starred_file(&reader.base, &reader.cookie).await;
     assert_eq!(empty["version"], "https://jsonfeed.org/version/1.1");
     assert_eq!(empty["items"], json!([]));
-    // Settings says "Nothing starred yet" instead of offering an empty file (SPEC section 18).
-    assert_eq!(reader.get("/api/feeds").await["starred"], false);
 
     let all = reader.list("view=all").await;
     let ids = [all[3].1, all[60].1, all[110].1];
@@ -262,26 +260,22 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
             json!({ "ids": ids, "starred": true }),
         )
         .await;
-    assert_eq!(reader.get("/api/feeds").await["starred"], true);
 
     let response = Client::new()
-        .get(format!("{}/api/starred/export", reader.base))
+        .get(format!("{}/api/everything", reader.base))
         .header("cookie", &reader.cookie)
         .send()
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.headers()["content-type"],
-        "application/feed+json; charset=utf-8"
-    );
+    assert_eq!(response.headers()["content-type"], "application/zip");
     assert!(
         response.headers()["content-disposition"]
             .to_str()
             .unwrap()
-            .starts_with("attachment")
+            .starts_with("attachment; filename=\"nine-turtles-")
     );
-    let file: Value = serde_json::from_str(&response.text().await.unwrap()).unwrap();
+    let file = common::starred_file(&reader.base, &reader.cookie).await;
     let titles: Vec<&str> = file["items"]
         .as_array()
         .unwrap()
@@ -311,7 +305,7 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
     .execute(&reader.state.db)
     .await
     .unwrap();
-    let file = reader.get("/api/starred/export").await;
+    let file = common::starred_file(&reader.base, &reader.cookie).await;
     let item = &file["items"][0];
     assert_eq!(item["url"], "https://quiet.example/117");
     let content = item["content_html"].as_str().unwrap();
@@ -321,7 +315,7 @@ async fn the_starred_export_is_a_json_feed_of_every_starred_article() {
 
     // Not signed in: nothing.
     let response = Client::new()
-        .get(format!("{}/api/starred/export", reader.base))
+        .get(format!("{}/api/everything", reader.base))
         .send()
         .await
         .unwrap();

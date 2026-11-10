@@ -163,15 +163,7 @@ async fn an_email_to_a_readers_address_becomes_an_article_of_its_senders_feed() 
         .unwrap();
     assert!(due.is_empty());
     // And it isn't in the OPML file, which lists web feeds.
-    let opml = reqwest::Client::new()
-        .get(format!("{base}/api/opml"))
-        .header("cookie", &cookie)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+    let opml = common::from_everything(&base, &cookie, "follows.opml").await;
     assert!(!opml.contains("slow garden"), "{opml}");
 }
 

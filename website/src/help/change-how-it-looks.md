@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-10
+updated: 2026-11-11
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -37,6 +37,22 @@ whole app, not just the article:
     following your device's own setting.
 
 Text size and font are only in **Aa**, next to the text they change.
+
+## Everything larger
+
+To make the whole app larger (the lists, buttons and Settings, not only
+the article), use your device's own setting:
+
+- **iPhone or iPad:** Settings › Display & Brightness › **Text Size** (or
+  Accessibility › Display & Text Size › **Larger Text**). nine turtles
+  grows with it, as Mail and Messages do, the next time you open it. (A
+  smaller setting leaves it as it is, so everything stays easy to tap.)
+- **Android:** Settings › Display › **Font size**. Your browser grows the
+  whole page with it.
+- **Computer:** zoom the browser with <kbd>⌘</kbd> <kbd>+</kbd> on a Mac or
+  <kbd>Ctrl</kbd> <kbd>+</kbd> on Windows.
+
+Aa's text size still works on top, for the article alone.
 
 ## Good to know
 

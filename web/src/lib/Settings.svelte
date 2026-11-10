@@ -35,8 +35,6 @@
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
-  import { noted } from "./notes.svelte";
-  import { stars } from "./stars.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import NoteLine from "./NoteLine.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
@@ -194,11 +192,6 @@
     importUndo = undefined;
     importUndone = { words: "", refusal: false };
   }
-  /** Your data's two exports: each a download once there's something in it, else a line saying there's nothing yet. */
-  const exports = $derived([
-    { href: "/api/starred/export", label: "Export starred articles", any: stars.any, none: "Nothing starred yet" },
-    { href: "/api/notes/export", label: "Export notes and highlights", any: noted.any, none: "No notes yet" },
-  ]);
 
   async function chooseUnread(next: boolean) {
     unreadMessage = "";
@@ -478,14 +471,8 @@
         <div class="inset-group">
           <ImportOpml onImported={() => ((importUndone = { words: "", refusal: false }), onImported())} bind:lines={importLines} bind:undo={importUndo} />
           <ImportStars onImported={() => (endImportUndo(), onImported())} bind:lines={importLines} />
-          <!-- An export with nothing in it says so instead, in a row that isn't a button (decision 0191). -->
-          {#each exports as { href, label, any, none } (href)}
-            {#if any}
-              <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" /></span></a>
-            {:else}
-              <p class="inset-row text-muted">{none}</p>
-            {/if}
-          {/each}
+          <!-- Everything the reader keeps, as one folder of plain pages (decision 0251). -->
+          <a href="/api/everything" download class="inset-row inset-action">Download everything<span class="row-glyph"><Icon name="download" /></span></a>
         </div>
         <div role="status" class={["inset-foot flex flex-col gap-1 text-ink", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line (line)}
@@ -506,10 +493,10 @@
         </div>
 
         <p class="inset-foot">
-          OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
-          keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,
-          with each article's text, its original link and the feed it came from. Notes and highlights are saved as one Markdown file. To bring your stars over from
-          Inoreader, Feedly, Feedbin or another feed reader, import the JSON file it exports them in.
+          Download everything gives you one folder: open its index.html in any browser, with or without nine turtles, to
+          find who you follow, every article you starred or highlighted, and your notes. It also holds an OPML file and a
+          JSON Feed file for other feed apps. To bring your stars over from Inoreader, Feedly, Feedbin or another feed
+          reader, import the JSON file it exports them in.
         </p>
       </section>
       {:else if page === "install"}

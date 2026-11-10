@@ -12,12 +12,15 @@ import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";
 import { listenForInstall } from "./lib/installing.svelte";
+import { followSystemText } from "./lib/systemText";
 
 const target = document.getElementById("app");
 if (!target) throw new Error("nine turtles: the #app element is missing from index.html");
 
-// The reader's theme and reading settings for this device, before anything is drawn.
+// The reader's theme and reading settings for this device, and the phone's own
+// text size, before anything is drawn.
 apply(load());
+followSystemText();
 mount(App, { target });
 
 // Keeps the browser's offer to install nine turtles for Settings › Install the app on any device.

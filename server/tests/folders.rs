@@ -445,7 +445,7 @@ async fn unsubscribing_hides_a_feed_undo_brings_it_back_and_stars_are_kept() {
     let article = reader.get(&format!("/api/articles/{starred}")).await;
     assert_eq!(article["article"]["feed_title"], "Alpha blog");
     // And the starred export still has it, credited to its feed.
-    let export = reader.get("/api/starred/export").await;
+    let export = common::starred_file(&reader.base, &reader.cookie).await;
     assert_eq!(export["items"].as_array().unwrap().len(), 1);
     assert_eq!(export["items"][0]["title"], "Alpha blog post 3");
     assert_eq!(
@@ -579,15 +579,8 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(answer["error"], "not-opml");
 
-    // Export: every feed, under each of its folders (in the reader's order), as a download.
-    let response = reader.get_text("/api/opml").await;
-    assert!(
-        response.headers()["content-disposition"]
-            .to_str()
-            .unwrap()
-            .starts_with("attachment")
-    );
-    let exported = response.text().await.unwrap();
+    // Export: every feed, under each of its folders (in the reader's order), in Download everything.
+    let exported = common::from_everything(&reader.base, &reader.cookie, "follows.opml").await;
     let listed: Vec<_> = nine_turtles::subscriptions::read(&exported)
         .unwrap()
         .into_iter()

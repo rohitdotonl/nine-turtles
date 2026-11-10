@@ -1,5 +1,6 @@
-//! Your data › Export notes and highlights (SPEC section 42): everything the
-//! reader wrote, as one Markdown file any notes app reads. People A to Z,
+//! Notes and highlights as a file (SPEC section 42): everything the reader
+//! wrote, as one Markdown file any notes app reads, inside Download
+//! everything (`everything`, decision 0251). People A to Z,
 //! each with their note, then their highlighted or noted articles, newest
 //! first: the title linked to the original, the date, each highlight as a
 //! quote with its note under it, then the note on the whole article. People
@@ -8,18 +9,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use axum::{
-    extract::State,
-    http::header,
-    response::{IntoResponse, Response},
-};
-
-use crate::{
-    AppState,
-    auth::{SignedIn, database_problem},
-    dates::civil_date,
-    feed::link_without_tracking,
-};
+use crate::{dates::civil_date, feed::link_without_tracking};
 
 /// One highlight or note, with the article it's on and whose that is.
 #[derive(sqlx::FromRow)]
@@ -173,26 +163,6 @@ fn write(people: &BTreeMap<(String, String), Person>, today: i64) -> String {
         }
     }
     out
-}
-
-pub(super) async fn download(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-) -> Response {
-    match markdown(&state.db, person, crate::now()).await {
-        Ok(text) => (
-            [
-                (header::CONTENT_TYPE, "text/markdown; charset=utf-8"),
-                (
-                    header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"nine-turtles-notes.md\"",
-                ),
-            ],
-            text,
-        )
-            .into_response(),
-        Err(error) => database_problem("exporting notes and highlights", &error),
-    }
 }
 
 #[cfg(test)]

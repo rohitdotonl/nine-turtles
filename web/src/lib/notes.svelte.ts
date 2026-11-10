@@ -28,9 +28,6 @@ export type Waiting =
   | { kind: "remove"; article: number; id: number }
   | { kind: "article-note"; article: number; note: string | null };
 
-/** Whether the reader has highlighted or written a note on anything: Settings › Your data offers their export from then on. */
-export const noted = $state({ any: false });
-
 /** Changes still waiting, oldest first (kept for each reader, on this device). */
 export const waiting: { list: Waiting[] } = $state({ list: [] });
 
@@ -231,7 +228,6 @@ export class Marks {
     const before = this.notes;
     const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
     this.keep([...this.notes, made]);
-    noted.any = true;
     const { answer, refusal } = await this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, before);
     if (refusal) return { problem: refusal };
     const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
@@ -269,7 +265,6 @@ export class Marks {
   async setArticleNote(note: string | null): Promise<string | undefined> {
     const before = this.notes;
     const clean = note?.trim() || null;
-    if (clean) noted.any = true;
     this.keep(withWaiting(this.notes, this.full.id, [{ kind: "article-note", article: this.full.id, note: clean }]));
     return (await this.change({ kind: "article-note", article: this.full.id, note: clean }, before)).refusal;
   }

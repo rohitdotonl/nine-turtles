@@ -121,7 +121,7 @@ anywhere or counted.
 - With nothing kept, Unsubscribe doesn't ask.
 
 **Your data** (section 18)
-- **Export notes and highlights** saves one Markdown file: each person
+- **Download everything** (section 23) holds them in one Markdown file, `notes-and-highlights.md`, and each marked article as a page of its own with its highlights and notes. The Markdown file has each person
   with their note, then each marked article with its title linked to the
   original, its date, its highlights as quotations with their notes, and the
   note on the whole article.
@@ -146,5 +146,5 @@ anywhere or counted.
    find field: the person is found.
 7. Their page › Edit › Unsubscribe: it asks what to do with what you
    saved. Choose Keep them: Notes still lists the article.
-8. Settings › Your data › Export notes and highlights: a Markdown file with
-   all of it.
+8. Settings › Your data › Download everything: notes-and-highlights.md has
+   all of it, and the article's own page shows its highlights and notes.

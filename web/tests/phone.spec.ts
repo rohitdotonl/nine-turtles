@@ -23,6 +23,23 @@ async function openHome(page: Page) {
   await expect(sidebar(page)).toBeVisible();
 }
 
+/**
+ * Stands in for an iPhone's Text Size, which Chromium doesn't have: the
+ * system's body text is `pixels` (17 by default) when nine turtles measures it.
+ */
+async function pretendTextSize(page: Page, pixels: number) {
+  await page.addInitScript((pixels) => {
+    const supports = CSS.supports.bind(CSS);
+    CSS.supports = ((...args: [string, string?]) =>
+      (args[0] === "font" && args[1] === "-apple-system-body") || supports(...(args as [string, string]))) as typeof CSS.supports;
+    const computed = window.getComputedStyle.bind(window);
+    window.getComputedStyle = ((element: Element, pseudo?: string | null) =>
+      element instanceof HTMLElement && element.hidden && element.tagName === "SPAN" && element.parentElement === document.body
+        ? ({ fontSize: `${pixels}px` } as CSSStyleDeclaration)
+        : computed(element, pseudo)) as typeof window.getComputedStyle;
+  }, pixels);
+}
+
 test.describe("on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone layout only");
 
@@ -34,6 +51,26 @@ test.describe("on a phone", () => {
       await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
       await expect(page.getByText("You don't follow anyone at this address.")).toBeVisible();
     }
+  });
+
+  test("the phone's own Text Size grows the whole app, never shrinks it, and every target stays 44px (decision 0252)", async ({ page }) => {
+    await pretendTextSize(page, 34); // the largest Larger Text sizes: the app stops at twice its size
+    await openHome(page);
+    await expect.poll(() => page.evaluate(() => document.documentElement.style.fontSize)).toBe("200%");
+    // Nothing runs off the side, and every button and link is still at least 44px tall.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const short = await sidebar(page).evaluate((nav) =>
+      [...nav.querySelectorAll("a, button")].filter((e) => (e as HTMLElement).offsetParent && e.getBoundingClientRect().height < 44).map((e) => e.textContent),
+    );
+    expect(short).toEqual([]);
+
+    // A smaller Text Size leaves the app as designed: shrinking it would make targets under 44px.
+    const smaller = await page.context().newPage();
+    await pretendTextSize(smaller, 14);
+    await smaller.goto(new URL("/", FEEDS_APP).href);
+    await appReady(smaller);
+    expect(await smaller.evaluate(() => document.documentElement.style.fontSize)).toBe("");
+    await smaller.close();
   });
 
   test("Feeds → Items → Article, each with a back arrow saying where it goes", async ({ page }) => {
