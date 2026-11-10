@@ -28,7 +28,11 @@ was left was inside the article, and a few steps nearer a well-set book.
    Atkinson. Addresses, codes and the article's own text keep the crossed
    zero, where it tells 0 from O. A date written inside a sentence ("kept
    until 10 Dec", "Nothing new has arrived since 10:05.") is text, not a
-   `<time>`, and keeps the crossed zero for now. The licence (SIL OFL 1.1, no reserved
+   `<time>`, so its date alone is found and marked `.dated`
+   (`web/src/lib/dated.ts`, `Dated.svelte`) and takes the same face
+   (Rohit, 10 November: every date, in a small change of its own). The
+   words around it keep Atkinson's own zero, as they may hold an address,
+   a title or a code. The licence (SIL OFL 1.1, no reserved
    name) allows a changed copy under its own name.
 4. **Two weights.** Settings' row names lose their medium weight (decision
    0120) and are regular, as the sidebar's rows; the 500 files go.

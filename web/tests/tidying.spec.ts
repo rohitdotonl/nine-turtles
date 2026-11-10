@@ -150,6 +150,8 @@ test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and o
   const kept = yours(page).getByRole("region", { name: "Recently unsubscribed" });
   await expect(kept.getByRole("button", { name: `Bring back ${first}` })).toBeVisible();
   await expect(kept.getByText(/^Unsubscribed today · kept until \d+\s\w+/).first()).toBeVisible();
+  // A date inside a sentence has the plain zero too (decision 0246).
+  await expect(kept.getByText(/^Unsubscribed today · kept until/).first().locator(".dated")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
   await expect(kept.getByText("Kept for 30 days, with their articles, so you can bring them back.")).toBeVisible();
 
   // From the keyboard: Bring back, then the keyboard waits on Undo.

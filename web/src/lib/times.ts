@@ -7,7 +7,7 @@
 // decision 0218. Every date and time in the app is written here.
 
 // Three letters each, always: the browser's own short months say "Sept" for September.
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
 
 let monthFirst = false;

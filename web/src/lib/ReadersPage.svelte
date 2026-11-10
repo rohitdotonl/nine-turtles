@@ -9,6 +9,7 @@
   reads.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
   import { SETTINGS_PAGES } from "./router";
@@ -123,9 +124,9 @@
                 <span class="flex min-w-0 flex-col">
                   <span class="value">{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted"> (you)</span>{/if}</span>
                   <span class="text-meta text-muted"
-                    >Joined {date(reader.createdAt)} · {plural(reader.feeds, "feed", "feeds")}</span
+                    ><Dated text={`Joined ${date(reader.createdAt)} · ${plural(reader.feeds, "feed", "feeds")}`} /></span
                   >
-                  <span class="text-meta text-muted">Last here {dateOrToday(reader.lastHere)}</span>
+                  <span class="text-meta text-muted"><Dated text={`Last here ${dateOrToday(reader.lastHere)}`} /></span>
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
                   {/if}

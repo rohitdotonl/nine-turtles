@@ -12,6 +12,7 @@
   kept for 30 days under Recently unsubscribed in Everyone you follow (decision 0240), as the reader's own is.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import NoteLine from "./NoteLine.svelte";
   import { tick } from "svelte";
@@ -174,7 +175,7 @@
       <div class="inset-row item-row">
         <p class="min-w-0 flex-1 break-words">
           {name}<br /><span class="text-meta text-muted"
-            >Connected {date(assistant.connectedAt)} · {assistant.lastUsedAt === null ? "Not used yet" : `Last used ${date(assistant.lastUsedAt)}`}</span
+            ><Dated text={`Connected ${date(assistant.connectedAt)} · ${assistant.lastUsedAt === null ? "Not used yet" : `Last used ${date(assistant.lastUsedAt)}`}`} /></span
           >
         </p>
         <button

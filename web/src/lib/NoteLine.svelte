@@ -9,6 +9,7 @@
   words alone, which then stay in the page while empty.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
   import { tipEvery } from "./keyboard";
@@ -47,7 +48,7 @@
 {#if message || announce}
   <span class={["flex w-full items-center gap-x-2", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}>
     <span role={announce ? "status" : undefined} class="flex min-w-0 flex-1 items-start gap-2 py-2"
-      >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</span
+      >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Dated text={message} /></span
     >
     {#if message}
       {#if onRetry}
