@@ -4,7 +4,7 @@ description: Delete your account and everything in it, or delete only what you f
 groupId: you-and-your-account
 order: 5
 spec: 23
-updated: 2026-11-06
+updated: 2026-11-10
 related: [download-everything, your-plan, unfollow-someone]
 ---
 
@@ -15,7 +15,7 @@ related: [download-everything, your-plan, unfollow-someone]
 
 ## Delete your account
 
-1. Open **Settings › Account** and press **Delete account…**
+1. Open **Settings** and, under **Leaving** at the very end, press **Delete account…**
 2. Read what will go. Under **Before you go, you can download them**, save
    anything you'd like to keep.
 3. Type **Your password**, so nobody else at a device you left signed in

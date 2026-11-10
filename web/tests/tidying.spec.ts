@@ -137,7 +137,7 @@ test("when everyone you follow couldn't load, Try again loads them, keeping the 
   await expect(yours(page).getByRole("button", { name: "Choose…" })).toBeVisible();
 });
 
-test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and one already gone (decision 0239)", async ({ page }) => {
+test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and one already gone (decision 0240)", async ({ page }) => {
   const [first, second] = await twoBlogs(page);
   await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
   await appReady(page);

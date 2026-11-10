@@ -109,7 +109,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   await expect(group.getByText("Copy it now: it won't be shown again.", { exact: false })).toBeVisible();
   await expect(group.getByRole("button", { name: "Disconnect My helper" })).toBeVisible();
 
-  // What an assistant unsubscribes from is listed with the reader's own (decision 0239).
+  // What an assistant unsubscribes from is listed with the reader's own (decision 0240).
   await expect(group.getByText("What an assistant unsubscribes from is kept for 30 days, under Recently unsubscribed in Everyone you follow.")).toBeVisible();
   await expect(group.getByRole("button", { name: /^Bring back/ })).toHaveCount(0);
 });

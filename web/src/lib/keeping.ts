@@ -32,3 +32,18 @@ export function keptWords(kept: Kept): string {
   const last = parts.pop() ?? "";
   return `You ${parts.length > 0 ? `${parts.join(", ")} and ${last}` : last}.`;
 }
+
+/**
+ * The red button's own words, naming exactly what goes (decision 0239):
+ * "Remove the 2 starred articles too", "Remove the starred article, the 3
+ * highlighted or noted articles and your note on them too".
+ */
+export function removeWords(kept: Kept): string {
+  const these = (n: number, what: string) => (n === 1 ? `the ${what} article` : `the ${n} ${what} articles`);
+  const parts: string[] = [];
+  if (kept.starred > 0) parts.push(these(kept.starred, "starred"));
+  if (kept.marked > 0) parts.push(these(kept.marked, "highlighted or noted"));
+  if (kept.note) parts.push("your note on them");
+  const last = parts.pop() ?? "them";
+  return `Remove ${parts.length > 0 ? `${parts.join(", ")} and ${last}` : last} too`;
+}

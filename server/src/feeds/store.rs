@@ -50,7 +50,7 @@ pub async fn follow_again(
 /// Whether "Remove them too" has already been done for any of these places
 /// the reader unsubscribed from (`notes::drop_kept_due`): Undo then says
 /// it's too late rather than bring back less than it promises; Bring back
-/// still can (decision 0239).
+/// still can (decision 0240).
 pub async fn removed_already(
     connection: &mut sqlx::SqliteConnection,
     person: i64,
@@ -257,7 +257,7 @@ pub async fn followed_at(
 /// The feed at this address (its `url_key`) that the reader unsubscribed
 /// from but that isn't cleared yet, so Undo or Bring back could still bring
 /// it back; with `kept_only`, only one kept 30 days (every unsubscribe since
-/// decision 0239, not one an import's Undo is clearing).
+/// decision 0240, not one an import's Undo is clearing).
 pub(super) async fn waiting_at(
     connection: &mut sqlx::SqliteConnection,
     person: i64,

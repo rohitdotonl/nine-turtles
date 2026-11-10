@@ -7,7 +7,8 @@
 
   Visiting: their name in Literata with a quiet underlined Edit beside it, so
   Write to is the page's one strong button (decision 0215), their
-  blog's own title under it when that isn't their name (one source), then
+  blog's own title under it when that isn't their name (one source), then,
+  while a source is paused, the line saying so with Resume (PausedLine), then
   "Write to Tomas Berg", the solid button with the paper plane, with the
   address under it (WriteBack, the owner's core path, points 9 and 10), then
   the reader's private note on them (SPEC section 42), then Your highlights
@@ -21,6 +22,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
   import SourcePage from "./SourcePage.svelte";
@@ -123,6 +125,8 @@
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
       </div>
+      <!-- Paused, it says so here as above their list, with Resume (decision 0239). -->
+      {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}
       <WriteBack feedId={feed.id} {library} />
       <!-- The reader's private note on them (SPEC section 42). -->
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />

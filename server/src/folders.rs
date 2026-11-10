@@ -4,7 +4,7 @@
 //!
 //! Unsubscribing hides the feed from that reader at once (its background
 //! checks stop once nobody follows it), but keeps everything for 30 days
-//! (`KEPT_FOR`, decision 0239), so Undo straight afterwards, or Bring back
+//! (`KEPT_FOR`, decision 0240), so Undo straight afterwards, or Bring back
 //! under Recently unsubscribed, can bring it back whole, read history
 //! included. After that the reader's unstarred entries and folder pairs for
 //! it are removed for good, and a folder it was the last one in goes with
@@ -42,7 +42,7 @@ pub use shared::{Deleted, Renamed, delete, named, put_back, rename};
 pub const UNDO_FOR: i64 = 10 * 60;
 
 /// How long a feed the reader (or an assistant) unsubscribed from is kept,
-/// hidden, for Bring back, in seconds (decision 0239).
+/// hidden, for Bring back, in seconds (decision 0240).
 pub const KEPT_FOR: i64 = 30 * 24 * 60 * 60;
 
 /// The longest name a feed or folder can have, in characters.

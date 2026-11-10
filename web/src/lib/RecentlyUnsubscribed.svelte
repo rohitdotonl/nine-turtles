@@ -1,5 +1,5 @@
 <!--
-  Recently unsubscribed (decision 0239), the last group of Everyone you
+  Recently unsubscribed (decision 0240), the last group of Everyone you
   follow: who the reader, or an assistant, unsubscribed from in the last 30
   days, newest first, each with when and until when it's kept, and Bring
   back. Drawn as Settings' rows; nothing shows while it's empty.

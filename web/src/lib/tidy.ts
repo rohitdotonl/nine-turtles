@@ -148,7 +148,7 @@ export async function resubscribeAll(ids: number[]): Promise<Refusal | undefined
   return (await change("/api/tidy/resubscribe", { feeds: ids })).refusal;
 }
 
-/** Bring back, under Recently unsubscribed (decision 0239): "too-many" past the most feeds a reader follows. */
+/** Bring back, under Recently unsubscribed (decision 0240): "too-many" past the most feeds a reader follows. */
 export async function bringBackAll(ids: number[]): Promise<Refusal | "too-many" | undefined> {
   return (await sendChange("/api/tidy/resubscribe", { feeds: ids, bring_back: true }, ["too-late", "too-many"])).refusal;
 }

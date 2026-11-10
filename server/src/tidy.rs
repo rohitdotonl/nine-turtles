@@ -79,7 +79,7 @@ const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
      ORDER BY title COLLATE NOCASE, feed_id";
 
 /// A feed the reader unsubscribed from (or an assistant did) that's still
-/// kept, so Bring back can follow it again (decision 0239).
+/// kept, so Bring back can follow it again (decision 0240).
 #[derive(Serialize, sqlx::FromRow)]
 struct Kept {
     feed_id: i64,
@@ -159,7 +159,7 @@ struct BringingBack {
     feeds: Vec<i64>,
     /// Bring back under Recently unsubscribed, rather than Undo: it may
     /// bring a place back without what "Remove them too" removed, and
-    /// counts towards the most feeds a reader follows (decision 0239).
+    /// counts towards the most feeds a reader follows (decision 0240).
     #[serde(default)]
     bring_back: bool,
 }

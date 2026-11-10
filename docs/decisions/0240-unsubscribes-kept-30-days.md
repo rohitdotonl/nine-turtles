@@ -1,4 +1,4 @@
-# 0239: Your own unsubscribes are kept 30 days, with Bring back
+# 0240: Your own unsubscribes are kept 30 days, with Bring back
 
 *10 November 2026.*
 

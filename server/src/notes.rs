@@ -404,7 +404,7 @@ pub async fn kept_by(
     }))
 }
 
-/// Unsubscribing with "Remove them too": what the reader kept from these
+/// Unsubscribing with the red "Remove … too": what the reader kept from these
 /// places goes once Undo has passed (`drop_kept_due`); Undo before then
 /// brings it all back (`feeds::store::follow_again`).
 pub async fn drop_later(
@@ -427,7 +427,7 @@ pub async fn drop_later(
 /// for every reader's unsubscribe at or before `before`, though the place
 /// itself is kept 30 days: what the reader asked to remove doesn't linger
 /// in Starred, Notes and search for a month, and Bring back returns the
-/// place without it (decision 0239). Answers how many places.
+/// place without it (decision 0240). Answers how many places.
 pub async fn drop_kept_due(db: &sqlx::SqlitePool, before: i64) -> Result<usize, sqlx::Error> {
     let due: Vec<(i64, i64)> = sqlx::query_as(
         "SELECT person_id, feed_id FROM subscriptions

@@ -79,7 +79,8 @@ PLAN.md → V1, item 1.*
   their list. It shows their name with **Edit** beside it, a quiet underlined
   word (44px tall and wide to touch), so Write to is the page's one strong button (decision 0215); for one
   source whose own title isn't their name, that title under it, in the
-  reading serif ("Notes from Tomas" under Tomas Berg); under that, for a
+  reading serif ("Notes from Tomas" under Tomas Berg); while a source is
+  paused, the line saying so with Resume (section 15, decision 0239); under that, for a
   person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
   address under it once nine turtles knows it (section 37; the owner's core
   path, point 9); then your private note on them (section 42); then
@@ -161,7 +162,7 @@ PLAN.md → V1, item 1.*
   reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
   them all back, and so does Bring back for 30 days, as one row under
-  Recently unsubscribed, decision 0239). To leave one source only, take it out first. Following a
+  Recently unsubscribed, decision 0240). To leave one source only, take it out first. Following a
   source again within its 30 days brings it back whole, in its person;
   after that it starts afresh, on its own. Find new address keeps the
   source in its person. Each reader's people and publications are theirs

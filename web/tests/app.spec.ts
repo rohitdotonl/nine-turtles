@@ -680,11 +680,11 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   await openApp(page, "/settings");
   // Each group has a small header above it; the groups share one column, no wider than 560px. The owner also sees Your nine turtles (decision 0087).
   const groups = page.getByRole("region", { name: "Settings" }).locator(".inset-group:visible");
-  await expect(groups).toHaveCount(6);
+  await expect(groups).toHaveCount(7);
   const boxes = await groups.evaluateAll((all) => all.map((each) => each.getBoundingClientRect()).map((box) => [Math.round(box.x), Math.round(box.width)]));
   for (const [x, width] of boxes) expect([x, width]).toEqual(boxes[0]);
   expect(boxes[0]![1]).toBeLessThanOrEqual(560);
-  for (const name of ["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]) {
+  for (const name of ["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account", "Leaving"]) {
     await expect(page.getByRole("heading", { level: 3, name })).toBeVisible();
   }
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);

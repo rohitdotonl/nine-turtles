@@ -42,6 +42,8 @@ describe("article times", () => {
     expect(pausedSince(at(new Date(2026, 9, 23, 9, 0)), now)).toBe("Paused today.");
     expect(pausedSince(at(new Date(2026, 9, 20, 9, 0)), now)).toBe("Paused on 20 Oct.");
     expect(pausedSince(at(new Date(2025, 11, 30, 9, 0)), now)).toBe("Paused on 30 Dec 2025.");
+    expect(pausedSince(at(new Date(2026, 9, 20, 9, 0)), now, "since")).toBe("Paused since 20 Oct.");
+    expect(pausedSince(at(new Date(2026, 9, 23, 9, 0)), now, "since")).toBe("Paused today.");
   });
 
   it("write every date one way, three letters for the month, even September (decision 0215)", () => {

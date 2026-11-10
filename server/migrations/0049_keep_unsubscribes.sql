@@ -1,5 +1,5 @@
 -- A reader's own unsubscribes are kept 30 days too, as an assistant's
--- already were (decision 0239): every unsubscribe now sets
+-- already were (decision 0240): every unsubscribe now sets
 -- `subscriptions.kept_until`, so this marks which ones an assistant made,
 -- for Settings › Everyone you follow › Recently unsubscribed to say so.
 -- Every unsubscribe kept until now was an assistant's.

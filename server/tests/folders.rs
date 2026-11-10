@@ -486,7 +486,7 @@ async fn a_feed_unsubscribed_with_no_stars_is_removed_entirely() {
         .post(&format!("/api/feeds/{gamma}/unsubscribe"), json!({}))
         .await;
     // Unsubscribing from another feed no longer ends the first one's keep
-    // (decision 0239); its 30 days passing does.
+    // (decision 0240); its 30 days passing does.
     let beta = reader.follow("beta").await;
     reader
         .post(&format!("/api/feeds/{beta}/unsubscribe"), json!({}))

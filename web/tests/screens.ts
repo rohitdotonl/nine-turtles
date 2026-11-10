@@ -274,7 +274,7 @@ export const SCREENS: Screen[] = [
   },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
   {
-    // Everyone you follow scrolled to Recently unsubscribed (decision 0239): one the reader
+    // Everyone you follow scrolled to Recently unsubscribed (decision 0240): one the reader
     // left today and one an assistant left, answered here so nothing is really unsubscribed.
     name: "your-feeds-recently-unsubscribed",
     path: "/settings/feeds",

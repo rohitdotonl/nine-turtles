@@ -8,7 +8,7 @@
   chosen, the bar at the foot moves them to one folder or unsubscribes from
   them all, in one go, with one Undo until your next action. Last,
   Recently unsubscribed: who was left in the last 30 days, each with Bring
-  back (RecentlyUnsubscribed.svelte, decision 0239).
+  back (RecentlyUnsubscribed.svelte, decision 0240).
 -->
 <script lang="ts">
   import type { LoadedLibrary } from "./library.svelte";

@@ -57,7 +57,7 @@ pub async fn forget_disconnected(
 
 /// Settings: the reader's connected assistants. What an assistant
 /// unsubscribed from is listed with the reader's own unsubscribes, in
-/// Everyone you follow (`tidy::list`, decision 0239).
+/// Everyone you follow (`tidy::list`, decision 0240).
 pub async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed = async {
         forget_disconnected(&state.db, Some(person), now() - UNDO_FOR).await?;

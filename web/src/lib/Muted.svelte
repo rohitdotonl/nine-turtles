@@ -57,7 +57,7 @@
     row.busy = false;
     if (refusal) {
       // Hiding again is Undo for Unhide (BRAND.md → "Messages").
-      row.message = muted && refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal, "The article couldn't be unhidden.");
+      row.message = muted && refusal === "trouble" ? UNDO_FAILED : ruleRefused(refusal, "The article couldn't be unhidden. Try again in a moment.");
       return;
     }
     row.unmuted = !muted;

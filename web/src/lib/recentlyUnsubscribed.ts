@@ -1,4 +1,4 @@
-// Recently unsubscribed (decision 0239): who the reader, or an assistant,
+// Recently unsubscribed (decision 0240): who the reader, or an assistant,
 // unsubscribed from in the last 30 days, kept with their articles so Bring
 // back can follow them again, at the end of Everyone you follow.
 

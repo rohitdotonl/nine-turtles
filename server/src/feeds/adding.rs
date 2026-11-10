@@ -197,7 +197,7 @@ async fn add(
         }
         Link::Other => url,
     };
-    // A feed unsubscribed from is kept 30 days (decision 0239): adding it
+    // A feed unsubscribed from is kept 30 days (decision 0240): adding it
     // again brings it back whole, as Bring back does, rather than starting
     // it afresh.
     if let Some(id) = bring_back(state, person, &url, true).await? {
@@ -277,7 +277,7 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
 
 /// Follows again a feed at this address that the reader unfollowed but
 /// that isn't cleared yet, as Bring back does; with `kept_only`, only one
-/// kept its 30 days (decision 0239).
+/// kept its 30 days (decision 0240).
 async fn bring_back(
     state: &AppState,
     person: i64,

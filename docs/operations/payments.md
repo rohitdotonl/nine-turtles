@@ -82,7 +82,7 @@ mode works without Dodo's approval; you don't need your ID or bank yet.
    reader.
 5. Press **Billing and cancelling**, cancel, and come back: it says
    "Cancelled. It lasts until …".
-6. Delete that test reader's account when you're done (Settings › Account
+6. Delete that test reader's account when you're done (Settings › Leaving
    › Delete account…).
 
 If something doesn't work, the Readers page's problems list shows what nine

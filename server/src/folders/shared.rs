@@ -44,7 +44,7 @@ pub async fn rename(
             .await?;
     if let Some(hidden) = other {
         // A folder hidden because everyone in it was unsubscribed from
-        // (still kept, decision 0239) can't be seen, so it never blocks a
+        // (still kept, decision 0240) can't be seen, so it never blocks a
         // name: this folder takes its place, and its waiting pairs, so Bring
         // back still lands in a folder of that name.
         let waiting: bool = sqlx::query_scalar(

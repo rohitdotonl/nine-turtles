@@ -9,7 +9,7 @@
   (decision 0238), so a slip never means connecting again from inside the
   assistant. For an assistant that can't show the connect
   page, "Make an assistant key" makes a key, shown once with Copy. What an assistant unsubscribes from is
-  kept for 30 days under Recently unsubscribed in Everyone you follow (decision 0239), as the reader's own is.
+  kept for 30 days under Recently unsubscribed in Everyone you follow (decision 0240), as the reader's own is.
 -->
 <script lang="ts">
   import LoadFailed from "./LoadFailed.svelte";

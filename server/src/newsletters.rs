@@ -81,7 +81,7 @@ pub const ALL_DAILY_BYTES: i64 = 100 * 1024 * 1024;
 /// How long a sender stays away once the reader's unsubscribe is final (and
 /// the sender told, `tell_senders`), so a slow sender's last emails don't
 /// bring the feed back. Counted from the unsubscribe, it's this after the
-/// 30 days it's kept (`folders::KEPT_FOR`, decision 0239). After that, an
+/// 30 days it's kept (`folders::KEPT_FOR`, decision 0240). After that, an
 /// email from it (the reader signed up again, say) makes the feed afresh.
 pub const STAYS_AWAY_FOR: i64 = 30 * 24 * 60 * 60;
 

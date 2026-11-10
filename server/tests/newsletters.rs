@@ -333,7 +333,7 @@ async fn after_unsubscribing_a_senders_emails_stay_away() {
     assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 0);
 
     // A month on, the reader's 30 days are just over and the sender only
-    // just told: a slow sender's email still stays away (decision 0239).
+    // just told: a slow sender's email still stays away (decision 0240).
     let back = async |seconds: i64| {
         sqlx::query("UPDATE feeds SET unsubscribed_at = unsubscribed_at - ?")
             .bind(seconds)
