@@ -49,15 +49,24 @@ export function setsEnglishPunctuation(language: string | null | undefined): boo
   return !language || /^en\b/i.test(language);
 }
 
+/** Where a new line of text starts: a quote mark just after one opens. */
+const STARTS_LINE = /^(P|LI|DT|DD|H[1-6]|TD|TH|BLOCKQUOTE|FIGCAPTION|DIV|BR|SECTION|ASIDE|HEADER|FOOTER|TR|UL|OL|DL|TABLE|FIGURE|HR|DETAILS|SUMMARY)$/;
+
 /** Sets the punctuation of every text in `root` that isn't code, in place. */
 export function setPunctuation(root: Element): void {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) => (node.parentElement?.closest(AS_WRITTEN) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => (node instanceof Element && node.matches(AS_WRITTEN) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
   });
   let before = " ";
-  for (let node = walker.nextNode() as Text | null; node; node = walker.nextNode() as Text | null) {
-    const set = typeset(node.data, before);
-    if (set !== node.data) node.data = set;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node instanceof Element) {
+      // A paragraph, item, cell or line break starts afresh, whatever ended the one before.
+      if (STARTS_LINE.test(node.tagName)) before = " ";
+      continue;
+    }
+    const text = node as Text;
+    const set = typeset(text.data, before);
+    if (set !== text.data) text.data = set;
     if (set.trim()) before = set[set.length - 1]!;
   }
 }

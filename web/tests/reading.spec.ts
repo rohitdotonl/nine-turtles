@@ -436,7 +436,7 @@ test.describe("on a wide window", () => {
   test("a footnote opens where you are, and the article's typewriter marks are set properly", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
-    const text = article(page).locator(".article-text");
+    const text = article(page).locator("#article-text");
     // A footnote's number opens its note in a card just under the line (decision 0247); the notes stay at the end too.
     const one = text.locator("sup").getByRole("link", { name: "1", exact: true });
     await one.click();
@@ -453,22 +453,55 @@ test.describe("on a wide window", () => {
     await expect(one).toBeFocused();
     await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
-    // A note in a list, without its way back; × closes it, and so does a press anywhere else.
+    // From the keyboard alone: Enter on the number opens it; Tab reaches its ×, and Tab past it closes it.
+    await page.keyboard.press("Enter");
+    await expect(card).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(card.getByRole("button", { name: "Close" })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(card).toHaveCount(0);
+    // A note in a list, without its way back, its own link set as the article's are; × closes it, and so does a press anywhere else.
     await text.locator("sup").getByRole("link", { name: "2", exact: true }).click();
     const two = page.getByRole("dialog", { name: "Footnote 2" });
-    await expect(two).toContainText("She taught for \u2018thirty years\u2019, and wrote every letter by hand.");
-    await expect(two.getByRole("link")).toHaveCount(0);
+    await expect(two).toContainText("She taught for \u2018thirty years\u2019, and wrote every letter by hand;");
+    await expect(two.getByRole("link")).toHaveCount(1);
+    await expect(two.getByRole("link", { name: "her notebooks" })).toHaveCSS("text-decoration-line", "underline");
     await two.getByRole("button", { name: "Close" }).click();
     await expect(two).toHaveCount(0);
     await text.locator("sup").getByRole("link", { name: "2", exact: true }).click();
     await title(page, "The pleasure of a slow letter").click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
+    // A number that isn't a superscript, with the note's id on the note's own number, as some newsletters write them.
+    await text.getByRole("link", { name: "3", exact: true }).first().click();
+    const three = page.getByRole("dialog", { name: "Footnote 3" });
+    await expect(three).toContainText("A note shaped as some newsletters write them.");
+    await expect(three.getByRole("link")).toHaveCount(0);
+    await page.keyboard.press("Escape");
     // A note's own way back still jumps to its place.
-    await text.locator("li").getByRole("link").click();
+    await text.locator("li").getByRole("link", { name: "\u21a9" }).click();
     await expect(text.locator("sup").getByRole("link", { name: "2", exact: true })).toBeFocused();
-    // Curly quotes, an apostrophe, a dash and an ellipsis, as a typesetter would; code exactly as written.
+    // Curly quotes, an apostrophe, a dash and an ellipsis, as a typesetter would; a paragraph's opening mark opens; code exactly as written.
     await expect(text).toContainText("As my teacher said, \u201cDon\u2019t rush it \u2014 the words will wait\u2026\u201d");
+    await expect(text).toContainText("\u201cSlowly,\u201d she said, \u201calways slowly.\u201d");
     await expect(text.locator("code").first()).toHaveText('print("hello")');
+  });
+
+  test("a highlight kept with straight quotes is still found in the curled text", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    const id = new URL(page.url()).pathname.split("/").pop();
+    const made = await page.request.post(new URL(`/api/articles/${id}/highlights`, FEEDS_APP).href, {
+      data: { quote: `"Don't rush it -- the words` },
+      headers: { Origin: FEEDS_APP },
+    });
+    expect(made.status()).toBe(201);
+    await page.reload();
+    await expect(article(page).locator("#article-text mark.highlight").first()).toBeVisible();
+    await expect(article(page).locator("#article-text")).toContainText("\u201cDon\u2019t rush it \u2014 the words");
+    expect(await article(page).locator("#article-text mark.highlight").allTextContents()).toEqual(["\u201cDon\u2019t rush it \u2014 the words"]);
+    // Taken off again, so the other tests find the article as it was.
+    const { highlight } = (await made.json()) as { highlight: { id: number } };
+    await page.request.post(new URL(`/api/highlights/${highlight.id}/delete`, FEEDS_APP).href, { headers: { Origin: FEEDS_APP } });
   });
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {

@@ -118,8 +118,10 @@ A <a href="/letters">letter</a> can wait a week; a good essay can wait a year.</
 <pre><code>for book in shelf:
     read(book, slowly=True)</code></pre>
 <p>As my teacher said, "Don't rush it -- the words will wait..."<sup><a href="#fn-2" id="ref-2">2</a></sup></p>
+<p>"Slowly," she said, "always slowly."<a href="#footnote-3" id="footnote-anchor-3">3</a></p>
 <p id="note-1">1. Written in Python, a long time ago.</p>
-<ol><li id="fn-2">She taught for 'thirty years', and wrote <em>every</em> letter by hand. <a href="#ref-2">↩</a></li></ol>`;
+<ol><li id="fn-2">She taught for 'thirty years', and wrote <em>every</em> letter by hand; <a href="https://reading-room.example/teacher">her notebooks</a> are kept. <a href="#ref-2">↩</a></li></ol>
+<div><a id="footnote-3" href="#footnote-anchor-3">3</a><div><p>A note shaped as some newsletters write them.</p></div></div>`;
 
 // Shaped like a YouTube channel's feed; the channel and its videos are made up.
 const videos = `<?xml version="1.0" encoding="UTF-8"?>

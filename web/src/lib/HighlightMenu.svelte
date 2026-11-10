@@ -17,6 +17,7 @@
   import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
   import type { Note } from "./shapes";
+  import { dismissOn } from "./dismiss";
 
   let {
     anchor,
@@ -109,24 +110,13 @@
   // A press anywhere outside closes it (words chosen elsewhere open their own), as does Escape
   // wherever the keyboard is, and scrolling the article, unless a note is being written.
   $effect(() => {
-    const away = (event: PointerEvent) => {
-      if (menu && event.target instanceof Node && !menu.contains(event.target)) onClose(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      onClose(true);
-    };
+    const stop = dismissOn(() => menu, onClose);
     const scrolled = (event: Event) => {
       if (!writing && !(event.target instanceof Node && menu?.contains(event.target))) onClose(false);
     };
-    document.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", escape, true);
     document.addEventListener("scroll", scrolled, true);
     return () => {
-      document.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", escape, true);
+      stop();
       document.removeEventListener("scroll", scrolled, true);
     };
   });

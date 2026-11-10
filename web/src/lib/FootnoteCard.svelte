@@ -6,27 +6,30 @@
   // move or fade: it's there, then gone.
   import Icon from "./Icon.svelte";
   import type { Footnote } from "./footnotes";
+  import { dismissOn } from "./dismiss";
 
   let { note, top, onclose }: { note: Footnote; top: number; onclose: (returnFocus: boolean) => void } = $props();
   let card: HTMLElement | undefined = $state();
 
-  // A press anywhere else closes it, as does Escape wherever the keyboard is (as HighlightMenu does).
+  // Escape or a press anywhere else closes it (dismiss.ts). It opens in view,
+  // moving the page no more than it must, and closes if the column's width
+  // changes (a new text size, a resized window), as it would sit over the
+  // wrong line.
   $effect(() => {
-    card?.focus({ preventScroll: true });
-    const away = (event: PointerEvent) => {
-      if (card && event.target instanceof Node && !card.contains(event.target)) onclose(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      event.stopPropagation();
-      onclose(true);
-    };
-    document.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", escape, true);
+    if (!card) return;
+    card.focus({ preventScroll: true });
+    card.scrollIntoView({ block: "nearest" });
+    const stop = dismissOn(() => card, onclose);
+    const column = card.parentElement?.closest("article");
+    let width = column?.clientWidth;
+    const resized = new ResizeObserver(() => {
+      if (column && column.clientWidth !== width) onclose(false);
+      width = column?.clientWidth;
+    });
+    if (column) resized.observe(column);
     return () => {
-      document.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", escape, true);
+      stop();
+      resized.disconnect();
     };
   });
 </script>
@@ -43,8 +46,8 @@
     if (event.relatedTarget instanceof Node && !card?.contains(event.relatedTarget)) onclose(false);
   }}
 >
-  <!-- The note as the article has it, cleaned before it was stored (server/src/feed/clean.rs), after its number on the same line. -->
-  <div class="footnote-words"><span class="footnote-number" aria-hidden="true">{note.number}</span>{@html note.html}</div>
+  <!-- The note as the article has it, cleaned before it was stored (server/src/feed/clean.rs), after its number on the same line, set as the article's text is. -->
+  <div class="footnote-words article-text"><span class="footnote-number" aria-hidden="true">{note.number}</span>{@html note.html}</div>
   <button type="button" class="btn-quiet btn-icon footnote-close" aria-label="Close" title="Close" onclick={() => onclose(true)}><Icon name="close" size="alone" /></button>
 </div>
 

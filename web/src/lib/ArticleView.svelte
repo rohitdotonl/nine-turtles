@@ -46,7 +46,7 @@
   import { writesBack } from "./writeBack";
   import ArticleMarks from "./ArticleMarks.svelte";
   import FootnoteCard from "./FootnoteCard.svelte";
-  import { footnoteOf, type Footnote } from "./footnotes";
+  import { followAnchors, type Footnote } from "./footnotes";
   import { setPunctuation, setsEnglishPunctuation } from "./punctuation";
   import type { LoadedLibrary } from "./library.svelte";
   import { siteName } from "./people";
@@ -307,32 +307,18 @@
   });
 
   // Footnotes: a footnote's number opens its note in a card just under the
-  // line (FootnoteCard, decision 0247). Any other link to a place inside the
-  // article (cleaned to `#article-…` by nine turtles), such as a note's way
-  // back, scrolls there and moves the keyboard's place with it, rather than
-  // opening a new tab.
-  let footnote: { note: Footnote; top: number; link: HTMLAnchorElement; of: number } | undefined = $state();
+  // line (FootnoteCard, decision 0247); any other link to a place inside the
+  // article scrolls there (footnotes.ts). A new article closes the card.
+  let footnote: { note: Footnote; top: number; link: HTMLAnchorElement } | undefined = $state();
   $effect(() => {
-    const area = scroller;
-    if (!area) return;
-    const followAnchor = (event: MouseEvent) => {
-      const link = event.target instanceof Element ? event.target.closest("a") : null;
-      const anchor = link?.getAttribute("href");
-      if (!anchor?.startsWith("#article-")) return;
-      event.preventDefault();
-      const note = column && footnoteOf(link!, area);
-      if (note) {
-        footnote = { note, top: link!.getBoundingClientRect().bottom - column!.getBoundingClientRect().top + 4, link: link!, of: article.id };
-        return;
-      }
-      const place = document.getElementById(decodeURIComponent(anchor.slice(1)));
-      if (!place || !area.contains(place)) return;
-      place.setAttribute("tabindex", "-1");
-      place.scrollIntoView({ block: "start" });
-      place.focus({ preventScroll: true });
-    };
-    area.addEventListener("click", followAnchor);
-    return () => area.removeEventListener("click", followAnchor);
+    if (!scroller) return;
+    return followAnchors(scroller, (note, link) => {
+      if (column) footnote = { note, top: link.getBoundingClientRect().bottom - column.getBoundingClientRect().top + 4, link };
+    });
+  });
+  $effect(() => {
+    void article.id;
+    footnote = undefined;
   });
 
   // An English article's typewriter marks set properly as it's shown: curly
@@ -600,7 +586,7 @@
               >{folded ? "Show the full description" : "Show less"}</button
             >
           {/if}
-          {#if footnote?.of === article.id}
+          {#if footnote}
             <FootnoteCard note={footnote.note} top={footnote.top} onclose={(back) => { if (back) footnote?.link.focus(); footnote = undefined; }} />
           {/if}
           <!-- The last page: a short rule, so the article ends rather than stops. -->
