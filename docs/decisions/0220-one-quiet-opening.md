@@ -1,5 +1,7 @@
 # 0220: One quiet opening, in every list
 
+**In one line:** Every list opens the same quiet way: no begun first article or Start reading on a phone or a computer; the newest is simply the first row, and the reading area shows its quiet line (replaces 0210)
+
 *9 November 2026. The owner's pick from the Jony Ive critique (`critique-24/designer-12-jony-ive.html`). Replaces 0210.*
 
 **Decision.** The begun first article and its Start reading are gone, on a

@@ -1,5 +1,7 @@
 # 0082: Settings for each feed
 
+**In one line:** Settings for each feed, in Edit feed: Inbox or River (a river feed skips Unread and counts nothing), checks at most hourly or daily (hourly removed by 0162), and opening articles on the publisher's website; three columns on `feeds` with today's behavior as default
+
 *October 2026. "At most Hourly" was removed on 3 November 2026 (decision 0162).*
 
 **Decision.** Edit feed gains three settings for one feed, chosen by the

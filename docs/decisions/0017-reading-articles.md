@@ -1,5 +1,7 @@
 # 0017: Reading articles
 
+**In one line:** Reading articles: tracking images removed by size, images from anywhere, prefetching, selecting is showing
+
 *23 October 2026, Milestone 6. Built from SPEC section 7 without a separate plan (decision 0014).*
 
 **Tracking images are removed by size.** Any `<img>` whose width or height

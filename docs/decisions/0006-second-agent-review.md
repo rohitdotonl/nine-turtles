@@ -1,5 +1,7 @@
 # 0006: The second-agent review is written instructions, not an app
 
+**In one line:** The second-agent review is written instructions, not an app
+
 > **Partly replaced by [0021](0021-no-review-for-small-changes.md):** documents-only changes and tiny fixes outside the full-review areas (the rule documents, the checks, screens, data, sign-in) get no review.
 
 *October 2026, Milestone 1. Chosen by the owner.*

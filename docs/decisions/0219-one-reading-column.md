@@ -1,5 +1,7 @@
 # 0219: One column for the reading area
 
+**In one line:** On a computer, an article, Start reading and a person's page share one column (left edge, first line), so Start reading's title is where the article's will be and nothing jumps
+
 *9 November 2026. The owner's pick from the Massimo Vignelli critique (Vignelli 1).*
 
 **Decision.** On a computer, everything the reading area shows hangs from

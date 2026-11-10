@@ -1,5 +1,7 @@
 # 0170: Fewer settings in the way: no Change keys, no Up Next
 
+**In one line:** *(Up Next's table and old keys deleted by 0174.)* Fewer settings in the way: choosing your own keys and Settings › Keyboard go (a reader who had keys is told once at the `?` list's foot, then their `keys` row is deleted); Up Next goes (an episode that ends just says "Finished."), its `up_next` table later deleted by 0174
+
 *Up Next's table and readers' old keys were deleted by [0174](0174-keep-starred.md).*
 
 *3 November 2026. Step 5 of the owner's review plan. Rohit said go on the

@@ -1,5 +1,7 @@
 # 0023: Search
 
+**In one line:** Search: a contentless index of tag-free text, every typed word quoted, title matches first, filters as plain settings, speed
+
 *23 October 2026, Milestone 10. Built from SPEC section 14 without a separate plan (decision 0014).*
 
 **One small index, no second copy.** Every article's title and plain text go

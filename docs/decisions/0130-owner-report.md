@@ -1,5 +1,7 @@
 # 0130: The owner report
 
+**In one line:** A hidden, read-only owner report (`GET /owner-report`) for the owner's private manual: its own key (`NINE_TURTLES_OWNER_REPORT_KEY`, at least 32 characters), "not found" without it; counts and dates only (backups kept, readers, who pays, the days plans change in the next 30), never who
+
 *29 October 2026.*
 
 **Decision.** nine turtles has a hidden, read-only owner report at

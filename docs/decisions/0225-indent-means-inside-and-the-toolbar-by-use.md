@@ -1,5 +1,7 @@
 # 0225: Indent means inside; the phone's toolbar in two groups, by use
 
+**In one line:** Only people and publications inside a folder are indented in the sidebar (those in no folder start at the margin, replacing 0123's one names' edge); the phone's toolbar is More · Aa · Write back · Star, a hairline, then Previous · Next
+
 *9 November 2026.*
 
 **Decision.** Two changes from the Silvio Rizzi critique (`critique-24`,

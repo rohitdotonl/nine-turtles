@@ -1,5 +1,7 @@
 # 0206: Polish adding someone
 
+**In one line:** Polish adding someone: the welcome's heading still on a computer; several feeds followed at once by tick boxes, joined as one person; cards on the phone welcome; "how often it posts" said nowhere; a share line in the installed phone app's Add; `/sign-in` a real address
+
 *6 November 2026. The owner's onboarding review, findings 9, 12, 13 and 16
 (finding 4, the welcome's order, landed with decision 0198), and the owner's answers in that thread (6 November, 15:32 UTC).*
 

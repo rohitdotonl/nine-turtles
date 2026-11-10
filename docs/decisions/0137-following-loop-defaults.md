@@ -1,5 +1,7 @@
 # 0137: The first steps and Move to… answer before you ask
 
+**In one line:** Small defaults from the loop walk-through: a phone opens on the welcome while you follow no one; the welcome's "Bring your list from another app…" opens the file chooser at once; Move to… starts with nothing chosen
+
 *1 November 2026.*
 
 **Decision.** From a walk-through of adding, editing, folders, importing and

@@ -1,5 +1,7 @@
 # 0145: Four themes
 
+**In one line:** Four themes: Original, Plain, Fountain pen and Signal; Brushed, Anodised and Heather retire, a reader on Brushed moving to Original and on Anodised or Heather to Fountain pen. Replaced by 0176
+
 *2 November 2026.*
 
 **Decision.** Seven themes become four: **Original**, **Plain**,

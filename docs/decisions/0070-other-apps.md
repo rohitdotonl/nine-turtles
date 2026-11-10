@@ -1,5 +1,7 @@
 # 0070: Other apps sync through the Google Reader API, with an app password
 
+**In one line:** *Removed by decision 0184.* Reeder, NetNewsWire and other feed readers sync through the Google Reader API at `/api/greader`, signing in with an app password made in Settings (never the owner's own); apps may follow, unfollow and file feeds, with unfollowing hidden first
+
 *25 October 2026. Asked for by the owner ("working with other apps").*
 
 *Removed on 5 November 2026 (decision 0184).*

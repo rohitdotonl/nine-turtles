@@ -1,5 +1,7 @@
 # 0159: YouTube's feeds are asked again before a "not found" stands
 
+**In one line:** YouTube's feeds answer "not found" or a server error about half the time, for every channel, so a YouTube feed is asked up to four times, a second apart, before such an answer stands (why following TED failed)
+
 *3 November 2026. The owner asked why following YouTube's TED channel
 failed ("Dig into the Ted problem").*
 

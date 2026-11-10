@@ -1,5 +1,7 @@
 # 0112: Article privacy and lazy pictures
 
+**In one line:** Article privacy: tracking tags (a fixed list) taken off article links and links in the text, pictures from a short hand-kept list of trackers removed, every picture `loading="lazy"`; the duplicate check unchanged; older articles cleaned again when shown, no one-off pass
+
 *October 2026.*
 
 **Decision.** Reading an article in nine turtles tells publishers and

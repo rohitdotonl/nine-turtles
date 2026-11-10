@@ -1,5 +1,7 @@
 # 0104: Adding a feed from anywhere
 
+**In one line:** Adding a feed from anywhere: `/add-feed?url=…` (or a link inside `text`/`title`) opens Add a feed with the address and looks through the feed finder without following; only Add feed follows. A GET Web Share Target for Android, an Apple Shortcuts shortcut for iPhone, and a bookmarklet in Settings › Add from anywhere
+
 *27 October 2026. Asked for by the owner: add a feed from the system share
 sheet, from Apple's Shortcuts app, and from any link.*
 

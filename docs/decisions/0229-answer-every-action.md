@@ -1,5 +1,7 @@
 # 0229: Every press is answered
 
+**In one line:** Every press is answered: the list's note at the article's foot while the list is out of sight, Refresh saying when nothing new came, a waiting main button saying "Signing in…", Write back's "Opening your email app…" with Copy their address, a still pressed tone, and keys with nothing to do saying why
+
 *10 November 2026.*
 
 Rohit's "Implement all suggestions" (10 November 2026) on the critique of

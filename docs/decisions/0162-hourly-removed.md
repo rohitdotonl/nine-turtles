@@ -1,5 +1,7 @@
 # 0162: Edit feed's "Hourly" goes
 
+**In one line:** Edit feed's "Hourly" goes, since Automatic is now at most hourly too: the choice is Automatic · Daily; a stored hour behaves as Automatic and shows as it
+
 *3 November 2026. Once feeds were checked at most hourly (decision 0161),
 "Hourly" did exactly what "Automatic" does. The owner: "You're allowed to
 touch it. We go by less, but better."*

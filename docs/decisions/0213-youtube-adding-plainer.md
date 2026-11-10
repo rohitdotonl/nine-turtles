@@ -1,5 +1,7 @@
 # 0213: Adding from YouTube, plainer and sturdier
 
+**In one line:** Adding gets a 60-second limit (YouTube answering slowly broke it behind Cloudflare), Follow reuses the feed just looked at, empty media descriptions no longer stop a channel; a video asks "Follow {channel}?" with youtube.com/@handle and its newest title, a playlist offers Only "…" first then Every video; YouTube channels start as publications
+
 *8 November 2026. Asked for by the owner, Rohit, after YouTube video links
 kept failing with "The feed couldn't be added. Try again in a moment." on the
 live app ("implement all of your suggestions … Ship and merge"). SPEC

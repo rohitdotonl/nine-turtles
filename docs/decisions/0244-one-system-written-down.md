@@ -1,5 +1,7 @@
 # 0244: One system, written down and checked
 
+**In one line:** One system, written down and checked: DESIGN.md → "The system" is the whole system on one page and `scripts/check-system.mjs` fails anything outside it; three interface text sizes, one title size (24px), one label for every group (replacing 0123 and 0198's small capitals), icons at two sizes with one line, two corners and one shadow, one top for every phone screen
+
 *10 November 2026.*
 
 Rohit's "Implement all of your suggestions" (10 November 2026), for the

@@ -1,5 +1,7 @@
 # 0139: One brand sheet
 
+**In one line:** Every brand decision on one page, `docs/BRAND.md`, part of DESIGN.md with its standing; each line marked Live or Being built; a new brand decision goes there first, with the owner's yes
+
 *2 November 2026.*
 
 **Decision.** Every brand decision lives on one page, `docs/BRAND.md`:

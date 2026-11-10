@@ -1,5 +1,7 @@
 # 0077: Rules and mutes
 
+**In one line:** Rules and mutes: "when a new article matches this, do that" (mute, star or mark as read), matching whole words or an author, acting on arrival; muting hides, never deletes; structure change 10
+
 *25 October 2026. Asked for by the owner ("implement Rules and mutes"), as agreed in the planning thread the same day.*
 
 **Decision.** The reader can write rules: "when a new article matches this,

@@ -1,5 +1,7 @@
 # 0192: No Write back for publications
 
+**In one line:** A publication has no Write back, no Write to on its page and no Email address in Edit; choosing A person brings them back. The question when adding stays, its guess chosen in advance
+
 *6 November 2026.*
 
 **Context.** Since decision 0163, everything a reader follows is a person or a

@@ -1,5 +1,7 @@
 # 0096: "Email me a sign-in link"
 
+**In one line:** "Email me a sign-in link": a link that signs in once, within 15 minutes, for every reader including the owner; one press on its page; passwords keep working; the same limits as a password link; structure change 20 adds the `sign-in` purpose to `email_links`
+
 *26 October 2026. The owner asked for it in their list of next things to
 build.*
 

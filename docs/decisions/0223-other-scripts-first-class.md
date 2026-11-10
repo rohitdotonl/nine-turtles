@@ -1,5 +1,7 @@
 # 0223: Other scripts set with the same care as English
 
+**In one line:** Other scripts set with the same care as English: an article's language checked against its letters, right-to-left made whole, each script's own line height and title, names fenced, fields typed in any direction
+
 *9 November 2026. Approved by the owner ("just implement your suggestions"),
 after the critique in the project files (`critique-24/other-scripts.html`,
 from Reichenstein's R4-6).*

@@ -1,5 +1,7 @@
 # 0147: Writing back opens the reader's own email app
 
+**In one line:** Writing back: Write back at the end of every article (and in More, and `w`) opens the reader's own email app with the writer's address and "Re: the title"; the address from the feed, a newsletter's Reply-To or From, or typed once by the reader and kept for the person; nine turtles never sends or reads the email
+
 *2 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 2); the owner gave advance permission to build and ship it ("Go on V1. Ship
 each one."). The smaller choices below were made by the building agent while

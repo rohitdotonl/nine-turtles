@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 9 November 2026 (decisions 0227, 0141, 0148, 0153, 0176, 0181, 0185, 0199).*
+*Every brand decision on one page.*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is

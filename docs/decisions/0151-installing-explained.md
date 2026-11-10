@@ -1,5 +1,7 @@
 # 0151: Installing the app, said plainly
 
+**In one line:** Installing the app, said plainly: Settings › Install the app says in one sentence what an installed web app is, then the steps for this device (one-press Install where the browser offers it), then a line each for other devices; in the installed app it says so instead
+
 *3 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 6, decision 0140); the owner gave advance permission to build and ship it
 ("Go on V1. Ship each one."). The smaller choices below were made by the

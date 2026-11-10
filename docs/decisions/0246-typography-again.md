@@ -1,5 +1,7 @@
 # 0246: Typography, again
 
+**In one line:** Typography, again: an article's headings in three clear steps (26, 22px, then the text's size), real bold italics, a plain zero in the interface's dates, two weights (Settings' rows regular, replacing 0120's medium), titles in Literata's display cut with the article's title in regular weight at 38px, every part of a post set (highlighting, keys, definitions, number tables, footnotes), line spacing that eases as the text grows, and stand-in fonts so nothing moves while the fonts arrive
+
 *10 November 2026.*
 
 Rohit's "go" (10 November 2026) on the fresh typography critique

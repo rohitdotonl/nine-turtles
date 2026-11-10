@@ -1,5 +1,7 @@
 # 0125: The owner changes their email by a link, like everyone
 
+**In one line:** The owner changes their email by Change… and a link to the new address, like everyone; the Readers email box and `POST /api/people/me/email` are gone; structure change 27 drops the old sign-up links' `sign-up` purpose, `email_links.password_hash` and the `sign_up*` settings
+
 *28 October 2026.*
 
 **Decision.** The owner said yes (survey question 2 of the code tidy-up):

@@ -1,5 +1,7 @@
 # 0114: Quicker, steadier checks
 
+**In one line:** Quicker, steadier checks: libraries built optimized for the Rust tests, only the libraries remembered between runs, the browser tests in parts (four, six since November 2026) with the browser remembered between runs, agents run only the browser tests for what they changed before a pull request (GitHub runs them all), and the timing fixed in the tests that failed now and then; no automatic retries; each decision carries its own one line, listed by `scripts/decisions.mjs`, so no shared list clashes
+
 *October 2026.*
 
 **Decision.** Four changes make the checks on each pull request finish
@@ -75,3 +77,11 @@ step in its package storage (the image's `buildcache` tag), so a merge
 rebuilds only nine turtles itself. It uses `docker buildx` with Docker's own
 builder, BuildKit, at a fixed version; a host without the kept copy simply
 builds everything, as before.
+
+Nothing shared to add a line to: each decision note carries its own one
+line under its title, and `scripts/decisions.mjs` lists them, instead of a
+table in `docs/decisions/README.md` that nearly every change added a row
+to. DESIGN.md's "Last updated" line, which repeated every decision in one
+paragraph, points to that list instead, and BRAND.md's drops its list of
+numbers. Two changes made at once had clashed there and had to wait for
+the checks again.

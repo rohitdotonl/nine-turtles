@@ -1,5 +1,7 @@
 # 0115: Sign-up always open
 
+**In one line:** Sign-up always open: anyone makes an account at once with an email and a password; no switch, no invite links, no confirmation email (replaces those parts of 0087 and 0088); the 20-an-hour cap stays. Partly replaced by 0154: the address is confirmed by an emailed link first
+
 > **Partly replaced by [0154](0154-confirm-email-at-sign-up.md):** sign-up
 > emails a link that confirms the address, and only following it makes the
 > account. Sign-up stays open to anyone, with no switch or invite. And

@@ -1,5 +1,7 @@
 # 0187: One line width, one sidebar, shorter words
 
+**In one line:** One line width (Medium, about 71 characters) and Font on Settings itself, so the Font and line width page goes; Show in the sidebar removed, every list always shows; reading offline always on, its switch removed; shorter words for Look and feel, Hiding and Pause, and every list ends "That's everything."
+
 *6 November 2026.*
 
 **Context.** Points 5, 6 and 15 of the owner's whole-app review of what to

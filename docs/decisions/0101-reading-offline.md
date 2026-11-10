@@ -1,5 +1,7 @@
 # 0101: Reading offline, words only
 
+**In one line:** Reading offline, words only: each device keeps the first 200 unread and newest 200 starred articles in IndexedDB, images as a short note; read, mark and star offline; marks sent later say when they were made and the latest wins (structure change 21); deleted whenever nobody is signed in
+
 *October 2026.*
 
 **Decision.** The owner asked for "the lighter version of offline reading on

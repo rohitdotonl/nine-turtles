@@ -1,5 +1,7 @@
 # 0088: Account emails: confirming, a new password, a new address, and deleting an account
 
+**In one line:** Account emails over plain SMTP (lettre): confirming an address, a new password, a new address, and deleting one's own account; nothing sent without the settings
+
 > **Partly replaced by [0115](0115-sign-up-always-open.md):** sign-up no longer sends a confirmation email.
 
 *25 October 2026. Part of "Many readers in one app" (decision 0086), at the

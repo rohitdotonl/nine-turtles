@@ -1,5 +1,7 @@
 # 0002: Exact versions of Rust, Node and GitHub's building blocks
 
+**In one line:** Exact versions of Rust, Node and GitHub's building blocks
+
 *October 2026, Milestone 1.*
 
 **Decision.**

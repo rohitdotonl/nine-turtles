@@ -1,5 +1,7 @@
 # 0063: A second theme, Plain, and the device's own serif
 
+**In one line:** A second theme, Plain (rohit.onl's bare look: black on white, blue underlined article links, the accent in the text color), and System serif, the device's own serif, as a reading font (adds to 0056). Plain replaced by 0176; System serif stays
+
 *25 October 2026. The owner's request: "Go to www.rohit.onl. Pick the font
 and offer that as an option in the app. And pick the bare HTML-ish look and
 ship that as a theme (don't copy font size)." Adds to decision 0056 (one

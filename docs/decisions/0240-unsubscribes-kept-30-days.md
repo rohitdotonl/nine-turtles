@@ -1,5 +1,7 @@
 # 0240: Your own unsubscribes are kept 30 days, with Bring back
 
+**In one line:** Your own unsubscribes are kept 30 days, as an assistant's were: Recently unsubscribed with Bring back at the end of Everyone you follow, one list for both; "Remove them too" still goes after Undo's ten minutes; the floor's exception now starts after the 30 days
+
 *10 November 2026.*
 
 Rohit's "Implement every suggestion from round 1. From round 2, implement

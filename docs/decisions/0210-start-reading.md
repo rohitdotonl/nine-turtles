@@ -1,5 +1,7 @@
 # 0210: Start reading
 
+**In one line:** With nothing open, the reading area begins the newest unread article (title, byline, first paragraph) with Start reading; on a phone, the list's first row is begun; not for search or with Unread off (replaced by 0220)
+
 *6 November 2026. Replaced by decision 0220 (9 November 2026): every list now opens the same quiet way.*
 
 **Decision.** When nothing is open and there's nothing to pick up, and the

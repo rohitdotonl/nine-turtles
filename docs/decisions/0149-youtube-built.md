@@ -1,5 +1,7 @@
 # 0149: How YouTube as a first-class citizen is built
 
+**In one line:** How YouTube as a first-class citizen is built: Shorts and live streams marked only when YouTube's own lists name them, each reader's two switches, following any YouTube link, the place kept as a podcast's is, talking to YouTube's player without its script, Takeout through the OPML import
+
 *3 November 2026. What to build was agreed with the owner (decision 0144,
 PLAN.md → V1, item 4); the owner gave advance permission to build and ship it
 ("Go on V1. Ship each one."). The technical choices and the smaller design

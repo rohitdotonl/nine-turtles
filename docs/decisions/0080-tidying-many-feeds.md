@@ -1,5 +1,7 @@
 # 0080: Tidying many feeds at once
 
+**In one line:** Your feeds, in Settings › Feeds: every feed with when it last posted, quiet feeds (6 months or a year), and Edit to move or unsubscribe from several at once with one Undo; a page in Settings, not ticks in the sidebar; Move to… puts each feed in one folder (numbered 0080 because changes built at the same time took 0073 to 0079)
+
 *25 October 2026. Built in V2 at the owner's request ("Tidying many feeds
 at once": an Edit mode to move or unsubscribe from several feeds with one
 Undo, and a list of quiet feeds).*

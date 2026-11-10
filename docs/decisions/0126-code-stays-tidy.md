@@ -1,5 +1,7 @@
 # 0126: Code stays tidy: small files and nothing unused, checked
 
+**In one line:** Code stays tidy: a check fails when a file of the app's own code passes 800 lines (older, longer files listed in the script may only shrink; tests don't count) or a file, export or server `pub` item is unused; the web type check refuses unused names too
+
 *29 October 2026.*
 
 **Context.** The code tidy-up of October 2026 (survey, bug fixes, then 35

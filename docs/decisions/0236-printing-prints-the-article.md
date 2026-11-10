@@ -1,5 +1,7 @@
 # 0236: Printing an article prints the article
 
+**In one line:** Print (Command P) prints the open article alone, black on white, with a credit line naming the publisher, writer, date and the original's address; nothing of the app's own
+
 *10 November 2026.*
 
 Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"

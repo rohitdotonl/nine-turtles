@@ -1,5 +1,7 @@
 # 0024: Starred export, and the final V1 pass
 
+**In one line:** Starred export as JSON Feed 1.1 with a `_slowfeed` source extension; "Marked as read" spoken to screen readers; export speed
+
 *23 October 2026, Milestone 14. Built from SPEC sections 22, 23 and 25 without a separate plan (decision 0014).*
 
 **The starred export is a JSON Feed 1.1 file** (`starred.rs`, decided in Q23),

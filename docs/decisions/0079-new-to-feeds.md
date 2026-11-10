@@ -1,5 +1,7 @@
 # 0079: "New to feeds?" in the first-visit welcome
 
+**In one line:** "New to feeds?" in the first-visit welcome: a sheet explaining feeds, a link to the website's guide, and five fixed starter feeds, none ticked (an owner-approved exception to "not a discovery engine")
+
 *25 October 2026. Milestone 7 of the owner's plan for going multi-user ("A friendly start: the 'New to feeds?' welcome with a few suggested feeds to pick"). The plan lives outside this repository, in the owner's project notes; the owner approved it in the project chat on 25 October 2026, including changing DESIGN.md Part 1 (the "is not" list) to match it.*
 
 **Decision.** The first-visit welcome gains one quiet link under its

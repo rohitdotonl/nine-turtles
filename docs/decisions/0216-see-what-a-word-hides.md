@@ -1,5 +1,7 @@
 # 0216: See what a word will hide, and Start reading keeps its paragraphs
 
+**In one line:** Settings › Hiding shows, as you type, how many unread articles a word would hide, the newest five and where the word is, before Add; Start reading shows a summary's first paragraph, never paragraphs run together (Start reading part replaced by 0220)
+
 *Point 2 no longer applies: Start reading was removed by decision 0220.*
 
 *9 November 2026. The owner asked for both ("Implement V3 and V6") from the

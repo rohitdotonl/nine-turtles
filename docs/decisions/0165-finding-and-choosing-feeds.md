@@ -1,5 +1,7 @@
 # 0165: Finding a feed in a few more places, and choosing among several
 
+**In one line:** A page naming no feed tries the usual address under it, the home page and eight usual addresses (at most ten, one at a time); a site's several feeds each show their newest title and how often they post, repeats and missing ones left out, one left followed straight away; one shared lookup for Add feed, "Follow this person?" and the website's finder
+
 *3 November 2026. V1 items 9 and 10 (decision 0160), shown to the owner as
 clickable copies of the real screen before building.*
 

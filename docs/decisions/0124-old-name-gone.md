@@ -1,5 +1,7 @@
 # 0124: The old name slowfeed is gone from the code
 
+**In one line:** The old name slowfeed is gone from the code: only `NINE_TURTLES_*` settings, `nine-turtles.sqlite`, the `nine_turtles_session` cookie, the `x-nine-turtles-version` header, the `nine-turtles` command and the `nine-turtles.*` device keys; Render, repository and daily-check names stay for the owner
+
 *28 October 2026.*
 
 **Decision.** The owner said to remove the old name everywhere (survey

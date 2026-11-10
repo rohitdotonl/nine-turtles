@@ -1,5 +1,7 @@
 # 0120: A shorter Settings, with icons and a clearer hierarchy
 
+**In one line:** A shorter Settings: only Reading and Look and feel on its first page, every other group a page of its own at `/settings/<name>` with ‹ Settings, Escape and the keyboard back on its row; a muted line icon on each row, lined up with its name's first line; names at 500 with descriptions under them, in Settings and Edit feed
+
 *27 October 2026.*
 
 **Decision.** The owner chose the "My pick" versions of three findings from

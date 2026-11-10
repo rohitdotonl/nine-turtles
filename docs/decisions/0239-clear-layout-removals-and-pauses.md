@@ -1,5 +1,7 @@
 # 0239: Deleting sits apart, removals say what goes, a pause shows
 
+**In one line:** Deleting sits apart, in a Leaving group at the end of Settings; "Remove the 2 starred articles too" under a hairline, apart from Keep them; a paused source says "Paused since 23 Oct." with Resume on its list and page; five failure messages say the fix
+
 *10 November 2026.*
 
 Rohit's "Implement every suggestion from round 1. From round 2, implement

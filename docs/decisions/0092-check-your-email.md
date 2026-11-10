@@ -1,5 +1,7 @@
 # 0092: "Check your email", once, and one password link a minute
 
+**In one line:** After a link is sent, the form gives way to "Check your email" (said once) with a quiet Send again that sends nothing within a minute; the server sends one password link to an address a minute (sign-up links excepted), as well as three an hour; no limits per IP address (behind Render's proxy)
+
 > **Partly replaced by [0115](0115-sign-up-always-open.md):** there are no sign-up emails any more, so the sign-up link and its exception to the one-a-minute limit are gone.
 
 *26 October 2026. The owner pressed Send link twice on "Forgot your

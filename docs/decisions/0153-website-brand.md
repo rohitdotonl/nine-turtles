@@ -1,5 +1,7 @@
 # 0153: The website wears the brand
 
+**In one line:** The website wears the brand: the app's grey sidebar band on every page ("G set as C"), the logo at the sidebar's sizes, footer on the left edge, and the front page Rohit tried on his Mac (one 20px text size, "Read people. Write back.", the positioning copy word for word). Partly replaced by 0169: the front page is Rohit's letter, with no band and its own sizes. Then replaced by 0185: every page has the front page's top and text, no band
+
 *Partly replaced by [0169](0169-front-page-letter.md): the front page is
 Rohit's letter, with no band and its own sizes. Then replaced by
 [0185](0185-website-pages-match-the-front-page.md): every page has the front

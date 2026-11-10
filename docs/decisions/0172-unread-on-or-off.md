@@ -1,5 +1,7 @@
 # 0172: Unread, on or off
 
+**In one line:** Unread, on or off: Inbox and River go as names; Settings › Reading has one switch, Unread (on is the old inbox, off the old river); a single feed's River goes; readers on River get Unread off, and each feed set to River has its unread marked read once (structure change 38)
+
 *4 November 2026. Step 7 of the owner's review plan. Rohit said go on the
 whole plan and permitted removing these features and their data, including
 the one-time data path below. The plan's open question (does a single

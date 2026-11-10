@@ -40,6 +40,9 @@ build_frontend() {
 docs() {
   step "No broken links between documents"
   node scripts/check-doc-links.mjs
+
+  step "Each decision has its one line and its own number"
+  node scripts/decisions.mjs --check
 }
 
 frontend() {

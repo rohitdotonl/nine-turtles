@@ -1,5 +1,7 @@
 # 0136: Five themes after Braun's colors
 
+**In one line:** Five themes after Braun's colors (Brushed, Anodised, Fountain pen, Heather, Signal); their bright accent, only the unread dot, held to 3 : 1. Partly replaced by 0145: only Fountain pen and Signal remain; all replaced by 0176
+
 *Partly replaced by [0145](0145-four-themes.md) (2 November 2026): Brushed, Anodised and Heather retired; Fountain pen and Signal remain, and the 3 : 1 rule for their accent still holds.*
 
 *1 November 2026.*

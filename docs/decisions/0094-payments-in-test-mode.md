@@ -1,5 +1,7 @@
 # 0094: Paying for nine turtles, built in Dodo's test mode
 
+**In one line:** Paying through Dodo Payments, built in test mode: a free trial with no card (14 days, a setting), monthly and yearly plans at prices that are settings, Dodo's checkout and billing pages, signed webhooks, our own record of each subscription (structure change 18); an ended plan keeps reading and exports but stops adding feeds; deleting an account cancels its plan first
+
 *26 October 2026. Milestone 9 of the plan for 100 to 200 readers (decision
 0086). Built overnight under the owner's go-ahead; the open choices are in
 `docs/planning/questions.md`.*

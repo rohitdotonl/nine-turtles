@@ -1,5 +1,7 @@
 # 0083: Dodo Payments takes payments, as merchant of record
 
+**In one line:** Payments through Dodo Payments as merchant of record (the owner signs up as an Individual); built last in test mode, switched on after Dodo approves the live website; Paddle revisited once there's sales history (first numbered 0086, which many readers also took)
+
 *25 October 2026. The owner's choice. First numbered 0086, which many readers also took.*
 
 ## Decision

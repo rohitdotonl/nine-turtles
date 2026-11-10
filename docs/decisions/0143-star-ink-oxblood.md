@@ -1,5 +1,7 @@
 # 0143: The star in the ink; oxblood for delete and errors
 
+**In one line:** The star is drawn in the theme's ink (filled when starred), green retires; delete and errors are oxblood, `#8C2F39` by day and `#E39AA4` by night (the owner, 2 November 2026)
+
 *2 November 2026. The owner chose this from the color mockups (brand sheet,
 step 2). Replaces the green star of 0057 and the muted red of DESIGN.md
 before it.*

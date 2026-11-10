@@ -1,5 +1,7 @@
 # 0181: Icon rules: clear at a glance, one meaning each, outlines for shapes
 
+**In one line:** Icon rules on the brand sheet: clear at a glance, one icon per meaning, familiar signs first, simple not empty, outlines for shapes and solid only for tiny marks, judged at 18px; twelve Settings icons redrawn (Newsletters an envelope with a feed sign, Hiding an eye with a line through it)
+
 *4 November 2026.*
 
 **Decision.** Icons follow seven rules, written on the brand sheet

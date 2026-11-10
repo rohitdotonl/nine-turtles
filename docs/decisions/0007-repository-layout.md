@@ -1,5 +1,7 @@
 # 0007: `server/` and `web/`, with the frontend packed into the program
 
+**In one line:** `server/` and `web/`, with the frontend packed into the program
+
 *October 2026, Milestone 1.*
 
 **Decision.**

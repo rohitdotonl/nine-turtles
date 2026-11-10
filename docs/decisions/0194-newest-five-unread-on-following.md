@@ -1,5 +1,7 @@
 # 0194: Following someone brings their newest five into Unread
 
+**In one line:** Following someone brings only their newest five articles into Unread; older ones are in their own list, already read; the same for imported files, at each feed's first check
+
 *6 November 2026.*
 
 **Decision.** When a reader follows a feed, only its five newest articles

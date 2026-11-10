@@ -1,5 +1,7 @@
 # 0221: One sheet of paper, one desk
 
+**In one line:** The article list sits on the page itself, the same color as the article, parted by the pane line; only the sidebar is toned; the list's pill is mixed into the page (from the owner's Kenya Hara critique)
+
 *9 November 2026.*
 
 Rohit's pick (suggestion 2) from a design critique an agent wrote following
