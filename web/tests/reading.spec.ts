@@ -292,12 +292,12 @@ test.describe("on a wide window", () => {
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note, Hide articles about… and Full-screen reading (decision 0241), their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/, /Full-screen reading/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -849,7 +849,7 @@ test.describe("on a wide window", () => {
     expect(await fillsWindow()).toEqual(still);
   });
 
-  test("+ and - change the text size while reading, and Settings remembers it", async ({ page }) => {
+  test("+ and - change the text size while reading, and the Aa panel shows it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const text = article(page).locator("article");
@@ -862,8 +862,9 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("-");
     await expect.poll(size).toBe("18px");
 
-    await page.getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Small");
+    // The same setting as the Aa panel's, the one place for it (decision 0241).
+    await article(page).getByRole("button", { name: "Reading appearance" }).first().click();
+    await expect(page.getByRole("dialog", { name: "Reading appearance" }).getByRole("status")).toHaveText("Small");
   });
 
   test("a YouTube video plays in YouTube's own player, and nothing loads from YouTube until Play is pressed", async ({ page }) => {

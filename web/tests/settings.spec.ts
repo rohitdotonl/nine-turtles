@@ -70,7 +70,7 @@ test("each row's icon sits on the centre of its name's first line", async ({ pag
       }),
   );
   // Rows with a description under the name (Unread, Email) and rows without one.
-  expect(offsets.length).toBeGreaterThan(14);
+  expect(offsets.length).toBeGreaterThan(11);
   for (const { row, off } of offsets) expect(off, row ?? "").toBeLessThanOrEqual(1);
 });
 

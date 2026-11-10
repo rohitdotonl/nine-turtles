@@ -221,6 +221,7 @@ test("a search from Starred finds only starred ones: the place is the filter (de
   await page.keyboard.press("Enter");
   await expect(results(page)).toHaveCount(1);
   await results(page).first().getByRole("button").focus();
+  await page.keyboard.press("j");
   await page.keyboard.press("s");
   await expect(results(page).first()).toContainText("Starred");
   await page.keyboard.press("Escape");
@@ -230,8 +231,10 @@ test("a search from Starred finds only starred ones: the place is the filter (de
   await expect(page.getByRole("button", { name: "Remove in: Starred" })).toBeVisible();
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");
-  await expect(results(page)).toHaveCount(1);
-  await expect(results(page).first()).toContainText("Walking the long way home");
+  // Other tests star articles here too, so: this blog's one starred match, and nothing unstarred.
+  await expect(results(page).filter({ hasText: `Blog ${blog}` })).toHaveCount(1);
+  await expect(results(page).filter({ hasText: `Blog ${blog}` })).toContainText("Walking the long way home");
+  await expect(results(page).filter({ hasNotText: "Starred" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Search options" })).toHaveCount(0);
 });
 
