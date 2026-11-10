@@ -1,8 +1,8 @@
 // The article lists (SPEC sections 6, 8, 9 and 13): pages from the server,
 // or from this device's copies without a connection; whether new articles
 // wait; and the words a list ends with and says after Mark all as read.
-import { noConnection } from "./connection.svelte";
-import { keptPage, markSent, useFetchers } from "./offline";
+import { connection, noConnection } from "./connection.svelte";
+import { NeedsConnection, keptPage, markSent, useFetchers } from "./offline";
 import { getJson, isRecord } from "./http";
 import { saved, send, worthRetrying } from "./saving";
 import { toArticle, toFullArticle, type Page, type Source } from "./shapes";
@@ -65,6 +65,25 @@ export async function newItemsWaiting(source: Source, latest: number): Promise<b
 export function endOfList(source: Source): string {
   if ("search" in source) return "No more results.";
   return "That's everything.";
+}
+
+/** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
+export function couldNotLoad(failure: unknown): string {
+  if (failure instanceof NeedsConnection) return failure.message;
+  if (connection.offline) return "You're offline. These articles load once you're back online.";
+  return "The articles couldn't be loaded. Try again in a moment.";
+}
+
+/** "1 result", "12 results", or "50+ results" while older ones are still to load. */
+export function resultCount(count: number, more: boolean): string {
+  if (count === 0) return "";
+  return `${count}${more ? "+" : ""} ${count === 1 && !more ? "result" : "results"}`;
+}
+
+/** j or k with no article further that way (decision 0229); `more`: older ones still load as you scroll down. */
+export function noFurther(step: 1 | -1, more: boolean): string {
+  if (step === -1) return "That's the first article here.";
+  return more ? "That's the last one so far. More load as you scroll down." : "That's the last article here.";
 }
 
 /** What the note at the foot of the list says when new items are waiting: no number. On a touch screen a Show button follows it. */

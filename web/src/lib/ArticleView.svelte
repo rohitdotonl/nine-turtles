@@ -32,6 +32,8 @@
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
+  import AwayNote from "./AwayNote.svelte";
+  import type { ListNote } from "./listNote";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
@@ -68,6 +70,7 @@
     onWriter,
     beforeToolbar,
     library,
+    listNote = false,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
@@ -95,6 +98,8 @@
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
     library: LoadedLibrary;
+    /** The list's note, while the list isn't on screen (decision 0229); undefined while the list shows it. */
+    listNote?: ListNote | false;
   } = $props();
 
   /** Write back, at the article's end; the paper plane and `w` start it too. */
@@ -608,6 +613,7 @@
     </article>
   </div>
 
+  {#if listNote !== false}<AwayNote note={listNote} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
   {#if phone && beforeToolbar}
     {@render beforeToolbar()}
   {/if}

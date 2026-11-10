@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { endOfList, markedAllMessage, newItemsMessage } from "./lists";
+import { endOfList, markedAllMessage, newItemsMessage, noFurther, resultCount } from "./lists";
 
 describe("mark all as read", () => {
   it("says how many items it marked, in plain words", () => {
@@ -23,5 +23,22 @@ describe("new items", () => {
     expect(newItemsMessage(false)).toBe("New articles · press r");
     expect(newItemsMessage(true)).toBe("New articles");
     expect(newItemsMessage(false)).not.toMatch(/[0-9!]/);
+  });
+});
+
+describe("j and k with no article further (decision 0229)", () => {
+  it("say which end it is, and that more load as you scroll down", () => {
+    expect(noFurther(-1, true)).toBe("That's the first article here.");
+    expect(noFurther(1, false)).toBe("That's the last article here.");
+    expect(noFurther(1, true)).toBe("That's the last one so far. More load as you scroll down.");
+  });
+});
+
+describe("a search's count", () => {
+  it("says one, many, or many and more", () => {
+    expect(resultCount(0, false)).toBe("");
+    expect(resultCount(1, false)).toBe("1 result");
+    expect(resultCount(12, false)).toBe("12 results");
+    expect(resultCount(50, true)).toBe("50+ results");
   });
 });

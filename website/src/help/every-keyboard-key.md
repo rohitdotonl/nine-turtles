@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-08
+updated: 2026-11-10
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -74,6 +74,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 - <kbd>↑</kbd> and <kbd>↓</kbd> move inside the part you're in: along the
   sidebar, along the list, or scrolling the article. In a text field or a
   menu, the arrow keys work as they always do.
+- A key with nothing to do says why in the note at the bottom: <kbd>K</kbd>
+  on the first article says "That's the first article here.", and
+  <kbd>U</kbd> with nothing to undo says "Nothing to undo."
 - The keys are the same for everyone, and can't be changed.
 - With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for Unread
   and marking all as read are left out.

@@ -16,6 +16,7 @@
   (KeepOrRemove, SPEC section 42).
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import AddPlace from "./AddPlace.svelte";
   import Icon from "./Icon.svelte";
@@ -148,7 +149,7 @@
     <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
     <div class="flex shrink-0 gap-2">
       <button type="button" class="btn" onclick={() => onDone(false)}>Cancel</button>
-      <button type="submit" form={formId} aria-disabled={busy} class="btn-primary">Done</button>
+      <button type="submit" form={formId} aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Done" doing="Saving…" /></button>
     </div>
   </div>
 

@@ -6,6 +6,7 @@
   data exports it. It's the same on each of the person's places.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import NoteText from "./NoteText.svelte";
@@ -65,7 +66,7 @@
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
       <div class="flex flex-wrap gap-2">
-        <button type="submit" class="btn-primary" aria-disabled={busy}>Save</button>
+        <button type="submit" class="btn-primary" aria-disabled={busy}><Waiting {busy} word="Save" doing="Saving…" /></button>
         <button type="button" class="btn-quiet" onclick={done}>Not now</button>
       </div>
     </form>

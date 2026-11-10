@@ -8,6 +8,9 @@ export const UNREACHABLE = "nine turtles can't be reached right now. Try again i
 /** A successful Undo, everywhere. */
 export const UNDONE = "Undone.";
 
+/** `u` with nothing to undo says so, rather than nothing (decision 0229). */
+export const NOTHING_TO_UNDO = "Nothing to undo.";
+
 /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
 export const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 

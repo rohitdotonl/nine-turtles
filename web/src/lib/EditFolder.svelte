@@ -12,6 +12,7 @@
   no Cancel, Delete as a group of its own and Save at the screen's foot.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
@@ -118,7 +119,7 @@
       <div class="sheet-actions">
         {@render remover("btn-danger")}
         <button type="button" onclick={onCancel} class="btn">Cancel</button>
-        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Save" doing="Saving…" /></button>
       </div>
     {:else}
       <!-- On a phone: Delete as a group of its own, a red row, then Save at the foot, at least 36px below it. -->
@@ -126,7 +127,7 @@
         {@render remover("inset-row inset-action text-danger font-semibold")}
       </div>
       <div class="page-action">
-        <button type="submit" aria-disabled={busy} class="btn-primary">Save</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Save" doing="Saving…" /></button>
       </div>
     {/if}
   </form>

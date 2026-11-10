@@ -6,6 +6,7 @@
   nine turtles. A link that has run out says so calmly and offers Sign in.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import PasswordField from "./PasswordField.svelte";
@@ -83,7 +84,7 @@
         <p id="reset-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
-        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Set password</button>
+        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Set password" doing="Saving…" /></button>
       </div>
     </form>
   {/if}

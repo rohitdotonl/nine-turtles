@@ -1,0 +1,50 @@
+/*
+  A press is felt (decision 0229): while a finger or a mouse button is down
+  on a row or a button, a still tone of the ink sits behind it, a step
+  deeper than the pointer's --hover, so the press is answered before
+  anything it does. It comes and goes with the finger: no fade, no ripple
+  (DESIGN.md → "Instant and still"). The browser's own grey or blue flash is
+  turned off, so this is the one answer on every phone. A held row keeps it
+  until its own menu opens. Never the accent; never the only answer (what
+  the press does still shows). The main action takes a step nearer the
+  text color instead, as under the pointer (decision 0045).
+*/
+:root {
+  --pressed: color-mix(in srgb, var(--ink) 10%, transparent);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* :is, not :where, so it outweighs the pointer's own tone, which a mouse still has while it presses. */
+:is(
+    .btn,
+    .btn-quiet,
+    .btn-icon,
+    .bar-button,
+    .menu-item,
+    .check-row,
+    .choice,
+    .inset-action
+  ):active:not([aria-disabled="true"]),
+.place:is(:active, :has(> a:active)):not([aria-current], [data-here]) {
+  background-color: var(--pressed);
+}
+
+.btn-primary:active:not([aria-disabled="true"]) {
+  background-color: var(--ink);
+}
+
+@media (forced-colors: active) {
+  :is(
+    .btn,
+    .btn-quiet,
+    .btn-icon,
+    .bar-button,
+    .place,
+    .menu-item,
+    .check-row,
+    .choice,
+    .inset-action
+  ):active {
+    outline: 2px solid Highlight;
+  }
+}

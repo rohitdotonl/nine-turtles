@@ -14,6 +14,7 @@
   the title is the way out) and the main action the full width at the foot.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
   import { GUIDE_URL, STARTERS, addLabel, addStarters, siteName, startProblem, type Starter } from "./starters";
@@ -91,13 +92,13 @@
   </p>
   {#if page}
     <div class="page-action">
-      <button type="submit" aria-disabled={busy} class="btn-primary">{addLabel(chosen.length)}</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word={addLabel(chosen.length)} doing="Adding…" /></button>
     </div>
   {:else}
     <!-- The sheet's one row of actions, 20px under what's above it: Cancel, then the main action at the right end. -->
     <div class="sheet-actions mt-5">
       <button type="button" onclick={onCancel} class="btn">Cancel</button>
-      <button type="submit" aria-disabled={busy} class="btn-primary">{addLabel(chosen.length)}</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word={addLabel(chosen.length)} doing="Adding…" /></button>
     </div>
   {/if}
 </form>

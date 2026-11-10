@@ -15,6 +15,7 @@
   (the browser's passkey autofill).
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
@@ -289,7 +290,7 @@
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
       <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). Its corners match the field's. -->
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">{asking ? "Email me a link" : "Sign in"}</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word={asking ? "Email me a link" : "Sign in"} doing={asking ? "Sending…" : "Signing in…"} /></button>
       {#if asking}
         <p class="text-center"><a href="/" class="text-link" onclick={(event) => switchTo(event, false)}>Back to sign in</a></p>
       {:else}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { date, dayAndTime, dayOrToday, exactly, pausedSince, until, when } from "./times";
+import { date, dayAndTime, dayOrToday, exactly, nothingNewSince, pausedSince, until, when } from "./times";
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -48,5 +48,13 @@ describe("article times", () => {
     expect(dayOrToday(at(new Date(2025, 2, 14, 9, 0)), now)).toBe("14 Mar 2025");
     expect(date(at(new Date(2026, 9, 27, 9, 0)))).toBe("27 Oct 2026");
     expect(dayAndTime(at(new Date(2026, 8, 29, 14, 5)))).toBe("29 Sep, 14:05");
+  });
+});
+
+describe("refresh with nothing new (decision 0229)", () => {
+  const now = new Date(2026, 9, 23, 18, 0);
+  it("says when the list last loaded: the time today, else the day", () => {
+    expect(nothingNewSince(new Date(2026, 9, 23, 14, 5), now)).toBe("Nothing new has arrived since 14:05.");
+    expect(nothingNewSince(new Date(2026, 9, 3, 9, 0), now)).toBe("Nothing new has arrived since 3 Oct.");
   });
 });

@@ -4,6 +4,7 @@ import "./article-lists.css";
 import "./arranging.css";
 import "./reading-column.css";
 import "./scripts.css";
+import "./pressed.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";
@@ -24,6 +25,8 @@ listenForInstall();
 // (app.css).
 addEventListener("keydown", () => (document.documentElement.dataset.keyboard = ""), true);
 addEventListener("pointerdown", () => delete document.documentElement.dataset.keyboard, true);
+// Safari on iPhone draws a press (:active, pressed.css) only once the page listens for touches.
+addEventListener("touchstart", () => {}, { passive: true });
 
 // Lets nine turtles be added to the home screen and open without a connection
 // (public/sw.js). It keeps only the app itself and its fonts; articles kept for

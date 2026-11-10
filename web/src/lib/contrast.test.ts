@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import appCss from "../app.css?raw";
 import themesCss from "../themes.css?raw";
+import pressedCss from "../pressed.css?raw";
 import html from "../../index.html?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
 import { LOOKS, THEMES as THEME_NAMES } from "./themes";
@@ -113,7 +114,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
 
 // The faint tones under a pointer, behind a search chip and filling the search
 // field are the text color mixed into whatever is behind them, read from
-// app.css (--hover, --tone, --search-fill).
+// app.css (--hover, --tone, --search-fill); the press's (--pressed) from pressed.css.
 function mix(ink: string, background: string, share: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
   return (
@@ -128,8 +129,8 @@ function mix(ink: string, background: string, share: number): string {
 describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (_name, colors) => {
   // Never drawn on the selected row's tint: the selected row isn't tinted under the pointer.
   it("keep text at 7 : 1 and muted grey at 4.5 : 1 on the three areas", () => {
-    const shares = ["hover", "tone", "search-fill"].map((name) => {
-      const found = css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
+    const shares = ["hover", "tone", "search-fill", "pressed"].map((name) => {
+      const found = (css + pressedCss).match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
       expect(found, name).not.toBeNull();
       return Number(found![1]) / 100;
     });

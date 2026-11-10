@@ -7,6 +7,7 @@
   read. A link that has run out says so calmly.
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
@@ -115,7 +116,7 @@
             <p id="choose-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
               {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
             </p>
-            <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Set password</button>
+            <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Set password" doing="Saving…" /></button>
             <p class="text-center"><a href="/" onclick={leave} class="text-link">Not now</a></p>
           </div>
         </form>
@@ -133,7 +134,7 @@
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <button type="button" autofocus aria-disabled={busy} aria-describedby="link-help link-message" onclick={signIn} class="btn-primary rounded-lg">Sign in</button>
+        <button type="button" autofocus aria-disabled={busy} aria-describedby="link-help link-message" onclick={signIn} class="btn-primary rounded-lg"><Waiting {busy} word="Sign in" doing="Signing in…" /></button>
       </div>
     {/if}
   </div>

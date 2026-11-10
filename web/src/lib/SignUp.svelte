@@ -10,6 +10,7 @@
   reader arrives in nine turtles.)
 -->
 <script lang="ts">
+  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
@@ -149,7 +150,7 @@
       <p id="sign-up-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Sign up</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Sign up" doing="Signing up…" /></button>
       <p class="text-center text-small">Have an account? <a href={SIGN_IN_PAGE} onclick={signIn} class="text-link">Sign in</a></p>
     </div>
   </form>

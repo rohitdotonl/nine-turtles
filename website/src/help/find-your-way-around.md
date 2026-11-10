@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7 and 13
-updated: 2026-11-09
+updated: 2026-11-10
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -72,7 +72,8 @@ you open it.
 
 The list never changes while you look at it. When new articles have arrived,
 a note at the bottom says **New articles**. Press <kbd>R</kbd>, or **Show**
-on a phone, to bring them in. Opening the app always shows the latest. On a
+on a phone, to bring them in. If you refresh and nothing has come in, the
+note says so: "Nothing new has arrived since 14:05." Opening the app always shows the latest. On a
 phone, the dots in the sidebar catch up each time you come back to it.
 
 ## Make room to read

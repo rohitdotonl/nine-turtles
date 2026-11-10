@@ -40,6 +40,11 @@ V1, item 2). Its look gets a refinement round.*
   "Re:" keeps its own). nine turtles never sends that email and never sees
   it, or your inbox; it only makes the `mailto:` link your device opens. The
   body is left empty for you, unless you highlighted words in the article.
+  Once pressed, a line under the address says "Opening your email app…",
+  and under it "Nothing opened?" with **Copy their address** (underlined
+  words, as the list's note's buttons), which copies it and says "Copied.":
+  on a computer with no email app set up, the press otherwise does nothing
+  you can see (decision 0229). The line stays until another article opens.
 - **Write back about this** (decision 0205): when you've highlighted words
   in the article (section 42), the email starts with them, each quote on
   lines beginning "> " as email apps quote, a blank line after each, then

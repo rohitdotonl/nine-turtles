@@ -4,7 +4,7 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-08
+updated: 2026-11-10
 related: [unread-on-or-off, star-an-article, find-your-way-around]
 ---
 
@@ -36,7 +36,10 @@ you're looking at are marked: anything that arrived since stays unread.
 
 After you mark or star something, a note at the bottom of the list says
 what happened, with an **Undo** button. Press it, or <kbd>U</kbd>, to put
-things back as they were.
+things back as they were. If you're reading with the list out of sight (an
+article on a phone, or the list hidden on a computer), the same note shows
+at the bottom of the article instead. With nothing to undo, <kbd>U</kbd>
+says "Nothing to undo."
 
 The note goes when you open another article (on a computer; on a phone or
 tablet it stays, as Undo is your only way back there), press its **×**, or

@@ -89,6 +89,12 @@ export function pausedSince(at: number, now: Date = new Date()): string {
   return `Paused on ${shortDay(date, now)}.`;
 }
 
+/** Refresh found nothing new (decision 0229): "Nothing new has arrived since 14:05.", or "… since 3 Oct." for an older load. */
+export function nothingNewSince(loaded: Date, now: Date = new Date()): string {
+  const sameDay = loaded.toDateString() === now.toDateString();
+  return `Nothing new has arrived since ${sameDay ? TIME.format(loaded) : shortDay(loaded, now)}.`;
+}
+
 /** An empty feed's second line (decision 0142): "Last checked today at 14:20.", or "Last checked on 3 Oct." */
 export function lastChecked(at: number, now: Date = new Date()): string {
   const date = new Date(at * 1000);

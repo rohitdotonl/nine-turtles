@@ -42,12 +42,13 @@
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, writerOf, type OneSource } from "./people";
-  import { UNDONE, UNDO_FAILED } from "./messages";
+  import { NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
+  import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
-  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting } from "./lists";
+  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, couldNotLoad, resultCount } from "./lists";
   import { markRead, markStarred } from "./saving";
   import { prefetch } from "./articles";
-  import { exactly, when } from "./times";
+  import { exactly, nothingNewSince, when } from "./times";
   import { hugEllipsis } from "./hug";
   import RowKind from "./RowKind.svelte";
   import RowPlace from "./RowPlace.svelte";
@@ -59,7 +60,7 @@
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { END_OF_KEPT, NOTHING_KEPT_HERE, NeedsConnection, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
+  import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
 
   let {
     source,
@@ -77,6 +78,7 @@
     first = $bindable(),
     found = $bindable(""),
     rowActions = () => [],
+    note = $bindable(),
   }: {
     source: Source;
     order: Order;
@@ -104,6 +106,8 @@
     found?: string;
     /** A row's menu, after its star and read: writing back and the page about its writer (`rowMenu.ts` → `writerItems`). */
     rowActions?: (article: Article) => MenuItem[];
+    /** The note, for the reading area to show while the list isn't on screen (decision 0229). */
+    note?: ListNote;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -122,8 +126,9 @@
   let bottom: HTMLElement | undefined = $state();
   let bottomInView = false;
   let loadingMore = $state(false);
-  /** The newest article's number when the list was loaded, and whether anything has arrived since. */
+  /** The newest article's number when the list was loaded, and when that was; and whether anything has arrived since. */
   let latest = 0;
+  let loadedAt = new Date();
   /** Bumped each time the list loads from the top, so an older "anything new?" answer is ignored. */
   let topLoads = 0;
   let newWaiting = $state(false);
@@ -147,6 +152,12 @@
   let closed = $state(false);
   /** What the note's first line shows: nothing once it's put away. */
   let saying = $derived(!closed && !!(line || undoLast));
+  /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
+  let noteFor: number | undefined = $state();
+  $effect(() => {
+    const here = saying && (selected?.id === noteFor || !!retryLast);
+    note = here ? { words: line, undo: undoLast && (() => undo()), retry: retryLast && retryNow, close: () => (closed = true) } : undefined;
+  });
   // The notice is read when the list opens, and again when a move brings a new one to the same list.
   $effect(() => {
     if (!notice || !firstShowing(notice)) return;
@@ -189,6 +200,7 @@
       next = page.next;
       if (after === null) {
         latest = page.latest;
+        loadedAt = new Date();
         topLoads++;
       }
       fromDevice = page.kept === true;
@@ -228,9 +240,10 @@
    * article no longer listed (read, in Unread) isn't selected in the list any
    * more, so `j` starts again from the top, as the list does.
    */
-  export async function refresh() {
+  export async function refresh(asked = false) {
     if (busy) return;
     busy = true;
+    const [before, since] = [latest, loadedAt];
     problem = "";
     const focusWasInList = rows.some((row) => row === document.activeElement);
     onRefresh();
@@ -245,11 +258,14 @@
       });
       next = page.next;
       latest = page.latest;
+      loadedAt = new Date();
       topLoads++;
       newWaiting = false;
       fromDevice = page.kept === true;
       loaded = true;
       if (fromDevice) say(REFRESH_NEEDS_CONNECTION);
+      // Asked for and nothing came: it says so (decision 0229), unless an Undo is on offer, which r never clears.
+      else if (asked && latest === before && !(undoLast && saying)) say(nothingNewSince(since));
     } catch (failure) {
       problem = couldNotLoad(failure);
     }
@@ -265,13 +281,6 @@
   function retryList() {
     document.getElementById("list-heading")?.focus({ preventScroll: true });
     void refresh();
-  }
-
-  /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
-  function couldNotLoad(failure: unknown): string {
-    if (failure instanceof NeedsConnection) return failure.message;
-    if (connection.offline) return "You're offline. These articles load once you're back online.";
-    return "The articles couldn't be loaded. Try again in a moment.";
   }
 
   /** Asks the server, quietly, whether new items are waiting for this list. */
@@ -311,7 +320,10 @@
    */
   export function move(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
-    if (index < 0 || index >= articles.length) return false;
+    if (index < 0 || index >= articles.length) {
+      if (selectedIndex !== -1) say(noFurther(step, next !== null));
+      return false;
+    }
     select(index);
     return true;
   }
@@ -450,6 +462,7 @@
   /** The line says something that has nothing to undo; after a failed save, Try again sends it again. */
   export function say(message: string, retry?: () => void) {
     line = message;
+    noteFor = selected?.id;
     undoLast = undefined;
     retryLast = retry;
     closed = false;
@@ -462,6 +475,7 @@
    */
   function did(message: string, reverse: () => void) {
     line = undoMessage = message;
+    noteFor = selected?.id;
     undoLast = reverse;
     retryLast = undefined;
     closed = false;
@@ -520,16 +534,23 @@
   /** `u` and Undo: reverses the last undoable action, once. */
   export function undo(): boolean {
     const reverse = undoLast;
-    if (!reverse) return false;
+    if (!reverse) {
+      say(NOTHING_TO_UNDO);
+      return false;
+    }
     reverse();
     say(UNDONE);
     return true;
   }
 
-  function retryByButton() {
+  function retryNow() {
     const retry = retryLast;
     settled();
     retry?.();
+  }
+
+  function retryByButton() {
+    retryNow();
     keepPlaceNearby();
   }
 
@@ -577,12 +598,6 @@
     if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
     event.preventDefault();
     if (move(event.key === "ArrowDown" ? 1 : -1)) focusSelected();
-  }
-
-  /** "1 result", "12 results", or "50+ results" while older ones are still to load. */
-  function resultCount(count: number, more: boolean): string {
-    if (count === 0) return "";
-    return `${count}${more ? "+" : ""} ${count === 1 && !more ? "result" : "results"}`;
   }
 
   load(null);
