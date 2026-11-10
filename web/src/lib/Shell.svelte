@@ -973,7 +973,7 @@
           {follow}
           {phone}
           {unreadOff}
-          {searchArticles}
+          {searchArticles} onLeft={(row) => { if ((route.kind === "feed" || isWho(route)) && (row.places ?? [row.id]).includes(route.id)) go(home); }} onLink={(address) => { shared = address; go({ kind: "add-feed" }); }}
         />
       {/if}
       {#if library.feedsFailed}

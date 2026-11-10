@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 16
-updated: 2026-11-10
+updated: 2026-11-11
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -26,6 +26,10 @@ folders." Their articles arrive over the next few minutes.
 
 Chose the wrong file? Press **Undo the import** on the line under it: exactly
 what that import added goes again, and everything you followed before stays.
+
+On a computer you can also drag the file straight onto nine turtles' window
+and let go: it's imported the same way, with **Undo** at the bottom of the
+sidebar.
 
 New here? At the foot of the welcome screen, **Bring your list from another
 app…** does the same thing.

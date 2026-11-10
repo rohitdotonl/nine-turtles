@@ -74,3 +74,47 @@ html[data-dragging="copy"] * {
     outline: 2px dashed CanvasText;
   }
 }
+/*
+  While a person or publication is held, the sidebar's foot trades + Add, Keys
+  and Settings for two places to drop them: Pause and Unsubscribe (decision
+  0246). Each is a faint tile, so it reads as a place; held over, it takes
+  the drop tone, as a folder does.
+*/
+.drop-acts {
+  display: none;
+}
+.drop-act {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  border-radius: var(--radius-press);
+  background-color: var(--line);
+  font-size: var(--text-meta);
+}
+html:is([data-dragging="person"], [data-dragging="copy"]) .sidebar-foot > :not(.drop-acts) {
+  display: none;
+}
+html:is([data-dragging="person"], [data-dragging="copy"]) .drop-acts {
+  display: flex;
+}
+/*
+  A link or a list of feeds held over nine turtles (linkDrop.svelte.ts,
+  decision 0246): one line at the top of the sidebar's people and folders
+  says what letting go does, on a faint tile; a folder under the pointer
+  takes the drop tone, as above.
+*/
+.drop-hint {
+  display: none;
+  margin: 0 0.5rem 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-press);
+  background-color: var(--line);
+  color: var(--ink);
+  font-size: var(--text-meta);
+}
+html[data-dragging="link"] .drop-hint-link,
+html[data-dragging="file"] .drop-hint-file {
+  display: block;
+}

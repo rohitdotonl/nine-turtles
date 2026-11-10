@@ -114,6 +114,31 @@ export class LoadedLibrary {
     };
   }
 
+  /** Pauses every source of a person or publication not paused yet (dropped on the sidebar's Pause, decision 0246), with Undo. */
+  async pause(row: Feed): Promise<Removed> {
+    const name = this.shownAs(row)?.title ?? row.title;
+    const ids = (row.places ?? [row.id]).filter((id) => this.feeds?.find((feed) => feed.id === id)?.pausedAt == null);
+    if (ids.length === 0) return `${name} is already paused.`;
+    const set = async (paused: boolean) => {
+      for (const id of ids) {
+        const problem = await editFeed(id, { paused });
+        if (problem) return problem;
+      }
+      return undefined;
+    };
+    const problem = await set(true);
+    await this.loadFeeds();
+    if (problem) return refused(problem, "feed");
+    return {
+      message: `Paused ${name}.`,
+      undo: async () => {
+        const back = await set(false);
+        await this.loadFeeds();
+        return back ? undoRefused(back, "feed") : undefined;
+      },
+    };
+  }
+
   /**
    * Just followed (decision 0230): "You're following Maya Chen.", then the
    * line about any ticked feeds that couldn't be followed. Undo unfollows

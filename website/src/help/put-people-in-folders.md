@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 15
-updated: 2026-11-10
+updated: 2026-11-11
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -25,6 +25,9 @@ out of the folder you dragged them from.
   **Publications**.
 - On a phone or tablet, press and hold their name until it lifts, then move
   it. A quick swipe still scrolls.
+- While you hold someone, the bottom of the sidebar offers **Pause** and
+  **Unsubscribe** to drop them on (see
+  <a href="/help/unfollow-someone/">Unfollow someone</a>).
 
 Each move is said at the bottom of the sidebar, with **Undo**.
 

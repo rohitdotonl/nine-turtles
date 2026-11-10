@@ -30,10 +30,20 @@
   holds first). Edit, beside Folders, gives every row a handle for those who
   don't drag: a folder's opens Move up, Move down…, a person's "Move to a
   folder". What was done shows in a note at the sidebar's foot, with Undo.
+  Dropped on the foot's Pause or Unsubscribe (decision 0246), they're paused
+  or unsubscribed from, with Undo; if the reader starred, highlighted or
+  noted anything of theirs, the foot first asks whether to keep it, as
+  Edit's Unsubscribe does (KeepOrRemove). A link dropped anywhere on nine
+  turtles, or on a folder here, opens "Follow <name>?" (linkDrop.svelte.ts);
+  a list of feeds dropped there is imported, said in the same note.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import KeepOrRemove from "./KeepOrRemove.svelte";
+  import { keptAny, keptFrom, type Kept } from "./keeping";
+  import { importMessage, importOpml, undoImport } from "./importing";
+  import { droppedOn, listenForDrops } from "./linkDrop.svelte";
   import MoreMenu from "./MoreMenu.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import TextButton from "./TextButton.svelte";
@@ -53,6 +63,8 @@
     phone = false,
     unreadOff = false,
     searchArticles,
+    onLeft,
+    onLink,
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
     library: LoadedLibrary;
@@ -66,6 +78,10 @@
     unreadOff?: boolean;
     /** Searches every article for what's typed in the sidebar search (decision 0231). */
     searchArticles: (words: string) => void;
+    /** Unsubscribed from by a drop: if their list or page is open, it closes. */
+    onLeft: (row: Feed) => void;
+    /** A web address was dropped on nine turtles: "Follow <name>?" opens for it. */
+    onLink: (address: string) => void;
   } = $props();
 
   let feeds: Feed[] = $derived(library.rows ?? []);
@@ -83,6 +99,9 @@
   let where = $state("");
   /** Why the person held over Publications can't go there, under its heading. */
   let refusal = $state("");
+  /** Dropped on Unsubscribe, with something kept: the foot asks whether it stays. */
+  let asking: { row: Feed; kept: Kept } | undefined = $state();
+  let leaving = $state(false);
 
   /** The folders open now: Shift+J and Shift+K pass over the feeds in the others (decision 0110). */
   export function openFolders(): number[] {
@@ -123,9 +142,15 @@
     if (dragged.kind === "folder") return over?.kind === "between" && droppedBefore(order, dragged.id, over.before).join() !== order.join();
     const row = rowNamed(dragged.id);
     if (!row || !over || over.kind === "between") return false;
+    if (over.kind === "act") return over.act === "unsubscribe" || !paused(row);
     if (over.kind === "folder") return !row.folders.includes(over.id);
     if (over.who === "publication" && several(row)) return false;
     return dragged.from !== null || over.who !== (row.kind ?? "person");
+  }
+
+  /** Whether every source of theirs is paused already. */
+  function paused(row: Feed): boolean {
+    return (row.places ?? [row.id]).every((id) => library.feeds?.find((feed) => feed.id === id)?.pausedAt != null);
   }
 
   /** Held over Publications, someone in several places is told why they can't go there; let go anyway, the note says it too. */
@@ -133,6 +158,10 @@
     const row = dragged.kind === "person" ? rowNamed(dragged.id) : undefined;
     const why = row && over?.kind === "loose" && over.who === "publication" && several(row) ? `${row.title} writes in more than one place, so stays under People.` : "";
     refusal = dropped ? "" : why;
+    if (dropped && row && over?.kind === "act") {
+      note = `${row.title} is already paused.`;
+      where = "";
+    }
     if (dropped && why) {
       note = why;
       where = "";
@@ -152,10 +181,63 @@
       const to = folderNamed(over.id);
       await arranged(library.file(row, from, to, keep));
       if (to) openFolder([to.id]);
+    } else if (over.kind === "act") {
+      if (over.act === "pause") await arranged(library.pause(row));
+      else await leave(row);
     } else if (over.kind === "loose") {
       // Out of a folder onto People or Publications: out of it, and the one dropped on.
       await arranged(from ? library.file(row, from, null, false, over.who) : library.makeKind(row, over.who));
     }
+  }
+
+  /** Unsubscribes from someone dropped on Unsubscribe; with something kept, asks first (`removeKept` is the answer). */
+  async function leave(row: Feed, removeKept?: boolean) {
+    if (leaving) return;
+    leaving = true;
+    if (removeKept === undefined) {
+      const kept = await keptFrom(row.id);
+      if (keptAny(kept)) {
+        leaving = false;
+        note = undefined;
+        asking = { row, kept };
+        return;
+      }
+    }
+    const done = await library.unsubscribe(row, removeKept ?? false);
+    leaving = false;
+    asking = undefined;
+    if (typeof done !== "string") onLeft(row);
+    note = done;
+    where = "";
+  }
+
+  onMount(() =>
+    listenForDrops({
+      onLink: (address, folder) => {
+        const into = folderNamed(folder);
+        droppedOn.folder = into ? { id: into.id, name: into.name } : null;
+        onLink(address);
+      },
+      onFile: (file) => arranged(imported(file)),
+    }),
+  );
+
+  /** A dropped list of feeds, imported: what it brought, with Undo taking exactly that away (decision 0238). */
+  async function imported(file: File): Promise<Removed> {
+    note = "Importing…";
+    const result = await importOpml(file);
+    if (typeof result === "string") return result;
+    await library.loadFeeds();
+    const message = importMessage(result).join(" ");
+    if (!result.undoable) return message;
+    return {
+      message,
+      undo: async () => {
+        const late = await undoImport();
+        await library.loadFeeds();
+        return late ? "It's too late to undo that." : undefined;
+      },
+    };
   }
 
   /** A handle's menu moved a folder: the keyboard stays on its handle. */
@@ -181,6 +263,7 @@
 
   /** An arranging finished: the note says what, with Undo, or why it couldn't be done. */
   async function arranged(doing: Promise<Removed | undefined>, folder?: Folder) {
+    asking = undefined;
     const done = await doing;
     if (done === undefined) return;
     note = done;
@@ -322,6 +405,9 @@
   class="arranging"
   data-editing={editing || undefined}
 >
+<!-- While a link or a file is held over nine turtles (linkDrop.svelte.ts): what letting go does. For the pointer only. -->
+<p class="drop-hint drop-hint-link" aria-hidden="true">Drop to follow this site. Onto a folder to file them there.</p>
+<p class="drop-hint drop-hint-file" aria-hidden="true">Drop a list of feeds (OPML) to import it.</p>
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
@@ -414,7 +500,14 @@
   What arranging did, with Undo, or why it couldn't: a note at the sidebar's foot, the list's
   note in look (BRAND.md → "Messages"), which stays until it's closed or something else is done.
 -->
-{#if note}
+{#if asking}
+  {@const { row, kept } = asking}
+  <div class="sidebar-note-band sticky bottom-0 z-10 px-2 pt-3 pb-1">
+    <div class="toast border [&_.keep]:!border-0">
+      <KeepOrRemove name={row.title} {kept} busy={leaving} onChoose={(removeKept) => leave(row, removeKept)} onCancel={() => (asking = undefined)} />
+    </div>
+  </div>
+{:else if note}
   <div class="sidebar-note-band sticky bottom-0 z-10 flex justify-center px-2 pt-3 pb-1">
     <div class="toast flex min-h-11 max-w-full items-center gap-x-2 border pr-1 pl-4 text-meta text-ink-2">
       <span role="status" class="min-w-0 py-2">{typeof note === "string" ? note : note.message}<span class="sr-only">{" "}{where}</span></span>

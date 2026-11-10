@@ -3,8 +3,8 @@ title: Unfollow someone
 description: Stop following a person or a publication, and what's kept when you do.
 groupId: keeping-things-tidy
 order: 3
-spec: 15, 23, 36 and 42
-updated: 2026-11-10
+spec: 5, 15, 23, 36 and 42
+updated: 2026-11-11
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -27,6 +27,20 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
 back exactly as they were, with what you'd read and their folders. If they
 were the last one in a folder, the folder goes too, and Undo brings it back.
+
+## Drag them out
+
+In the sidebar, drag a person or publication down to the bottom: while you
+hold them, **+ Add** and **Settings** make way for two places to drop them,
+**Pause** and **Unsubscribe**. On a phone or tablet, press and hold their
+name until it lifts first.
+
+- Let go on **Unsubscribe** and they're gone, with "Unsubscribed from …"
+  and **Undo** at the bottom of the sidebar. If you starred, highlighted or
+  noted anything of theirs, nine turtles asks first, right there, whether
+  to keep it, just as Edit does.
+- Let go on **Pause** for a noisy week: their new articles arrive already
+  read until you resume them. "Paused …" comes with **Undo** too.
 
 ## Changed your mind later?
 
