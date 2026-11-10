@@ -81,6 +81,38 @@ test("anyone can sign up from the sign-in page, and the owner sees them", async 
   await stranger.close();
 });
 
+test("sign-up offers a likely slip in the email's provider before sending, and never blocks (decision 0234)", async ({ browser }, testInfo) => {
+  const page = await (await browser.newContext()).newPage();
+  await page.goto("/sign-up");
+  await expect(page.getByLabel("Email")).toBeFocused();
+  const stamp = `${testInfo.project.name}-${Date.now()}`;
+  let sent = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/sign-up") sent += 1;
+  });
+  // Offered on leaving the field, in the text color, the field kept as typed.
+  await page.keyboard.type(`asha-${stamp}@gmial.com`);
+  await page.keyboard.press("Tab");
+  const fix = page.locator("#sign-up-fix");
+  await expect(fix).toHaveText(`Did you mean asha-${stamp}@gmail.com? Use that`);
+  await expect(page.getByLabel("Email")).toHaveValue(`asha-${stamp}@gmial.com`);
+  await page.getByRole("button", { name: "Use that" }).click();
+  await expect(page.getByLabel("Email")).toHaveValue(`asha-${stamp}@gmail.com`);
+  await expect(page.getByLabel("Email")).toBeFocused();
+  await expect(fix).toHaveText("");
+
+  // Pressing Sign up offers it first; pressing again sends the email as typed.
+  await page.getByLabel("Email").fill(`asha-${stamp}@yahoo.con`);
+  await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
+  await page.keyboard.press("Enter");
+  await expect(fix).toHaveText(`Did you mean asha-${stamp}@yahoo.com? Use that`);
+  expect(sent).toBe(0);
+  const signingUp = page.waitForRequest("**/api/sign-up");
+  await page.keyboard.press("Enter");
+  expect((await signingUp).postDataJSON()).toMatchObject({ email: `asha-${stamp}@yahoo.con` });
+  await expect(page.locator("#sidebar")).toBeAttached();
+});
+
 test("the owner's email is changed like everyone's, not on the Readers page", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "the owner has one email for the whole app");
   await page.goto("/");

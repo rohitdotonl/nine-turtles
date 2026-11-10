@@ -70,6 +70,11 @@ const INBOXES: { name: string; url: string; domains: string[] }[] = [
   { name: "Proton Mail", url: "https://mail.proton.me/", domains: ["proton.me", "protonmail.com", "protonmail.ch", "pm.me"] },
 ];
 
+/** Whether `domain` (the part after an @) is one of the big email providers above. */
+export function mailProvider(domain: string): boolean {
+  return INBOXES.some((inbox) => inbox.domains.includes(domain.toLowerCase()));
+}
+
 /**
  * Where the reader of `email` can open their inbox, when its address says
  * (decision 0195), or nothing: offered as a link to press, never opened by itself.

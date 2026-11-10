@@ -14,6 +14,8 @@
   import { tick } from "svelte";
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
+  import EmailFix from "./EmailFix.svelte";
+  import { emailFix } from "./typos";
   import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { SIGN_IN_PAGE } from "./accounts";
@@ -33,10 +35,27 @@
   let sent = $state("");
   let sentHeading: HTMLHeadingElement | undefined = $state();
   let emailField: HTMLInputElement | undefined = $state();
+  /** A likely slip in the email's provider, offered under the field (decision 0234). */
+  let fix: string | undefined = $state();
+  /** The email Sign up already paused for once: pressed again, it's sent as typed. */
+  let pausedFor = "";
+
+  /** Use that: the field takes the address offered, and the keyboard goes back to it. */
+  function useFix(meant: string) {
+    email = meant;
+    fix = undefined;
+    emailField?.focus();
+  }
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (busy || email.trim() === "" || password === "") return;
+    // A likely slip is offered first; never blocking, so a second press sends the email as typed.
+    fix = emailFix(email);
+    if (fix && pausedFor !== email.trim()) {
+      pausedFor = email.trim();
+      return;
+    }
     busy = true;
     const result = await signUp(email.trim(), password, heardAbout || undefined);
     busy = false;
@@ -117,10 +136,13 @@
         autofocus
         bind:this={emailField}
         bind:value={email}
-        aria-describedby="sign-up-message"
+        onblur={() => (fix = emailFix(email))}
+        oninput={() => (fix = undefined)}
+        aria-describedby="sign-up-fix sign-up-message"
         aria-invalid={refusedField === "email" ? "true" : undefined}
         class="field"
       />
+      <EmailFix id="sign-up-fix" {fix} onUse={useFix} />
     </div>
     <!-- The same room above the password's name as on sign-in, where "Forgot?" sits, so the two pages line up. -->
     <div class="flex flex-col gap-1.5 pt-3">

@@ -11,7 +11,7 @@ import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
 import { fold } from "./search";
-import { UNDO_FAILED } from "./messages";
+import { NOT_AN_ADDRESS, UNDO_FAILED } from "./messages";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
@@ -288,7 +288,7 @@ export const PLAN_ENDED = "Your free trial or plan has ended. Choose a plan in S
 export function explain(reason: Problem): string {
   switch (reason) {
     case "not-an-address":
-      return "That doesn't look like a web address.";
+      return `${NOT_AN_ADDRESS} An address looks like example.com.`;
     case "not-allowed":
       return "nine turtles can't visit that address.";
     case "unreachable":

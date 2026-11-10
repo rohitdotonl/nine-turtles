@@ -15,6 +15,8 @@
   import { edge } from "./edge";
   import { changeEmail, explainChange } from "./accounts";
   import { plausibleEmail } from "./readers";
+  import EmailFix from "./EmailFix.svelte";
+  import { emailFix } from "./typos";
 
   let {
     heading = $bindable(),
@@ -38,10 +40,27 @@
   let refusedField: "email" | "password" | undefined = $state();
   let busy = $state(false);
   let emailField: HTMLInputElement | undefined = $state();
+  /** A likely slip in the new email's provider, offered under the field (decision 0234). */
+  let fix: string | undefined = $state();
+  /** The email Send link already paused for once: pressed again, it's sent as typed. */
+  let pausedFor = "";
+
+  /** Use that: the field takes the address offered, and the keyboard goes back to it. */
+  function useFix(meant: string) {
+    email = meant;
+    fix = undefined;
+    emailField?.focus();
+  }
 
   async function send(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
+    // A likely slip is offered first; never blocking, so a second press sends the email as typed.
+    fix = emailFix(email);
+    if (fix && pausedFor !== email.trim()) {
+      pausedFor = email.trim();
+      return;
+    }
     if (!plausibleEmail(email.trim())) {
       refusedField = "email";
       message = "That doesn't look like an email address.";
@@ -68,21 +87,26 @@
 
 {#snippet form()}
   <form onsubmit={send} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
+    <div class="flex flex-col gap-1.5">
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">New email</span>
       <input
         bind:this={emailField}
         bind:value={email}
+        onblur={() => (fix = emailFix(email))}
+        oninput={() => (fix = undefined)}
         type="text"
         inputmode="email"
         autocomplete="email"
         autocapitalize="none"
         spellcheck="false"
-        aria-describedby="change-email-message"
+        aria-describedby="change-email-fix change-email-message"
         aria-invalid={refusedField === "email" ? "true" : undefined}
         class="field"
       />
     </label>
+    <EmailFix id="change-email-fix" {fix} onUse={useFix} />
+    </div>
     <div class="flex flex-col gap-1.5">
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">Your password</span>
