@@ -3,7 +3,7 @@ title: Find your way around
 description: The sidebar, the list of articles and the reading pane, and how new articles arrive without moving anything under you.
 groupId: getting-started
 order: 5
-spec: 4, 5, 6, 7 and 13
+spec: 4, 5, 6, 7, 13 and 20
 updated: 2026-11-10
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
@@ -13,6 +13,9 @@ related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
   in the middle, and the article you're reading on the right. On a phone you
   see one at a time.
 </p>
+
+On an iPhone, tap the top of the screen (where the clock is) to go
+back to the top of the list or article you're in.
 
 ## The sidebar
 
