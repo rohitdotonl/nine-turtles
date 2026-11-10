@@ -49,3 +49,22 @@ stand alone say so.
 
 **Revisit if** a browser test part passes about two minutes (add parts), or
 the Rust tests pass about two minutes (run their files side by side).
+
+**Later (November 2026).** Six parts instead of four. On the eight pull
+requests merged on 10 November, the slowest quarter took about 5 minutes of
+tests and held up every pull request, while the others took 2 to 3½. The
+browser the tests use is now remembered between runs too: its download
+usually took under half a minute but sometimes over three. And `tabTo`
+starts its walk afresh when the place the keyboard was on leaves the page
+(the shared app's sidebar redrawing as new articles came in), which it had
+mistaken for Tab coming all the way round. The answering tests stop
+standing in for the server's lists before each test closes its page: a list
+asked for as a test ended was thrown away with the page, failing a test
+that had passed.
+
+And, with the owner's yes (10 November 2026), an agent no longer runs every
+browser test on its own computer before opening a pull request: it runs the
+quick parts and the browser test files for what it changed
+(`NINE_TURTLES_BROWSER_TESTS`). On a cloud computer the whole set took
+10½ minutes, on top of building the program, and then ran again on GitHub,
+which is what decides: nothing merges unless every test passes there.
