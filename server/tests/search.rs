@@ -1,5 +1,6 @@
 //! Search (SPEC section 14), tested against a real running nine turtles and two
-//! made-up publishers: one writing in English, one in Hindi.
+//! made-up publishers: one writing in English, one in Hindi (and, for one
+//! test, a third in Chinese, Japanese, Arabic and Hebrew).
 
 mod common;
 
@@ -234,6 +235,81 @@ async fn hindi_words_are_found_whole() {
     // after a vowel sign, doesn't: the word wasn't cut there.
     assert_eq!(reader.titles(&[("q", "किता")]).await, ["पुस्तकालय"]);
     assert!(reader.titles(&[("q", "ताबें")]).await.is_empty());
+}
+
+/// A publisher writing in Chinese, Japanese, Arabic (with its vowel marks
+/// written out) and Hebrew.
+async fn other_scripts() -> String {
+    let app = Router::new().route(
+        "/other.xml",
+        get(|| async {
+            rss(
+                "Other scripts",
+                &[
+                    (
+                        "c1",
+                        "为什么我又开始用阅读器",
+                        "<p>去年冬天，我删掉了手机上所有的推荐类应用。</p>",
+                        3,
+                    ),
+                    ("c2", "阅读，然后", "<p>器物之美。</p>", 4),
+                    (
+                        "j1",
+                        "十一月の朝",
+                        "<p>友だちに<b>手紙</b>を書いた。</p>",
+                        5,
+                    ),
+                    ("a1", "دفتر الصباح", "<p>أُحِبُّ القِرَاءَةَ في الصَّبَاح.</p>", 6),
+                    ("h1", "יומן הגינה", "<p>שָׁלוֹם לַגִּנָּה.</p>", 7),
+                ],
+            )
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    format!("http://{address}/other.xml")
+}
+
+#[tokio::test]
+async fn chinese_japanese_arabic_and_hebrew_words_are_found() {
+    let reader = Reader::new().await;
+    reader.follow(&other_scripts().await).await;
+    // Chinese and Japanese have no spaces between words: the characters are
+    // found side by side, anywhere in a sentence, and only side by side.
+    assert_eq!(
+        reader.titles(&[("q", "阅读器")]).await,
+        ["为什么我又开始用阅读器"]
+    );
+    assert_eq!(
+        reader.titles(&[("q", "推荐")]).await,
+        ["为什么我又开始用阅读器"]
+    );
+    assert_eq!(reader.titles(&[("q", "手紙")]).await, ["十一月の朝"]);
+    // Arabic and Hebrew are found with or without their vowel marks.
+    assert_eq!(reader.titles(&[("q", "القراءة")]).await, ["دفتر الصباح"]);
+    assert_eq!(reader.titles(&[("q", "القِرَاءَة")]).await, ["دفتر الصباح"]);
+    assert_eq!(reader.titles(&[("q", "שלום")]).await, ["יומן הגינה"]);
+
+    // The excerpt marks the characters found, as written.
+    let (_, body) = reader.search(&[("q", "手紙")]).await;
+    assert_eq!(
+        body["articles"][0]["excerpt"],
+        json!([
+            { "text": "友だちに", "match": false },
+            { "text": "手紙", "match": true },
+            { "text": "を書いた。", "match": false },
+        ])
+    );
+    let (_, body) = reader.search(&[("q", "القراءة")]).await;
+    assert_eq!(
+        body["articles"][0]["excerpt"],
+        json!([
+            { "text": "أُحِبُّ ", "match": false },
+            { "text": "القِرَاءَةَ", "match": true },
+            { "text": " في الصَّبَاح.", "match": false },
+        ])
+    );
 }
 
 #[tokio::test]

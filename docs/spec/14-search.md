@@ -15,7 +15,7 @@
 - Matching words, in a title and in the line of text under it alike, have a faint tone of the theme's accent behind them with small rounded corners and a fine underline (so never tone alone), in the text's own weight (decision 0037). Screen readers hear them as highlighted.
 - Under the title of each result whose text (not only its title) holds a searched word, up to two muted lines show that text around the first match, before the source and time: a few words before it, then on to about 90 characters, cut only between words, with "…" where text was left out, and ending in "…" if the list is too narrow for two lines. Three typed dots in the publisher's text show as one "…" too. The searched words in it are marked as in the title, and in full ink rather than muted grey. The line is plain text: nothing from the feed's HTML comes through.
 - Once the field has words in it, a **×** at its end ("Clear search", a 44px target) empties the field, keeping any chips, and leaves the keyboard in it.
-- Works for English, other Latin-alphabet languages, and Hindi.
+- Works in every language: English and other Latin-alphabet languages with or without accents ("cafe" finds "café"), Hindi words whole, Chinese and Japanese characters found side by side anywhere in a sentence ("阅读器"), and Arabic and Hebrew with or without their vowel marks (decision 0228).
 - Searches can't be saved (decision 0174, which removed saved searches): the search field starts empty each time.
 - Tab moves from the field into the open options, onto the place being searched; Escape closes search and returns you to where you were.
 
@@ -24,5 +24,5 @@
 2. Remove the chip: results now come from all feeds.
 3. Open the options, tick Starred: a chip says "Starred", and only starred items are listed.
 4. Open the options, choose This list: the place chip comes back. The options hold only Search in and Starred.
-5. Search a Hindi word from a Hindi article: that article is found.
+5. Search a Hindi word from a Hindi article, and two or three Chinese or Japanese characters from the middle of a sentence: each article is found, the characters marked in its line of text.
 6. Press Escape: you're back exactly where you were.

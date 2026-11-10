@@ -9,7 +9,7 @@
 - Devanagari and Arabic letters are set in reading faces that match Literata (Noto Serif Devanagari, Noto Naskh Arabic, decision 0227), downloaded only for pages with those letters; other scripts use the device's fonts.
 - Each script gets its own type settings (DESIGN.md → "Typography"): more room between lines for Devanagari, Arabic, Hebrew, Chinese, Japanese and Korean, a lighter Devanagari title, strict Japanese line breaks, and no slanted letters where a script has no italics.
 - A writer's name or a title in another script keeps its own direction wherever it sits beside nine turtles' words (the list, the sidebar, a list's heading, the byline, Write back). Fields the reader types in (search, Find a person, notes, folder names, words to hide) start in the direction of what's typed. Find a person compares letters as written, vowel signs included.
-- Search covers English, other Latin-alphabet languages and Hindi. Chinese and Japanese search are not in V1.
+- Search finds words in every script: Chinese and Japanese characters side by side, Arabic and Hebrew with or without vowel marks (SPEC section 14, decision 0228). Hiding a word (section 27) finds it the same way.
 
 **How to check it**
 Covered by sections 14 and 22. Open an article in Arabic or Hebrew whose feed names no language: the title and text start on the right, the byline lines up under the title on the right, and a screen reader reads it in an Arabic or Hebrew voice. Open a Hindi article: the lines have visibly more room than an English one and quotations are upright.
