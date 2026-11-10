@@ -10,8 +10,10 @@
   accessibility checks and src/lib/contrast.test.ts verify every pair against
   WCAG on every page (the minimums are in docs/decisions/0013-look-and-feel.md).
 
-  The text sizes are DESIGN.md's fixed type scale. Tailwind's own sizes are
-  switched off, so nothing else can be used by accident.
+  The text sizes, corners and shadow are DESIGN.md's system ("The system").
+  Tailwind's own sizes, corners and shadows are switched off, so nothing else
+  can be used by accident, and scripts/check-system.mjs holds plain CSS to the
+  same table.
 */
 
 @theme {
@@ -21,29 +23,39 @@
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
 
   --text-*: initial;
-  /* Meta: times, source names, counts, hints. */
+  /* Three interface sizes, each with a touch screen's twin (below). */
+  /* Meta: times, source names, hints, buttons' words, a group's label. */
   --text-meta: 0.8125rem;
   --text-meta--line-height: 1.4;
-  /* Small: toolbar actions, helper text, labels. */
-  --text-small: 0.875rem;
-  --text-small--line-height: 1.45;
-  /* Interface: sidebar rows and list titles. */
+  /* Interface: sidebar rows, list titles, Settings' row names. */
   --text-ui: 0.9375rem;
   --text-ui--line-height: 1.4;
   /* Base: text boxes and running interface text. */
   --text-base: 1rem;
   --text-base--line-height: 1.5;
-  /* Large: section headings inside a screen. */
+  /* Large: a heading inside a screen. */
   --text-large: 1.25rem;
   --text-large--line-height: 1.35;
-  /* Heading: the list's title and the wordmark, in the reading serif. */
+  /* Title: every place's title, in the reading serif. */
   --text-heading: 1.5rem;
   --text-heading--line-height: 1.2;
-  /* Extra large: a screen's own title (Settings, Add a feed). */
-  --text-xlarge: 1.75rem;
-  --text-xlarge--line-height: 1.2;
+  /* The sign-in pages' wordmark. */
   --text-display: 3rem;
   --text-display--line-height: 1.1;
+  /* Named exceptions (DESIGN.md → "The system"): the list's dates and Add's share line (decision 0206), and the sidebar's wordmark beside the logo (Exceptions log). */
+  --text-date: 0.75rem;
+  --text-wordmark: 1.375rem;
+  --text-wordmark-phone: 1.75rem;
+  --text-wordmark-phone--line-height: 1.2;
+
+  /* Two corners and a pill: 8px for what you press or type in, 12px for what holds things, 4px for small marks inside them. */
+  --radius-*: initial;
+  --radius-press: 0.5rem;
+  --radius-hold: 0.75rem;
+  --radius-mark: 0.25rem;
+  /* One shadow, for everything that floats. */
+  --shadow-*: initial;
+  --shadow-float: 0 16px 48px -12px rgb(0 0 0 / 0.3);
 
   --color-paper: var(--paper);
   --color-list: var(--list);
@@ -176,11 +188,11 @@ body {
   align-items: center;
   padding-inline: 1rem;
   border: 1px solid var(--raised-edge, transparent);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-press);
   background-color: var(--surface-raised);
   color: var(--ink);
   font-weight: 600;
-  box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
+  box-shadow: var(--shadow-float);
 }
 .skip-link:not(:focus) {
   position: absolute;
@@ -213,7 +225,7 @@ body {
 */
 .place {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-press);
 }
 .place:is([aria-current], [data-here]) {
   background-color: var(--place-tint, var(--color-tint-sidebar));
@@ -229,14 +241,17 @@ body {
   }
 }
 
-/* Small spaced capitals, semibold, muted: Settings' group names (decision 0123) and the welcome's small headings (decision 0198). */
-.small-caps {
-  font-size: 0.6875rem;
-  line-height: 1.3;
+/*
+  One label for every group (DESIGN.md → "The system"), the sidebar's own:
+  semibold words in full ink, sentence case, at the meta size (13px, 15 on a
+  touch screen). Settings' groups, the welcome, a person's page, an article's
+  end, the Aa panel and the sidebar's Folders and People all use it.
+*/
+.label {
+  font-size: var(--text-meta);
+  line-height: 1.4;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink);
 }
 
 /*
@@ -278,7 +293,7 @@ body {
   (decision 0074), and "Loading…" shows there meanwhile, in small grey
   centred text. Its "Show older articles" button is for the keyboard and
   screen readers: hidden until it has the keyboard's place (or a load
-  failed), then a small, quiet pill centred under the list, in muted grey
+  failed), then a small, quiet button centred under the list, in muted grey
   with a soft hairline around it. Never in the accent: the accent marks
   only what's unread or found, never a button (decisions 0037, 0057).
   44px tall to touch.
@@ -293,7 +308,7 @@ body {
   margin: 0 auto 0.5rem;
   padding: 0 1.125rem;
   border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-press);
   background: transparent;
   color: var(--muted);
 }
@@ -405,11 +420,11 @@ textarea {
   padding: 0 0.375rem;
   border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
   border-bottom-width: 2px;
-  border-radius: 0.3125rem;
+  border-radius: var(--radius-mark);
   background-color: var(--raised-group, var(--paper));
   /* The interface font, so a hint on every screen doesn't load the code font. */
   font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-size: var(--text-meta);
   font-weight: 400;
   line-height: 1;
   vertical-align: middle;
@@ -439,9 +454,9 @@ textarea {
   */
   .floating {
     border: 1px solid var(--raised-edge, color-mix(in oklab, var(--ink) 12%, transparent));
-    border-radius: 0.75rem;
+    border-radius: var(--radius-hold);
     background-color: var(--surface-raised, var(--paper));
-    box-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.3);
+    box-shadow: var(--shadow-float);
   }
   /* A grouped list inside something floating: by night 4% white over the lifted surface, so it still reads as a group. */
   .floating .inset-group {
@@ -464,7 +479,6 @@ textarea {
   .page-action > .btn-primary {
     width: 100%;
     min-height: 3.125rem;
-    border-radius: 0.75rem;
   }
 
   /*
@@ -533,7 +547,7 @@ textarea {
     min-height: 2.75rem;
     margin-left: -0.5rem;
     padding-inline: 0.5rem;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-press);
     color: var(--danger);
     font-weight: 600;
     text-align: left;
@@ -555,7 +569,7 @@ textarea {
   */
   .inset-group {
     overflow: hidden;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
   }
   .inset-row {
@@ -658,7 +672,7 @@ textarea {
   .setting-name {
     margin: 0;
     color: var(--ink);
-    font-size: 0.98rem;
+    font-size: var(--text-ui);
     font-weight: 500;
     line-height: var(--setting-line);
     overflow-wrap: anywhere;
@@ -666,7 +680,7 @@ textarea {
   .setting-hint {
     margin: 0;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: var(--text-meta);
     font-weight: 400;
     line-height: 1.35;
     overflow-wrap: anywhere;
@@ -688,14 +702,9 @@ textarea {
       flex-basis: 100%;
     }
   }
-  /* The heading of a group, in small uppercase muted letters (decision 0120). */
+  /* The heading of a group: the one label (.label), on the group's inner edge. */
   .settings-head {
     margin: 0 0 0.5rem 1rem;
-    color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
   }
 
   /* A row that is itself a button or link (Import OPML, Sign out): the whole row presses. */
@@ -749,7 +758,7 @@ textarea {
     align-items: center;
     justify-content: center;
     border: 1.5px solid var(--muted);
-    border-radius: 0.3125rem;
+    border-radius: var(--radius-mark);
     color: transparent;
   }
   .check-row:has(> input:checked) > .check-mark {
@@ -922,7 +931,7 @@ textarea {
     flex-wrap: wrap;
     gap: 0.25rem;
     padding: 0.25rem;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-press);
     background-color: var(--tone);
   }
   /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
@@ -931,8 +940,11 @@ textarea {
       display: grid;
       grid-template-columns: repeat(var(--phone-columns), minmax(0, 1fr));
     }
+    /* Each choice's words stay on one line ("For a month"), with less room at its sides. */
     .choice {
       justify-content: center;
+      padding-inline: 0.5rem;
+      white-space: nowrap;
     }
   }
   .choice {
@@ -943,9 +955,9 @@ textarea {
     min-height: 2.75rem;
     padding-inline: 0.875rem;
     border: 1px solid transparent;
-    border-radius: 0.4375rem;
+    border-radius: var(--radius-mark);
     color: var(--ink-2);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
     cursor: pointer;
   }
   @media (pointer: fine) {
@@ -1012,7 +1024,7 @@ textarea {
     min-height: 2.75rem;
     padding-inline: 1rem;
     border: 1px solid var(--muted);
-    border-radius: 0.375rem;
+    border-radius: var(--radius-press);
     white-space: nowrap;
     touch-action: manipulation;
     cursor: pointer;
@@ -1053,7 +1065,7 @@ textarea {
     gap: 0.375rem;
     padding-inline: 0.625rem;
     color: var(--ink-2);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
   }
 
   /*
@@ -1067,9 +1079,9 @@ textarea {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-mark);
     color: var(--ink);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
@@ -1102,7 +1114,7 @@ textarea {
     min-height: 2.75rem;
     padding-inline: 0.75rem;
     border: 1px solid var(--field-edge);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-press);
     background-color: var(--field);
     color: var(--ink);
   }
@@ -1155,7 +1167,7 @@ textarea {
   .search-capsule {
     min-height: var(--search-height);
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--radius-press);
     background-color: var(--search-fill);
     color: var(--ink);
     font-size: var(--text-ui);
@@ -1271,7 +1283,7 @@ input {
 .article-byline {
   margin-top: 0;
   font-family: var(--font-sans);
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
   line-height: 1.45;
   letter-spacing: 0.01em;
   color: var(--ink-2);
@@ -1314,7 +1326,7 @@ input {
 .article-note {
   margin-top: 1.25rem;
   font-family: var(--font-sans);
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
   line-height: 1.5;
   font-style: normal;
   text-align: center;
@@ -1425,7 +1437,7 @@ input {
   display: block;
   margin-block: 1em;
   font-family: var(--font-sans);
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
   font-style: normal;
   line-height: 1.5;
   color: var(--ink-2);
@@ -1516,7 +1528,7 @@ input {
 */
 .shortcut-tip {
   margin-top: 0.75rem;
-  font-size: var(--text-small);
+  font-size: var(--text-meta);
   color: var(--muted);
   text-align: center;
 }
@@ -1572,8 +1584,9 @@ input {
 /* The note at the bottom of the list floats, so it alone has a shadow, on the lifted surface (decision 0052). */
 .toast {
   border-color: var(--raised-edge, color-mix(in srgb, var(--ink) 15%, transparent));
+  border-radius: var(--radius-hold);
   background-color: var(--surface-raised, var(--paper));
-  box-shadow: 0 10px 28px -10px rgb(0 0 0 / 0.3);
+  box-shadow: var(--shadow-float);
 }
 /*
   The band the note sits in (decision 0048): the page, as under the list, across the
@@ -1599,46 +1612,6 @@ dialog.dimmed::backdrop {
   background: var(--scrim, rgb(0 0 0 / 0.18));
 }
 
-/*
-  One top line across the window (decision 0043): the sidebar's wordmark, the
-  list's title and More, the article's tools, a page's title and X, and the
-  sidebar button all sit in a band of the same height, centred in it, so the
-  three panes' top lines end, and their hairlines fall, at the same height,
-  as Apple Books keeps every toolbar item on one line. A 44px button in it
-  has 6px clear above and below. It's a minimum, so text set larger by the
-  reader can still grow it.
-*/
-:root {
-  --bar-h: 3.5rem;
-}
-.pane-bar {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  min-height: var(--bar-h);
-}
-/*
-  A button in a top line rings just inside its own edge, with soft corners,
-  so the ring never reaches the window's top or the line's edge.
-*/
-.pane-bar :is(a, button):focus-visible,
-.bar-button:focus-visible {
-  outline-offset: -2px;
-  border-radius: 10px;
-}
-
-/*
-  The phone's back button (decision 0043): the same place and size on every
-  screen, its arrow 8px from the screen's edge, as iOS keeps its back button
-  still while the screens change.
-*/
-.nav-bar {
-  padding-inline: 0.25rem;
-}
-.nav-back {
-  gap: 0.125rem;
-  padding-inline: 0.25rem 0.5rem;
-}
 
 /*
   The list's edges (decision 0043): its title, search field, row titles and
@@ -1722,7 +1695,7 @@ dialog.dimmed::backdrop {
   min-height: 0;
   margin-top: calc(env(safe-area-inset-top, 0px) + 10px);
   overflow: hidden;
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-hold) var(--radius-hold) 0 0;
   background-color: var(--sheet-ground);
 }
 .page-sheet-card .inset-group {
@@ -1730,10 +1703,6 @@ dialog.dimmed::backdrop {
 }
 .page-sheet-card .page-action {
   background-color: var(--sheet-ground);
-}
-.page-sheet-card .pane-bar h2 {
-  font-size: var(--text-large);
-  line-height: var(--text-large--line-height);
 }
 @media (forced-colors: active) {
   .page-sheet-card {

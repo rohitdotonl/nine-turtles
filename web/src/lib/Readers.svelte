@@ -30,11 +30,11 @@
   <div class="inset-group">
     <a href="/settings/readers/all" onclick={onReaders} data-settings-row="all-readers" class="inset-row inset-action"
       >All readers<span class="row-glyph flex items-center gap-1"
-        >{#if people.length > 0}<span class="text-meta">{people.length}</span>{/if}<Icon name="chevron-right" size={18} /></span
+        >{#if people.length > 0}<span class="text-meta">{people.length}</span>{/if}<Icon name="chevron-right" /></span
       ></a
     >
   </div>
-  <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
+  <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
   <p class="inset-foot">
     All readers lists everyone with an account here and how this nine turtles is doing; nobody sees what anyone else
     reads.

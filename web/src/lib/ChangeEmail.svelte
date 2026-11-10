@@ -92,7 +92,7 @@
   <form onsubmit={send} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <div class="flex flex-col gap-1.5">
     <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">New email</span>
+      <span class="text-meta text-ink-2">New email</span>
       <input
         bind:this={emailField}
         bind:value={email}
@@ -112,7 +112,7 @@
     </div>
     <div class="flex flex-col gap-1.5">
     <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">Your password</span>
+      <span class="text-meta text-ink-2">Your password</span>
       <input
         bind:value={password}
         type="password"
@@ -125,8 +125,8 @@
     </label>
     <p id="change-email-help" class="field-help">A link goes to the new email. Your email changes once it's opened.</p>
     </div>
-    <p id="change-email-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+    <p id="change-email-message" role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}
       <div class="sheet-actions">

@@ -388,8 +388,8 @@ test.describe("on a phone", () => {
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
     await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
     await appReady(page);
-    // The list's title is one line that ends in "…", with the whole name as its tooltip; in a pane
-    // this narrow it steps down from 24px to 22px (decision 0041).
+    // The list's title is one line that ends in "…", with the whole name as its tooltip, at every
+    // place's title size even in a pane this narrow (DESIGN.md → "The system", decision 0244).
     const title = page.locator("#list-heading");
     await expect(title).toHaveAttribute("title", `Blog ${name}`);
     // A person's or publication's name is the button to their page (decision 0163): its name is what's
@@ -411,7 +411,7 @@ test.describe("on a phone", () => {
     expect(lines.cut).toBe(true);
     expect(lines.overflow).toBe("ellipsis");
     expect(lines.wrap).toBe("nowrap");
-    expect(lines.size).toBe("22px");
+    expect(lines.size).toBe("24px");
     expect((await title.boundingBox())!.width).toBeLessThanOrEqual(320);
     await page.getByRole("button", { name: /A year of reading slowly/ }).click();
     const back = article(page).getByRole("button", { name: `Back to Blog ${name}`, exact: true });

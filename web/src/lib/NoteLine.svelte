@@ -47,7 +47,7 @@
 {#if message || announce}
   <span class={["flex w-full items-center gap-x-2", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}>
     <span role={announce ? "status" : undefined} class="flex min-w-0 flex-1 items-start gap-1.5 py-2"
-      >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</span
+      >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</span
     >
     {#if message}
       {#if onRetry}
@@ -57,7 +57,7 @@
         <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" title={tipEvery("Undo", "undo")} aria-disabled={busy} onclick={onUndo}>{undoWord}</TextButton>
       {/if}
       <button type="button" onclick={onClose} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"
-        ><Icon name="close" size={18} /></button
+        ><Icon name="close" size="alone" /></button
       >
     {/if}
   </span>

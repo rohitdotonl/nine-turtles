@@ -59,7 +59,7 @@
 {#if paused.length > 0 || resumed || message}
   <div class={["paused flex flex-col gap-1", look]}>
     {#each paused as place (place.id)}
-      <p class="text-small text-ink-2">
+      <p class="text-meta text-ink-2">
         {#if places.length > 1}<span class="text-ink">{placeShownAs(place)}</span>:{/if}
         {pausedSince(place.pausedAt ?? 0, new Date(), "since")}
         {places.length > 1 ? "Its" : "Their"} new articles arrive already read.
@@ -68,9 +68,9 @@
         >
       </p>
     {/each}
-    {#if resumed}<p bind:this={said} tabindex="-1" role="status" class="text-small text-ink-2">{resumed}</p>{/if}
+    {#if resumed}<p bind:this={said} tabindex="-1" role="status" class="text-meta text-ink-2">{resumed}</p>{/if}
     {#if message}
-      <p role="status" class="flex items-start gap-1.5 text-small text-danger"><span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}</p>
+      <p role="status" class="flex items-start gap-1.5 text-meta text-danger"><span class="mt-px shrink-0"><Icon name="alert" /></span>{message}</p>
     {/if}
   </div>
 {/if}

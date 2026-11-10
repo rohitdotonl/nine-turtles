@@ -430,7 +430,7 @@
   }
 </script>
 
-{#snippet aa(size: number, style: string)}
+{#snippet aa(style: string)}
   <!-- The reading panel's button: text size, theme and font, one press from the text. -->
   <button
     type="button"
@@ -450,23 +450,23 @@
     class={[style, panelOpen && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-9 items-center justify-center rounded-md", panelOpen && "bg-[var(--tone)]"]}><Icon name="aa" {size} /></span>
+    <span class={["flex size-9 items-center justify-center rounded-press", panelOpen && "bg-[var(--tone)]"]}><Icon name="aa" size="alone" /></span>
   </button>
 {/snippet}
 
-{#snippet starIcon(size: number)}
+{#snippet starIcon()}
   <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
-  <Icon name="star" {size} filled={article.starred} />
+  <Icon name="star" size="alone" filled={article.starred} />
 {/snippet}
 
-{#snippet writeBackButton(size: number, style: string)}
+{#snippet writeBackButton(style: string)}
   <!-- Write back, one press from the text (decision 0214): a paper plane, for a person only. -->
-  <button type="button" aria-label="Write back" title={phone ? "Write back" : tip("Write back", "write-back")} onclick={() => act("write-back")} class={style}><Icon name="send" {size} /></button>
+  <button type="button" aria-label="Write back" title={phone ? "Write back" : tip("Write back", "write-back")} onclick={() => act("write-back")} class={style}><Icon name="send" size="alone" /></button>
 {/snippet}
 
-{#snippet original(size: number)}
+{#snippet original()}
   <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={phone ? "View original" : tip("View original", "open-original")} class="btn-quiet btn-icon"
-    ><Icon name="open" {size} /></a
+    ><Icon name="open" size="alone" /></a
   >
 {/snippet}
 
@@ -487,11 +487,11 @@
     <!-- Put away (decision 0242), it's still there for screen readers and Tab, which brings it back. -->
     <div bind:this={topBar} onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "reading-bar pane-bar nav-bar relative z-10 gap-2"}>
       <button type="button" onclick={phone.onBack} aria-label="Back to {phone.back}" title="Back to {phone.back}" class="btn-quiet nav-back min-w-0 shrink"
-        ><Icon name="back" size={22} /><span class="truncate">{phone.back}</span></button
+        ><Icon name="back" size="alone" /><span class="truncate">{phone.back}</span></button
       >
-      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
+      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-meta empty:sr-only">{copied}</p>
       {#if article.link}
-        <span class="ml-auto">{@render original(22)}</span>
+        <span class="ml-auto">{@render original()}</span>
       {/if}
     </div>
   {:else}
@@ -501,19 +501,19 @@
     -->
     <div class={["reading-bar pane-bar relative z-10 gap-2 pr-2", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
       {#if !article.link}
-        <p class="px-2 text-small text-muted">This article has no link to its original.</p>
+        <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
       {/if}
-      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-small empty:sr-only">{copied}</p>
+      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-meta empty:sr-only">{copied}</p>
       <div class="ml-auto flex items-center gap-1">
         {#if article.link}
-          {@render original(20)}
+          {@render original()}
         {/if}
-        {@render aa(20, "btn-quiet btn-icon")}
+        {@render aa("btn-quiet btn-icon")}
         <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
         <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
-          {@render starIcon(20)}
+          {@render starIcon()}
         </button>
-        {#if writable}{@render writeBackButton(20, "btn-quiet btn-icon")}{/if}
+        {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
         <MoreMenu id="article-menu" label="More actions" groups={more} />
       </div>
     </div>
@@ -597,7 +597,7 @@
           -->
           <p class="article-note" lang="en">
             <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="gap-[0.25em]"
-                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" size={16} /><span class="sr-only"> (opens in a new tab)</span></a
+                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only"> (opens in a new tab)</span></a
               >{/if}
           </p>
         {:else if video || episode}
@@ -654,18 +654,18 @@
     -->
     <div bind:this={toolbar} role="group" aria-label="Article actions" onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]"}>
       <!-- Share (or Copy link) and the rest, in a menu that opens upwards, nearest the button first (decision 0243). -->
-      <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up start />
-      {@render aa(22, "")}
-      {#if writable}{@render writeBackButton(22, "")}{/if}
+      <MoreMenu id="article-menu" label="More actions" groups={more} up start />
+      {@render aa("")}
+      {#if writable}{@render writeBackButton("")}{/if}
       <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
-        {@render starIcon(22)}
+        {@render starIcon()}
       </button>
       <span aria-hidden="true" class="toolbar-rule"></span>
       <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>
-        <Icon name="chevron-up" size={22} />
+        <Icon name="chevron-up" size="alone" />
       </button>
       <button type="button" aria-label="Next" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()}>
-        <Icon name="chevron-down" size={22} />
+        <Icon name="chevron-down" size="alone" />
       </button>
     </div>
   {/if}
@@ -743,8 +743,8 @@
   }
   /* The writer's name under the title: a 44px target to touch, taller than its line without moving it. */
   .writer-link {
-    padding-block: 0.75rem;
-    margin-block: -0.75rem;
+    padding-block: calc((2.75rem - 1lh) / 2);
+    margin-block: calc((1lh - 2.75rem) / 2);
     cursor: pointer;
   }
   @media (hover: hover) {

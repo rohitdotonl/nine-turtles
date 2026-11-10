@@ -109,14 +109,14 @@
       {/if}
     </p>
     <div class="flex flex-col gap-1.5">
-      <p class="text-small text-ink-2">Before you go, you can download them</p>
+      <p class="text-meta text-ink-2">Before you go, you can download them</p>
       <div class="inset-group">
         <a href="/api/opml" download class="inset-row inset-action"
-          >Export OPML<span class="row-glyph"><Icon name="download" size={18} /></span></a
+          >Export OPML<span class="row-glyph"><Icon name="download" /></span></a
         >
         {#if stars.any}
           <a href="/api/starred/export" download class="inset-row inset-action"
-            >Export starred articles<span class="row-glyph"><Icon name="download" size={18} /></span></a
+            >Export starred articles<span class="row-glyph"><Icon name="download" /></span></a
           >
         {:else}
           <!-- Nothing to download: said in a row that isn't a button (decision 0191). -->
@@ -129,7 +129,7 @@
     </div>
     <!-- Asked for, as for a new email, so a device left signed in can't delete anything (decision 0200). -->
     <label class="flex flex-col gap-1.5">
-      <span class="text-small text-ink-2">Your password</span>
+      <span class="text-meta text-ink-2">Your password</span>
       <input
         bind:this={passwordField}
         bind:value={password}
@@ -141,8 +141,8 @@
         class="field"
       />
     </label>
-    <p id="delete-account-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+    <p id="delete-account-message" role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}
       <div class="sheet-actions">

@@ -34,7 +34,6 @@
     id,
     label = "More",
     groups,
-    size = 20,
     up = false,
     start = false,
     icon = "more",
@@ -44,8 +43,6 @@
     groups: MenuGroup[];
     /** The button's icon: More's three dots, or a row's handle in the sidebar's Edit. */
     icon?: IconName;
-    /** The icon's size: 22 in the phone's bottom bar. */
-    size?: number;
     /** Opens upwards, from a bar at the bottom of the screen, its first item nearest the button. */
     up?: boolean;
     /** Lines the menu up with the button's left edge, for a button at the screen's left (the phone's bottom bar). */
@@ -100,7 +97,7 @@
     class={["btn-quiet btn-icon", open && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name={icon} {size} /></span>
+    <span class={["flex size-8 items-center justify-center rounded-press", open && "bg-[var(--tone)]"]}><Icon name={icon} size="alone" /></span>
   </button>
   {#if open}
     <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />

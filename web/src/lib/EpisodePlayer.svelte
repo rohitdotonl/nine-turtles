@@ -157,10 +157,10 @@
   .episode {
     margin-top: 1.5em;
     padding: 0.75rem 1rem 0.875rem;
-    border-radius: 12px;
+    border-radius: var(--radius-hold);
     background-color: var(--tone);
     font-family: var(--font-sans);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
     color: var(--ink-2);
   }
   .episode-controls {
@@ -175,7 +175,7 @@
     min-height: 2.75rem;
     align-items: center;
     justify-content: center;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-press);
     color: var(--ink-2);
     cursor: pointer;
   }

@@ -363,7 +363,7 @@
 -->
 <form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
   {#if !asking}
-  <label for="feed-address" class={framed ? "text-small text-ink-2" : "sr-only"}>Their website's address</label>
+  <label for="feed-address" class={framed ? "text-meta text-ink-2" : "sr-only"}>Their website's address</label>
   <!-- In the welcome, a container, so its hint can step down a size on a small phone (welcome-field in app.css). -->
   <div class={["flex gap-2", !framed && "welcome-row"]}>
     <input
@@ -383,7 +383,7 @@
     />
     {#if !framed && !offering}
       <!-- Beside the field, its corners match the field's. It steps aside while feeds are offered: Follow is under them. -->
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg">Add</button>
+      <button type="submit" aria-disabled={busy} class="btn-primary">Add</button>
     {/if}
   </div>
   {#if shareHint}
@@ -413,17 +413,17 @@
       id="feed-address-status"
       role="status"
       class={[
-        "flex items-start gap-1.5 text-small",
+        "flex items-start gap-1.5 text-meta",
         problem && !busy && "text-danger",
         choosing && "mt-3.5 self-stretch text-left text-ink-2",
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
-      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : "Looking…"}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
+      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : "Looking…"}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
     </p>
     {#if slip && !busy}
       <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->
-      <button type="button" onclick={useRepair} class={["btn mt-1.5 max-w-full rounded-lg break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
+      <button type="button" onclick={useRepair} class={["btn mt-1.5 max-w-full break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
     {/if}
 
     {#if choices.length > 0}
@@ -450,7 +450,7 @@
             <span class="flex min-w-0 flex-col py-2.5">
               <span class="break-words">{only.title}</span>
               {#if only.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{only.latest}</span>{/if}
-              <span class="mt-0.5 truncate text-small text-muted">{only.place ?? only.url}</span>
+              <span class="mt-0.5 truncate text-meta text-muted">{only.place ?? only.url}</span>
             </span>
           </div>
         </div>
@@ -471,12 +471,12 @@
               <span class="flex min-w-0 flex-col py-2.5">
                 <span class="break-words">{choice.title}</span>
                 {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
-                <span class="mt-0.5 truncate text-small text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
+                <span class="mt-0.5 truncate text-meta text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
               </span>
               {#if oneOnly}
                 <span aria-hidden="true" class="radio-mark shrink-0"></span>
               {:else}
-                <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+                <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
               {/if}
             </label>
           {/each}
@@ -505,22 +505,22 @@
         <legend class={framed ? "sr-only" : "mb-4 font-serif text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
-            {#if siteName(asking.siteUrl)}<span class="text-small break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
+            {#if siteName(asking.siteUrl)}<span class="text-meta break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
             {#if latest}<span class="font-serif break-words text-ink">{latest}</span>{/if}
           </div>
         {/if}
         <div class="tiles">
           <label class="tile">
             <input type="radio" name="feed-who" value="person" bind:group={who} aria-labelledby="feed-who-person-name" aria-describedby="feed-who-person" />
-            <Icon name="person" size={36} />
+            <Icon name="person" size="picture" />
             <span id="feed-who-person-name" class="font-semibold text-ink">A person</span>
-            <span id="feed-who-person" class="text-small text-ink-2">Someone you might write back to.</span>
+            <span id="feed-who-person" class="text-meta text-ink-2">Someone you might write back to.</span>
           </label>
           <label class="tile">
             <input type="radio" name="feed-who" value="publication" bind:group={who} aria-labelledby="feed-who-publication-name" aria-describedby="feed-who-publication" />
-            <Icon name="newspaper" size={36} />
+            <Icon name="newspaper" size="picture" />
             <span id="feed-who-publication-name" class="font-semibold text-ink">A publication</span>
-            <span id="feed-who-publication" class="text-small text-ink-2">Anything you only read or watch, and won't write back to.</span>
+            <span id="feed-who-publication" class="text-meta text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>
         <span class="field-help mt-0">You can change this later in Edit.</span>
@@ -572,7 +572,7 @@
   /* What was found, quietly, on the grouped rows' grey. */
   .found {
     padding: 0.875rem 1rem;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
   }
   /* Two tiles side by side, each the same size, whatever their words. */
@@ -589,7 +589,7 @@
     gap: 0.5rem;
     padding: 1.25rem 0.875rem;
     border: 2px solid transparent;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
     color: var(--ink);
     text-align: center;
@@ -628,7 +628,7 @@
   .share-hint {
     margin: 0.25rem 0 0;
     color: var(--faint);
-    font-size: 0.75rem;
+    font-size: var(--text-date);
     line-height: 1.4;
   }
   /* What's above the list (title, words, field) takes about 37rem; the list keeps at least two rows. */

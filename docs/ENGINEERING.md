@@ -326,6 +326,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, on every page (White, Paper and Night) |
 | No motion (DESIGN.md) | Fails if animations or transitions appear in the styles |
+| One system (DESIGN.md → "The system") | Fails if the web app uses a corner, shadow, text size, icon size or label outside the table, or adds a spacing value off the scale or a new grey tone (decision 0244) |
 | Written for the next agent | Fails if a file of the app's own code grows past 800 lines (a few older, longer files may only shrink), or if a file, an export or a server `pub` item is unused (decision 0126) |
 | Fast by design | Fails if the frontend download grows past its size budget |
 | Docs stay findable | Fails if a document links to a file that doesn't exist; runs on every pull request, documents-only ones too (decision 0119) |

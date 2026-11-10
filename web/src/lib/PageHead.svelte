@@ -41,17 +41,20 @@
 
 <div class={["pane-bar pr-5 md:pr-10", besideToggle ? "pl-16" : "pl-5 md:pl-10"]}>
   {#if onBack}
-    <div class={["mx-auto flex w-full flex-col items-start pb-1", column]}>
-      <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
-        ><Icon name="back" size={20} />{backTo}</button
-      >
-      <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>
+    <!-- One top for every screen below home (DESIGN.md → "The system"): Back in the top line's own height, the title on the line under it. -->
+    <div class={["mx-auto flex w-full flex-col items-start pb-2", column]}>
+      <div class="top-back">
+        <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
+          ><Icon name="back" size="alone" />{backTo}</button
+        >
+      </div>
+      <h2 {id} tabindex="-1" bind:this={heading} class="top-title min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>
     </div>
   {:else}
     <div class={["mx-auto flex min-h-11 w-full items-center justify-between gap-4", column]}>
       <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-serif text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>
       {#if onClose}
-        <button type="button" onclick={onClose} aria-label={closeLabel ?? "Close"} title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size={20} /></button>
+        <button type="button" onclick={onClose} aria-label={closeLabel ?? "Close"} title="Close (Esc)" class="btn-quiet btn-icon -mr-2.5"><Icon name="close" size="alone" /></button>
       {/if}
     </div>
   {/if}

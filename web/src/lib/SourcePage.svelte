@@ -84,9 +84,9 @@
 </script>
 
 <div class={["flex flex-col gap-6", phone && "flex-1"]}>
-  <div class="flex flex-col gap-1">
-    <button type="button" onclick={() => onDone(false)} title="Back to Edit {name} (Esc)" class="btn-quiet nav-back -ml-2 self-start text-ink-2"><Icon name="back" size={20} />Edit {name}</button>
-    <div class="flex items-center justify-between gap-3">
+  <div class={["flex flex-col", !phone && "gap-1"]}>
+    <div class={phone ? "top-back" : "contents"}><button type="button" onclick={() => onDone(false)} title="Back to Edit {name} (Esc)" class="btn-quiet nav-back -ml-2 self-start text-ink-2"><Icon name="back" size="alone" />Edit {name}</button></div>
+    <div class={["flex items-center justify-between gap-3", phone && "top-title"]}>
       <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">
         {PLACE_NAMES[source.place ?? "blog"]}<span class="font-normal text-muted"> · {placeShownAs(source)}</span>
       </h2>
@@ -97,8 +97,8 @@
   <form id={formId} onsubmit={save} class={["flex flex-col gap-5", phone && "flex-1"]}>
     <SourceFields feed={source} bind:paused bind:shorts bind:liveStreams {onMoved} />
 
-    <p role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+    <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
 
     <div class="flex flex-col gap-1.5">

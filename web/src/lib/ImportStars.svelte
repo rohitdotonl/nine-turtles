@@ -42,5 +42,5 @@
   aria-hidden="true"
 />
 <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
-  >Import starred articles…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
+  >Import starred articles…<span class="row-glyph"><Icon name="chevron-right" /></span></button
 >

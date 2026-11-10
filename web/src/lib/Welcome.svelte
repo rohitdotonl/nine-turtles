@@ -50,7 +50,7 @@
 
 <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
   <div class={start ? "text-left" : "text-center"}>
-    <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-xlarge font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
+    <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-serif text-heading font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
     <p class="mt-3 text-ink-2">Paste the address of someone's blog, newsletter or channel.</p>
   </div>
   {#if !covered}
@@ -70,7 +70,7 @@
           {#if !trying.current}<a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>{#if !start}<span aria-hidden="true" class="text-ink-2">·</span>{/if}{/if}
           <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
         </div>
-        <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
+        <div role="status" class={["flex flex-col gap-1 text-meta text-ink-2", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line, index (index)}<p>{line}</p>{/each}
         </div>
       {/snippet}
@@ -84,7 +84,7 @@
     <div inert aria-hidden="true" class="flex flex-col gap-1.5">
       <div class="welcome-row flex gap-2">
         <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Their website's address</span></span>
-        <span class="btn-primary rounded-lg">Add</span>
+        <span class="btn-primary">Add</span>
       </div>
       <div class={["flex min-h-[5.8rem] flex-col", start ? "items-start" : "items-center"]}>
         <TryOne {follow} {onTried} />

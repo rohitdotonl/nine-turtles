@@ -1,7 +1,7 @@
 <!--
   Settings (SPEC section 18), laid out as Apple Books' settings are: one
-  centred column of grouped inset lists, each group with a small uppercase
-  header above it (decision 0120). It fills the list and reading areas while
+  centred column of grouped inset lists, each group with the one label
+  above it (decisions 0120, 0244). It fills the list and reading areas while
   the sidebar stays, so the reader never loses their place. "Close settings"
   (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
@@ -251,7 +251,7 @@
 <span id="opens-page" hidden>Opens its own page.</span>
 
 {#snippet icon(name: IconName)}
-  <span class="setting-icon" aria-hidden="true"><Icon {name} size={18} /></span>
+  <span class="setting-icon" aria-hidden="true"><Icon {name} /></span>
 {/snippet}
 
 <!-- A row that opens a page of its own (decision 0120): its icon, its name, perhaps what it's set to, then ›. -->
@@ -259,7 +259,7 @@
   <a {href} {onclick} data-settings-row={key} aria-describedby="opens-page" class={["inset-row inset-action setting", extra]}>
     <span class="setting-label">{@render icon(name)}<span class="setting-words"><span class="setting-name">{label}</span></span></span>
     <span class="row-glyph flex items-center gap-2"
-      >{#if value}<span class="setting-value">{value}</span>{/if}<Icon name="chevron-right" size={18} /></span
+      >{#if value}<span class="setting-value">{value}</span>{/if}<Icon name="chevron-right" /></span
     >
   </a>
 {/snippet}
@@ -311,7 +311,7 @@
         <p role="status">{SETTINGS_NEED_CONNECTION}</p>
       {:else if !page}
       <section aria-labelledby="reading-heading">
-        <h3 id="reading-heading" class="settings-head">Reading</h3>
+        <h3 id="reading-heading" class="settings-head label">Reading</h3>
         <div class="inset-group">
           <!-- One switch (decision 0172): Unread on is the Unread list, read styling and dots; off, none of them. -->
           <div class="inset-row setting">
@@ -339,11 +339,11 @@
           </div>
         </div>
         <p class="inset-foot">Applies on all your devices.</p>
-        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{unreadMessage}</p>
+        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{unreadMessage}</p>
       </section>
 
       <section aria-labelledby="reader-heading">
-        <h3 id="reader-heading" class="settings-head">Look and feel</h3>
+        <h3 id="reader-heading" class="settings-head label">Look and feel</h3>
         <div class="inset-group">
           <!-- The page itself: White, Paper, Night, or Match device, White by day and Night by night (decision 0176). -->
           <div class="inset-row setting has-control">
@@ -367,7 +367,7 @@
       </section>
 
       <section aria-labelledby="library-heading">
-        <h3 id="library-heading" class="settings-head">Your library</h3>
+        <h3 id="library-heading" class="settings-head label">Your library</h3>
         <div class="inset-group">
           {@render pageRow("feeds", "/settings/feeds", "Everyone you follow", "feed", onYourFeeds)}
           {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
@@ -375,7 +375,7 @@
       </section>
 
       <section aria-labelledby="more-heading">
-        <h3 id="more-heading" class="settings-head">More</h3>
+        <h3 id="more-heading" class="settings-head label">More</h3>
         <div class="inset-group">
           {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone-download", open("install"))}
           {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "eye-off", open("hiding"))}
@@ -391,7 +391,7 @@
 
       {#if owner}
         <section aria-labelledby="yours-heading">
-          <h3 id="yours-heading" class="settings-head">Your nine turtles<span class="sr-only">, </span><span class="only-you">Only you</span></h3>
+          <h3 id="yours-heading" class="settings-head label">Your nine turtles<span class="sr-only">, </span><span class="only-you">Only you</span></h3>
           <div class="inset-group">
             {@render pageRow("readers", "/settings/readers", SETTINGS_PAGES.readers, "people", open("readers"))}
           </div>
@@ -399,7 +399,7 @@
       {/if}
 
       <section aria-labelledby="account-heading">
-        <h3 id="account-heading" class="settings-head">Account</h3>
+        <h3 id="account-heading" class="settings-head label">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
             <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
@@ -443,7 +443,7 @@
           >
         </div>
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
-        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
+        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
         {#if email && !emailSending}
           <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
         {/if}
@@ -458,7 +458,7 @@
 
       <!-- Deleting sits apart from Sign out, at the very end (decision 0239): a slip aimed at an everyday row can't land on one that removes something. -->
       <section aria-labelledby="leaving-heading">
-        <h3 id="leaving-heading" class="settings-head">Leaving</h3>
+        <h3 id="leaving-heading" class="settings-head label">Leaving</h3>
         <div class="inset-group">
           <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
           <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action setting"
@@ -481,7 +481,7 @@
           <!-- An export with nothing in it says so instead, in a row that isn't a button (decision 0191). -->
           {#each exports as { href, label, any, none } (href)}
             {#if any}
-              <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+              <a {href} download class="inset-row inset-action">{label}<span class="row-glyph"><Icon name="download" /></span></a>
             {:else}
               <p class="inset-row text-muted">{none}</p>
             {/if}
@@ -569,7 +569,7 @@
     place-items: center;
     width: 1.75rem;
     height: 1.75rem;
-    border-radius: 0.3125rem;
+    border-radius: var(--radius-mark);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
     /* 12px, under the type scale on purpose: the "A" is part of the drawing, not text to read. */
     font: 600 0.75rem/1 var(--font-serif);
@@ -599,8 +599,8 @@
     padding: 0 0.375rem;
     border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
     border-radius: 999px;
-    font-size: 0.66rem;
-    letter-spacing: 0.05em;
+    color: var(--muted);
+    font-weight: 400;
     vertical-align: 1px;
   }
 </style>

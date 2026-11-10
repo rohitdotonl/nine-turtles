@@ -46,20 +46,20 @@
       {#if canSubscribe(status.plan)}
         <button type="button" aria-disabled={busy} onclick={() => go(() => checkoutAddress("monthly"))} class="inset-row inset-action"
           ><span class="min-w-0">Monthly<span class="text-muted">{` · ${status.prices.monthly}`}</span></span><span class="row-glyph"
-            ><Icon name="open" size={18} /></span
+            ><Icon name="open" /></span
           ></button
         >
         {#if status.prices.yearly}
           <button type="button" aria-disabled={busy} onclick={() => go(() => checkoutAddress("yearly"))} class="inset-row inset-action"
             ><span class="min-w-0">Yearly<span class="text-muted">{` · ${status.prices.yearly}`}</span></span><span class="row-glyph"
-              ><Icon name="open" size={18} /></span
+              ><Icon name="open" /></span
             ></button
           >
         {/if}
       {/if}
       {#if status.canManage}
         <button type="button" aria-disabled={busy} onclick={() => go(billingAddress)} class="inset-row inset-action"
-          >Billing and cancelling<span class="row-glyph"><Icon name="open" size={18} /></span></button
+          >Billing and cancelling<span class="row-glyph"><Icon name="open" /></span></button
         >
       {/if}
     </div>

@@ -726,7 +726,7 @@
 <div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(saying || updates.stranded || updates.otherReader || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
-      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 rounded-lg border px-4 text-small text-ink-2",
+      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 border px-4 text-meta text-ink-2",
       !(saying || updates.stranded || updates.otherReader || newWaiting) && "sr-only",
     ]}
   >
@@ -741,7 +741,7 @@
         <TextButton onclick={byButton(undo)} class="-mr-2 px-2">Undo</TextButton>
       {/if}
       {#if saying}
-        <button type="button" onclick={byButton(() => (closed = true))} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
+        <button type="button" onclick={byButton(() => (closed = true))} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size="alone" /></button>
       {/if}
     </p>
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>

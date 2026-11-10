@@ -66,7 +66,7 @@
   }
   .sign {
     margin-left: 0.1875rem;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--ink-2);
   }
@@ -78,7 +78,7 @@
     justify-content: space-between;
     gap: 0.25rem;
     padding: 0.25rem;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-press);
     background-color: var(--tone);
   }
   /* Each A is a flat cell of the capsule: no fill, no shadow, the segments' 7px corners for the pointer's tone. */
@@ -90,7 +90,7 @@
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
-    border-radius: 0.4375rem;
+    border-radius: var(--radius-mark);
     background-color: transparent;
     box-shadow: none;
     color: var(--ink);
@@ -141,7 +141,7 @@
     flex: 1 1 auto;
     min-width: 5.5rem;
     color: var(--ink-2);
-    font-size: var(--text-small);
+    font-size: var(--text-meta);
     text-align: center;
     white-space: nowrap;
   }

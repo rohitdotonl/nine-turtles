@@ -55,12 +55,12 @@
         aria-describedby={view === "unread" && waiting ? "unread-waiting" : undefined}
         onclick={(event) => follow(event, { kind: "view", view })}
         class={[
-          "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui pointer-fine:text-small",
+          "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui",
           current ? "font-semibold text-ink" : "text-ink-2",
         ]}
-        ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} size={16} /></span
+        ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} /></span
         ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span
-        >{#if view === "unread" && waiting}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}</a
+        >{#if view === "unread" && waiting}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}</a
       >
       <!-- Its description, outside the link so the link's name stays "Unread". -->
       {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}

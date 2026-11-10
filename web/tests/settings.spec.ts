@@ -177,7 +177,9 @@ test("a setting's description sits straight under its name, and group names are 
   expect(h!.y).toBeGreaterThanOrEqual(n!.y + n!.height - 1);
   expect(h!.y - (n!.y + n!.height)).toBeLessThan(6);
   await expect(page.getByRole("switch", { name: "Unread" })).toHaveAccessibleDescription(/Unread list/);
-  await expect(page.locator("#reading-heading")).toHaveCSS("text-transform", "uppercase");
+  // A group's name is the one label: semibold words in full ink, sentence case (DESIGN.md → "The system").
+  await expect(page.locator("#reading-heading")).toHaveCSS("text-transform", "none");
+  await expect(page.locator("#reading-heading")).toHaveCSS("font-weight", "600");
 });
 
 test("Install the app on any device says what an installed app is, then the steps for this device, with a tab for each other", async ({ page }, testInfo) => {

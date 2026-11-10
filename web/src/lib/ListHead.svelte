@@ -42,7 +42,7 @@
     tabindex="-1"
     bind:this={heading}
     title={text}
-    class="min-w-0 flex-1 truncate font-serif text-heading leading-[1.3] font-semibold tracking-[-0.01em] @max-[340px]:text-[1.375rem]"
+    class="min-w-0 flex-1 truncate font-serif text-heading leading-[1.3] font-semibold tracking-[-0.01em]"
   >
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
@@ -58,7 +58,7 @@
     <div class="-mr-3 flex shrink-0 items-center">
       <!-- The way into search, beside More, as an iOS list keeps it (decisions 0060 and 0242): the field waits until asked for. -->
       <button type="button" aria-label="Search" title={tip("Search", "search")} aria-expanded={searchOpen} onclick={onSearch} class="btn-quiet btn-icon"
-        ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
+        ><span class="flex size-8 items-center justify-center"><Icon name="search" size="alone" /></span></button
       >
       <MoreMenu id="list-menu" groups={menu()} />
     </div>
@@ -71,7 +71,7 @@
     font: inherit;
     letter-spacing: inherit;
     color: inherit;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-press);
   }
   /* Its ring drawn inside: the heading cuts off anything outside its box (a long name is truncated). */
   .list-title-link:focus-visible {

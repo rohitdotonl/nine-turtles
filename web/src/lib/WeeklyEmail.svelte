@@ -34,7 +34,7 @@
 
 <div class="inset-row setting">
   <div class="setting-label">
-    <span class="setting-icon" aria-hidden="true"><Icon name="envelope" size={18} /></span>
+    <span class="setting-icon" aria-hidden="true"><Icon name="envelope" /></span>
     <div class="setting-words">
       <p class="setting-name" aria-hidden="true">Weekly email</p>
       <p id="weekly-hint" class="setting-hint">{oftenHint(often)}</p>

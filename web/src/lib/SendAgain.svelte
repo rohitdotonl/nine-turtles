@@ -47,7 +47,7 @@
       >Open {inbox.name}<span class="sr-only"> (opens in a new tab)</span></a
     >
   {/if}
-  <p class="text-small text-muted">Didn't get it? Look in your spam folder.</p>
+  <p class="text-meta text-muted">Didn't get it? Look in your spam folder.</p>
   <button type="button" onclick={again} aria-disabled={busy} class="text-link">Send again</button>
-  <p role="status" class={["text-small", !note && "sr-only"]}>{note}</p>
+  <p role="status" class={["text-meta", !note && "sr-only"]}>{note}</p>
 </div>

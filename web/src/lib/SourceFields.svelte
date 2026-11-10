@@ -50,7 +50,7 @@
           <span class="setting-name">Include Shorts</span>
           <span id="{id}-shorts-hint" class="setting-hint">YouTube's short, upright videos. Sorted by YouTube's own lists, so one may slip through now and then.</span>
         </span>
-        <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+        <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
       </label>
       <label class="inset-row check-row setting">
         <input type="checkbox" bind:checked={liveStreams} aria-describedby="{id}-live-hint" />
@@ -58,7 +58,7 @@
           <span class="setting-name">Include live streams</span>
           <span id="{id}-live-hint" class="setting-hint">Streams, and their recordings once they end.</span>
         </span>
-        <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+        <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
       </label>
     {/if}
     <label class="inset-row check-row setting">
@@ -70,7 +70,7 @@
             {pausedSince(feed.pausedAt)}{/if}</span
         >
       </span>
-      <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+      <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
     </label>
   </div>
 </div>

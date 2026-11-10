@@ -31,7 +31,7 @@
 
 /* Words to press (Undo, Try again, Copy their address, a link in a line): the same tone, just around the words. */
 :is(.text-button, .text-link):active {
-  border-radius: 0.25rem;
+  border-radius: var(--radius-mark);
   background-color: var(--pressed);
 }
 

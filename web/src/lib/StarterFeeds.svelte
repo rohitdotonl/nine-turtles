@@ -77,7 +77,7 @@
             </a>
             <span class="text-meta text-muted">{starter.about}</span>
           </span>
-          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size={14} /></span>
+          <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
         </label>
       {/each}
     </div>
@@ -87,8 +87,8 @@
     there's something to say, and the sheet grows down by it (its top stays put); a problem is in red
     words after an icon.
   -->
-  <p id="starters-status" role="status" class={["flex items-start gap-1.5 text-small", message && !busy && "text-danger", busy || message ? "mt-3" : "sr-only"]}>
-    {#if busy}Adding feeds… {done} of {adding} done{:else if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+  <p id="starters-status" role="status" class={["flex items-start gap-1.5 text-meta", message && !busy && "text-danger", busy || message ? "mt-3" : "sr-only"]}>
+    {#if busy}Adding feeds… {done} of {adding} done{:else if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   {#if page}
     <div class="page-action">

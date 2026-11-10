@@ -60,7 +60,7 @@
   {#if spent}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
       <p role="status">{message || explainLink("expired", "reset")}</p>
-      <a href="/" onclick={signIn} class="btn rounded-lg">Sign in</a>
+      <a href="/" onclick={signIn} class="btn">Sign in</a>
     </div>
   {:else}
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
@@ -81,10 +81,10 @@
       </p>
       <!-- Room for a message kept below the button, as on sign-in (decision 0045). -->
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="reset-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="reset-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
-        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Set password" doing="Saving…" /></button>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Set password" doing="Saving…" /></button>
       </div>
     </form>
   {/if}

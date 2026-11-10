@@ -98,22 +98,22 @@
   {#if spent}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
       <p bind:this={spentMessage} tabindex="-1">{message || explainFinish({ ok: false, reason: "expired" })}</p>
-      <a href="/" onclick={leave} class="btn rounded-lg">Sign in</a>
+      <a href="/" onclick={leave} class="btn">Sign in</a>
     </div>
   {:else if sameBrowser}
     <!-- The browser that signed up (decision 0193): one press, nothing to type. -->
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
-        <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
+        <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
       </div>
     </form>
   {:else if here === "password"}
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <div class="flex flex-col gap-1.5">
-        <label for="password" class="text-small text-ink-2">Password</label>
+        <label for="password" class="text-meta text-ink-2">Password</label>
         <!-- The only thing to do on this page, so it has the focus. -->
         <PasswordField
           id="password"
@@ -127,11 +127,11 @@
       </div>
       <!-- Room for a message kept at the foot, as on sign-in (decision 0045). -->
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
-        <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
-        <p class="text-center text-small">Forgot it? <a href="/sign-up" onclick={signUpAgain} class="text-link">Sign up again</a></p>
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
+        <p class="text-center text-meta">Forgot it? <a href="/sign-up" onclick={signUpAgain} class="text-link">Sign up again</a></p>
       </div>
     </form>
   {/if}

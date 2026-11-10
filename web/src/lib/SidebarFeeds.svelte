@@ -224,7 +224,7 @@
 {/snippet}
 
 {#snippet leadsOn()}
-  {#if phone && !editing}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" size={18} /></span>{/if}
+  {#if phone && !editing}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}
 {/snippet}
 
 <!-- In Edit, a person's handle: drag it, or press it for "Move to a folder". -->
@@ -237,8 +237,8 @@
       aria-label={`Move ${feed.title}`}
       title={`Move ${feed.title}`}
       onclick={() => (moving = feed)}
-      class="handle btn-quiet absolute inset-y-0 right-2 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
-      ><Icon name="grip" size={phone ? 22 : 18} /></button
+      class="handle btn-quiet absolute inset-y-0 right-2 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-press text-muted"
+      ><Icon name="grip" size="alone" /></button
     >
   {/if}
 {/snippet}
@@ -255,7 +255,7 @@
       title={feed.title}
       data-unread={unreadOff ? undefined : feed.unread}
       class={[
-        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui pointer-fine:text-small",
+        "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui",
         // Indent means inside (decision 0225): a folder's people start a step in, on the names' edge;
         // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
         from === null && !searching ? "pl-3" : "pl-[38px]",
@@ -289,7 +289,7 @@
     data-folder-link={folder.id}
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3.5 text-ui", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
@@ -302,8 +302,8 @@
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  <div data-drop-loose={who} class={["drop-area mx-2 rounded-lg", rows.length === 0 && "drop-empty"]}>
-    <h2 class="sidebar-section -mx-2">{heading}</h2>
+  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press", rows.length === 0 && "drop-empty"]}>
+    <h2 class="sidebar-section label -mx-2">{heading}</h2>
     {@render refused(who)}
     {#if rows.length > 0}
       <ul class="-mx-2">
@@ -325,7 +325,7 @@
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
-    <p class="px-5 pt-4 pb-1 text-small text-ink-2">No person or folder is called “<bdi>{search.trim()}</bdi>”.</p>
+    <p class="px-5 pt-4 pb-1 text-meta text-ink-2">No person or folder is called “<bdi>{search.trim()}</bdi>”.</p>
   {:else}
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
@@ -343,14 +343,14 @@
   <button
     type="button"
     onclick={() => searchArticles(search.trim())}
-    class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-left text-ui pointer-fine:text-small text-ink-2"
-    ><span class="text-muted"><Icon name="search" size={16} /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
+    class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-left text-ui text-ink-2"
+    ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
     <div class="sidebar-section-row">
-      <h2 class="sidebar-section">Folders</h2>
+      <h2 class="sidebar-section label">Folders</h2>
       <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
     </div>
     <ul data-folder-list class="relative">
@@ -370,7 +370,6 @@
                     id={`move-folder-${folder.id}`}
                     label={`Move ${folder.name}`}
                     icon="grip"
-                    size={phone ? 22 : 18}
                     groups={[{ label: `Move ${folder.name}`, items: steps.map((how) => ({ label: STEP_WORDS[how], onSelect: () => step(folder, how) })) }]}
                   />
                 </span>
@@ -388,15 +387,9 @@
                 aria-label={`What's in ${folder.name}`}
                 title={shown ? "Hide what's in it" : "Show what's in it"}
                 onclick={() => toggle(folder.id)}
-                class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-md text-muted"
+                class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-press text-muted"
               >
-                <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                  {#if shown}
-                    <path d="M2.5 4.5 6 8l3.5-3.5" />
-                  {:else}
-                    <path d="M4.5 2.5 8 6 4.5 9.5" />
-                  {/if}
-                </svg>
+                <Icon name={shown ? "chevron-down" : "chevron-right"} />
               </button>
             {/if}
           </div>
@@ -423,12 +416,12 @@
 -->
 {#if note}
   <div class="sidebar-note-band sticky bottom-0 z-10 flex justify-center px-2 pt-3 pb-1">
-    <div class="toast flex min-h-11 max-w-full items-center gap-x-2 rounded-lg border pr-1 pl-4 text-small text-ink-2">
+    <div class="toast flex min-h-11 max-w-full items-center gap-x-2 border pr-1 pl-4 text-meta text-ink-2">
       <span role="status" class="min-w-0 py-2">{typeof note === "string" ? note : note.message}<span class="sr-only">{" "}{where}</span></span>
       {#if typeof note !== "string" && note.undo}
         <TextButton onclick={undo} class="-mr-1 px-2">Undo</TextButton>
       {/if}
-      <button type="button" onclick={() => (note = undefined)} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon shrink-0"><Icon name="close" size={18} /></button>
+      <button type="button" onclick={() => (note = undefined)} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon shrink-0"><Icon name="close" size="alone" /></button>
     </div>
   </div>
 {/if}
@@ -440,21 +433,16 @@
 
 <style>
   /*
-    The sidebar's section names (Folders, People, Publications): bold words in
-    full ink (decision 0207, which replaced the small spaced capitals of
-    decision 0123), larger on a touch screen, where the rows are.
+    The sidebar's section names (Folders, People, Publications): the one
+    label (app.css → .label; decision 0207 made it the app's), with more room
+    above on a touch screen, where the rows are.
   */
   .sidebar-section {
     padding: 1.5rem 1.25rem 0.5rem;
-    font-size: 0.8125rem;
-    line-height: 1.3;
-    font-weight: 600;
-    color: var(--ink);
   }
   @media (pointer: coarse) {
     .sidebar-section {
       padding-top: 1.75rem;
-      font-size: 1.25rem;
     }
   }
   /*
@@ -497,7 +485,7 @@
     flex: 1;
   }
   /*
-    Edit: quiet words in the muted grey, a step smaller than the heading, so the heading leads.
+    Edit: quiet words in the muted grey at the label's size, regular weight, so the heading leads.
     With a mouse it shows once the pointer is on the sidebar, or the keyboard reaches it; on a
     touch screen it always shows. 44px to press on a touch screen.
   */
@@ -505,8 +493,8 @@
     margin-right: 0.5rem;
     padding: 0 0.75rem;
     min-height: 2rem;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
+    border-radius: var(--radius-press);
+    font-size: var(--text-meta);
     color: var(--muted);
   }
   .sidebar-edit[aria-pressed="true"] {
@@ -516,7 +504,6 @@
   @media (pointer: coarse) {
     .sidebar-edit {
       min-height: 2.75rem;
-      font-size: 0.875rem;
     }
   }
   @media (hover: hover) and (pointer: fine) {

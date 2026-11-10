@@ -26,13 +26,13 @@
 
 {#if address}
   <section aria-labelledby="by-email-head" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
-    <h3 id="by-email-head" class="small-caps">If it's a newsletter</h3>
+    <h3 id="by-email-head" class="label">If it's a newsletter</h3>
     <p class="text-ink-2">Sign up with your own nine turtles address, and each issue arrives here instead of your inbox.</p>
     <div class="flex gap-2">
       <input readonly value={address} translate="no" aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="field min-w-0 flex-1 text-ink" />
-      <button type="button" onclick={copy} class="btn rounded-lg">Copy<span class="sr-only"> address</span></button>
+      <button type="button" onclick={copy} class="btn">Copy<span class="sr-only"> address</span></button>
     </div>
-    <p role="status" class={["text-small text-ink-2", !message && "sr-only"]}>{message}</p>
+    <p role="status" class={["text-meta text-ink-2", !message && "sr-only"]}>{message}</p>
     <a {href} target="_blank" rel="noopener" class="text-link self-start">Open their site to sign up<span class="sr-only"> (opens in a new tab)</span></a>
   </section>
 {/if}

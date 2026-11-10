@@ -57,18 +57,18 @@
     {#if changedTo}
       <p role="status">Your email is now <span class="font-semibold">{changedTo}</span>. Sign in with it from now on.</p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
-      <a href="/" onclick={leave} autofocus class="btn rounded-lg">Continue</a>
+      <a href="/" onclick={leave} autofocus class="btn">Continue</a>
     {:else if spent}
       <p role="status">{message || explainLink("expired", "confirm")}</p>
-      <a href="/" onclick={leave} class="btn rounded-lg">Sign in</a>
+      <a href="/" onclick={leave} class="btn">Sign in</a>
     {:else}
       <p id="confirm-help">Press Confirm email to finish.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="confirm-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="confirm-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->
-        <button type="button" autofocus aria-disabled={busy} aria-describedby="confirm-help confirm-message" onclick={confirm} class="btn-primary rounded-lg"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
+        <button type="button" autofocus aria-disabled={busy} aria-describedby="confirm-help confirm-message" onclick={confirm} class="btn-primary"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
       </div>
     {/if}
   </div>

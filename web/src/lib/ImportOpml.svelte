@@ -81,10 +81,10 @@
   <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="text-link">{link}</button>
 {:else}
   <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
-    >Import OPML…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
+    >Import OPML…<span class="row-glyph"><Icon name="chevron-right" /></span></button
   >
-  <a href="/api/opml" download class="inset-row inset-action">Export OPML<span class="row-glyph"><Icon name="download" size={18} /></span></a>
+  <a href="/api/opml" download class="inset-row inset-action">Export OPML<span class="row-glyph"><Icon name="download" /></span></a>
   <button type="button" aria-disabled={busy} onclick={() => !busy && youtubePicker?.click()} class="inset-row inset-action"
-    >Import YouTube subscriptions…<span class="row-glyph"><Icon name="chevron-right" size={18} /></span></button
+    >Import YouTube subscriptions…<span class="row-glyph"><Icon name="chevron-right" /></span></button
   >
 {/if}

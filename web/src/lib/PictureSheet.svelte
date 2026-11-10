@@ -72,16 +72,16 @@
 >
   <div class="flex flex-col items-center px-4 pb-3">
     <div class="flex w-full justify-end pt-1">
-      <button type="button" onclick={close} lang="en" aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon -mr-2"><Icon name="close" size={18} /></button>
+      <button type="button" onclick={close} lang="en" aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon -mr-2"><Icon name="close" size="alone" /></button>
     </div>
     <figure class="m-0 flex flex-col items-center">
       <!-- Its alt text is the caption below, so the picture itself isn't named twice. -->
       <img {src} alt="" class="picture-sheet-image" />
       {#if caption}
-        <figcaption class="mt-2 max-w-[60ch] text-center text-small text-ink-2">{caption}</figcaption>
+        <figcaption class="mt-2 max-w-[60ch] text-center text-meta text-ink-2">{caption}</figcaption>
       {/if}
     </figure>
-    <a href={src} lang="en" target="_blank" rel="noopener noreferrer" class="picture-sheet-link text-small text-ink-2">Open in new tab</a>
+    <a href={src} lang="en" target="_blank" rel="noopener noreferrer" class="picture-sheet-link text-meta text-ink-2">Open in new tab</a>
   </div>
 </dialog>
 

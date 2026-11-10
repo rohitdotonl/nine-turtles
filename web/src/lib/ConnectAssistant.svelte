@@ -64,7 +64,7 @@
   {#if request?.kind === "ok"}
     {@const name = shortName(request.clientName)}
     <div class="connect flex w-full flex-col gap-5">
-      <h1 bind:this={heading} tabindex="-1" class="text-center font-serif text-xlarge font-semibold leading-tight break-words">
+      <h1 bind:this={heading} tabindex="-1" class="text-center font-serif text-heading font-semibold leading-tight break-words">
         Connect {name} to nine turtles?
       </h1>
       <div class="flex flex-col gap-2">
@@ -91,13 +91,13 @@
         <p>Afterwards you'll go back to <span class="font-semibold break-words" translate="no">{request.redirectHost}</span>.</p>
       </div>
       <div class="flex flex-col gap-3">
-        <p id="connect-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-          {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+        <p id="connect-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+          {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- Cancel, then the main action at the right end, as in a sheet. Busy is said with aria-disabled, so the buttons keep their look and the keyboard's place. -->
         <div class="sheet-actions">
-          <button type="button" aria-disabled={busy} onclick={() => answer("deny")} class="btn rounded-lg">Cancel</button>
-          <button type="button" aria-disabled={busy} aria-describedby="connect-message" onclick={() => answer("approve")} class="btn-primary rounded-lg"
+          <button type="button" aria-disabled={busy} onclick={() => answer("deny")} class="btn">Cancel</button>
+          <button type="button" aria-disabled={busy} aria-describedby="connect-message" onclick={() => answer("approve")} class="btn-primary"
             >Connect</button
           >
         </div>
@@ -105,12 +105,12 @@
     </div>
   {:else if request?.kind === "invalid" || request?.kind === "trouble"}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
-      <h1 bind:this={heading} tabindex="-1" class="font-serif text-xlarge font-semibold leading-tight">
+      <h1 bind:this={heading} tabindex="-1" class="font-serif text-heading font-semibold leading-tight">
         {request.kind === "invalid" ? "This link can't be used" : "Not connected"}
       </h1>
       <p role="status">{request.kind === "invalid" ? INVALID : UNREACHABLE}</p>
       {#if request.kind === "trouble"}
-        <button type="button" onclick={() => location.reload()} class="btn rounded-lg">Try again</button>
+        <button type="button" onclick={() => location.reload()} class="btn">Try again</button>
       {/if}
     </div>
   {/if}

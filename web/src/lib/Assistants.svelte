@@ -183,7 +183,7 @@
           aria-disabled={busy}
           title="Ends this connection; your feeds and articles stay as they are"
           onclick={() => end(assistant, index)}
-          class="btn-danger text-small">Disconnect<span class="sr-only"> {name}</span></button
+          class="btn-danger text-meta">Disconnect<span class="sr-only"> {name}</span></button
         >
       </div>
     {:else}

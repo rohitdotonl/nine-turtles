@@ -120,12 +120,12 @@
         A link is on its way to <span class="font-semibold">{sent}</span>. Open it in this browser to finish signing up with one press (anywhere else, it asks your password). It works once, within 24 hours.
       </p>
       <SendAgain to={sent} onSend={signUpAgain} />
-      <a href="/sign-up" class="btn rounded-lg" onclick={back}>Use another email</a>
+      <a href="/sign-up" class="btn" onclick={back}>Use another email</a>
     </div>
   {:else}
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
     <div class="flex flex-col gap-1.5">
-      <label for="email" class="text-small text-ink-2">Email</label>
+      <label for="email" class="text-meta text-ink-2">Email</label>
       <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->
       <input
         id="email"
@@ -149,7 +149,7 @@
     </div>
     <!-- The same room above the password's name as on sign-in, where "Forgot?" sits, so the two pages line up. -->
     <div class="flex flex-col gap-1.5 pt-3">
-      <label for="password" class="text-small text-ink-2">Password</label>
+      <label for="password" class="text-meta text-ink-2">Password</label>
       <PasswordField
         id="password"
         autocomplete="new-password"
@@ -161,7 +161,7 @@
     </div>
     <!-- One optional question (decision 0155): a plain list, "Rather not say" until something is chosen. -->
     <div class="flex flex-col gap-1.5 pt-3">
-      <label for="heard-about" class="text-small text-ink-2">How did you hear about nine turtles?</label>
+      <label for="heard-about" class="text-meta text-ink-2">How did you hear about nine turtles?</label>
       <select id="heard-about" name="heard-about" bind:value={heardAbout} aria-describedby="heard-about-help" class="field">
         <option value="">Rather not say</option>
         {#each HEARD_ABOUT as answer (answer.value)}
@@ -172,11 +172,11 @@
     </div>
     <!-- Room for a message kept at the column's foot, as on sign-in (decision 0045), so a message moves only what's under it. -->
     <div class="flex min-h-[10.5rem] flex-col gap-3">
-      <p id="sign-up-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small text-danger", !message && "sr-only"]}>
-        {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
+      <p id="sign-up-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
       </p>
-      <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word="Sign up" doing="Signing up…" /></button>
-      <p class="text-center text-small">Have an account? <a href={SIGN_IN_PAGE} onclick={signIn} class="text-link">Sign in</a></p>
+      <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Sign up" doing="Signing up…" /></button>
+      <p class="text-center text-meta">Have an account? <a href={SIGN_IN_PAGE} onclick={signIn} class="text-link">Sign in</a></p>
     </div>
   </form>
   {/if}

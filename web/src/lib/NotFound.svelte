@@ -27,7 +27,7 @@
 -->
 <main class="min-h-screen bg-paper px-5 pt-24 pb-20 sm:pt-48">
   <div class="mx-auto flex w-full max-w-[38.5rem] flex-col items-start">
-    <p class="text-small font-medium text-muted">404 error</p>
+    <p class="text-meta font-medium text-muted">404 error</p>
     <div class="wrong-turn mt-4" aria-hidden="true">
       <svg viewBox="-10 -4.5 22 8.5" focusable="false"><path transform="translate(2 0) scale(-1 1)" d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z" /><circle transform="translate(2 0) scale(-1 1)" cx="8.6" cy="0.6" r="2" /></svg>
       <span class="apart"></span>
@@ -41,7 +41,7 @@
       <p>If a link in this app brought you here, <a class="underline underline-offset-4" href={tellMe}>tell me which one</a> and I'll fix it.</p>
     </div>
     <p class="mt-6 font-serif text-large leading-8 text-ink">— Rohit</p>
-    <button type="button" class="btn-primary mt-10 rounded-lg" onclick={onBack}>Back to your reading</button>
+    <button type="button" class="btn-primary mt-10" onclick={onBack}>Back to your reading</button>
   </div>
 </main>
 
