@@ -496,7 +496,8 @@ test("their page opens in the reading area in the article's place; Escape gives 
   await expect(page.locator(".item-row")).toHaveCount(3);
   await page.keyboard.press("Escape");
   await expect(about).toHaveCount(0);
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  // Back to the list, with its open article's address (decision 0233).
+  await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
 });
 
 test.describe("on a touch screen beside the list", () => {

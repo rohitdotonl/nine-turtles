@@ -4,7 +4,7 @@ description: Send someone the link to an article, always the publisher's own pag
 groupId: reading
 order: 7
 spec: 21
-updated: 2026-11-03
+updated: 2026-11-10
 related: [write-back, star-an-article]
 ---
 
@@ -21,6 +21,10 @@ related: [write-back, star-an-article]
      device, or
    - **Copy link**, anywhere else (or press <kbd>C</kbd>). nine turtles says
      **Link copied.** Paste it wherever you like.
+
+You can do the same without opening it: right-click its row in the list
+(or press and hold it on a phone) and choose **Copy link** (**Share** on a
+phone).
 
 ## Good to know
 

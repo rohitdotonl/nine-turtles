@@ -145,6 +145,35 @@ export function arrivedBySwitching(): Carried | undefined {
   }
 }
 
+/**
+ * After the switch: the keyboard's place goes to `heading()` and the sidebar's `scroller()` back to
+ * `scrollTop`. Feeds and lists arrive a moment later, so it keeps trying each frame for about three
+ * seconds. Once the reader has put the keyboard's place somewhere (not the `opening` wordmark, nor the
+ * heading, where opening puts it first), it stays there.
+ */
+export function settleBack(heading: () => HTMLElement | undefined, opening: HTMLElement | undefined, scroller: () => Element | null | undefined, scrollTop: number) {
+  let [focused, scrolled] = [false, scrollTop <= 0];
+  let frames = 0;
+  const settle = () => {
+    const at = document.activeElement;
+    if (!focused && at && at !== document.body && at !== opening && at !== heading()) focused = true;
+    if (!focused) {
+      const place = heading();
+      if (place) {
+        place.focus();
+        focused = document.activeElement === place;
+      }
+    }
+    const box = scrolled ? undefined : scroller();
+    if (box && box.scrollHeight - box.clientHeight >= scrollTop) {
+      box.scrollTop = scrollTop;
+      scrolled = true;
+    }
+    if (!(focused && scrolled) && ++frames < 180) requestAnimationFrame(settle);
+  };
+  requestAnimationFrame(settle);
+}
+
 /** Only a note this code wrote counts; anything else is ignored. */
 export function readCarried(value: unknown): Carried | undefined {
   if (typeof value !== "object" || value === null) return undefined;

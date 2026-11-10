@@ -21,4 +21,8 @@ describe("phone steps in the browser's history", () => {
     expect(startingStep({ screen: "list", back: "home" }, true, "/feeds/3", true)).toEqual({ screen: "list", back: "home" });
     expect(startingStep({ screen: "article", back: "list" }, true, "/feeds/3", true)).toEqual({ screen: "list", back: undefined });
   });
+
+  it("keeps an open article across a reload while its address names it (decision 0233)", () => {
+    expect(startingStep({ screen: "article", back: "list" }, true, "/people/3/articles/9", true)).toEqual({ screen: "article", back: "list" });
+  });
 });

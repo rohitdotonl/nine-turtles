@@ -634,7 +634,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await expect(page.getByText(/Marked \d+ items? as read/)).toHaveCount(0);
   await page.keyboard.press("g");
   await page.keyboard.press("u");
-  await expect(page).toHaveURL(/\/people\/\d+$/);
+  await expect(page).toHaveURL(/\/people\/\d+\/articles\/\d+$/);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);

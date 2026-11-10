@@ -16,11 +16,11 @@ export type RowHands = {
   read(article: Article, read: boolean): void;
 };
 
-/** Star or Unstar, then Mark as read or unread (none with Unread off: nothing shows it), then `others`. */
-export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, others: MenuItem[] = []): MenuGroup[] {
+/** Star or Unstar, then Mark as read or unread (none with Unread off: nothing shows it), then the `others` that have something in them. */
+export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, others: MenuGroup[] = []): MenuGroup[] {
   const own: MenuItem[] = [{ label: article.starred ? "Unstar" : "Star", onSelect: () => hands.star(article) }];
   if (!unreadOff) own.push({ label: article.read ? "Mark as unread" : "Mark as read", onSelect: () => hands.read(article, !article.read) });
-  return others.length ? [{ items: own }, { items: others }] : [{ items: own }];
+  return [{ items: own }, ...others.filter((group) => group.items.length > 0)];
 }
 
 /** What the reader knows of whoever wrote it (`LoadedLibrary`). */
