@@ -162,6 +162,9 @@ test("the new lines never take away an Undo, and r says nothing new too", async 
   ).toBeVisible();
   await page.keyboard.press("r");
   await expect(page.getByText(/^Nothing new has arrived since/)).toBeVisible();
+  // Only the time takes the face with a plain zero, not the words around it (decision 0246).
+  await expect(page.getByText(/^Nothing new has arrived since/).locator(".dated")).toHaveText(/^\d{1,2}:\d{2}/);
+  await expect(page.getByText(/^Nothing new has arrived since/).locator(".dated")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
   // A passing line shows no Undo of its own, but u still undoes the last action.
   await expect(page.getByRole("button", { name: "Undo" })).toBeHidden();
   await page.keyboard.press("j");

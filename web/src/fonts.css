@@ -399,10 +399,12 @@
 }
 
 /*
-  Dates in the interface take the face with a plain zero (decision 0246). It
+  Dates in the interface take the face with a plain zero (decision 0246): a
+  <time>, or a date inside a sentence, marked .dated (Dated.svelte). It
   holds one glyph and no features: never ask a <time> for tabular figures,
   or its zero keeps its own width while the other digits change.
 */
-time:not(.article-text *) {
+time:not(.article-text *),
+.dated {
   font-family: var(--font-dates);
 }

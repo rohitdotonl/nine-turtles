@@ -10,6 +10,7 @@
   to list, it shows nothing.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import { onMount, tick } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import LoadFailed from "./LoadFailed.svelte";
@@ -142,7 +143,7 @@
               <h4 class="card-name">{row.feed.title}</h4>
               {#if !row.unsubscribed}
                 <p class="what text-ink-2">
-                  <span class="font-semibold">{headline(row.feed)}.</span>
+                  <span class="font-semibold"><Dated text={`${headline(row.feed)}.`} /></span>
                   {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
                   {#if row.feed.state === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
                 </p>
