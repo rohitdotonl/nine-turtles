@@ -40,7 +40,8 @@
     address: string;
     /** Who it's by, once the look finds out: the sheet's title asks about them. */
     name?: string;
-    onFollowed: (feed: Feed) => void;
+    /** Followed; `note` says anything that didn't go as asked (the dropped-on folder). */
+    onFollowed: (feed: Feed, note?: string) => void;
     onOpen: (feedId: number) => void;
     /** In a sheet: Not now, beside Follow in one row at the foot. */
     onCancel?: () => void;
@@ -84,9 +85,10 @@
     let result = await addFeed(person?.choices[0]?.url ?? address);
     // Asked without a look, a site naming several: its first, as the look would have chosen.
     if (result.kind === "choose" && result.choices[0]) result = await addFeed(result.choices[0].url);
-    if (result.kind === "added" && into) await editFeed(result.feed.id, { folders: [into.id] });
+    // Filing them in the folder the link was dropped on; if that fails, they're followed all the same and the note says so.
+    const filed = result.kind === "added" && into ? await editFeed(result.feed.id, { folders: [into.id] }) : undefined;
     busy = false;
-    if (result.kind === "added") onFollowed(result.feed);
+    if (result.kind === "added") onFollowed(result.feed, filed && into ? `They couldn't be put in ${into.name}; Edit can do it.` : undefined);
     // Followed already: Follow takes them to that person instead.
     else if (result.kind === "already") onOpen(result.feedId);
     else if (result.kind === "problem") said(result.reason);

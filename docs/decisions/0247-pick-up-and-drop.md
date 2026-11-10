@@ -29,12 +29,16 @@ change.
    Rohit asked for that rather than keeping everything without asking, as
    the bulk Unsubscribe does.
 3. **Pause** pauses every source not paused yet, with Undo (resume).
-4. **Drop a link to follow.** On a computer, a link dragged from an article,
-   or another tab's address, dropped on nine turtles opens "Follow <name>?"
-   (decision 0138); dropped on a folder, they're filed there once followed.
-   An OPML file dropped the same way is imported (decision 0238's Undo).
-   This visits only the page the reader dropped, as pasting it into + Add
-   does (decision 0016), and nothing until the question opens.
+4. **Drop a link to follow.** On a computer, another tab's address dropped
+   anywhere on nine turtles, or a link dragged from an article and dropped
+   on the sidebar, opens "Follow <name>?" (decision 0138); dropped on a
+   folder, they're filed there once followed. An OPML file dropped the same
+   way is imported (decision 0238's Undo). This visits only the page the
+   reader dropped, as pasting it into + Add does (decision 0016), and
+   nothing until the question opens: it joins the list of visits in
+   AGENTS.md's hard rule and ENGINEERING.md. A link nudged inside the
+   article visits nothing, since a link from the page itself counts only on
+   the sidebar, and nine turtles' own links never count.
 
 **Why.** Arranging the sidebar already meant picking someone up; letting go
 of them is the most direct way to let them go, and the foot is where the

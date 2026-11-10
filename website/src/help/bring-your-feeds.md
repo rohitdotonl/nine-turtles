@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 16
-updated: 2026-11-11
+updated: 2026-11-10
 related: [follow-someone, download-everything, questions]
 ---
 

@@ -42,7 +42,6 @@
   import Icon from "./Icon.svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
   import { keptAny, keptFrom, type Kept } from "./keeping";
-  import { importMessage, importOpml, undoImport } from "./importing";
   import { droppedOn, listenForDrops } from "./linkDrop.svelte";
   import MoreMenu from "./MoreMenu.svelte";
   import MoveSheet from "./MoveSheet.svelte";
@@ -142,15 +141,10 @@
     if (dragged.kind === "folder") return over?.kind === "between" && droppedBefore(order, dragged.id, over.before).join() !== order.join();
     const row = rowNamed(dragged.id);
     if (!row || !over || over.kind === "between") return false;
-    if (over.kind === "act") return over.act === "unsubscribe" || !paused(row);
+    if (over.kind === "act") return over.act === "unsubscribe" || !library.allPaused(row);
     if (over.kind === "folder") return !row.folders.includes(over.id);
     if (over.who === "publication" && several(row)) return false;
     return dragged.from !== null || over.who !== (row.kind ?? "person");
-  }
-
-  /** Whether every source of theirs is paused already. */
-  function paused(row: Feed): boolean {
-    return (row.places ?? [row.id]).every((id) => library.feeds?.find((feed) => feed.id === id)?.pausedAt != null);
   }
 
   /** Held over Publications, someone in several places is told why they can't go there; let go anyway, the note says it too. */
@@ -158,10 +152,8 @@
     const row = dragged.kind === "person" ? rowNamed(dragged.id) : undefined;
     const why = row && over?.kind === "loose" && over.who === "publication" && several(row) ? `${row.title} writes in more than one place, so stays under People.` : "";
     refusal = dropped ? "" : why;
-    if (dropped && row && over?.kind === "act") {
-      note = `${row.title} is already paused.`;
-      where = "";
-    }
+    // Let go on Pause when they're paused already: the note says so.
+    if (dropped && row && over?.kind === "act") void arranged(library.pause(row));
     if (dropped && why) {
       note = why;
       where = "";
@@ -209,6 +201,16 @@
     if (typeof done !== "string") onLeft(row);
     note = done;
     where = "";
+    // The question's buttons are gone: the keyboard goes to the note's Undo (or Close).
+    await tick();
+    document.querySelector<HTMLElement>("#sidebar .sidebar-note-band button")?.focus();
+  }
+
+  /** Cancel (or Escape) in the foot's question: nothing changes, and the keyboard goes back to their row. */
+  async function stay(row: Feed) {
+    asking = undefined;
+    await tick();
+    document.querySelector<HTMLElement>(`#sidebar li[data-drag^="person:${row.id}:"] a`)?.focus();
   }
 
   onMount(() =>
@@ -218,27 +220,12 @@
         droppedOn.folder = into ? { id: into.id, name: into.name } : null;
         onLink(address);
       },
-      onFile: (file) => arranged(imported(file)),
+      onFile: (file) => {
+        note = "Importing…";
+        void arranged(library.importFile(file));
+      },
     }),
   );
-
-  /** A dropped list of feeds, imported: what it brought, with Undo taking exactly that away (decision 0238). */
-  async function imported(file: File): Promise<Removed> {
-    note = "Importing…";
-    const result = await importOpml(file);
-    if (typeof result === "string") return result;
-    await library.loadFeeds();
-    const message = importMessage(result).join(" ");
-    if (!result.undoable) return message;
-    return {
-      message,
-      undo: async () => {
-        const late = await undoImport();
-        await library.loadFeeds();
-        return late ? "It's too late to undo that." : undefined;
-      },
-    };
-  }
 
   /** A handle's menu moved a folder: the keyboard stays on its handle. */
   async function step(folder: Folder, how: Step) {
@@ -502,9 +489,14 @@
 -->
 {#if asking}
   {@const { row, kept } = asking}
-  <div class="sidebar-note-band sticky bottom-0 z-10 px-2 pt-3 pb-1">
+  <!-- svelte-ignore a11y_no_static_element_interactions (Escape is Cancel, as in a sheet; the buttons inside are the controls) -->
+  <div class="sidebar-note-band sticky bottom-0 z-10 px-2 pt-3 pb-1" onkeydown={(event) => {
+      if (event.key !== "Escape" || leaving) return;
+      event.stopPropagation();
+      void stay(row);
+    }}>
     <div class="toast border [&_.keep]:!border-0">
-      <KeepOrRemove name={row.title} {kept} busy={leaving} onChoose={(removeKept) => leave(row, removeKept)} onCancel={() => (asking = undefined)} />
+      <KeepOrRemove name={row.title} {kept} busy={leaving} onChoose={(removeKept) => leave(row, removeKept)} onCancel={() => stay(row)} />
     </div>
   </div>
 {:else if note}

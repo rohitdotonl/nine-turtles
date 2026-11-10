@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-11
+updated: 2026-11-10
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 

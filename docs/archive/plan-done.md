@@ -498,3 +498,10 @@ the phone-specific parts and a final human pass.
 Built 3 November 2026, once V1 was finished (the owner's plan of 27
 October, decision 0157, SPEC section 40): 29 pages at nineturtles.app/help
 in five groups, linked from the website, Settings and the keys sheet.
+
+## Pick up and drop ✅
+
+Built 10 November 2026 (decision 0247, the owner's idea): drag someone in
+the sidebar onto Pause or Unsubscribe at its foot, with Undo and the
+keep-or-remove question; drop a link or a list of feeds on nine turtles to
+follow or import. Part of "Easier tidying" in `docs/PLAN.md`.

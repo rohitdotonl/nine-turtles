@@ -77,8 +77,10 @@ html[data-dragging="copy"] * {
 /*
   While a person or publication is held, the sidebar's foot trades + Add, Keys
   and Settings for two places to drop them: Pause and Unsubscribe (decision
-  0247). Each is a faint tile, so it reads as a place; held over, it takes
-  the drop tone, as a folder does.
+  0247). Each is a faint tile (the fill grey), so it reads as a place; held
+  over, it turns a step darker (the line grey) rather than the folders' drop
+  tone, which would take Unsubscribe's oxblood words below AA on Paper and
+  Night.
 */
 .drop-acts {
   display: none;
@@ -90,8 +92,11 @@ html[data-dragging="copy"] * {
   justify-content: center;
   min-height: 2.75rem;
   border-radius: var(--radius-press);
-  background-color: var(--line);
+  background-color: var(--fill);
   font-size: var(--text-meta);
+}
+.drop-act[data-drop] {
+  background-color: var(--line) !important;
 }
 html:is([data-dragging="person"], [data-dragging="copy"]) .sidebar-foot > :not(.drop-acts) {
   display: none;

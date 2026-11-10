@@ -1,10 +1,16 @@
-// Following by dropping (SPEC section 3, decision 0247): a link dragged out
-// of an article, or a page's address dragged from another browser tab,
-// dropped anywhere on nine turtles opens "Follow <name>?" for it, as a page
-// shared here does; dropped on a folder, whoever is followed goes into that
-// folder too. A list of feeds (an OPML file) dropped the same way is
-// imported. Nothing is visited until the question opens, exactly as if the
-// address had been pasted into + Add.
+// Following by dropping (SPEC section 3, decision 0247): a page's address
+// dragged from another browser tab or app and dropped anywhere on nine
+// turtles, or a link dragged out of an article here and dropped on the
+// sidebar, opens "Follow <name>?" for it, as a page shared here does;
+// dropped on a folder, whoever is followed goes into that folder too. A list
+// of feeds (an OPML file) dropped the same way is imported. Nothing is
+// visited until the question opens, exactly as if the address had been
+// pasted into + Add.
+//
+// A drag that starts here is ours only when it's a link to somewhere else,
+// and only over the sidebar: a link nudged and let go inside the article
+// opens nothing, and dragging nine turtles' own links (a list's rows) never
+// says "Drop to follow".
 //
 // While something that can be dropped is held over the window, the page
 // says so (`data-dragging="link"` or `"file"` on the page, read by
@@ -56,6 +62,8 @@ export type LinkDropOptions = {
 export function listenForDrops(options: LinkDropOptions): () => void {
   const page = document.documentElement;
   let marked: HTMLElement | undefined;
+  /** A drag that began on this page: "away" for a link elsewhere, "own" for anything else (never ours). */
+  let started: "away" | "own" | undefined;
 
   const ours = () => page.dataset.dragging === "link" || page.dataset.dragging === "file";
   // A person being arranged, an open sheet, or a text field: not ours to take.
@@ -76,9 +84,20 @@ export function listenForDrops(options: LinkDropOptions): () => void {
     mark(undefined);
   }
 
+  function start(event: DragEvent) {
+    const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+    started = link && droppedAddress({ getData: () => link.href }) ? "away" : "own";
+  }
+
+  function end() {
+    started = undefined;
+    clear();
+  }
+
   function over(event: DragEvent) {
     const kind = holding(event.dataTransfer?.types);
-    if (!kind || elsewhere(event.target)) return;
+    if (!kind || started === "own" || elsewhere(event.target)) return;
+    if (started === "away" && !(event.target instanceof Element && event.target.closest("#sidebar"))) return clear();
     event.preventDefault();
     if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     page.dataset.dragging = kind;
@@ -102,15 +121,17 @@ export function listenForDrops(options: LinkDropOptions): () => void {
     if (address) options.onLink(address, folder);
   }
 
+  window.addEventListener("dragstart", start);
   window.addEventListener("dragover", over);
   window.addEventListener("dragleave", leave);
   window.addEventListener("drop", drop);
-  window.addEventListener("dragend", clear);
+  window.addEventListener("dragend", end);
   return () => {
     clear();
+    window.removeEventListener("dragstart", start);
     window.removeEventListener("dragover", over);
     window.removeEventListener("dragleave", leave);
     window.removeEventListener("drop", drop);
-    window.removeEventListener("dragend", clear);
+    window.removeEventListener("dragend", end);
   };
 }

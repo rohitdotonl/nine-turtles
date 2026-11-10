@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-11
+updated: 2026-11-10
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -93,9 +93,10 @@ You can follow a site you're looking at without copying its address:
   **Command Shift B** on a Mac, or **Ctrl Shift B** elsewhere. Can't drag?
   Paste the blog's address into **+ Add**.
 
-- **Drop a link:** on a computer, drag a link out of an article you're
-  reading, or a page's address from another browser tab, onto nine turtles.
-  Drop it on a folder in the sidebar and they go in that folder too.
+- **Drop a link:** on a computer, drag a page's address from another
+  browser tab onto nine turtles, or a link out of an article you're
+  reading onto the sidebar. Drop it on a folder in the sidebar and they go
+  in that folder too.
 
 nine turtles asks "Follow…?" first, and follows only when you say so.
 
