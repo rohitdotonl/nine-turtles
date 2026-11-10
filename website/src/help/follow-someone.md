@@ -27,6 +27,9 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
    or **A publication** (anything you only read or watch, such as a
    magazine, with no Write back). Its guess is already chosen. Press **Done**.
 
+Closed Add before pressing it? The address you typed is still there next
+time. **Cancel** clears it.
+
 When a blog signs every article with one writer's name, nine turtles calls
 them by that name, with the blog's title under it on their page. Want a
 different name? Change it in **Edit** on their page; yours always stays.

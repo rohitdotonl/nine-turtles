@@ -134,7 +134,7 @@ pub struct AppState {
     /// After a sign-in link, the offer to choose a new password (decision
     /// 0122), held in memory only.
     pub password_choices: Arc<accounts::PasswordChoices>,
-    /// Each reader's last import, for its Undo (decision 0235), held in
+    /// Each reader's last import, for its Undo (decision 0236), held in
     /// memory only.
     pub imports: Arc<subscriptions::Imports>,
 }

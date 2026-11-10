@@ -135,7 +135,7 @@ export async function disconnect(id: number): Promise<void> {
 /** Undo after Disconnect could no longer reach the connection (ten minutes passed, or another was disconnected). */
 export const TOO_LATE_TO_RECONNECT = "It's too late to undo that. Connect it again from inside your assistant.";
 
-/** Undo for `disconnect`: the same connection comes back, as it was (decision 0235). "too-late" once it's gone for good. */
+/** Undo for `disconnect`: the same connection comes back, as it was (decision 0236). "too-late" once it's gone for good. */
 export async function reconnect(id: number): Promise<"too-late" | undefined> {
   const response = await api(`/api/assistants/${id}/reconnect`, { method: "POST" });
   if (response.status === 409) return "too-late";

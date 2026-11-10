@@ -6,12 +6,15 @@
   when the article's writer is someone to write to (decision 0205). A note is written in place, in a box with Save and Not now; on
   a video or a podcast's episode it starts with the time it's playing at.
   It sits under the words (above them when there's no room below), inside
-  the window, and closes with Escape or a press outside it.
+  the window, and closes with Escape or a press outside it. A note being
+  written is kept as it's typed (onWords), so closing the menu, however it
+  happens, never loses it; opened again, the box starts with those words
+  and says "Not saved yet.", with Discard (decision 0235).
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { keyCap, keyFor } from "./keyboard";
-  import { LONGEST_NOTE } from "./notes.svelte";
+  import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
   import type { Note } from "./shapes";
 
@@ -25,6 +28,9 @@
     jump,
     onHighlight,
     onSaveNote,
+    kept,
+    onWords,
+    onDiscard,
     onCopy,
     onRemove,
     onWriteBack,
@@ -43,7 +49,14 @@
     startTime?: () => string | undefined;
     jump?: (seconds: number) => void;
     onHighlight: () => void;
-    onSaveNote: (note: string) => void;
+    /** Saves the note; answers why, if it couldn't be. The menu stays open, with the words, until it's saved. */
+    onSaveNote: (note: string) => Promise<string | undefined>;
+    /** Words kept unsaved for this note from before, to start with. */
+    kept?: () => string | undefined;
+    /** The note's words as they're typed, to keep on this device. */
+    onWords?: (words: string) => void;
+    /** Throws the kept words away (with Undo). */
+    onDiscard?: () => void;
     onCopy: () => void;
     onRemove: () => void;
     /** Write back about these words: the email starts with them quoted. None for a publication. */
@@ -53,8 +66,10 @@
   } = $props();
 
   let menu: HTMLDivElement | undefined = $state();
-  let box: HTMLTextAreaElement | undefined = $state();
+  let box: NoteBox | undefined = $state();
   let draft = $state("");
+  /** The box opened onto words kept unsaved from before. */
+  let keptHere = $state(false);
   let height = $state(0);
   let width = $state(0);
 
@@ -68,13 +83,21 @@
 
   /** Starts writing the note: what it says now, or the player's time to begin a new one. */
   export async function write() {
-    draft = highlight?.note ?? "";
+    const before = kept?.();
+    keptHere = before !== undefined;
+    draft = before ?? highlight?.note ?? "";
     if (!draft) draft = startTime?.() ?? "";
+    started = true;
     writing = true;
     await tick();
-    box?.focus();
-    box?.setSelectionRange(draft.length, draft.length);
+    await box?.focus();
   }
+
+  // Kept once the box has its words: before that, an empty box would forget what was kept.
+  let started = $state(false);
+  $effect(() => {
+    if (writing && started) onWords?.(draft);
+  });
 
   // Opened to write a note straight away (N, or "Add a note…" on words just chosen).
   // A highlight pressed: the keyboard goes to its first choice, as in any menu.
@@ -108,10 +131,6 @@
     };
   });
 
-  function save(event: SubmitEvent) {
-    event.preventDefault();
-    onSaveNote(draft);
-  }
 </script>
 
 <div
@@ -130,15 +149,18 @@
   }}
 >
   {#if writing}
-    <form class="flex flex-col gap-3 p-3" onsubmit={save}>
-      <label for="highlight-note" class="text-small font-semibold text-ink">{highlight?.note ? "Your note" : "A note on these words"}</label>
-      <textarea dir="auto" id="highlight-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
-      <p class="text-meta text-muted">Only you see it.</p>
-      <div class="flex flex-wrap gap-2">
-        <button type="submit" class="btn-primary">Save</button>
-        <button type="button" class="btn-quiet" onclick={() => onClose(true)}>Not now</button>
-      </div>
-    </form>
+    <NoteBox
+      bind:this={box}
+      small
+      id="highlight-note"
+      label={highlight?.note ? "Your note" : "A note on these words"}
+      help="Only you see it."
+      bind:words={draft}
+      kept={keptHere ? "here" : undefined}
+      onSave={onSaveNote}
+      onNotNow={() => onClose(true)}
+      {onDiscard}
+    />
   {:else}
     {#if fresh}
       <p class="text-small text-ink-2 menu-note">Highlighted</p>
@@ -176,7 +198,7 @@
     padding: 0.375rem;
     font-family: var(--font-sans);
   }
-  .highlight-menu:has(form) {
+  .highlight-menu:has(:global(form)) {
     width: min(22rem, calc(100vw - 2rem));
   }
   .menu-item {
@@ -219,10 +241,5 @@
     margin: 0.25rem 0;
     border: 0;
     border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  }
-  .note-box {
-    min-height: 6rem;
-    resize: vertical;
-    line-height: 1.5;
   }
 </style>

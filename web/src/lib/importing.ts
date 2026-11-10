@@ -10,7 +10,7 @@ export type ImportSummary = {
   already: number;
   foldersAdded: number;
   unreadable: string[];
-  /** It added something, so "Wrong file? Undo the import" can take it away (decision 0235). */
+  /** It added something, so "Wrong file? Undo the import" can take it away (decision 0236). */
   undoable: boolean;
 };
 
@@ -52,7 +52,7 @@ export async function importOpml(file: File, youtube = false): Promise<ImportSum
 }
 
 /**
- * Undo for the last import: exactly the feeds and folders it added go (decision 0235).
+ * Undo for the last import: exactly the feeds and folders it added go (decision 0236).
  * "too-late" once nine turtles can't reach it any more; throws when it couldn't be asked.
  */
 export async function undoImport(): Promise<"too-late" | undefined> {

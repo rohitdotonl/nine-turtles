@@ -1,7 +1,11 @@
 <!--
   Edit (SPEC section 36, decision 0163): a person's or publication's page,
   turned into its settings in place by its Edit button, the same for both.
-  Done saves and turns it back; Cancel or Escape turns it back unchanged.
+  Done saves and turns it back; Cancel turns it back unchanged. Changes not
+  saved yet are kept on this device (decision 0235): Escape, Back or a
+  press on an article leaves them waiting here, and coming back shows them
+  with "Not saved yet. Going elsewhere keeps these changes here for you."
+  under the title. Cancel is the one way to throw them away.
 
   Top to bottom (the owner's core path, points 11 to 13): their name; the
   email address Write back writes to (SPEC section 37); for one source,
@@ -21,7 +25,10 @@
   import AddPlace from "./AddPlace.svelte";
   import Icon from "./Icon.svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
+  import NotSavedYet from "./NotSavedYet.svelte";
   import SourceFields from "./SourceFields.svelte";
+  import { keepDraft, keepWhileChanged, keptDraft } from "./drafts";
+  import { isRecord } from "./http";
   import { editFeed, refused, type Notice } from "./feeds";
   import type { Sick } from "./health";
   import { keptAny, keptFrom, type Kept } from "./keeping";
@@ -80,6 +87,30 @@
   let busy = $state(false);
   let message = $state("");
 
+  // Changes kept from before (decision 0235): the form starts from them, and says so.
+  const draftName = `edit:feed:${start.id}`;
+  const original = (() => ({ title, address, who, chosen: [...chosen], newFolder, paused, shorts, liveStreams }))();
+  const kept = keptDraft(draftName);
+  const restored = isRecord(kept);
+  if (isRecord(kept)) {
+    if (typeof kept.title === "string") title = kept.title;
+    if (typeof kept.address === "string") address = kept.address;
+    if (kept.who === "person" || kept.who === "publication") who = kept.who;
+    // A folder deleted meanwhile is left out.
+    if (Array.isArray(kept.chosen)) chosen = kept.chosen.filter((id) => typeof id === "number" && folders.some((folder) => folder.id === id));
+    if (typeof kept.newFolder === "string") newFolder = kept.newFolder;
+    if (typeof kept.paused === "boolean") paused = kept.paused;
+    if (typeof kept.shorts === "boolean") shorts = kept.shorts;
+    if (typeof kept.liveStreams === "boolean") liveStreams = kept.liveStreams;
+  }
+  $effect(() => keepWhileChanged(draftName, { title, address, who, chosen: [...chosen].sort(), newFolder, paused, shorts, liveStreams }, { ...original, chosen: [...original.chosen].sort() }));
+
+  /** Cancel: back to their page, and the changes go. */
+  function cancel() {
+    keepDraft(draftName, undefined);
+    onDone(false);
+  }
+
   async function save(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
@@ -112,7 +143,10 @@
     }
     busy = false;
     if (problem) message = problem;
-    else onDone(true);
+    else {
+      keepDraft(draftName, undefined);
+      onDone(true);
+    }
   }
 
   /** What the reader kept of theirs, while Unsubscribe asks whether to keep it (SPEC section 42). */
@@ -135,6 +169,7 @@
     const problem = await onUnsubscribe(removeKept ?? false);
     busy = false;
     if (problem) message = problem;
+    else keepDraft(draftName, undefined);
   }
 
   async function keepAsking() {
@@ -145,12 +180,15 @@
 </script>
 
 <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between gap-3">
     <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
     <div class="flex shrink-0 gap-2">
-      <button type="button" class="btn" onclick={() => onDone(false)}>Cancel</button>
+      <button type="button" class="btn" onclick={cancel}>Cancel</button>
       <button type="submit" form={formId} aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Done" doing="Saving…" /></button>
     </div>
+  </div>
+  {#if restored}<NotSavedYet />{/if}
   </div>
 
   <form id={formId} onsubmit={save} class="flex flex-col gap-5">

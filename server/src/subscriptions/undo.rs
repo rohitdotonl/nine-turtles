@@ -1,4 +1,4 @@
-//! Undo for an import (SPEC section 16, decision 0235): "Wrong file? Undo
+//! Undo for an import (SPEC section 16, decision 0236): "Wrong file? Undo
 //! the import" takes away exactly what the reader's last import added, the
 //! feeds it followed, the folders it made and the folders it put feeds
 //! already followed into, and nothing that was there before.

@@ -175,7 +175,7 @@ test.describe("on a wide window", () => {
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
   });
 
-  test("Mark all as read's Undo follows you to another list, naming where, until your next undoable action (decision 0235)", async ({ page }) => {
+  test("Mark all as read's Undo follows you to another list, naming where, until your next undoable action (decision 0236)", async ({ page }) => {
     const blog = await openBlog(page);
     await page.keyboard.press("Shift+A");
     await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);

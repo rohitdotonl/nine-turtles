@@ -100,7 +100,8 @@ pub async fn run(state: AppState) {
 /// deleted (`accounts::tidy_links`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     folders::clear_unsubscribed(&state.db, None, now - folders::UNDO_FOR).await?;
-    crate::assistants::forget_disconnected(&state.db, None, now - folders::UNDO_FOR).await?;
+    crate::assistants::settings::forget_disconnected(&state.db, None, now - folders::UNDO_FOR)
+        .await?;
     // In the background: a slow sender's server never holds up feed checks.
     // Each sender is claimed before it's told, so overlapping rounds are fine.
     let telling = state.clone();

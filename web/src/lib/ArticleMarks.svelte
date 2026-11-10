@@ -15,12 +15,21 @@
 
   Without a connection all of it still works, and one quiet line at the
   foot of the article says where it's kept (OFFLINE_LINE) until it's sent.
+
+  Nothing typed is thrown away (decision 0235): a note left unsaved (by
+  Not now, Escape, a press outside its box, or going to another article)
+  is kept on this device. Coming back, its box is open at the article's
+  end with the words and "Not saved yet. Kept from when you left this
+  article."; Discard throws them away, with Undo.
 -->
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import HighlightMenu from "./HighlightMenu.svelte";
+  import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
-  import { Marks, LONGEST_NOTE, OFFLINE_LINE, type Quote } from "./notes.svelte";
+  import { keepDraft, keptDraft, keptWords, worthKeeping } from "./drafts";
+  import { isRecord } from "./http";
+  import { Marks, OFFLINE_LINE, type Quote } from "./notes.svelte";
   import { paint, quoteOf, unpaint } from "./highlights";
   import { clock } from "./podcasts";
   import { UNDONE } from "./messages";
@@ -70,8 +79,72 @@
 
   /** The small menu: for words just chosen, or for a highlight pressed. */
   let menu: { anchor: DOMRect; quote?: Quote; highlight?: Note; fresh?: boolean; writing: boolean; from?: Element | null } | undefined = $state();
-  /** "Highlight removed · Undo", until something else is done. */
-  let removed: Note | undefined = $state();
+  /** "Highlight removed · Undo" or "Note discarded · Undo", until something else is done. */
+  let undoable: { said: string; undo: () => Promise<void> | void } | undefined = $state();
+
+  // The names the unsaved notes are kept under on this device (drafts.ts); each article has its own.
+  // svelte-ignore state_referenced_locally
+  const articleDraft = `note:article:${full.id}`;
+  const highlightDraft = (id: number) => `note:highlight:${id}`;
+  /** One note on words chosen but not yet highlighted, for each article: its words, and the note. */
+  // svelte-ignore state_referenced_locally
+  const wordsDraft = `note:words:${full.id}`;
+
+  /** The note kept for words chosen but not yet highlighted, if it's for these words. */
+  function keptOnWords(quote?: Quote): { quote: Quote; words: string } | undefined {
+    const kept = keptDraft(wordsDraft);
+    if (!isRecord(kept) || typeof kept.words !== "string" || !isRecord(kept.quote) || typeof kept.quote.quote !== "string") return undefined;
+    const was = { quote: kept.quote as Quote, words: kept.words };
+    return quote && quote.quote !== was.quote.quote ? undefined : was;
+  }
+
+  /**
+   * The notes kept unsaved, open in their boxes at the article's end: on a
+   * highlight (by its number), or on words not yet highlighted. Each says
+   * whether it was kept from when the reader left ("left") or in place ("here").
+   */
+  type Open = { highlight?: number; quote?: Quote; words: string; kept: "left" | "here" };
+  let open: Open[] = $state(
+    (() => {
+      const kept: Open[] = marks.highlights.flatMap((each) => {
+        const words = keptWords(highlightDraft(each.id));
+        return words === undefined ? [] : [{ highlight: each.id, words, kept: "left" as const }];
+      });
+      const onWords = keptOnWords();
+      if (onWords) kept.push({ ...onWords, kept: "left" });
+      return kept;
+    })(),
+  );
+
+  // Each open box's words are kept as they're typed, while they're the reader's own.
+  $effect(() => {
+    for (const each of open) {
+      if (each.highlight !== undefined) {
+        const saved = marks.highlights.find((highlight) => highlight.id === each.highlight)?.note ?? "";
+        keepDraft(highlightDraft(each.highlight), worthKeeping(each.words, saved) ? each.words : undefined);
+      } else if (each.quote) keepDraft(wordsDraft, worthKeeping(each.words, "") ? { quote: each.quote, words: each.words } : undefined);
+    }
+  });
+
+  /** The words in the small menu's box, kept as they're typed (unless they're what was there to start with). */
+  function keepMenuWords(words: string) {
+    const at = menu;
+    if (!at) return;
+    if (at.highlight) {
+      const name = highlightDraft(at.highlight.id);
+      keepDraft(name, worthKeeping(words, at.highlight.note ?? startTime() ?? "") ? words : undefined);
+    } else if (at.quote) {
+      if (worthKeeping(words, startTime() ?? "")) keepDraft(wordsDraft, { quote: at.quote, words });
+      // Another chosen words' note is left alone.
+      else if (keptOnWords(at.quote)) keepDraft(wordsDraft, undefined);
+    }
+  }
+
+  /** What the small menu's box starts with, when a note on its words was kept unsaved. */
+  function keptForMenu(): string | undefined {
+    if (menu?.highlight) return keptWords(highlightDraft(menu.highlight.id));
+    return menu?.quote ? keptOnWords(menu.quote)?.words : undefined;
+  }
 
   /** The words chosen in the article now, if any. */
   function chosen(): { quote: Quote; anchor: DOMRect } | undefined {
@@ -126,7 +199,7 @@
 
   async function highlightChosen(quote: Quote | undefined = menu?.quote ?? chosen()?.quote) {
     if (!quote) return;
-    removed = undefined;
+    undoable = undefined;
     const from = document.activeElement;
     getSelection()?.removeAllRanges();
     menu = undefined;
@@ -139,17 +212,67 @@
     if (at) menu = { anchor: at.getBoundingClientRect(), highlight: made, fresh: true, writing: false, from };
   }
 
-  async function saveNote(note: string) {
-    const open = menu;
-    menu = undefined;
-    if (!open) return;
+  /** Saves a note on a highlight, or highlights words with their note. The box stays open, with the words, until it's saved; answers why, if it couldn't be. */
+  async function saveOn(on: { highlight?: number; quote?: Quote }, note: string): Promise<string | undefined> {
+    undoable = undefined;
     let problem: string | undefined;
-    if (open.highlight) problem = await marks.setNote(open.highlight.id, note);
-    else if (open.quote) {
-      getSelection()?.removeAllRanges();
-      problem = (await marks.highlight(open.quote, note.trim() || null)).problem;
-    }
-    say(problem ?? "Note saved.");
+    if (on.highlight !== undefined) problem = await marks.setNote(on.highlight, note);
+    else if (on.quote) problem = (await marks.highlight(on.quote, note.trim() || null)).problem;
+    if (problem) return problem;
+    keepDraft(on.highlight !== undefined ? highlightDraft(on.highlight) : wordsDraft, undefined);
+    say("Note saved.");
+    return undefined;
+  }
+
+  async function saveNote(note: string): Promise<string | undefined> {
+    const at = menu;
+    if (!at) return undefined;
+    if (at.quote) getSelection()?.removeAllRanges();
+    const problem = await saveOn({ highlight: at.highlight?.id, quote: at.quote }, note);
+    if (menu !== at) {
+      // The menu was closed while it waited: the words are kept for its box, and the top bar says why they weren't saved.
+      if (problem) say(problem);
+    } else if (!problem) menu = undefined;
+    return problem;
+  }
+
+  /** Saves a note in a box at the article's end; once saved, the box gives way to the highlight. */
+  async function saveOpen(each: Open, note: string): Promise<string | undefined> {
+    const problem = await saveOn(each, note);
+    if (!problem) open = open.filter((other) => other !== each);
+    return problem;
+  }
+
+  /** Discard: the kept words are thrown away, with Undo, which brings their box back. */
+  async function discard(name: string, back: () => void) {
+    const was = keptDraft(name);
+    keepDraft(name, undefined);
+    undoable = {
+      said: "Note discarded",
+      undo: () => {
+        keepDraft(name, was);
+        back();
+        say(UNDONE);
+      },
+    };
+    say("Note discarded.");
+    await tick();
+    undoButton?.focus({ preventScroll: true });
+  }
+
+  function discardOpen(each: Open) {
+    open = open.filter((other) => other !== each);
+    void discard(each.highlight !== undefined ? highlightDraft(each.highlight) : wordsDraft, () => (open = [...open, { ...each, kept: "here" }]));
+  }
+
+  /** Discard in the small menu: its box closes, and Undo opens the kept words at the article's end. */
+  function discardInMenu() {
+    const at = menu;
+    if (!at) return;
+    const words = keptForMenu() ?? "";
+    close(true);
+    const each: Open = { highlight: at.highlight?.id, quote: at.highlight ? undefined : at.quote, words, kept: "here" };
+    void discard(at.highlight ? highlightDraft(at.highlight.id) : wordsDraft, () => (open = [...open, each]));
   }
 
   async function copy(highlight: Note) {
@@ -166,7 +289,7 @@
   async function remove(highlight: Note) {
     close();
     const { was, problem } = await marks.remove(highlight.id);
-    removed = was;
+    undoable = was && { said: "Highlight removed", undo: async () => say((await marks.restore(was)) ?? UNDONE) };
     say(problem ?? "Highlight removed.");
     // Its buttons are gone: the keyboard goes to Undo.
     await tick();
@@ -174,9 +297,9 @@
   }
 
   async function undo() {
-    const was = removed;
-    removed = undefined;
-    if (was) say((await marks.restore(was)) ?? UNDONE);
+    const was = undoable;
+    undoable = undefined;
+    await was?.undo();
   }
 
   // Without a connection, the quiet line at the foot is said once as well, for a screen reader.
@@ -192,10 +315,12 @@
     at?.scrollIntoView({ block: "center" });
   }
 
-  // The note on the whole article.
-  let editingArticle = $state(false);
-  let draft = $state("");
-  let box: HTMLTextAreaElement | undefined = $state();
+  // The note on the whole article: open at once, with its words, when some were kept unsaved.
+  const keptOnArticle = keptWords(articleDraft);
+  let editingArticle = $state(keptOnArticle !== undefined);
+  let draft = $state(keptOnArticle ?? "");
+  let articleKept: "left" | "here" | undefined = $state(keptOnArticle === undefined ? undefined : "left");
+  let articleBox: NoteBox | undefined = $state();
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
   /** Where the keyboard was before the note box opened, for when Edit note is gone (the note emptied). */
@@ -203,14 +328,22 @@
 
   /** "Add a note…" (More, N with nothing chosen): the box at the article's end, ready to type in. */
   export async function writeArticleNote() {
-    draft = marks.articleNote?.note ?? startTime() ?? "";
-    noteFrom = document.activeElement;
-    editingArticle = true;
+    if (!editingArticle) {
+      const kept = keptWords(articleDraft);
+      draft = kept ?? marks.articleNote?.note ?? startTime() ?? "";
+      articleKept = kept === undefined ? undefined : "here";
+      noteFrom = document.activeElement;
+      editingArticle = true;
+    }
     await tick();
-    box?.scrollIntoView({ block: "center" });
-    box?.focus();
-    box?.setSelectionRange(draft.length, draft.length);
+    articleBox?.show();
+    await articleBox?.focus();
   }
+
+  // The article's note is kept as it's typed, while it differs from what's saved.
+  $effect(() => {
+    if (editingArticle) keepDraft(articleDraft, worthKeeping(draft, marks.articleNote?.note ?? "") ? draft : undefined);
+  });
 
   /** The words the reader highlighted, in the order they were made: Write back starts the email with them. */
   export function quotes(): string[] {
@@ -237,17 +370,34 @@
     else void writeArticleNote();
   }
 
-  async function saveArticleNote(event: SubmitEvent) {
-    event.preventDefault();
+  /** The box stays open, with the words, until they're saved; answers why, if they couldn't be. */
+  async function saveArticleNote(words: string): Promise<string | undefined> {
+    undoable = undefined;
+    const problem = await marks.setArticleNote(words);
+    if (problem) return problem;
+    keepDraft(articleDraft, undefined);
     editingArticle = false;
-    const problem = await marks.setArticleNote(draft);
-    say(problem ?? (draft.trim() ? "Note saved." : "Note removed."));
+    articleKept = undefined;
+    say(words.trim() ? "Note saved." : "Note removed.");
     await giveBack();
+    return undefined;
   }
 
+  /** Not now: the box closes; words that weren't saved are kept for next time. */
   async function notNow() {
     editingArticle = false;
     await giveBack();
+  }
+
+  function discardArticle() {
+    const words = draft;
+    editingArticle = false;
+    articleKept = undefined;
+    void discard(articleDraft, () => {
+      draft = words;
+      articleKept = "here";
+      editingArticle = true;
+    });
   }
 
   /** The keyboard goes to Edit note, or, with no note left, back where it was. */
@@ -258,13 +408,14 @@
   }
 </script>
 
-{#if marks.highlights.length > 0 || marks.articleNote || editingArticle}
+{#if marks.highlights.length > 0 || marks.articleNote || editingArticle || open.length > 0}
   <section class="marks" aria-labelledby="marks-title" lang="en">
     <h3 id="marks-title" class="sr-only">Your highlights and note</h3>
-    {#if marks.highlights.length > 0}
+    {#if marks.highlights.length > 0 || open.length > 0}
       <p class="label" aria-hidden="true">Your highlights</p>
       <ul class="flex flex-col gap-4" aria-label="Your highlights">
         {#each marks.highlights as each (each.id)}
+          {@const box = open.find((kept) => kept.highlight === each.id)}
           <li class="quote">
             {#if missing.has(each.id)}
               <p class="font-serif text-ink">{each.quote}</p>
@@ -272,6 +423,9 @@
             {:else}
               <button type="button" class="font-serif text-ink text-left" title="Show in the article" onclick={() => show(each)}>{each.quote}</button>
             {/if}
+            {#if box}
+              <NoteBox id="kept-note-{each.id}" label="A note on these words" help="Only you see it." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
+            {:else}
             {#if each.note}<div class="text-small"><NoteText note={each.note} jump={media?.jump} /></div>{/if}
             <div class="-ml-3 flex flex-wrap">
               <button type="button" class="btn-quiet" aria-label="{each.note ? 'Edit note' : 'Add a note'} on “{each.quote}”" onclick={(event) => (menu = { anchor: event.currentTarget.getBoundingClientRect(), highlight: each, writing: true, from: event.currentTarget })}
@@ -280,20 +434,30 @@
               <button type="button" class="btn-quiet" aria-label="Copy “{each.quote}”" onclick={() => copy(each)}>Copy</button>
               <button type="button" class="btn-quiet" aria-label="Remove highlight “{each.quote}”" onclick={() => remove(each)}>Remove</button>
             </div>
+            {/if}
+          </li>
+        {/each}
+        <!-- A note on words not highlighted yet: Save highlights them with it. -->
+        {#each open.filter((kept) => kept.quote) as box (box)}
+          <li class="quote">
+            <p class="font-serif text-ink">{box.quote?.quote}</p>
+            <NoteBox id="kept-note-words" label="A note on these words" help="Only you see it. Save highlights the words." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
           </li>
         {/each}
       </ul>
     {/if}
     {#if editingArticle}
-      <form class="note-form flex flex-col gap-3" onsubmit={saveArticleNote}>
-        <label class="text-base font-semibold text-ink" for="article-note">A note on this article</label>
-        <textarea dir="auto" id="article-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" class="field note-box"></textarea>
-        <p class="text-small text-ink-2">Only you see it. Search finds it, and Your data exports it.</p>
-        <div class="flex flex-wrap gap-2">
-          <button type="submit" class="btn-primary">Save</button>
-          <button type="button" class="btn-quiet" onclick={notNow}>Not now</button>
-        </div>
-      </form>
+      <NoteBox
+        bind:this={articleBox}
+        id="article-note"
+        label="A note on this article"
+        help="Only you see it. Search finds it, and Your data exports it."
+        bind:words={draft}
+        kept={articleKept}
+        onSave={saveArticleNote}
+        onNotNow={notNow}
+        onDiscard={discardArticle}
+      />
     {:else if marks.articleNote?.note}
       <p class="label">Your note</p>
       <div class="text-base"><NoteText note={marks.articleNote.note} jump={media?.jump} /></div>
@@ -302,10 +466,10 @@
   </section>
 {/if}
 
-{#if marks.waits || removed}
+{#if marks.waits || undoable}
   <div class="foot floating" lang="en">
-    {#if removed}
-      <p>Highlight removed</p>
+    {#if undoable}
+      <p>{undoable.said}</p>
       <button type="button" class="btn-quiet" bind:this={undoButton} onclick={undo}>Undo</button>
     {/if}
     {#if marks.waits}<p class="text-ink-2">{OFFLINE_LINE}</p>{/if}
@@ -323,6 +487,9 @@
     jump={media?.jump}
     onHighlight={() => void highlightChosen()}
     onSaveNote={saveNote}
+    kept={keptForMenu}
+    onWords={keepMenuWords}
+    onDiscard={discardInMenu}
     onCopy={() => menu?.highlight && copy(menu.highlight)}
     onRemove={() => menu?.highlight && remove(menu.highlight)}
     onWriteBack={writeBack && writeBackAbout}
@@ -361,16 +528,6 @@
     color: var(--muted);
     font-size: var(--text-small);
     font-style: italic;
-  }
-  .note-form {
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-    border-radius: 0.75rem;
-  }
-  .note-box {
-    min-height: 6rem;
-    resize: vertical;
-    line-height: 1.5;
   }
   /* The quiet line at the foot of the article, staying in view while the article scrolls. */
   .foot {

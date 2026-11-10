@@ -153,6 +153,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Web fonts
 - Pages: White, Paper, Night and Match device
 - Browser storage (`localStorage`)
+- Drafts: unsaved words kept on the device until saved or discarded (`drafts.ts`)
 - The browser's database (IndexedDB), and reading offline
 - Routing (addresses inside a single-page app) and browser history
 - Font subsets and `unicode-range`

@@ -71,8 +71,7 @@ const LONGEST_ADDRESS: usize = 2_000;
 /// Keys start so, so a reader (or a secret scanner) can tell one at a glance.
 const KEY_PREFIX: &str = "nt_";
 
-mod settings;
-pub use settings::forget_disconnected;
+pub mod settings;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -692,7 +691,7 @@ async fn swap_code(
         return Ok(Err("The PKCE code_verifier doesn't match."));
     }
     // Connecting again after a disconnect starts afresh: the old connection,
-    // waiting for an Undo, goes for good with its tickets (decision 0235).
+    // waiting for an Undo, goes for good with its tickets (decision 0236).
     sqlx::query(
         "DELETE FROM assistant_connections
          WHERE person_id = ? AND client_id = ? AND disconnected_at IS NOT NULL",

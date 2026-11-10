@@ -98,7 +98,7 @@ export function newItemsMessage(touch: boolean): string {
   return touch ? "New articles" : "New articles · press r";
 }
 
-/** What the note says after "Mark all as read", naming the list it was done in, which its Undo may outlive (decision 0235). */
+/** What the note says after "Mark all as read", naming the list it was done in, which its Undo may outlive (decision 0236). */
 export function markedAllMessage(count: number, place?: string): string {
   if (count === 0) return "Everything here is already read.";
   return `Marked ${count} ${count === 1 ? "article" : "articles"} as read${place ? ` in ${place}` : ""}.`;

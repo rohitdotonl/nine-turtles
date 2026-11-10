@@ -30,7 +30,7 @@
   Unsubscribing and deleting a folder happen elsewhere, then lead here: the
   list arrives with their `notice` already in the line, Undo included.
   Mark all as read's Undo outlives the list (`lastMarkAll.ts`, decision
-  0235): the next list arrives with it, naming where it happened, until
+  0236): the next list arrives with it, naming where it happened, until
   something else is done that can be undone.
 
   The list never changes on its own (SPEC section 13). Every minute it asks
@@ -164,7 +164,7 @@
   /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
   let noteFor: number | undefined = $state();
   $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
-  /** The last Mark all as read, made here or carried from the list before (decision 0235). */
+  /** The last Mark all as read, made here or carried from the list before (decision 0236). */
   let marking: MarkedAll | undefined = lastMarkAll();
   if (marking) {
     const { message, articles: marked } = marking;
