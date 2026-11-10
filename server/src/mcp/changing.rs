@@ -7,12 +7,12 @@ use std::time::Duration;
 use serde::Deserialize;
 use serde_json::json;
 
-use super::{ADDS_AN_HOUR, Answer, KEPT_FOR, LONGEST_ADDRESS, MOST_AT_ONCE, database};
+use super::{ADDS_AN_HOUR, Answer, LONGEST_ADDRESS, MOST_AT_ONCE, database};
 use crate::{
     AppState,
     dates::rfc3339,
     feeds::{self, NotAdded},
-    folders::{self, Leaving, Renamed},
+    folders::{self, KEPT_FOR, Leaving, Renamed},
     marks::{self, Mark, now_ms},
     now, rules,
 };

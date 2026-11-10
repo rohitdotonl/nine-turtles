@@ -78,7 +78,8 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
   people in it; each device remembers which you opened. A folder you just
   made or chose in Edit opens, so you can see them in it.
 - Unsubscribing from the last person in a folder, or moving them out of it
-  in the sidebar, removes the folder too; **Undo** brings it back.
+  in the sidebar, removes the folder too; **Undo** brings it back, and so
+  does **Bring back** under Recently unsubscribed, for 30 days.
 - Someone in a folder is listed in the folder, not under **People** or
   **Publications**, which hold everyone who isn't in one.
 - A folder can hold people and publications alike.

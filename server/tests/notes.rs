@@ -399,6 +399,110 @@ async fn unsubscribing_keeps_what_was_marked_unless_asked_to_remove_it() {
 }
 
 #[tokio::test]
+async fn what_the_reader_asked_to_remove_goes_after_undo_though_the_place_is_kept() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let (other_id, other) = common::another_reader(&state).await;
+    let (feed, ids) = follow(&base, &other, &publisher().await).await;
+    send(
+        &base,
+        &other,
+        &format!("/api/articles/{}/highlights", ids[1]),
+        json!({ "quote": "soup" }),
+    )
+    .await;
+    send(
+        &base,
+        &other,
+        "/api/articles/starred",
+        json!({ "ids": [ids[2]], "starred": true }),
+    )
+    .await;
+    let (status, _) = send(
+        &base,
+        &other,
+        "/api/writers/unsubscribe",
+        json!({ "feed": feed, "remove_kept": true }),
+    )
+    .await;
+    assert!(status.is_success());
+    let now = nine_turtles::now();
+    // During Undo's ten minutes, everything is still there.
+    nine_turtles::checking::round(&state, now + 9 * 60)
+        .await
+        .unwrap();
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM notes WHERE person_id = ?",
+            other_id
+        )
+        .await,
+        1
+    );
+    // After them, the highlight and the star go; the place waits its 30 days.
+    nine_turtles::checking::round(&state, now + 11 * 60)
+        .await
+        .unwrap();
+    for (sql, left) in [
+        ("SELECT COUNT(*) FROM notes WHERE person_id = ?", 0),
+        (
+            "SELECT COUNT(*) FROM entries WHERE person_id = ? AND starred = 1",
+            0,
+        ),
+        ("SELECT COUNT(*) FROM entries WHERE person_id = ?", 5),
+    ] {
+        assert_eq!(count(&state, sql, other_id).await, left, "{sql}");
+    }
+    let (_, starred) = ask(&base, &other, "/api/articles?view=starred").await;
+    assert_eq!(titles(&starred), Vec::<String>::new());
+    // Undo would now bring back less than it says, so it's too late.
+    let (status, refused) = send(
+        &base,
+        &other,
+        &format!("/api/feeds/{feed}/resubscribe"),
+        json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(refused["error"], "too-late");
+    let (status, _) = send(
+        &base,
+        &other,
+        "/api/tidy/resubscribe",
+        json!({ "feeds": [feed] }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    // Bring back: the place and its articles, without what was removed.
+    let (status, _) = send(
+        &base,
+        &other,
+        "/api/tidy/resubscribe",
+        json!({ "feeds": [feed], "bring_back": true }),
+    )
+    .await;
+    assert!(status.is_success(), "{status}");
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM entries WHERE person_id = ?",
+            other_id
+        )
+        .await,
+        5
+    );
+    assert_eq!(
+        count(
+            &state,
+            "SELECT COUNT(*) FROM notes WHERE person_id = ?",
+            other_id
+        )
+        .await,
+        0
+    );
+}
+
+#[tokio::test]
 async fn deleting_the_reader_removes_their_notes() {
     let (base, state) = common::start_with_state(common::config()).await;
     let (other_id, other) = common::another_reader(&state).await;

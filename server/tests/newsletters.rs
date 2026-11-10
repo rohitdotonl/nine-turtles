@@ -332,12 +332,21 @@ async fn after_unsubscribing_a_senders_emails_stay_away() {
     assert_eq!(json(response).await["kept"], false);
     assert_eq!(count(&state, "SELECT COUNT(*) FROM articles").await, 0);
 
-    // A month on, an email from it is a new sign-up: the feed starts again.
-    sqlx::query("UPDATE feeds SET unsubscribed_at = unsubscribed_at - ?")
-        .bind(nine_turtles::newsletters::STAYS_AWAY_FOR + 1)
-        .execute(&state.db)
-        .await
-        .unwrap();
+    // A month on, the reader's 30 days are just over and the sender only
+    // just told: a slow sender's email still stays away (decision 0240).
+    let back = async |seconds: i64| {
+        sqlx::query("UPDATE feeds SET unsubscribed_at = unsubscribed_at - ?")
+            .bind(seconds)
+            .execute(&state.db)
+            .await
+            .unwrap();
+    };
+    back(nine_turtles::folders::KEPT_FOR + 24 * 60 * 60).await;
+    let response = post_to(&base, &to, letter(from, "6@x", "Slow")).await;
+    assert_eq!(json(response).await["kept"], false);
+
+    // A month after that, an email from it is a new sign-up: the feed starts again.
+    back(nine_turtles::newsletters::STAYS_AWAY_FOR).await;
     let response = post_to(&base, &to, letter(from, "7@x", "Welcome back")).await;
     assert_eq!(json(response).await["kept"], true);
     let feeds = get(&base, &cookie, "/api/feeds").await;

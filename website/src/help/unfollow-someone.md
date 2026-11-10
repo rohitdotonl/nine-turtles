@@ -25,9 +25,16 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
    go, such as **Remove the 2 starred articles too**.
 
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
-back exactly as they were, with what you'd read and their folders. It lasts
-ten minutes, or until you do something else. If they were the last one in a
-folder, the folder goes too, and Undo brings it back.
+back exactly as they were, with what you'd read and their folders. If they
+were the last one in a folder, the folder goes too, and Undo brings it back.
+
+## Changed your mind later?
+
+For 30 days, they wait under **Recently unsubscribed**, at the end of
+**Settings › Everyone you follow**, with the day they'll go. Press **Bring
+back** and they're back exactly as they were, folders and what you'd read
+included. Adding them again with **+ Add** does the same. After 30 days
+they're gone for good.
 
 If they have several sources (a blog and a channel, say), Unsubscribe leaves
 them all. To let go of one source only, press › beside it in Edit, then
@@ -41,10 +48,10 @@ all back.
 
 ## Good to know
 
-- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too.
-- Following someone again later starts afresh, with their articles unread.
-- For a newsletter, nine turtles also asks the sender to stop, once the ten
-  minutes to undo have passed. See
+- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too. Those go once Undo has passed; **Bring back** doesn't return them.
+- Following someone again after their 30 days starts afresh, with their articles unread.
+- For a newsletter, nine turtles also asks the sender to stop, once the 30
+  days are over. See
   <a href="/help/newsletters/">Read your newsletters here</a>.
 - **Settings › Everyone you follow** also shows who's been quiet: after six
   months with nothing new, it says "Quiet since" and the date, if you'd like

@@ -113,7 +113,8 @@ fn list() -> Vec<Value> {
             "list_feeds",
             "List feeds and folders",
             "Every feed the reader follows (id, name, address, website, folders, unread count), every folder, \
-             and feeds an assistant unsubscribed from that can still be brought back.",
+             and feeds the reader or an assistant unsubscribed from that can still be brought back \
+             (kept 30 days).",
             json!({}),
             &[],
             reading(),

@@ -36,14 +36,6 @@ struct Connected {
     last_used_at: Option<i64>,
 }
 
-#[derive(Serialize, sqlx::FromRow)]
-struct Kept {
-    feed_id: i64,
-    title: String,
-    unsubscribed_at: i64,
-    kept_until: i64,
-}
-
 /// Deletes for good, tickets and all, the disconnected assistants that Undo
 /// can't reach any more (those disconnected at or before `before`): one
 /// reader's, or (`None`) everyone's, as each background round does.
@@ -63,8 +55,9 @@ pub async fn forget_disconnected(
     .map(|_| ())
 }
 
-/// Settings: the reader's connected assistants, and the feeds an assistant
-/// unsubscribed from that can still be brought back.
+/// Settings: the reader's connected assistants. What an assistant
+/// unsubscribed from is listed with the reader's own unsubscribes, in
+/// Everyone you follow (`tidy::list`, decision 0240).
 pub async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed = async {
         forget_disconnected(&state.db, Some(person), now() - UNDO_FOR).await?;
@@ -76,22 +69,11 @@ pub async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> 
         .bind(person)
         .fetch_all(&state.db)
         .await?;
-        let kept: Vec<Kept> = sqlx::query_as(
-            "SELECT feed_id, title, unsubscribed_at, kept_until FROM subscriptions
-             WHERE person_id = ? AND kept_until IS NOT NULL AND unsubscribed_at IS NOT NULL
-                 AND cleared = 0
-             ORDER BY unsubscribed_at DESC, feed_id",
-        )
-        .bind(person)
-        .fetch_all(&state.db)
-        .await?;
-        Ok::<_, sqlx::Error>((assistants, kept))
+        Ok::<_, sqlx::Error>(assistants)
     }
     .await;
     match listed {
-        Ok((assistants, kept)) => {
-            Json(json!({ "assistants": assistants, "unsubscribed": kept })).into_response()
-        }
+        Ok(assistants) => Json(json!({ "assistants": assistants })).into_response(),
         Err(error) => database_problem("listing assistants", &error),
     }
 }

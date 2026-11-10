@@ -136,3 +136,39 @@ test("when everyone you follow couldn't load, Try again loads them, keeping the 
   await expect(page.locator("#your-feeds-heading")).toBeFocused();
   await expect(yours(page).getByRole("button", { name: "Choose…" })).toBeVisible();
 });
+
+test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and one already gone (decision 0240)", async ({ page }) => {
+  const [first, second] = await twoBlogs(page);
+  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await appReady(page);
+
+  // Unsubscribe from the first, then do something else: it waits, kept, at the end.
+  await page.getByRole("button", { name: "Choose…" }).click();
+  await page.getByRole("checkbox", { name: new RegExp(first) }).check();
+  await page.getByRole("button", { name: "Unsubscribe", exact: true }).click();
+  await yours(page).getByRole("button", { name: "Close the note" }).click();
+  const kept = yours(page).getByRole("region", { name: "Recently unsubscribed" });
+  await expect(kept.getByRole("button", { name: `Bring back ${first}` })).toBeVisible();
+  await expect(kept.getByText(/^Unsubscribed today · kept until \d+\s\w+/).first()).toBeVisible();
+  await expect(kept.getByText("Kept for 30 days, with their articles, so you can bring them back.")).toBeVisible();
+
+  // From the keyboard: Bring back, then the keyboard waits on Undo.
+  await tabTo(page, kept.getByRole("button", { name: `Bring back ${first}` }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "is back." })).toHaveText(`${first} is back.`);
+  await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
+  await expect(yours(page).getByRole("link", { name: new RegExp(`^${first}`) })).toBeVisible();
+  await expect(kept.getByRole("button", { name: `Bring back ${first}` })).toHaveCount(0);
+  // Undo unsubscribes again: they're back on the shelf.
+  await page.keyboard.press("Enter");
+  await expect(kept.getByRole("button", { name: `Bring back ${first}` })).toBeVisible();
+  await expect(yours(page).getByRole("link", { name: new RegExp(`^${second}`) })).toBeVisible();
+
+  // One cleared meanwhile: said calmly, and the keyboard stays on the shelf, not lost.
+  await page.route("**/api/tidy/resubscribe", (route) => route.fulfill({ status: 409, json: { error: "too-late" } }));
+  await yours(page).getByRole("button", { name: `Bring back ${first}` }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status").filter({ hasText: "already gone" })).toHaveText(`${first} can't be brought back: they're already gone.`);
+  await expect(page.locator(":focus")).not.toHaveCount(0);
+  await expect(page.locator("body")).not.toBeFocused();
+});

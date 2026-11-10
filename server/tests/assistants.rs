@@ -850,10 +850,11 @@ async fn a_feed_an_assistant_unsubscribes_from_is_kept_for_thirty_days() {
 
     let (answer, error) = tool(&base, key, "unsubscribe_feed", json!({ "feed_id": feed })).await;
     assert!(!error, "{answer}");
-    // Settings offers it back.
-    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    // Settings › Everyone you follow offers it back, saying an assistant did it.
+    let (_, listed) = get_json(&base, "/api/tidy/feeds", &cookie).await;
     assert_eq!(listed["unsubscribed"][0]["feed_id"], feed);
     assert_eq!(listed["unsubscribed"][0]["title"], "Kept Blog");
+    assert_eq!(listed["unsubscribed"][0]["by_assistant"], true);
 
     // Long past the screen's ten minutes, and after the reader unsubscribes
     // from another feed themselves, it's still there.
@@ -902,8 +903,15 @@ async fn a_feed_an_assistant_unsubscribes_from_is_kept_for_thirty_days() {
         .unwrap();
     let (_, error) = tool(&base, key, "resubscribe_feed", json!({ "feed_id": feed })).await;
     assert!(error, "too late");
-    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
-    assert_eq!(listed["unsubscribed"], json!([]));
+    let (_, listed) = get_json(&base, "/api/tidy/feeds", &cookie).await;
+    assert!(
+        listed["unsubscribed"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|kept| kept["feed_id"] != feed),
+        "{listed}"
+    );
 }
 
 #[tokio::test]
@@ -1031,12 +1039,12 @@ async fn a_kept_feed_added_again_comes_back_whole() {
     assert_eq!(status, StatusCode::CREATED, "{again}");
     assert_eq!(again["feed"]["id"], feed);
     assert_eq!(again["feed"]["unread"], 4);
-    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    let (_, listed) = get_json(&base, "/api/tidy/feeds", &cookie).await;
     assert_eq!(listed["unsubscribed"], json!([]));
 }
 
 #[tokio::test]
-async fn an_assistant_cant_keep_a_feed_the_reader_unsubscribed_from() {
+async fn a_feed_the_reader_unsubscribed_from_stays_theirs() {
     let base = common::start(common::config()).await;
     let cookie = common::signed_in(&base).await;
     let (_, added) = post_json(
@@ -1064,11 +1072,11 @@ async fn an_assistant_cant_keep_a_feed_the_reader_unsubscribed_from() {
     )
     .await;
     assert!(error);
-    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    let (_, listed) = get_json(&base, "/api/tidy/feeds", &cookie).await;
+    assert_eq!(listed["unsubscribed"][0]["feed_id"], feed);
     assert_eq!(
-        listed["unsubscribed"],
-        json!([]),
-        "it keeps the screen's ten minutes"
+        listed["unsubscribed"][0]["by_assistant"], false,
+        "the reader unsubscribed, not the assistant"
     );
 }
 
