@@ -12,6 +12,16 @@ const pane = (page: Page) => page.getByRole("region", { name: "Article", exact: 
 /** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
 const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
 
+/**
+ * Done, then wait until their page is back: the choice is saved by then. ("Edit Blog …"
+ * already holds the name and has no Write to, so waiting for those alone could leave
+ * while the save was still on its way, and the next page would show them unchanged.)
+ */
+async function saved(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page).toHaveURL(/\/about$/);
+}
+
 test.skip(({ isMobile }) => isMobile, "the person's page stands in the wide window's reading pane");
 
 test("Write back asks once for an address, keeps it on their page, then opens the email app", async ({ page }) => {
@@ -144,7 +154,7 @@ test("A publication has no Write back, no Write to and no email address in Edit;
   await expect(who().getByRole("textbox", { name: "Email address" })).toBeVisible();
   await who().getByRole("radio", { name: "A publication" }).check();
   await expect(who().getByRole("textbox", { name: "Email address" })).toHaveCount(0);
-  await page.getByRole("button", { name: "Done" }).click();
+  await saved(page);
   await expect(who().getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
 
@@ -169,7 +179,7 @@ test("A publication has no Write back, no Write to and no email address in Edit;
   await page.getByRole("button", { name: "Done" }).click();
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
   await editAs("A publication");
-  await page.getByRole("button", { name: "Done" }).click();
+  await saved(page);
   await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
   await editAs("A person");
   await expect(who().getByRole("textbox", { name: "Email address" })).toHaveValue("pub@pub.example");

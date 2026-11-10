@@ -7,19 +7,38 @@ decision 0021).
 
 ## For the agent that built the change
 
-If the change needs no review (see "Which review" below), skip steps 2 to 4.
+These steps keep each change to as few rounds of checks as it needs (decision 0251).
 
-1. Open the pull request and let the automatic checks run.
-2. Straight away, while the checks run (they don't need each other), start
+If the change needs no review (see "Which review" below), skip steps 3 to 5.
+
+1. **Before opening it,** bring in the latest main, and go through the full
+   reviewer's list below yourself, as if someone else had written the
+   change: the floors first (contrast in every state, including while
+   hovered, pressed or held; the keyboard's place after every step), then
+   missing tests and documents. What you find now costs no extra round.
+2. Open the pull request and let the automatic checks run. If GitHub says it
+   has a conflict, it runs no checks at all until that's fixed: fix it
+   straight away.
+3. Straight away, while the checks run (they don't need each other), start
    a **fresh** reviewer: a new agent or session with none of your
    conversation. In Claude Code that's a subagent; in another tool, a new
    session. Give it only the matching prompt below (full or light), with
    the pull request's address filled in. Don't tell it what you think is right or wrong.
-3. Wait for its findings on the pull request.
-4. For each finding: fix it, or reply on the pull request explaining why
+4. Wait for its findings and for the checks. After each push, start
+   something that tells you **the moment** the checks finish (a command
+   left running in the background that waits for them, or your tool's
+   pull-request notifications), never a timer: a result that sits unread
+   is time lost for nothing.
+5. For each finding: fix it, or reply on the pull request explaining why
    not. Fix them all, together with anything the checks found, and push
-   once: each push runs every check again. Then tell the owner the review
-   is done and what changed.
+   once: each push runs every check again. A decision number another change
+   took in the meantime is renumbered in that same push, never in a push of
+   its own (`docs/decisions/README.md`). Then tell the owner the review is
+   done and what changed.
+6. **Just before merging,** run `node scripts/decisions.mjs --free`: it
+   fetches main and fails if another change has since taken one of your
+   decision numbers. Each change's checks ran before the other was merged,
+   so only this catches two that took the same number at once.
 
 If the change is large, a second round of review after the fixes is
 worthwhile; say so to the owner if you skip it.
