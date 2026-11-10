@@ -2,7 +2,7 @@
 
 > **nine turtles is a reader for the small web: a quiet place to read the people worth knowing, and write back to them.**
 
-*What changed and when: each change has its decision note, one line each with `node scripts/decisions.mjs` (a list here clashed whenever two changes were made at once, decision 0114).*
+*What changed and when: each change has its own note in [`decisions/`](decisions/README.md), and the first line of each note says what it decided. (A list here clashed whenever two changes were made at once, decision 0114.)*
 
 ## Mission
 

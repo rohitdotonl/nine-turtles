@@ -13,10 +13,12 @@ at the top. Notes that later ones have replaced may be folded into one
 summary note, one line each (as 0061 did); their full text stays in the
 repository's history.
 
-Each note says what it decided in one line, under its title:
+Each note says what it decided in one line, right under its title:
 `**In one line:** …`. There is no shared list to add to, so two changes
-made at once never clash over one (decision 0114). To see them all, one
-line each, oldest first:
+made at once never clash over one (decision 0114). To browse them, open
+this folder on GitHub: the notes are listed by number and name, and each
+one's first line says what it decided. An agent lists them all, one line
+each, oldest first:
 
 ```sh
 node scripts/decisions.mjs            # every decision

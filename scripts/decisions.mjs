@@ -15,10 +15,10 @@ const notes = readdirSync(folder)
   .filter((name) => /^\d{4}-.+\.md$/.test(name))
   .sort()
   .map((name) => {
-    const line = readFileSync(join(folder, name), "utf8")
-      .split("\n")
-      .find((each) => each.startsWith(marker));
-    return { number: name.slice(0, 4), name, line: line?.slice(marker.length) };
+    // The line sits right under the title: line 3, after one blank line.
+    const third = readFileSync(join(folder, name), "utf8").split("\n")[2] ?? "";
+    const line = third.startsWith(marker) ? third.slice(marker.length).trim() : "";
+    return { number: name.slice(0, 4), name, line };
   });
 
 const [argument] = process.argv.slice(2);
@@ -26,7 +26,7 @@ if (argument === "--check") {
   const problems = [];
   const seen = new Map();
   for (const note of notes) {
-    if (!note.line) problems.push(`docs/decisions/${note.name} has no "In one line:" under its title.`);
+    if (!note.line) problems.push(`docs/decisions/${note.name} needs "${marker}…" on its third line, under its title.`);
     if (seen.has(note.number)) {
       problems.push(`${seen.get(note.number)} and ${note.name} share number ${note.number}: give the newer one the next free number.`);
     }
@@ -41,6 +41,6 @@ if (argument === "--check") {
   const wanted = argument?.toLowerCase();
   for (const note of notes) {
     if (wanted && !`${note.name} ${note.line}`.toLowerCase().includes(wanted)) continue;
-    console.log(`${note.number}  ${note.line ?? "(no line yet)"}`);
+    console.log(`${note.number}  ${note.line || "(no line yet)"}`);
   }
 }
