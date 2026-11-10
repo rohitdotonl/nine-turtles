@@ -6,8 +6,8 @@
   When the two are in different folders it asks which folders they should
   be in, every one ticked to start with. Either way the sources become one
   person, with Undo on the line that follows. It opens in place, under its
-  button, and never inside a form of its own, so it can sit in Edit's. For
-  someone with one source it opens from a quiet line near Edit's foot
+  button, and never inside a form of its own. For
+  someone with one source it opens from a quiet line under their settings
   instead (`invite`): one link that says what it adds, "+ Add their
   newsletter, videos or podcast" (decision 0241).
 -->
@@ -24,6 +24,7 @@
     name,
     library,
     invite = false,
+    quiet = false,
     onJoined,
   }: {
     feed: Feed;
@@ -31,6 +32,8 @@
     library: LoadedLibrary;
     /** Someone with one source: a line saying why, and a link rather than a button. */
     invite?: boolean;
+    /** On their page, under their settings: "+ Add a source" as a quiet link too, never a bordered button. */
+    quiet?: boolean;
     /** Joined: the line with Undo, and the place the person's row now opens. */
     onJoined: (done: Notice, lead: number) => void;
   } = $props();
@@ -163,8 +166,8 @@
   }
 </script>
 
-{#if !open && invite}
-  <button type="button" class="text-link self-start" bind:this={opener} onclick={show}>+ Add their newsletter, videos or podcast</button>
+{#if !open && (invite || quiet)}
+  <button type="button" class="text-link self-start" bind:this={opener} onclick={show}>{invite ? "+ Add their newsletter, videos or podcast" : "+ Add a source"}</button>
 {:else if !open}
   <button
     type="button"

@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 5 and 15
-updated: 2026-11-10
+updated: 2026-11-11
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -51,10 +51,9 @@ readers too.
 
 1. Choose the person in the sidebar, and press their name at the top of
    their list to open their page.
-2. Press **Edit**.
-3. Under **Folders**, tick the folders they belong in. To make a new one,
-   type its name in **New folder…**
-4. Press **Done**.
+2. In their settings at the foot of the page, press **Folders**.
+3. Tick the folders they belong in; each one counts at once. To make a new
+   one, type its name in **New folder…** and press <kbd>Enter</kbd>.
 
 There's no "new folder" button in the sidebar: a folder is made when you put
 someone in it.
@@ -82,7 +81,7 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
 
 - Folders start closed in the sidebar. Press a folder's arrow to show the
   people in it; each device remembers which you opened. A folder you just
-  made or chose in Edit opens, so you can see them in it.
+  made or chose on their page opens, so you can see them in it.
 - Unsubscribing from the last person in a folder, or moving them out of it
   in the sidebar, removes the folder too; **Undo** brings it back, and so
   does **Bring back** under Recently unsubscribed, for 30 days.

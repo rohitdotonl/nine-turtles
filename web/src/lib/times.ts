@@ -99,7 +99,7 @@ export function until(at: number, now: Date = new Date()): string {
 
 /**
  * When a paused feed was paused (SPEC section 15): "Paused today.", and
- * "Paused on 23 Oct." in Edit, or "Paused since 23 Oct." on its list and page.
+ * "Paused on 23 Oct.", or "Paused since 23 Oct." on its list and page.
  */
 export function pausedSince(at: number, now: Date = new Date(), word: "on" | "since" = "on"): string {
   const date = new Date(at * 1000);

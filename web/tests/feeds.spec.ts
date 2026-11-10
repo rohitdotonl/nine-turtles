@@ -346,7 +346,7 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await expect(asked).toBeVisible();
   await expect(page.getByRole("heading", { name: `Blog ${name} is…` })).toBeVisible();
   await expect(field(page)).toHaveCount(0);
-  await expect(asked.getByText("You can change this later in Edit.")).toBeVisible();
+  await expect(asked.getByText("You can change this later on their page.")).toBeVisible();
   await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeChecked();
   await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();

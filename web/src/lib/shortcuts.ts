@@ -151,7 +151,7 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       // The folder whose list this is, else the person or publication.
       if (!scene.onList || scene.searching) break;
       if (scene.folder !== undefined) hands.go({ kind: "edit-folder", id: scene.folder });
-      else if (scene.feed !== undefined) hands.go({ kind: "edit-feed", id: scene.feed });
+      else if (scene.feed !== undefined) hands.go({ kind: "about", id: scene.feed, settings: true });
       break;
     case "pane":
       if (!scene.reading) hands.movePane(action.step);

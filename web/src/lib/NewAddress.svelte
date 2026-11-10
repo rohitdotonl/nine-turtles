@@ -1,7 +1,7 @@
 <!--
   Find new address, the one way it works wherever it's offered (decision
   0106): on a card in Everyone you follow (SPEC section 15), in the quiet line above a
-  failing feed's list (section 6) and in Edit feed (section 15). The place
+  failing feed's list (section 6) and on their page (section 15). The place
   draws its own "Find new address" button and calls `find()`; this shows
   what came back, in place:
 

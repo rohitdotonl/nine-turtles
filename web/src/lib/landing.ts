@@ -41,7 +41,7 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
   if (place.kind === "muted") return headings.muted;
   if (place.kind === "readers") return headings.readers;
   if (place.kind === "add-feed") return headings.add;
-  if (place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source") return headings.who;
+  if (place.kind === "about") return headings.who;
   if (place.kind === "new-to-feeds") return scene.phone ? headings.list : headings.sheet;
   if (scene.sheetShown) return headings.sheet;
   if (scene.welcome) return headings.welcome;

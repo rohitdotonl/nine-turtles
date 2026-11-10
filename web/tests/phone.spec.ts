@@ -343,7 +343,7 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
   });
 
-  test("their page is a screen of its own, with ‹ back to their list; Edit turns it into its settings and its X back", async ({ page }) => {
+  test("their page is a screen of its own, with ‹ back to their list, and its settings at its foot", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
@@ -356,57 +356,18 @@ test.describe("on a phone", () => {
     await expect(back).toBeVisible();
     expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
-    await page.getByRole("button", { name: "Edit Reading Room" }).click();
-    const title = page.getByRole("heading", { level: 2, name: "Edit Reading Room" });
-    await expect(title).toBeVisible();
-    // Finished as Add is (decision 0243): an X at the right of the title in Cancel's place, and Done the full width
-    // at the screen's foot, under Unsubscribe.
-    await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
-    const close = page.getByRole("button", { name: "Close" });
-    const done = page.getByRole("button", { name: "Done" });
-    await expect(done).toBeVisible();
-    // With folders the settings can run past the screen: at their end, Unsubscribe sits above Done.
+    // Its settings are on the same page, at its foot: no Edit, X or Done, and nothing runs off the side.
+    await expect(page.getByRole("button", { name: /^(Edit Reading Room|Done|Cancel)$/ })).toHaveCount(0);
     await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).scrollIntoViewIfNeeded();
-    const [titleBox, closeBox, doneBox, leaveBox] = await Promise.all([
-      title.boundingBox(),
-      close.boundingBox(),
-      done.boundingBox(),
-      page.getByRole("button", { name: "Unsubscribe from Reading Room" }).boundingBox(),
-    ]);
-    expect(Math.abs(closeBox!.y + closeBox!.height / 2 - (titleBox!.y + titleBox!.height / 2))).toBeLessThan(6);
-    expect(closeBox!.width).toBeGreaterThanOrEqual(44);
-    expect(doneBox!.y).toBeGreaterThan(leaveBox!.y + leaveBox!.height);
-    expect(doneBox!.width).toBeGreaterThan(page.viewportSize()!.width - 48);
-    expect(doneBox!.y + doneBox!.height).toBeGreaterThan(page.viewportSize()!.height - 80);
-    // Nothing runs off the side of the phone.
+    await expect(page.getByRole("region", { name: "Settings" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // On a short screen, a field the keyboard reaches scrolls clear of Done, never behind it (the first floor).
-    await page.setViewportSize({ width: page.viewportSize()!.width, height: 480 });
-    await page.getByLabel("Name").focus();
-    for (let step = 0; step < 30; step++) {
-      if (await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).evaluate((element) => element === document.activeElement)) break;
-      await page.keyboard.press("Tab");
-    }
-    const [reached, foot] = await Promise.all([
-      page.getByRole("button", { name: "Unsubscribe from Reading Room" }).boundingBox(),
-      page.locator(".page-action").boundingBox(),
-    ]);
-    expect(reached!.y + reached!.height).toBeLessThanOrEqual(foot!.y);
-    // Leaving by Back keeps what was typed, as on a computer (decision 0235)...
-    await page.getByLabel("Name").fill("Reading Room, renamed");
-    await page.goBack();
-    await expect(page).toHaveURL(/\/about$/);
-    await page.getByRole("button", { name: "Edit Reading Room" }).click();
-    await expect(page.getByLabel("Name")).toHaveValue("Reading Room, renamed");
-    await expect(page.getByText("Not saved yet.")).toBeVisible();
-    // ...and the X stands for Cancel: what was typed goes.
-    await close.click();
-    await expect(page).toHaveURL(/\/about$/);
-    await page.getByRole("button", { name: "Edit Reading Room" }).click();
-    await expect(page.getByLabel("Name")).toHaveValue("Reading Room");
-    await expect(page.getByText("Not saved yet.")).toHaveCount(0);
-    await close.click();
-    await expect(page).toHaveURL(/\/about$/);
+    // A new name is kept as the field is left.
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room, renamed");
+    await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
+    await expect(page.getByRole("heading", { level: 2, name: "Reading Room, renamed", exact: true })).toBeVisible();
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room");
+    await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
+    await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();
 
     await back.click();
     await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
@@ -494,7 +455,7 @@ test.describe("on a phone", () => {
     expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
 
-  test("a source's own settings keep ‹ back to Edit and have Done along the screen's foot (decision 0243)", async ({ page }) => {
+  test("an old source-settings address opens their page, with each source and its Take out on the phone's screen", async ({ page }) => {
     await openHome(page);
     const stamp = Date.now();
     const first = await follow(page, `${FEED_SITE}/blog/src-a-${stamp}/`);
@@ -503,14 +464,14 @@ test.describe("on a phone", () => {
     expect(joined.ok()).toBe(true);
     await page.goto(new URL(`/people/${first}/sources/${second}`, FEEDS_APP).href);
     await appReady(page);
-    await expect(page.getByRole("button", { name: `Edit Ana ${stamp}` })).toBeVisible();
-    const done = page.getByRole("button", { name: "Done" });
-    const [doneBox, takeOut] = await Promise.all([done.boundingBox(), page.getByRole("button", { name: `Take out of Ana ${stamp}` }).boundingBox()]);
-    expect(doneBox!.y).toBeGreaterThan(takeOut!.y + takeOut!.height);
-    expect(doneBox!.width).toBeGreaterThan(page.viewportSize()!.width - 48);
-    expect(doneBox!.y + doneBox!.height).toBeGreaterThan(page.viewportSize()!.height - 80);
-    await done.click();
-    await expect(page).toHaveURL(new RegExp(`/people/${first}/edit$`));
+    await expect(page).toHaveURL(new RegExp(`/people/${first}/about$`));
+    const sources = page.getByRole("region", { name: "Sources" });
+    await expect(sources.getByRole("button", { name: /^Take out / })).toHaveCount(2);
+    for (const each of await sources.getByRole("button", { name: /^Take out / }).all()) {
+      const box = (await each.boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    }
   });
 
   test("a folder on the feeds screen has no arrow and always lists its feeds, a step in", async ({ page }) => {
@@ -518,12 +479,12 @@ test.describe("on a phone", () => {
     const name = `foldered-${Date.now()}`;
     const folder = `Shelf ${Date.now()}`;
     const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-    await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
     await appReady(page);
+    await page.getByRole("button", { name: /^Folders/ }).click();
     await page.getByLabel("New folder").fill(folder);
-    await page.getByRole("button", { name: "Done" }).click();
-    await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+    await page.getByLabel("New folder").press("Enter");
+    await expect(page.getByRole("checkbox", { name: folder })).toBeChecked();
 
     await page.goto(new URL("/", FEEDS_APP).href);
     await appReady(page);

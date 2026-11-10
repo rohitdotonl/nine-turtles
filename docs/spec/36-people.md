@@ -2,7 +2,8 @@
 
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
 Decision 0146 made people; decision 0163 (agreed with the owner on 3
-November 2026) added publications, one page for both, and Edit on that page.
+November 2026) added publications and one page for both; decision 0254 made
+that one page hold their settings too, with no Edit mode.
 PLAN.md → V1, item 1.*
 
 **What it does**
@@ -38,7 +39,7 @@ PLAN.md → V1, item 1.*
   "Tomas Berg is…" with one of two tiles (**A person**, "Someone you might
   write back to."; **A publication**, "Anything you only read or watch, and
   won't write back to."), with the guess already chosen. They can change it later in
-  Edit (for one source only, and not for the last source left of someone
+  their page's settings (for one source only, and not for the last source left of someone
   joined, who stays a person). Feeds followed before this change get their
   guess the next time the sidebar loads; an imported feed gets it once
   nine turtles has checked it for the first time, so the guess sees its
@@ -49,16 +50,16 @@ PLAN.md → V1, item 1.*
   name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
   from Tomas"). A role or placeholder ("admin", "editor", "staff" and the
   like) is never taken for a name. When the feed doesn't name one author,
-  the blog's title stays, and Edit fixes the rest. A name the reader gave (in
-  Edit, or in the app they imported from) always wins: nine turtles only renames a person still called by
+  the blog's title stays, and their Name setting fixes the rest. A name the reader gave (on
+  their page, or in the app they imported from) always wins: nine turtles only renames a person still called by
   their feed's own title (as the publisher last gave it, never a name brought
   from another app), once, when it first guesses them; people followed
   before this change are renamed the same way, once, at their feed's next
   check. An Atom feed that names its author once, for all its entries, signs
   each of them, so it counts as one author for the person-or-publication
   guess too (an organisation named as a feed's only author is guessed a
-  person, and Edit fixes it). Only "No, a publication" in the question after
-  adding gives back the feed's title; changing **This is** in Edit later
+  person, and their page fixes it). Only "No, a publication" in the question after
+  adding gives back the feed's title; changing **This is** on their page later
   keeps whatever name it has.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their sources (`/people/12`
@@ -70,75 +71,68 @@ PLAN.md → V1, item 1.*
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.
 - **Their page,** the same for a person and a publication (but a
-  publication has no Write to, decision 0192)
-  (`/people/12/about`): opened by pressing their name at the top of their
-  list ("Alpha ›"), by their name under an article's title, by **Info about
-  Alpha** in the list's More menu or a row's own menu, or by the `i` key
-  (in any list, for the chosen article's writer; decision 0214). On a computer it opens in the reading area beside their list,
-  where an article would, in the article's own column (decision 0219); on a phone it's a screen of its own, with ‹ back to
-  their list. It shows their name with **Edit** beside it, a quiet underlined
-  word (44px tall and wide to touch), so Write to is the page's one strong button (decision 0215); for one
-  source whose own title isn't their name, that title under it, in the
-  reading serif ("Notes from Tomas" under Tomas Berg); while a source is
-  paused, the line saying so with Resume (section 15, decision 0239); under that, for a
-  person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
-  address under it once nine turtles knows it (section 37; the owner's core
-  path, point 9); then your private note on them (section 42); then
-  **Your highlights**, the words you highlighted in their
-  writing (the newest article first, at most 20; Notes has them all), each
-  as at an article's end, with "From {title} · {day}" (the title opens the
-  article) and your note on it; it shows only when it has something, an
-  untitled piece by its opening words (section 6); if they can't
-  be loaded, one quiet line says "Your highlights from their writing
-  couldn't be loaded. Open the page again to try once more." (decision
-  0211). There is no Lately, their newest pieces: their list already shows
-  them, beside the page on a computer and one step back on a phone
-  (decision 0215). Then their sources, each by its kind (Blog, Video,
-  Newsletter, Podcast) with a link to the publisher's own site (a blog by its
-  website, "alpha.example"; a channel or newsletter by its own name). The
-  muted line that said what they are, their folders and since when ("A
-  person · in Friends · following since March 2026") and the separate Email
-  line went (point 10). At its foot, a quiet link,
-  **Hide articles about…**, opens Settings › Hiding with the field set to
-  them ("Only from …", section 27).
-- **Edit** (`/people/12/edit`) turns the same
-  page into their settings. **Done** saves and turns it back; **Cancel**
-  turns it back unchanged. Changes not saved yet are kept on this device
-  (decision 0235): Escape, Back or a press on an article leaves them
-  waiting, and coming back shows them, with "**Not saved yet.** Going
-  elsewhere keeps these changes here for you." under the title; Cancel is
-  the one way to throw them away. On a phone, Edit finishes as + Add and
-  Edit folder do (decision 0243): an **×** at the right of the title in
-  Cancel's place (it throws the changes away, as Cancel does), and **Done**
-  the full width at the screen's foot, under Unsubscribe, within thumb
-  reach. Top to bottom (the owner's core path,
-  points 11 and 12):
-  - **Name**;
-  - for one source, **This is: A person / A publication**;
-  - for a person, **Email address** (where Write back writes to them,
-    section 37), under This is: a publication has no Write back, so no
-    address, and the field goes as soon as A publication is chosen, taking
-    away only what's below the choice (decision 0192);
-  - **Folders** (one list for all their sources: Done puts every source in
-    exactly those);
-  - for one source, its settings right here in Edit: **Pause for a while**
-    (and a YouTube channel's two switches);
-  - for someone with two or more sources, their **Sources**, each a row
-    whose › opens that source's own settings, and **+ Add a source** under
-    them; for a person with one source, no Sources heading, only one link
-    near the foot that says what it adds, **+ Add their newsletter, videos or
-    podcast**, which opens the same box (decision 0241);
-  - at the foot, **Unsubscribe from Alpha** in red words, which leaves every
+  publication has no Write to, decision 0192), one page with no Edit mode
+  (decision 0254) (`/people/12/about`): opened by pressing their name at
+  the top of their list ("Alpha ›"), by their name under an article's title
+  (underlined, faintly), by **Info about Alpha** in the list's More menu or
+  a row's own menu, or by the `i` key (in any list, for the chosen
+  article's writer; decision 0214). On a computer it opens in the reading
+  area beside their list, where an article would, in the article's own
+  column (decision 0219), under the article's bar with an **×** at its
+  right end (and Escape) back to their list; on a phone it's a screen of its
+  own, with ‹ back to their list. Top to bottom:
+  - **Their name**, large, as an article's title is; under it **where they
+    publish**, each place a link to its own website (a blog by its website,
+    "alpha.example"; a channel or newsletter by its own name; one called
+    just what they are by what it is, "Website" or "YouTube channel");
+  - while a source is paused, the line saying so with Resume (section 15,
+    decision 0239); while one isn't working, the line naming it with Find
+    new address (section 15);
+  - for a person, **Write to Tomas Berg**, the solid ink button with the
+    paper plane, with the address under it once nine turtles knows it
+    (section 37), and **Change** beside the address, which opens the same
+    box as Write back's, filled with it, to correct it (Save, Not now);
+  - **Your note** (section 42), "Add a note…" while there's none;
+  - **Your highlights**, the words you highlighted in their writing (the
+    newest article first, at most 20; Notes has them all), each as at an
+    article's end, with "From {title} · {day}" (the title opens the
+    article) and your note on it, an untitled piece by its opening words
+    (section 6); with none, "Nothing highlighted yet." and "Words you
+    highlight in their writing gather here."; if they can't be loaded, one
+    quiet line says "Your highlights from their writing couldn't be loaded.
+    Open the page again to try once more." (decision 0211). There is no
+    Lately: their list already shows their newest (decision 0215);
+  - **Settings**, each changing the moment it's touched, with no Save,
+    Cancel or Done (decision 0254):
+    - **Name**, kept on Enter or on leaving the field, with "Saved." under
+      it; Escape while typing puts it back. An empty name isn't kept
+      ("Give them a name.");
+    - for one source, **This is: A person / A publication**; A publication
+      takes Write to and its address away at once (decision 0192);
+    - **Folders**, the folders they're in, in words ("1 and Friends",
+      "None"); pressed, every folder opens under it in place as a tick
+      list, each tick counting at once, with **New folder…** as its last
+      row (Enter makes it and puts them in it; the sidebar opens it). One
+      list for all their sources;
+    - **Pause for a while**, every source of theirs at once;
+    - for a YouTube channel on its own, **Include Shorts** and **Include
+      live streams** (section 38);
+    - **Hide articles about… ›**, which opens Settings › Hiding with the
+      field set to them ("Only from …", section 27); its back button then
+      reads "‹ Alpha" and leads back to their page;
+  - for someone with two or more sources, **Sources**: each by its name
+    over its kind (Blog, Video, Newsletter, Podcast, read from the feed and
+    no longer the reader's to correct, decision 0183), with **Take out** at
+    its end (it becomes a person or publication of its own, guessed afresh,
+    with Undo), and a channel's two switches under it;
+  - **+ Add a source** (for a person with one source, **+ Add their
+    newsletter, videos or podcast**, decision 0241);
+  - apart, **Unsubscribe from Alpha** in red words, which leaves every
     source of theirs at once, with Undo.
-- **A source's settings** (`/people/12/sources/34`, from Edit's ›), titled
-  by its **kind** (read from the feed: a newsletter, a YouTube channel is
-  Video, a feed with any episode is Podcast, anything else Blog; no longer
-  the reader's to correct, decision 0183): YouTube's Include Shorts and Include live streams (section 38), Pause for a
-  while, **Find new address** while it's
-  failing (section 15), and at the foot **Take out of Alpha**: it becomes a
-  person or publication of its own, guessed afresh, with Undo. Done saves
-  and goes back to Edit; on a phone it's the full width at the screen's
-  foot, as on Edit (decision 0243).
+
+  The old addresses for Edit (`/people/12/edit`) and a source's settings
+  (`/people/12/sources/34`) open their page with the keyboard on Name, and
+  the address bar is tidied to `…/about`; so does `e` in their list.
 - **+ Add a source** opens in place: choose someone already followed, or
   paste the address of their blog, channel or newsletter (followed as + Add
   would). If the address offers several feeds, the choices show first. If
@@ -169,8 +163,7 @@ PLAN.md → V1, item 1.*
   the person's list with "Alpha is one person now · Undo", which makes the
   folder again with everything in it, and its rules.
 - **Addresses:** `/people/12` and `/publications/7` for a list, `…/about`
-  for the page, `…/edit` for Edit, `/people/12/sources/34` for a source's
-  settings. Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
+  for the page (`…/edit` and `/people/12/sources/34` open it too). Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
   the address bar is tidied to the new one. An address for someone the
   reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
@@ -190,13 +183,13 @@ PLAN.md → V1, item 1.*
 2. Press a person's name at the top of their list: their page opens beside
    the list (on a phone, as its own screen), with **Write to …** under
    their name and their sources, and no muted line.
-3. Press **Edit**, change **This is** to A publication, press **Done**: the
-   row moves under Publications.
-4. In Edit, press **+ Add a source** and choose someone in another folder:
+3. On their page, under Settings, choose **This is: A publication**: the
+   row moves under Publications at once, and Write to goes.
+4. On their page, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:
    it asks which folders, all ticked. Join: one row, both lists in one, each
    row labelled by kind. Undo: two rows again.
-5. In Edit on that person, press › on a source, then **Take out of …**: two
-   rows again. Undo joins them back.
+5. On that person's page, press **Take out** on a source's row under
+   Sources: two rows again. Undo joins them back.
 6. Press **Unsubscribe from …** on a person with two sources: the row goes.
    Undo: it's back with both.
 7. Make a folder holding two sources, open Edit folder, tick **This is one

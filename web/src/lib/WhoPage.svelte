@@ -1,37 +1,36 @@
 <!--
-  A person's or publication's page (SPEC section 36, decision 0163): the same
-  for both. On a computer it opens in the reading area, beside their list,
-  where an article would; on a phone, as a screen of its own, with "‹" back
-  to their list. Opened by their name at the top of the list, "Info about …" in
-  the list's More menu, or the i key.
+  A person's or publication's page (SPEC section 36): one page, the same for
+  both, with no Edit mode. On a computer it opens in the reading area, beside
+  their list, where an article would; on a phone, as a screen of its own,
+  with "‹" back to their list. Opened by their name at the top of the list,
+  "Info about …" in the list's More menu, or the i key; `e` (and the old
+  Edit addresses) open it with the keyboard on their Name.
 
-  Visiting: their name in Literata with a quiet underlined Edit beside it, so
-  Write to is the page's one strong button (decision 0215), their
-  blog's own title under it when that isn't their name (one source), then,
-  while a source is paused, the line saying so with Resume (PausedLine), then
-  "Write to Tomas Berg", the solid button with the paper plane, with the
-  address under it (WriteBack, the owner's core path, points 9 and 10), then
-  the reader's private note on them (SPEC section 42), then Your highlights
-  from their writing (TheirReading, decision 0211; Lately went in 0215, as
-  their list already shows their newest), then their
-  sources, each by what it is (Blog, Video, Newsletter, Podcast) with a link
-  to the publisher's own site, then a quiet "Hide articles about…" (SPEC
-  section 27). No
-  picture and no color. Edit turns the same page into its settings
-  (WhoEdit), and a person's source opens its own settings (SourcePage).
+  It reads as a book's title page, then its pages, then its colophon. First
+  who they are: their name, the one large thing on the screen, set as an
+  article's title is; under it, where they publish, each place a link to the
+  publisher's own site; a paused or failing source's line; and Write to, the
+  page's one solid button, with the address under it (Change beside it).
+  Then what's yours of them, where the eye rests: your note and the words
+  you highlighted, in the reading serif. Then, quieter, apart, their
+  settings as Settings' rows (WhoSettings, TheirPlaces), each changing as
+  it's touched. No picture and no color.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
+  import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
-  import SourcePage from "./SourcePage.svelte";
+  import FailingLine from "./FailingLine.svelte";
+  import TheirPlaces from "./TheirPlaces.svelte";
   import TheirReading from "./TheirReading.svelte";
-  import WhoEdit from "./WhoEdit.svelte";
+  import WhoSettings from "./WhoSettings.svelte";
   import type { Notice } from "./feeds";
   import type { Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
-  import { PLACE_NAMES, placeShownAs, placesOf } from "./people";
+  import { placeShownAs, placesOf } from "./people";
   import type { Route } from "./router";
   import type { Article, Feed } from "./shapes";
 
@@ -49,7 +48,7 @@
     onFolders,
     onOpen,
   }: {
-    route: Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }>;
+    route: Extract<Route, { kind: "about" }>;
     /** Their row's place: the one their address and list open at. */
     feed: Feed;
     library: LoadedLibrary;
@@ -62,9 +61,9 @@
     onHide: () => void;
     /** Find new address moved a source. */
     onMoved: (source: Feed, after: Sick) => void;
-    /** Edit or a source's settings were saved: their list refreshes (an unpaused source's newest come back). */
+    /** A setting was saved: their list refreshes (an unpaused source's newest come back). */
     onSaved: () => void;
-    /** Edit put them in a folder just made or chosen: the sidebar opens it. */
+    /** A folder just made or chosen: the sidebar opens it. */
     onFolders?: (folders: number[]) => void;
     /** A piece of theirs pressed in Your highlights: it opens, in its list. */
     onOpen?: (article: Article) => void;
@@ -72,108 +71,144 @@
 
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
-  /** One source whose own title isn't their name ("Notes from Tomas" under Tomas Berg): it shows under the name. */
-  let ownTitle = $derived.by(() => {
-    const title = places.length === 1 ? places[0]?.siteTitle : undefined;
-    return title && title.toLowerCase() !== name.toLowerCase() ? title : undefined;
-  });
-  let source = $derived(route.kind === "edit-source" ? places.find((place) => place.id === route.source) : undefined);
-  const about = $derived({ kind: "about", id: feed.id } as const);
-  // Its own name for screen readers, never the same as their list's beside it (which is their name alone).
-  let label = $derived(route.kind === "about" ? `About ${name}` : route.kind === "edit-feed" ? `Edit ${name}` : `Source settings for ${name}`);
+  let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
+  /** A place by its own name; one called just what they are ("xkcd.com" under xkcd.com) by what it is, so the line never repeats the name. */
+  function placeWords(place: Feed): string {
+    const shown = placeShownAs(place);
+    if (shown.trim().toLowerCase() !== name.trim().toLowerCase()) return shown;
+    if (place.sortsVideos) return "YouTube channel";
+    return { blog: "Website", video: "Videos", newsletter: "Newsletter", podcast: "Podcast" }[place.place ?? "blog"];
+  }
   const joined = (done: Notice, lead: number) => go({ kind: "feed", id: lead }, done);
+
+  // `e` and the old Edit addresses: the same page, with the keyboard on their Name.
+  let nameField: HTMLInputElement | undefined = $state();
+  let scroller: HTMLDivElement | undefined = $state();
+  $effect(() => {
+    if (!route.settings) return;
+    void tick().then(() => {
+      if (!nameField || !scroller) return;
+      // Only the page's own scroll moves (scrollIntoView would nudge the whole window too), the field at its middle.
+      const field = nameField.getBoundingClientRect();
+      const area = scroller.getBoundingClientRect();
+      scroller.scrollTop += field.top - area.top - (area.height - field.height) / 2;
+      nameField.focus({ preventScroll: true });
+    });
+  });
 </script>
 
-<!-- On a phone, Edit and a source's settings end with Done at the screen's foot, so nothing pads below it, and a field the
-  keyboard reaches scrolls clear of Done rather than behind it (decision 0243, the first floor's visible focus). -->
-<section aria-label={label} class={["who-page flex min-w-0 flex-1 flex-col overflow-y-auto bg-paper", phone ? ["px-5", route.kind === "edit-feed" && "pt-3", route.kind === "about" ? "pb-10" : "scroll-pb-24"] : "reading-top scroll-gutter px-5 pb-16 md:px-16"]}>
+<section aria-label="About {name}" class="who-page flex min-w-0 flex-1 flex-col bg-paper">
+  {#if !phone}
+    <!-- The reading area's own bar, as an article's: on its right, where the article's tools end, the way back to their list. -->
+    <div class="reading-bar pane-bar relative z-10 justify-end pr-2">
+      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title="Close (Esc)" onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
+    </div>
+  {/if}
+  <!-- Its hairline under the bar once the page has scrolled, as an article's (decision 0040). -->
+  <div use:edge bind:this={scroller} class={["scroller relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "px-5 pb-12" : "scroll-gutter px-5 pt-3 pb-16 md:px-16"]}>
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : "reading-column"}>
-  <div class={["flex w-full max-w-[36rem] flex-col gap-6 font-sans text-base", phone && "flex-1"]}>
-    {#if phone && route.kind === "about"}
-      <!-- One top (DESIGN.md → "The system"): Back in the top line's height, the name on the line under it. -->
-      <div class="top-back -mb-6"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" />{name}</button></div>
+  <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
+    {#if phone}
+      <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
+      <div class="top-back"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" />{name}</button></div>
     {/if}
-    {#if route.kind === "edit-feed"}
-      <WhoEdit
-        {feed}
-        folders={library.folders}
-        {library}
-        {phone}
-        bind:heading
-        onDone={(saved) => (saved && onSaved(), go(about))}
-        onSource={(id) => go({ kind: "edit-source", id: feed.id, source: id })}
-        {onUnsubscribe}
-        onPeople={joined}
-        onMoved={(after) => onMoved(feed, after)}
-        {onFolders}
-      />
-    {:else if route.kind === "edit-source" && source}
-      {#key source.id}
-        <SourcePage
-          {source}
-          {name}
-          {library}
-          {phone}
-          bind:heading
-          onDone={(saved) => (saved && onSaved(), go({ kind: "edit-feed", id: feed.id }))}
-          onPeople={(done, lead) => joined(done, library.rowOf(lead))}
-          onMoved={(after) => onMoved(source!, after)}
-        />
-      {/key}
-    {:else}
-      <div class="flex flex-col gap-2">
-        <div class={["flex justify-between gap-4", phone ? "top-title" : "items-start"]}>
-          <!-- The page's heading, at every place's title size (DESIGN.md → "The system"). -->
-          <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-display text-heading font-semibold break-words text-ink">{name}</h2>
-          <button type="button" class="text-link min-w-11 shrink-0 justify-end" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
-        </div>
-        {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
+
+    <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->
+    <header class={["flex flex-col", phone ? "pt-2" : ""]}>
+      <h2 bind:this={heading} tabindex="-1" class="who-name">{name}</h2>
+      <p class="who-places">
+        {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only"> (opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}
+      </p>
+      <div class="mt-6 flex flex-col gap-3 empty:hidden">
+        {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}
+        <!-- Unkeyed, so a source that just moved to a new number keeps its line saying so (decision 0106). -->
+        {#each places as place}<FailingLine feed={place} subject={placeShownAs(place)} label="Find new address" onMoved={(after) => onMoved(place, after)} />{/each}
       </div>
-      <!-- Paused, it says so here as above their list, with Resume (decision 0239). -->
-      {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}
-      <WriteBack feedId={feed.id} {library} />
-      <!-- The reader's private note on them (SPEC section 42). -->
+      {#if person}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
+    </header>
+
+    <!-- What's yours of them: where the eye rests. -->
+    <div class="mt-12 flex flex-col gap-10">
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
-      <!-- Your highlights from their writing (decision 0211). -->
       {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
-      <div class="flex flex-col gap-2">
-        <h3 class="label">{places.length > 1 ? "Sources" : "Source"}</h3>
-        <dl class="who-facts">
-          {#each places as place (place.id)}
-            <dt>{PLACE_NAMES[place.place ?? "blog"]}</dt>
-            <dd>
-              {#if place.siteUrl}
-                <a href={place.siteUrl} target="_blank" rel="noopener noreferrer" class="underline decoration-1 underline-offset-4">{placeShownAs(place)}<span class="sr-only"> (opens in a new tab)</span></a>
-              {:else}
-                {placeShownAs(place)}
-              {/if}
-            </dd>
-          {/each}
-        </dl>
-      </div>
-      <p class="text-meta"><button type="button" class="text-link" onclick={onHide}>Hide articles about…</button></p>
-    {/if}
+    </div>
+
+    <!-- Their settings: quieter, at the foot, apart. -->
+    <div class="mt-16">
+      <WhoSettings {feed} {library} bind:nameField {onSaved} {onFolders} {onHide} {onUnsubscribe}>
+        {#snippet sources()}<TheirPlaces {feed} {library} onPeople={joined} {onSaved} />{/snippet}
+      </WhoSettings>
+    </div>
+  </div>
   </div>
   </div>
 </section>
 
 <style>
-  /* The facts: the muted name of each in one column, its value in full ink beside it. */
-  .who-facts {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.5rem 1.5rem;
-    margin: 0;
-    font-size: var(--text-base);
-    line-height: 1.5;
+  /* The bar is solid, in the page's own color (decision 0040). */
+  .reading-bar {
+    background-color: var(--paper);
   }
-  .who-facts :global(dt) {
-    color: var(--muted);
-  }
-  .who-facts :global(dd) {
+  /*
+    Their name, the one large thing on the screen, set as an article's title
+    is (decision 0246): Literata's display cut, regular weight, about 38px
+    (32px on a phone), balanced over two lines when it needs them.
+  */
+  .who-name {
     margin: 0;
     color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 2.375rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    outline: none;
+  }
+  /* Where they publish, under the name in the reading serif and the second ink, each place a link to it, underlined as every link is. */
+  .who-places {
+    margin: 0.75rem 0 0;
+    color: var(--ink-2);
+    font-family: var(--font-serif);
+    font-size: var(--text-large);
+    line-height: 1.4;
     overflow-wrap: anywhere;
+  }
+  /* Each place stays whole on its line, unless it alone is wider than the line. */
+  .who-places a,
+  .who-places span:not(.dot, .sr-only) {
+    display: inline-block;
+    max-width: 100%;
+  }
+  .who-places a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+  }
+  @media (hover: hover) {
+    .who-places a:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+  .who-places .dot {
+    padding-inline: 0.5rem;
+  }
+  @media (width < 48rem) {
+    .who-name {
+      font-size: 2rem;
+    }
+    /* On a phone, one place to a line, so no line ends on a lone dot. */
+    .who-places .dot {
+      display: none;
+    }
+    .who-places a,
+    .who-places span:not(.dot, .sr-only) {
+      display: block;
+      width: fit-content;
+    }
   }
 </style>

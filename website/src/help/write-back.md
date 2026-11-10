@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 37
-updated: 2026-11-10
+updated: 2026-11-11
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -14,8 +14,8 @@ related: [one-person-several-places, share-an-article, newsletters]
 </p>
 
 Write back is for people. A publication, such as a magazine, has no Write
-back button; if you'd like to write to one, open its page, press **Edit**
-and choose **A person**.
+back button; if you'd like to write to one, open its page and, in its
+settings, choose **This is: A person**.
 
 ## Write back
 
@@ -59,7 +59,7 @@ about page, while the box says "Looking on their site…".
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Write to Tomas Berg**, which opens your email app to
 write to them about anything, with no subject. To change it, press
-**Edit** there and change **Email address**.
+**Change** beside the address.
 
 ## Good to know
 

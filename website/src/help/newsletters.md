@@ -4,7 +4,7 @@ description: nine turtles gives you a private email address. Sign up to newslett
 groupId: bringing-more-in
 order: 1
 spec: 28
-updated: 2026-11-10
+updated: 2026-11-11
 related: [hide-topics, unfollow-someone, write-back]
 ---
 
@@ -36,8 +36,8 @@ A few sign-up forms don't accept a plus sign; use the plain address there.
 
 ## Stop a newsletter
 
-Unfollow it as you would anyone: open its page, press **Edit**, then
-**Unsubscribe from …**. Its emails stop arriving at once. Once
+Unfollow it as you would anyone: open its page and press
+**Unsubscribe from …** at its foot. Its emails stop arriving at once. Once
 it can no longer be brought back (30 days), nine turtles also tells the
 sender to stop, where the newsletter allows it. If it
 doesn't, use the unsubscribe link at the bottom of one of its emails.

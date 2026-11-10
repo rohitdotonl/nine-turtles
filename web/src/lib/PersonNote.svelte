@@ -90,15 +90,15 @@
   {#if writing}
     <NoteBox bind:this={box} id="person-note" on="page" label="A note on {name}" help="Only you see it. It's kept for all their places, and Your data exports it." bind:words={draft} {kept} onSave={save} onNotNow={done} onDiscard={discard} />
   {:else}
+    <p class="label">Your note</p>
     {#if note}
-      <p class="label">Your note</p>
       <div class="text-base"><NoteText {note} /></div>
-      <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Edit note</button>
+      <button type="button" class="text-link self-start text-meta" bind:this={opener} onclick={write}>Edit note</button>
     {:else}
-      <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Add a note…</button>
+      <button type="button" class="text-link self-start text-meta" bind:this={opener} onclick={write}>Add a note…</button>
     {/if}
     <!-- Discard's Undo, in place, until the box opens again. -->
-    <div class="flex flex-wrap items-center gap-x-3 text-meta">
+    <div class={["flex flex-wrap items-center gap-x-3 text-meta", discarded === undefined && "sr-only"]}>
       <p role="status" class={discarded === undefined ? "sr-only" : undefined}>{discarded === undefined ? "" : "Note discarded."}</p>
       {#if discarded !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
     </div>

@@ -111,7 +111,7 @@ test.describe("on a wide window", () => {
   });
 
 
-  test("o opens and closes the folder you're in, or your feed's; e opens Edit for it", async ({ page }) => {
+  test("o opens and closes the folder you're in, or your feed's; e opens its settings", async ({ page }) => {
     await signedIn(page);
     const blog = await openBlog(page);
     const folder = `Keys-${test.info().workerIndex}-${Date.now()}`;
@@ -160,13 +160,14 @@ test.describe("on a wide window", () => {
     await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).not.toBeFocused();
     await expect(sidebar(page).locator("a[href]:focus")).toHaveCount(1);
 
-    // e opens Edit: in their list, theirs; in the folder's, Edit folder (the owner's core path, point 16).
+    // e opens their settings: in their list, their page with the keyboard on Name; in the folder's, Edit folder (the owner's core path, point 16).
     await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
     await appReady(page);
     // Once the list knows whose it is: a key pressed before the feeds arrive has no one to edit yet.
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
     await page.keyboard.press("e");
-    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/edit$`));
+    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
+    await expect(page.getByRole("textbox", { name: "Name" })).toBeFocused();
     await page.keyboard.press("Escape");
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();

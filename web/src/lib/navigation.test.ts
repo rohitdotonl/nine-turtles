@@ -7,7 +7,7 @@ const unread: Route = { kind: "view", view: "unread" };
 const all: Route = { kind: "view", view: "all" };
 const feed: Route = { kind: "feed", id: 7 };
 const addFeed: Route = { kind: "add-feed" };
-const editFeed: Route = { kind: "edit-feed", id: 7 };
+const theirSettings: Route = { kind: "about", id: 7, settings: true };
 const about: Route = { kind: "about", id: 7 };
 const settings: Route = { kind: "settings" };
 const following: Route = { kind: "your-feeds" };
@@ -23,8 +23,8 @@ describe("places", () => {
     expect(lists.every(isList)).toBe(true);
     expect(isList(settings) || isList(addFeed)).toBe(false);
     expect(isOver(addFeed) && isOver({ kind: "edit-folder", id: 2 })).toBe(true);
-    expect(isOver(settings) || isOver(feed) || isOver(editFeed)).toBe(false);
-    expect(isWho(about) && isWho(editFeed) && isWho({ kind: "edit-source", id: 7, source: 8 })).toBe(true);
+    expect(isOver(settings) || isOver(feed) || isOver(theirSettings)).toBe(false);
+    expect(isWho(about) && isWho(theirSettings)).toBe(true);
     expect(isWho(feed) || isWho(addFeed)).toBe(false);
   });
 
@@ -35,8 +35,8 @@ describe("places", () => {
   });
 
   it("shows under a sheet the thing edited, or the last list", () => {
-    // A person's page and Edit sit beside their list on a computer; on a phone they're screens of their own.
-    expect(underSheet(editFeed, unread, false)).toEqual(feed);
+    // A person's page (at its settings too) sits beside their list on a computer; on a phone it's a screen of its own.
+    expect(underSheet(theirSettings, unread, false)).toEqual(feed);
     expect(underSheet(about, unread, false)).toEqual(feed);
     expect(underSheet(about, unread, true)).toBe(about);
     expect(underSheet({ kind: "edit-folder", id: 2 }, unread, false)).toEqual({ kind: "folder", id: 2 });
@@ -54,12 +54,12 @@ describe("moveTo", () => {
 
   it("closes a sheet back to the place under it, keeping its article", () => {
     expect(moveTo(here(addFeed, feed), feed)).toEqual({ keepsArticle: true, sameScreen: true, opening: false, closing: true, returnRow: undefined });
-    expect(moveTo(here(editFeed, feed), feed)).toMatchObject({ keepsArticle: true, closing: false });
+    expect(moveTo(here(theirSettings, feed), feed)).toMatchObject({ keepsArticle: true, closing: false });
   });
 
-  it("keeps the list and its article beside a person's page, Edit and source settings", () => {
+  it("keeps the list and its article beside a person's page, at its settings too", () => {
     expect(moveTo(here(feed), about)).toMatchObject({ keepsArticle: true, opening: false });
-    expect(moveTo(here(about, feed), editFeed)).toMatchObject({ keepsArticle: true });
+    expect(moveTo(here(about, feed), theirSettings)).toMatchObject({ keepsArticle: true });
     expect(moveTo(here(about, feed), unread)).toMatchObject({ keepsArticle: false });
   });
 

@@ -2,7 +2,7 @@
 // nothing they wrote is thrown away by a slip (DESIGN.md → "Forgiving",
 // decision 0235): a half-written note, an Edit or a sheet left by a stray
 // click, Escape or Back. Each draft has a name ("note:article:12",
-// "edit:feed:3") and is kept for each reader, until it's saved or the
+// "edit:folder:3") and is kept for each reader, until it's saved or the
 // reader throws it away themselves (Discard, Cancel). Nothing is ever
 // dropped on a timer.
 

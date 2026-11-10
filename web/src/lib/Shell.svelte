@@ -563,11 +563,6 @@
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
-  /** Escape on a person's page goes back to their list; on Edit, to the page; on a source's settings, to Edit. */
-  function whoBack() {
-    if (isWho(route)) go({ kind: route.kind === "about" ? "feed" : route.kind === "edit-feed" ? "about" : "edit-feed", id: route.id });
-  }
-
   /** Unsubscribes, then shows Unread (All with Unread off) with "Unsubscribed from … · Undo". */
   async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
     const done = await library.unsubscribe(feed, removeKept);
@@ -610,7 +605,7 @@
   async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
     if (after !== before) movedFeed = { from: before, to: after };
     await library.loadFeeds(() => {
-      if (after !== before) go(isWho(route) ? { kind: route.kind === "about" ? "about" : "edit-feed", id: library.rowOf(after) } : { kind: "feed", id: after });
+      if (after !== before) go(isWho(route) ? { kind: "about", id: library.rowOf(after) } : { kind: "feed", id: after });
     });
     await tick();
     heading()?.focus();
@@ -625,8 +620,12 @@
 
   function hideFrom(feed: number) { // "Hide articles about…" (an article's More menu, a person's page): Settings › Hiding, with the field set to them ("Only from …").
     ruleForFeed = feed;
+    hidingFrom = isWho(route) ? { route, name: library.shownAs(currentFeed)?.title ?? currentFeed?.title ?? "Back" } : undefined;
     go({ kind: "settings", page: "hiding" });
   }
+  /** Their page, when it opened Hiding: Hiding's way back leads there ("‹ Jim Nielsen"), not to Settings (decision 0254). */
+  let hidingFrom: { route: Route; name: string } | undefined = $state();
+  $effect(() => void ((route.kind === "settings" && route.page === "hiding") || (hidingFrom = undefined)));
 
   /**
    * Close a page opened from Settings (Everyone you follow, Hidden articles, All readers, and
@@ -634,6 +633,7 @@
    * step back in history when it came from there.
    */
   function closeSettingsPage() {
+    if (hidingFrom) return go(hidingFrom.route);
     const parent = parentOf(route);
     if (!parent) return;
     if (cameFromSettings) steps.goBack();
@@ -805,7 +805,7 @@
     if (parentOf(route)) closeSettingsPage();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-folder") edited(false);
-    else if (isWho(route)) whoBack();
+    else if (isWho(route)) go({ kind: "feed", id: route.id }); // their page: back to their list
     else if (reading || (selected && inArticle())) backToList();
     else if (searching.open || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) steps.back("home");
@@ -999,7 +999,7 @@
         <Settings
           page={route.page}
           onOpen={(event, page) => follow(event, { kind: "settings", page })}
-          onBack={closeSettingsPage}
+          onBack={closeSettingsPage} backTo={hidingFrom?.name}
           bind:preferences
           loaded={settings.sort !== undefined}
           unread={settings.unread}

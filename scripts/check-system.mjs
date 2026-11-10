@@ -52,6 +52,8 @@ const EXCEPTIONS = [
   ["web/src/lib/Logo.svelte", "mr-[9px]", "the drawn turtle sits 9px from the name, the owner's choice (BRAND.md, DESIGN.md's Exceptions log)"],
   ["web/src/lib/YouTubePlayer.svelte", "margin-left: 2px", "the Play triangle sits 2px right of centre, so it looks centred"],
   ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
+  ["web/src/lib/WhoPage.svelte", "2.375rem", "their name on their page, set as an article's title is (decision 0254, DESIGN.md's Exceptions log)"],
+  ["web/src/lib/WhoPage.svelte", "2rem", "their name on their page on a phone, as an article's title (decision 0254)"],
 ];
 const excepted = (file, value) => EXCEPTIONS.some(([f, v]) => f === file && v === value);
 

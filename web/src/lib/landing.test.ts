@@ -55,10 +55,9 @@ describe("where the keyboard lands", () => {
     expect(landing({ kind: "edit-folder", id: 7 }, { ...computer, phone: true })).toBe("list");
   });
 
-  it("lands on a person's page, Edit or source settings heading (decision 0163)", () => {
+  it("lands on a person's page heading, at their settings too (decision 0163)", () => {
     expect(landing({ kind: "about", id: 7 })).toBe("who");
-    expect(landing({ kind: "edit-feed", id: 7 })).toBe("who");
-    expect(landing({ kind: "edit-source", id: 7, source: 8 }, { ...computer, phone: true })).toBe("who");
+    expect(landing({ kind: "about", id: 7, settings: true }, { ...computer, phone: true })).toBe("who");
   });
 
   it("lands on New to feeds' heading: the sheet's on a computer, the page's on a phone", () => {

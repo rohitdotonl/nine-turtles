@@ -17,11 +17,11 @@ export function isOver(place: Route): boolean {
 }
 
 /**
- * A person's or publication's page, its Edit, or one source's settings (decision 0163): on a computer
+ * A person's or publication's page (decision 0163), its settings on it too: on a computer
  * in the reading area, beside their list; on a phone, a screen of its own in the list's place.
  */
-export function isWho(place: Route): place is Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }> {
-  return place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source";
+export function isWho(place: Route): place is Extract<Route, { kind: "about" }> {
+  return place.kind === "about";
 }
 
 /** With Unread off there's no Unread view: its address (and "/") leads to All. */

@@ -22,7 +22,7 @@ export type Missing = "feed" | "folder";
 export function missingFrom(place: Route, found: Found): Missing | undefined {
   if (!found.feeds) return undefined;
   // A person's or publication's list, page, Edit or source settings (SPEC section 36).
-  if (["feed", "about", "edit-feed", "edit-source"].includes(place.kind) && !found.feed) return "feed";
+  if (["feed", "about"].includes(place.kind) && !found.feed) return "feed";
   if ((place.kind === "folder" || place.kind === "edit-folder") && !found.folder) return "folder";
   return undefined;
 }

@@ -40,7 +40,7 @@ export type Action =
   | { kind: "mark-all-read" }
   | { kind: "undo" }
   | { kind: "toggle-folder" }
-  /** Edit for the person, publication or folder whose list this is. */
+  /** Their settings, on the page of the person or publication (or Edit folder) whose list this is. */
   | { kind: "edit" }
   /** ← and →: the pane before or after (`panes.ts`). */
   | { kind: "pane"; step: 1 | -1 }
@@ -162,7 +162,7 @@ export const SHORTCUTS: Shortcut[] = [
       { key: "ArrowUp", does: { kind: "row", step: -1 } },
     ],
   ),
-  shortcut("Getting around", "Edit this person or publication", [["edit", "e", { kind: "edit" }]]),
+  shortcut("Getting around", "Settings for this person or publication", [["edit", "e", { kind: "edit" }]]),
   shortcut("Getting around", "Open / close this folder", [["toggle-folder", "o", { kind: "toggle-folder" }]]),
   shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
   shortcut("Getting around", "Full-screen reading", [["toggle-both", "f", { kind: "toggle-both" }]]),

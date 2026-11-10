@@ -19,7 +19,7 @@ describe("missingFrom", () => {
 
   it("names a feed or folder the reader doesn't have, under its Edit sheet too", () => {
     expect(missingFrom({ kind: "feed", id: 1 }, found({ feed: false }))).toBe("feed");
-    expect(missingFrom({ kind: "edit-feed", id: 1 }, found({ feed: false }))).toBe("feed");
+    expect(missingFrom({ kind: "about", id: 1, settings: true }, found({ feed: false }))).toBe("feed");
     expect(missingFrom({ kind: "folder", id: 1 }, found({ folder: false }))).toBe("folder");
     expect(missingFrom({ kind: "edit-folder", id: 1 }, found({ folder: false }))).toBe("folder");
   });
@@ -37,8 +37,8 @@ describe("insteadOfList", () => {
 
   it("says why a missing place shows no list, with its own heading", () => {
     expect(insteadOfList({ kind: "feed", id: 1 }, found({ feed: false }))).toBe("You don't follow anyone at this address. It may have been an old one.");
-    // Their page, Edit and a source's settings too, so a phone never falls back to another list (SPEC section 36).
-    for (const place of [{ kind: "about", id: 1 }, { kind: "edit-feed", id: 1 }, { kind: "edit-source", id: 1, source: 2 }] as const)
+    // Their page too, at its settings or not, so a phone never falls back to another list (SPEC section 36).
+    for (const place of [{ kind: "about", id: 1 }, { kind: "about", id: 1, settings: true }] as const)
       expect(insteadOfList(place, found({ feed: false }))).toBe("You don't follow anyone at this address. It may have been an old one.");
     expect(insteadOfList({ kind: "folder", id: 1 }, found({ folder: false }))).toBe("There's no folder here. It may have been deleted or renamed.");
     expect(NOT_FOUND.folder).toBe("Folder not found");

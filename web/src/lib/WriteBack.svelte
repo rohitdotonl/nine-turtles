@@ -69,6 +69,9 @@
   let quoted = $derived(article ? (chosen ?? quotes()) : []);
 
   let asking = $state(false);
+  /** On their page: the address is being changed, in the same box, saved without writing. */
+  let changing = $state(false);
+  let changer: HTMLButtonElement | undefined = $state();
   /** Looking on their site for the address, what it found, that it found none, or couldn't look. */
   let looked: "looking" | "found" | "none" | "couldn't" | undefined = $state();
   let found = $state("");
@@ -106,6 +109,7 @@
   $effect(() => {
     void (article?.id ?? feedId);
     asking = false;
+    changing = false;
     looked = undefined;
     typed = "";
     message = "";
@@ -147,7 +151,43 @@
     }
   }
 
+  /** Change, beside the address on their page: the box opens with it, to correct or replace. */
+  async function change() {
+    typed = address ?? "";
+    message = "";
+    changing = true;
+    await tick();
+    field?.select();
+  }
+
+  async function keep(event: SubmitEvent) {
+    event.preventDefault();
+    if (!place || busy) return;
+    message = "";
+    // Emptied, it forgets the reader's own, and the one their feed gives (if any) is used again.
+    if (typed.trim() && !looksLikeAddress(typed)) {
+      message = "That doesn't look like an email address. Check it and try again.";
+      field?.focus();
+      return;
+    }
+    busy = true;
+    const problem = await keepAddress(place.id, typed);
+    if (!problem) await library.loadFeeds();
+    busy = false;
+    if (problem) return void (message = problem);
+    changing = false;
+    typed = "";
+    await tick();
+    changer?.focus();
+  }
+
   async function notNow() {
+    if (changing) {
+      changing = false;
+      message = "";
+      await tick();
+      return changer?.focus();
+    }
     asking = false;
     chosen = undefined;
     looked = undefined;
@@ -189,7 +229,24 @@
 
 {#if place}
   <div class={["write-back", !article && "on-page"]} lang="en">
-    {#if asking}
+    {#if changing}
+      <AddressBox
+        title={`${name}'s email address`}
+        {site}
+        looked={undefined}
+        showingFound={false}
+        saved={false}
+        submit="Save"
+        {busy}
+        {message}
+        foot="Write to and Write back open your own email app with this address."
+        say="Correct it, or paste a new one."
+        bind:typed
+        bind:field
+        onsubmit={keep}
+        onNotNow={() => void notNow()}
+      />
+    {:else if asking}
       <AddressBox
         title={`${verb} ${name}`}
         {site}
@@ -208,7 +265,12 @@
       />
     {:else if address}
       <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>
-      <p class="to">{address}</p>
+      {#if article}
+        <p class="to">{address}</p>
+      {:else}
+        <!-- On their page the address is theirs to correct, where it's shown. -->
+        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
+      {/if}
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
       <p class={["opening", !opening && "sr-only"]} aria-live="polite">
         {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
@@ -252,6 +314,10 @@
   }
   .on-page .opening {
     text-align: start;
+  }
+  .change {
+    margin-left: 0.5rem;
+    color: var(--ink-2);
   }
   /* Where it goes, quietly, so the press holds no surprise. */
   .to {

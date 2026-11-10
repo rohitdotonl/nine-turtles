@@ -20,6 +20,7 @@
     busy = false,
     message,
     foot,
+    say,
     typed = $bindable(""),
     field = $bindable(),
     onsubmit,
@@ -43,6 +44,8 @@
     message: string;
     /** The quiet line under the buttons. */
     foot: string;
+    /** The line under the title, in place of "Paste it here." (Change on their page). */
+    say?: string;
     typed?: string;
     field?: HTMLInputElement;
     onsubmit: (event: SubmitEvent) => void;
@@ -57,7 +60,7 @@
   <div class="flex flex-col gap-1">
     <p id={`${id}-title`} class="text-base font-semibold text-ink">{title}</p>
     <p class="text-meta text-ink-2" aria-live="polite">
-      {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if looked === "none"}No email address on their site. {paste}{:else if looked === "couldn't"}Their site couldn't be checked for an address. {paste}{:else if saved}nine turtles doesn't have their address yet. {paste}{:else}{paste}{/if}
+      {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if looked === "none"}No email address on their site. {paste}{:else if looked === "couldn't"}Their site couldn't be checked for an address. {paste}{:else if saved}nine turtles doesn't have their address yet. {paste}{:else}{say ?? paste}{/if}
     </p>
   </div>
   {#if site && !showingFound}

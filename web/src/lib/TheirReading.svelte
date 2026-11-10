@@ -20,15 +20,18 @@
 
   let highlights: Highlight[] = $state([]);
   let failed = $state(false);
+  let loaded = $state(false);
 
   $effect(() => {
     const id = feed;
     highlights = [];
     failed = false;
+    loaded = false;
     getJson(`/api/feeds/${id}/highlights`).then(
       (body) => {
         if (id !== feed) return;
         highlights = toHighlights(body);
+        loaded = true;
       },
       () => id === feed && (failed = true),
     );
@@ -51,10 +54,17 @@
   <p class="text-meta text-ink-2">Your highlights from their writing couldn't be loaded. Open the page again to try once more.</p>
 {/if}
 
-{#if highlights.length > 0}
+{#if loaded && highlights.length === 0}
+  <!-- Nothing yet: the fact, then how it fills (BRAND.md → "Empty screens"). -->
+  <section class="flex flex-col gap-2" aria-labelledby="their-highlights">
+    <h3 id="their-highlights" class="label">Your highlights</h3>
+    <p class="font-serif text-ink-2">Nothing highlighted yet.</p>
+    <p class="text-meta text-muted">Words you highlight in their writing gather here.</p>
+  </section>
+{:else if highlights.length > 0}
   <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
     <h3 id="their-highlights" class="label">Your highlights</h3>
-    <ul class="flex flex-col gap-4">
+    <ul class="flex flex-col gap-8">
       {#each highlights as each (each.id)}
         <li class="quote">
           <p class="font-serif text-ink">{each.quote}</p>
@@ -71,17 +81,34 @@
 
 <style>
   /* Each highlight: its words in the reading serif, set off by a fine line at the left, as at an article's end. */
+  /* Their words, where the eye rests: the reading serif a step larger than the interface around it. */
   .quote {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding-left: 1rem;
+    padding-left: 1.25rem;
     border-left: 2px solid var(--strong);
-    font-size: var(--text-base);
-    line-height: 1.55;
+    font-size: var(--text-large);
+    line-height: 1.5;
   }
   .from {
     font-size: var(--text-meta);
+    line-height: 1.5;
     color: var(--ink-2);
+  }
+  /* The title reads as part of the line; its 44px to touch reaches above and below without spacing the lines apart. */
+  .from :global(.text-link) {
+    position: relative;
+    display: inline;
+    min-height: 0;
+    text-align: left;
+  }
+  .from :global(.text-link)::after {
+    content: "";
+    position: absolute;
+    inset: -0.75rem -0.25rem;
+  }
+  .quote :global(.text-meta) {
+    color: var(--ink);
   }
 </style>
