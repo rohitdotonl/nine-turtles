@@ -1,5 +1,7 @@
 # 0247: Footnotes where you are, and proper punctuation
 
+**In one line:** Footnotes where you are, and proper punctuation: a footnote's number opens its note in a small card just under the line (Escape, × or a press elsewhere closes it; the notes stay at the end); an English article's straight quotes, double hyphens and three dots are shown as curly quotes, dashes and ellipses, never inside code, with the stored text unchanged and highlights found either way
+
 *10 November 2026.*
 
 Rohit's "go" (10 November 2026) on the fresh typography critique

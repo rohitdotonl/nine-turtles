@@ -1,5 +1,7 @@
 # 0057: A plain grey pill for where you are, and green stars
 
+**In one line:** Where you are: a plain neutral grey pill, its sidebar icon in ink; a light green for filled stars, the one second color (changes 0037, 0041 and 0043)
+
 *24 October 2026. The owner's request: small touches of color, as GitHub
 uses them (a screenshot of GitHub's tabs and sidebar), tried side by side
 on the owner's own computer. Changes 0037 (the pill filled with the accent)

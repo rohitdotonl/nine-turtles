@@ -1,5 +1,7 @@
 # 0235: Nothing the reader typed is thrown away
 
+**In one line:** Nothing typed is thrown away: unsaved notes and Edit, Edit folder and Add changes are kept on the device and shown again with "Not saved yet." (Discard or Cancel throws them away), and a note that couldn't be saved keeps its words with Try again
+
 *10 November 2026.*
 
 Rohit's "Implement every suggestion from round 1" (10 November 2026),

@@ -1,5 +1,7 @@
 # 0135: A critique checklist for every change the reader sees
 
+**In one line:** Twelve critique questions (from the owner's design field guide) every change the reader sees answers before its pull request; the full review checks them
+
 *1 November 2026.*
 
 **Decision.** The ten principles (decision 0134) become twelve questions,

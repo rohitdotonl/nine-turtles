@@ -1,5 +1,7 @@
 # 0056: Renamed nine turtles, and one theme, Original
 
+**In one line:** Renamed nine turtles (the program, settings, database, repository and Render service keep the name slowfeed); one theme, Original, by day and by night, with Light, Dark and Match device; the theme tiles, Bold and Literata's 800 removed (replaces the theme list of 0046). Its themes and Appearance are replaced by 0176
+
 > **Partly replaced:** [0058](0058-renamed-everywhere.md) renamed the names this note kept (program, settings, database, repository); [0063](0063-plain-theme-system-serif.md) added a second theme, Plain.
 
 *24 October 2026. The owner's request, in their own words: "We are completely

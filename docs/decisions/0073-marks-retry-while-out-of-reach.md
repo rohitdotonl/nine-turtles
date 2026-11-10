@@ -1,5 +1,7 @@
 # 0073: Marks try again while nine turtles is out of reach
 
+**In one line:** A mark that can't reach nine turtles (a restart, a dropped connection) tries again for up to a minute; if it still fails, the note offers Try again and clears once a later mark is saved
+
 *25 October 2026. After the owner saw "An article couldn't be marked as read" while a new version was going live, and the message stayed until a reload.*
 
 **Decision.** A read mark or star that can't reach nine turtles is tried

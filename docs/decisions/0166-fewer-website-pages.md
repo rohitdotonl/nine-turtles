@@ -1,5 +1,7 @@
 # 0166: Fewer website pages, and Rohit's story on About
 
+**In one line:** Fewer website pages: the tour and Questions fold into Help (and Pricing for price answers), About becomes Rohit's story, the band is Help and Open the app, old addresses lead to their new places from one list
+
 *3 November 2026. Step 1b of the owner's review. Rohit asked for fewer
 pages, each one true, and his own story on About; he said go on the whole
 plan the same day.*

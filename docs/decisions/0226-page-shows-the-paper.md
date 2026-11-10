@@ -1,5 +1,7 @@
 # 0226: Settings' Page choices show the paper
 
+**In one line:** Settings' Page choices show the paper: a small square of each page with an "A" in its words' color above its name, in the usual segmented control (from the owner's Kenya Hara critique, version A)
+
 *9 November 2026.*
 
 Rohit's pick ("Implement A") from the Kenya Hara critique's suggestion 4,

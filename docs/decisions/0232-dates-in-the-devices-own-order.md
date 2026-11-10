@@ -1,5 +1,7 @@
 # 0232: Dates in the device's own order and clock
 
+**In one line:** Dates and times follow the device: "Oct 20" and "2:05 PM" in the United States, "20 Oct" and "14:05" in Britain, English words everywhere; revises point 3 of 0215
+
 *10 November 2026.*
 
 Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"

@@ -1,5 +1,7 @@
 # 0164: Notes and highlights
 
+**In one line:** Notes and highlights: private highlights and notes on articles and a note on each person, in soft pencil (no new color); Notes in the sidebar after the first mark; marked articles kept like starred ones, with "Keep them / Remove them too" on unsubscribing; made offline and sent later; times in notes on videos and episodes
+
 *3 November 2026. V1 item 8 (`docs/PLAN.md`), shaped with the owner from
 high-fidelity mockups; SPEC section 42.*
 

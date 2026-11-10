@@ -1,5 +1,7 @@
 # 0191: A smoother way in
 
+**In one line:** A smoother way in: Start reading opens sign-up; the sign-in pages' password fields have Show; no sidebar pill while the welcome shows; long addresses in the several-feeds choice end in "…"; an empty export says "Nothing starred yet" / "No notes yet" instead of downloading
+
 *6 November 2026.*
 
 **Decision.** Five small fixes from the owner's onboarding review (findings

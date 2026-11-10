@@ -1,5 +1,7 @@
 # 0122: Simpler sign-in pages, and Forgot? as a link that signs in
 
+**In one line:** Simpler sign-in pages: names above fields; one small Forgot? (replaces "Email me a sign-in link" and "Forgot your password?") emails the 15-minute sign-in link, whose page then offers a new password through a ticket kept in memory only (no structure change); the passkey a quieter button; no sign-up "Check your email" (0115 stands)
+
 *27 October 2026.*
 
 **Decision.** The owner chose the "My pick" version of finding S2 in the

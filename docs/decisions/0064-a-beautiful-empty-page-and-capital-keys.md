@@ -1,5 +1,7 @@
 # 0064: "Time to read something beautiful.", capital keys in tooltips, and Keys
 
+**In one line:** "Time to read something beautiful." in the empty reading area (replaces "No article open"); tooltips print keys as capitals, like the key caps; Shortcuts becomes "Keys" with an icon
+
 *25 October 2026. The owner chose the line and asked for the keys to match.*
 
 **Why.** "No article open" was accurate but cold: the empty reading area is

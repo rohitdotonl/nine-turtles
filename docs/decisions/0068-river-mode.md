@@ -1,5 +1,7 @@
 # 0068: River mode
 
+**In one line:** River mode: a reading mode with no Unread view, counts or read styling
+
 *October 2026.*
 
 **Decision.** River mode (SPEC section 10) is one setting for the whole app,

@@ -1,5 +1,7 @@
 # 0243: Thumb reach: menus read from the button outwards, and Edit finishes as Add does
 
+**In one line:** Thumb reach: a menu that opens upwards on a phone draws its first item nearest the button (the article's More: Share or Copy link nearest, Hide articles about… furthest); Edit for a person or publication finishes as Add does on a phone, an X in Cancel's place and Done the full width at the screen's foot
+
 *10 November 2026.*
 
 Rohit's "Implement 1 and 4" (10 November 2026), for the fresh thumb-reach

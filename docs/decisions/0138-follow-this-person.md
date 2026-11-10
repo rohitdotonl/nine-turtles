@@ -1,5 +1,7 @@
 # 0138: "Follow this person?" when a page is shared
 
+**In one line:** A page shared to nine turtles opens one question, "Follow <name>?", with the site under it and one press, Follow (the site's own feed, its first); no field, no choice of feeds, no word of "feed" or "RSS"; nothing saved as a link, no read-later (the owner, 1 November 2026)
+
 *1 November 2026. Asked for by the owner, after the positioning work ("read
 people, not feeds", `docs/RnD/ideal-reader.md`).*
 

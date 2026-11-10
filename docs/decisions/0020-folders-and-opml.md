@@ -1,5 +1,7 @@
 # 0020: Folders, unsubscribing and OPML
 
+**In one line:** Folders, unsubscribing and OPML: folder pairs, hide first and clear later, edit pages with addresses, import fetches in the background
+
 *23 October 2026, Milestone 9. Built from SPEC sections 5, 15 and 16 without a separate plan (decision 0014). The owner hadn't yet answered whether V1 should allow only one folder per feed (the "scope trim" question), so this follows the spec as written: a feed can be in several folders, and sidebar search is in.*
 
 **Folders are a small table and a list of pairs.** `folders` holds each

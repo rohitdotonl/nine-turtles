@@ -1,5 +1,7 @@
 # 0198: "Or try one" in the welcome, and no dead end for an email-only newsletter
 
+**In one line:** The welcome's "Or try one": three fixed example addresses followed in one press, their newest post shown in place with Start reading; a site with no feed offers your own newsletter address
+
 *6 November 2026. The owner's onboarding review, finding 5; the owner chose the examples, approved the design after three rounds of mockups ("the UX is good"), chose "Start reading", and asked for "Bring your list from another app…" to stay prominent for people who already use feeds.*
 
 **Decision.**

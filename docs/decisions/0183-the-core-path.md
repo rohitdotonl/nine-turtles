@@ -1,5 +1,7 @@
 # 0183: The core path
 
+**In one line:** The core path: Add asks "Maya Chen is…" with two tiles (A person, A publication), a publication's writers named in lists, Write back and Write to as the one solid button with a paper plane and full names (Write back outlined at an article's end since 0242), their page without the muted line or Email row, Edit down to Name, Email address, This is, Folders and Pause (Kind of source, Check for new articles, Open on the website and how often they post removed, with their data), a folder opening after Edit and going with its last person; `e` for Edit, `o` for a folder, and the arrows moving between and inside panes
+
 *5 November 2026.*
 
 **Decision.** Fifteen changes to the path every reader walks (adding

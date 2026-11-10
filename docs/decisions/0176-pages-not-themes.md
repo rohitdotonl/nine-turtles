@@ -1,5 +1,7 @@
 # 0176: Themes named by the page they give
 
+**In one line:** Themes named by the page they give: one setting, Page, with White (ink blue dot), Paper (warm cream, old-ink brown dot), Night (pale blue dot) and Match device (White by day, Night by night, the default), replacing the four themes and Appearance; Font and line width loses the theme; Plain's blue links go; no moving of old choices
+
 *4 November 2026.*
 
 **Decision.** The four themes (Original, Plain, Fountain pen and Signal)

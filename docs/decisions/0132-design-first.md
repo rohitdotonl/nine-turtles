@@ -1,5 +1,7 @@
 # 0132: Design first, and the first settled parts of our own language
 
+**In one line:** Design first: agents proactive about design, decisions tried in mockups (safe and bold, preferably locally); accessibility never traded; the book tiebreaker retired; "calm" not the brand; a warm voice with "I" from Rohit and never "we"; honesty a public promise; easter eggs found, never shown; "no decoration that pretends"
+
 *1 November 2026.*
 
 **Decision.** The owner settled these while the new design principles are

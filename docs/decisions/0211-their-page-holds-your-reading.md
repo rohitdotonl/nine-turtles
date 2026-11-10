@@ -1,5 +1,7 @@
 # 0211: Their page holds your reading of them
 
+**In one line:** Their page: name and Write to, your note, Lately (three newest), Your highlights from their writing (at most 20), then Source; a read-only list of a person's highlights for the signed-in reader
+
 *6 November 2026.*
 
 **Decision.** A person's or publication's page reads in order of what

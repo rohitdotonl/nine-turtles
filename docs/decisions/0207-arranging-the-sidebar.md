@@ -1,5 +1,7 @@
 # 0207: Arranging the sidebar: folders in your own order, and dragging people into folders
 
+**In one line:** Folders in your own order (structure change 46) by dragging or Edit's handles; people and publications dragged onto a folder (Option or Ctrl keeps both), out of one, or between People and Publications; a folder left empty goes, with Undo; Folders, People and Publications in bold words with a quiet Edit
+
 *6 November 2026.*
 
 **Context.** The owner asked for an easy way to change the order of their

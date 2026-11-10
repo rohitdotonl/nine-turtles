@@ -1,5 +1,7 @@
 # 0161: An even politer feed checker
 
+**In one line:** No publisher blocks the checker; it now checks a feed at most hourly, honors Cache-Control max-age up to a day, never fetches two feeds on one site at once, and names a page for publishers in its User-Agent
+
 *3 November 2026. The owner asked whether any publisher blocks nine
 turtles' feed checker, whether it follows the usual standards, and how it
 could go further. He chose these changes ("Implement every suggestion

@@ -1,5 +1,7 @@
 # 0091: Newsletters as feeds
 
+**In one line:** Newsletters as feeds: Cloudflare Email Routing and a small Worker post each raw email to nine turtles with a shared secret; emails are read with mail-parser and tidied for reading; never shared between readers; part one keeps nothing yet
+
 *25 and 26 October 2026. Milestone 10 of the plan for 100 to 200 readers
 (https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk). The owner approved the
 feature, Cloudflare Email Routing, the mail-parser library and the change to

@@ -1,5 +1,7 @@
 # 0075: An automatic health check, run by GitHub
 
+**In one line:** A scheduled GitHub Actions job checks the status page every 15 minutes and GitHub emails the owner when nine turtles isn't answering after 5 tries a minute apart; no outside monitoring service
+
 *25 October 2026. At the owner's request, the second step of making nine
 turtles ready for 100 to 200 readers (agreed with the owner that day).*
 

@@ -1,5 +1,7 @@
 # 0021: No second-agent review for documents-only changes and tiny fixes
 
+**In one line:** No second-agent review for documents-only changes and tiny fixes
+
 *23 October 2026. Chosen by the owner. Partly replaces decision 0015, point 2.*
 
 **Decision.** Pull requests that change only documents outside the rule

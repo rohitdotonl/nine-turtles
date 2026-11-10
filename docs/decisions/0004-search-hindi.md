@@ -1,5 +1,7 @@
 # 0004: Search splits words so Hindi stays whole
 
+**In one line:** Search splits words so Hindi stays whole
+
 *October 2026, Milestone 1.*
 
 **Decision.** The search table (built in Milestone 10) uses SQLite FTS5 with

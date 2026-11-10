@@ -1,5 +1,7 @@
 # 0118: Fixes from a design review
 
+**In one line:** Fixes from a design review: a segmented control's chosen side at 3 : 1 (an edge by day, a strong fill by night, checked automatically), no ring on any title, the keyboard starting on the list's title, Skip to articles, Recently read's `opened` time for day headings (no structure change), and the list beside the article at least 280px
+
 *27 October 2026.*
 
 **Decision.** The owner approved a batch of small fixes from a design

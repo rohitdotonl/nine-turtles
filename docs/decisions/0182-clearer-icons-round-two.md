@@ -1,5 +1,7 @@
 # 0182: Clearer icons, round two
 
+**In one line:** Clearer icons, round two: Previous and Next as chevrons up and down, the sidebar star an outline, Email a person with an @, "All" renamed "All articles" with layers, Your data a storage box, the players at 1.5px, a row's › always 18px
+
 *4 November 2026.*
 
 **Decision.** Seven more icon fixes under the icon rules (decision 0181),

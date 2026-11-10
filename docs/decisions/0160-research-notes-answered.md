@@ -1,5 +1,7 @@
 # 0160: The research notes, answered
 
+**In one line:** The research notes answered: never scrape stays but any feed address may be followed, including outside feed makers; notes and highlights, a feed finder that tries a few more places and a clearer choice between several feeds join V1; batched delivery, the check-up page, Kindle and text to speech dropped; smaller ideas parked for V2
+
 *3 November 2026. The owner went through the open questions in his
 research notes of 1 November (`docs/RnD/research-notes-2026-11.md`).*
 

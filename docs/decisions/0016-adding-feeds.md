@@ -1,5 +1,7 @@
 # 0016: Adding feeds
 
+**In one line:** Adding feeds: autodiscovery on the pasted page, private addresses refused, cleaning before storing, list order and speed test
+
 *23 October 2026, Milestone 5. Plan approved by the owner, including both choices below.*
 
 **Autodiscovery looks at exactly the page you paste.** The earlier rule said

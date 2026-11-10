@@ -1,5 +1,7 @@
 # 0009: Agents may merge once the owner has given permission
 
+**In one line:** Agents may merge once the owner has given permission (per change, or in advance in a plan or session)
+
 *October 2026, after Milestone 1. Chosen by the owner. Widened on 26 October
 2026, see "Amended" at the end.*
 

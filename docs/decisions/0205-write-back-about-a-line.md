@@ -1,5 +1,7 @@
 # 0205: Write back about a line
 
+**In one line:** Words chosen or a highlight pressed offer Write back about this (people only): the email starts with those words quoted; Write back starts with every highlight in the article and says so under the address
+
 *6 November 2026.*
 
 **Decision.** The small menu beside words chosen in an article, and the

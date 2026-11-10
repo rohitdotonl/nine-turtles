@@ -1,5 +1,7 @@
 # 0086: Many readers in one nine turtles
 
+**In one line:** Many readers in one nine turtles: one shared copy of each feed and its articles, everything personal belonging to a reader, a `people` table with the owner as reader 1, and walls tested on purpose (structure changes 11 and 12)
+
 *25 October 2026. At the owner's request, milestone 3 of the plan for 100 to
 200 readers, "Many readers in one app"
 (https://claude.ai/artifact/V3GhrBxfXDG1TjPMsXQFPk). Builds on decision 0076

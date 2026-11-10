@@ -1,5 +1,7 @@
 # 0174: Keep Starred, remove the other shelves
 
+**In one line:** Keep Starred, remove the other shelves: Collections, saved searches and Recently read go (sidebar, Settings, search `in:`, keys `l` and `g r`, their addresses) and their data is deleted outright, as are earlier leftovers (Up Next, switched-off rules, old keys), since nine turtles is still being built; the Notes list stays (structure change 40)
+
 *4 November 2026. Step 9 of the owner's review plan. Rohit said go on the
 whole plan and permitted removing these features and their data; on the
 day, he chose to delete the data outright. The plan settled its one

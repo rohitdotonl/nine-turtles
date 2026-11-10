@@ -1,5 +1,7 @@
 # 0215: Their page says each thing once, and every date is "20 Oct"
 
+**In one line:** Their page drops Lately (their list already shows their newest) and Edit becomes a quiet underlined word; every date in the app reads "20 Oct" ("20 Oct 2025" another year), months always three letters
+
 *9 November 2026. The owner's picks from the Dieter Rams critique (D02-5).*
 
 **Decision.**

@@ -1,5 +1,7 @@
 # 0078: The logo beside the name, and a one-turtle tab icon
 
+**In one line:** The logo beside the name: a roomier frame, sized 1.15 times the name, a one-turtle browser-tab icon and roomier home-screen icons (first numbered 0073, which marks trying again also took). Partly replaced on 2 November 2026: the logo's sizes and the black app icon are on the brand sheet, `docs/BRAND.md` → "The logo" (the redrawn nine of that day was dropped by 0179)
+
 *October 2026. First numbered 0073, which marks trying again also took.*
 
 **Decision.** A review of the logo (decision 0067) everywhere it appears

@@ -1,5 +1,7 @@
 # 0224: Your place shows in the list
 
+**In one line:** While your place in an article is kept, its row says how far in words ("· Half read", "· Nearly finished"; "· Part read" for a place from another device); `read` share kept on the device only
+
 *9 November 2026.*
 
 **Decision.** While nine turtles keeps your place in an article (decision

@@ -1,5 +1,7 @@
 # 0129: All rights reserved
 
+**In one line:** nine turtles is all rights reserved instead of MIT: readable on GitHub, not reusable without the owner's written permission; copies taken under MIT before 29 October 2026 keep MIT; the repository stays public
+
 *29 October 2026.*
 
 **Decision.** The owner chose to make nine turtles "all rights reserved"

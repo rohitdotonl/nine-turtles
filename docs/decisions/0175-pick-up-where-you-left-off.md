@@ -1,5 +1,7 @@
 # 0175: Pick up where you left off
 
+**In one line:** Pick up where you left off: the server keeps the one article the reader last left partway (a `person_settings` row, no structure change), and the empty reading area (on a phone, the top of the list) offers it: "You were reading {title}, by {writer}."; it goes once another article opens or it's finished
+
 *4 November 2026. Step 13 of the owner's review plan, approved by Rohit on
 3 November. The words and where the line sits were decided in the owner's
 review thread.*

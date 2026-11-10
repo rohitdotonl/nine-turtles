@@ -1,5 +1,7 @@
 # 0123: Less chrome: space instead of lines, spaced-capital names, a rule as a sentence, a quieter Aa panel
 
+**In one line:** Less chrome: no lines between the list's rows (more space instead, the publisher's name a step stronger than the time); the sidebar's section names in small spaced capitals, a folder's arrow at its row's right end, an open folder's feeds with a faint line down their left; a rule written as one sentence whose blanks are its fields; the Aa panel as one quiet line per setting with swatches for Appearance
+
 *28 October 2026.*
 
 **Decision.** The owner brought four design pictures (after Tufte, Vignelli,

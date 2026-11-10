@@ -1,5 +1,7 @@
 # 0228: Search in Chinese, Japanese, Arabic and Hebrew
 
+**In one line:** Search finds Chinese and Japanese words (each character a word, found side by side) and Arabic and Hebrew words with or without vowel marks; Hiding cuts words the same way; the index is rebuilt once
+
 *10 November 2026. Approved by the owner ("just implement your suggestions"),
 OS-7 in the "other scripts" critique.*
 

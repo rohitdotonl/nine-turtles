@@ -1,5 +1,7 @@
 # 0185: Every website page matches the front page
 
+**In one line:** Every website page matches the front page: the top along a centred 640px column, the letter's 21px text, no grey band (replacing 0153's band)
+
 *5 November 2026.*
 
 **Decision.** Rohit asked for the rest of the website to look like the

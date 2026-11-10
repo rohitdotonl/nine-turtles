@@ -1,5 +1,7 @@
 # 0167: People are called by their names
 
+**In one line:** People are called by their names: "Is … someone you might write to?" (Yes, a person / No, a publication) replaces "someone or something?"; a feed signing every article with one author names the person, with the blog's title under it on their page; a name the reader gave wins; Write back uses a person's first name; people already followed are renamed at their feed's next check (structure change 35 marks them)
+
 *3 November 2026. Step 2 of the owner's review (items 1 and 7): in the
 owner's test a blog by Tomas Berg became a person called "Notes from Tomas",
 and Write back said "Write back to Notes from Tomas".*

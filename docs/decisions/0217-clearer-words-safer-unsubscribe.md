@@ -1,5 +1,7 @@
 # 0217: Clearer words and a safer Unsubscribe
 
+**In one line:** From the owner's Don Norman critique: a phone's back button to the first screen says ‹ Home (not ‹ Feeds); the list's search field says and is named Search articles; Unsubscribe sits alone at the left of Everyone you follow's bar, apart from Move to…
+
 *9 November 2026. The owner's choice, from the Don Norman critique.*
 
 On 8 November 2026 the owner asked for design critiques of the app, each from

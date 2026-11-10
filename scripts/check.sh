@@ -5,7 +5,8 @@
 #
 # With no arguments it runs everything, in order. GitHub Actions runs the
 # parts side by side on separate computers to save time (decision 0065):
-#   scripts/check.sh docs       no broken links between documents (runs for every change)
+#   scripts/check.sh docs       no broken links between documents, and each decision's one line
+#                               and number (runs for every change)
 #   scripts/check.sh frontend   libraries, frontend build, types, tests, motion, one system, tidy code, size,
 #                               the health check and the newsletter forwarder
 #   scripts/check.sh rust       Rust formatting, lint and tests
@@ -40,6 +41,9 @@ build_frontend() {
 docs() {
   step "No broken links between documents"
   node scripts/check-doc-links.mjs
+
+  step "Each decision has its one line and its own number"
+  node scripts/decisions.mjs --check
 }
 
 frontend() {

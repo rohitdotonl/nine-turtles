@@ -1,5 +1,7 @@
 # 0157: Help pages for readers, at nineturtles.app/help
 
+**In one line:** Help pages for readers at nineturtles.app/help: one page per question in five groups, steps in the app's own words, no screenshots, each naming its SPEC section; linked from the website, Settings and the keys sheet; `/docs` leads there
+
 *3 November 2026. Planned with the owner on 27 October 2026 (the mockup
 "Plan help docs for readers"); on 3 November he chose that Help is for
 readers only and his own manual (ror) links to it instead of copying it,

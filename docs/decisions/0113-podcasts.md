@@ -1,5 +1,7 @@
 # 0113: Podcasts, played in place from the publisher's own file
 
+**In one line:** *(Up Next removed by 0170.)* Podcasts (structure change 24): audio enclosures played in the browser's own audio element from the publisher's address, never downloaded or proxied (`media-src`; the owner reworded the second floor to say so); a calm player with back 15, forward 30 and speeds; each reader's place on the server (latest save wins) and the device; finished within 30 seconds of the end, marked read; Up Next per reader with buttons, no dragging; Media Session; no new keys
+
 *27 October 2026.*
 
 **Decision.** A podcast's episodes play inside nine turtles, in a calm

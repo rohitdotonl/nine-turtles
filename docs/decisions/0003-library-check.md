@@ -1,5 +1,7 @@
 # 0003: How the library check knows what's approved
 
+**In one line:** How the library check knows what's approved
+
 *October 2026, Milestone 1.*
 
 **Decision.** `scripts/check-libraries.mjs` reads the tables in

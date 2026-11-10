@@ -1,5 +1,7 @@
 # 0081: Saved searches in the sidebar
 
+**In one line:** *(Replaced by 0174.)* Saved searches: Save search… in the list's More menu, listed in the sidebar under Unread, Starred and All, with Edit, Delete and Undo; kept as JSON in a small new table
+
 *Replaced by [0174](0174-keep-starred.md): saved searches are gone; the database keeps them unused.*
 
 *25 October 2026. Built in V2 at the owner's request (planning thread of 25 October 2026).*

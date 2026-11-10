@@ -1,5 +1,7 @@
 # 0154: Confirm the email address at sign-up
 
+**In one line:** Confirm the email address at sign-up: signing up emails a link, and only following it with the password chosen makes the account, confirms its address and signs the device in (replaces 0115's "no confirmation email"); without email settings the account is made at once; readers who already had an address count as confirmed
+
 *Changed by [0193](0193-confirm-in-the-same-browser.md): in the browser that signed up, the link asks no password.*
 
 *3 November 2026. The owner's choice, in their own words: "Confirm at

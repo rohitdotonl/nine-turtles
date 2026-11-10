@@ -1,5 +1,7 @@
 # 0231: Fit what people already do: search, Command Z, going back, the tab
 
+**In one line:** Fit what people already do: the top search box offers "Search articles for …", Command Z (Ctrl Z) undoes as U does, Settings on a phone and the pages opened from Settings go back with ‹ instead of an X, and the browser tab names the open article
+
 *10 November 2026.*
 
 Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"

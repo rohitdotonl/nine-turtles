@@ -1,5 +1,7 @@
 # 0186: Everyone you follow, one page
 
+**In one line:** Everyone you follow: Your feeds and Feed health become one page, who isn't working first (no Retry, no address shown), then People and Publications A to Z with their newest title and day, "Quiet since …" instead of the Show filter, a row opening their page, and Edit renamed Choose…
+
 *6 November 2026.*
 
 **Context.** Point 1 of the owner's whole-app review of what to remove or

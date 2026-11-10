@@ -1,5 +1,7 @@
 # 0001: Every check runs through one script
 
+**In one line:** Every check runs through one script
+
 *October 2026, Milestone 1.*
 
 **Decision.** All automatic checks live in `scripts/check.sh`. GitHub Actions

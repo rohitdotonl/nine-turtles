@@ -1,5 +1,7 @@
 # 0085: An open tab switches to a new version on the next move
 
+**In one line:** A tab left open across an update switches to the new version the next time you go to another place, once marks are saved and no Undo would be lost; it checks on coming back into view and every 5 minutes
+
 *25 October 2026. Part of making nine turtles ready for more readers (the SaaS plan): a tab left open while a new version goes live should keep working, without stale-page errors.*
 
 **Decision.** When a tab learns that a newer nine turtles is live, it

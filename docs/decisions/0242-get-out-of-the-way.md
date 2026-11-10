@@ -1,5 +1,7 @@
 # 0242: Get out of the way: the phone's bars step aside, one search field, one dot, a quieter Write back
 
+**In one line:** Get out of the way: on a phone, a tap on the text puts the article's bars away and another brings them back (so do Tab, a new article and the article's end); the list's search waits behind a magnifier on a computer too; the sidebar's only unread dot is on Unread; Write back at an article's end is outlined
+
 *10 November 2026.*
 
 Rohit's "Implement GW-1, 2, 3 (with a dot only on Unread folder), and 5"

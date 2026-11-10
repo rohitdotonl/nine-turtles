@@ -1,5 +1,7 @@
 # 0199: One house style for messages
 
+**In one line:** One house style for messages (BRAND.md → "Messages"): what you did is a full sentence; a failure names the thing and what to do; "You're offline." first; Undo always says "Undone."; no technical words
+
 *6 November 2026.*
 
 **Decision.** Every line the app says after an action or a failure follows

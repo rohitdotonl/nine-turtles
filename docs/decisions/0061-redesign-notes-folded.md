@@ -1,5 +1,7 @@
 # 0061: The redesign notes folded into one
 
+**In one line:** The redesign notes 0025–0055 folded into one summary, their files deleted (full text in the history)
+
 *25 October 2026. The owner's request: fewer Markdown files, deleting
 rather than archiving.*
 

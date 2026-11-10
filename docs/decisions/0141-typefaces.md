@@ -1,5 +1,7 @@
 # 0141: Three typefaces: Literata, Atkinson Hyperlegible Next and its Mono
 
+**In one line:** Three typefaces: Literata for everything written, Atkinson Hyperlegible Next for the whole interface on every device (and the sans reading font), Atkinson Hyperlegible Mono for code; the device's own font, Inter and JetBrains Mono retire (the owner, 2 November 2026)
+
 *2 November 2026. The owner chose this from the typeface mockups (brand
 sheet, option 3). Replaces the font part of 0013 and the interface font
 of DESIGN.md before it.*

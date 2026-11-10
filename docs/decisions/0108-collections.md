@@ -1,5 +1,7 @@
 # 0108: Collections, the reader's own shelves for articles
 
+**In one line:** *(Replaced by 0174.)* Collections, the reader's own shelves for articles (structure change 23): Add to collection… and `l`, listed under Saved searches, by article date in the sort order, Rename… and Delete with Undo, `in:name` in search, kept forever like a star (the clean-up, unsubscribing and the database itself keep a collected entry), exported as JSON Feed with collections as tags; listed offline but not kept
+
 *Replaced by [0174](0174-keep-starred.md): collections are gone, with their data.*
 
 *27 October 2026.*

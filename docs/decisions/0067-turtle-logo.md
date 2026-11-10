@@ -1,5 +1,7 @@
 # 0067: A logo of nine turtles
 
+**In one line:** A logo of nine turtles seen from the side, in one ink, for the app icon and the browser tab; the wordmark stays words (revisits 0022)
+
 > **Partly replaced by [0078](0078-logo-proportions.md):** the logo's frame, its size beside the name, and the tab and home-screen icons.
 
 *October 2026.*

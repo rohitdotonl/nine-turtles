@@ -1,5 +1,7 @@
 # 0093: The Readers page shows the day each reader was last here
 
+**In one line:** The Readers page shows the day each reader was last here ("Last here today"), from what nine turtles already keeps; readers are told under Account in Settings and in the privacy policy; no structure change
+
 *26 October 2026. The owner answered the open question from decision 0090:
 "Should the Readers page show when each reader last visited? Yes."*
 

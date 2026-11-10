@@ -1,5 +1,7 @@
 # 0190: Install the app on any device
 
+**In one line:** Install the app and Add from anywhere become one page, "Install the app on any device": Computer, Android and iPhone & iPad tabs (the reader's own chosen, its steps naming the browser), each ending with how to follow the blog you're on; the raw bookmark code and Copy go
+
 *6 November 2026.*
 
 **Decision.** Settings › Install the app and Settings › Add from anywhere

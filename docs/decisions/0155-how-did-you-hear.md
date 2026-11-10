@@ -1,5 +1,7 @@
 # 0155: "How did you hear about nine turtles?"
 
+**In one line:** "How did you hear about nine turtles?": one optional list at sign-up (Rather not say, a blog, a friend, a search, an AI assistant, Reddit, somewhere else), kept with the account, counted only as totals in the owner report, cleared by Delete all my data
+
 *3 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 7, decision 0140); the owner gave advance permission to build and ship it
 ("Go on V1. Ship each one."). The smaller choices below were made by the

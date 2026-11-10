@@ -1,5 +1,7 @@
 # 0089: The yearly clean-up runs after each night's backup
 
+**In one line:** The yearly clean-up runs right after each night's backup is stored: unstarred entries and articles received over a year ago go, a little at a time, their fingerprints kept so they don't come back
+
 *25 October 2026. Milestone 6 of the plan for 100 to 200 readers ("Room to grow"): the one real limit is the disk, and keeping every article forever would fill it.*
 
 **Decision.** Every night, right after the backup is safely stored, nine

@@ -1,5 +1,7 @@
 # 0099: The feed finder on the website
 
+**In one line:** The feed finder at nineturtles.app/feed-finder/: the app looks (`/api/find-feeds`, anyone, no sign-in) the way Add feed does, the page and its first feed once; answers remembered 30 minutes, one site at most 6 lookups in half an hour, limits for everyone together and nothing about visitors kept; CORS lets only the website's pages read it; at most 10 feeds read from any page (Add feed too)
+
 *26 October 2026. The first free tool from the marketing plan, part of the
 owner's plan for 100 to 200 readers (decision 0086).*
 

@@ -1,5 +1,7 @@
 # 0019: Background checks and Refresh
 
+**In one line:** Background checks and Refresh: each feed's rhythm, rounds, polite answers, failing feeds counted, the list asks once a minute
+
 *23 October 2026, Milestone 8. Built from SPEC sections 11 and 13 without a separate plan (decision 0014).*
 
 **Each feed's rhythm.** After every successful check, slowfeed looks at the

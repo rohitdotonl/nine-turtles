@@ -1,5 +1,7 @@
 # 0241: Less, but better: one way to search, each setting in one place
 
+**In one line:** Less, but better: Search has no options panel (the chip says where, a search from Starred finds starred ones); sort order only in the list's More menu, text size and font only in Aa; Edit and Everyone you follow lose lines that repeat the screen; the welcome's two other ways in share one line; the list's own layout button goes (full-screen reading is `f` or the article's More menu)
+
 *10 November 2026.*
 
 Rohit's "Implement all suggestions, including one in small notes" (10

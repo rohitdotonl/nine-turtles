@@ -1,5 +1,7 @@
 # 0180: A shorter list of keys, and searching is typing words
 
+**In one line:** A shorter list of keys: two columns in the order that matters, no find field or filters in it, `o`, `[`, `]`, `Shift+E`, `g f`, `n` and `Shift+N` cut, `N` for a note, `\` moved to `F`, Shift J / K walking every sidebar row, Shift written as a word on every computer, and typed search filters removed: searching is typing words.
+
 **Date:** 5 November 2026. **Decided by:** the owner, with the owner's critic.
 
 ## What changed

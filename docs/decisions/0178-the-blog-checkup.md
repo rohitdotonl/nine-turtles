@@ -1,5 +1,7 @@
 # 0178: The blog checkup
 
+**In one line:** The blog checkup: a free website tool for writers, "Is your blog easy to follow and write to?", checking their feed, their name in it and three ways to be written to (contact page enough, email in the feed best, Reply by email optional), with fixes for their platform; the second floor's third visit, the page given, its home page and one contact or about page, once, under the feed finder's limits
+
 *4 November 2026.*
 
 **Decision.** The website gets a free tool for writers, "Is your blog easy to

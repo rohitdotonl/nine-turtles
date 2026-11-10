@@ -1,5 +1,7 @@
 # 0184: No syncing with other apps, and the weekly email once a week
 
+**In one line:** Syncing with other apps (Reeder, NetNewsWire, the Google Reader API and app passwords) removed; the weekly email is a switch, once a week or off, and readers who had chosen twice a week are told once
+
 *5 November 2026.*
 
 **Context.** The owner's whole-app review of what to remove or simplify

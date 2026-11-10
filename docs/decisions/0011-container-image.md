@@ -1,5 +1,7 @@
 # 0011: The container image and automatic deploys
 
+**In one line:** The container image, where it's stored, and automatic deploys
+
 *October 2026, Milestone 2.*
 
 **The image.** The `Dockerfile` builds in three steps: the frontend (Node),
