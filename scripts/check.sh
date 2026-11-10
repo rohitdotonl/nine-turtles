@@ -11,7 +11,10 @@
 #   scripts/check.sh rust       Rust formatting, lint and tests
 #   scripts/check.sh browser    the release program, then the browser tests
 #   scripts/check.sh website    the website at nineturtles.app (decision 0066)
-# NINE_TURTLES_SHARD=1/6 runs only the first sixth of the browser tests.
+# NINE_TURTLES_SHARD=1/6 runs only the first sixth of the browser tests, and
+# NINE_TURTLES_BROWSER_TESTS="tests/a.spec.ts tests/b.spec.ts" only those files:
+# what an agent runs before opening a pull request, since GitHub runs them all
+# (decision 0114).
 #
 # Needs: Rust (the version in rust-toolchain.toml), Node 22.12 or newer, and
 # Chromium for Playwright (`npx playwright install chromium` in web/, or point
@@ -96,6 +99,10 @@ browser() {
   step "Accessibility, contrast and screenshots, in a real browser"
   if [ -n "${NINE_TURTLES_SHARD:-}" ]; then
     (cd web && npx playwright test --shard="$NINE_TURTLES_SHARD")
+  elif [ -n "${NINE_TURTLES_BROWSER_TESTS:-}" ]; then
+    # Word splitting on purpose: one or more test files.
+    # shellcheck disable=SC2086
+    (cd web && npx playwright test $NINE_TURTLES_BROWSER_TESTS)
   else
     (cd web && npx playwright test)
   fi

@@ -14,8 +14,8 @@ On GitHub the script runs in parts at once, each on its own computer
 browser` (builds the frontend and the release program, then runs the browser
 tests) six times, each with a sixth of the browser tests
 (`NINE_TURTLES_SHARD=1/6` to `6/6`; decision 0114). The browser the tests
-use is remembered between runs, so it's downloaded only when Playwright's
-version changes. Another, `scripts/check.sh website`, builds the website and checks it
+use is remembered between runs, so it's downloaded again only when the web
+app's libraries (`web/package-lock.json`) change. Another, `scripts/check.sh website`, builds the website and checks it
 in a real browser (decision 0066). The required **All checks** waits for all
 of them and passes only if every one passed. Each part is still a plain script anyone can run; no
 arguments runs everything in order, as before.

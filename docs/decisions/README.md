@@ -4,7 +4,10 @@ Short notes on significant technical decisions: what was decided, why, and
 what would make us revisit it. They exist so a future agent (or person)
 doesn't undo a deliberate choice by accident.
 
-One file per decision, numbered in order: `NNNN-short-name.md`. If a
+One file per decision, numbered in order: `NNNN-short-name.md`. Before
+taking a number, look at the open pull requests too and take the next one
+none of them uses: two changes built at once that take the same number
+clash, and the second must wait for the checks again. If a
 decision changes, a new note replaces it and the old one says "Replaced by …"
 at the top. Notes that later ones have replaced may be folded into one
 summary note, one line each (as 0061 did); their full text stays in the
@@ -93,7 +96,7 @@ repository's history.
 | [0111](0111-assistants-mcp.md) | Your own AI assistant connects over MCP at `/mcp`: the open standard only, OAuth 2.1 with PKCE and dynamic registration (or an assistant key), 15 tools plus bring back, a feed an assistant unsubscribes from kept 30 days, limits per reader, no new library, checked every 15 days |
 | [0112](0112-article-privacy.md) | Article privacy: tracking tags (a fixed list) taken off article links and links in the text, pictures from a short hand-kept list of trackers removed, every picture `loading="lazy"`; the duplicate check unchanged; older articles cleaned again when shown, no one-off pass |
 | [0113](0113-podcasts.md) | *(Up Next removed by 0170.)* Podcasts (structure change 24): audio enclosures played in the browser's own audio element from the publisher's address, never downloaded or proxied (`media-src`; the owner reworded the second floor to say so); a calm player with back 15, forward 30 and speeds; each reader's place on the server (latest save wins) and the device; finished within 30 seconds of the end, marked read; Up Next per reader with buttons, no dragging; Media Session; no new keys |
-| [0114](0114-quicker-steadier-checks.md) | Quicker, steadier checks: libraries built optimized for the Rust tests, only the libraries remembered between runs, the browser tests in parts (four, six since November 2026) with the browser remembered between runs, and the timing fixed in the tests that failed now and then; no automatic retries |
+| [0114](0114-quicker-steadier-checks.md) | Quicker, steadier checks: libraries built optimized for the Rust tests, only the libraries remembered between runs, the browser tests in parts (four, six since November 2026) with the browser remembered between runs, agents run only the browser tests for what they changed before a pull request (GitHub runs them all), and the timing fixed in the tests that failed now and then; no automatic retries |
 | [0115](0115-sign-up-always-open.md) | Sign-up always open: anyone makes an account at once with an email and a password; no switch, no invite links, no confirmation email (replaces those parts of 0087 and 0088); the 20-an-hour cap stays. Partly replaced by 0154: the address is confirmed by an emailed link first |
 | [0116](0116-email-for-everyone.md) | Everyone signs in with an email, the owner too: the password alone signs nobody in (replaces that part of 0087); on a brand-new install the owner's first sign-in saves their email |
 | [0117](0117-delete-my-data.md) | Delete my data: every reader, the owner too, can empty their account from Settings › Account › Delete data…, keeping the account; one "Are you sure?" with the downloads offered first, and no undo |

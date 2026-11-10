@@ -120,7 +120,7 @@ jobs:
       # Let every part finish, so one failure shows every failing test.
       # Six parts, each on its own computer: one computer runs two tests at
       # a time at best, so more parts is what makes them finish sooner. With
-      # four, the slowest part took about 6 minutes and held up every pull
+      # four, the slowest part took about 5 minutes and held up every pull
       # request (decision 0114).
       fail-fast: false
       matrix:
@@ -147,9 +147,9 @@ jobs:
           restore-keys: |
             rust-release-${{ runner.os }}-
 
-      # The browser is the same until Playwright's version changes, so keep
-      # it rather than download it every time; a slow download sometimes
-      # took over 3 minutes (decision 0114).
+      # Kept until the web app's libraries change (Playwright among them),
+      # rather than downloaded every time; a slow download sometimes took
+      # over 3 minutes (decision 0114).
       - name: Remember the browser used by the tests
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -198,9 +198,9 @@ jobs:
             web/package-lock.json
             website/package-lock.json
 
-      # The browser is the same until Playwright's version changes, so keep
-      # it rather than download it every time; a slow download sometimes
-      # took over 3 minutes (decision 0114).
+      # Kept until the web app's libraries change (Playwright among them),
+      # rather than downloaded every time; a slow download sometimes took
+      # over 3 minutes (decision 0114).
       - name: Remember the browser used by the tests
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

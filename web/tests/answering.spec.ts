@@ -14,6 +14,11 @@ const NEWEST = "On keeping a commonplace book (3)";
 const newestRow = (page: Page) =>
   page.getByRole("button", { name: /On keeping a commonplace book \(3\)/ });
 
+// The app may still be asking for a list as a test ends; its answer is thrown
+// away with the page, which made the stand-in below fail a test that had
+// passed ("Response has been disposed"). Stop standing in first (decision 0114).
+test.afterEach(async ({ page }) => page.unrouteAll({ behavior: "ignoreErrors" }));
+
 /** Signs in, follows a new made-up blog of its own and opens its list. */
 async function openBlog(page: Page): Promise<void> {
   const name = `answers-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
