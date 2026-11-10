@@ -26,11 +26,11 @@ nine turtles runs no AI itself. A reader can connect their own assistant (Claude
 - Adding a feed that an assistant unsubscribed from, in the Add field or by an assistant, within its 30 days brings it back whole, as Bring back does.
 
 **Settings › Connected assistants**
-- The server address with **Copy**; each connected assistant with "Connected <date> · Last used <date>" (or "Not used yet") and **Disconnect**, which stops it at once (nothing of the reader's changes); the assistant-key row; and the line under the group saying what this is and that nine turtles runs no AI itself. Below, when there are any, **Unsubscribed by an assistant** with **Bring back** on each.
+- The server address with **Copy**; each connected assistant with "Connected <date> · Last used <date>" (or "Not used yet") and **Disconnect**, which stops it at once (nothing of the reader's changes): "Claude is disconnected. It can no longer reach your nine turtles." with **Undo** and ×, drawn as every Undo line is (section 8). Undo brings the same connection back, so the assistant carries on without being connected again; it lasts until the next action in the group, at most ten minutes, and disconnecting another ends it (decision 0238); the assistant-key row; and the line under the group saying what this is and that nine turtles runs no AI itself. Below, when there are any, **Unsubscribed by an assistant** with **Bring back** on each.
 
 **How to check it**
 1. In Settings › Connected assistants, copy the server address.
 2. In Claude (Settings › Connectors › Add custom connector) or ChatGPT (a custom connector in developer mode), paste the address and connect. The "Connect … to nine turtles?" page opens; press Connect.
 3. Ask the assistant "What's unread in nine turtles?" and "Star the newest article about gardens": the star shows in nine turtles.
 4. Ask it to unsubscribe from a feed. The feed leaves the sidebar; Settings › Connected assistants lists it under Unsubscribed by an assistant. Press Bring back: it's back with its articles.
-5. Press Disconnect beside the assistant: it can no longer reach nine turtles.
+5. Press Disconnect beside the assistant: it can no longer reach nine turtles. Press Undo: it's listed again and works as before, without connecting again.

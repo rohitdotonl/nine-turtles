@@ -26,6 +26,7 @@
   Readers, Plan, Passkeys, ChangeEmail and DeleteAccount.
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import { edge } from "./edge";
   import ChangeEmail from "./ChangeEmail.svelte";
   import ChangePassword from "./ChangePassword.svelte";
@@ -35,6 +36,8 @@
   import { noted } from "./notes.svelte";
   import { stars } from "./stars.svelte";
   import ImportOpml from "./ImportOpml.svelte";
+  import NoteLine from "./NoteLine.svelte";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import InstallApp from "./InstallApp.svelte";
   import ImportStars from "./ImportStars.svelte";
   import Newsletters from "./Newsletters.svelte";
@@ -169,6 +172,36 @@
   let sortMessage = $state("");
   /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
+  /** After an import that added something, "Wrong file? Undo the import" until the next action here (decision 0238). */
+  let importUndo: (() => Promise<"too-late" | undefined>) | undefined = $state();
+  let undoingImport = $state(false);
+  /** What undoing the import said, in oxblood when it couldn't be done. */
+  let importUndone = $state({ words: "", refusal: false });
+
+  async function undoTheImport() {
+    if (!importUndo || undoingImport) return;
+    const undo = importUndo;
+    undoingImport = true;
+    try {
+      const why = await undo();
+      importUndo = undefined;
+      // Undone, the summary is no longer true; too late, it still is.
+      if (why === undefined) importLines = [];
+      importUndone = why === "too-late" ? { words: "It's too late to undo that.", refusal: true } : { words: UNDONE, refusal: false };
+      if (why === undefined) onImported();
+    } catch {
+      importUndone = { words: UNDO_FAILED, refusal: true };
+    }
+    undoingImport = false;
+    await tick();
+    heading?.focus();
+  }
+
+  /** Another import, or ×, ends the import's Undo line. */
+  function endImportUndo() {
+    importUndo = undefined;
+    importUndone = { words: "", refusal: false };
+  }
   /** Your data's two exports: each a download once there's something in it, else a line saying there's nothing yet. */
   const exports = $derived([
     { href: "/api/starred/export", label: "Export starred articles", any: stars.any, none: "Nothing starred yet" },
@@ -500,8 +533,8 @@
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
-          <ImportOpml {onImported} bind:lines={importLines} />
-          <ImportStars {onImported} bind:lines={importLines} />
+          <ImportOpml onImported={() => ((importUndone = { words: "", refusal: false }), onImported())} bind:lines={importLines} bind:undo={importUndo} />
+          <ImportStars onImported={() => (endImportUndo(), onImported())} bind:lines={importLines} />
           <!-- An export with nothing in it says so instead, in a row that isn't a button (decision 0191). -->
           {#each exports as { href, label, any, none } (href)}
             {#if any}
@@ -516,6 +549,19 @@
             <p>{line}</p>
           {/each}
         </div>
+        <!-- The import's Undo, drawn as every Undo line is (SPEC section 8), and what it said: always in the page, so its words are heard. -->
+        <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", importUndone.refusal ? "text-danger" : "text-ink", !importUndo && !importUndone.words && "sr-only"]}>
+          <NoteLine
+            announce
+            message={importUndone.words || (importUndo ? "Wrong file?" : "")}
+            refusal={importUndone.refusal}
+            busy={undoingImport}
+            undoWord="Undo the import"
+            onUndo={importUndo ? undoTheImport : undefined}
+            onClose={() => (endImportUndo(), void tick().then(() => heading?.focus()))}
+          />
+        </div>
+
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,

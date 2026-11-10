@@ -5,7 +5,14 @@ import { isRecord } from "./http";
 import { PLAN_ENDED } from "./feeds";
 
 /** What an OPML import did. */
-export type ImportSummary = { added: number; already: number; foldersAdded: number; unreadable: string[] };
+export type ImportSummary = {
+  added: number;
+  already: number;
+  foldersAdded: number;
+  unreadable: string[];
+  /** It added something, so "Wrong file? Undo the import" can take it away (decision 0238). */
+  undoable: boolean;
+};
 
 /**
  * Imports an OPML file's feeds and folders, or (`youtube`) the subscriptions.csv Google Takeout gives for
@@ -30,6 +37,7 @@ export async function importOpml(file: File, youtube = false): Promise<ImportSum
       already: Number(summary.already ?? 0),
       foldersAdded: Number(summary.folders_added ?? 0),
       unreadable: Array.isArray(summary.unreadable) ? summary.unreadable.map(String) : [],
+      undoable: body.undo === true,
     };
   }
   if (isRecord(body) && body.error === "not-opml") {
@@ -43,6 +51,17 @@ export async function importOpml(file: File, youtube = false): Promise<ImportSum
   return "The file couldn't be imported. Try again in a moment.";
 }
 
+/**
+ * Undo for the last import: exactly the feeds and folders it added go (decision 0238).
+ * "too-late" once nine turtles can't reach it any more; throws when it couldn't be asked.
+ */
+export async function undoImport(): Promise<"too-late" | undefined> {
+  const response = await api("/api/opml/undo", { method: "POST" });
+  if (response.status === 409) return "too-late";
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
+  return undefined;
+}
+
 /** Why nothing was imported: the file would take the reader past the most feeds one reader can follow. */
 export function tooManyToImport(following: number, adding: number, most: number): string {
   const number = new Intl.NumberFormat("en-GB");
@@ -51,7 +70,7 @@ export function tooManyToImport(following: number, adding: number, most: number)
 }
 
 /** The plain summary after an import (SPEC section 16). */
-export function importMessage(summary: ImportSummary): string[] {
+export function importMessage(summary: Omit<ImportSummary, "undoable">): string[] {
   const count = (number: number, one: string, many: string) => `${number} ${number === 1 ? one : many}`;
   const lines = [
     summary.added === 0

@@ -538,6 +538,47 @@ async fn the_reader_approves_and_the_assistant_works() {
     )
     .await;
     assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(listed["assistants"], json!([]));
+
+    // Undo brings the same connection back, tickets and all (decision 0238).
+    let (status, _) = post_json(
+        &base,
+        &format!("/api/assistants/{id}/reconnect"),
+        Some(&cookie),
+        &json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
+    assert_eq!(listed["assistants"][0]["id"], id);
+    let (_, error) = tool(
+        &base,
+        fresh["access_token"].as_str().unwrap(),
+        "list_feeds",
+        json!({}),
+    )
+    .await;
+    assert!(!error);
+    let (status, _) = token(
+        &base,
+        &[
+            ("grant_type", "refresh_token"),
+            ("refresh_token", fresh["refresh_token"].as_str().unwrap()),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    // There's no undoing a connection that isn't disconnected.
+    let (status, answer) = post_json(
+        &base,
+        &format!("/api/assistants/{id}/reconnect"),
+        Some(&cookie),
+        &json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(answer["error"], "too-late");
 }
 
 #[tokio::test]
@@ -704,7 +745,7 @@ async fn an_assistant_sees_only_its_own_readers_things() {
 
 #[tokio::test]
 async fn an_assistant_key_works_until_turned_off() {
-    let base = common::start(common::config()).await;
+    let (base, state) = common::start_with_state(common::config()).await;
     let cookie = common::signed_in(&base).await;
     let (status, made) = post_json(
         &base,
@@ -730,6 +771,57 @@ async fn an_assistant_key_works_until_turned_off() {
         rpc(&base, key, "tools/list", json!({})).await.status(),
         StatusCode::UNAUTHORIZED
     );
+
+    // Undo reverses only the last disconnect: disconnecting another
+    // forgets this one for good, key and all (decision 0238).
+    let (_, other) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
+    let other = other["assistant"]["id"].as_i64().unwrap();
+    post_json(
+        &base,
+        &format!("/api/assistants/{other}/disconnect"),
+        Some(&cookie),
+        &json!({}),
+    )
+    .await;
+    let (status, _) = post_json(
+        &base,
+        &format!("/api/assistants/{id}/reconnect"),
+        Some(&cookie),
+        &json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(
+        rpc(&base, key, "tools/list", json!({})).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    // Someone else can't bring it back either.
+    let (_, stranger) = common::another_reader(&state).await;
+    let (status, _) = post_json(
+        &base,
+        &format!("/api/assistants/{other}/reconnect"),
+        Some(&stranger),
+        &json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    // A background round forgets it for good once Undo's ten minutes are up.
+    let waiting = async || -> i64 {
+        sqlx::query_scalar("SELECT COUNT(*) FROM assistant_connections WHERE id = ?")
+            .bind(other)
+            .fetch_one(&state.db)
+            .await
+            .unwrap()
+    };
+    let now = nine_turtles::now();
+    nine_turtles::checking::round(&state, now + 9 * 60)
+        .await
+        .unwrap();
+    assert_eq!(waiting().await, 1);
+    nine_turtles::checking::round(&state, now + 11 * 60)
+        .await
+        .unwrap();
+    assert_eq!(waiting().await, 0);
 }
 
 #[tokio::test]

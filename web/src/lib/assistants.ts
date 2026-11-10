@@ -132,6 +132,17 @@ export async function disconnect(id: number): Promise<void> {
   if (!response.ok && response.status !== 404) throw new Error(`nine turtles answered ${response.status}`);
 }
 
+/** Undo after Disconnect could no longer reach the connection (ten minutes passed, or another was disconnected). */
+export const TOO_LATE_TO_RECONNECT = "It's too late to undo that. Connect it again from inside your assistant.";
+
+/** Undo for `disconnect`: the same connection comes back, as it was (decision 0238). "too-late" once it's gone for good. */
+export async function reconnect(id: number): Promise<"too-late" | undefined> {
+  const response = await api(`/api/assistants/${id}/reconnect`, { method: "POST" });
+  if (response.status === 409) return "too-late";
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
+  return undefined;
+}
+
 /** Reads one assistant from the server's words, or nothing if it's malformed. */
 function readOne(item: unknown): Assistant | undefined {
   return readAssistants({ assistants: [item] }).assistants[0];

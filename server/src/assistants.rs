@@ -29,13 +29,13 @@ use std::{
 
 use axum::{
     Form, Json, Router,
-    extract::{FromRequestParts, Path, State},
+    extract::{FromRequestParts, State},
     http::{HeaderMap, HeaderValue, StatusCode, header, request::Parts},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
 use reqwest::Url;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use sqlx::SqlitePool;
@@ -71,6 +71,8 @@ const LONGEST_ADDRESS: usize = 2_000;
 /// Keys start so, so a reader (or a secret scanner) can tell one at a glance.
 const KEY_PREFIX: &str = "nt_";
 
+pub mod settings;
+
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route(
@@ -94,9 +96,13 @@ pub fn routes() -> Router<AppState> {
         .route("/api/oauth/request", get(request))
         .route("/api/oauth/approve", post(approve))
         .route("/api/oauth/deny", post(deny))
-        .route("/api/assistants", get(list))
-        .route("/api/assistants/key", post(make_key))
-        .route("/api/assistants/{id}/disconnect", post(disconnect))
+        .route("/api/assistants", get(settings::list))
+        .route("/api/assistants/key", post(settings::make_key))
+        .route(
+            "/api/assistants/{id}/disconnect",
+            post(settings::disconnect),
+        )
+        .route("/api/assistants/{id}/reconnect", post(settings::reconnect))
 }
 
 /// How often things happen, kept in memory: registrations, and each
@@ -684,6 +690,16 @@ async fn swap_code(
     if !verifier_matches(get("code_verifier"), &challenge) {
         return Ok(Err("The PKCE code_verifier doesn't match."));
     }
+    // Connecting again after a disconnect starts afresh: the old connection,
+    // waiting for an Undo, goes for good with its tickets (decision 0238).
+    sqlx::query(
+        "DELETE FROM assistant_connections
+         WHERE person_id = ? AND client_id = ? AND disconnected_at IS NOT NULL",
+    )
+    .bind(person)
+    .bind(client)
+    .execute(db)
+    .await?;
     // Connecting the same assistant again keeps one line for it in Settings.
     // One statement adds the line only if there's none yet, so two codes
     // swapped at the same moment can't both add one (survey A9.5).
@@ -720,6 +736,8 @@ async fn swap_refresh(
 ) -> Result<Result<Value, &'static str>, sqlx::Error> {
     let found: Option<(i64, Option<i64>)> = sqlx::query_as(
         "DELETE FROM assistant_tokens WHERE token_hash = ? AND kind = 'refresh' AND expires_at > ?
+             AND connection_id IN
+                 (SELECT id FROM assistant_connections WHERE disconnected_at IS NULL)
          RETURNING connection_id,
              (SELECT client_id FROM assistant_connections WHERE id = connection_id)",
     )
@@ -788,6 +806,7 @@ impl FromRequestParts<AppState> for Assistant {
              FROM assistant_tokens JOIN assistant_connections
                  ON assistant_connections.id = assistant_tokens.connection_id
              WHERE assistant_tokens.token_hash = ? AND assistant_tokens.kind IN ('access', 'key')
+                 AND assistant_connections.disconnected_at IS NULL
                  AND (assistant_tokens.expires_at IS NULL OR assistant_tokens.expires_at > ?)",
         )
         .bind(&scramble(token)[..])
@@ -816,133 +835,6 @@ impl FromRequestParts<AppState> for Assistant {
             Ok(None) => Err(sign_in_first(state, &parts.headers)),
             Err(error) => Err(database_problem("checking an assistant's ticket", &error)),
         }
-    }
-}
-
-#[derive(Serialize, sqlx::FromRow)]
-struct Connected {
-    id: i64,
-    name: String,
-    connected_at: i64,
-    last_used_at: Option<i64>,
-}
-
-#[derive(Serialize, sqlx::FromRow)]
-struct Kept {
-    feed_id: i64,
-    title: String,
-    unsubscribed_at: i64,
-    kept_until: i64,
-}
-
-/// Settings: the reader's connected assistants, and the feeds an assistant
-/// unsubscribed from that can still be brought back.
-async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    let listed = async {
-        let assistants: Vec<Connected> = sqlx::query_as(
-            "SELECT id, name, created_at AS connected_at, last_used_at
-             FROM assistant_connections WHERE person_id = ? ORDER BY created_at, id",
-        )
-        .bind(person)
-        .fetch_all(&state.db)
-        .await?;
-        let kept: Vec<Kept> = sqlx::query_as(
-            "SELECT feed_id, title, unsubscribed_at, kept_until FROM subscriptions
-             WHERE person_id = ? AND kept_until IS NOT NULL AND unsubscribed_at IS NOT NULL
-                 AND cleared = 0
-             ORDER BY unsubscribed_at DESC, feed_id",
-        )
-        .bind(person)
-        .fetch_all(&state.db)
-        .await?;
-        Ok::<_, sqlx::Error>((assistants, kept))
-    }
-    .await;
-    match listed {
-        Ok((assistants, kept)) => {
-            Json(json!({ "assistants": assistants, "unsubscribed": kept })).into_response()
-        }
-        Err(error) => database_problem("listing assistants", &error),
-    }
-}
-
-/// Disconnects an assistant: its tickets stop working at once.
-async fn disconnect(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Path(id): Path<i64>,
-) -> Response {
-    let deleted = sqlx::query("DELETE FROM assistant_connections WHERE id = ? AND person_id = ?")
-        .bind(id)
-        .bind(person)
-        .execute(&state.db)
-        .await;
-    match deleted {
-        Ok(done) if done.rows_affected() == 0 => StatusCode::NOT_FOUND.into_response(),
-        Ok(_) => StatusCode::NO_CONTENT.into_response(),
-        Err(error) => database_problem("disconnecting an assistant", &error),
-    }
-}
-
-#[derive(Deserialize)]
-struct KeyForm {
-    #[serde(default)]
-    name: Option<String>,
-}
-
-/// Makes an assistant key, for an assistant that can't show the "Connect
-/// this assistant?" page, and shows it this once.
-async fn make_key(
-    SignedIn(person): SignedIn,
-    State(state): State<AppState>,
-    Json(form): Json<KeyForm>,
-) -> Response {
-    let key = match new_token() {
-        Ok(token) => format!("{KEY_PREFIX}{token}"),
-        Err(error) => {
-            log::problem(&format!("couldn't make an assistant key: {error}"));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-    };
-    let name = match form.name.as_deref().map(str::trim) {
-        Some(name) if !name.is_empty() => clean_name(Some(name)),
-        _ => "Assistant key".to_owned(),
-    };
-    let at = now();
-    let made = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        let id: i64 = sqlx::query_scalar(
-            "INSERT INTO assistant_connections (person_id, client_id, name, created_at)
-             VALUES (?, NULL, ?, ?) RETURNING id",
-        )
-        .bind(person)
-        .bind(&name)
-        .bind(at)
-        .fetch_one(&mut *transaction)
-        .await?;
-        sqlx::query(
-            "INSERT INTO assistant_tokens (token_hash, connection_id, kind, expires_at)
-             VALUES (?, ?, 'key', NULL)",
-        )
-        .bind(&scramble(&key)[..])
-        .bind(id)
-        .execute(&mut *transaction)
-        .await?;
-        transaction.commit().await?;
-        Ok::<i64, sqlx::Error>(id)
-    }
-    .await;
-    match made {
-        Ok(id) => (
-            StatusCode::CREATED,
-            [(header::CACHE_CONTROL, "no-store")],
-            Json(json!({
-                "key": key,
-                "assistant": Connected { id, name, connected_at: at, last_used_at: None },
-            })),
-        )
-            .into_response(),
-        Err(error) => database_problem("making an assistant key", &error),
     }
 }
 

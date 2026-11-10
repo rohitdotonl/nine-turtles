@@ -36,7 +36,8 @@ mod order;
 mod shared;
 pub use shared::{Deleted, Renamed, delete, named, put_back, rename};
 
-/// How long Undo can bring an unsubscribed feed back, in seconds. The screen
+/// How long Undo can bring an unsubscribed feed back, in seconds, and a
+/// disconnected assistant or the last import too (decision 0238). The screen
 /// offers Undo only until the reader's next action, which is almost always
 /// sooner.
 pub const UNDO_FOR: i64 = 10 * 60;

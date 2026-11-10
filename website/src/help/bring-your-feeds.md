@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 16
-updated: 2026-11-06
+updated: 2026-11-10
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -23,6 +23,9 @@ related: [follow-someone, download-everything, questions]
 
 nine turtles says how many it added, for example "Added 120 feeds and 8
 folders." Their articles arrive over the next few minutes.
+
+Chose the wrong file? Press **Undo the import** on the line under it: exactly
+what that import added goes again, and everything you followed before stays.
 
 New here? On the welcome screen, **Bring your list from another app…** does
 the same thing.

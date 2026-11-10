@@ -325,7 +325,7 @@ test("the sidebar search also searches articles: its row, or Enter, searches All
   await expect(field).toHaveValue(blog);
 });
 
-test("import an OPML file from Settings: a plain summary, folders in the sidebar; export downloads them", async ({ page }) => {
+test("import an OPML file from Settings: a plain summary, folders in the sidebar, Undo; export downloads them", async ({ page }) => {
   const [one, two] = [unique("imported"), unique("imported-too")];
   const folder = unique("From OPML");
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -362,6 +362,15 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   const text = await exported.text();
   expect(text).toContain(`<outline text="${folder}"`);
   expect(text).toContain(`xmlUrl="${FEED_SITE}/blog/${one}/feed.xml"`);
+
+  // Wrong file? Undo the import takes away exactly what it added (decision 0238).
+  await expect(page.getByText("Wrong file?")).toBeVisible();
+  // From the keyboard: then the keyboard's place waits on the page's heading.
+  await tabTo(page, page.getByRole("button", { name: "Undo the import" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Undone.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toHaveCount(0);
 
   // Starred articles download as a JSON Feed file.
   const starredLink = page.getByRole("link", { name: "Export starred articles" });

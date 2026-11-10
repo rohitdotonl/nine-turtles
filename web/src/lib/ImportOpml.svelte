@@ -7,19 +7,24 @@
   "Import YouTube subscriptions…" takes the subscriptions.csv Google Takeout
   gives, each channel as its feed, the same way (decision 0144).
   In the welcome (`link`), only the way in, as a text link that opens the file chooser at once.
+  In Settings, an import that added something hands over its Undo (`undo`):
+  "Wrong file? Undo the import" takes away exactly what it added (decision 0238).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { importMessage, importOpml } from "./importing";
+  import { importMessage, importOpml, undoImport } from "./importing";
 
   let {
     onImported,
     lines = $bindable([]),
+    undo = $bindable(),
     link,
   }: {
     /** A list was read; `lines` say what came of it, and `added` how many feeds came in. */
     onImported: (lines: string[], added: number) => void;
     lines?: string[];
+    /** After an import that added something: takes it away again. "too-late" once it can't. */
+    undo?: () => Promise<"too-late" | undefined>;
     /** In the welcome: only the way in, as a text link with these words (no Settings rows, no Export). */
     link?: string;
   } = $props();
@@ -32,6 +37,7 @@
     const file = from?.files?.[0];
     if (!file || busy) return;
     busy = true;
+    undo = undefined;
     lines = ["Importing…"];
     const result = await importOpml(file, youtube);
     busy = false;
@@ -41,6 +47,7 @@
       return;
     }
     lines = importMessage(result);
+    if (result.undoable && !link) undo = undoImport;
     onImported(lines, result.added);
   }
 </script>

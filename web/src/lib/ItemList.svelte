@@ -29,6 +29,9 @@
 
   Unsubscribing and deleting a folder happen elsewhere, then lead here: the
   list arrives with their `notice` already in the line, Undo included.
+  Mark all as read's Undo outlives the list (`lastMarkAll.ts`, decision
+  0238): the next list arrives with it, naming where it happened, until
+  something else is done that can be undone.
 
   The list never changes on its own (SPEC section 13). Every minute it asks
   the server whether articles have arrived for it; if so, it says "New
@@ -38,28 +41,26 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { onMount, tick } from "svelte";
-  import { untitledOpening, type Article, type Source } from "./shapes";
+  import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
-  import { sourceOf, writerOf, type OneSource } from "./people";
+  import type { OneSource } from "./people";
   import { CHOOSE_FIRST, NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
   import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
   import LateLine from "./LateLine.svelte";
+  import { lastMarkAll, rememberMarkAll, type MarkedAll } from "./lastMarkAll";
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, notSavedSignedOut, couldNotLoad, resultCount } from "./lists";
   import { markRead, markStarred, signedOut } from "./saving";
   import { prefetch } from "./articles";
-  import { exactly, nothingNewSince, when } from "./times";
-  import { hugEllipsis } from "./hug";
-  import RowKind from "./RowKind.svelte";
-  import RowPlace from "./RowPlace.svelte";
+  import { nothingNewSince } from "./times";
+  import RowText from "./RowText.svelte";
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu } from "./rowMenu";
   import { longPress } from "./longPress";
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { opensElsewhere } from "./articleLinks";
   import type { EmptyWords } from "./listWording";
-  import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
@@ -82,7 +83,7 @@
     rowActions = () => [],
     addressOf = () => "",
     note = $bindable(),
-    loading = "Loading…",
+    place,
   }: {
     source: Source;
     order: Order;
@@ -114,9 +115,12 @@
     addressOf?: (article: Article) => string;
     /** The note, for the reading area to show while the list isn't on screen (decision 0229). */
     note?: ListNote;
-    /** What a slow first load says where the rows will be, "Loading Outdoors…" (decision 0230). */
-    loading?: string;
+    /** The list's own name, "Outdoors": a slow first load says "Loading Outdoors…" (decision 0230), and Mark all as read names it. */
+    place?: string;
   } = $props();
+
+  /** What a slow first load says where the rows will be. */
+  let loading = $derived(results ? "Searching…" : place ? `Loading ${place}…` : "Loading…");
 
   /** How often the list asks whether new items are waiting. */
   const ASK_EVERY_MS = 60_000;
@@ -160,10 +164,27 @@
   /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
   let noteFor: number | undefined = $state();
   $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
+  /** The last Mark all as read, made here or carried from the list before (decision 0238). */
+  let marking: MarkedAll | undefined = lastMarkAll();
+  if (marking) {
+    const { message, articles: marked } = marking;
+    line = undoMessage = message;
+    undoLast = () => markUnreadAgain(marked);
+    closed = marking.closed;
+  }
+  // Closing the note (or moving on) carries: the next list keeps it on `u` only.
+  $effect(() => {
+    const put = closed;
+    if (marking && marking === lastMarkAll()) marking.closed = put;
+  });
+
   // The notice is read when the list opens, and again when a move brings a new one to the same list.
   $effect(() => {
     if (!notice || !firstShowing(notice)) return;
     const { message, undo } = notice;
+    // Unsubscribing and the rest are newer than any Mark all as read: Undo reverses only the last.
+    marking = undefined;
+    rememberMarkAll(undefined);
     line = undoMessage = message;
     closed = false;
     if (undo) {
@@ -467,6 +488,7 @@
 
   /** The line says something that has nothing to undo; after a failed save, Try again sends it again. */
   export function say(message: string, retry?: () => void) {
+    rememberMarkAll((marking = undefined));
     line = message;
     noteFor = selected?.id;
     undoLast = undefined;
@@ -488,7 +510,9 @@
    * Called before the action's own marks are saved, so their saves belong
    * to it (see `save`).
    */
-  function did(message: string, reverse: () => void) {
+  function did(message: string, reverse: () => void, markedAll?: Article[]) {
+    marking = markedAll && { message, articles: markedAll, closed: false };
+    rememberMarkAll(marking);
     line = undoMessage = message;
     passing = false;
     noteFor = selected?.id;
@@ -543,8 +567,17 @@
       say(markedAllMessage(0));
       return;
     }
-    did(markedAllMessage(unread.length), () => setRead(unread, false));
+    did(markedAllMessage(unread.length, results ? undefined : place), () => markUnreadAgain(unread), unread);
     setRead(unread, true);
+  }
+
+  /** Undo for Mark all as read, here or in a list after it: each article this list shows is marked unread on its row. */
+  function markUnreadAgain(marked: Article[]) {
+    const shown = new Map(articles.map((article) => [article.id, article]));
+    setRead(
+      marked.map((article) => shown.get(article.id) ?? article),
+      false,
+    );
   }
 
   /** `u` and Undo: reverses the last undoable action, once. */
@@ -622,7 +655,6 @@
   <ul class="item-list">
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
-      {@const opening = untitledOpening(article)}
       <li>
         <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
         <button
@@ -649,52 +681,8 @@
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
-          <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
-          <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
-          <!-- An untitled post shows its opening once instead (SPEC section 6, decision 0196): the same serif, never semibold so it doesn't pose as a title, two lines and then "…". -->
-          <span class={["title font-serif text-(length:--row-title-size) leading-(--row-title-line)", opening === undefined ? "block" : "line-clamp-2", unreadOff ? "text-ink" : !article.read ? [opening === undefined && "font-semibold", "text-ink"] : current ? "text-ink" : "text-ink-2"]}
-            ><bdi
-              >{#each boldParts(opening ?? article.title, bold) as part, partIndex (partIndex)}{#if part.bold}<mark class="match"
-                    >{part.text}</mark
-                  >{:else}{part.text}{/if}{/each}</bdi
-            >{#if !article.read && !unreadOff}<span class="sr-only">, unread</span>{/if}</span
-          >
-          {#if article.excerpt && article.excerpt.length > 0}
-            <!--
-              A search result's text around the first searched word (SPEC section 14), right under
-              the title and before the meta line, as Apple Books orders a result: plain text from
-              nine turtles, shown as text, up to two lines. Searched words are marked as in the title
-              (a faint accent tone behind them, and an underline) and in full ink, so they show by
-              tone and shape.
-            -->
-            <span class="excerpt mt-0.5 line-clamp-2 text-meta text-muted"
-              >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<mark class="match"
-                    >{piece.text}</mark
-                  >{:else}{piece.text}{/if}{/each}</span
-            >
-          {/if}
-          <!--
-            Always one line (decision 0048): a long source name ends in "…", the time and star never wrap. The "·" hugs the "…" (decision 0051). The whole line
-            is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
-            (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
-          -->
-          <span class={["row-meta mt-2 text-[0.75rem] tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
-            <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
-            {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>&nbsp;·</span>{/if}
-            <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
-            <time datetime={new Date(article.at * 1000).toISOString()} class="row-date" title={exactly(article.at)}>{when(article.at)}</time>
-            <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
-            <RowKind {article} />
-            <!-- Your place, while one is kept: "· Half read" (decision 0224). -->
-            <RowPlace article={article.id} />
-            {#if article.muted}
-              <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
-              <span class="row-muted">· Hidden</span>
-            {/if}
-            {#if article.starred}
-              <span class="row-star"><Icon name="star" size={13} filled /><span class="sr-only">, Starred</span></span>
-            {/if}
-          </span>
+          <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
+          <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
         </button>
       </li>
     {/each}
@@ -774,25 +762,3 @@
     </p>
   </div>
 </div>
-
-<style>
-  /*
-    A searched word, in a title or in the line of text under it: one style,
-    a faint tone of the accent behind it with small rounded corners, in the
-    text's own weight and color, and a fine underline so it never shows by
-    tone alone (SPEC.md section 6, decision 0037).
-  */
-  .match {
-    padding: 0 1px;
-    text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
-    text-underline-offset: 0.2em;
-    border-radius: 3px;
-    background-color: var(--mark);
-    color: inherit;
-    font-weight: inherit;
-  }
-  /* In the muted line of text, the searched words are in full ink too. */
-  .excerpt .match {
-    color: var(--ink);
-  }
-</style>

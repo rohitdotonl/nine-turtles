@@ -164,7 +164,7 @@ test.describe("on a wide window", () => {
     for (const title of [NEWEST, MIDDLE, OLDEST]) {
       await expect(row(page, blog, title)).not.toHaveAccessibleName(/, unread/);
     }
-    await expect(line(page)).toHaveText("Marked 3 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
     // No unread articles: no number at all.
     await expect(feedLink(page, blog)).toHaveAccessibleName(`Blog ${blog}`);
 
@@ -173,6 +173,42 @@ test.describe("on a wide window", () => {
       await expect(row(page, blog, title)).toHaveAccessibleName(/, unread/);
     }
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
+  });
+
+  test("Mark all as read's Undo follows you to another list, naming where, until your next undoable action (decision 0238)", async ({ page }) => {
+    const blog = await openBlog(page);
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
+
+    // Somewhere else, the note is still there, and Undo still works.
+    await sidebar(page).getByRole("link", { name: "All articles" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "All articles" })).toBeVisible();
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
+    await page.getByRole("button", { name: "Undo" }).click();
+    await expect(line(page)).toHaveText("Undone.");
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", "3");
+
+    // Closed, it still waits on u in the next list; something else undoable ends it.
+    await feedLink(page, blog).click();
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
+    await page.getByRole("button", { name: "Close the note" }).click();
+    await sidebar(page).getByRole("link", { name: "All articles" }).click();
+    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+    await page.keyboard.press("u");
+    await expect(line(page)).toHaveText("Undone.");
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", "3");
+    await feedLink(page, blog).click();
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
+    await page.keyboard.press("Shift+A");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
+    await page.keyboard.press("j");
+    await page.keyboard.press("s");
+    await expect(line(page)).toHaveText("Starred.");
+    await sidebar(page).getByRole("link", { name: "All articles" }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "All articles" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
   });
 
   test("Command Z (Ctrl Z) undoes as u does, but in a field it stays the field's own undo (decision 0231)", async ({ page }) => {
@@ -210,7 +246,7 @@ test.describe("on a wide window", () => {
     await expect(markAll).toBeFocused();
     await expect(markAll).toHaveAttribute("aria-keyshortcuts", "Shift+A");
     await page.keyboard.press("Enter");
-    await expect(line(page)).toHaveText("Marked 3 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
     // The menu closes, and the keyboard goes back to its button.
     await expect(page.getByRole("menu")).toHaveCount(0);
     await expect(more).toBeFocused();
@@ -226,7 +262,7 @@ test.describe("on a wide window", () => {
   test("the note goes once you move on or close it, never on a timer, and u still undoes", async ({ page }) => {
     const blog = await openBlog(page);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 3 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
     const undo = page.getByRole("button", { name: "Undo" });
     const close = page.getByRole("button", { name: "Close the note" });
     // The words on the left, Undo and × on the right, side by side, centred on one another.
@@ -266,7 +302,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("j");
     await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 2 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 2 articles as read in Blog ${blog}.`);
     // Opening another article puts the note away; then the first save fails.
     await page.keyboard.press("j");
     await expect(page.getByRole("button", { name: "Close the note" })).toHaveCount(0);
@@ -468,7 +504,7 @@ test.describe("when saving fails", () => {
     // The article is marked read once the reading area shows it: that's the first save.
     await expect.poll(() => saves).toBe(1);
     await page.keyboard.press("Shift+A");
-    await expect(line(page)).toHaveText("Marked 2 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 2 articles as read in Blog ${blog}.`);
 
     // The first fails: taken back and said, with Try again, and Mark all as read's Undo stays.
     releases[0]?.();
@@ -479,7 +515,7 @@ test.describe("when saving fails", () => {
 
     // Mark all as read is saved: the connection is back, so the line returns to it, Undo included.
     releases[1]?.();
-    await expect(line(page)).toHaveText("Marked 2 articles as read.");
+    await expect(line(page)).toHaveText(`Marked 2 articles as read in Blog ${blog}.`);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
   });
