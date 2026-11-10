@@ -127,6 +127,21 @@ function notKept(refusal: string, kind: Waiting["kind"]): string {
   return FAILED[kind];
 }
 
+/**
+ * The changes still waiting once `sent`, the first, has been sent: by itself,
+ * not by its place, as changes go on being folded in while it's on its way.
+ * A highlight given a note meanwhile has that note sent next, under the
+ * number the server gave it (`made`); one removed meanwhile is removed there too.
+ */
+export function afterSent(list: Waiting[], sent: Waiting, made?: number): Waiting[] {
+  if (sent.kind !== "highlight" || list.includes(sent)) return list.filter((each) => each !== sent);
+  const now = list.find((each) => each.kind === "highlight" && each.id === sent.id);
+  // The server didn't take it: whatever was folded into it goes with it.
+  if (made === undefined) return list.filter((each) => each !== now);
+  if (now?.kind === "highlight") return list.map((each) => (each === now ? { kind: "change", article: sent.article, id: made, note: now.note } : each));
+  return [{ kind: "remove", article: sent.article, id: made }, ...list];
+}
+
 let sending = false;
 
 /** Sends the waiting changes in order, stopping if the connection goes again. A highlight made offline takes the server's number. */
@@ -140,7 +155,7 @@ export async function sendWaiting(): Promise<void> {
       if (sent === "offline") break;
       // One the server won't take (an article gone meanwhile) isn't sent again; the article shows the account's own once reopened.
       const made = change.kind === "highlight" && isRecord(sent.answer?.highlight) ? toNote(sent.answer.highlight) : undefined;
-      waiting.list = waiting.list.slice(1);
+      waiting.list = afterSent(waiting.list, change, made?.id);
       save();
       if (made && change.kind === "highlight") {
         // A note left unsaved on it follows it to its number (decision 0235).
@@ -173,9 +188,11 @@ export class Marks {
    * (below zero), which a menu or box opened meanwhile may still hold.
    * Removing it or changing its note waits for its own number, here (none if
    * its save was refused), and `renamed` finds it by the stand-in afterwards.
+   * A refused one's words stay in `lost`, for a note written on it meanwhile.
    */
   private saving = new Map<number, Promise<number | undefined>>();
   private renamed = new Map<number, number>();
+  private lost = new Map<number, Quote>();
 
   constructor(full: FullArticle) {
     this.full = full;
@@ -215,10 +232,11 @@ export class Marks {
 
   /**
    * Sends a change, or keeps it on this device. If the server won't take
-   * it, what was shown goes back to how it was (`before`) and the answer
+   * it, what was shown goes back (`back`: worked out then, so only this
+   * change is undone, whatever else was done meanwhile) and the answer
    * says why, in plain words, for the reader to see.
    */
-  private async change(change: Waiting, before: Note[]): Promise<Sent> {
+  private async change(change: Waiting, back: () => Note[]): Promise<Sent> {
     const sent = waiting.list.length > 0 ? "offline" : await send(change);
     if (sent === "offline") {
       waiting.list = folded(waiting.list, change);
@@ -228,22 +246,25 @@ export class Marks {
       return {};
     }
     if (sent.refusal) {
-      this.keep(before);
+      this.keep(back());
       return { refusal: notKept(sent.refusal, change.kind) };
     }
     return sent;
   }
 
   /** Highlights the words; answers the new highlight, or why it couldn't be kept. */
-  async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string }> {
-    const before = this.notes;
+  async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string; lost?: number }> {
     const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
     this.keep([...this.notes, made]);
-    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, before);
+    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, () => this.notes.filter((each) => each.id !== made.id));
     // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
     this.saving.set(made.id, sent.then(({ answer, refusal }) => (refusal ? undefined : isRecord(answer?.highlight) ? toNote(answer.highlight).id : made.id)));
     const { answer, refusal } = await sent;
-    if (refusal) return { problem: refusal };
+    if (refusal) {
+      // Its words are kept, for a note written on it meanwhile to highlight them again.
+      this.lost.set(made.id, quote);
+      return { problem: refusal, lost: made.id };
+    }
     const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
     if (saved) {
       this.renamed.set(made.id, saved.id);
@@ -257,7 +278,14 @@ export class Marks {
 
   /** The highlight's number here now: its own, once a stand-in's save has answered. */
   here(id: number): number {
-    return this.renamed.get(id) ?? id;
+    // Made offline, then given its number once sent, it was renamed twice.
+    for (let now = this.renamed.get(id); now !== undefined; now = this.renamed.get(id)) id = now;
+    return id;
+  }
+
+  /** The words of a highlight whose save was refused, if this was one. */
+  lostQuote(id: number): Quote | undefined {
+    return this.lost.get(this.here(id));
   }
 
   /** Its number on the server, waiting for its save if need be; none if that save was refused. */
@@ -273,11 +301,22 @@ export class Marks {
     const clean = note?.trim() || null;
     this.keep(this.notes.map((each) => (each.id === this.here(id) ? { ...each, note: clean } : each)));
     const server = await this.onServer(id);
-    // Its highlight couldn't be saved (and the reader was told): the words stay in the box (decision 0235).
-    if (server === undefined) return NOTE_NOT_SAVED;
-    // Refused, only this note goes back, whatever else was done meanwhile.
-    const then = this.notes.map((each) => (each.id === this.here(id) ? { ...each, note: was?.note ?? null } : each));
-    return (await this.change({ kind: "change", article: this.full.id, id: server, note: clean }, then)).refusal;
+    // Its highlight couldn't be saved (and the reader was told): Save highlights its words again, with the note.
+    if (server === undefined) return this.again(id, clean);
+    const back = () => this.notes.map((each) => (each.id === this.here(id) ? { ...each, note: was?.note ?? null } : each));
+    return (await this.change({ kind: "change", article: this.full.id, id: server, note: clean }, back)).refusal;
+  }
+
+  /** A note on a highlight whose save was refused: its words are highlighted again, with it. If that's refused too, the words stay in the box. */
+  private async again(id: number, note: string | null): Promise<string | undefined> {
+    const at = this.here(id);
+    const quote = this.lost.get(at);
+    if (!quote) return NOTE_NOT_SAVED;
+    const { made, problem } = await this.highlight(quote, note);
+    if (!made) return problem ?? NOTE_NOT_SAVED;
+    this.lost.delete(at);
+    this.renamed.set(at, made.id);
+    return undefined;
   }
 
   /** Removes a highlight (and its note). Answers it, for Undo, or why it couldn't be removed. */
@@ -289,11 +328,10 @@ export class Marks {
     const server = await this.onServer(id);
     // Its save was refused: it's gone already, and the reader was told why.
     if (server === undefined) return {};
-    // Refused, only this highlight comes back, in its place, whatever else was done meanwhile.
-    const back = { ...was, id: this.here(id) };
-    const then = [...this.notes.slice(0, at), back, ...this.notes.slice(at)];
-    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id: server }, then);
-    return refusal ? { problem: refusal } : { was: back };
+    const kept = { ...was, id: this.here(id) };
+    const back = () => [...this.notes.slice(0, at), kept, ...this.notes.slice(at)];
+    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id: server }, back);
+    return refusal ? { problem: refusal } : { was: kept };
   }
 
   /** Undo for a removed highlight: it's made again, with its note. Answers why, if it couldn't be. */
@@ -309,6 +347,6 @@ export class Marks {
     const before = this.notes;
     const clean = note?.trim() || null;
     this.keep(withWaiting(this.notes, this.full.id, [{ kind: "article-note", article: this.full.id, note: clean }]));
-    return (await this.change({ kind: "article-note", article: this.full.id, note: clean }, before)).refusal;
+    return (await this.change({ kind: "article-note", article: this.full.id, note: clean }, () => before)).refusal;
   }
 }

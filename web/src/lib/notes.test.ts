@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { folded, withWaiting, type Waiting } from "./notes.svelte";
+import { afterSent, folded, withWaiting, type Waiting } from "./notes.svelte";
 import { keptWords } from "./keeping";
 import type { Note } from "./shapes";
 
@@ -24,6 +24,22 @@ describe("changes kept on this device without a connection", () => {
       { kind: "change", article: 7, id: 3, note: "two" },
       { kind: "article-note", article: 7, note: "second" },
     ]);
+  });
+
+  it("lose nothing folded in while the first is on its way", () => {
+    const later: Waiting = { kind: "change", article: 7, id: 3, note: "next" };
+    const sent = made(-1);
+    // Nothing changed meanwhile: it goes, and the rest stay.
+    expect(afterSent([sent, later], sent, 12)).toEqual([later]);
+    // A note given to it meanwhile is sent next, under the server's number.
+    expect(afterSent(folded([sent, later], { kind: "change", article: 7, id: -1, note: "Ask her" }), sent, 12)).toEqual([{ kind: "change", article: 7, id: 12, note: "Ask her" }, later]);
+    // Removed meanwhile, it's removed on the server too, and the next change isn't dropped.
+    expect(afterSent(folded([sent, later], { kind: "remove", article: 7, id: -1 }), sent, 12)).toEqual([{ kind: "remove", article: 7, id: 12 }, later]);
+    // Refused, what was folded into it goes with it.
+    expect(afterSent(folded([sent, later], { kind: "change", article: 7, id: -1, note: "Ask her" }), sent)).toEqual([later]);
+    // A later note on a saved highlight replaces the one on its way; that one stays to be sent.
+    const first: Waiting = { kind: "change", article: 7, id: 3, note: "one" };
+    expect(afterSent(folded([first], later), first)).toEqual([later]);
   });
 
   it("show on the article as if they'd been sent", () => {

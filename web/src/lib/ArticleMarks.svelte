@@ -120,7 +120,9 @@
   // Each open box's words are kept as they're typed, while they're the reader's own.
   $effect(() => {
     for (const each of open) {
-      if (each.highlight !== undefined) {
+      const lost = each.highlight === undefined ? undefined : marks.lostQuote(each.highlight);
+      if (lost) keepOnWords(lost, each.words, "");
+      else if (each.highlight !== undefined) {
         const saved = marks.highlights.find((highlight) => highlight.id === marks.here(each.highlight!))?.note ?? "";
         keepDraft(highlightDraft(each.highlight), worthKeeping(each.words, saved) ? each.words : undefined);
       } else if (each.quote) keepDraft(wordsDraft, worthKeeping(each.words, "") ? { quote: each.quote, words: each.words } : undefined);
@@ -131,14 +133,27 @@
   function keepMenuWords(words: string) {
     const at = menu;
     if (!at) return;
-    if (at.highlight) {
+    // On a highlight whose save was refused, the note is kept as one on its words: Save highlights them again.
+    const quote = at.highlight ? marks.lostQuote(at.highlight.id) : at.quote;
+    if (at.highlight && !quote) {
       const name = highlightDraft(at.highlight.id);
       keepDraft(name, worthKeeping(words, at.highlight.note ?? startTime() ?? "") ? words : undefined);
-    } else if (at.quote) {
-      if (worthKeeping(words, startTime() ?? "")) keepDraft(wordsDraft, { quote: at.quote, words });
-      // Another chosen words' note is left alone.
-      else if (keptOnWords(at.quote)) keepDraft(wordsDraft, undefined);
-    }
+    } else if (quote) keepOnWords(quote, words, startTime() ?? "");
+  }
+
+  /** A note on words not highlighted yet, kept as it's typed. Another chosen words' note is left alone. */
+  function keepOnWords(quote: Quote, words: string, start: string) {
+    if (worthKeeping(words, start)) keepDraft(wordsDraft, { quote, words });
+    else if (keptOnWords(quote)) keepDraft(wordsDraft, undefined);
+  }
+
+  /** A highlight's save was refused: a note already kept on it becomes one on its words, unless another is (decision 0235). */
+  function keepLost(id: number) {
+    const words = keptWords(highlightDraft(id));
+    const quote = marks.lostQuote(id);
+    if (words === undefined || !quote || (keptOnWords() && !keptOnWords(quote))) return;
+    keepDraft(wordsDraft, { quote, words });
+    keepDraft(highlightDraft(id), undefined);
   }
 
   /** What the small menu's box starts with, when a note on its words was kept unsaved. */
@@ -204,7 +219,8 @@
     const from = document.activeElement;
     getSelection()?.removeAllRanges();
     menu = undefined;
-    const { made, problem } = await marks.highlight(quote);
+    const { made, problem, lost } = await marks.highlight(quote);
+    if (lost !== undefined) keepLost(lost);
     say(problem ?? "Highlighted.");
     if (!made) return;
     // A small menu beside the new highlight says so, and offers a note on it there and then, or Done.
@@ -222,6 +238,9 @@
     else if (on.quote) problem = (await marks.highlight(on.quote, note.trim() || null)).problem;
     if (problem) return problem;
     keepDraft(on.highlight !== undefined ? highlightDraft(on.highlight) : wordsDraft, undefined);
+    // Saved on a highlight made again after its save was refused: the same words kept on its words go too.
+    const saved = on.highlight !== undefined ? marks.highlights.find((each) => each.id === marks.here(on.highlight!)) : undefined;
+    if (saved?.quote && keptOnWords({ quote: saved.quote, before: saved.before, after: saved.after })?.words.trim() === note.trim()) keepDraft(wordsDraft, undefined);
     say("Note saved.");
     return undefined;
   }
@@ -417,7 +436,7 @@
       <p class="label" aria-hidden="true">Your highlights</p>
       <ul class="flex flex-col gap-4" aria-label="Your highlights">
         {#each marks.highlights as each (each.id)}
-          {@const box = open.find((kept) => kept.highlight === each.id)}
+          {@const box = open.find((kept) => kept.highlight !== undefined && marks.here(kept.highlight) === each.id)}
           <li class="quote">
             {#if missing.has(each.id)}
               <p class="font-serif text-ink">{each.quote}</p>

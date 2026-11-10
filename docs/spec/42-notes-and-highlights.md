@@ -28,7 +28,10 @@ anywhere or counted.
   removed highlight shows "Highlight removed · Undo" at the article's foot
   until something else is done. A highlight can be removed, or given a
   note, the moment it's made: if its save hasn't answered yet, the change
-  waits for it, then follows.
+  waits for it, then follows. If the server refuses that save, a note
+  written on it meanwhile stays: Save (or **Try again**) highlights the
+  words again, with the note, and one left for later comes back as a note
+  on those words.
 - A note is written in a box in place, with **Save** and **Not now**. An
   empty note takes the note off, never the highlight.
 - **Nothing typed is thrown away** (decision 0235). The box stays open, with
