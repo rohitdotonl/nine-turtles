@@ -315,7 +315,7 @@ Themes are named by the page they give (decision 0176): one setting, **Page**, w
 #### Languages
 - **Interface:** English only in V1.
 - **Articles:** any language, each marked with its language (from the feed) for screen readers and typography.
-- **Search:** every language whose words a feed holds: Chinese and Japanese characters found side by side, Arabic and Hebrew with or without vowel marks (decision 0228).
+- **Search:** languages that put spaces between words (English and the Latin alphabet, Hindi, Arabic, Hebrew, Greek, Russian, Korean…), with Arabic and Hebrew found with or without vowel marks, and Chinese and Japanese, their characters found side by side (decision 0228). Thai, Lao, Khmer and Burmese, also written without spaces, aren't searchable yet.
 
 ### Screens
 

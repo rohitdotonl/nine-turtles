@@ -68,11 +68,11 @@ export function withoutChip(query: Query, key: Chip["key"]): Query {
   return key === "scope" ? { ...query, scope: { kind: "all" } } : { ...query, starred: false };
 }
 
-/** Letters compared without capitals, Latin accents, or Arabic and Hebrew vowel marks ("Café" is "cafe"); other scripts as written. */
+/** Letters compared without capitals, Latin accents, or Arabic and Hebrew vowel marks ("Café" is "cafe"; hamza and madda stay); other scripts as written. */
 export function fold(text: string): string {
   return text
     .normalize("NFD")
-    .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/g, "")
+    .replace(/[\u0300-\u036f\u064b-\u0652\u0656-\u065f\u0670\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/g, "")
     .normalize("NFC")
     .toLocaleLowerCase();
 }
@@ -94,7 +94,7 @@ export function searchParams(query: Query): Record<string, string> {
 // A Chinese character or kana: in Chinese and Japanese, written without
 // spaces, each is a word of its own, as the server's search splits them
 // (the same ranges as `is_ideograph` in server/src/search/words.rs, decision 0228).
-const IDEOGRAPH = "\\u3040-\\u30ff\\u31f0-\\u31ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\uff66-\\uff9f\\u{20000}-\\u{3134f}";
+const IDEOGRAPH = "\\u3040-\\u309f\\u30a1-\\u30fa\\u30fc-\\u30ff\\u31f0-\\u31ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\uff66-\\uff9f\\u{20000}-\\u{3134f}";
 const PIECES = new RegExp(`[${IDEOGRAPH}]|(?:(?![${IDEOGRAPH}])[\\p{L}\\p{M}\\p{N}])+|[^\\p{L}\\p{M}\\p{N}]+`, "gu");
 const RUN = new RegExp(`[${IDEOGRAPH}]+|(?:(?![${IDEOGRAPH}])[\\p{L}\\p{M}\\p{N}])+`, "gu");
 const isIdeograph = (piece: string) => new RegExp(`^[${IDEOGRAPH}]$`, "u").test(piece);

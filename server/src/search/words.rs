@@ -15,7 +15,9 @@
 /// in a language written without spaces, a word of its own.
 pub(crate) fn is_ideograph(c: char) -> bool {
     matches!(c,
-        '\u{3040}'..='\u{30FF}'
+        '\u{3040}'..='\u{309F}'
+        | '\u{30A1}'..='\u{30FA}'
+        | '\u{30FC}'..='\u{30FF}'
         | '\u{31F0}'..='\u{31FF}'
         | '\u{3400}'..='\u{4DBF}'
         | '\u{4E00}'..='\u{9FFF}'
@@ -35,9 +37,11 @@ pub(crate) fn need_space(before: &str, after: &str) -> bool {
 
 /// A short vowel or other reading mark of Arabic or Hebrew, which writers
 /// may add or leave out (harakat, niqqud and the Bible's cantillation marks).
+/// Hamza and madda (U+0653 to U+0655) are part of their letters, and stay.
 fn is_vowel_mark(c: char) -> bool {
     matches!(c,
-        '\u{064B}'..='\u{065F}'
+        '\u{064B}'..='\u{0652}'
+        | '\u{0656}'..='\u{065F}'
         | '\u{0670}'
         | '\u{0591}'..='\u{05BD}'
         | '\u{05BF}'
@@ -171,7 +175,9 @@ pub(super) fn searched_words(typed: &str) -> Vec<Term> {
     terms
 }
 
-/// How many of the words from `spans[at]` on make up `term`, or 0 if it isn't
+/// How many of the words from `spans[at]` on make up `term`. (FTS5 itself
+/// skips punctuation inside a phrase, so "阅读器" also finds "阅读，器"; such a
+/// rare result simply shows nothing marked.) Returns how many words, or 0 if it isn't
 /// there: the last of them may be longer than the searched word, and a run of
 /// characters must stand side by side.
 pub(super) fn found_at(text: &str, spans: &[(usize, usize)], at: usize, term: &Term) -> usize {
@@ -242,5 +248,7 @@ mod tests {
         assert!(!holds_all("阅读，然后器", &searched));
         assert!(holds_all("القِرَاءَة جميلة", &searched_words("القراءة")));
         assert!(holds_all("Slow reading", &searched_words("read")));
+        // Hamza is part of its letter: أ is not ا.
+        assert_eq!(searchable("أَحمد"), "أحمد");
     }
 }

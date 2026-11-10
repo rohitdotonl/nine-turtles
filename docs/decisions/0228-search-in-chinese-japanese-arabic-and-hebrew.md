@@ -11,16 +11,24 @@ Arabic and Hebrew words whether or not their short vowels are written.
   and nothing typed found anything. Now each Chinese character and kana is a
   word of its own, and a searched word is found where its characters stand
   side by side, in order: "阅读器" finds 阅, 读 and 器 together, anywhere in
-  a sentence, and never apart.
+  a sentence, and never apart (FTS5 does skip punctuation inside a phrase, so
+  "阅读，器" is found too, with nothing marked).
 - **Arabic and Hebrew** may write short vowels as marks above and below the
   letters (harakat, niqqud), or leave them out. The marks are now set aside on
   both sides, so "القراءة" finds "القِرَاءَة" and the other way round. Hindi's
-  vowel signs are part of its letters and stay (decision 0004).
+  vowel signs, and Arabic's hamza and madda, are part of their letters and
+  stay (decision 0004).
+
+**Not yet.** Thai, Lao, Khmer and Burmese are also written without spaces
+between words, and still can't be searched; they would need the same
+treatment, and the documents say so.
 
 **How.** One file, `server/src/search/words.rs`, says what a word is: the
 index is given text with a space around each character and no vowel marks,
 the question is made the same way (a run of characters becomes a phrase), and
-the excerpt marks the characters found. Hiding (SPEC section 27) cuts words
+the excerpt marks the characters found. Text taken from a feed's HTML gains
+no space where a tag splits a Chinese or Japanese sentence, and keeps every
+space the writer typed. Hiding (SPEC section 27) cuts words
 the same way, so hiding "推荐" hides articles with it in a sentence. The
 screen's bold in titles (`web/src/lib/search.ts`) uses the same character
 ranges. FTS5's word-splitting setting is unchanged.

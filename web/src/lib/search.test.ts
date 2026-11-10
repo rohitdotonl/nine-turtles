@@ -4,6 +4,7 @@ import {
   boldParts,
   chipsFor,
   emptyQuery,
+  fold,
   isSearching,
   resultsTitle,
   searchParams,
@@ -120,6 +121,7 @@ describe("bold matches", () => {
       { text: "朝の", bold: false },
       { text: "コーヒー", bold: true },
     ]);
+    expect(fold("أَحمد")).toBe("أحمد");
     expect(boldParts("阅读，然后器", searchedTerms("阅读器"))).toEqual([{ text: "阅读，然后器", bold: false }]);
     expect(boldParts("دفتر القِرَاءَة", searchedTerms("القراءة"))).toEqual([
       { text: "دفتر ", bold: false },

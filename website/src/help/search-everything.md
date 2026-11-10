@@ -42,5 +42,6 @@ up there, press **Search all articles** to look everywhere for the same words.
 
 - Search needs a connection.
 - **Mark all as read** works on what a search found.
-- Search understands every language: Hindi, Chinese, Japanese, Arabic,
-  Hebrew and those written in the Latin alphabet. More in <a href="/help/read-in-other-languages/">Read in other languages</a>.
+- Search understands English and other languages written in the Latin
+  alphabet, Hindi, Chinese, Japanese, Arabic, Hebrew and Korean. Thai, Lao,
+  Khmer and Burmese can't be searched yet. More in <a href="/help/read-in-other-languages/">Read in other languages</a>.

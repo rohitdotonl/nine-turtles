@@ -43,6 +43,6 @@ in the direction of what you type.
   can translate a page if you'd like.
 - <a href="/help/search-everything/">Search</a> understands English,
   Hindi, Chinese, Japanese, Arabic, Hebrew and every language written in the
-  Latin alphabet. Type two or three Chinese or Japanese characters to find
+  Latin alphabet (not yet Thai, Lao, Khmer or Burmese). Type two or three Chinese or Japanese characters to find
   them anywhere in a sentence; Arabic and Hebrew are found with or without
   their vowel marks.

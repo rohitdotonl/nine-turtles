@@ -59,18 +59,20 @@ pub fn routes() -> Router<AppState> {
 
 /// An article's text as plain words, for the index: tags removed, each
 /// piece of text kept apart from the next ("one</p><p>two" is two words),
-/// except in Chinese and Japanese, which need no spaces ("友だちに<b>手紙</b>").
+/// except where pieces touch beside Chinese or Japanese, which need no spaces
+/// ("友だちに<b>手紙</b>"). Every space the writer typed is kept, as one.
 pub fn plain_words(html: &str) -> String {
     let mut words = String::new();
-    for piece in scraper::Html::parse_fragment(html)
-        .root_element()
-        .text()
-        .flat_map(str::split_whitespace)
-    {
-        if !words.is_empty() && words::need_space(&words, piece) {
-            words.push(' ');
+    let mut spaced = false;
+    for node in scraper::Html::parse_fragment(html).root_element().text() {
+        spaced |= node.starts_with(char::is_whitespace);
+        for (index, piece) in node.split_whitespace().enumerate() {
+            if !words.is_empty() && (index > 0 || spaced || words::need_space(&words, piece)) {
+                words.push(' ');
+            }
+            words.push_str(piece);
         }
-        words.push_str(piece);
+        spaced = node.ends_with(char::is_whitespace) || (spaced && node.trim().is_empty());
     }
     words
 }
@@ -638,6 +640,18 @@ mod tests {
             "One two three"
         );
         assert_eq!(plain_words("a &amp; b"), "a & b");
+        // Chinese and Japanese gain no space where tags split a sentence, and
+        // keep every space the writer typed.
+        assert_eq!(
+            plain_words("友だちに<b>手紙</b>を書いた"),
+            "友だちに手紙を書いた"
+        );
+        assert_eq!(plain_words("<p>我用 Rust 写代码</p>"), "我用 Rust 写代码");
+        assert_eq!(
+            plain_words("<p>第一段</p>\n<p>English</p>"),
+            "第一段 English"
+        );
+        assert_eq!(plain_words("<p>第一段 </p><p><i> </i>二</p>"), "第一段 二");
     }
 
     /// An excerpt as text, with the searched words in [brackets].
