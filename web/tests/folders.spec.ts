@@ -588,6 +588,9 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   const sheet = whoPage(page, `Blog ${blog}`);
   await sheet.getByRole("checkbox", { name: "Pause for a while" }).check();
   await sheet.getByRole("button", { name: "Done" }).click();
+  // Saved: Done goes back to their page, which says so.
+  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
+  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(2);
   await page.goto(new URL(`/people/${paused}`, FEEDS_APP).href);
   await appReady(page);
   // With only the keyboard: Tab to Resume, Enter, and the keyboard lands on what happened.
