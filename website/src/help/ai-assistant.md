@@ -4,7 +4,7 @@ description: Connect your own AI assistant, such as Claude or ChatGPT, so it can
 groupId: bringing-more-in
 order: 3
 spec: 33
-updated: 2026-11-03
+updated: 2026-11-10
 related: [search-everything, unfollow-someone, questions]
 ---
 
@@ -37,7 +37,8 @@ delete your account. Reading an article through it doesn't mark it read.
 ## Disconnect
 
 In **Settings › Connected assistants**, press **Disconnect** beside it. It
-stops at once.
+stops at once. Pressed it by mistake? **Undo**, on the line that appears,
+brings it straight back, with no need to connect it again.
 
 ## Good to know
 

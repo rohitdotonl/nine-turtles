@@ -7,6 +7,7 @@ describe("mark all as read", () => {
     expect(markedAllMessage(1)).toBe("Marked 1 article as read.");
     expect(markedAllMessage(23)).toBe("Marked 23 articles as read.");
     expect(markedAllMessage(0)).toBe("Everything here is already read.");
+    expect(markedAllMessage(3, "Reading Room")).toBe("Marked 3 articles as read in Reading Room.");
   });
 });
 

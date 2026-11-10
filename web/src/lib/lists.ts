@@ -98,10 +98,10 @@ export function newItemsMessage(touch: boolean): string {
   return touch ? "New articles" : "New articles · press r";
 }
 
-/** What the line above the list says after "Mark all as read". */
-export function markedAllMessage(count: number): string {
+/** What the note says after "Mark all as read", naming the list it was done in, which its Undo may outlive (decision 0235). */
+export function markedAllMessage(count: number, place?: string): string {
   if (count === 0) return "Everything here is already read.";
-  return `Marked ${count} ${count === 1 ? "article" : "articles"} as read.`;
+  return `Marked ${count} ${count === 1 ? "article" : "articles"} as read${place ? ` in ${place}` : ""}.`;
 }
 
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).

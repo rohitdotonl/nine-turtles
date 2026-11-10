@@ -72,6 +72,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
     }),
   );
   await page.route("**/api/assistants/3/disconnect", (route) => route.fulfill({ status: 204 }));
+  await page.route("**/api/assistants/3/reconnect", (route) => route.fulfill({ status: 204 }));
   await page.route("**/api/assistants/key", (route) =>
     route.fulfill({
       status: 201,
@@ -93,6 +94,11 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   await page.keyboard.press("Enter");
   await expect(group.getByText("No assistants connected.")).toBeVisible();
   await expect(group.getByRole("status").filter({ hasText: "Claude is disconnected" })).toBeVisible();
+
+  // Undo, drawn like every Undo line: the same connection is back (decision 0235).
+  await group.getByRole("button", { name: "Undo" }).click();
+  await expect(group.getByRole("button", { name: "Disconnect Claude" })).toBeVisible();
+  await expect(group.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
 
   // A key: shown once, with Copy, which has the keyboard's place.
   await group.getByLabel(/Name for a new assistant key/).fill("My helper");

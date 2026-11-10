@@ -144,7 +144,7 @@ test("the new lines never take away an Undo, and r says nothing new too", async 
   await openBlog(page);
   await page.keyboard.press("Shift+A");
   await expect(
-    page.getByText("Marked 3 articles as read.", { exact: true }),
+    page.getByText(/^Marked 3 articles as read in Blog answers-.*\.$/),
   ).toBeVisible();
   await page.keyboard.press("r");
   await expect(page.getByText(/^Nothing new has arrived since/)).toBeVisible();

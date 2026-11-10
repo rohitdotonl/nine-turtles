@@ -4,14 +4,18 @@
   nine turtles, to find, sort and tidy things for them; nine turtles runs no
   AI itself. The group shows the server address to add in the assistant,
   with Copy, lists each connection with when it was made and last used, and
-  disconnects one with a press (no Undo: only the connection goes, and
-  connecting again is easy). For an assistant that can't show the connect
+  disconnects one with a press. The assistant is stopped at once; Undo on
+  the line brings the same connection back until the next action here
+  (decision 0235), so a slip never means connecting again from inside the
+  assistant. For an assistant that can't show the connect
   page, "Make an assistant key" makes a key, shown once with Copy. Feeds an assistant unsubscribed from are
   kept for 30 days and listed below, each with Bring back.
 -->
 <script lang="ts">
   import LoadFailed from "./LoadFailed.svelte";
+  import NoteLine from "./NoteLine.svelte";
   import { tick } from "svelte";
+  import { UNDONE, UNDO_FAILED } from "./messages";
   import { date } from "./times";
   import { resubscribe } from "./feeds";
   import {
@@ -19,6 +23,8 @@
     listAssistants,
     makeKey,
     mcpAddress,
+    reconnect,
+    TOO_LATE_TO_RECONNECT,
     shortName,
     type Assistant,
     type Unsubscribed,
@@ -30,7 +36,10 @@
   let assistants: Assistant[] | undefined = $state();
   let unsubscribed: Unsubscribed[] = $state([]);
   let failed = $state(false);
+  /** What the last action did, in oxblood when it failed (`refusal`), with Undo after a disconnect. */
   let message = $state("");
+  let refusal = $state(false);
+  let undo: (() => Promise<void>) | undefined = $state();
   let busy = $state(false);
   let keyName = $state("");
   /** A key just made, shown only until Settings closes. */
@@ -55,12 +64,17 @@
   }
   load();
 
+  /** The line says what just happened; any Undo before it ends (Undo reverses the last action only). */
+  function say(words: string, failed = false, reverse?: () => Promise<void>) {
+    [message, refusal, undo] = [words, failed, reverse];
+  }
+
   async function copy(text: string, what: string) {
     try {
       await navigator.clipboard.writeText(text);
-      message = `${what} copied.`;
+      say(`${what} copied.`);
     } catch {
-      message = `The ${what.toLowerCase()} couldn't be copied. Select it and copy it yourself.`;
+      say(`The ${what.toLowerCase()} couldn't be copied. Select it and copy it yourself.`, true);
     }
   }
 
@@ -76,35 +90,65 @@
   async function end(assistant: Assistant, index: number) {
     if (busy) return;
     busy = true;
-    message = "";
+    say("");
+    const name = shortName(assistant.name);
     try {
       await disconnect(assistant.id);
       assistants = (assistants ?? []).filter((each) => each.id !== assistant.id);
-      message = `${shortName(assistant.name)} is disconnected. It can no longer reach your nine turtles.`;
+      say(`${name} is disconnected. It can no longer reach your nine turtles.`, false, async () => {
+        const back = await reconnect(assistant.id);
+        if (back === "too-late") throw new Error("too-late");
+        assistants = [...(assistants ?? []).filter((each) => each.id !== assistant.id), assistant].sort(
+          (one, other) => one.connectedAt - other.connectedAt || one.id - other.id,
+        );
+      });
       busy = false;
       await refocus("assistant", index);
     } catch {
-      message = `${shortName(assistant.name)} couldn't be disconnected. Try again in a moment.`;
+      say(`${name} couldn't be disconnected. Try again in a moment.`, true);
     }
     busy = false;
+  }
+
+  /** Undo after Disconnect: the same connection is back, as it was. */
+  async function takeBack() {
+    if (!undo || busy) return;
+    const doing = undo;
+    busy = true;
+    try {
+      await doing();
+      say(UNDONE);
+    } catch (why) {
+      say(why instanceof Error && why.message === "too-late" ? TOO_LATE_TO_RECONNECT : UNDO_FAILED, true);
+    }
+    busy = false;
+    await tick();
+    heading?.focus();
+  }
+
+  /** × on the line: it goes, and the keyboard's place goes to the group's heading. */
+  async function closeNote() {
+    say("");
+    await tick();
+    heading?.focus();
   }
 
   async function make(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
     busy = true;
-    message = "";
+    say("");
     try {
       const made = await makeKey(keyName);
       key = made.key;
       keyName = "";
       assistants = [...(assistants ?? []).filter((each) => each.id !== made.assistant.id), made.assistant];
-      message = "A new assistant key is ready.";
+      say("A new assistant key is ready.");
       busy = false;
       await tick();
       copyKey?.focus();
     } catch {
-      message = "The assistant key couldn't be made. Try again in a moment.";
+      say("The assistant key couldn't be made. Try again in a moment.", true);
     }
     busy = false;
   }
@@ -112,21 +156,19 @@
   async function bringBack(feed: Unsubscribed, index: number) {
     if (busy) return;
     busy = true;
-    message = "";
-    const refusal = await resubscribe(feed.feedId);
+    say("");
+    const why = await resubscribe(feed.feedId);
     busy = false;
     const name = shortName(feed.title || "This feed");
-    if (refusal === undefined || refusal === "too-late" || refusal === "gone") {
+    if (why === undefined || why === "too-late" || why === "gone") {
       unsubscribed = unsubscribed.filter((each) => each.feedId !== feed.feedId);
-      message =
-        refusal === undefined
-          ? `${name} is back in your feeds.`
-          : `${name} can't be brought back: it's already gone.`;
-      if (refusal === undefined) onFeedsChanged?.();
+      if (why === undefined) say(`${name} is back in your feeds.`);
+      else say(`${name} can't be brought back: it's already gone.`, true);
+      if (why === undefined) onFeedsChanged?.();
       await refocus("unsubscribed", index);
       return;
     }
-    message = `${name} couldn't be brought back. Try again in a moment.`;
+    say(`${name} couldn't be brought back. Try again in a moment.`, true);
   }
 </script>
 
@@ -187,7 +229,10 @@
       <button type="submit" aria-disabled={busy} class="btn btn-small">Make an assistant key</button>
     </form>
   </div>
-  <p role="status" class={["inset-foot text-ink", !message && "sr-only"]}>{message}</p>
+  <!-- What the last action did, with Undo after a disconnect, until the next one (SPEC section 8). -->
+  <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}>
+    <NoteLine announce {message} {refusal} {busy} onUndo={undo ? takeBack : undefined} onClose={closeNote} />
+  </div>
   {#if key}
     <p class="inset-foot text-ink">
       Copy it now: it won't be shown again. In your assistant, add the server address above and send this key as a

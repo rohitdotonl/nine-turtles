@@ -609,6 +609,75 @@ async fn importing_opml_follows_each_feed_once_in_all_its_folders() {
 }
 
 #[tokio::test]
+async fn undoing_an_import_takes_away_exactly_what_it_added() {
+    let reader = Reader::new().await;
+    let beta = reader.follow("beta").await;
+    reader
+        .post("/api/folders", json!({ "name": "Friends" }))
+        .await;
+    let site = &reader.publisher;
+    let file = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>The wrong file</title></head>
+  <body>
+    <outline text="Tech">
+      <outline type="rss" text="Alpha" xmlUrl="{site}/alpha.xml"/>
+      <outline type="rss" text="Beta" xmlUrl="{site}/beta.xml"/>
+    </outline>
+    <outline text="Friends">
+      <outline type="rss" text="Beta" xmlUrl="{site}/beta.xml"/>
+      <outline type="rss" text="Gamma" xmlUrl="{site}/gamma.xml"/>
+    </outline>
+  </body>
+</opml>"#
+    );
+    let (_, answer) = reader.send("/api/opml", "text/x-opml", file.clone()).await;
+    assert_eq!(answer["summary"]["added"], 2);
+    assert_eq!(answer["undo"], true);
+    assert_eq!(
+        reader.sidebar().await.0,
+        [
+            row("Alpha", 0, &["Tech"]),
+            row("Beta blog", 3, &["Friends", "Tech"]),
+            row("Gamma", 0, &["Friends"]),
+        ]
+    );
+
+    // Undo (decision 0235): Alpha, Gamma and the folder Tech go; Beta, which
+    // was followed before, stays, out of the folders the file put it in;
+    // Friends, made before, stays too.
+    let (status, _) = reader.post("/api/opml/undo", json!({})).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(
+        reader.sidebar().await,
+        (vec![row("Beta blog", 3, &[])], vec!["Friends".to_owned()])
+    );
+    let followed: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM subscriptions WHERE unsubscribed_at IS NULL AND feed_id != ?",
+    )
+    .bind(beta)
+    .fetch_one(&reader.state.db)
+    .await
+    .unwrap();
+    assert_eq!(followed, 0);
+    // Once only: there's no undoing it twice.
+    let (status, answer) = reader.post("/api/opml/undo", json!({})).await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(answer["error"], "too-late");
+
+    // Importing again works as before; a file that adds nothing has no Undo,
+    // and leaves none from the import before it.
+    let (_, answer) = reader.send("/api/opml", "text/x-opml", file.clone()).await;
+    assert_eq!(answer["undo"], true);
+    let (_, answer) = reader.send("/api/opml", "text/x-opml", file).await;
+    assert_eq!(answer["summary"]["added"], 0);
+    assert_eq!(answer["undo"], false);
+    let (status, _) = reader.post("/api/opml/undo", json!({})).await;
+    assert_eq!(status, StatusCode::CONFLICT);
+}
+
+#[tokio::test]
 async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and_never_after_undo()
 {
     let reader = Reader::new().await;

@@ -17,6 +17,7 @@
     message,
     refusal = false,
     onUndo,
+    undoWord = "Undo",
     onRetry,
     retryWord = "Try again",
     onClose,
@@ -29,6 +30,8 @@
     refusal?: boolean;
     /** Shown while there's something to undo. */
     onUndo?: () => void;
+    /** What Undo says: "Undo the import" after "Wrong file?" (decision 0235). */
+    undoWord?: string;
     /** Shown when trying again is the fix. */
     onRetry?: () => void;
     /** What that button says: "Sign in" when being signed out is why (decision 0230). */
@@ -51,7 +54,7 @@
         <TextButton class="-mr-2 px-2" aria-disabled={busy} onclick={onRetry}>{retryWord}</TextButton>
       {/if}
       {#if onUndo}
-        <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" title={tipEvery("Undo", "undo")} aria-disabled={busy} onclick={onUndo}>Undo</TextButton>
+        <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" title={tipEvery("Undo", "undo")} aria-disabled={busy} onclick={onUndo}>{undoWord}</TextButton>
       {/if}
       <button type="button" onclick={onClose} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"
         ><Icon name="close" size={18} /></button

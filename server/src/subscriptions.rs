@@ -12,6 +12,8 @@
 //! turtles gets the same at its first check (decision 0194). Exporting writes each feed the reader
 //! follows under every folder of theirs it's in. The subscriptions file
 //! Google Takeout gives for YouTube is read here too (`youtube::takeout`).
+//! The reader's last import can be undone for a while (`undo`, decision
+//! 0235): exactly what it added goes, nothing that was there before.
 
 use std::collections::HashMap;
 
@@ -20,7 +22,7 @@ use axum::{
     extract::State,
     http::{StatusCode, header},
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
 };
 use opml::{OPML, Outline};
 use reqwest::Url;
@@ -40,8 +42,13 @@ use crate::{
 /// rather than half imported.
 pub const MOST_FEEDS: usize = 5_000;
 
+mod undo;
+pub use undo::Imports;
+
 pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/opml", get(export).post(import))
+    Router::new()
+        .route("/api/opml", get(export).post(import))
+        .route("/api/opml/undo", post(undo::undo))
 }
 
 /// One feed as the file lists it.
@@ -96,6 +103,17 @@ pub struct Summary {
     pub unreadable: Vec<String>,
 }
 
+/// Exactly what an import added, for its Undo.
+#[derive(Debug, Default, Clone)]
+pub struct Added {
+    /// Feeds now followed that weren't before.
+    pub feeds: Vec<i64>,
+    /// Folders the import made.
+    pub folders: Vec<i64>,
+    /// Feeds already followed that the import put in a folder: (folder, feed).
+    pub joined: Vec<(i64, i64)>,
+}
+
 async fn import(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -123,8 +141,13 @@ async fn import(
         }
         Err(error) => return database_problem("reading a reader's plan", &error),
     }
-    match follow_all(&state.db, person, &listed, now()).await {
-        Ok(Imported::Done(summary)) => Json(json!({ "summary": summary })).into_response(),
+    let at = now();
+    match follow_all(&state.db, person, &listed, at).await {
+        Ok(Imported::Done(summary, added)) => {
+            // Undo reverses the last import only; one that added nothing has none.
+            let undo = state.imports.remember(person, added, at);
+            Json(json!({ "summary": summary, "undo": undo })).into_response()
+        }
         Ok(Imported::TooMany { following, adding }) => (
             StatusCode::CONFLICT,
             Json(json!({
@@ -142,7 +165,7 @@ async fn import(
 /// What `follow_all` did.
 #[derive(Debug)]
 pub enum Imported {
-    Done(Summary),
+    Done(Summary, Added),
     /// Nothing was imported: the reader, who follows `following` feeds,
     /// would have followed `adding` more, past `admin::MOST_FEEDS`.
     TooMany {
@@ -161,6 +184,7 @@ pub async fn follow_all(
     now: i64,
 ) -> Result<Imported, sqlx::Error> {
     let mut summary = Summary::default();
+    let mut added = Added::default();
     let mut seen: HashMap<String, i64> = HashMap::new();
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let before = admin::following(&mut transaction, person).await?;
@@ -175,6 +199,7 @@ pub async fn follow_all(
         let id = if let Some(&id) = seen.get(&key) {
             id
         } else {
+            let already = summary.already;
             let id = follow_one(
                 &mut transaction,
                 person,
@@ -185,17 +210,28 @@ pub async fn follow_all(
                 &mut summary,
             )
             .await?;
+            if summary.already == already {
+                added.feeds.push(id);
+            }
             seen.insert(key, id);
             id
         };
         if let Some(name) = &entry.folder {
             let (folder, created) = folders::folder_named(&mut transaction, person, name).await?;
             summary.folders_added += usize::from(created);
-            sqlx::query("INSERT OR IGNORE INTO feed_folders (folder_id, feed_id) VALUES (?, ?)")
-                .bind(folder)
-                .bind(id)
-                .execute(&mut *transaction)
-                .await?;
+            if created {
+                added.folders.push(folder);
+            }
+            let joined = sqlx::query(
+                "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id) VALUES (?, ?)",
+            )
+            .bind(folder)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await?;
+            if joined.rows_affected() > 0 && !added.feeds.contains(&id) {
+                added.joined.push((folder, id));
+            }
         }
     }
     if summary.added > 0 && admin::following(&mut transaction, person).await? > admin::MOST_FEEDS {
@@ -206,7 +242,7 @@ pub async fn follow_all(
         });
     }
     transaction.commit().await?;
-    Ok(Imported::Done(summary))
+    Ok(Imported::Done(summary, added))
 }
 
 /// Follows one feed from the file for reader `person`, unless they follow
