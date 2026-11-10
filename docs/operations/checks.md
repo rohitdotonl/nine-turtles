@@ -79,7 +79,11 @@ by the next merge, whatever it changes.
 publisher (`web/tests/feed-server.mjs`, invented blogs only). The first
 nine turtles stays empty, for the first-visit screens; the second may read the
 made-up publisher and is where tests add feeds. Each test that adds a feed
-uses a blog name of its own, so tests never meet each other's feeds.
+uses a blog name of its own, so tests never meet each other's feeds. What
+they do share is the one reader and the lists that gather every feed (All
+articles, Unread, Starred): another test's articles can arrive there at any
+moment, so a test finds its own article by its name or opens its own blog's
+list, never "the first article" of a shared list.
 
 **Wait for the save, not just the screen.** Many of nine turtles' changes
 show at once and are saved a moment later. A test that changes something
@@ -89,7 +93,8 @@ fails only sometimes. For a reading setting, wherever it's changed (Settings
 or a list's More menu), `settingsSaved(page)` in `web/tests/screens.ts` does
 this: start it before the change, await it after. For anything else, wait for
 the save's answer (`page.waitForResponse`) or for a line the app shows only
-once the save has answered.
+once the save has answered. After **Done** in Edit, that's their page coming
+back (`/about` in the address): Edit's own heading already holds their name.
 
 ## Adding a screen
 

@@ -6,8 +6,10 @@ doesn't undo a deliberate choice by accident.
 
 One file per decision, numbered in order: `NNNN-short-name.md`. Before
 taking a number, look at the open pull requests too and take the next one
-none of them uses: two changes built at once that take the same number
-clash, and the second must wait for the checks again. If a
+none of them uses. If another change takes it first anyway, renumber in
+your next push (never a push of its own: each one runs every check again),
+and run `node scripts/decisions.mjs --free` just before merging, which
+fails if main has since taken one of your numbers. If a
 decision changes, a new note replaces it and the old one says "Replaced by …"
 at the top. Notes that later ones have replaced may be folded into one
 summary note, one line each (as 0061 did); their full text stays in the
