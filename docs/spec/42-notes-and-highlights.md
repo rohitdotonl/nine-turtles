@@ -112,7 +112,8 @@ anywhere or counted.
   afterwards; once Undo's ten minutes are over, what was chosen is done.
   The place itself is still kept 30 days under Recently unsubscribed
   (section 15, decision 0239); Bring back returns it without what was
-  removed.
+  removed, and Undo from then says "It's too late to undo that." rather
+  than bring back less than it promises.
 - With nothing kept, Unsubscribe doesn't ask.
 
 **Your data** (section 18)

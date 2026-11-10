@@ -27,7 +27,8 @@ pub async fn follow_again(
     now: i64,
 ) -> Result<bool, sqlx::Error> {
     let back = sqlx::query(
-        "UPDATE subscriptions SET unsubscribed_at = NULL, kept_until = NULL, drop_kept = 0
+        "UPDATE subscriptions SET unsubscribed_at = NULL, kept_until = NULL, drop_kept = 0,
+             removed_at = NULL
          WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NOT NULL AND cleared = 0",
     )
     .bind(person)
@@ -44,6 +45,25 @@ pub async fn follow_again(
         .await?;
     refresh_shared(connection, feed_id).await?;
     Ok(true)
+}
+
+/// Whether "Remove them too" has already been done for any of these places
+/// the reader unsubscribed from (`notes::drop_kept_due`): Undo then says
+/// it's too late rather than bring back less than it promises; Bring back
+/// still can (decision 0239).
+pub async fn removed_already(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    feeds: &[i64],
+) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM subscriptions WHERE person_id = ? AND removed_at IS NOT NULL
+             AND feed_id IN (SELECT value FROM json_each(?)))",
+    )
+    .bind(person)
+    .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
+    .fetch_one(connection)
+    .await
 }
 
 /// Works out again what a feed's followers share, after any change to who
@@ -86,7 +106,8 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, paused_at = NULL, writer_id = NULL, kind = NULL, place = NULL, write_to = NULL,
-             shorts = 0, live_streams = 0, drop_kept = 0",
+             shorts = 0, live_streams = 0, drop_kept = 0, removed_at = NULL, kept_until = NULL,
+             by_assistant = 0",
     )
     .bind(person)
     .bind(feed_id)
@@ -234,8 +255,9 @@ pub async fn followed_at(
 }
 
 /// The feed at this address (its `url_key`) that the reader unsubscribed
-/// from but that isn't cleared yet, so Undo could still bring it back; with
-/// `kept_only`, only one an assistant unsubscribed from (kept 30 days).
+/// from but that isn't cleared yet, so Undo or Bring back could still bring
+/// it back; with `kept_only`, only one kept 30 days (every unsubscribe since
+/// decision 0239, not one an import's Undo is clearing).
 pub(super) async fn waiting_at(
     connection: &mut sqlx::SqliteConnection,
     person: i64,

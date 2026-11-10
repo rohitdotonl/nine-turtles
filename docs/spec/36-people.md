@@ -162,7 +162,8 @@ PLAN.md → V1, item 1.*
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
   them all back, and so does Bring back for 30 days, as one row under
   Recently unsubscribed, decision 0239). To leave one source only, take it out first. Following a
-  source again later starts it afresh, on its own. Find new address keeps the
+  source again within its 30 days brings it back whole, in its person;
+  after that it starts afresh, on its own. Find new address keeps the
   source in its person. Each reader's people and publications are theirs
   alone.
 

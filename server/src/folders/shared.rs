@@ -42,8 +42,42 @@ pub async fn rename(
             .bind(id)
             .fetch_optional(&mut *connection)
             .await?;
-    if other.is_some() {
-        return Ok(Renamed::Taken(other));
+    if let Some(hidden) = other {
+        // A folder hidden because everyone in it was unsubscribed from
+        // (still kept, decision 0239) can't be seen, so it never blocks a
+        // name: this folder takes its place, and its waiting pairs, so Bring
+        // back still lands in a folder of that name.
+        let waiting: bool = sqlx::query_scalar(
+            "SELECT EXISTS (SELECT 1 FROM feed_folders WHERE folder_id = ?2)
+                 AND NOT EXISTS (SELECT 1 FROM feed_folders JOIN subscriptions
+                     ON subscriptions.person_id = ?1
+                         AND subscriptions.feed_id = feed_folders.feed_id
+                 WHERE feed_folders.folder_id = ?2 AND subscriptions.unsubscribed_at IS NULL)",
+        )
+        .bind(person)
+        .bind(hidden)
+        .fetch_one(&mut *connection)
+        .await?;
+        if !waiting {
+            return Ok(Renamed::Taken(other));
+        }
+        sqlx::query(
+            "INSERT OR IGNORE INTO feed_folders (folder_id, feed_id)
+             SELECT ?, feed_id FROM feed_folders WHERE folder_id = ?",
+        )
+        .bind(id)
+        .bind(hidden)
+        .execute(&mut *connection)
+        .await?;
+        sqlx::query("DELETE FROM feed_folders WHERE folder_id = ?")
+            .bind(hidden)
+            .execute(&mut *connection)
+            .await?;
+        sqlx::query("DELETE FROM folders WHERE id = ? AND person_id = ?")
+            .bind(hidden)
+            .bind(person)
+            .execute(&mut *connection)
+            .await?;
     }
     let renamed = sqlx::query("UPDATE folders SET name = ? WHERE id = ? AND person_id = ?")
         .bind(name)

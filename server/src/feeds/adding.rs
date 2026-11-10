@@ -197,9 +197,9 @@ async fn add(
         }
         Link::Other => url,
     };
-    // A feed an assistant unsubscribed from is kept 30 days (SPEC section
-    // 33): adding it again brings it back whole, as Bring back does, rather
-    // than starting it afresh.
+    // A feed unsubscribed from is kept 30 days (decision 0239): adding it
+    // again brings it back whole, as Bring back does, rather than starting
+    // it afresh.
     if let Some(id) = bring_back(state, person, &url, true).await? {
         let feeds: Vec<FeedRow> = sqlx::query_as(FEEDS)
             .bind(person)
@@ -276,8 +276,8 @@ pub async fn add_for_app(state: &AppState, person: i64, address: &str) -> Result
 }
 
 /// Follows again a feed at this address that the reader unfollowed but
-/// that isn't cleared yet, as Undo does; with `kept_only`, only one an
-/// assistant unsubscribed from (kept 30 days).
+/// that isn't cleared yet, as Bring back does; with `kept_only`, only one
+/// kept its 30 days (decision 0239).
 async fn bring_back(
     state: &AppState,
     person: i64,
@@ -285,6 +285,10 @@ async fn bring_back(
     kept_only: bool,
 ) -> Result<Option<i64>, sqlx::Error> {
     let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+    // Never past the most feeds a reader follows: adding then says so.
+    if !crate::admin::room_for_one_more(&mut transaction, person).await? {
+        return Ok(None);
+    }
     let waiting = waiting_at(&mut transaction, person, &feed::normalize(url), kept_only).await?;
     if let Some(id) = waiting {
         follow_again(&mut transaction, person, id, now()).await?;

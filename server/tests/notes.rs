@@ -455,12 +455,30 @@ async fn what_the_reader_asked_to_remove_goes_after_undo_though_the_place_is_kep
     }
     let (_, starred) = ask(&base, &other, "/api/articles?view=starred").await;
     assert_eq!(titles(&starred), Vec::<String>::new());
-    // Bring back: the place and its articles, without what was removed.
-    let (status, _) = send(
+    // Undo would now bring back less than it says, so it's too late.
+    let (status, refused) = send(
         &base,
         &other,
         &format!("/api/feeds/{feed}/resubscribe"),
         json!({}),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(refused["error"], "too-late");
+    let (status, _) = send(
+        &base,
+        &other,
+        "/api/tidy/resubscribe",
+        json!({ "feeds": [feed] }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    // Bring back: the place and its articles, without what was removed.
+    let (status, _) = send(
+        &base,
+        &other,
+        "/api/tidy/resubscribe",
+        json!({ "feeds": [feed], "bring_back": true }),
     )
     .await;
     assert!(status.is_success(), "{status}");

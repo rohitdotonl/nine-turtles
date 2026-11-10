@@ -78,9 +78,11 @@ pub const DAILY_BYTES: i64 = 5 * 1024 * 1024;
 /// tenth of the disk.
 pub const ALL_DAILY_BYTES: i64 = 100 * 1024 * 1024;
 
-/// How long a sender stays away after the reader unsubscribes from it, so a
-/// slow sender's last emails don't bring the feed back. After that, an email
-/// from it (the reader signed up again, say) makes the feed afresh.
+/// How long a sender stays away once the reader's unsubscribe is final (and
+/// the sender told, `tell_senders`), so a slow sender's last emails don't
+/// bring the feed back. Counted from the unsubscribe, it's this after the
+/// 30 days it's kept (`folders::KEPT_FOR`, decision 0239). After that, an
+/// email from it (the reader signed up again, say) makes the feed afresh.
 pub const STAYS_AWAY_FOR: i64 = 30 * 24 * 60 * 60;
 
 /// The header nine turtles puts on "no such address" and "replaced", so the
@@ -390,7 +392,9 @@ async fn file(
             .await?;
     let feed = match known {
         // Nobody follows it any more: the reader unsubscribed.
-        Some((_, Some(at))) if at > now - STAYS_AWAY_FOR => return Ok(Filed::Unsubscribed),
+        Some((_, Some(at))) if at > now - crate::folders::KEPT_FOR - STAYS_AWAY_FOR => {
+            return Ok(Filed::Unsubscribed);
+        }
         // Long enough ago that this is a new sign-up: the feed starts again.
         Some((id, Some(_))) => {
             if !crate::admin::room_for_one_more(&mut transaction, person).await? {
@@ -494,7 +498,7 @@ async fn open(client: &reqwest::Client, opens: &[String], local_allowed: bool) {
 }
 
 /// Tells senders their reader unsubscribed: for each newsletter feed whose
-/// reader's unsubscribe is final (Undo has passed) and whose emails offer
+/// reader's unsubscribe is final (its 30 days to bring it back are over) and whose emails offer
 /// one-click unsubscribe, posts `List-Unsubscribe=One-Click` to it, once.
 /// Answers how many were told. Run by each round of background checking.
 pub async fn tell_senders(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {

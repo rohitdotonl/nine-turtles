@@ -475,3 +475,46 @@ async fn a_readers_own_unsubscribes_are_kept_thirty_days_with_bring_back() {
     assert_eq!(listed["unsubscribed"].as_array().unwrap().len(), 1);
     assert_eq!(listed["unsubscribed"][0]["feed_id"], beta);
 }
+
+#[tokio::test]
+async fn a_folder_hidden_with_everyone_in_it_never_blocks_its_name() {
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha-2020").await;
+    let beta = reader.follow("beta-2020").await;
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "Tech", "feeds": [alpha] }))
+        .await;
+    let tech = made["folder"]["id"].as_i64().unwrap();
+    let (_, made) = reader
+        .post("/api/folders", json!({ "name": "Later", "feeds": [beta] }))
+        .await;
+    let later = made["folder"]["id"].as_i64().unwrap();
+    // Tech's only one is unsubscribed from: Tech is hidden, though kept.
+    reader
+        .post(&format!("/api/feeds/{alpha}/unsubscribe"), json!({}))
+        .await;
+    let (status, answer) = reader
+        .post(&format!("/api/folders/{later}"), json!({ "name": "Tech" }))
+        .await;
+    assert!(status.is_success(), "{status} {answer}");
+    // Bring back lands alpha in the folder now called Tech.
+    reader
+        .post(
+            "/api/tidy/resubscribe",
+            json!({ "feeds": [alpha], "bring_back": true }),
+        )
+        .await;
+    let gone: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM folders WHERE id = ?")
+        .bind(tech)
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    assert_eq!(gone, 0);
+    assert_eq!(
+        reader.feeds().await,
+        [
+            ("alpha".to_owned(), vec!["Tech".to_owned()]),
+            ("beta".to_owned(), vec!["Tech".to_owned()]),
+        ]
+    );
+}

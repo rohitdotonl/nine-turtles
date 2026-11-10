@@ -73,9 +73,9 @@
   }
 
   /** After a row goes, the keyboard moves to the same place in what's left: the next row's button, the one before, or the heading. */
-  async function refocus(group: string, index: number) {
+  async function refocus(index: number) {
     await tick();
-    const buttons = section?.querySelectorAll<HTMLButtonElement>(`[data-group="${group}"]`) ?? [];
+    const buttons = section?.querySelectorAll<HTMLButtonElement>(`[data-group="assistant"]`) ?? [];
     const next = buttons[Math.min(index, buttons.length - 1)];
     if (next) next.focus();
     else heading?.focus();
@@ -97,7 +97,7 @@
         );
       });
       busy = false;
-      await refocus("assistant", index);
+      await refocus(index);
     } catch {
       say(`${name} couldn't be disconnected. Try again in a moment.`, true);
     }

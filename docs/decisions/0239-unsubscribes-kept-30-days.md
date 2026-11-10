@@ -30,7 +30,11 @@ owner's critic settled the words and the two questions below.
   (`notes::drop_kept_due`), not after 30 days: otherwise the starred
   articles and notes the reader asked to remove would stay in Starred,
   Notes and search for a month. The place itself is kept its 30 days, and
-  Bring back returns it without them.
+  Bring back returns it without them. Undo, from then, says it's too late
+  (`subscriptions.removed_at`), rather than bring back less than it says.
+- Bring back and adding a kept one again count towards the 1,000 feeds a
+  reader follows; a folder hidden with everyone in it waiting never blocks
+  its name (renaming another folder to it takes its place).
 - **The floor's wording** (AGENTS.md, ENGINEERING.md → "The floor"):
   unsubscribing stays one of the three exceptions to undo, but only once
   its 30 days are over.
@@ -47,4 +51,5 @@ unsubscribed feed already had for 30 more days; the feed isn't checked
 meanwhile (when nobody else follows it), so nothing new piles up. A
 newsletter's sender is told to stop once the 30 days are over rather than
 after ten minutes (so Bring back works whole); its emails are dropped
-until then, as they already were.
+until then, and for `STAYS_AWAY_FOR` (30 days) after, so a slow sender
+can't bring it back by itself.

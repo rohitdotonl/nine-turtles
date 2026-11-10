@@ -5,7 +5,7 @@
 import type { Folder } from "./shapes";
 import { change, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
-import { isRecord } from "./http";
+import { isRecord, sendChange } from "./http";
 import { dayOrToday } from "./times";
 import { readKept, type Kept } from "./recentlyUnsubscribed";
 
@@ -146,6 +146,11 @@ export async function unsubscribeAll(ids: number[]): Promise<Refusal | undefined
 /** Undo for unsubscribing from several feeds. */
 export async function resubscribeAll(ids: number[]): Promise<Refusal | undefined> {
   return (await change("/api/tidy/resubscribe", { feeds: ids })).refusal;
+}
+
+/** Bring back, under Recently unsubscribed (decision 0239): "too-many" past the most feeds a reader follows. */
+export async function bringBackAll(ids: number[]): Promise<Refusal | "too-many" | undefined> {
+  return (await sendChange("/api/tidy/resubscribe", { feeds: ids, bring_back: true }, ["too-late", "too-many"])).refusal;
 }
 
 /**

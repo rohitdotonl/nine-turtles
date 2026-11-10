@@ -18,10 +18,11 @@
   import NotWorking from "./NotWorking.svelte";
   import RecentlyUnsubscribed from "./RecentlyUnsubscribed.svelte";
   import type { Kept } from "./recentlyUnsubscribed";
+  import { shortName } from "./assistants";
   import PageHead from "./PageHead.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
-  import { deleteFolder, refused, undoRefused } from "./feeds";
+  import { deleteFolder, explain, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import LoadFailed from "./LoadFailed.svelte";
@@ -29,6 +30,7 @@
   import {
     folderNames,
     listTended,
+    bringBackAll,
     moveAll,
     movedMessage,
     placeIds,
@@ -171,14 +173,22 @@
   async function bringBack(row: Kept) {
     if (busy) return;
     busy = true;
-    const why = await resubscribeAll(row.ids);
+    const index = kept.indexOf(row);
+    const name = shortName(row.title || "Untitled");
+    const why = await bringBackAll(row.ids);
     busy = false;
     if (why) {
-      [message, undo, refusal] = [why === "too-late" ? `${row.title} can't be brought back: they're already gone.` : refused(why, "feed"), undefined, true];
+      const words =
+        why === "too-late" ? `${name} can't be brought back: they're already gone.` : why === "too-many" ? explain("too-many") : refused(why, "feed");
+      [message, undo, refusal] = [words, undefined, true];
       await load();
+      // The row may have gone: the keyboard's place moves to the one now there, or the line.
+      await tick();
+      const left = [...document.querySelectorAll<HTMLButtonElement>("[data-kept]")];
+      (left[Math.min(index, left.length - 1)] ?? editButton)?.focus();
       return;
     }
-    await done(`${row.title} is back.`, async () => {
+    await done(`${name} is back.`, async () => {
       const refusal = await unsubscribeAll(row.ids);
       if (refusal) throw refusal;
     });

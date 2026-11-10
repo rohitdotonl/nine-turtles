@@ -402,7 +402,8 @@ pub async fn hide(
     now: i64,
 ) -> Result<u64, sqlx::Error> {
     let hidden: Vec<i64> = sqlx::query_scalar(
-        "UPDATE subscriptions SET unsubscribed_at = ?1, kept_until = ?1 + ?2, by_assistant = 0
+        "UPDATE subscriptions SET unsubscribed_at = ?1, kept_until = ?1 + ?2, by_assistant = 0,
+             removed_at = NULL
          WHERE person_id = ?3 AND feed_id IN (SELECT value FROM json_each(?4))
              AND unsubscribed_at IS NULL
          RETURNING feed_id",
@@ -420,7 +421,8 @@ pub async fn hide(
 }
 
 /// Undo for unsubscribing: the feed comes back as it was, and is checked
-/// again soon. Too late once it has been cleared.
+/// again soon. Too late once it has been cleared, or once what the reader
+/// chose to remove with it has gone.
 async fn resubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -428,6 +430,11 @@ async fn resubscribe(
 ) -> Response {
     let back: Result<bool, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        // What the reader chose to remove has gone: Undo would bring back
+        // less than it says, so it's too late (Bring back still can).
+        if crate::feeds::removed_already(&mut transaction, person, &[id]).await? {
+            return Ok(false);
+        }
         let back = follow_again(&mut transaction, person, id, now()).await?;
         transaction.commit().await?;
         Ok(back)

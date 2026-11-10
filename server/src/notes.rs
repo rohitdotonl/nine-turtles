@@ -439,10 +439,12 @@ pub async fn drop_kept_due(db: &sqlx::SqlitePool, before: i64) -> Result<usize, 
     for &(person, feed) in &due {
         let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
         drop_kept(&mut transaction, person, feed).await?;
+        // Done, and when, so Undo can say it's too late (`feeds::removed_already`).
         sqlx::query(
-            "UPDATE subscriptions SET drop_kept = 0
+            "UPDATE subscriptions SET drop_kept = 0, removed_at = ?
              WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NOT NULL",
         )
+        .bind(before)
         .bind(person)
         .bind(feed)
         .execute(&mut *transaction)
@@ -452,10 +454,12 @@ pub async fn drop_kept_due(db: &sqlx::SqlitePool, before: i64) -> Result<usize, 
     Ok(due.len())
 }
 
-/// When an unsubscribe is cleared for good and the reader chose to remove
-/// what they kept (`subscriptions.drop_kept`): their highlights and notes on
-/// the place's articles and their note on the person go, and its articles
-/// are unstarred, so `folders::clear` then removes them with the rest.
+/// When the reader chose to remove what they kept from a place they
+/// unsubscribed from (`subscriptions.drop_kept` 1), once Undo has passed
+/// (`drop_kept_due`) or, at the latest, when it's cleared for good: their
+/// highlights and notes on the place's articles and their note on the
+/// person go, and its articles are unstarred, so `folders::clear` later
+/// removes them with the rest.
 pub async fn drop_kept(
     connection: &mut SqliteConnection,
     person: i64,
