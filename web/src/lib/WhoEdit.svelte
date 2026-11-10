@@ -1,7 +1,10 @@
 <!--
   Edit (SPEC section 36, decision 0163): a person's or publication's page,
   turned into its settings in place by its Edit button, the same for both.
-  Done saves and turns it back; Cancel turns it back unchanged. Changes not
+  Done saves and turns it back; Cancel turns it back unchanged. On a phone
+  it finishes as Add and Edit folder do (DESIGN.md → "One phone sheet",
+  decision 0243): an X at the right of the title stands for Cancel, and
+  Done is the full width at the screen's foot, within thumb reach. Changes not
   saved yet are kept on this device (decision 0235): Escape, Back or a
   press on an article leaves them waiting here, and coming back shows them
   with "Not saved yet. Going elsewhere keeps these changes here for you."
@@ -41,6 +44,7 @@
     feed,
     folders,
     library,
+    phone = false,
     heading = $bindable(),
     onDone,
     onSource,
@@ -53,6 +57,8 @@
     feed: Feed;
     folders: Folder[];
     library: LoadedLibrary;
+    /** On a phone: an X for Cancel, and Done along the screen's foot. */
+    phone?: boolean;
     heading?: HTMLHeadingElement;
     /** Back to their page, saved or not. */
     onDone: (saved: boolean) => void;
@@ -179,19 +185,24 @@
   }
 </script>
 
-<div class="flex flex-col gap-6">
+<div class={["flex flex-col gap-6", phone && "flex-1"]}>
   <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between gap-3">
     <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
+    {#if phone}
+      <!-- The X stands for Cancel, as on a phone's Edit folder (decision 0235). -->
+      <button type="button" onclick={cancel} aria-label="Close" title="Close without saving" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={20} /></button>
+    {:else}
     <div class="flex shrink-0 gap-2">
       <button type="button" class="btn" onclick={cancel}>Cancel</button>
       <button type="submit" form={formId} aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Done" doing="Saving…" /></button>
     </div>
+    {/if}
   </div>
   {#if restored}<NotSavedYet />{/if}
   </div>
 
-  <form id={formId} onsubmit={save} class="flex flex-col gap-5">
+  <form id={formId} onsubmit={save} class={["flex flex-col gap-5", phone && "flex-1"]}>
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">Name</span>
       <input bind:value={title} type="text" autocomplete="off" class="field" />
@@ -289,6 +300,12 @@
     </div>
     {/if}
     <span id="{formId}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
+    {#if phone}
+      <!-- Done at the screen's foot, as Add's and Edit folder's main button, at least 36px under Unsubscribe. -->
+      <div class="page-action">
+        <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Done" doing="Saving…" /></button>
+      </div>
+    {/if}
   </form>
 </div>
 

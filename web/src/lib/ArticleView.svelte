@@ -7,7 +7,8 @@
   toolbar (decision 0050): View original, Aa (the reading panel), Star,
   Write back (a paper plane, for a person only, decision 0214) and More (…).
   More holds Copy link (Share on phones), Mark unread, Add a note and Hide
-  (SPEC sections 7, 8, 9, 21, 33 and 37). Write back also ends the article.
+  (SPEC sections 7, 8, 9, 21, 33 and 37); on a phone it opens upwards, Copy
+  link or Share nearest the button (decision 0243). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
   0214), as their name at the top of the list does. The
   bar is solid, in the page's own color, above the scrolling text, with a
@@ -652,7 +653,7 @@
       says "dimmed" to screen readers and does nothing (decision 0047).
     -->
     <div bind:this={toolbar} role="group" aria-label="Article actions" onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]"}>
-      <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
+      <!-- Share (or Copy link) and the rest, in a menu that opens upwards, nearest the button first (decision 0243). -->
       <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up start />
       {@render aa(22, "")}
       {#if writable}{@render writeBackButton(22, "")}{/if}

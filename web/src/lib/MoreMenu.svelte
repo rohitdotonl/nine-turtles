@@ -7,7 +7,11 @@
   The button says it opens a menu (`aria-haspopup`); the menu is a short list
   of buttons. Opening it puts the keyboard on the first item; the arrow keys,
   Home and End move between items; Escape closes it and goes back to the
-  button; Tab, or a press anywhere outside, closes it too. A choice that is
+  button; Tab, or a press anywhere outside, closes it too. A menu that opens
+  upwards, from the phone's bottom bar, reads from the button outwards: its
+  first item sits nearest the button and finger, so its rows (and groups)
+  are drawn in reverse, and opening it puts the keyboard on that nearest
+  one (decision 0243). A choice that is
   one of several (the sort order) is ticked, so it shows without color.
 -->
 <script lang="ts" module>
@@ -42,7 +46,7 @@
     icon?: IconName;
     /** The icon's size: 22 in the phone's bottom bar. */
     size?: number;
-    /** Opens upwards, from a bar at the bottom of the screen. */
+    /** Opens upwards, from a bar at the bottom of the screen, its first item nearest the button. */
     up?: boolean;
     /** Lines the menu up with the button's left edge, for a button at the screen's left (the phone's bottom bar). */
     start?: boolean;
@@ -52,8 +56,11 @@
   let wrap: HTMLDivElement | undefined = $state();
   let button: HTMLButtonElement | undefined = $state();
   let list: MenuList | undefined = $state();
+  /** Nearest the button first: upwards, the last row drawn is the first item. */
+  let shown = $derived(up ? [...groups].reverse().map((group) => ({ ...group, items: [...group.items].reverse() })) : groups);
 
-  async function show(at: "first" | "last" = "first") {
+  /** `at` is where it sits on the screen: the top row ("first") or the bottom one; by default, the one nearest the button. */
+  async function show(at: "first" | "last" = up ? "last" : "first") {
     open = true;
     await Promise.resolve();
     await list?.focus(at);
@@ -96,6 +103,6 @@
     <span class={["flex size-8 items-center justify-center rounded-md", open && "bg-[var(--tone)]"]}><Icon name={icon} {size} /></span>
   </button>
   {#if open}
-    <MenuList bind:this={list} {id} {label} {groups} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
+    <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
   {/if}
 </div>

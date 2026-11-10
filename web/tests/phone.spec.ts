@@ -145,10 +145,30 @@ test.describe("on a phone", () => {
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
-    // More opens upwards, over the article, with Share (or Copy link), Mark unread, Add a note and Hide articles about….
+    // More opens upwards, over the article, reading from the button outwards (decision 0243): Share (or Copy link) nearest
+    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…. The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*(Share|Copy link)\s*$/, /^\s*Mark unread/, /^\s*Add a note/, /^\s*Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*(Share|Copy link)\s*$/]);
+    await expect(menu.getByRole("menuitem").last()).toBeFocused();
+    // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
+    // Enter opens on the nearest row, and the arrows on More open on the row nearest (up) or furthest (down).
+    const more = toolbar(page).getByRole("button", { name: "More actions" });
+    await page.keyboard.press("ArrowUp");
+    await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(more).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(menu.getByRole("menuitem").last()).toBeFocused();
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("ArrowUp");
+    await expect(menu.getByRole("menuitem").last()).toBeFocused();
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem").first()).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await more.click();
     expect((await menu.boundingBox())!.y + (await menu.boundingBox())!.height).toBeLessThanOrEqual((await toolbar(page).boundingBox())!.y);
     // More is at the bar's left end, so its menu opens from there, wholly on the screen.
     const opened = (await menu.boundingBox())!;
@@ -286,7 +306,7 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
   });
 
-  test("their page is a screen of its own, with ‹ back to their list; Edit turns it into its settings and Cancel back", async ({ page }) => {
+  test("their page is a screen of its own, with ‹ back to their list; Edit turns it into its settings and its X back", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
@@ -300,12 +320,53 @@ test.describe("on a phone", () => {
     expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
     await page.getByRole("button", { name: "Edit Reading Room" }).click();
-    await expect(page.getByRole("heading", { level: 2, name: "Edit Reading Room" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Unsubscribe from Reading Room" })).toBeAttached();
+    const title = page.getByRole("heading", { level: 2, name: "Edit Reading Room" });
+    await expect(title).toBeVisible();
+    // Finished as Add is (decision 0243): an X at the right of the title in Cancel's place, and Done the full width
+    // at the screen's foot, under Unsubscribe.
+    await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
+    const close = page.getByRole("button", { name: "Close" });
+    const done = page.getByRole("button", { name: "Done" });
+    await expect(done).toBeVisible();
+    const [titleBox, closeBox, doneBox, leaveBox] = await Promise.all([
+      title.boundingBox(),
+      close.boundingBox(),
+      done.boundingBox(),
+      page.getByRole("button", { name: "Unsubscribe from Reading Room" }).boundingBox(),
+    ]);
+    expect(Math.abs(closeBox!.y + closeBox!.height / 2 - (titleBox!.y + titleBox!.height / 2))).toBeLessThan(6);
+    expect(closeBox!.width).toBeGreaterThanOrEqual(44);
+    expect(doneBox!.y).toBeGreaterThan(leaveBox!.y + leaveBox!.height);
+    expect(doneBox!.width).toBeGreaterThan(page.viewportSize()!.width - 48);
+    expect(doneBox!.y + doneBox!.height).toBeGreaterThan(page.viewportSize()!.height - 80);
     // Nothing runs off the side of the phone.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await page.getByRole("button", { name: "Cancel" }).click();
+    // On a short screen, a field the keyboard reaches scrolls clear of Done, never behind it (the first floor).
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: 480 });
+    await page.getByLabel("Name").focus();
+    for (let step = 0; step < 30; step++) {
+      if (await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).evaluate((element) => element === document.activeElement)) break;
+      await page.keyboard.press("Tab");
+    }
+    const [reached, foot] = await Promise.all([
+      page.getByRole("button", { name: "Unsubscribe from Reading Room" }).boundingBox(),
+      page.locator(".page-action").boundingBox(),
+    ]);
+    expect(reached!.y + reached!.height).toBeLessThanOrEqual(foot!.y);
+    // Leaving by Back keeps what was typed, as on a computer (decision 0235)...
+    await page.getByLabel("Name").fill("Reading Room, renamed");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/about$/);
+    await page.getByRole("button", { name: "Edit Reading Room" }).click();
+    await expect(page.getByLabel("Name")).toHaveValue("Reading Room, renamed");
+    await expect(page.getByText("Not saved yet.")).toBeVisible();
+    // ...and the X stands for Cancel: what was typed goes.
+    await close.click();
+    await expect(page).toHaveURL(/\/about$/);
+    await page.getByRole("button", { name: "Edit Reading Room" }).click();
+    await expect(page.getByLabel("Name")).toHaveValue("Reading Room");
+    await expect(page.getByText("Not saved yet.")).toHaveCount(0);
+    await close.click();
     await expect(page).toHaveURL(/\/about$/);
 
     await back.click();
@@ -392,6 +453,25 @@ test.describe("on a phone", () => {
     const [rowBox, dateBox, starBox] = [(await mine.boundingBox())!, (await meta.locator("time").boundingBox())!, (await meta.locator(".row-star").boundingBox())!];
     expect(Math.abs(starBox.y + starBox.height / 2 - (dateBox.y + dateBox.height / 2))).toBeLessThan(3);
     expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
+  });
+
+  test("a source's own settings keep ‹ back to Edit and have Done along the screen's foot (decision 0243)", async ({ page }) => {
+    await openHome(page);
+    const stamp = Date.now();
+    const first = await follow(page, `${FEED_SITE}/blog/src-a-${stamp}/`);
+    const second = await follow(page, `${FEED_SITE}/blog/src-b-${stamp}/`);
+    const joined = await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: [first, second], name: `Ana ${stamp}` } });
+    expect(joined.ok()).toBe(true);
+    await page.goto(new URL(`/people/${first}/sources/${second}`, FEEDS_APP).href);
+    await appReady(page);
+    await expect(page.getByRole("button", { name: `Edit Ana ${stamp}` })).toBeVisible();
+    const done = page.getByRole("button", { name: "Done" });
+    const [doneBox, takeOut] = await Promise.all([done.boundingBox(), page.getByRole("button", { name: `Take out of Ana ${stamp}` }).boundingBox()]);
+    expect(doneBox!.y).toBeGreaterThan(takeOut!.y + takeOut!.height);
+    expect(doneBox!.width).toBeGreaterThan(page.viewportSize()!.width - 48);
+    expect(doneBox!.y + doneBox!.height).toBeGreaterThan(page.viewportSize()!.height - 80);
+    await done.click();
+    await expect(page).toHaveURL(new RegExp(`/people/${first}/edit$`));
   });
 
   test("a folder on the feeds screen has no arrow and always lists its feeds, a step in", async ({ page }) => {
