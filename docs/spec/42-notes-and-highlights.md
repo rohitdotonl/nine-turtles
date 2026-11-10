@@ -29,6 +29,21 @@ anywhere or counted.
   until something else is done.
 - A note is written in a box in place, with **Save** and **Not now**. An
   empty note takes the note off, never the highlight.
+- **Nothing typed is thrown away** (decision 0233). The box stays open, with
+  the words, until the save is confirmed (Save says "Saving…" after half a
+  second). If it fails, the message sits under the words in oxblood with the
+  alert icon, "The note couldn't be saved, so your words are still here.
+  Try again in a moment.", and Save becomes **Try again**. A note written
+  and not saved is kept on this device: Not now, Escape, a press outside
+  the box, Back and going to another article all keep it. Coming back to
+  the article, its box is open at the end with the words and "**Not saved
+  yet.** Kept from when you left this article." (a note on highlighted
+  words waits under its highlight; one on words chosen but not yet
+  highlighted waits under those words, and Save highlights them). Opened
+  again without leaving, the box says "**Not saved yet.**". **Discard**
+  beside the line throws the words away, with "Note discarded · Undo" at
+  the article's foot (the keyboard on Undo). The same for the note on a
+  person ("Kept from when you left this page."), its Undo in place.
 - **`n`** writes a note on the words chosen; with none chosen, a note
   on the whole article.
 - A highlight keeps its words and a little of the text either side, never a

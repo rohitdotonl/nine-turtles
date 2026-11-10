@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 36
-updated: 2026-11-08
+updated: 2026-11-10
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -55,7 +55,9 @@ you can:
 - and, at the foot, **Unsubscribe from Alpha**. If they were the last one
   in a folder, the folder goes too; **Undo** brings both back.
 
-Press **Done** to save, or **Cancel** to leave everything as it was.
+Press **Done** to save, or **Cancel** to leave everything as it was. If you
+leave Edit any other way, your changes wait there for you, marked **Not saved
+yet.**, until you press Done or Cancel.
 
 ## Join someone's sources
 

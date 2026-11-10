@@ -45,7 +45,7 @@ Prefer well-known, mature tools, and as few of them as possible. Every new libra
 Small things a library would usually do are written once, in one place, rather than added as a library. Use these instead of writing another copy:
 
 - Server: the folder and rule actions every door shares in `server/src/folders/shared.rs` and `server/src/rules/shared.rs`; hex, base64 and web forms in `server/src/encoding.rs`; calendar dates and RFC 3339 times in `server/src/dates.rs`.
-- Web app: talking to the server (`isRecord`, `getJson`, `sendChange`) in `web/src/lib/http.ts`; small settings kept on the device (local storage, which a private window may refuse) in `web/src/lib/device.ts`; saving marks and settings in order, and keeping only the newest answer, in `saving.ts` and `inorder.ts`; the messages said in many places ("Undone.", nine turtles can't be reached) in `messages.ts` (BRAND.md → "Messages").
+- Web app: talking to the server (`isRecord`, `getJson`, `sendChange`) in `web/src/lib/http.ts`; small settings kept on the device (local storage, which a private window may refuse) in `web/src/lib/device.ts`; what the reader typed and hasn't saved (notes, Edit, Edit folder, Add), kept under a name for each reader until it's saved, cancelled or discarded, never on a timer and never sent until saved, in `drafts.ts` (decision 0233); saving marks and settings in order, and keeping only the newest answer, in `saving.ts` and `inorder.ts`; the messages said in many places ("Undone.", nine turtles can't be reached) in `messages.ts` (BRAND.md → "Messages").
 
 Where the web app's code lives, one job per file in `web/src/lib/`:
 

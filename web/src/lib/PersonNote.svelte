@@ -1,81 +1,107 @@
 <!--
   The reader's private note on a person (SPEC section 42), on their page:
   "Your note" and what it says, with Edit note; or, with none yet, Add a
-  note…. It's written in a box in place, with Save and Not now. Only the
+  note…. It's written in a box in place (NoteBox), with Save and Not now. Only the
   reader sees it; search's sidebar filter finds the person by it, and Your
-  data exports it. It's the same on each of the person's places.
+  data exports it. It's the same on each of the person's places. Words not
+  saved yet are kept on this device, and the box opens with them when the
+  reader comes back (decision 0233).
 -->
 <script lang="ts">
-  import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
-  import Icon from "./Icon.svelte";
+  import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
+  import { keepDraft, keptWords, worthKeeping } from "./drafts";
   import { sendChange } from "./http";
   import type { LoadedLibrary } from "./library.svelte";
-  import { LONGEST_NOTE } from "./notes.svelte";
+  import { NOTE_NOT_SAVED } from "./notes.svelte";
 
   let { place, note, name, library }: { place: number; note: string | null; name: string; library: LoadedLibrary } = $props();
 
   let writing = $state(false);
-  let busy = $state(false);
   let draft = $state("");
-  let message = $state("");
-  let box: HTMLTextAreaElement | undefined = $state();
+  let kept: "left" | "here" | undefined = $state();
+  /** "Note discarded · Undo", until the box opens again. */
+  let discarded: string | undefined = $state();
+  let box: NoteBox | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
+  let undoButton: HTMLButtonElement | undefined = $state();
+  let draftName = $derived(`note:person:${place}`);
 
+  // Each person's page starts with their kept note open, if words were left unsaved.
   $effect(() => {
-    void place;
-    writing = false;
-    message = "";
+    const words = keptWords(draftName);
+    writing = words !== undefined;
+    draft = words ?? "";
+    kept = words === undefined ? undefined : "left";
+    discarded = undefined;
+  });
+
+  // The note is kept as it's typed, while it differs from what's saved.
+  $effect(() => {
+    if (writing) keepDraft(draftName, worthKeeping(draft, note ?? "") ? draft : undefined);
   });
 
   async function write() {
-    draft = note ?? "";
+    const words = keptWords(draftName);
+    draft = words ?? note ?? "";
+    kept = words === undefined ? undefined : "here";
+    discarded = undefined;
     writing = true;
-    await tick();
-    box?.focus();
+    await box?.focus();
   }
 
   async function done() {
     writing = false;
-    message = "";
     await tick();
     opener?.focus();
   }
 
-  async function save(event: SubmitEvent) {
-    event.preventDefault();
-    if (busy) return;
-    busy = true;
-    const { refusal } = await sendChange(`/api/feeds/${place}/note`, { note: draft }, ["too-long"]);
-    if (!refusal) await library.loadFeeds();
-    busy = false;
-    if (!refusal) return done();
-    message =
-      refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That note is too long. Make it shorter." : "The note couldn't be saved. Try again in a moment.";
+  async function save(words: string): Promise<string | undefined> {
+    const { refusal } = await sendChange(`/api/feeds/${place}/note`, { note: words }, ["too-long"]);
+    if (refusal) return refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That note is too long. Make it shorter." : NOTE_NOT_SAVED;
+    keepDraft(draftName, undefined);
+    await library.loadFeeds();
+    await done();
+    return undefined;
+  }
+
+  async function discard() {
+    discarded = draft;
+    keepDraft(draftName, undefined);
+    writing = false;
+    await tick();
+    undoButton?.focus();
+  }
+
+  async function undo() {
+    const words = discarded;
+    discarded = undefined;
+    if (words === undefined) return;
+    keepDraft(draftName, words);
+    draft = words;
+    kept = "here";
+    writing = true;
+    await box?.focus();
   }
 </script>
 
 <div class="flex flex-col gap-2" lang="en">
   {#if writing}
-    <form class="note-form flex flex-col gap-3" onsubmit={save}>
-      <label class="text-base font-semibold text-ink" for="person-note">A note on {name}</label>
-      <textarea dir="auto" id="person-note" bind:this={box} bind:value={draft} maxlength={LONGEST_NOTE} rows="4" aria-describedby="person-note-message" class="field note-box"></textarea>
-      <p class="text-small text-ink-2">Only you see it. It's kept for all their places, and Your data exports it.</p>
-      <p id="person-note-message" role="status" class={["flex items-start gap-1.5 text-small text-danger", !message && "sr-only"]}>
-        {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
-      </p>
-      <div class="flex flex-wrap gap-2">
-        <button type="submit" class="btn-primary" aria-disabled={busy}><Waiting {busy} word="Save" doing="Saving…" /></button>
-        <button type="button" class="btn-quiet" onclick={done}>Not now</button>
-      </div>
-    </form>
-  {:else if note}
-    <p class="label">Your note</p>
-    <div class="text-base"><NoteText {note} /></div>
-    <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Edit note</button>
+    <NoteBox bind:this={box} id="person-note" on="page" label="A note on {name}" help="Only you see it. It's kept for all their places, and Your data exports it." bind:words={draft} {kept} onSave={save} onNotNow={done} onDiscard={discard} />
   {:else}
-    <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Add a note…</button>
+    {#if note}
+      <p class="label">Your note</p>
+      <div class="text-base"><NoteText {note} /></div>
+      <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Edit note</button>
+    {:else}
+      <button type="button" class="btn-quiet -ml-3 self-start" bind:this={opener} onclick={write}>Add a note…</button>
+    {/if}
+    <!-- Discard's Undo, in place, until the box opens again. -->
+    <div class="flex flex-wrap items-center gap-x-3 text-small">
+      <p role="status" class={discarded === undefined ? "sr-only" : undefined}>{discarded === undefined ? "" : "Note discarded."}</p>
+      {#if discarded !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
+    </div>
   {/if}
 </div>
 
@@ -86,15 +112,5 @@
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-  }
-  .note-form {
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-    border-radius: 0.75rem;
-  }
-  .note-box {
-    min-height: 6rem;
-    resize: vertical;
-    line-height: 1.5;
   }
 </style>

@@ -10,12 +10,19 @@
   red words, with Cancel and Save at the right end (decision 0039). On a
   phone, the phone sheet's one build (decision 0052): an X beside the title,
   no Cancel, Delete as a group of its own and Save at the screen's foot.
+  Changes not saved yet are kept on this device (decision 0233): Escape or a
+  press on the dimmed page leaves them waiting, and reopening shows them
+  with "Not saved yet. …" at the top; Cancel (on a phone, the X) throws
+  them away.
 -->
 <script lang="ts">
   import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
+  import NotSavedYet from "./NotSavedYet.svelte";
   import Sheet from "./Sheet.svelte";
+  import { keepDraft, keepWhileChanged, keptDraft } from "./drafts";
+  import { isRecord } from "./http";
   import { edge } from "./edge";
   import type { Folder } from "./shapes";
   import { refused, renameFolder } from "./feeds";
@@ -49,6 +56,25 @@
   let busy = $state(false);
   let message = $state("");
 
+  // Changes kept from before (decision 0233): the form starts from them, and says so.
+  // svelte-ignore state_referenced_locally
+  const draftName = `edit:folder:${folder.id}`;
+  const kept = keptDraft(draftName);
+  const restored = isRecord(kept);
+  if (isRecord(kept)) {
+    if (typeof kept.name === "string") name = kept.name;
+    if (typeof kept.onePerson === "boolean") onePerson = kept.onePerson;
+  }
+  // svelte-ignore state_referenced_locally
+  const original = { name: folder.name, onePerson: false };
+  $effect(() => keepWhileChanged(draftName, { name, onePerson }, original));
+
+  /** Cancel (on a phone, the X): back to the folder, and the changes go. */
+  function cancel() {
+    keepDraft(draftName, undefined);
+    onCancel();
+  }
+
   async function save(event: SubmitEvent) {
     event.preventDefault();
     if (busy) return;
@@ -63,7 +89,10 @@
     const problem = onePerson ? await onPerson(name === folder.name ? folder.name : name.trim()) : undefined;
     busy = false;
     if (problem) message = problem;
-    else if (!onePerson) onSaved();
+    else {
+      keepDraft(draftName, undefined);
+      if (!onePerson) onSaved();
+    }
   }
 
   async function remove() {
@@ -73,6 +102,7 @@
     const problem = await onDelete();
     busy = false;
     if (problem) message = problem;
+    else keepDraft(draftName, undefined);
   }
 </script>
 
@@ -91,6 +121,7 @@
 
 {#snippet form()}
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
+    {#if restored}<NotSavedYet />{/if}
     <label class="flex flex-col gap-1.5">
       <span class="text-small text-ink-2">Name</span>
       <input dir="auto" bind:value={name} type="text" autocomplete="off" class="field" />
@@ -118,7 +149,7 @@
       <!-- One row at the foot: Delete in red words at the far left, then Cancel and Save at the right end. -->
       <div class="sheet-actions">
         {@render remover("btn-danger")}
-        <button type="button" onclick={onCancel} class="btn">Cancel</button>
+        <button type="button" onclick={cancel} class="btn">Cancel</button>
         <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Save" doing="Saving…" /></button>
       </div>
     {:else}
@@ -146,7 +177,7 @@
     first group does, and Save sits at the screen's foot.
   -->
   <div class="page-sheet-card">
-    <PageHead title="Edit folder" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+    <PageHead title="Edit folder" bind:heading {besideToggle} onClose={cancel} closeLabel="Close" />
     <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
       <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
         {@render form()}

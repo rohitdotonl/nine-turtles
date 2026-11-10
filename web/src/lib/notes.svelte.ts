@@ -8,6 +8,7 @@
 import { isRecord, sendChange } from "./http";
 import { connection, whenBack } from "./connection.svelte";
 import { deviceJson, setDeviceText } from "./device";
+import { renameDraft } from "./drafts";
 import { currentTabReader } from "./updates.svelte";
 import { toNote, type FullArticle, type Note } from "./shapes";
 import { UNDO_FAILED } from "./messages";
@@ -112,18 +113,20 @@ async function send(change: Waiting): Promise<Sent | "offline"> {
 }
 
 /** What couldn't be done, by the kind of change, when the trouble was nine turtles' own. */
-const FAILED: Record<Waiting["kind"], string> = {
+const FAILED: Record<"highlight" | "remove", string> = {
   highlight: "The highlight couldn't be saved.",
-  change: "The note couldn't be saved.",
   remove: "The highlight couldn't be removed.",
-  "article-note": "The note couldn't be saved.",
 };
+
+/** A note that couldn't be saved: its box stays open with the words (decision 0233), and says so under them. */
+export const NOTE_NOT_SAVED = "The note couldn't be saved, so your words are still here. Try again in a moment.";
 
 /** Why a change wasn't kept, in plain words (shown, never silently dropped). */
 function notKept(refusal: string, kind: Waiting["kind"]): string {
   if (refusal === "too-long") return "That note is too long. Make it shorter.";
   if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
   if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
+  if (kind === "change" || kind === "article-note") return NOTE_NOT_SAVED;
   return `${FAILED[kind]} Try again in a moment.`;
 }
 
@@ -142,7 +145,11 @@ export async function sendWaiting(): Promise<void> {
       const made = change.kind === "highlight" && isRecord(sent.answer?.highlight) ? toNote(sent.answer.highlight) : undefined;
       waiting.list = waiting.list.slice(1);
       save();
-      if (made && change.kind === "highlight") renumbered.get(change.article)?.(change.id, made.id);
+      if (made && change.kind === "highlight") {
+        // A note left unsaved on it follows it to its number (decision 0233).
+        renameDraft(`note:highlight:${change.id}`, `note:highlight:${made.id}`);
+        renumbered.get(change.article)?.(change.id, made.id);
+      }
     }
   } finally {
     sending = false;

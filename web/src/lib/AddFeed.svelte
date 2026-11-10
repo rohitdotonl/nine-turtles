@@ -27,6 +27,11 @@
   (FollowPerson.svelte, decision 0138). A YouTube video's address asks
   whether to follow its channel, and a playlist's whether to follow the
   whole channel or only the playlist (decision 0144), the same way.
+
+  In the sheet (and its page on a phone), an address typed and not yet
+  added is kept on this device: Escape, a press on the dimmed page or going
+  elsewhere leave it in the field for next time; Cancel clears it
+  (decision 0233).
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -35,6 +40,7 @@
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
   import { onDestroy, tick } from "svelte";
+  import { keepDraft, keptWords } from "./drafts";
   import { addFeed, editFeed, explain, type Choice } from "./feeds";
   import { followedTogether } from "./several";
   import { runningInstalled } from "./installing.svelte";
@@ -75,7 +81,19 @@
     alternative?: Snippet;
   } = $props();
 
-  let address = $state("");
+  // In the sheet, an address typed earlier and not added waits in the field (decision 0233).
+  // svelte-ignore state_referenced_locally
+  const keeps = onCancel !== undefined || page;
+  let address = $state((keeps && keptWords("add")) || "");
+  $effect(() => {
+    if (keeps) keepDraft("add", address.trim() ? address : undefined);
+  });
+
+  /** Cancel: the sheet closes, and what was typed goes with it. */
+  function cancel() {
+    keepDraft("add", undefined);
+    onCancel?.();
+  }
   let busy = $state(false);
   let message = $state("");
   /** The message is a problem, not a next step. */
@@ -499,7 +517,7 @@
   {:else if onCancel}
     <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add at the right end. -->
     <div class="sheet-actions mt-3.5">
-      {#if !asking}<button type="button" onclick={onCancel} class="btn">Cancel</button>{/if}
+      {#if !asking}<button type="button" onclick={cancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
         >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
       >
