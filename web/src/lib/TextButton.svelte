@@ -22,5 +22,5 @@
   bind:this={element}
   type="button"
   {...rest}
-  class={["min-h-11 min-w-11 shrink-0 font-semibold text-ink underline underline-offset-4", extra]}>{@render children()}</button
+  class={["text-button min-h-11 min-w-11 shrink-0 font-semibold text-ink underline underline-offset-4", extra]}>{@render children()}</button
 >

@@ -154,10 +154,7 @@
   let saying = $derived(!closed && !!(line || undoLast));
   /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
   let noteFor: number | undefined = $state();
-  $effect(() => {
-    const here = saying && (selected?.id === noteFor || !!retryLast);
-    note = here ? { words: line, undo: undoLast && (() => undo()), retry: retryLast && retryNow, close: () => (closed = true) } : undefined;
-  });
+  $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, close: () => (closed = true) } : undefined));
   // The notice is read when the list opens, and again when a move brings a new one to the same list.
   $effect(() => {
     if (!notice || !firstShowing(notice)) return;
@@ -265,7 +262,7 @@
       loaded = true;
       if (fromDevice) say(REFRESH_NEEDS_CONNECTION);
       // Asked for and nothing came: it says so (decision 0229), unless an Undo is on offer, which r never clears.
-      else if (asked && latest === before && !(undoLast && saying)) say(nothingNewSince(since));
+      else if (asked && latest === before) inform(nothingNewSince(since));
     } catch (failure) {
       problem = couldNotLoad(failure);
     }
@@ -321,7 +318,7 @@
   export function move(step: 1 | -1): boolean {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
     if (index < 0 || index >= articles.length) {
-      if (selectedIndex !== -1) say(noFurther(step, next !== null));
+      if (selectedIndex !== -1) inform(noFurther(step, next !== null));
       return false;
     }
     select(index);
@@ -468,6 +465,13 @@
     closed = false;
   }
 
+  /** A passing answer (decision 0229): `u` still undoes the last action; a failed save's line, which matters, stays. */
+  let passing = $state(false);
+  function inform(message: string) {
+    if (retryLast) return;
+    [line, passing, closed, noteFor] = [message, true, false, selected?.id];
+  }
+
   /**
    * An undoable action happened: the line says what, and Undo reverses it.
    * Called before the action's own marks are saved, so their saves belong
@@ -475,6 +479,7 @@
    */
   function did(message: string, reverse: () => void) {
     line = undoMessage = message;
+    passing = false;
     noteFor = selected?.id;
     undoLast = reverse;
     retryLast = undefined;
@@ -535,7 +540,7 @@
   export function undo(): boolean {
     const reverse = undoLast;
     if (!reverse) {
-      say(NOTHING_TO_UNDO);
+      inform(NOTHING_TO_UNDO);
       return false;
     }
     reverse();
@@ -752,7 +757,7 @@
       {#if retryLast}
         <TextButton onclick={retryByButton} class="-mr-2 px-2">Try again</TextButton>
       {/if}
-      {#if undoLast && saying}
+      {#if undoLast && saying && !passing}
         <TextButton onclick={undoByButton} class="-mr-2 px-2">Undo</TextButton>
       {/if}
       {#if saying}

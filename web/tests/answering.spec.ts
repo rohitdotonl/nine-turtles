@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, openReadingRoom, signIn } from "./screens";
+import { appReady, follow, openReadingRoom, signIn, tabTo } from "./screens";
 
 // Every press is answered (decision 0229): a mark made while reading is said
 // where the reader is, Refresh says when nothing new came, a key with
@@ -135,4 +135,46 @@ test("Write back says the email app is opening, and offers the address if nothin
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
     "a@reading-room.example",
   );
+});
+
+test("the new lines never take away an Undo, and r says nothing new too", async ({
+  page,
+}) => {
+  test.skip(phone(), "Keys, on a computer.");
+  await openBlog(page);
+  await page.keyboard.press("Shift+A");
+  await expect(
+    page.getByText("Marked 3 articles as read.", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("r");
+  await expect(page.getByText(/^Nothing new has arrived since/)).toBeVisible();
+  // A passing line shows no Undo of its own, but u still undoes the last action.
+  await expect(page.getByRole("button", { name: "Undo" })).toBeHidden();
+  await page.keyboard.press("j");
+  await page.keyboard.press("k");
+  await expect(
+    page.getByText("That's the first article here.", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("u");
+  await expect(page.getByText("Undone.", { exact: true })).toBeVisible();
+  await expect(newestRow(page)).toHaveAccessibleName(/, unread/);
+});
+
+test("the note in the article is reached by Tab, and its Undo leaves the keyboard on the article", async ({
+  page,
+}) => {
+  test.skip(phone(), "The keyboard, on a computer.");
+  await openBlog(page);
+  await newestRow(page).click();
+  await page.getByRole("button", { name: "Article list" }).click();
+  await page.keyboard.press("s");
+  const undo = article(page).getByRole("button", { name: "Undo" });
+  await tabTo(page, undo);
+  await page.keyboard.press("Enter");
+  await expect(
+    article(page).getByText("Undone.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    article(page).getByRole("heading", { level: 2, name: NEWEST }),
+  ).toBeFocused();
 });

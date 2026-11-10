@@ -44,7 +44,7 @@ V1, item 2). Its look gets a refinement round.*
   and under it "Nothing opened?" with **Copy their address** (underlined
   words, as the list's note's buttons), which copies it and says "Copied.":
   on a computer with no email app set up, the press otherwise does nothing
-  you can see (decision 0229). The line stays until another article opens.
+  you can see (decision 0229). The line goes once you come back from the email app (the page was hidden while it opened) or another article opens. A copy that fails says so in oxblood with the alert icon.
 - **Write back about this** (decision 0205): when you've highlighted words
   in the article (section 42), the email starts with them, each quote on
   lines beginning "> " as email apps quote, a blank line after each, then

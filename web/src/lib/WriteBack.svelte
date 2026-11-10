@@ -82,12 +82,20 @@
   /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened. */
   let opening = $state(false);
   let copied = $state("");
+  let copyFailed = $state(false);
+  // Back from the email app: the page was hidden while it opened, so the line has done its job.
+  $effect(() => {
+    const back = () => document.visibilityState === "visible" && (opening = false);
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
+  });
 
   async function copyAddress() {
     try {
       await navigator.clipboard.writeText(address ?? "");
       copied = "Copied.";
     } catch {
+      copyFailed = true;
       copied = "The address couldn't be copied. Select it above and copy it yourself.";
     }
   }
@@ -102,6 +110,7 @@
     chosen = undefined;
     opening = false;
     copied = "";
+    copyFailed = false;
   });
 
   /** Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight. */
@@ -200,7 +209,7 @@
       <p class="to">{address}</p>
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
       <p class={["opening", !opening && "sr-only"]} role="status">
-        {#if opening}Opening your email app…<br />{#if copied}<span>{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
+        {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-1.5", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
       </p>
     {:else}
       <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></button>

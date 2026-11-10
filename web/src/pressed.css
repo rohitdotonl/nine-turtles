@@ -29,6 +29,12 @@
   background-color: var(--pressed);
 }
 
+/* Words to press (Undo, Try again, Copy their address, a link in a line): the same tone, just around the words. */
+:is(.text-button, .text-link):active {
+  border-radius: 0.25rem;
+  background-color: var(--pressed);
+}
+
 .btn-primary:active:not([aria-disabled="true"]) {
   background-color: var(--ink);
 }
@@ -43,7 +49,9 @@
     .menu-item,
     .check-row,
     .choice,
-    .inset-action
+    .inset-action,
+    .text-button,
+    .text-link
   ):active {
     outline: 2px solid Highlight;
   }

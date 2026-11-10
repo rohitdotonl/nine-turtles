@@ -508,7 +508,7 @@
     use:edge
     bind:this={scroller}
     onscroll={scrolled}
-    class="reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 pb-8 md:px-14">
+    class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-14", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>

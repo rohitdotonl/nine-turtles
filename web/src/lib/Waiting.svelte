@@ -3,8 +3,9 @@
   "Signing in…", "Save" becomes "Saving…", once the wait has passed half a
   second, so a quick answer never flickers. A word changing, never a
   spinner or a fade (DESIGN.md → "Instant and still"); the button keeps its
-  look and its place (decision 0045). Screen readers hear the button's new
-  name where it has the keyboard.
+  look and its place (decision 0045), and its width: both words take the
+  same cell, the hidden one invisible, so nothing beside it moves. Only the
+  shown word is in the button's name.
 -->
 <script lang="ts">
   let { busy, word, doing }: { busy: boolean; word: string; doing: string } = $props();
@@ -23,4 +24,7 @@
   });
 </script>
 
-{late ? doing : word}
+<span class="grid">
+  <span class={["col-start-1 row-start-1", late && "invisible"]}>{word}</span>
+  <span class={["col-start-1 row-start-1", !late && "invisible"]}>{doing}</span>
+</span>
