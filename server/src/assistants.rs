@@ -691,7 +691,7 @@ async fn swap_code(
         return Ok(Err("The PKCE code_verifier doesn't match."));
     }
     // Connecting again after a disconnect starts afresh: the old connection,
-    // waiting for an Undo, goes for good with its tickets (decision 0236).
+    // waiting for an Undo, goes for good with its tickets (decision 0238).
     sqlx::query(
         "DELETE FROM assistant_connections
          WHERE person_id = ? AND client_id = ? AND disconnected_at IS NOT NULL",

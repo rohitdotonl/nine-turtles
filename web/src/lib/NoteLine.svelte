@@ -30,7 +30,7 @@
     refusal?: boolean;
     /** Shown while there's something to undo. */
     onUndo?: () => void;
-    /** What Undo says: "Undo the import" after "Wrong file?" (decision 0236). */
+    /** What Undo says: "Undo the import" after "Wrong file?" (decision 0238). */
     undoWord?: string;
     /** Shown when trying again is the fix. */
     onRetry?: () => void;

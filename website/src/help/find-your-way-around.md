@@ -65,6 +65,11 @@ original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
 and Star on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
+To print an article, open it and use your browser's Print (<kbd>Command</kbd>
+<kbd>P</kbd>, or <kbd>Ctrl</kbd> <kbd>P</kbd> on Windows). Only the article
+prints, in black on white, and the last line says where it came from, with
+the address of the original.
+
 When you come back with nothing open, the reading pane offers the article
 you last left part of the way through, in one quiet line: "You were reading
 *The long walk home*, by Ana." Press the title to carry on where you

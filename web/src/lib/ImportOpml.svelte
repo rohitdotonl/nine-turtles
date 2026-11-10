@@ -8,7 +8,7 @@
   gives, each channel as its feed, the same way (decision 0144).
   In the welcome (`link`), only the way in, as a text link that opens the file chooser at once.
   In Settings, an import that added something hands over its Undo (`undo`):
-  "Wrong file? Undo the import" takes away exactly what it added (decision 0236).
+  "Wrong file? Undo the import" takes away exactly what it added (decision 0238).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";

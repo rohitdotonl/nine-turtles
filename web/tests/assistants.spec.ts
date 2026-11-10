@@ -95,7 +95,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   await expect(group.getByText("No assistants connected.")).toBeVisible();
   await expect(group.getByRole("status").filter({ hasText: "Claude is disconnected" })).toBeVisible();
 
-  // Undo, drawn like every Undo line: the same connection is back (decision 0236).
+  // Undo, drawn like every Undo line: the same connection is back (decision 0238).
   // From the keyboard: Undo, then the keyboard's place waits on the group's heading.
   await tabTo(page, group.getByRole("button", { name: "Undo" }));
   await page.keyboard.press("Enter");

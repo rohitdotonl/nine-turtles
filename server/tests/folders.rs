@@ -644,7 +644,7 @@ async fn undoing_an_import_takes_away_exactly_what_it_added() {
         ]
     );
 
-    // Undo (decision 0236): Alpha, Gamma and the folder Tech go; Beta, which
+    // Undo (decision 0238): Alpha, Gamma and the folder Tech go; Beta, which
     // was followed before, stays, out of the folders the file put it in;
     // Friends, made before, stays too.
     let (status, _) = reader.post("/api/opml/undo", json!({})).await;

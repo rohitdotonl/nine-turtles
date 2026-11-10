@@ -1,5 +1,5 @@
 // Mark all as read's Undo outlives the list it was done in (SPEC section 8,
-// decision 0236): a slip is often noticed one step later, in another list.
+// decision 0238): a slip is often noticed one step later, in another list.
 // Each list (`ItemList.svelte`) is made afresh when you go to another, so the
 // last Mark all as read waits here, with the articles it marked, until the
 // reader does something else that can be undone (or undoes it). The list

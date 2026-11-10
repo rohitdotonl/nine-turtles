@@ -1,5 +1,5 @@
 //! Settings › Connected assistants (SPEC section 33): the reader's
-//! connections, disconnecting one with Undo (decision 0236), and making an
+//! connections, disconnecting one with Undo (decision 0238), and making an
 //! assistant key.
 //!
 //! Disconnecting stops the assistant at once: every ticket of the

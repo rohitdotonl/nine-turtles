@@ -541,7 +541,7 @@ async fn the_reader_approves_and_the_assistant_works() {
     let (_, listed) = get_json(&base, "/api/assistants", &cookie).await;
     assert_eq!(listed["assistants"], json!([]));
 
-    // Undo brings the same connection back, tickets and all (decision 0236).
+    // Undo brings the same connection back, tickets and all (decision 0238).
     let (status, _) = post_json(
         &base,
         &format!("/api/assistants/{id}/reconnect"),
@@ -773,7 +773,7 @@ async fn an_assistant_key_works_until_turned_off() {
     );
 
     // Undo reverses only the last disconnect: disconnecting another
-    // forgets this one for good, key and all (decision 0236).
+    // forgets this one for good, key and all (decision 0238).
     let (_, other) = post_json(&base, "/api/assistants/key", Some(&cookie), &json!({})).await;
     let other = other["assistant"]["id"].as_i64().unwrap();
     post_json(

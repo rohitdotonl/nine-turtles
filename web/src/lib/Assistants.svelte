@@ -6,7 +6,7 @@
   with Copy, lists each connection with when it was made and last used, and
   disconnects one with a press. The assistant is stopped at once; Undo on
   the line brings the same connection back until the next action here
-  (decision 0236), so a slip never means connecting again from inside the
+  (decision 0238), so a slip never means connecting again from inside the
   assistant. For an assistant that can't show the connect
   page, "Make an assistant key" makes a key, shown once with Copy. Feeds an assistant unsubscribed from are
   kept for 30 days and listed below, each with Bring back.

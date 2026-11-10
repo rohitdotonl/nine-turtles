@@ -363,7 +363,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   expect(text).toContain(`<outline text="${folder}"`);
   expect(text).toContain(`xmlUrl="${FEED_SITE}/blog/${one}/feed.xml"`);
 
-  // Wrong file? Undo the import takes away exactly what it added (decision 0236).
+  // Wrong file? Undo the import takes away exactly what it added (decision 0238).
   await expect(page.getByText("Wrong file?")).toBeVisible();
   // From the keyboard: then the keyboard's place waits on the page's heading.
   await tabTo(page, page.getByRole("button", { name: "Undo the import" }));

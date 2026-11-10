@@ -172,7 +172,7 @@
   let sortMessage = $state("");
   /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
-  /** After an import that added something, "Wrong file? Undo the import" until the next action here (decision 0236). */
+  /** After an import that added something, "Wrong file? Undo the import" until the next action here (decision 0238). */
   let importUndo: (() => Promise<"too-late" | undefined>) | undefined = $state();
   let undoingImport = $state(false);
   /** What undoing the import said, in oxblood when it couldn't be done. */

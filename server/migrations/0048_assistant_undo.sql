@@ -1,4 +1,4 @@
--- Undo for disconnecting an assistant (decision 0236). A disconnected
+-- Undo for disconnecting an assistant (decision 0238). A disconnected
 -- connection keeps its line here, with when it was disconnected, in
 -- seconds since 1970: every ticket of it is refused from that moment, and
 -- Undo can clear this to bring the same connection back for ten minutes.
