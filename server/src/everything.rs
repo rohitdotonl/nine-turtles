@@ -79,8 +79,13 @@ const KEPT: &str = concat!(
      ORDER BY entries.sort_at DESC, articles.id DESC LIMIT ?"
 );
 
+/// One download is built at a time, for everyone: each is held in memory
+/// while it's made, and the server is small. Another waits its turn.
+static ONE_AT_A_TIME: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 async fn download(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let today = crate::now();
+    let _turn = ONE_AT_A_TIME.lock().await;
     match zip_for(&state.db, person, today).await {
         Ok(zip) => {
             let (year, month, day) = civil_date(today);
@@ -128,7 +133,8 @@ pub async fn zip_for(
         .fetch_all(db)
         .await?;
 
-    // Each article's page, read one at a time so only the zip grows.
+    // Each article's page, its text read one at a time so only the zip grows
+    // (`starred::file` reads its articles a page at a time too).
     let mut listed = Vec::with_capacity(kept.len());
     for article in &kept {
         let (content, summary): (Option<String>, Option<String>) =
@@ -164,13 +170,9 @@ pub async fn zip_for(
     if let Some(opml) = subscriptions::opml_for(db, person).await? {
         zip.add(&format!("{folder}/follows.opml"), opml.as_bytes());
     }
-    let stars: Vec<starred::Starred> = sqlx::query_as(starred::EXPORT)
-        .bind(person)
-        .fetch_all(db)
-        .await?;
     zip.add(
         &format!("{folder}/starred.json"),
-        starred::write(&stars).to_string().as_bytes(),
+        starred::file(db, person).await?.as_bytes(),
     );
     let markdown = notes::export::markdown(db, person, today).await?;
     zip.add(
@@ -180,11 +182,11 @@ pub async fn zip_for(
     Ok(zip.finish())
 }
 
-/// The people followed, A to Z, each name once (a writer with two feeds is
-/// one person), with every note written on them.
 /// A person's site and notes, under their name (lowercased first, to sort A to Z).
 type People<'a> = BTreeMap<(String, String), (Option<&'a str>, Vec<&'a str>)>;
 
+/// The people followed, A to Z, each name once (a writer with two feeds is
+/// one person), with every note written on them.
 fn people(followed: &[Followed]) -> People<'_> {
     let mut people = People::new();
     for one in followed {

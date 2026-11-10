@@ -37,5 +37,10 @@ something a person can open and read in twenty years without another app.
    the OPML file from `subscriptions::opml_for`). `/api/feeds` no longer says
    whether anything is starred or noted: only those rows needed it.
 
-**Limits.** Built in memory, one article's text read at a time; at most
-65,525 articles (a plain zip's limit), far more than any reader stars.
+**Limits.** Built in memory, one article's text read at a time (the starred
+file a hundred at a time), and one download at a time for the whole server,
+so a small server never holds two (the second-agent review); at most 65,525
+articles (a plain zip's limit), far more than any reader stars. Each starred
+text is in the zip twice (its page and starred.json): accepted, as text is
+small. While it's built the browser shows nothing until the file starts; a
+typical library should take about a second or less.

@@ -200,12 +200,12 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     let index = common::from_everything(&base, &cookie, "index.html").await;
     assert!(index.contains("<h1>Your reading</h1>"), "{index}");
     assert!(index.contains("Kitchen Notes"), "{index}");
-    assert!(index.contains("Soup 2</a>"), "{index}");
+    assert!(index.contains(">Soup 2</a>"), "{index}");
     assert!(index.contains(" · Your notes"), "{index}");
     let page = common::from_everything(&base, &cookie, &format!("{}-soup-2.html", ids[1])).await;
-    assert!(page.contains("<h1>Soup 2</h1>"), "{page}");
+    assert!(page.contains(">Soup 2</h1>"), "{page}");
     assert!(
-        page.contains("<blockquote>A warm soup</blockquote>\n<p>Try with leeks</p>"),
+        page.contains(">A warm soup</blockquote>\n<p dir=\"auto\">Try with leeks</p>"),
         "{page}"
     );
     assert!(!page.contains("<script"), "{page}");

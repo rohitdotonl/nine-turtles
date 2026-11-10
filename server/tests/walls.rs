@@ -612,6 +612,30 @@ async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
         export["items"][0]["_nine_turtles"]["feed_title"],
         "Their garden"
     );
+    // So are Download everything's pages: each reader's index lists only
+    // what they starred, under their own name for the feed.
+    let theirs = export["items"][0]["title"].as_str().unwrap().to_owned();
+    let their_index = common::from_everything(&other.base, &other.cookie, "index.html").await;
+    assert!(
+        their_index.contains(&format!(">{theirs}</a>")),
+        "{their_index}"
+    );
+    assert_eq!(
+        their_index.matches("<li><a href=\"articles/").count(),
+        1,
+        "{their_index}"
+    );
+    let owner_index = common::from_everything(&owner.base, &owner.cookie, "index.html").await;
+    assert!(
+        owner_index.contains(">Post 2 about tomatoes</a>"),
+        "{owner_index}"
+    );
+    assert!(!owner_index.contains("Their garden"), "{owner_index}");
+    assert_eq!(
+        owner_index.matches("<li><a href=\"articles/").count(),
+        1,
+        "{owner_index}"
+    );
     assert!(
         common::from_everything(&other.base, &other.cookie, "follows.opml")
             .await

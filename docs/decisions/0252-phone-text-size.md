@@ -1,6 +1,6 @@
 # 0252: The phone's own text size grows the whole app
 
-**In one line:** On an iPhone or iPad, nine turtles follows the system's Text Size, growing or shrinking the whole app as native apps do (up to twice its size), with Aa still the article's own control on top.
+**In one line:** On an iPhone or iPad, nine turtles follows a larger system Text Size, growing the whole app as native apps do (up to twice its size, never smaller than designed), with Aa still the article's own control on top.
 
 *11 November 2026.*
 
@@ -20,5 +20,7 @@ everywhere except here.
 (`-apple-system-body`, 17px at the default size) and sets the root font size
 to the same proportion, so everything sized in rem follows. Only on touch
 devices whose browser knows that font (Apple's); capped at 200%, where the
-first floor promises everything still works. Smaller settings shrink it, as
-they do native apps. Aa's six steps are unchanged and apply on top.
+first floor promises everything still works. Smaller settings leave it as
+designed: shrinking would make touch targets under 44px and fields under
+16px, which Safari zooms into when tapped (the second-agent review). Aa's six
+steps are unchanged and apply on top.

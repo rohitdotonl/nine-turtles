@@ -11,18 +11,20 @@ use crate::{
     feed::escape,
 };
 
-/// The look every page shares: dark words on white, or light on near-black,
-/// both well past AA contrast.
+/// The look every page shares: the brand's White page by day and Night by
+/// night (`web/src/themes.css`, BRAND.md), both well past AA contrast, in
+/// Literata and Atkinson Hyperlegible Next where the device has them, the
+/// device's own serif and sans otherwise (nothing is fetched).
 const STYLE: &str = "<style>
-:root{color-scheme:light dark;--page:#fff;--ink:#1d1d1f;--muted:#55555a;--line:#e3e3e6}
-@media (prefers-color-scheme:dark){:root{--page:#161617;--ink:#ececec;--muted:#b0b0b5;--line:#333336}}
-body{margin:0;background:var(--page);color:var(--ink);font:1.125rem/1.6 Georgia,'Iowan Old Style','Times New Roman',serif}
+:root{color-scheme:light dark;--page:#ffffff;--ink:#141414;--muted:#5f5f64;--line:#dddddf}
+@media (prefers-color-scheme:dark){:root{--page:#121212;--ink:#e8e8e8;--muted:#a4a4a8;--line:#3b3b3b}}
+body{margin:0;background:var(--page);color:var(--ink);font:1.125rem/1.6 Literata,Georgia,'Iowan Old Style',serif}
 main{max-width:38rem;margin:0 auto;padding:2.5rem 1.25rem 4rem}
 h1{font-size:2.25rem;line-height:1.15;margin:.25rem 0 .75rem}
 h2{font-size:1.4rem;line-height:1.25;margin:2.5rem 0 .75rem}
 h3{font-size:1.15rem;margin:1.75rem 0 .5rem}
 a{color:inherit;text-underline-offset:.2em}
-.small{font:.9375rem/1.5 system-ui,sans-serif;color:var(--muted);margin:0}
+.small{font:.9375rem/1.5 'Atkinson Hyperlegible Next',system-ui,sans-serif;color:var(--muted);margin:0}
 ul.plain{list-style:none;padding:0;margin:0}
 ul.plain li{padding:.6rem 0;border-top:1px solid var(--line)}
 ul.plain .small{display:block;margin-top:.15rem}
@@ -49,13 +51,24 @@ pub(super) fn article_path(id: i64, title: &str, at: i64) -> String {
     format!("articles/{year}/{id}{slug}.html")
 }
 
-fn page(language: &str, title: &str, body: &str) -> String {
+/// A page in English, nine turtles' own words; what the publisher or the
+/// reader wrote carries its own language and direction (`own`).
+fn page(title: &str, body: &str) -> String {
     format!(
-        "<!doctype html>\n<html lang=\"{}\">\n<head>\n<meta charset=\"utf-8\">\n\
+        "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n\
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
-         <title>{title}</title>\n{STYLE}\n</head>\n<body>\n<main>\n{body}</main>\n</body>\n</html>\n",
-        escape(language)
+         <title>{title}</title>\n{STYLE}\n</head>\n<body>\n<main>\n{body}</main>\n</body>\n</html>\n"
     )
+}
+
+/// The attributes for words the publisher wrote: their language when it's
+/// known (as the app marks an article, SPEC section 24), and their direction
+/// from their own letters, so Arabic and Hebrew read right to left.
+fn own(language: Option<&str>) -> String {
+    match language {
+        Some(language) => format!(r#" lang="{}" dir="auto""#, escape(language)),
+        None => r#" dir="auto""#.to_owned(),
+    }
 }
 
 /// One kept article: its title, byline and link to the original, the text
@@ -66,11 +79,12 @@ pub(super) fn article(
     marks: &[(Option<String>, Option<String>)],
 ) -> String {
     let title = title_of(&article.title);
+    let theirs = own(article.language.as_deref());
     let mut body =
         String::from("<p class=\"small\"><a href=\"../../index.html\">Your reading</a></p>\n");
     let _ = write!(
         body,
-        "<h1>{title}</h1>\n<p class=\"small\">{}</p>\n",
+        "<h1{theirs}>{title}</h1>\n<p class=\"small\">{}</p>\n",
         byline(article)
     );
     if let Some(link) = &article.link {
@@ -80,19 +94,19 @@ pub(super) fn article(
             web_link(link, "Read it where it was published")
         );
     }
-    let _ = write!(body, "<article>\n{text}\n</article>\n");
+    let _ = write!(body, "<article{theirs}>\n{text}\n</article>\n");
     if !marks.is_empty() {
         body.push_str("<h2>Your highlights and notes</h2>\n");
         for (quote, note) in marks {
             if let Some(quote) = quote {
-                let _ = writeln!(body, "<blockquote>{}</blockquote>", escape(quote));
+                let _ = writeln!(body, "<blockquote{theirs}>{}</blockquote>", escape(quote));
             }
             if let Some(note) = note {
-                let _ = writeln!(body, "<p>{}</p>", escape(note));
+                let _ = writeln!(body, "<p dir=\"auto\">{}</p>", escape(note));
             }
         }
     }
-    page(article.language.as_deref().unwrap_or("en"), &title, &body)
+    page(&title, &body)
 }
 
 /// The folder's front page: who the reader follows, then what they kept,
@@ -154,8 +168,9 @@ pub(super) fn index(
         }
         let _ = writeln!(
             body,
-            "<li><a href=\"{}\">{}</a><span class=\"small\">{line}</span></li>",
+            "<li><a href=\"{}\"{}>{}</a><span class=\"small\">{line}</span></li>",
             escape(path),
+            own(article.language.as_deref()),
             title_of(&article.title)
         );
     }
@@ -170,7 +185,7 @@ pub(super) fn index(
          <li><a href=\"notes-and-highlights.md\">notes-and-highlights.md</a><span class=\"small\">Your notes and highlights as plain text, for any notes app.</span></li>\n\
          </ul>\n",
     );
-    page("en", "Your reading", &body)
+    page("Your reading", &body)
 }
 
 #[cfg(test)]
@@ -213,15 +228,28 @@ mod tests {
             ],
         );
         assert!(page.contains("<title>Seeds &lt;and&gt; soil</title>"));
+        // The publisher's words carry their language; the page's own stay English.
+        let arabic = article(
+            &Kept {
+                language: Some("ar".to_owned()),
+                ..kept("مكتبة", "Ivy", "Ivy")
+            },
+            "<p>نص</p>",
+            &[],
+        );
+        assert!(arabic.contains("<html lang=\"en\">"));
+        assert!(arabic.contains(r#"<h1 lang="ar" dir="auto">مكتبة</h1>"#));
+        assert!(arabic.contains(r#"<article lang="ar" dir="auto">"#));
         assert!(page.contains("Ivy · Ivy's Garden · 2 Nov 2026"));
         assert!(
             page.contains(
                 r#"<a href="https://ivy.example/seeds">Read it where it was published</a>"#
             )
         );
-        assert!(page.contains("<article>\n<p>Text</p>\n</article>"));
+        assert!(page.contains("<html lang=\"en\">"));
+        assert!(page.contains("<article dir=\"auto\">\n<p>Text</p>\n</article>"));
         assert!(
-            page.contains("<blockquote>a &lt;line&gt;</blockquote>\n<p>Ask her</p>\n<p>Lovely</p>")
+            page.contains("<blockquote dir=\"auto\">a &lt;line&gt;</blockquote>\n<p dir=\"auto\">Ask her</p>\n<p dir=\"auto\">Lovely</p>")
         );
         assert!(!page.contains("<script"));
     }
@@ -259,6 +287,6 @@ mod tests {
             "A to Z"
         );
         assert!(index.contains("<h3>2026</h3>"));
-        assert!(index.contains(r#"<a href="articles/2026/7-seeds.html">Seeds</a><span class="small">Ivy · 2 Nov 2026 · Starred</span>"#));
+        assert!(index.contains(r#"<a href="articles/2026/7-seeds.html" dir="auto">Seeds</a><span class="small">Ivy · 2 Nov 2026 · Starred</span>"#));
     }
 }

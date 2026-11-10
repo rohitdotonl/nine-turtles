@@ -45,7 +45,8 @@ the article), use your device's own setting:
 
 - **iPhone or iPad:** Settings › Display & Brightness › **Text Size** (or
   Accessibility › Display & Text Size › **Larger Text**). nine turtles
-  follows it, as Mail and Messages do, the next time you open it.
+  grows with it, as Mail and Messages do, the next time you open it. (A
+  smaller setting leaves it as it is, so everything stays easy to tap.)
 - **Android:** Settings › Display › **Font size**. Your browser grows the
   whole page with it.
 - **Computer:** zoom the browser with <kbd>⌘</kbd> <kbd>+</kbd> on a Mac or
