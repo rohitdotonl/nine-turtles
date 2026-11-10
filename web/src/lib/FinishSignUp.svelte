@@ -104,7 +104,7 @@
     <!-- The browser that signed up (decision 0193): one press, nothing to type. -->
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="finish-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <button bind:this={confirmButton} type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>
@@ -112,7 +112,7 @@
     </form>
   {:else if here === "password"}
     <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
-      <div class="flex flex-col gap-1.5">
+      <div class="flex flex-col gap-2">
         <label for="password" class="text-meta text-ink-2">Password</label>
         <!-- The only thing to do on this page, so it has the focus. -->
         <PasswordField
@@ -127,7 +127,7 @@
       </div>
       <!-- Room for a message kept at the foot, as on sign-in (decision 0045). -->
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="finish-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="finish-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Confirm email" doing="Confirming…" /></button>

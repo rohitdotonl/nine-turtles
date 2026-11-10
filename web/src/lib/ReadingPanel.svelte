@@ -167,7 +167,7 @@
     flex: 1;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.25rem 0.875rem;
+    gap: 0.25rem 1rem;
   }
   /* Every choice 44px to press, with a mouse too: the floor allows less only in the sidebar and the search options. */
   .word,
@@ -221,7 +221,7 @@
     width: 3.5rem;
     flex-direction: column;
     justify-content: flex-start;
-    gap: 0.375rem;
+    gap: 0.5rem;
     padding-top: 0.25rem;
   }
   .swatch-name {
@@ -240,7 +240,7 @@
     height: 1.5rem;
     flex: none;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--ink) 60%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink) 65%, transparent);
   }
   .swatch:has(input:checked) .dot {
     box-shadow:

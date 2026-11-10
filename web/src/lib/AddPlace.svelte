@@ -203,7 +203,7 @@
       </div>
       <button type="button" class="btn self-start" aria-disabled={busy} onclick={addAddress}>Follow and join</button>
     {:else if others.length > 0}
-      <div class="flex flex-col gap-1.5">
+      <div class="flex flex-col gap-2">
         <label for="add-place-who" class="text-meta text-ink-2">Someone you already follow</label>
         <div class="flex flex-wrap gap-2">
           <select id="add-place-who" bind:value={chosen} class="field min-w-0 flex-1">
@@ -217,7 +217,7 @@
       </div>
     {/if}
     {#if !asking && choices.length === 0}
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <label for="add-place-address" class="text-meta text-ink-2">{others.length > 0 ? "Or the address of their blog, channel or newsletter" : "The address of their blog, channel or newsletter"}</label>
       <div class="flex flex-wrap gap-2">
         <input
@@ -239,7 +239,7 @@
       </div>
     </div>
     {/if}
-    <p role="status" class={["flex items-start gap-1.5 text-meta", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
+    <p role="status" class={["flex items-start gap-2 text-meta", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{:else if busy}Working…{/if}
     </p>
     <button type="button" class="btn-quiet self-start" onclick={hide}>Not now</button>
@@ -248,8 +248,8 @@
 
 <style>
   .add-place {
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    padding: 1rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-hold);
   }
 </style>

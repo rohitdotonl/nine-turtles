@@ -328,6 +328,8 @@ test.describe("on a phone", () => {
     const close = page.getByRole("button", { name: "Close" });
     const done = page.getByRole("button", { name: "Done" });
     await expect(done).toBeVisible();
+    // With folders the settings can run past the screen: at their end, Unsubscribe sits above Done.
+    await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).scrollIntoViewIfNeeded();
     const [titleBox, closeBox, doneBox, leaveBox] = await Promise.all([
       title.boundingBox(),
       close.boundingBox(),

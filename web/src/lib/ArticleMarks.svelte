@@ -514,8 +514,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding-left: 0.875rem;
-    border-left: 2px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    padding-left: 1rem;
+    border-left: 2px solid var(--strong);
     font-size: var(--text-base);
     line-height: 1.55;
   }
@@ -545,8 +545,8 @@
   */
   :global(mark.highlight) {
     color: inherit;
-    background-color: color-mix(in srgb, var(--ink) 9%, transparent);
-    box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 45%, transparent);
+    background-color: var(--line);
+    box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 65%, transparent);
     border-radius: var(--radius-mark);
     cursor: pointer;
   }
@@ -559,7 +559,7 @@
   }
   :global(.highlight-icon) {
     display: inline-flex;
-    margin-left: 3px;
+    margin-left: 0.25rem;
     vertical-align: 0.1em;
     color: var(--ink-2);
     cursor: pointer;

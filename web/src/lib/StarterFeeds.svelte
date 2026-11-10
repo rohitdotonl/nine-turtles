@@ -87,7 +87,7 @@
     there's something to say, and the sheet grows down by it (its top stays put); a problem is in red
     words after an icon.
   -->
-  <p id="starters-status" role="status" class={["flex items-start gap-1.5 text-meta", message && !busy && "text-danger", busy || message ? "mt-3" : "sr-only"]}>
+  <p id="starters-status" role="status" class={["flex items-start gap-2 text-meta", message && !busy && "text-danger", busy || message ? "mt-3" : "sr-only"]}>
     {#if busy}Adding feeds… {done} of {adding} done{:else if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   {#if page}

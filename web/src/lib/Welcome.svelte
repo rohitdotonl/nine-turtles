@@ -81,7 +81,7 @@
       The welcome keeps its exact shape under the dim, a still picture of itself that nothing can
       reach, so nothing behind the sheet moves as it opens or closes (decision 0048).
     -->
-    <div inert aria-hidden="true" class="flex flex-col gap-1.5">
+    <div inert aria-hidden="true" class="flex flex-col gap-2">
       <div class="welcome-row flex gap-2">
         <span class="field flex min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-muted"><span class="welcome-hint">Their website's address</span></span>
         <span class="btn-primary">Add</span>

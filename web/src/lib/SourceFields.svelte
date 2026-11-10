@@ -39,7 +39,7 @@
 <!-- Only while it isn't working, as Everyone you follow would list it: one quiet line and Find new address. -->
 <FailingLine {feed} label="Find new address" {onMoved} />
 
-<div class="flex min-w-0 flex-col gap-1.5">
+<div class="flex min-w-0 flex-col gap-2">
   <!-- Each setting's name with a short description straight under it, as in Settings (S1, decision 0120). No heading: Pause is often its only row. -->
   <div class="inset-group" role="group" aria-label="Settings">
     {#if feed.sortsVideos}

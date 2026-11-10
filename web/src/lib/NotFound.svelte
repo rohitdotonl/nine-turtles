@@ -25,7 +25,7 @@
   One left edge, like the website's home page (decision 0142): the column starts 192px down (96px on
   a phone), and its parts group by their gaps, 16 / 48 / 20 / 24 / 40, rather than one even spacing.
 -->
-<main class="min-h-screen bg-paper px-5 pt-24 pb-20 sm:pt-48">
+<main class="min-h-screen bg-paper px-5 pt-24 pb-24 sm:pt-48">
   <div class="mx-auto flex w-full max-w-[38.5rem] flex-col items-start">
     <p class="text-meta font-medium text-muted">404 error</p>
     <div class="wrong-turn mt-4" aria-hidden="true">

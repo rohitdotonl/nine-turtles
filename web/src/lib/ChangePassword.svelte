@@ -69,7 +69,7 @@
 
 {#snippet form()}
   <form onsubmit={change} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
-    <label class="flex flex-col gap-1.5">
+    <label class="flex flex-col gap-2">
       <span class="text-meta text-ink-2">Current password</span>
       <input
         bind:this={currentField}
@@ -82,7 +82,7 @@
         class="field"
       />
     </label>
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <label for="new-password" class="text-meta text-ink-2">New password</label>
       <PasswordField
         id="new-password"
@@ -96,7 +96,7 @@
         At least {PASSWORD_MINIMUM} characters. Your other devices will be signed out.
       </p>
     </div>
-    <p id="change-password-message" role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    <p id="change-password-message" role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}

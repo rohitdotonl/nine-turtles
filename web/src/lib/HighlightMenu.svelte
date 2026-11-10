@@ -195,7 +195,7 @@
     width: max-content;
     min-width: 13rem;
     max-width: min(22rem, calc(100vw - 2rem));
-    padding: 0.375rem;
+    padding: 0.5rem;
     font-family: var(--font-sans);
   }
   .highlight-menu:has(:global(form)) {
@@ -218,7 +218,7 @@
   }
   @media (hover: hover) {
     .menu-item:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   .menu-item:focus-visible {
@@ -232,14 +232,14 @@
   }
   /* The highlight's note, above what can be done with it. */
   .menu-note {
-    padding: 0.5rem 0.75rem 0.625rem;
+    padding: 0.5rem 0.75rem;
     margin-bottom: 0.25rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    border-bottom: 1px solid var(--line);
   }
   /* Write back leaves the app for the reader's email, so it sits apart from what stays here. */
   .menu-rule {
     margin: 0.25rem 0;
     border: 0;
-    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    border-top: 1px solid var(--line);
   }
 </style>

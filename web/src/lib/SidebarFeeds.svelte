@@ -258,8 +258,8 @@
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui",
         // Indent means inside (decision 0225): a folder's people start a step in, on the names' edge;
         // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
-        from === null && !searching ? "pl-3" : "pl-[38px]",
-        editing ? "pr-12" : "pr-3.5",
+        from === null && !searching ? "pl-3" : "pl-10",
+        editing ? "pr-12" : "pr-3",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
       >{@render name(plainSourceName(feed.title))}{@render leadsOn()}</a
@@ -289,7 +289,7 @@
     data-folder-link={folder.id}
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
-    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3.5 text-ui", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
+    class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
     >{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
@@ -343,7 +343,7 @@
   <button
     type="button"
     onclick={() => searchArticles(search.trim())}
-    class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-left text-ui text-ink-2"
+    class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-left text-ui text-ink-2"
     ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
@@ -398,7 +398,7 @@
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
               {:else}
-                <li class="py-2 pr-5 pl-[46px] text-meta text-muted">No one in this folder yet.</li>
+                <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
               {/each}
             </ul>
           {/if}
@@ -442,7 +442,7 @@
   }
   @media (pointer: coarse) {
     .sidebar-section {
-      padding-top: 1.75rem;
+      padding-top: 2rem;
     }
   }
   /*
@@ -457,7 +457,7 @@
     position: absolute;
     inset-block: 0.25rem;
     left: 21px;
-    border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    border-left: 1px solid var(--line);
   }
   /* With a mouse or keyboard the arrow hides until it's wanted: made see-through rather than hidden. On a touch screen it always shows. */
   @media not (pointer: coarse) {

@@ -339,7 +339,7 @@
           </div>
         </div>
         <p class="inset-foot">Applies on all your devices.</p>
-        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{unreadMessage}</p>
+        <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{unreadMessage}</p>
       </section>
 
       <section aria-labelledby="reader-heading">
@@ -443,7 +443,7 @@
           >
         </div>
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
-        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
+        <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
         {#if email && !emailSending}
           <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
         {/if}
@@ -548,7 +548,7 @@
   }
   .choices.setting-control :global(.choice) {
     justify-content: center;
-    padding-inline: 0.375rem;
+    padding-inline: 0.5rem;
     text-align: center;
     line-height: 1.2;
     text-wrap: balance;
@@ -570,7 +570,7 @@
     width: 1.75rem;
     height: 1.75rem;
     border-radius: var(--radius-mark);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 25%, transparent);
+    box-shadow: inset 0 0 0 1px var(--strong);
     /* 12px, under the type scale on purpose: the "A" is part of the drawing, not text to read. */
     font: 600 0.75rem/1 var(--font-serif);
   }
@@ -596,8 +596,8 @@
   /* "Only you", beside the owner's own group's header: a small outlined word, never a color. */
   .only-you {
     margin-left: 0.5rem;
-    padding: 0 0.375rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+    padding: 0 0.5rem;
+    border: 1px solid var(--strong);
     border-radius: 999px;
     color: var(--muted);
     font-weight: 400;

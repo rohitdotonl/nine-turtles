@@ -242,7 +242,7 @@
     sheet (decision 0122). The email comes first, as password managers expect.
   -->
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <label for="email" class="text-meta text-ink-2">Email</label>
       <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->
       <input
@@ -280,7 +280,7 @@
           bind:value={password}
           describedby="sign-in-message"
           invalid={refused}
-          class="col-span-2 row-start-2 mt-1.5"
+          class="col-span-2 row-start-2 mt-2"
         />
         {#if emailSending}
           <a
@@ -301,7 +301,7 @@
       In red words after an icon, so it isn't told by color or place alone.
     -->
     <div class={["flex flex-col gap-3", asking ? "min-h-[8.5rem]" : offered ? "min-h-[13.75rem]" : "min-h-[10.5rem]"]}>
-      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta", "text-danger", !message && "sr-only"]}>
+      <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta", "text-danger", !message && "sr-only"]}>
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
       </p>
       <!-- After "That email and password don't match.", a likely slip in the email, in the text color, centred under it. -->

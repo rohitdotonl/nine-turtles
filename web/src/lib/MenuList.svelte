@@ -98,15 +98,15 @@
     onkeydown={onMenuKey}
     style:left={at ? `${at.x}px` : undefined}
     style:top={at ? `${at.y}px` : undefined}
-    class={["z-30 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 floating p-1.5 text-left font-sans", at ? "fixed" : ["absolute", place]]}
+    class={["z-30 w-max max-w-[min(18rem,calc(100vw-2rem))] min-w-56 floating p-2 text-left font-sans", at ? "fixed" : ["absolute", place]]}
   >
     {#each groups as group, index (index)}
       {#if index > 0}
-        <div role="separator" class="mx-2 my-1.5 h-px bg-ink/10"></div>
+        <div role="separator" class="mx-2 my-2 h-px bg-[var(--line)]"></div>
       {/if}
       <div role="group" aria-label={group.label}>
         {#if group.label}
-          <p aria-hidden="true" class="flex items-center gap-1.5 px-3 pt-1.5 pb-1 text-meta text-muted">{#if group.icon}<Icon name={group.icon} />{/if}{group.label}</p>
+          <p aria-hidden="true" class="flex items-center gap-2 px-3 pt-2 pb-1 text-meta text-muted">{#if group.icon}<Icon name={group.icon} />{/if}{group.label}</p>
         {/if}
         {#each group.items as item (item.label)}
           <button
@@ -150,7 +150,7 @@
   }
   @media (hover: hover) {
     .menu-item:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   .menu-item:focus-visible {

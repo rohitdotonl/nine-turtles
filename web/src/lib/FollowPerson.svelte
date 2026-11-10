@@ -90,14 +90,14 @@
   <div class="flex flex-col gap-1">
     <p class="break-all text-ink-2">{site}</p>
     <!-- Screen readers hear each new line here without moving the keyboard's place: the question again once the name is known, since the keyboard reached the title before it was. -->
-    <p role="status" class={["flex items-start gap-1.5 text-meta", problem ? "text-danger" : "text-ink-2"]}>
+    <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2"]}>
       {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
     </p>
   </div>
 
   {#if person && person.lately.length > 0}
     <!-- What they wrote lately, so the reader knows who they're saying yes to. Plain text: Follow is the one action here. -->
-    <section aria-labelledby="follow-lately" class="flex flex-col gap-1.5">
+    <section aria-labelledby="follow-lately" class="flex flex-col gap-2">
       <h3 id="follow-lately" class="text-meta text-ink-2">Lately</h3>
       <ul class="flex flex-col gap-1 font-serif">
         {#each person.lately as title, index (index)}

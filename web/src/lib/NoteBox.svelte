@@ -85,7 +85,7 @@
     </p>
   {/if}
   <textarea dir="auto" {id} bind:this={box} bind:value={words} maxlength={LONGEST_NOTE} rows="4" aria-describedby={kept ? `${id}-kept ${id}-message` : `${id}-message`} class="field note-box"></textarea>
-  <p id="{id}-message" role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+  <p id="{id}-message" role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   <p class={small ? "text-meta text-muted" : "text-meta text-ink-2"}>{help}</p>
@@ -97,8 +97,8 @@
 
 <style>
   .note-form {
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    padding: 1rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-hold);
   }
   .note-box {
@@ -111,7 +111,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    column-gap: 0.375rem;
+    column-gap: 0.5rem;
   }
   .discard {
     margin-block: -0.75rem;

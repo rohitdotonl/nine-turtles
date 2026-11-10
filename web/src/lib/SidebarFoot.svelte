@@ -26,14 +26,14 @@
   } = $props();
 </script>
 
-<div class="@container flex shrink-0 items-center gap-1 border-t border-ink/10 py-1.5 pr-3">
+<div class="@container flex shrink-0 items-center gap-1 border-t border-[var(--line)] py-2 pr-3">
   <!-- An action, not a place: it never shows the "where you are" bar. -->
   <a
     href="/add"
     aria-label="Add a person or publication"
     title={tip("Add a person or publication", "add-feed")}
     onclick={(event) => follow(event, { kind: "add-feed" })}
-    class="btn-quiet ml-1.5 min-w-0 flex-1 justify-start gap-2.5 pl-[14px] text-meta text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-1.5 @max-[15rem]:pr-1.5 @max-[15rem]:pl-1.5"><Icon name="plus" />Add</a
+    class="btn-quiet ml-2 min-w-0 flex-1 justify-start gap-3 pl-3 text-meta text-ink-2 @max-[15rem]:ml-0 @max-[15rem]:gap-2 @max-[15rem]:pr-2 @max-[15rem]:pl-2"><Icon name="plus" />Add</a
   >
   {#if !phone}
     <!-- Filled in a neutral ink tone while the shortcut list is open (never the accent: this is a button, not a place), and it says it opens a dialog (decision 0054). -->
@@ -44,7 +44,7 @@
       title="Keyboard shortcuts (?)"
       aria-haspopup="dialog"
       aria-expanded={keysOpen}
-      class={["btn-quiet gap-2.5 px-2.5 text-meta text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", keysOpen && "bg-ink/10 text-ink"]}
+      class={["btn-quiet gap-3 px-3 text-meta text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", keysOpen && "bg-[var(--line)] text-ink"]}
       ><Icon name="keyboard" /><span class="@max-[15rem]:hidden">Keys</span></button
     >
   {/if}
@@ -54,6 +54,6 @@
     title="Settings"
     aria-current={inSettings(route) ? "page" : undefined}
     onclick={(event) => follow(event, { kind: "settings" })}
-    class={["btn-quiet btn-icon @max-[15rem]:-mr-1.5", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size="alone" /></a
+    class={["btn-quiet btn-icon @max-[15rem]:-mr-2", inSettings(route) && "bg-tint-sidebar text-ink"]}><Icon name="settings" size="alone" /></a
   >
 </div>

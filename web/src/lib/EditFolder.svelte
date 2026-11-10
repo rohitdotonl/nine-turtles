@@ -122,12 +122,12 @@
 {#snippet form()}
   <form onsubmit={save} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     {#if restored}<NotSavedYet />{/if}
-    <label class="flex flex-col gap-1.5">
+    <label class="flex flex-col gap-2">
       <span class="text-meta text-ink-2">Name</span>
       <input dir="auto" bind:value={name} type="text" autocomplete="off" class="field" />
     </label>
     <!-- For a folder made to hold one person's places (their blog, their channel): it becomes that person. -->
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <div class="inset-group">
         <label class="inset-row check-row setting">
           <input type="checkbox" bind:checked={onePerson} aria-describedby="one-person-hint" />
@@ -142,7 +142,7 @@
       </div>
     </div>
     <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
-    <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    <p role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}

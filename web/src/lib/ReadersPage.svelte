@@ -152,11 +152,11 @@
 <style>
   .text-row {
     flex-wrap: nowrap;
-    padding-block: 0.625rem;
+    padding-block: 0.75rem;
     line-height: 1.4;
   }
   .text-row > span {
-    gap: 0.125rem;
+    gap: 0.25rem;
   }
   .figure {
     color: var(--ink-2);
