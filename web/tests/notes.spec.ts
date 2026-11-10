@@ -156,7 +156,9 @@ test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
   await page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }).click();
   const question = page.getByRole("group", { name: `Keep what you saved from Blog ${blog}?` });
   const asked = page.waitForRequest((request) => request.url().endsWith("/api/writers/unsubscribe") && request.postDataJSON()?.remove_kept === true);
-  await question.getByRole("button", { name: "Remove them too" }).click();
+  // Apart from Keep them and Cancel, naming exactly what goes (decision 0239).
+  await expect(question.getByText("Or, if you don't want them any more:")).toBeVisible();
+  await question.getByRole("button", { name: "Remove the highlighted or noted article too" }).click();
   await asked;
   await expect(page.getByText(`Unsubscribed from Blog ${blog}.`)).toBeVisible();
   await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();

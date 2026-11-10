@@ -105,10 +105,14 @@ anywhere or counted.
 **Unsubscribing** (section 15)
 - When the reader starred, highlighted or wrote a note on any of a place's
   articles, or wrote a note on the person, Unsubscribe asks first: "Keep
-  what you saved from {name}?", saying what there is, with **Keep them**,
-  **Remove them too** and **Cancel**. Keep them works as unsubscribing
-  always has. Remove them too removes those articles, their highlights and
-  notes, and the note on the person as well. Either can be undone straight
+  what you saved from {name}?", saying what there is, with **Keep them**
+  and **Cancel** together; then, under a hairline, apart (decision 0239),
+  "Or, if you don't want them any more:" and an oxblood button that names
+  exactly what goes: "Remove the 2 starred articles too", "Remove the
+  starred article, the 3 highlighted or noted articles and your note on
+  them too". Keep them works as unsubscribing always has. The red button
+  removes those articles, their highlights and notes, and the note on the
+  person as well. Either can be undone straight
   afterwards; once the unsubscribe can't be undone, what was chosen is done.
 - With nothing kept, Unsubscribe doesn't ask.
 

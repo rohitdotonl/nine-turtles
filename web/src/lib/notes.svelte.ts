@@ -112,10 +112,10 @@ async function send(change: Waiting): Promise<Sent | "offline"> {
   return { answer, refusal };
 }
 
-/** What couldn't be done, by the kind of change, when the trouble was nine turtles' own. */
+/** What couldn't be done and what to do, by the kind of change, when the trouble was nine turtles' own (decision 0239). */
 const FAILED: Record<"highlight" | "remove", string> = {
-  highlight: "The highlight couldn't be saved.",
-  remove: "The highlight couldn't be removed.",
+  highlight: "The highlight couldn't be saved. Choose the words and press Highlight again in a moment.",
+  remove: "The highlight couldn't be removed, so it's still here. Try again in a moment.",
 };
 
 /** A note that couldn't be saved: its box stays open with the words (decision 0235), and says so under them. */
@@ -127,7 +127,7 @@ function notKept(refusal: string, kind: Waiting["kind"]): string {
   if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
   if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
   if (kind === "change" || kind === "article-note") return NOTE_NOT_SAVED;
-  return `${FAILED[kind]} Try again in a moment.`;
+  return FAILED[kind];
 }
 
 let sending = false;

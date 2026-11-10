@@ -282,7 +282,7 @@
       await navigator.clipboard.writeText(`“${highlight.quote}”\n${credit}`);
       say("Highlight copied.");
     } catch {
-      say("The highlight couldn't be copied.");
+      say("The highlight couldn't be copied. Select its words and copy them yourself.");
     }
   }
 

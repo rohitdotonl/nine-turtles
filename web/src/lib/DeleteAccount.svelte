@@ -1,6 +1,6 @@
 <!--
   "Delete your account?" (SPEC section 18, decision 0088), opened from
-  Settings › Account by any reader but the owner. It is the one "Are you
+  Settings › Leaving by any reader but the owner. It is the one "Are you
   sure?": it first offers the reader's two downloads (their feeds and folders
   as OPML, their starred articles), then asks for their password (decision
   0200, so a device left signed in can't delete anything), then Delete account, which deletes the

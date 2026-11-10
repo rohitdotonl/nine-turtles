@@ -49,7 +49,9 @@ you can:
   <a href="/help/write-back/">writing back</a>,
 - choose their **Folders** (type a name to make a new one; it opens in the
   sidebar when you press Done),
-- **Pause for a while**, while they have one source,
+- **Pause for a while**, while they have one source. While they're paused,
+  their list and their page say so, "Paused since 23 Oct. Their new articles
+  arrive already read.", with **Resume** to undo it in one press,
 - see their **Sources**, when they have two or more, and press › beside
   one for its own settings,
 - and, at the foot, **Unsubscribe from Alpha**. If they were the last one

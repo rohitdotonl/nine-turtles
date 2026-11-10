@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 15, 23, 36 and 42
-updated: 2026-11-09
+updated: 2026-11-10
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -20,8 +20,9 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 2. Press **Edit**.
 3. Press **Unsubscribe from …** at the foot.
 4. If you starred, highlighted or wrote notes on any of their articles, or
-   wrote a note on them, nine turtles asks what to do with it: **Keep them**
-   or **Remove them too**.
+   wrote a note on them, nine turtles asks what to do with it: **Keep them**,
+   or, set apart below a line, a red button that names exactly what would
+   go, such as **Remove the 2 starred articles too**.
 
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
 back exactly as they were, with what you'd read and their folders. It lasts
@@ -40,7 +41,7 @@ all back.
 
 ## Good to know
 
-- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose **Remove them too**.
+- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too.
 - Following someone again later starts afresh, with their articles unread.
 - For a newsletter, nine turtles also asks the sender to stop, once the ten
   minutes to undo have passed. See

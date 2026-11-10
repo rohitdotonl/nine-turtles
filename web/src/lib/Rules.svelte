@@ -145,7 +145,7 @@
     if (busy) return;
     const refusal = await deleteRule(rule.id);
     if (refusal && refusal !== "gone") {
-      say(ruleRefused(refusal, "The word couldn't be removed."), undefined, true);
+      say(ruleRefused(refusal, "The word couldn't be removed. Try again in a moment."), undefined, true);
       return;
     }
     await reload();
