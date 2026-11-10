@@ -297,11 +297,32 @@ test("the sidebar search finds feeds and folders by name, and Escape empties it"
   await expect(sidebar(page).getByRole("link", { name: /^Quiet Notes/ })).toHaveCount(0);
 
   await search.fill(`${blog}-nothing`);
-  await expect(sidebar(page).getByText("Nothing in the sidebar has that in its name.")).toBeVisible();
+  await expect(sidebar(page).getByText(`No person or folder is called “${blog}-nothing”.`)).toBeVisible();
 
   await search.press("Escape");
   await expect(search).toHaveValue("");
   await expect(search).toBeFocused();
+});
+
+test("the sidebar search also searches articles: its row, or Enter, searches All articles for the same words (decision 0231)", async ({ page }) => {
+  const blog = unique("words-in-articles");
+  await openBlogs(page, [blog]);
+  const search = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
+  await search.fill("allotment");
+  await expect(sidebar(page).getByText("No person or folder is called “allotment”.")).toBeVisible();
+  await sidebar(page).getByRole("button", { name: "Search articles for “allotment”" }).click();
+  await expect(page).toHaveURL(/\/all$/);
+  await expect(search).toHaveValue("");
+  const field = page.getByRole("textbox", { name: "Search articles", exact: true });
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("allotment");
+  await expect(page.getByRole("region", { name: /^Results in / })).toBeVisible();
+
+  // Enter in the sidebar's field does the same, even when a name matched.
+  await search.fill(blog);
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
+  await search.press("Enter");
+  await expect(field).toHaveValue(blog);
 });
 
 test("import an OPML file from Settings: a plain summary, folders in the sidebar; export downloads them", async ({ page }) => {

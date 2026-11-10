@@ -60,6 +60,9 @@ describe("addresses", () => {
     expect(pathFor({ kind: "settings" })).toBe("/settings");
     expect(titleFor({ kind: "view", view: "all" })).toBe("All articles · nine turtles");
     expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
+    // An open article names the tab (decision 0231).
+    expect(titleFor({ kind: "feed", id: 3 }, "Reading Room", "The pleasure of a slow letter")).toBe("The pleasure of a slow letter · nine turtles");
+    expect(titleFor({ kind: "feed", id: 3 }, "Reading Room", "")).toBe("Reading Room · nine turtles");
     expect(pathFor({ kind: "your-feeds" })).toBe("/settings/feeds");
     expect(titleFor({ kind: "your-feeds" })).toBe("Everyone you follow · nine turtles");
     expect(pathFor({ kind: "muted" })).toBe("/settings/hidden");

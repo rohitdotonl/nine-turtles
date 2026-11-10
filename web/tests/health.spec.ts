@@ -71,8 +71,8 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
 
-  // Closing goes back to Settings.
-  await page.getByRole("button", { name: "Close everyone you follow" }).click();
+  // ‹ Settings goes back to Settings (decision 0231).
+  await page.getByRole("button", { name: "Back to Settings" }).click();
   await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
 });
 

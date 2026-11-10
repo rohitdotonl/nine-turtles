@@ -108,7 +108,7 @@
                         <!-- Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes. -->
                         <td class="py-[3px] text-right align-middle whitespace-nowrap">
                           {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
-                              >{#if index > 0}<span class="text-muted">{"/ "}</span>{/if}{@render caps(key)}</span
+                              >{#if index > 0}<span class="text-muted">{shortcut.either ? "or " : "/ "}</span>{/if}{@render caps(key)}</span
                             >{/each}
                         </td>
                       </tr>

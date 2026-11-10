@@ -18,6 +18,10 @@ related: [star-an-article, every-keyboard-key, find-your-way-around]
 1. Press <kbd>/</kbd>, or choose the **Search articles** field above the list.
 2. Type a few words. Matching articles appear, with the words picked out.
 
+Typed something in **Find a person or folder** at the top of the sidebar
+instead? Press <kbd>Enter</kbd>, or **Search articles for “…”** under it, and
+the same words are searched in every article.
+
 Search starts in the list you're in, shown as a small label such as
 **in: Cooking ×**. Press its × to search everything instead.
 <kbd>Esc</kbd> takes you back to where you were.

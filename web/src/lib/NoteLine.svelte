@@ -11,6 +11,7 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
+  import { tipEvery } from "./keyboard";
 
   let {
     message,
@@ -50,7 +51,7 @@
         <TextButton class="-mr-2 px-2" aria-disabled={busy} onclick={onRetry}>{retryWord}</TextButton>
       {/if}
       {#if onUndo}
-        <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" aria-disabled={busy} onclick={onUndo}>Undo</TextButton>
+        <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" title={tipEvery("Undo", "undo")} aria-disabled={busy} onclick={onUndo}>Undo</TextButton>
       {/if}
       <button type="button" onclick={onClose} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"
         ><Icon name="close" size={18} /></button

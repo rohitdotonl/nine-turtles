@@ -41,7 +41,7 @@
   import SidebarViews from "./SidebarViews.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
-  import type { Article, Feed, Folder, Source } from "./shapes";
+  import { untitledOpening, type Article, type Feed, type Folder, type Source } from "./shapes";
   import { homeView } from "./reading";
   import { ReadingSettings } from "./reading-settings.svelte";
   import { type Notice } from "./feeds";
@@ -292,7 +292,9 @@
   });
 
   $effect(() => {
-    document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName);
+    // While an article is open the tab names it, as every website does (decision 0231).
+    const open = selected && (phone ? reading : isList(route)) ? selected.title.trim() || untitledOpening(selected) : undefined;
+    document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName, open);
   });
 
   // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes,
@@ -614,21 +616,6 @@
     go(next);
   }
 
-  /** Settings › Everyone you follow. */
-  function goYourFeeds(event: MouseEvent) {
-    follow(event, { kind: "your-feeds" });
-  }
-
-  /** Settings › Hiding › Hidden articles. */
-  function goMuted(event: MouseEvent) {
-    follow(event, { kind: "muted" });
-  }
-
-  /** Settings › Readers › All readers (the owner only). */
-  function goReaders(event: MouseEvent) {
-    follow(event, { kind: "readers" });
-  }
-
   /**
    * Find new address moved a failing feed, from the line above its list or
    * from Edit feed (decision 0106): the feeds load again, so its line and its
@@ -811,6 +798,15 @@
     queueMicrotask(() => searchBar?.focus());
   }
 
+  /** "Search articles for …" under the sidebar's search, or Enter in it (decision 0231): those words, in All articles. */
+  function searchArticles(words: string) {
+    if (words === "") return;
+    search = "";
+    go({ kind: "view", view: "all" });
+    searching.wordsEverywhere(words);
+    tick().then(() => searchBar?.focus());
+  }
+
   /** The phone's Search button: shows the field, ready to type in; pressed again with nothing searched, puts it away. */
   function toggleSearch() {
     if (!searching.putAway()) startSearch();
@@ -982,6 +978,7 @@
               event.preventDefault();
               search = "";
             }
+            if (event.key === "Enter" && !event.isComposing) searchArticles(search.trim());
           }}
           class="search-capsule w-full pr-3 pl-[38px]"
         />
@@ -997,6 +994,7 @@
           {follow}
           {phone}
           {unreadOff}
+          {searchArticles}
         />
       {/if}
       {#if library.feedsFailed}
@@ -1037,9 +1035,9 @@
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}
-          onYourFeeds={goYourFeeds}
-          onMuted={goMuted}
-          onReaders={goReaders}
+          onYourFeeds={(event) => follow(event, { kind: "your-feeds" })}
+          onMuted={(event) => follow(event, { kind: "muted" })}
+          onReaders={(event) => follow(event, { kind: "readers" })}
           people={library.rows ?? []}
           {phone}
           bind:ruleForFeed

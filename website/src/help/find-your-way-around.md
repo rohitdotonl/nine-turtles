@@ -19,7 +19,9 @@ related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 From the top:
 
 - **Find a person or folder**: type a few letters of a name to narrow the
-  sidebar. <kbd>Esc</kbd> empties it.
+  sidebar. Under what it finds, **Search articles for “…”** (or
+  <kbd>Enter</kbd>) looks for the same words in every article instead.
+  <kbd>Esc</kbd> empties it.
 - **Unread**, **Starred**, **Notes** and **All articles**.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.

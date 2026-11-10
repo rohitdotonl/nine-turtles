@@ -55,6 +55,7 @@
     follow,
     phone = false,
     unreadOff = false,
+    searchArticles,
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
     library: LoadedLibrary;
@@ -66,6 +67,8 @@
     phone?: boolean;
     /** Unread off: no unread dots. */
     unreadOff?: boolean;
+    /** Searches every article for what's typed in the sidebar search (decision 0231). */
+    searchArticles: (words: string) => void;
   } = $props();
 
   let feeds: Feed[] = $derived(library.rows ?? []);
@@ -333,7 +336,7 @@
 {#if searching}
   <h2 class="sr-only">Found by name</h2>
   {#if found.folders.length === 0 && found.feeds.length === 0}
-    <p class="px-4 pt-4 text-small">Nothing in the sidebar has that in its name.</p>
+    <p class="px-5 pt-4 pb-1 text-small text-ink-2">No person or folder is called “<bdi>{search.trim()}</bdi>”.</p>
   {:else}
     <ul class="mt-4">
       {#each found.folders as folder (folder.id)}
@@ -347,6 +350,13 @@
       {/each}
     </ul>
   {/if}
+  <!-- The box at the top searches everything, as in every other app (decision 0231): under what it found by name, the same words in every article. -->
+  <button
+    type="button"
+    onclick={() => searchArticles(search.trim())}
+    class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-left text-ui pointer-fine:text-small text-ink-2"
+    ><span class="text-muted"><Icon name="search" size={16} /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
+  >
 {:else}
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->

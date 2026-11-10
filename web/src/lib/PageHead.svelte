@@ -4,7 +4,9 @@
   as the list's, on the same line as the sidebar's wordmark, and an X that
   closes it (Escape does too), in the top line shared by every pane (decision 0043). It never scrolls. Like the page under it, it's
   a column centred in the pane. A page opened from Settings (decision 0120)
-  has "‹ Settings" on a line of its own above its title instead of an X.
+  (Everyone you follow, Hidden articles and All readers too, decision 0231) has
+  "‹ Settings" (or the page it came from) on a line of its own above its
+  title instead of an X, and on a phone Settings itself has "‹ Home".
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";

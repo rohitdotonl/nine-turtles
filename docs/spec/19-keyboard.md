@@ -31,7 +31,7 @@
   | | `a` | Add a person or publication | Add a person or publication |
   | Tidying up | `Shift+A` | Mark all as read | Mark all as read |
   | | `m` | Mark current item unread | Mark unread |
-  | | `u` | Undo | Undo |
+  | | `u` or `Command Z` (`Ctrl Z` off a Mac) | Undo | Undo |
   | | `r` | Show new articles | Refresh (show new articles) |
   | (not printed) | `?` | Opens this list; its Keys button's tooltip names it | |
   | (not printed) | `↑` / `↓` | In the sidebar, the row above / below; in the list, the article above / below; in the article, scrolling: keys everyone already expects | |
@@ -56,6 +56,7 @@
 - The keyboard's place is shown by a 2px outline in the text color (never the accent, which marks what's unread and what a search found). Rows draw it just inside their rounded edge, in a slightly softened text color, so it never reaches over the hairlines between rows; the selected row keeps its pill. A text field in use rings the same softened text color, 2px, 1px clear of the field, its own edge stepping aside, at 3 : 1 or more against the field and whatever it sits on in every theme (decision 0055). A title that receives the place (a screen opening, a sheet, an opened article, or a key such as `g` then `a`), so screen readers start there, shows no ring, even after a key: it can't be pressed, and the next Tab lands on a real control, which rings (decisions 0042, 0047; since 27 October 2026 for every title).
 - **Skip to articles** is the first thing on the app's screen to take the keyboard while a list of articles shows (the keyboard starts later, on the list's title, so it's reached by Tab from the browser's own address bar and controls): hidden until the keyboard reaches it, then a small label at the top left with its ring. Enter takes the keyboard past the sidebar to the chosen article in the list, or the first (with none, to the list's title).
 - A tooltip names its button's key after its name, in brackets, as a capital letter, the same way the key caps print it: "Star (S)", "Add a person or publication (A)", "Info about Jim (I)" (decision 0064).
+- **Command Z** (Ctrl Z off a Mac) undoes, as `u` does, as in every other app (decision 0231): the one shortcut with Command or Ctrl. It works wherever `u` does, and never while typing in a field, where it stays the field's own undo; Command Shift Z, Option and Ctrl together with Command do nothing. The `?` list prints Undo's keys as "U or Command Z" ("or", not "/", because both do the same thing), and the Undo button in the list's note says it in its tooltip: "Undo (U or Command Z)". Every other key with Command or Ctrl stays the browser's.
 - Shortcuts don't fire while you're typing in a field, nor while a word is being composed (Chinese, Japanese and the like). Caps Lock doesn't change them: with it on, `a` is still `a`, and Shift+A still Shift+A.
 - Podcasts add no keys (decision 0113): Space still scrolls the article, and the player's controls answer to Enter, Space and the arrow keys only while the keyboard is on them (section 35).
 
@@ -66,7 +67,7 @@
 4. Press `Shift+H`, `[`, `]`, `\`, `Shift+E`, `Shift+N` and `g` then `f` in a list: nothing happens (decision 0180).
 5. Open a long article and press Space a few times: it moves down a screen each time and stops at the end, staying on the same article. `Shift+Space` moves it back up. With the keyboard on the article's More button, Space opens its menu instead.
 6. Press `j` to choose an article, then `Enter`: the keyboard's place moves into the article.
-7. Press `Shift+A` in a feed: what's listed turns grey and the note says "Marked … articles as read." with Undo. Press `u`: they're unread again. `Shift+O` does nothing (decision 0171).
+7. Press `Shift+A` in a feed: what's listed turns grey and the note says "Marked … articles as read." with Undo. Press `u`: they're unread again. Do it again and press Command Z (Ctrl Z off a Mac): the same. In the search field, Command Z undoes typing only. `Shift+O` does nothing (decision 0171).
 8. With an article open, press `c`: "Link copied." shows in the top bar, and pasting gives the publisher's address.
 9. In a feed inside a folder, press `o`: the folder closes in the sidebar; again, it opens. Press `i`: their page opens. Back in their list, press `e`: Edit opens; in a folder's list, `e` opens Edit folder.
 10. In Unread, press `Shift+J`: the next list in the sidebar opens; keep pressing and it goes on to the folders (each opens its combined list); `Shift+K` goes back. With a folder folded, its people are passed over and the next press goes to the next folder. In a feed, `End` chooses the last article loaded and `Home` the first. Open an article and press `End`: it scrolls to the article's end, and the same article stays chosen. On Settings, `End` scrolls the page. `g` then `,` opens Settings.

@@ -171,9 +171,12 @@ export function nameFor(route: Route, placeName?: string): string {
   }
 }
 
-/** The browser tab's title, which screen readers also announce. */
-export function titleFor(route: Route, placeName?: string): string {
-  return `${nameFor(route, placeName)} · nine turtles`;
+/**
+ * The browser tab's title, which screen readers also announce: the open
+ * article's title while one is open (decision 0231), else the place's name.
+ */
+export function titleFor(route: Route, placeName?: string, articleTitle?: string): string {
+  return `${articleTitle || nameFor(route, placeName)} · nine turtles`;
 }
 
 /**

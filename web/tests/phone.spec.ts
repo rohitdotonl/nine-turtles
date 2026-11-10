@@ -257,14 +257,15 @@ test.describe("on a phone", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("heading", { level: 1, name: "nine turtles" })).toBeFocused();
 
-    // Settings is one step on from the feeds; Escape and Close settings go back to them.
+    // Settings is one step on from the feeds; Escape and ‹ Home go back to them, as on every phone screen (decision 0231).
     await tabTo(page, sidebar(page).getByRole("link", { name: "Settings" }));
     await page.keyboard.press("Enter");
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(sidebar(page)).toBeVisible();
     await sidebar(page).getByRole("link", { name: "Settings" }).click();
-    await page.getByRole("button", { name: "Close settings" }).click();
+    await expect(page.getByRole("button", { name: "Close settings" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
     // Back from the feeds leaves Settings behind: it doesn't reopen.
     await page.goBack();
