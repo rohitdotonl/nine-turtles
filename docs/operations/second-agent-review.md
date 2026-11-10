@@ -10,13 +10,16 @@ decision 0021).
 If the change needs no review (see "Which review" below), skip steps 2 to 4.
 
 1. Open the pull request and let the automatic checks run.
-2. Start a **fresh** reviewer: a new agent or session with none of your
+2. Straight away, while the checks run (they don't need each other), start
+   a **fresh** reviewer: a new agent or session with none of your
    conversation. In Claude Code that's a subagent; in another tool, a new
    session. Give it only the matching prompt below (full or light), with
    the pull request's address filled in. Don't tell it what you think is right or wrong.
 3. Wait for its findings on the pull request.
-4. For each finding: fix it and push, or reply on the pull request explaining
-   why not. Then tell the owner the review is done and what changed.
+4. For each finding: fix it, or reply on the pull request explaining why
+   not. Fix them all, together with anything the checks found, and push
+   once: each push runs every check again. Then tell the owner the review
+   is done and what changed.
 
 If the change is large, a second round of review after the fixes is
 worthwhile; say so to the owner if you skip it.
