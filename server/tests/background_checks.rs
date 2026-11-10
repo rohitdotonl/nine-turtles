@@ -721,3 +721,31 @@ async fn an_edited_article_gets_the_new_words_quietly_and_stays_read() {
         false
     );
 }
+
+#[tokio::test]
+async fn a_file_of_feeds_says_which_still_wait_for_their_first_check() {
+    let reader = Reader::new().await;
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><head><title>Mine</title></head><body>
+        <outline text="Works" type="rss" xmlUrl="{0}/many/works.xml"/>
+        <outline text="Gone" type="rss" xmlUrl="{0}/gone-for-good.xml"/></body></opml>"#,
+        reader.site
+    );
+    let (status, answer) = reader
+        .send(&reader.cookie, "/api/opml", "text/x-opml", file)
+        .await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    let waiting = |feeds: serde_json::Value| -> Vec<bool> {
+        feeds["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|feed| feed["waiting"].as_bool().unwrap())
+            .collect()
+    };
+    // Both wait for their first check (decision 0249)…
+    assert_eq!(waiting(reader.get("/api/feeds").await), [true, true]);
+    // …and neither once it's been tried, whether it worked or not.
+    reader.round(nine_turtles::now() + MINUTE).await;
+    assert_eq!(waiting(reader.get("/api/feeds").await), [false, false]);
+}

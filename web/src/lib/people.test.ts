@@ -29,6 +29,12 @@ describe("a person's row in the sidebar", () => {
     expect(alpha!.folders).toEqual([1, 2]);
   });
 
+  it("says checking… while any of its places waits for its first check (decision 0249)", () => {
+    const waiting = { ...channel, waiting: true };
+    expect(rowsOf([blog, beta, waiting], people)[0]!.waiting).toBe(true);
+    expect(rowsOf([blog, beta, channel], people)[0]!.waiting).toBe(false);
+  });
+
   it("stands for any of its places, and a place on its own is its own row, as before", () => {
     const rows = rowsOf([blog, beta, channel], people);
     expect(rowFor(5, rows)?.title).toBe("Alpha");

@@ -14,6 +14,9 @@ import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } fro
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
 import { moveAll, movedMessage, restoreFolders } from "./tidy";
 
+/** How soon the feeds load again while some brought from a file are still being checked. */
+const CHECK_AGAIN_MS = 5_000;
+
 /** A removal was made, with its line and Undo; or a sentence saying why it wasn't. */
 export type Removed = Notice | string;
 
@@ -35,6 +38,16 @@ export class LoadedLibrary {
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
+  /** How many feeds brought from a file still wait for their first check (decision 0249). */
+  checking: number = $derived(this.feeds?.filter((feed) => feed.waiting).length ?? 0);
+  /** While any do, the feeds load again every few seconds, so names and "checking…" catch up. */
+  #checkAgain: ReturnType<typeof setTimeout> | undefined;
+  /** This screen is gone (signed out, another reader): nothing more is asked. */
+  stop() {
+    clearTimeout(this.#checkAgain);
+    this.#stopped = true;
+  }
+  #stopped = false;
   /** People and folders together, as search names them: a person by their row. */
   get names(): Library {
     return { feeds: this.rows ?? [], folders: this.folders };
@@ -77,6 +90,8 @@ export class LoadedLibrary {
     } catch {
       this.feedsFailed = true;
     }
+    clearTimeout(this.#checkAgain);
+    if (this.checking > 0 && !this.#stopped) this.#checkAgain = setTimeout(() => void this.loadFeeds(), CHECK_AGAIN_MS);
   }
 
   /** Loads the feeds again as the reader arrives on them (a phone's feeds screen): a failure keeps the dots as they were and says nothing. */

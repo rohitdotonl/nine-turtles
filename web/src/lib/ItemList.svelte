@@ -60,7 +60,7 @@
   import { longPress } from "./longPress";
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { opensElsewhere } from "./articleLinks";
-  import type { EmptyWords } from "./listWording";
+  import { checkingLine, type EmptyWords } from "./listWording";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
@@ -83,6 +83,7 @@
     addressOf = () => "",
     note = $bindable(),
     place,
+    checking = 0,
   }: {
     source: Source;
     order: Order;
@@ -114,13 +115,22 @@
     note?: ListNote;
     /** The list's own name, "Outdoors": a slow first load says "Loading Outdoors…" (decision 0230), and Mark all as read names it. */
     place?: string;
+    /** How many feeds brought from a file are still waiting for their first check (decision 0249). */
+    checking?: number;
   } = $props();
 
   /** What a slow first load says where the rows will be. */
   let loading = $derived(results ? "Searching…" : place ? `Loading ${place}…` : "Loading…");
 
-  /** How often the list asks whether new items are waiting. */
+  /** How often the list asks whether new items are waiting; every few seconds while a list brought from a file is being checked. */
   const ASK_EVERY_MS = 60_000;
+  const ASK_WHILE_CHECKING_MS = 5_000;
+  /**
+   * While a list brought from a file is being checked, Unread and All
+   * articles fill in by themselves until the reader opens an article: there's
+   * nothing yet to move under them (decision 0249). After that, new ones wait for r.
+   */
+  let fillsIn = $derived(checking > 0 && "view" in source && (source.view === "unread" || source.view === "all"));
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -300,20 +310,30 @@
   }
 
   /** Asks the server, quietly, whether new items are waiting for this list. */
-  async function askForNew() {
+  async function askForNew(filling = false) {
     if (!loaded || newWaiting || busy || document.hidden || fromDevice) return;
     const asked = topLoads;
     try {
       const waiting = await newItemsWaiting(source, latest);
       // A refresh while asking already brought whatever was new.
-      if (topLoads === asked && !busy) newWaiting = waiting;
+      if (topLoads !== asked || busy) return;
+      if (waiting && filling && !selected) void refresh();
+      else newWaiting = waiting;
     } catch {
       // Nothing to say: it asks again in a minute.
     }
   }
 
+  /** Was filling in at the last ask: the ask just after the last feed is checked still fills in. */
+  let wasFilling = false;
   onMount(() => {
-    const asking = setInterval(askForNew, ASK_EVERY_MS);
+    let ticks = 0;
+    const asking = setInterval(() => {
+      ticks++;
+      const filling = fillsIn || wasFilling;
+      wasFilling = fillsIn;
+      if (filling || ticks % (ASK_EVERY_MS / ASK_WHILE_CHECKING_MS) === 0) void askForNew(filling);
+    }, ASK_WHILE_CHECKING_MS);
     return () => clearInterval(asking);
   });
 
@@ -642,7 +662,14 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
 {/if}
 
-{#if loaded && articles.length === 0}
+{#if fillsIn && articles.length > 0}
+  <!-- A list brought from a file, still being checked: how many feeds are left, in words that change in place (decision 0249). -->
+  <p class="pt-1 pb-2 text-meta text-muted">{checkingLine(checking)}</p>
+{/if}
+
+{#if loaded && articles.length === 0 && fillsIn && !fromDevice}
+  <div class="list-empty"><p class="list-empty-fact">{checkingLine(checking)}</p><p class="list-empty-how">Their articles show here as each one is checked.</p></div>
+{:else if loaded && articles.length === 0}
   <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class="item-list">
