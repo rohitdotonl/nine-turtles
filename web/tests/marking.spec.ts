@@ -150,9 +150,11 @@ test.describe("on a wide window", () => {
     await page.getByRole("menuitem", { name: "Mark unread" }).click();
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
-    // It's saved: once the server has it, a reload shows the same.
+    // It's saved: once the server has it, loading the list again shows the same.
+    // The list's own address, without the article: reopening the article
+    // from the address (decision 0233) would rightly mark it read again.
     await savedUnread;
-    await page.reload();
+    await page.goto(page.url().replace(/\/articles\/\d+$/, ""));
     await appReady(page);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
