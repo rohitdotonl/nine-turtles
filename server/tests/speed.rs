@@ -12,7 +12,7 @@ use nine_turtles::{
     feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
     marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
-    starred::{EXPORT, Starred, write},
+    starred::{self, AT_ONCE, PAGE},
 };
 use sqlx::SqlitePool;
 
@@ -352,21 +352,18 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         assert!(took < FAST_ENOUGH, "{what} took {took:?}");
     }
 
-    // The starred export walks only the starred articles, from their own
-    // index, already in order. It's a download, not something the screen
-    // waits on, so it has a second, for 2,000 starred articles.
-    let export = plan(&db, EXPORT, &[READER]).await;
+    // The starred file (inside Download everything) walks only the starred
+    // articles, from their own index, already in order, a page at a time.
+    // It's a download, not something the screen waits on, so it has a
+    // second, for 2,000 starred articles.
+    let export = plan(&db, PAGE, &[READER, AT_ONCE, 1_900]).await;
     assert!(export.contains("INDEX entries_starred"), "{export}");
     assert!(!export.contains("TEMP B-TREE"), "{export}");
     let started = Instant::now();
-    let starred: Vec<Starred> = sqlx::query_as(EXPORT)
-        .bind(READER)
-        .fetch_all(&db)
-        .await
-        .unwrap();
-    let file = write(&starred).to_string();
+    let file = starred::file(&db, READER).await.unwrap();
     let took = started.elapsed();
-    assert_eq!(starred.len(), 2_000);
+    let parsed: serde_json::Value = serde_json::from_str(&file).unwrap();
+    assert_eq!(parsed["items"].as_array().unwrap().len(), 2_000);
     assert!(file.len() > 100_000);
     assert!(
         took < Duration::from_secs(1),

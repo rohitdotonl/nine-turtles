@@ -203,6 +203,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Unicode and combining marks
 - Timestamps and UTC
 - Data export
+- Zip files (Download everything)
 - Data retention and clean-up
 - Hiding articles about… (rules the reader writes)
 - Readers (accounts) and the `people` table

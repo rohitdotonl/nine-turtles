@@ -340,14 +340,17 @@ pub fn seconds_to_wait(value: &str, now: i64) -> Option<i64> {
 
 /// Seconds since 1970 for a date like `Wed, 21 Oct 2026 07:28:00 GMT`.
 fn http_date(value: &str) -> Option<i64> {
-    const MONTHS: [&str; 12] = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ];
     let mut parts = value.split_whitespace();
     let _weekday = parts.next()?;
     let day: i64 = parts.next()?.parse().ok()?;
     let month = parts.next()?;
-    let month = i64::try_from(MONTHS.iter().position(|name| *name == month)?).ok()? + 1;
+    let month = i64::try_from(
+        crate::dates::MONTHS
+            .iter()
+            .position(|name| *name == month)?,
+    )
+    .ok()?
+        + 1;
     let year: i64 = parts.next()?.parse().ok()?;
     let mut clock = parts.next()?.split(':').map(str::parse::<i64>);
     let (hour, minute, second) = (

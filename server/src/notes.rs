@@ -52,7 +52,6 @@ pub fn routes() -> Router<AppState> {
         .route("/api/feeds/{id}/note", post(note_on_person))
         .route("/api/feeds/{id}/kept", get(kept))
         .route("/api/feeds/{id}/highlights", get(their_highlights))
-        .route("/api/notes/export", get(export::download))
 }
 
 /// A highlight or a note on a whole article, as the reading area shows it.

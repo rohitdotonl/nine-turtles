@@ -136,16 +136,18 @@ fn with_video_links(html: &str) -> String {
     out
 }
 
+/// Text written safely into HTML, as words or inside an attribute's quotes.
+pub fn escape(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
 /// Plain text with line breaks (a video's description) as HTML paragraphs,
 /// its web addresses as links. The result still goes through the safety
 /// cleaning.
 pub(crate) fn paragraphs(text: &str) -> String {
-    let escape = |text: &str| {
-        text.replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-            .replace('"', "&quot;")
-    };
     let line = |line: &str| {
         line.split(' ')
             .map(|word| match Url::parse(word) {

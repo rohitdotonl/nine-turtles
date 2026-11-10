@@ -20,6 +20,18 @@ pub fn civil_date(at: i64) -> (i64, i64, i64) {
     (year, month, day)
 }
 
+/// The months as dates write them in short: "Jan" to "Dec".
+pub const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/// A date as nine turtles writes one for people, in UTC: `10 Nov 2026`.
+pub fn day_month_year(at: i64) -> String {
+    let (year, month, day) = civil_date(at);
+    let month = usize::try_from(month - 1).map_or("", |index| MONTHS[index]);
+    format!("{day} {month} {year}")
+}
+
 /// Days since 1970 for a calendar date ("days_from_civil"), the reverse of `civil_date`.
 pub fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
     let year = if month <= 2 { year - 1 } else { year };

@@ -1,32 +1,16 @@
-//! Export of starred articles (SPEC section 23): every starred article as a
+//! Starred articles as a file (SPEC section 23): every starred article as a
 //! JSON Feed file (<https://jsonfeed.org/version/1.1>), a standard, open
-//! format other feed tools can read. With the OPML export, it's the
-//! reader's safety net in V1, which has no backups.
+//! format other feed tools can read. It goes into Download everything
+//! (`everything`, decision 0251) as `starred.json`.
 //!
 //! Each article keeps what the publisher sent, its original link and the
 //! feed it came from, so the credit travels with it (the publisher floor).
 //! Starred articles of feeds since unsubscribed are included too: they stay
 //! in Starred.
 
-use axum::{
-    Router,
-    extract::State,
-    http::header,
-    response::{IntoResponse, Response},
-    routing::get,
-};
 use serde_json::{Map, Value, json};
 
-use crate::{
-    AppState,
-    auth::{SignedIn, database_problem},
-    dates::rfc3339,
-    feeds,
-};
-
-pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/starred/export", get(export))
-}
+use crate::{dates::rfc3339, feeds};
 
 /// One starred article, with the feed it came from.
 #[derive(sqlx::FromRow)]
@@ -56,46 +40,58 @@ macro_rules! columns {
     };
 }
 
-/// Every article the reader starred, newest first, from the
-/// `entries_starred` index, with their name for its feed. Takes the reader.
-pub const EXPORT: &str = concat!(
+/// A page of the articles the reader starred, newest first, from the
+/// `entries_starred` index, with their name for its feed. Takes the reader,
+/// how many, and how many to skip.
+pub const PAGE: &str = concat!(
     "SELECT ",
     columns!(),
     feeds::from_entries!(),
     "? AND entries.starred = 1
-     ORDER BY entries.sort_at DESC, entries.article_id DESC"
+     ORDER BY entries.sort_at DESC, entries.article_id DESC LIMIT ? OFFSET ?"
 );
 
-async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    let starred: Result<Vec<Starred>, sqlx::Error> = sqlx::query_as(EXPORT)
-        .bind(person)
-        .fetch_all(&state.db)
-        .await;
-    match starred {
-        Ok(starred) => (
-            [
-                (header::CONTENT_TYPE, "application/feed+json; charset=utf-8"),
-                (
-                    header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"nine-turtles-starred.json\"",
-                ),
-            ],
-            write(&starred).to_string(),
-        )
-            .into_response(),
-        Err(error) => database_problem("exporting starred articles", &error),
-    }
-}
+/// How many starred articles are read at once: their texts can be long.
+pub const AT_ONCE: i64 = 100;
 
-/// The JSON Feed file for these articles, newest first as given.
-pub fn write(starred: &[Starred]) -> Value {
-    let items: Vec<Value> = starred.iter().map(item).collect();
-    json!({
+/// The JSON Feed file's opening, up to the start of its list of items.
+fn opening() -> String {
+    let mut text = json!({
         "version": "https://jsonfeed.org/version/1.1",
         "title": "nine turtles starred articles",
         "description": "Articles starred in nine turtles, each with the feed it came from.",
-        "items": items,
     })
+    .to_string();
+    text.pop(); // its closing brace: the items follow
+    text.push_str(r#","items":["#);
+    text
+}
+
+/// Reader `person`'s starred articles as one JSON Feed file, newest first,
+/// read a page at a time so only the file itself grows.
+pub async fn file(db: &sqlx::SqlitePool, person: i64) -> Result<String, sqlx::Error> {
+    let mut text = opening();
+    let mut skipped = 0;
+    loop {
+        let page: Vec<Starred> = sqlx::query_as(PAGE)
+            .bind(person)
+            .bind(AT_ONCE)
+            .bind(skipped)
+            .fetch_all(db)
+            .await?;
+        for article in &page {
+            if !text.ends_with('[') {
+                text.push(',');
+            }
+            text.push_str(&item(article).to_string());
+        }
+        if (page.len() as i64) < AT_ONCE {
+            break;
+        }
+        skipped += AT_ONCE;
+    }
+    text.push_str("]}");
+    Ok(text)
 }
 
 /// One article as a JSON Feed item.
@@ -176,7 +172,8 @@ mod tests {
             feed_url: "https://quiet.example/feed.xml".to_owned(),
             site_url: Some("https://quiet.example/".to_owned()),
         };
-        let file = write(&[article]);
+        let file: Value =
+            serde_json::from_str(&format!("{}{}]}}", opening(), item(&article))).unwrap();
         let item = &file["items"][0];
         assert_eq!(file["version"], "https://jsonfeed.org/version/1.1");
         assert_eq!(item["id"], "https://quiet.example/feed.xml#post-1");

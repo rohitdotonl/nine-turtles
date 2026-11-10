@@ -1,9 +1,9 @@
 <!--
-  OPML import and export (SPEC section 16), as two rows of Settings › Your
-  data. "Import OPML…" (ending in ›) opens the device's file chooser, reads the chosen file
+  OPML import (SPEC section 16), as rows of Settings › Your data (exporting
+  is in Download everything, decision 0251). "Import OPML…" (ending in ›) opens the device's file chooser, reads the chosen file
   and says plainly what it did (in `lines`, which Settings shows under the
   group); the feeds' articles then arrive in the background over the next few
-  minutes. "Export OPML" downloads every feed and folder as an OPML file.
+  minutes.
   "Import YouTube subscriptions…" takes the subscriptions.csv Google Takeout
   gives, each channel as its feed, the same way (decision 0144).
   In the welcome (`link`), only the way in, as a text link that opens the file chooser at once.
@@ -83,7 +83,6 @@
   <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
     >Import OPML…<span class="row-glyph"><Icon name="chevron-right" /></span></button
   >
-  <a href="/api/opml" download class="inset-row inset-action">Export OPML<span class="row-glyph"><Icon name="download" /></span></a>
   <button type="button" aria-disabled={busy} onclick={() => !busy && youtubePicker?.click()} class="inset-row inset-action"
     >Import YouTube subscriptions…<span class="row-glyph"><Icon name="chevron-right" /></span></button
   >
