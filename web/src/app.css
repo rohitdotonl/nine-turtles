@@ -15,7 +15,7 @@
 */
 
 @theme {
-  --font-serif: "Literata", Georgia, serif;
+  --font-serif: "Literata", "Noto Serif Devanagari", "Noto Naskh Arabic", Georgia, serif;
   /* The interface's one typeface on every device, and code's (decision 0141). */
   --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;

@@ -27,6 +27,9 @@ related: [search-everything, change-how-it-looks, highlight-and-take-notes]
   Arabic, Hebrew, Chinese, Japanese and Korean get more space between lines than English, so
   their marks above and below the letters never crowd. Nothing is slanted
   into a fake italic where a script has none.
+- **A book face for Hindi and Arabic.** Hindi and other Devanagari writing,
+  and Arabic, Persian and Urdu, are set in reading faces made to sit beside
+  the one English articles use. Other scripts use your device's own fonts.
 - **Names stay whole.** A writer's name or a title in another script keeps its
   own direction in the list, the sidebar and under the title.
 

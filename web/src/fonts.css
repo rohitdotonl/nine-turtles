@@ -6,8 +6,8 @@
   Latin and extended Latin; a browser downloads a piece only when the page uses
   one of its letters. Bold italic and the interface's 500 and 600 italics
   aren't shipped: the browser slants the upright instead, which keeps the
-  fonts well inside their 400 KB budget. Other scripts, such as Hindi, use the
-  fonts already on the reader's device.
+  fonts well inside their 400 KB budget. Devanagari and Arabic have reading
+  faces of their own (at the end); other scripts use the device's fonts.
 */
 
 @font-face {
@@ -176,4 +176,35 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
     U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113,
     U+2C60-2C7F, U+A720-A7FF;
+}
+
+/*
+  Reading faces for two other scripts (decision 0227), in the spirit of
+  Literata: a serif Devanagari (Hindi, Marathi, Nepali…) and Naskh, the book
+  style of Arabic (Arabic, Persian, Urdu…). Each is one variable file holding
+  every weight, and covers only its script's letters, so it is downloaded only
+  when a page shows those letters: a reader who never reads Hindi or Arabic
+  never loads them. Chinese, Japanese and Korean fonts are megabytes, so those
+  scripts keep the device's own. They follow Literata in --font-serif.
+  scripts/check-size.mjs lists their files by name and gives each its own
+  150 KB budget; a new one is added there too.
+*/
+
+@font-face {
+  font-family: "Noto Serif Devanagari";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/noto-serif-devanagari-wght.woff2") format("woff2");
+  unicode-range: U+0900-097F, U+1CD0-1CF9, U+A830-A839, U+A8E0-A8FF;
+}
+
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/noto-naskh-arabic-wght.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+FB50-FDFF, U+FE70-FE74,
+    U+FE76-FEFC;
 }

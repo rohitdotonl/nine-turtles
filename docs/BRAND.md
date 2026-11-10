@@ -1,6 +1,6 @@
 # nine turtles: the brand sheet
 
-*Every brand decision on one page. Last updated: 6 November 2026 (decisions 0141, 0148, 0153, 0176, 0181, 0185, 0199).*
+*Every brand decision on one page. Last updated: 9 November 2026 (decisions 0227, 0141, 0148, 0153, 0176, 0181, 0185, 0199).*
 
 **How to use this page.** Every change a reader can see (in the app, on the
 website, in an email, in a link preview) follows this page. This page is
@@ -33,6 +33,7 @@ what's live.
 - **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600).
 - **Atkinson Hyperlegible Next** (400, 500, 600) for the whole interface, on every device. It replaced the device's own font and Inter.
 - **Atkinson Hyperlegible Mono** for code in articles. It replaced JetBrains Mono.
+- **Noto Serif Devanagari** and **Noto Naskh Arabic** carry Literata into Hindi (and the other Devanagari languages) and Arabic (and Persian, Urdu…): a serif Devanagari and the book style of Arabic, wherever Literata is used. Each is downloaded only when a page shows its letters. Chinese, Japanese, Korean and other scripts use the device's own fonts (decision 0227, approved by the owner on 9 November 2026).
 - The reader can still pick another reading font in the Aa panel: Atkinson Hyperlegible Next or the device's own serif.
 - All served by nine turtles itself, never by a font service.
 
