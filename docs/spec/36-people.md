@@ -107,7 +107,11 @@ PLAN.md → V1, item 1.*
   (decision 0235): Escape, Back or a press on an article leaves them
   waiting, and coming back shows them, with "**Not saved yet.** Going
   elsewhere keeps these changes here for you." under the title; Cancel is
-  the one way to throw them away. Top to bottom (the owner's core path,
+  the one way to throw them away. On a phone, Edit finishes as + Add and
+  Edit folder do (decision 0243): an **×** at the right of the title in
+  Cancel's place (it throws the changes away, as Cancel does), and **Done**
+  the full width at the screen's foot, under Unsubscribe, within thumb
+  reach. Top to bottom (the owner's core path,
   points 11 and 12):
   - **Name**;
   - for one source, **This is: A person / A publication**;
@@ -133,7 +137,8 @@ PLAN.md → V1, item 1.*
   while, **Find new address** while it's
   failing (section 15), and at the foot **Take out of Alpha**: it becomes a
   person or publication of its own, guessed afresh, with Undo. Done saves
-  and goes back to Edit.
+  and goes back to Edit; on a phone it's the full width at the screen's
+  foot, as on Edit (decision 0243).
 - **+ Add a source** opens in place: choose someone already followed, or
   paste the address of their blog, channel or newsletter (followed as + Add
   would). If the address offers several feeds, the choices show first. If

@@ -57,7 +57,9 @@ you can:
 - and, at the foot, **Unsubscribe from Alpha**. If they were the last one
   in a folder, the folder goes too; **Undo** brings both back.
 
-Press **Done** to save, or **Cancel** to leave everything as it was. If you
+Press **Done** to save, or **Cancel** to leave everything as it was. On a
+phone, Done is along the bottom of the screen, and the **×** at the top
+leaves everything as it was. If you
 leave Edit any other way, your changes wait there for you, marked **Not saved
 yet.**, until you press Done or Cancel.
 
