@@ -162,7 +162,7 @@ export const SHORTCUTS: Shortcut[] = [
       { key: "ArrowUp", does: { kind: "row", step: -1 } },
     ],
   ),
-  shortcut("Getting around", "Settings for this person or publication", [["edit", "e", { kind: "edit" }]]),
+  shortcut("Getting around", "Their settings", [["edit", "e", { kind: "edit" }]]),
   shortcut("Getting around", "Open / close this folder", [["toggle-folder", "o", { kind: "toggle-folder" }]]),
   shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
   shortcut("Getting around", "Full-screen reading", [["toggle-both", "f", { kind: "toggle-both" }]]),

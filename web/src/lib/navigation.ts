@@ -62,7 +62,7 @@ export type Move = {
 export function moveTo(here: Here, next: Route): Move {
   const { route, under, phone } = here;
   const same = pathFor(route) === pathFor(next);
-  // A person's page, Edit and source settings sit beside their list, which stays, as does its article.
+  // A person's page (at its settings too) sits beside their list, which stays, as does its article.
   const whoUnder = (place: Route) => (isWho(place) ? pathFor({ kind: "feed", id: place.id }) : pathFor(place));
   const besideList = !phone && (isWho(next) || isWho(route)) && whoUnder(next) === whoUnder(route);
   const keepsArticle = same || besideList || (!phone && ((isOver(next) && !isOver(route)) || (isOver(route) && pathFor(next) === pathFor(under))));

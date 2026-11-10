@@ -17,7 +17,9 @@
   import { tick, type Snippet } from "svelte";
   import Icon from "./Icon.svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
-  import { editFeed, refused, type FeedChanges } from "./feeds";
+  import { editFeed, type FeedChanges, type Refusal } from "./feeds";
+  import SettingSwitch from "./SettingSwitch.svelte";
+  import VideoSwitches from "./VideoSwitches.svelte";
   import { keptAny, keptFrom, type Kept } from "./keeping";
   import type { LoadedLibrary } from "./library.svelte";
   import { placesOf } from "./people";
@@ -44,8 +46,8 @@
     onHide: () => void;
     /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
-    /** Their sources' own settings, between this group and Unsubscribe. */
-    sources?: Snippet;
+    /** Their sources' own settings, between this group and Unsubscribe, saving through the same queue. */
+    sources?: Snippet<[Save]>;
   } = $props();
 
   const id = $props.id();
@@ -72,18 +74,27 @@
   let message = $state("");
   let busy = $state(false);
 
+  /** What a refused change says here, in the reader's words: these screens never say "feed" (SPEC section 36). */
+  function whyNot(refusal: Refusal): string {
+    if (refusal === "no-name") return "Give them a name.";
+    if (refusal === "already") return "There's already a folder with that name.";
+    if (refusal === "gone") return "You don't follow them any more.";
+    return "That couldn't be saved. Try again in a moment.";
+  }
+
   /**
    * Saves one change to every place it belongs to (a person's name and folders are kept on any of theirs).
    * Changes go one after another, in the order they were made, so two quick presses never land the wrong way round.
    */
+  type Save = (changes: FeedChanges, on?: number[]) => Promise<boolean>;
   let queue: Promise<unknown> = Promise.resolve();
-  function save(changes: FeedChanges, on: number[] = [feed.id]): Promise<boolean> {
+  const save: Save = (changes, on = [feed.id]) => {
     const done = queue.then(async () => {
       message = "";
       for (const place of on) {
         const refusal = await editFeed(place, changes);
         if (refusal) {
-          message = refused(refusal, "feed");
+          message = whyNot(refusal);
           await library.loadFeeds();
           return false;
         }
@@ -94,26 +105,36 @@
     });
     queue = done;
     return done;
-  }
+  };
 
+  /** Keeps a new name, on Enter or on leaving the field. Refused, the typed name stays in the field, with why. */
+  let keeping = "";
   async function rename() {
-    editing = false;
     const wanted = title.trim();
-    if (wanted === name) return void (title = name);
+    if (wanted === name || wanted === keeping) {
+      if (wanted === name) editing = false;
+      return;
+    }
     if (!wanted) {
+      editing = false;
       title = name;
       message = "Give them a name.";
       return;
     }
+    keeping = wanted;
     renamed = await save({ title: wanted });
+    keeping = "";
+    // Only once it's kept does the field follow the saved name again; refused, what was typed stays.
+    if (renamed && document.activeElement !== nameField) editing = false;
   }
   /** "Saved." under Name once a new name is kept, until the field is used again: the field itself doesn't change, so a word does. */
   let renamed = $state(false);
 
   function nameKeys(event: KeyboardEvent) {
     if (event.key === "Enter") {
+      // Kept where it is: the keyboard stays in the field.
       event.preventDefault();
-      nameField?.blur();
+      void rename();
     } else if (event.key === "Escape" && title !== name) {
       // Escape puts the name back, and only a second one leaves the page.
       event.stopPropagation();
@@ -186,18 +207,6 @@
   }
 </script>
 
-{#snippet videoSwitch(which: "shorts" | "liveStreams", words: string, hint: string, on: boolean)}
-  <div class="inset-row setting">
-    <div class="setting-words">
-      <span class="setting-name" aria-hidden="true">{words}</span>
-      <span id="{id}-{which}-hint" class="setting-hint">{hint}</span>
-    </div>
-    <label class="switch-target -my-2 -mr-2">
-      <input type="checkbox" role="switch" class="switch" aria-label={words} aria-describedby="{id}-{which}-hint" checked={on} onchange={(event) => void save({ [which]: event.currentTarget.checked })} />
-    </label>
-  </div>
-{/snippet}
-
 <section class="flex flex-col gap-2" aria-labelledby="{id}-heading" lang="en">
   <h3 id="{id}-heading" class="label">Settings</h3>
   <div class="inset-group">
@@ -250,29 +259,18 @@
         {/each}
         <form class="inset-row nested new-folder" onsubmit={makeFolder}>
           <label class="sr-only" for="{id}-new">New folder</label>
-          <input id="{id}-new" bind:value={newFolder} type="text" autocomplete="off" enterkeyhint="done" placeholder="New folder…" class="inset-input" aria-describedby="{id}-new-help" />
+          <input id="{id}-new" bind:value={newFolder} onkeydown={(event) => event.key === "Escape" && newFolder && (event.stopPropagation(), (newFolder = ""))} type="text" autocomplete="off" enterkeyhint="done" placeholder="New folder…" class="inset-input" aria-describedby="{id}-new-help" />
           <!-- Kept (decision 0241): a placeholder disappears once you type, so this is the field's visible name then (first floor). -->
           <span id="{id}-new-help" class="setting-hint">Type a name and press Enter to make a folder.</span>
         </form>
       </div>
     {/if}
 
-    <div class="inset-row setting">
-      <div class="setting-words">
-        <span class="setting-name" aria-hidden="true">Pause for a while</span>
-        <span id="{id}-pause-hint" class="setting-hint">
-Their new articles arrive already read while this is on.
-        </span>
-      </div>
-      <label class="switch-target -my-2 -mr-2">
-        <input type="checkbox" role="switch" class="switch" aria-label="Pause for a while" aria-describedby="{id}-pause-hint" checked={paused} onchange={(event) => void pause(event.currentTarget.checked)} />
-      </label>
-    </div>
+    <SettingSwitch name="Pause for a while" hint="Their new articles arrive already read while this is on." checked={paused} onchange={(on) => void pause(on)} />
 
     {#if one && feed.sortsVideos}
       <!-- A YouTube channel on its own (decision 0144): both off by default, changed the moment they're switched. -->
-      {@render videoSwitch("shorts", "Include Shorts", "YouTube's short, upright videos. Sorted by YouTube's own lists, so one may slip through now and then.", feed.shorts === true)}
-      {@render videoSwitch("liveStreams", "Include live streams", "Streams, and their recordings once they end.", feed.liveStreams === true)}
+      <VideoSwitches source={feed} {save} />
     {/if}
 
     <!-- It goes to Settings › Hiding, with the field set to them: a row that leads on, so it ends in ›. -->
@@ -285,7 +283,7 @@ Their new articles arrive already read while this is on.
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}
   </p>
 
-  {@render sources?.()}
+  {@render sources?.(save)}
 
   <div class="mt-8">
     {#if asking}
@@ -318,7 +316,7 @@ Their new articles arrive already read while this is on.
     padding-inline: 0.5rem;
   }
   /* The row after the opened folders keeps its hairline, as the wrapper between them breaks the usual pairing. */
-  .contents + .inset-row::before {
+  .contents + :global(.inset-row)::before {
     content: "";
     position: absolute;
     top: 0;

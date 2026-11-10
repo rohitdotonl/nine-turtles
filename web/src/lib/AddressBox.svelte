@@ -25,6 +25,7 @@
     field = $bindable(),
     onsubmit,
     onNotNow,
+    onEscape,
   }: {
     /** "Write back to Tomas Berg", "Write to june.example". */
     title: string;
@@ -50,6 +51,8 @@
     field?: HTMLInputElement;
     onsubmit: (event: SubmitEvent) => void;
     onNotNow: () => void;
+    /** Escape in the box: as Not now (Change on their page), so it never leaves the page as well. */
+    onEscape?: () => void;
   } = $props();
 
   const id = $props.id();
@@ -80,6 +83,7 @@
       spellcheck="false"
       aria-invalid={message ? "true" : undefined}
       aria-describedby={`${id}-message`}
+      onkeydown={(event) => event.key === "Escape" && onEscape && (event.stopPropagation(), onEscape())}
       class="field min-w-0"
     />
   </div>

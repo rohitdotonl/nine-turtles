@@ -24,7 +24,7 @@
   | Getting around | `/` | Search | Search |
   | | `Shift+J` / `Shift+K` | Next / previous in the sidebar | Next / previous in the sidebar |
   | | `←` / `→` | Move the keyboard to the pane before / after: the sidebar, the list, the article (or their page) | Move between panes |
-  | | `e` | The settings of the person or publication whose list you're in, on their page (decision 0254), or Edit folder in a folder's list | Settings for this person or publication |
+  | | `e` | The settings of the person or publication whose list you're in, on their page (decision 0254), or Edit folder in a folder's list | Their settings |
   | | `o` | Open or close the folder you're in, or the first folder of the person you're viewing, in the sidebar | Open / close this folder |
   | | `i` | About this person or publication (their page, section 36) | Info about this person |
   | | `f` | Full-screen reading (hide sidebar and list) | Full-screen reading |

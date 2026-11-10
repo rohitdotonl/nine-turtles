@@ -134,7 +134,7 @@
   onDestroy(() => {
     closed = true;
     asked = "";
-    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which Edit can change.
+    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their page can change.
     if (asking && !answering) onAdded(asking, note);
   });
 
@@ -330,7 +330,7 @@
     busy = false;
     asking = undefined;
     asked = "";
-    // The guess stands if the answer couldn't be kept; Edit can change it later.
+    // The guess stands if the answer couldn't be kept; their page can change it later.
     onAdded(refusal ? feed : { ...feed, kind: who, ...(title ? { title } : {}) }, note);
   }
 

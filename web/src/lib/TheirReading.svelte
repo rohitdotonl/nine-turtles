@@ -3,8 +3,9 @@
   "Your highlights", the words you highlighted in their writing (the newest article first, at
   most 20; Notes has them all), each set as at an article's end: the words in the reading serif
   with a fine line at the left, "From {title} · {day}" (the title opens the article) and your
-  note on it. It shows only when there is something; when they can't be loaded, one quiet line
-  says so rather than letting them seem gone. (Lately, their three newest pieces, went in
+  note on it. Its label shows at once, with the empty state's room kept while they load, so
+  nothing below moves; with none, "Nothing highlighted yet." and how it fills (decision 0254);
+  when they can't be loaded, one quiet line says so rather than letting them seem gone. (Lately, their three newest pieces, went in
   decision 0215: their list already shows them.) An untitled piece shows its opening words, as
   a list does (decision 0196). No counts, no color.
 -->
@@ -52,36 +53,42 @@
 
 {#if failed}
   <p class="text-meta text-ink-2">Your highlights from their writing couldn't be loaded. Open the page again to try once more.</p>
-{/if}
-
-{#if loaded && highlights.length === 0}
-  <!-- Nothing yet: the fact, then how it fills (BRAND.md → "Empty screens"). -->
-  <section class="flex flex-col gap-2" aria-labelledby="their-highlights">
-    <h3 id="their-highlights" class="label">Your highlights</h3>
-    <p class="font-serif text-ink-2">Nothing highlighted yet.</p>
-    <p class="text-meta text-muted">Words you highlight in their writing gather here.</p>
-  </section>
-{:else if highlights.length > 0}
+{:else}
   <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
     <h3 id="their-highlights" class="label">Your highlights</h3>
-    <ul class="flex flex-col gap-8">
-      {#each highlights as each (each.id)}
-        <li class="quote">
-          <p class="font-serif text-ink">{each.quote}</p>
-          <p class="from">
-            From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
-            · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
-          </p>
-          {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
-        </li>
-      {/each}
-    </ul>
+    {#if !loaded}
+      <!-- While they load (a moment), the room the empty state takes, so what's below doesn't move when nothing comes. -->
+      <div class="waiting" aria-hidden="true"></div>
+    {:else if highlights.length === 0}
+      <!-- Nothing yet: the fact, then how it fills (BRAND.md → "Empty screens"). -->
+      <div class="waiting flex flex-col gap-2">
+        <p class="font-serif text-ink-2">Nothing highlighted yet.</p>
+        <p class="text-meta text-muted">Words you highlight in their writing gather here.</p>
+      </div>
+    {:else}
+      <ul class="flex flex-col gap-8">
+        {#each highlights as each (each.id)}
+          <li class="quote">
+            <p class="font-serif text-ink">{each.quote}</p>
+            <p class="from">
+              From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
+              · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
+            </p>
+            {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </section>
 {/if}
 
 <style>
   /* Each highlight: its words in the reading serif, set off by a fine line at the left, as at an article's end. */
   /* Their words, where the eye rests: the reading serif a step larger than the interface around it. */
+  /* The empty state's own height, kept while loading. */
+  .waiting {
+    min-height: 3.5rem;
+  }
   .quote {
     display: flex;
     flex-direction: column;

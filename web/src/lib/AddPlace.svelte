@@ -233,7 +233,7 @@
           class="field min-w-0 flex-1"
           onkeydown={(event) => {
             if (event.key !== "Enter") return;
-            // Never the form around it (Edit's Done): this adds the source.
+            // Never a form around it: this adds the source.
             event.preventDefault();
             void addAddress();
           }}

@@ -82,9 +82,11 @@ PLAN.md → V1, item 1.*
   right end (and Escape) back to their list; on a phone it's a screen of its
   own, with ‹ back to their list. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
-    publish**, each place a link to its own website (a blog by its website,
-    "alpha.example"; a channel or newsletter by its own name; one called
-    just what they are by what it is, "Website" or "YouTube channel");
+    publish**, each place a link to its own website, 44px to touch: by its
+    own title when that isn't their name ("Notes from Tomas" under Tomas
+    Berg, decision 0167), else a blog by its website ("alpha.example") and a
+    channel or newsletter by its own name; one called just what they are by
+    what it is, "Website" or "YouTube channel";
   - while a source is paused, the line saying so with Resume (section 15,
     decision 0239); while one isn't working, the line naming it with Find
     new address (section 15);
@@ -104,16 +106,18 @@ PLAN.md → V1, item 1.*
     Lately: their list already shows their newest (decision 0215);
   - **Settings**, each changing the moment it's touched, with no Save,
     Cancel or Done (decision 0254):
-    - **Name**, kept on Enter or on leaving the field, with "Saved." under
-      it; Escape while typing puts it back. An empty name isn't kept
-      ("Give them a name.");
+    - **Name**, kept on Enter (the keyboard stays in the field) or on
+      leaving the field, with "Saved." under it; Escape while typing puts it
+      back. An empty name isn't kept ("Give them a name."); a name that
+      couldn't be saved stays as typed, with why under the settings;
     - for one source, **This is: A person / A publication**; A publication
       takes Write to and its address away at once (decision 0192);
     - **Folders**, the folders they're in, in words ("1 and Friends",
       "None"); pressed, every folder opens under it in place as a tick
       list, each tick counting at once, with **New folder…** as its last
-      row (Enter makes it and puts them in it; the sidebar opens it). One
-      list for all their sources;
+      row (Enter makes it and puts them in it; the sidebar opens it; Escape
+      empties it, and only an empty one's Escape leaves the page). One list
+      for all their sources;
     - **Pause for a while**, every source of theirs at once;
     - for a YouTube channel on its own, **Include Shorts** and **Include
       live streams** (section 38);

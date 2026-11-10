@@ -19,7 +19,7 @@
   twice for the same writer). What it finds fills in the field for the reader
   to check; else "Find it on their site" (their website, in a new tab), one
   field to paste it in, Write back and Not now. The address is kept for the person (their page
-  shows it, Edit on their page changes it), so it's asked for once. The email app
+  shows it, Change beside it changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
   The More menu's "Write back" and its key (`w`) do the same (`start`).
@@ -178,7 +178,8 @@
     changing = false;
     typed = "";
     await tick();
-    changer?.focus();
+    // Emptied, no address is shown, so no Change: the keyboard goes to Write to instead.
+    (changer ?? opener)?.focus();
   }
 
   async function notNow() {
@@ -186,7 +187,7 @@
       changing = false;
       message = "";
       await tick();
-      return changer?.focus();
+      return (changer ?? opener)?.focus();
     }
     asking = false;
     chosen = undefined;
@@ -245,6 +246,7 @@
         bind:field
         onsubmit={keep}
         onNotNow={() => void notNow()}
+        onEscape={() => void notNow()}
       />
     {:else if asking}
       <AddressBox

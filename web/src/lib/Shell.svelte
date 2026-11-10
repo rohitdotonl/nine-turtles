@@ -1235,7 +1235,7 @@
   {/if}
 {/snippet}
 
-<!-- A person's or publication's page, Edit or source settings (decision 0163): beside their list, or on a phone in its place. -->
+<!-- A person's or publication's page, their settings on it (decisions 0163, 0254): beside their list, or on a phone in its place. -->
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}

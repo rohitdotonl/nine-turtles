@@ -11,7 +11,8 @@
 <script lang="ts">
   import AddPlace from "./AddPlace.svelte";
   import Icon from "./Icon.svelte";
-  import { editFeed, refused, type Notice } from "./feeds";
+  import type { FeedChanges, Notice } from "./feeds";
+  import VideoSwitches from "./VideoSwitches.svelte";
   import type { LoadedLibrary } from "./library.svelte";
   import { PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
   import type { Feed } from "./shapes";
@@ -20,13 +21,14 @@
     feed,
     library,
     onPeople,
-    onSaved,
+    save,
   }: {
     feed: Feed;
     library: LoadedLibrary;
     /** Joined or taken out: the list it opens on now, with "… · Undo". */
     onPeople: (done: Notice, lead: number) => void;
-    onSaved: () => void;
+    /** Their page's own saving: one change after another, in order (WhoSettings). */
+    save: (changes: FeedChanges, on?: number[]) => Promise<boolean>;
   } = $props();
 
   const id = $props.id();
@@ -36,14 +38,6 @@
   let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
   let message = $state("");
   let busy = $state(false);
-
-  async function setVideos(place: Feed, changes: { shorts?: boolean; liveStreams?: boolean }) {
-    message = "";
-    const refusal = await editFeed(place.id, changes);
-    await library.loadFeeds();
-    if (refusal) message = refused(refusal, "feed");
-    else onSaved();
-  }
 
   /** Take out: this source stands on its own again, with Undo on its list. */
   async function takeOut(place: Feed) {
@@ -78,26 +72,11 @@
             <span class="setting-name break-words">{placeShownAs(place)}</span>
             <span class="setting-hint">{PLACE_NAMES[place.place ?? "blog"]}</span>
           </span>
-          {#if many}
-            <button type="button" class="text-link shrink-0" aria-disabled={busy} title="It becomes a person or publication of its own. You can undo it straight afterwards." onclick={() => void takeOut(place)}>Take out<span class="sr-only"> {placeShownAs(place)} of {name}</span></button>
-          {/if}
+          <button type="button" class="text-link shrink-0" aria-disabled={busy} title="It becomes a person or publication of its own. You can undo it straight afterwards." onclick={() => void takeOut(place)}>Take out<span class="sr-only"> {placeShownAs(place)} of {name}</span></button>
         </div>
         {#if place.sortsVideos}
-          <!-- A YouTube channel (decision 0144): both off by default, changed the moment they're switched. -->
-          <div class="inset-row setting nested">
-            <div class="setting-words">
-              <span class="setting-name" aria-hidden="true">Include Shorts</span>
-              <span id="{id}-{place.id}-shorts-hint" class="setting-hint">YouTube's short, upright videos. Sorted by YouTube's own lists, so one may slip through now and then.</span>
-            </div>
-            <label class="switch-target -my-2 -mr-2"><input type="checkbox" role="switch" class="switch" aria-label="Include Shorts" aria-describedby="{id}-{place.id}-shorts-hint" checked={place.shorts === true} onchange={(event) => void setVideos(place, { shorts: event.currentTarget.checked })} /></label>
-          </div>
-          <div class="inset-row setting nested">
-            <div class="setting-words">
-              <span class="setting-name" aria-hidden="true">Include live streams</span>
-              <span id="{id}-{place.id}-live-hint" class="setting-hint">Streams, and their recordings once they end.</span>
-            </div>
-            <label class="switch-target -my-2 -mr-2"><input type="checkbox" role="switch" class="switch" aria-label="Include live streams" aria-describedby="{id}-{place.id}-live-hint" checked={place.liveStreams === true} onchange={(event) => void setVideos(place, { liveStreams: event.currentTarget.checked })} /></label>
-          </div>
+          <!-- A YouTube channel (decision 0144): its two switches under its row. -->
+          <VideoSwitches source={place} {save} nested />
         {/if}
       {/each}
     </div>
@@ -116,11 +95,5 @@
   /* Take out keeps to the row's end, and drops under the name only when big text leaves no room beside it. */
   .source-row > .setting-words {
     flex: 1 1 10rem;
-  }
-  .nested {
-    padding-left: 2rem;
-  }
-  .nested::before {
-    left: 2rem !important;
   }
 </style>

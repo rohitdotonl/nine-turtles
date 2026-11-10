@@ -72,10 +72,15 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
-  /** A place by its own name; one called just what they are ("xkcd.com" under xkcd.com) by what it is, so the line never repeats the name. */
+  /**
+   * A place by its own title when that isn't their name ("Garden Letters" under Hal Brennan, decision 0167), else by its
+   * website or name; one called just what they are ("xkcd.com" under xkcd.com) by what it is, so the line never repeats the name.
+   */
   function placeWords(place: Feed): string {
+    const same = (words: string | undefined) => !words || words.trim().toLowerCase() === name.trim().toLowerCase();
+    if (!same(place.siteTitle)) return place.siteTitle!;
     const shown = placeShownAs(place);
-    if (shown.trim().toLowerCase() !== name.trim().toLowerCase()) return shown;
+    if (!same(shown)) return shown;
     if (place.sortsVideos) return "YouTube channel";
     return { blog: "Website", video: "Videos", newsletter: "Newsletter", podcast: "Podcast" }[place.place ?? "blog"];
   }
@@ -137,7 +142,7 @@
     <!-- Their settings: quieter, at the foot, apart. -->
     <div class="mt-16">
       <WhoSettings {feed} {library} bind:nameField {onSaved} {onFolders} {onHide} {onUnsubscribe}>
-        {#snippet sources()}<TheirPlaces {feed} {library} onPeople={joined} {onSaved} />{/snippet}
+        {#snippet sources(save)}<TheirPlaces {feed} {library} onPeople={joined} {save} />{/snippet}
       </WhoSettings>
     </div>
   </div>
@@ -176,7 +181,15 @@
     line-height: 1.4;
     overflow-wrap: anywhere;
   }
-  /* Each place stays whole on its line, unless it alone is wider than the line. */
+  /* Each place stays whole on its line, unless it alone is wider than the line. Its 44px to touch reaches above and below (first floor). */
+  .who-places a {
+    position: relative;
+  }
+  .who-places a::after {
+    content: "";
+    position: absolute;
+    inset: -0.5rem -0.25rem;
+  }
   .who-places a,
   .who-places span:not(.dot, .sr-only) {
     display: inline-block;
@@ -207,8 +220,16 @@
     }
     .who-places a,
     .who-places span:not(.dot, .sr-only) {
-      display: block;
+      display: flex;
+      align-items: center;
       width: fit-content;
+      min-height: 2.75rem;
+    }
+    .who-places a::after {
+      inset: 0 -0.25rem;
+    }
+    .who-places {
+      margin-top: 0.25rem;
     }
   }
 </style>

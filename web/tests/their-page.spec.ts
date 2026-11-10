@@ -147,3 +147,110 @@ test("when Your highlights can't be loaded, their page says so", async ({ page, 
   await expect(who).toContainText("Your highlights from their writing couldn't be loaded.");
   await expect(who.getByRole("region", { name: "Your highlights" })).toHaveCount(0);
 });
+
+test("by keyboard alone: Change corrects the address in place, Escape closes the box, and the keyboard goes back to Change", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same page on a phone");
+  const name = `their-change-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const who = about(page, `Blog ${name}`);
+  const change = who.getByRole("button", { name: `Change Blog ${name}'s email address` });
+  await tabTo(page, change);
+  await page.keyboard.press("Enter");
+  const field = who.getByRole("textbox", { name: "Their email address" });
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("old@there.example");
+  // Escape closes the box only, never the page, and the keyboard is back on Change.
+  await page.keyboard.press("Escape");
+  await expect(field).toHaveCount(0);
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(change).toBeFocused();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("new@there.example");
+  await page.keyboard.press("Enter");
+  await expect(who.getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", "mailto:new@there.example");
+  await expect(change).toBeFocused();
+  // Emptied, it forgets it: no address, no Change, and the keyboard lands on Write to.
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Enter");
+  await expect(who.getByRole("button", { name: `Write to Blog ${name}` })).toBeFocused();
+});
+
+test("with nothing yet, their page says so; the × and Escape go back to their list, and Hiding opened there leads back to it", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the × is a computer's; a phone has ‹ back");
+  const name = `their-empty-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const who = about(page, `Blog ${name}`);
+  await expect(who.getByRole("region", { name: "Your highlights" })).toContainText("Nothing highlighted yet.");
+  await expect(who.getByRole("button", { name: "Add a note…" })).toBeVisible();
+
+  // The × by keyboard.
+  await tabTo(page, who.getByRole("button", { name: "Close" }));
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+
+  // Hide articles about… opens Hiding with "‹ Blog …" as its way back; the button and Escape both lead to their page.
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await who.getByRole("button", { name: "Hide articles about…" }).click();
+  await expect(page).toHaveURL(/\/settings\/hiding$/);
+  const back = page.getByRole("button", { name: new RegExp(`Blog ${name}`) }).first();
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await who.getByRole("button", { name: "Hide articles about…" }).click();
+  await expect(page).toHaveURL(/\/settings\/hiding$/);
+  await page.locator("body").focus();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+});
+
+test("a name that couldn't be saved stays as typed, with why, and Enter keeps the keyboard in the field", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same page on a phone");
+  const name = `their-refused-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const who = about(page, `Blog ${name}`);
+  const field = who.getByRole("textbox", { name: "Name" });
+  await page.route(`**/api/feeds/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
+  await field.fill(`Kept ${name}`);
+  await field.press("Enter");
+  await expect(who).toContainText("That couldn't be saved. Try again in a moment.");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue(`Kept ${name}`);
+  await expect(who).not.toContainText("feed");
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+});
+
+test("on a phone, each place under their name is 44px to touch", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the touch floor is a phone's");
+  const name = `their-places-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const place = about(page, `Blog ${name}`).locator(".who-places a").first();
+  expect((await place.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+});

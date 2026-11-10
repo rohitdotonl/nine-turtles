@@ -30,10 +30,12 @@ then a stack of equal parts.
      writer's, and the writer comes first (principle 2; DESIGN.md's
      Exceptions log).
    - Under it, **where they publish**, in the reading serif and the second
-     ink, each place a link to its own site, underlined as every link is; a place
-     called just what they are ("xkcd.com" under xkcd.com) is named by what
-     it is (Website, YouTube channel), so the line never repeats the name.
-     On a phone, one place to a line.
+     ink, each place a link to its own site, underlined as every link is,
+     44px to touch: by its own title when that isn't their name ("Garden
+     Letters" under Hal Brennan, as decision 0167 put it), else by its
+     website or name; one called just what they are ("xkcd.com" under
+     xkcd.com) by what it is (Website, YouTube channel), so the line never
+     repeats the name. On a phone, one place to a line.
    - A paused source's line (with Resume) and a failing one's, now naming
      what isn't working ("andrewconner.com hasn't worked since 2 Nov.", not
      "This feed").
@@ -73,8 +75,12 @@ were tried first and dropped: round chips aren't how the app chooses things
 (Rohit, 11 November 2026).
 
 **Changes.** Decisions 0163 (Edit on their page), 0183 (Edit's fields),
-0215 (Edit as a quiet word), 0235 (Edit's kept changes; their page has none
-to keep now) and 0243 (Edit's phone finish) for this page. Decision 0192
+0215 (Edit as a quiet word), 0235 (Edit's kept changes) and 0243 (Edit's
+phone finish) for this page. Nothing typed there needs keeping now: a name
+is kept on Enter or on leaving the field (refused, what was typed stays in
+it), and Escape in the address box or New folder… clears only that box,
+never the page. Changes an old Edit left unsaved on a device (its drafts,
+`edit:feed:N`) are no longer shown; Edit folder's drafts are untouched. Decision 0192
 stands: a publication has no Write to and no address.
 
 **Not changed.** Edit folder, its sheet and its kept changes. The server:
