@@ -23,14 +23,17 @@ shadows on things that float.
 2. **The computer checks it.** `scripts/check-system.mjs` (in
    `scripts/check.sh frontend`) fails any change whose corner, shadow, text
    size, icon size or label isn't in the table, as the no-motion check does
-   for animation. Older spacing values off the scale (193) and the 22 tones
+   for animation. Older spacing values off the scale (193, most of them
+   6px) and the 22 tones
    mixed from the ink are counted: no new one may appear, and the count is
    lowered in the same change that lowers it. Tailwind's own corners and
    shadows are switched off, as its text sizes already were.
 3. **Three interface text sizes:** meta 13px, interface 15px and base 16px,
    with their touch twins 15, 17 and 16. The old small size (14px, buttons,
    helper text, the byline) joins meta, so on a touch screen it is now 15px
-   rather than smaller than the meta line beside it.
+   rather than smaller than the meta line beside it. The sidebar's rows are the
+   interface size with a mouse too (15px, were 14px), a step above the
+   label over them.
 4. **One title size:** every place's title is 24px, a person's name and the
    welcome's "Hello" too (were 28px), a phone sheet's (was 20px) and the
    list's title in a narrow pane (was 22px, now it ends in "…").
@@ -58,8 +61,11 @@ shadows on things that float.
 **Not done, and why.** A 20px left edge on lists too (the dot would crowd
 the focus ring); the reading sizes (the reader's own, through Aa); the
 list's 12px dates (Rohit's choice, decision 0206, now a named exception).
-Gathering the grey tones into four named ones, and moving the older gaps
-onto the scale, are the next steps; the check already stops new drift.
+Two parts of the critique are follow-ups, not done here: moving the 193
+older gaps onto the scale (6px is written into several decisions, such as
+a field's name 6px over it, decision 0122, so each needs a look), and
+gathering the 22 grey tones into four named ones (each is held to a
+contrast floor). The check already stops new drift in both.
 
 Visual only: no feature, wording or data changed, every button stays 44px,
 every text keeps its contrast.

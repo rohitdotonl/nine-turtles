@@ -550,6 +550,13 @@
     border-radius: var(--radius-mark);
     cursor: pointer;
   }
+  /* The note's page icon, at the size beside a word: 16px, 18 on a touch screen (DESIGN.md → "The system"). */
+  @media (pointer: coarse) {
+    :global(.highlight-icon svg) {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
   :global(.highlight-icon) {
     display: inline-flex;
     margin-left: 3px;

@@ -267,13 +267,13 @@
     </div>
     {#if !asking}
       <!--
-        The password's name, with "Forgot?" at the right of its line: small to the eye,
+        The password's name, with "Forgot?" at the right of its line (its 20px line keeps it 24px under the email field): small to the eye,
         but 44px tall to touch, its box rising into the room above the line so it never
         reaches over a field. It comes after the field in the page, so Tab goes
         Email, Password, Forgot?, Sign in; the grid only draws it on the name's line.
       -->
       <div class="-mt-3 grid grid-cols-[1fr_auto] items-end gap-x-3">
-        <label for="password" class="col-start-1 row-start-1 text-meta text-ink-2">Password</label>
+        <label for="password" class="col-start-1 row-start-1 text-meta leading-5 text-ink-2">Password</label>
         <PasswordField
           id="password"
           autocomplete="current-password"

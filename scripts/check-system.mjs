@@ -128,7 +128,7 @@ for (const file of files(src, [".svelte", ".css", ".ts"])) {
     if (!excepted(name, m[0])) say(m.index, `a text size not in the table (${m[0]})`);
   }
 
-  for (const m of text.matchAll(/text-transform\s*:\s*uppercase|(?<![\w-:])uppercase(?![\w-])(?=[^"'`]*["'`])/g)) {
+  for (const m of text.matchAll(/text-transform\s*:\s*uppercase|(?<![\w-])uppercase(?![\w-])(?=[^"'`]*["'`])/g)) {
     say(m.index, "small capitals; a group's name is the one label (.label)");
   }
 

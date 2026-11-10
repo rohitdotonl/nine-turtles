@@ -64,7 +64,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(found).toHaveText("Walking");
   await expect(found).toHaveCSS("text-decoration-line", "underline");
   await expect(found).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(found).toHaveCSS("border-top-left-radius", "3px");
+  await expect(found).toHaveCSS("border-top-left-radius", "4px");
   const [wordColor, titleColor, wordWeight, titleWeight] = await Promise.all([
     found.evaluate((e) => getComputedStyle(e).color),
     found.evaluate((e) => getComputedStyle(e.parentElement!).color),
@@ -166,7 +166,7 @@ test("each result shows its text around the match under the title, and × clears
   await expect(word).toHaveCSS("font-weight", "400");
   const [wordFill, wordCorner] = await word.evaluate((e) => [getComputedStyle(e).backgroundColor, getComputedStyle(e).borderTopLeftRadius]);
   expect(wordFill).not.toBe("rgba(0, 0, 0, 0)");
-  expect(wordCorner).toBe("3px");
+  expect(wordCorner).toBe("4px");
   const [wordColor, lineColor, titleColor] = await Promise.all([
     word.evaluate((e) => getComputedStyle(e).color),
     excerpt.evaluate((e) => getComputedStyle(e).color),

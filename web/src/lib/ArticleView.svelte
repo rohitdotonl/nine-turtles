@@ -743,8 +743,8 @@
   }
   /* The writer's name under the title: a 44px target to touch, taller than its line without moving it. */
   .writer-link {
-    padding-block: 0.75rem;
-    margin-block: -0.75rem;
+    padding-block: calc((2.75rem - 1lh) / 2);
+    margin-block: calc((1lh - 2.75rem) / 2);
     cursor: pointer;
   }
   @media (hover: hover) {

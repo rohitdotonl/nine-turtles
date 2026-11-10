@@ -293,7 +293,7 @@ body {
   (decision 0074), and "Loading…" shows there meanwhile, in small grey
   centred text. Its "Show older articles" button is for the keyboard and
   screen readers: hidden until it has the keyboard's place (or a load
-  failed), then a small, quiet pill centred under the list, in muted grey
+  failed), then a small, quiet button centred under the list, in muted grey
   with a soft hairline around it. Never in the accent: the accent marks
   only what's unread or found, never a button (decisions 0037, 0057).
   44px tall to touch.
@@ -940,8 +940,11 @@ textarea {
       display: grid;
       grid-template-columns: repeat(var(--phone-columns), minmax(0, 1fr));
     }
+    /* Each choice's words stay on one line ("For a month"), with less room at its sides. */
     .choice {
       justify-content: center;
+      padding-inline: 0.5rem;
+      white-space: nowrap;
     }
   }
   .choice {

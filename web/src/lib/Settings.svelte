@@ -1,7 +1,7 @@
 <!--
   Settings (SPEC section 18), laid out as Apple Books' settings are: one
-  centred column of grouped inset lists, each group with a small uppercase
-  header above it (decision 0120). It fills the list and reading areas while
+  centred column of grouped inset lists, each group with the one label
+  above it (decisions 0120, 0244). It fills the list and reading areas while
   the sidebar stays, so the reader never loses their place. "Close settings"
   (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
