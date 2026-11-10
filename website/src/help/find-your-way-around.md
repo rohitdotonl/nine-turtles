@@ -36,7 +36,8 @@ Choose anything in the sidebar and its articles appear, newest first. Unread
 articles are in bolder type with a dot beside them. A post with no title,
 such as a short note, shows its first words instead, in plain type, up to
 two lines. Under each title are who wrote it and when: "Today",
-"Yesterday" or the day of the week for the past week, then the date. Rest
+"Yesterday" or the day of the week for the past week, then the date,
+written the way your device writes dates ("20 Oct" or "Oct 20"). Rest
 the pointer on it to see the exact day and time. A star means you starred
 it, headphones mean a podcast episode, and a small screen means a video.
 Older articles load as you reach the bottom, and every list ends with

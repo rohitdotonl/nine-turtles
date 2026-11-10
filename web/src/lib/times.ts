@@ -1,26 +1,43 @@
 // Times and dates in the words the screens show. Every date in the app has one
-// form, "20 Oct" (and "20 Oct 2025" for another year), decision 0215: an
-// article's day, when a feed was paused or last checked, Everyone you follow,
-// passkeys and the admin pages. An article's day says the last week in words
-// first ("Today", "Yesterday", "Thursday"), decision 0218.
+// form, the device's own order with a three-letter month: "20 Oct" in Britain,
+// "Oct 20" in the United States, with the year when it isn't this one
+// (decisions 0215 and 0232). Times follow the device's clock too: "14:05" or
+// "2:05 PM". The words stay English, the interface's language. An article's day
+// says the last week in words first ("Today", "Yesterday", "Thursday"),
+// decision 0218. Every date and time in the app is written here.
 
-const TIME = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit" });
 // Three letters each, always: the browser's own short months say "Sept" for September.
-const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
-const FULL = new Intl.DateTimeFormat("en-GB", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const WEEKDAY = new Intl.DateTimeFormat("en-GB", { weekday: "long" });
 
-/** "20 Oct", or with its year, "20 Oct 2025", in the device's time zone. */
+let monthFirst = false;
+let TIME: Intl.DateTimeFormat;
+let FULL: Intl.DateTimeFormat;
+
+/**
+ * Write dates and times the way this device does (decision 0232): the month
+ * before or after the day, and a 12- or 24-hour clock, from the device's
+ * language and region settings. Called once with nothing; tests pass a locale.
+ */
+export function writeDatesLike(locale?: string): void {
+  const order = new Intl.DateTimeFormat(locale, { month: "numeric", day: "numeric" })
+    .formatToParts(new Date(2026, 9, 20))
+    .map((part) => part.type);
+  monthFirst = order.indexOf("month") < order.indexOf("day");
+  const hour12 = new Intl.DateTimeFormat(locale, { hour: "numeric" }).resolvedOptions().hour12 ?? false;
+  const english = monthFirst ? "en-US" : "en-GB";
+  const clock = { hour: hour12 ? "numeric" : "2-digit", minute: "2-digit", hour12 } as const;
+  TIME = new Intl.DateTimeFormat(english, clock);
+  FULL = new Intl.DateTimeFormat(english, { weekday: "long", day: "numeric", month: "long", year: "numeric", ...clock });
+}
+writeDatesLike();
+
+/** "20 Oct" or "Oct 20", with its year "20 Oct 2025" or "Oct 20, 2025", in the device's time zone. */
 function dayMonth(date: Date, withYear: boolean): string {
-  const day = `${date.getDate()} ${MONTHS[date.getMonth()]}`;
-  return withYear ? `${day} ${date.getFullYear()}` : day;
+  const month = MONTHS[date.getMonth()];
+  const day = monthFirst ? `${month} ${date.getDate()}` : `${date.getDate()} ${month}`;
+  if (!withYear) return day;
+  return monthFirst ? `${day}, ${date.getFullYear()}` : `${day} ${date.getFullYear()}`;
 }
 
 /**

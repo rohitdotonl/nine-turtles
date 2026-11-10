@@ -64,3 +64,32 @@ test("Your plan shows the trial, works from the keyboard, and says why a door st
     .analyze();
   expect(results.violations).toEqual([]);
 });
+
+// Dates follow the device's own order (decision 0232): an American device
+// puts the month first.
+test.describe("on a device set to American English", () => {
+  test.use({ locale: "en-US" });
+  test("Your plan writes its date month first", async ({ page }) => {
+    await page.goto("/settings");
+    await appReady(page);
+    await signIn(page);
+    await page.route("**/api/session", async (route) => {
+      const response = await route.fetch();
+      await route.fulfill({ response, json: { ...(await response.json()), owner: false } });
+    });
+    await page.route("**/api/plan", (route) =>
+      route.fulfill({
+        json: {
+          on: true,
+          test_mode: false,
+          plan: { standing: "trial", ends_at: Date.UTC(2026, 10, 9, 12) / 1000 },
+          prices: { monthly: "$5 a month", yearly: "$50 a year" },
+          can_manage: false,
+        },
+      }),
+    );
+    await page.goto("/settings/plan");
+    await appReady(page);
+    await expect(page.getByRole("region", { name: "Your plan" }).getByText("Your trial ends on Nov 9, 2026.")).toBeVisible();
+  });
+});

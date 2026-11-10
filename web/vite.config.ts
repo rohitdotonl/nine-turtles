@@ -49,6 +49,7 @@ export default defineConfig({
   },
   test: {
     include: ["src/**/*.test.ts"],
+    setupFiles: ["tests/unit-setup.ts"],
     // Lets tests read app.css as text (the contrast test); nothing is styled.
     css: true,
   },
