@@ -678,7 +678,9 @@ test.describe("on a wide window", () => {
     // It comes after the short closing line; only Write back follows it, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
     expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
-    expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling ?? null)).toBeNull();
+    // Then only the credit line that shows on paper alone (decision 0235).
+    expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
+    await expect(article(page).locator(".print-credit")).toBeHidden();
   });
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {

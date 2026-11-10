@@ -51,7 +51,7 @@
   import type { Preferences } from "./preferences";
   import type { Article, FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
-  import { exactly, when } from "./times";
+  import { date, exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { articleOpened, placeKept } from "./resume.svelte";
   import { connection } from "./connection.svelte";
@@ -597,6 +597,8 @@
         {/key}
         <WriteBack bind:this={writeBack} {article} {library} quotes={() => marks?.quotes() ?? []} />
       {/if}
+      <!-- Only on paper (print.css, decision 0235): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
+      <p class="print-credit" lang="en" data-credit={`From ${article.feedTitle}${author ? `, by ${author}` : ""}, ${date(article.at)}.${article.link ? ` The original: ${article.link}` : ""}`}></p>
     </article>
   </div>
 
