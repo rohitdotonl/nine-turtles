@@ -11,7 +11,10 @@ OPML is the standard file format feed readers use to move subscription lists bet
 - **Export:** downloads an OPML file of all your feeds and folders. A feed in several folders appears under each of them.
 - Your own OPML file is never stored in the code repository.
 
+- **Dropping the file** (decision 0248): on a computer, an `.opml` (or `.xml`) file dragged onto nine turtles' window and let go is imported in the same way. While it's held, a line at the top of the sidebar's people and folders says "Drop a list of feeds (OPML) to import it."; afterwards the summary shows in the note at the sidebar's foot, with Undo when the import added something (decision 0238).
+
 **How to check it**
 1. Import your OPML file. The summary says how many feeds were added. Your folders appear in the sidebar.
 2. Import a second file, then press **Undo the import**: its feeds and new folders go from the sidebar; what you followed before stays where it was.
 3. Export, then import the export into another feed reader (or back into a fresh nine turtles). Everything is there, with the same folders.
+4. On a computer, drag an OPML file onto nine turtles' window and let go: the sidebar's foot says what was imported, with Undo.

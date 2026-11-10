@@ -377,8 +377,8 @@ test.describe("on a wide window", () => {
     await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, unread/);
     await expect(row(page, blog, MIDDLE)).toBeVisible();
 
-    await page.keyboard.press("g");
-    await page.keyboard.press("a");
+    // Leave for the blog's own list (All articles would do too, but other tests' blogs can crowd it past its first page).
+    await feedLink(page, blog).click();
     await expect(row(page, blog, MIDDLE)).toBeVisible();
     await page.keyboard.press("g");
     await page.keyboard.press("u");

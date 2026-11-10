@@ -5,6 +5,12 @@
   a word, so they read as two buttons, not one phrase (decisions 0062, 0064),
   then Settings as an icon, the way a Mac app keeps its tools at the foot of
   the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
+
+  While a person or publication is held (decision 0248), the foot shows two
+  places to drop them instead: Pause and, in the oxblood words, Unsubscribe,
+  as words alone (no icon of their own: one icon, one meaning, BRAND.md).
+  They're for the pointer only (sidebarDrag.ts reads `data-drop-act`); the
+  keyboard and screen readers have the same in Edit.
 -->
 <script lang="ts">
   import { tip } from "./keyboard";
@@ -26,7 +32,11 @@
   } = $props();
 </script>
 
-<div class="@container flex shrink-0 items-center gap-1 border-t border-[var(--line)] py-2 pr-3">
+<div class="sidebar-foot @container flex shrink-0 items-center gap-1 border-t border-[var(--line)] py-2 pr-3">
+  <div class="drop-acts ml-2 flex-1 gap-2" aria-hidden="true">
+    <span data-drop-act="pause" class="drop-act text-ink-2">Pause</span>
+    <span data-drop-act="unsubscribe" class="drop-act text-danger">Unsubscribe</span>
+  </div>
   <!-- An action, not a place: it never shows the "where you are" bar. -->
   <a
     href="/add"

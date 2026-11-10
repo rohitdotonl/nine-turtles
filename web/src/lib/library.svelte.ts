@@ -9,6 +9,7 @@
 
 import { filedAfter, saveOrder } from "./arranging";
 import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, saveOpenFolders, savedOpenFolders, undoRefused, type Notice, type Refusal } from "./feeds";
+import { importMessage, importOpml, undoImport } from "./importing";
 import { newestAnswer } from "./inorder";
 import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
@@ -110,6 +111,54 @@ export class LoadedLibrary {
         // Whatever came back shows, even when one couldn't.
         await this.loadFeeds();
         return problem ? undoRefused(problem, "feed") : undefined;
+      },
+    };
+  }
+
+  /** Pauses every source of a person or publication not paused yet (dropped on the sidebar's Pause, decision 0248), with Undo. */
+  async pause(row: Feed): Promise<Removed> {
+    const name = this.shownAs(row)?.title ?? row.title;
+    const ids = (row.places ?? [row.id]).filter((id) => this.feeds?.find((feed) => feed.id === id)?.pausedAt == null);
+    if (ids.length === 0) return `${name} is already paused.`;
+    const done: number[] = [];
+    let problem: Refusal | undefined;
+    for (const id of ids) {
+      problem = await editFeed(id, { paused: true });
+      if (problem) break;
+      done.push(id);
+    }
+    await this.loadFeeds();
+    if (problem && done.length === 0) return refused(problem, "feed");
+    return {
+      // Some of their sources paused before one couldn't be: Undo still unpauses those.
+      message: problem ? `Paused some of ${name}'s feeds, not all. ${refused(problem, "feed")}` : `Paused ${name}.`,
+      undo: async () => {
+        let back: Refusal | undefined;
+        for (const id of done) back ??= await editFeed(id, { paused: false });
+        await this.loadFeeds();
+        return back ? undoRefused(back, "feed") : undefined;
+      },
+    };
+  }
+
+  /** Whether every source of theirs is paused already (dropped on Pause, nothing would change). */
+  allPaused(row: Feed): boolean {
+    return (row.places ?? [row.id]).every((id) => this.feeds?.find((feed) => feed.id === id)?.pausedAt != null);
+  }
+
+  /** A list of feeds dropped on nine turtles, imported: what it brought, with Undo taking exactly that away (decision 0238). */
+  async importFile(file: File): Promise<Removed> {
+    const result = await importOpml(file);
+    if (typeof result === "string") return result;
+    await this.loadFeeds();
+    const message = importMessage(result).join(" ");
+    if (!result.undoable) return message;
+    return {
+      message,
+      undo: async () => {
+        const late = await undoImport();
+        await this.loadFeeds();
+        return late ? "It's too late to undo that." : undefined;
       },
     };
   }

@@ -15,13 +15,17 @@
   The same build as Add a feed's: in a sheet, Not now and Follow in one row
   at the foot; on a phone's page, no Not now (the X leaves) and Follow the
   full width at the screen's foot (decision 0052).
+
+  A link dropped on a folder (linkDrop.svelte.ts, decision 0248) says so
+  under the site, and once followed they're filed in that folder.
 -->
 <script lang="ts">
   import Waiting from "./Waiting.svelte";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
-  import { addFeed, type Problem } from "./feeds";
+  import { addFeed, editFeed, type Problem } from "./feeds";
+  import { droppedOn } from "./linkDrop.svelte";
   import { lookAt, sayProblem, siteOf, type Person } from "./follow";
 
   let {
@@ -36,7 +40,8 @@
     address: string;
     /** Who it's by, once the look finds out: the sheet's title asks about them. */
     name?: string;
-    onFollowed: (feed: Feed) => void;
+    /** Followed; `note` says anything that didn't go as asked (the dropped-on folder). */
+    onFollowed: (feed: Feed, note?: string) => void;
     onOpen: (feedId: number) => void;
     /** In a sheet: Not now, beside Follow in one row at the foot. */
     onCancel?: () => void;
@@ -52,6 +57,11 @@
   let stuck = $state(false);
 
   let site = $derived(siteOf(person?.site || address));
+  /** The folder the link was dropped on, if it was; forgotten when the question closes. */
+  const into = droppedOn.folder;
+  $effect(() => () => {
+    droppedOn.folder = null;
+  });
 
   onMount(async () => {
     const looked = await lookAt(address);
@@ -75,8 +85,10 @@
     let result = await addFeed(person?.choices[0]?.url ?? address);
     // Asked without a look, a site naming several: its first, as the look would have chosen.
     if (result.kind === "choose" && result.choices[0]) result = await addFeed(result.choices[0].url);
+    // Filing them in the folder the link was dropped on; if that fails, they're followed all the same and the note says so.
+    const filed = result.kind === "added" && into ? await editFeed(result.feed.id, { folders: [into.id] }) : undefined;
     busy = false;
-    if (result.kind === "added") onFollowed(result.feed);
+    if (result.kind === "added") onFollowed(result.feed, filed && into ? `They couldn't be put in ${into.name}; Edit can do it.` : undefined);
     // Followed already: Follow takes them to that person instead.
     else if (result.kind === "already") onOpen(result.feedId);
     else if (result.kind === "problem") said(result.reason);
@@ -89,6 +101,7 @@
 <form onsubmit={follow} class={["flex flex-col gap-4", page && "flex-1"]}>
   <div class="flex flex-col gap-1">
     <p class="break-all text-ink-2">{site}</p>
+    {#if into}<p class="text-meta text-ink-2">They'll go in {into.name}.</p>{/if}
     <!-- Screen readers hear each new line here without moving the keyboard's place: the question again once the name is known, since the keyboard reached the title before it was. -->
     <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2"]}>
       {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}

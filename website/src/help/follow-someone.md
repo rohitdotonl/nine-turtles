@@ -93,6 +93,11 @@ You can follow a site you're looking at without copying its address:
   **Command Shift B** on a Mac, or **Ctrl Shift B** elsewhere. Can't drag?
   Paste the blog's address into **+ Add**.
 
+- **Drop a link:** on a computer, drag a page's address from another
+  browser tab onto nine turtles, or a link out of an article you're
+  reading onto the sidebar. Drop it on a folder in the sidebar and they go
+  in that folder too.
+
 nine turtles asks "Follow…?" first, and follows only when you say so.
 
 ## If it doesn't work

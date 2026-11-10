@@ -17,7 +17,9 @@
 // in folder 3; nothing after the second colon for one in no folder),
 // `data-folder-list` and `data-folder-item="3"` for the folders in order,
 // `data-drop-folder="3"` on a folder's row and `data-drop-loose="person"` or
-// `"publication"` on the lists under the folders. This file sets
+// `"publication"` on the lists under the folders, and `data-drop-act="pause"`
+// or `"unsubscribe"` on the places the sidebar's foot shows while someone is
+// held (decision 0248). This file sets
 // `data-dragging` (on the page: "folder", "person", or "copy" while Option or
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
@@ -31,7 +33,11 @@ export type Over =
   | { kind: "between"; before: number | null }
   | { kind: "folder"; id: number }
   | { kind: "loose"; who: "person" | "publication" }
+  | { kind: "act"; act: Act }
   | null;
+
+/** What dropping someone on the sidebar's foot does to them (decision 0248). */
+export type Act = "pause" | "unsubscribe";
 
 export type DragOptions = {
   /** Whether letting go here would change anything (only then is the place marked). */
@@ -145,8 +151,10 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
 
   function follow() {
     if (!press || !ghost) return;
-    ghost.style.left = `${pointer.x + 12}px`;
-    ghost.style.top = `${pointer.y + 8}px`;
+    // Beside the pointer, or above it near the window's foot (the foot's Pause and Unsubscribe), so it never leaves the screen.
+    const above = pointer.y + 8 + ghost.offsetHeight > innerHeight;
+    ghost.style.left = `${Math.min(pointer.x + 12, innerWidth - ghost.offsetWidth - 8)}px`;
+    ghost.style.top = `${above ? pointer.y - 8 - ghost.offsetHeight : pointer.y + 8}px`;
     document.documentElement.dataset.dragging = keep && press.dragged.kind === "person" ? "copy" : press.dragged.kind;
     over = whereIs(press.dragged);
     mark();
@@ -163,6 +171,9 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
       return { kind: "between", before: below ? Number(below.dataset.folderItem) : null };
     }
     const under = document.elementFromPoint(pointer.x, pointer.y);
+    // The foot sits outside these lists, under them.
+    const act = under?.closest<HTMLElement>("[data-drop-act]")?.dataset.dropAct;
+    if (act === "pause" || act === "unsubscribe") return { kind: "act", act };
     const folder = under?.closest<HTMLElement>("[data-drop-folder]");
     if (folder && node.contains(folder)) return { kind: "folder", id: Number(folder.dataset.dropFolder) };
     const loose = under?.closest<HTMLElement>("[data-drop-loose]");
@@ -178,6 +189,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     let target: HTMLElement | undefined;
     if (accepted && over?.kind === "folder") target = node.querySelector<HTMLElement>(`[data-drop-folder="${over.id}"]`) ?? undefined;
     if (accepted && over?.kind === "loose") target = node.querySelector<HTMLElement>(`[data-drop-loose="${over.who}"]`) ?? undefined;
+    if (accepted && over?.kind === "act") target = document.querySelector<HTMLElement>(`[data-drop-act="${over.act}"]`) ?? undefined;
     if (target !== marked) {
       delete marked?.dataset.drop;
       marked = target;
@@ -211,7 +223,9 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     const area = scroller();
     if (area) {
       const box = area === document.scrollingElement ? { top: 0, bottom: innerHeight } : area.getBoundingClientRect();
-      const step = pointer.y < box.top + EDGE ? -SCROLL_STEP : pointer.y > box.bottom - EDGE ? SCROLL_STEP : 0;
+      // Over the foot's places, below the list, it stays still.
+      const still = over?.kind === "act";
+      const step = still ? 0 : pointer.y < box.top + EDGE ? -SCROLL_STEP : pointer.y > box.bottom - EDGE ? SCROLL_STEP : 0;
       if (step) {
         area.scrollTop += step;
         over = press ? whereIs(press.dragged) : null;
