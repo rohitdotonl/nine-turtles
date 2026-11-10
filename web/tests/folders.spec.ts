@@ -153,7 +153,7 @@ test("a feed put in two folders appears under both", async ({ page }) => {
       return range.getBoundingClientRect().left;
     });
   const labelEdge = await nameStart(sidebar(page).getByRole("link", { name: "Unread", exact: true }));
-  expect(Math.abs((await nameStart(folderLink)) - labelEdge + 26)).toBeLessThan(1);
+  expect(Math.abs((await nameStart(folderLink)) - labelEdge + 28)).toBeLessThan(1);
   expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog}`, exact: true }).and(page.locator(`[data-unread="3"]`)).first())) - labelEdge)).toBeLessThan(1);
   // No dots on folders or people: only Unread carries one (decision 0242).
   await expect(sidebar(page).locator("[data-folder-link] .sidebar-dot, [data-unread] .sidebar-dot")).toHaveCount(0);

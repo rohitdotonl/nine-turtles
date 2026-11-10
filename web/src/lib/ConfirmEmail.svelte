@@ -64,7 +64,7 @@
     {:else}
       <p id="confirm-help">Press Confirm email to finish.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="confirm-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="confirm-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->

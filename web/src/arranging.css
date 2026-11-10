@@ -10,8 +10,8 @@
   pointer-events: none;
   max-width: 16rem;
   overflow: hidden;
-  padding: 0.375rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
   border-radius: var(--radius-press);
   background-color: var(--color-sidebar);
   box-shadow: var(--shadow-float);
@@ -47,7 +47,7 @@
 }
 /* The folder or list it will go into: a tone darker than where you are, never an outline (that's the keyboard's). */
 [data-drop] {
-  background-color: color-mix(in srgb, var(--ink) 16%, transparent) !important;
+  background-color: var(--strong) !important;
 }
 html[data-dragging] * {
   cursor: grabbing !important;

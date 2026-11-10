@@ -88,5 +88,5 @@
   "where you are".
 */
 .item-row[data-held]:not([aria-current]) {
-  background-color: var(--hover);
+  background-color: var(--fill);
 }

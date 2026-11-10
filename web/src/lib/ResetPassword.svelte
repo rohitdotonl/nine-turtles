@@ -81,7 +81,7 @@
       </p>
       <!-- Room for a message kept below the button, as on sign-in (decision 0045). -->
       <div class="flex min-h-[6rem] flex-col gap-3">
-        <p id="reset-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="reset-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Set password" doing="Saving…" /></button>

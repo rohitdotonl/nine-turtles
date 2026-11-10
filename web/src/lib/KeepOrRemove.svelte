@@ -34,12 +34,12 @@
 
 <style>
   .keep {
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    padding: 1rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-hold);
   }
   .remove {
     padding-top: 0.75rem;
-    border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    border-top: 1px solid var(--line);
   }
 </style>

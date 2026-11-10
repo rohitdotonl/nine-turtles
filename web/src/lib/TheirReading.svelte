@@ -74,9 +74,9 @@
   .quote {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
-    padding-left: 0.875rem;
-    border-left: 2px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    gap: 0.5rem;
+    padding-left: 1rem;
+    border-left: 2px solid var(--strong);
     font-size: var(--text-base);
     line-height: 1.55;
   }

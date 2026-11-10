@@ -256,7 +256,7 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background-color: var(--tone);
+    background-color: var(--fill);
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: var(--text-ui);
@@ -269,7 +269,7 @@
     cursor: default;
   }
   button.video-play:hover {
-    background-color: color-mix(in srgb, var(--ink) 10%, transparent);
+    background-color: var(--line);
   }
   .video-title {
     max-width: 22ch;
@@ -289,7 +289,7 @@
   .video-word {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.75rem;
   }
   .video-mark {
     display: flex;

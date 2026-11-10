@@ -741,7 +741,7 @@
         <TextButton onclick={byButton(undo)} class="-mr-2 px-2">Undo</TextButton>
       {/if}
       {#if saying}
-        <button type="button" onclick={byButton(() => (closed = true))} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size="alone" /></button>
+        <button type="button" onclick={byButton(() => (closed = true))} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-3 shrink-0"><Icon name="close" size="alone" /></button>
       {/if}
     </p>
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>

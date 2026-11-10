@@ -110,7 +110,7 @@
   .pane-resizer:focus-visible::after {
     left: 3px;
     width: 3px;
-    background: color-mix(in srgb, var(--ink) 22%, transparent);
+    background: var(--strong);
   }
   .pane-resizer:focus-visible {
     outline: none;

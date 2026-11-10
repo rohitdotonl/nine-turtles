@@ -78,7 +78,7 @@
 >
   <!-- A 16px band of paper under the list, so a row cut by its foot sits above a hairline, never against the card's edge. -->
   <div class="shortcuts-body flex flex-col pb-4">
-    <div class={["shortcuts-head flex shrink-0 items-center justify-between gap-x-4 border-b pr-4 pl-6", scrolled ? "border-ink/10" : "border-transparent"]}>
+    <div class={["shortcuts-head flex shrink-0 items-center justify-between gap-x-4 border-b pr-4 pl-6", scrolled ? "border-[var(--line)]" : "border-transparent"]}>
       <h2 id="shortcuts-heading" tabindex="-1" bind:this={heading} class="sheet-title">Keyboard shortcuts</h2>
       <button type="button" onclick={() => (open = false)} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon"><Icon name="close" size="alone" /></button>
     </div>
@@ -90,23 +90,23 @@
       aria-label="Shortcuts"
       bind:this={list}
       onscroll={measure}
-      class={["shortcuts-list min-h-0 overflow-y-auto border-b px-6 pt-1 pb-2 shortcut-region", more ? "border-ink/10" : "border-transparent"]}
+      class={["shortcuts-list min-h-0 overflow-y-auto border-b px-6 pt-1 pb-2 shortcut-region", more ? "border-[var(--line)]" : "border-transparent"]}
     >
       <!-- Two columns, each its own stack, so a short group never leaves a hole beside a long one; on a narrow screen they stack in that order. -->
-      <div class="grid gap-x-12 gap-y-7 md:grid-cols-2">
+      <div class="grid gap-x-12 gap-y-6 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
-          <div class="flex min-w-0 flex-col gap-7">
+          <div class="flex min-w-0 flex-col gap-6">
             {#each column.filter((each) => shown.some((shortcut) => shortcut.group === each)) as group (group)}
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
-                <h3 id={`keys-${index}`} class="mb-1.5 text-base font-semibold text-ink">{group}</h3>
+                <h3 id={`keys-${index}`} class="mb-2 text-base font-semibold text-ink">{group}</h3>
                 <table class="w-full text-left text-meta">
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
-                      <tr>
-                        <td class="py-[3px] pr-4 align-middle">{shortcut.action}</td>
+                      <tr class="h-7">
+                        <td class="pr-4 align-middle">{shortcut.action}</td>
                         <!-- Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes. -->
-                        <td class="py-[3px] text-right align-middle whitespace-nowrap">
+                        <td class="text-right align-middle whitespace-nowrap">
                           {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
                               >{#if index > 0}<span class="text-muted">{shortcut.either ? "or " : "/ "}</span>{/if}{@render caps(key)}</span
                             >{/each}
@@ -160,7 +160,7 @@
     /* The phone's one top line and one 20px margin, the X where every phone screen has it. */
     .shortcuts-head {
       min-height: var(--bar-h);
-      padding-inline: 1.25rem 0.625rem;
+      padding-inline: 1.25rem 0.75rem;
     }
     .shortcuts-list {
       flex: 1 1 auto;

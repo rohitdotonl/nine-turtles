@@ -959,7 +959,7 @@
             }
             if (event.key === "Enter" && !event.isComposing) searchArticles(search.trim());
           }}
-          class="search-capsule w-full pr-3 pl-[38px]"
+          class="search-capsule w-full pr-3 pl-10"
         />
       </div>
       {/if}
@@ -1107,7 +1107,7 @@
             </div>
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
-          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
+          <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-24 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && searching.open}
               <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
@@ -1123,7 +1123,7 @@
                 margin (decision 0052). A medium window keeps it centred.
               -->
               <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
-              <div class={phone ? "mt-[5.5rem] ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
+              <div class={phone ? "mt-24 ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined}
               {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}

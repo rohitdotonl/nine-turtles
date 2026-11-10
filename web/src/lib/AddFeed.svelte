@@ -361,7 +361,7 @@
   the field's name is said to screen readers and shown as its placeholder, so
   no line of it sits left-aligned. In a sheet its name stands above it.
 -->
-<form onsubmit={submit} class={["flex flex-col gap-1.5", page && "flex-1"]}>
+<form onsubmit={submit} class={["flex flex-col gap-2", page && "flex-1"]}>
   {#if !asking}
   <label for="feed-address" class={framed ? "text-meta text-ink-2" : "sr-only"}>Their website's address</label>
   <!-- In the welcome, a container, so its hint can step down a size on a small phone (welcome-field in app.css). -->
@@ -405,7 +405,7 @@
       A problem is in red words after an icon. In a sheet the line takes room
       only once there's something to say, and the sheet grows down by it (its
       top stays put). In the welcome the block around it keeps the room. It
-      sits 6px under the field; when it asks you to choose among several
+      sits 8px under the field; when it asks you to choose among several
       feeds it is their label, set as the field's own label is, 20px under
       the field (decision 0052).
     -->
@@ -413,9 +413,9 @@
       id="feed-address-status"
       role="status"
       class={[
-        "flex items-start gap-1.5 text-meta",
+        "flex items-start gap-2 text-meta",
         problem && !busy && "text-danger",
-        choosing && "mt-3.5 self-stretch text-left text-ink-2",
+        choosing && "mt-3 self-stretch text-left text-ink-2",
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
@@ -423,7 +423,7 @@
     </p>
     {#if slip && !busy}
       <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->
-      <button type="button" onclick={useRepair} class={["btn mt-1.5 max-w-full break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
+      <button type="button" onclick={useRepair} class={["btn mt-2 max-w-full break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
     {/if}
 
     {#if choices.length > 0}
@@ -447,10 +447,10 @@
         {@const only = choices[0]!}
         <div class={["inset-group self-stretch text-left", framed && "mb-2"]}>
           <div id="feed-only-choice" class="inset-row flex-nowrap">
-            <span class="flex min-w-0 flex-col py-2.5">
+            <span class="flex min-w-0 flex-col py-3">
               <span class="break-words">{only.title}</span>
-              {#if only.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{only.latest}</span>{/if}
-              <span class="mt-0.5 truncate text-meta text-muted">{only.place ?? only.url}</span>
+              {#if only.latest}<span class="mt-1 font-serif break-words text-ink-2">{only.latest}</span>{/if}
+              <span class="mt-1 truncate text-meta text-muted">{only.place ?? only.url}</span>
             </span>
           </div>
         </div>
@@ -468,10 +468,10 @@
               {:else}
                 <input type="checkbox" name="feed-choice" value={choice.url} bind:group={ticked} />
               {/if}
-              <span class="flex min-w-0 flex-col py-2.5">
+              <span class="flex min-w-0 flex-col py-3">
                 <span class="break-words">{choice.title}</span>
-                {#if choice.latest}<span class="mt-0.5 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
-                <span class="mt-0.5 truncate text-meta text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
+                {#if choice.latest}<span class="mt-1 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
+                <span class="mt-1 truncate text-meta text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
               </span>
               {#if oneOnly}
                 <span aria-hidden="true" class="radio-mark shrink-0"></span>
@@ -487,7 +487,7 @@
           In the welcome, the list's own row of actions at its foot, 20px under it: Cancel, then
           Follow at the right end. On a phone, Follow alone, the list's full width.
         -->
-        <div class={["mt-3.5 mb-2 flex gap-3 self-stretch", start ? "flex-col" : "justify-end"]}>
+        <div class={["mt-3 mb-2 flex gap-3 self-stretch", start ? "flex-col" : "justify-end"]}>
           {#if !start}<button type="button" onclick={putAway} class="btn">Cancel</button>{/if}
           <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary">Follow</button>
         </div>
@@ -559,7 +559,7 @@
     </div>
   {:else if onCancel}
     <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add at the right end. -->
-    <div class="sheet-actions mt-3.5">
+    <div class="sheet-actions mt-3">
       {#if !asking}<button type="button" onclick={cancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
         >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
@@ -571,7 +571,7 @@
 <style>
   /* What was found, quietly, on the grouped rows' grey. */
   .found {
-    padding: 0.875rem 1rem;
+    padding: 1rem;
     border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
   }
@@ -587,7 +587,7 @@
     flex-direction: column;
     align-items: center;
     gap: 0.5rem;
-    padding: 1.25rem 0.875rem;
+    padding: 1.25rem 1rem;
     border: 2px solid transparent;
     border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
@@ -613,7 +613,7 @@
   }
   @media (hover: hover) {
     .tile:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   @media (forced-colors: active) {
