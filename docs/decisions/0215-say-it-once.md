@@ -20,6 +20,8 @@
    always three letters, September too ("29 Sep", not the browser's "Sept").
    Every date is written by `web/src/lib/times.ts` (`when`, `dayOrToday`,
    `date`, `dateOrToday`, `dayAndTime`); nothing else formats one.
+   *Revised by decision 0232: the order ("20 Oct" or "Oct 20") and the
+   clock follow the device.*
 
 **Why.** Saying the same thing twice on one screen is noise, and two strong
 buttons compete for what the page is for, writing to them. Two date forms

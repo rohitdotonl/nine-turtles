@@ -44,6 +44,9 @@ export default defineConfig({
     // nine turtles' service worker (public/sw.js) is off in tests, so they can
     // stand in for the server's answers; tests/phone.spec.ts switches it on.
     serviceWorkers: "block",
+    // A British device, so dates read "20 Oct" and times "14:05" (decision
+    // 0232); tests/plan.spec.ts tries an American one.
+    locale: "en-GB",
   },
   projects: (["desktop", "phone"] as const).flatMap((device) => {
     const use = device === "desktop" ? { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } } : { ...devices["Pixel 7"] };

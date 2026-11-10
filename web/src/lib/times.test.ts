@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { date, dayAndTime, dayOrToday, exactly, nothingNewSince, pausedSince, until, when } from "./times";
+import { beforeEach, describe, expect, it } from "vitest";
+import { date, dayAndTime, dayOrToday, exactly, nothingNewSince, pausedSince, until, when, writeDatesLike } from "./times";
+
+// Most cases are written as a British device writes them; the last block is an American one.
+beforeEach(() => writeDatesLike("en-GB"));
 
 describe("article times", () => {
   const now = new Date(2026, 9, 23, 18, 0);
@@ -56,5 +59,31 @@ describe("refresh with nothing new (decision 0229)", () => {
   it("says when the list last loaded: the time today, else the day", () => {
     expect(nothingNewSince(new Date(2026, 9, 23, 14, 5), now)).toBe("Nothing new has arrived since 14:05.");
     expect(nothingNewSince(new Date(2026, 9, 3, 9, 0), now)).toBe("Nothing new has arrived since 3 Oct.");
+  });
+});
+
+describe("the device's own order and clock (decision 0232)", () => {
+  const now = new Date(2026, 9, 23, 18, 0);
+  const at = (date: Date) => date.getTime() / 1000;
+
+  it("put the month first and use a 12-hour clock in the United States", () => {
+    writeDatesLike("en-US");
+    expect(when(at(new Date(2026, 9, 16, 9, 0)), now)).toBe("Oct 16");
+    expect(when(at(new Date(2025, 9, 23, 9, 0)), now)).toBe("Oct 23, 2025");
+    expect(when(at(new Date(2026, 8, 29, 9, 0)), now)).toBe("Sep 29");
+    expect(date(at(new Date(2026, 9, 27, 9, 0)))).toBe("Oct 27, 2026");
+    expect(dayAndTime(at(new Date(2026, 8, 29, 14, 5)))).toBe("Sep 29, 2:05 PM");
+    expect(until(at(new Date(2026, 9, 23, 20, 30)), now)).toBe("8:30 PM");
+    expect(exactly(at(new Date(2026, 10, 8, 6, 0)))).toBe("Sunday, November 8, 2026 at 6:00 AM");
+    expect(when(at(new Date(2026, 9, 21, 9, 0)), now)).toBe("Wednesday");
+  });
+
+  it("keep English words on a device set to another language", () => {
+    writeDatesLike("de-DE");
+    expect(date(at(new Date(2026, 9, 27, 9, 0)))).toBe("27 Oct 2026");
+    expect(until(at(new Date(2026, 9, 23, 20, 30)), now)).toBe("20:30");
+    writeDatesLike("en-AU");
+    expect(until(at(new Date(2026, 9, 23, 20, 30)), now)).toBe("8:30 pm");
+    expect(date(at(new Date(2026, 9, 27, 9, 0)))).toBe("27 Oct 2026");
   });
 });
