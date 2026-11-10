@@ -16,7 +16,7 @@
   at the foot; on a phone's page, no Not now (the X leaves) and Follow the
   full width at the screen's foot (decision 0052).
 
-  A link dropped on a folder (linkDrop.svelte.ts, decision 0247) says so
+  A link dropped on a folder (linkDrop.svelte.ts, decision 0248) says so
   under the site, and once followed they're filed in that folder.
 -->
 <script lang="ts">

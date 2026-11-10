@@ -501,7 +501,7 @@ in five groups, linked from the website, Settings and the keys sheet.
 
 ## Pick up and drop ✅
 
-Built 10 November 2026 (decision 0247, the owner's idea): drag someone in
+Built 10 November 2026 (decision 0248, the owner's idea): drag someone in
 the sidebar onto Pause or Unsubscribe at its foot, with Undo and the
 keep-or-remove question; drop a link or a list of feeds on nine turtles to
 follow or import. Part of "Easier tidying" in `docs/PLAN.md`.

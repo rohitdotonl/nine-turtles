@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { droppedAddress, feedListFile, holding } from "./linkDrop.svelte";
 
-// Following by dropping (SPEC section 3, decision 0247).
+// Following by dropping (SPEC section 3, decision 0248).
 const carrying = (text: string) => ({ getData: (kind: string) => (kind === "text/uri-list" ? text : "") });
 const OURS = "https://app.nineturtles.app";
 

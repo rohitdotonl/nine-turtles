@@ -77,7 +77,7 @@ html[data-dragging="copy"] * {
 /*
   While a person or publication is held, the sidebar's foot trades + Add, Keys
   and Settings for two places to drop them: Pause and Unsubscribe (decision
-  0247). Each is a faint tile (the fill grey), so it reads as a place; held
+  0248). Each is a faint tile (the fill grey), so it reads as a place; held
   over, it turns a step darker (the line grey) rather than the folders' drop
   tone, which would take Unsubscribe's oxblood words below AA on Paper and
   Night.
@@ -106,7 +106,7 @@ html:is([data-dragging="person"], [data-dragging="copy"]) .drop-acts {
 }
 /*
   A link or a list of feeds held over nine turtles (linkDrop.svelte.ts,
-  decision 0247): one line at the top of the sidebar's people and folders
+  decision 0248): one line at the top of the sidebar's people and folders
   says what letting go does, on a faint tile; a folder under the pointer
   takes the drop tone, as above.
 */

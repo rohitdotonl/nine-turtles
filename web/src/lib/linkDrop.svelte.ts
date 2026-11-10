@@ -1,4 +1,4 @@
-// Following by dropping (SPEC section 3, decision 0247): a page's address
+// Following by dropping (SPEC section 3, decision 0248): a page's address
 // dragged from another browser tab or app and dropped anywhere on nine
 // turtles, or a link dragged out of an article here and dropped on the
 // sidebar, opens "Follow <name>?" for it, as a page shared here does;

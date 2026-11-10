@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// Pick up and drop (decision 0247): someone held in the sidebar can be
+// Pick up and drop (decision 0248): someone held in the sidebar can be
 // dropped on the foot's Pause or Unsubscribe (SPEC section 5), and a link
 // dropped on nine turtles, or on a folder, opens "Follow <name>?" (SPEC
 // section 3). Each test follows blogs of its own, since every test shares

@@ -1,8 +1,8 @@
-# 0247: Pick up and drop
+# 0248: Pick up and drop
 
-*11 November 2026.*
+*10 November 2026.*
 
-**In one line:** someone held in the sidebar can be dropped on Pause or Unsubscribe at its foot (Unsubscribe asks Edit's keep-or-remove question first when something of theirs was kept); a link dragged onto nine turtles opens "Follow …?" (onto a folder files them there), and an OPML file dropped on it is imported.
+**In one line:** someone held in the sidebar can be dropped on Pause or Unsubscribe at its foot (Unsubscribe asks Edit's keep-or-remove question first when something of theirs was kept); a page's address dropped on nine turtles, or a link from an article dropped on the sidebar, opens "Follow …?" (onto a folder files them there), and an OPML file dropped on it is imported.
 
 Rohit's idea (10 November 2026): "When the user picks a feed, another option
 should show up: unfollow the feed. Simply drag and drop to unfollow." He

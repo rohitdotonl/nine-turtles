@@ -69,6 +69,13 @@ original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
 and Star on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
+A footnote's number opens its note in a small card just under the line, so
+you don't lose your place; <kbd>Esc</kbd>, × or a press anywhere else closes
+it. In an English article, the straight quotes, double hyphens and three dots
+that many feeds send are shown as curly quotes, dashes and ellipses, as in a
+printed book. The writer's words are never changed, and code stays exactly as
+written.
+
 To print an article, open it and use your browser's Print (<kbd>Command</kbd>
 <kbd>P</kbd>, or <kbd>Ctrl</kbd> <kbd>P</kbd> on Windows). Only the article
 prints, in black on white, and the last line says where it came from, with

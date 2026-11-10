@@ -177,7 +177,7 @@ agreed yet):
 - Sort feeds by how much they post, or show one article from each.
 - Check feeds you rarely read less often. Careful: readers use RSS for
   control, and anything that smells of an algorithm drives them away.
-- Easier tidying: mute in fewer steps (pausing and unfollowing by dragging came with decision 0247).
+- Easier tidying: mute in fewer steps (pausing and unfollowing by dragging came with decision 0248).
 - Searching by meaning, not words ("about cycling, not just saying
   cycling"): needs AI to judge what an article is about, close to the
   firm no on AI (`RnD/business-plan.md` → "Firm noes").

@@ -30,7 +30,7 @@
   holds first). Edit, beside Folders, gives every row a handle for those who
   don't drag: a folder's opens Move up, Move down…, a person's "Move to a
   folder". What was done shows in a note at the sidebar's foot, with Undo.
-  Dropped on the foot's Pause or Unsubscribe (decision 0247), they're paused
+  Dropped on the foot's Pause or Unsubscribe (decision 0248), they're paused
   or unsubscribed from, with Undo; if the reader starred, highlighted or
   noted anything of theirs, the foot first asks whether to keep it, as
   Edit's Unsubscribe does (KeepOrRemove). A link dropped anywhere on nine

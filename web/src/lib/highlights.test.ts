@@ -16,6 +16,12 @@ describe("finding a highlight's words again", () => {
     expect(locate(text, quote, squeezed("and the"), "")).toBe(text.lastIndexOf(quote));
   });
 
+  it("compares punctuation either way, as an English article's is shown set properly (decision 0247)", () => {
+    expect(squeezed("“It’s late” — she said…")).toBe(squeezed(`"It's late" -- she said...`));
+    const shown = squeezed("She said “wait”—and left.");
+    expect(locate(shown, squeezed(`"wait"--and`), "", "")).toBe(squeezed("She said").length);
+  });
+
   it("finds nothing when the words are no longer there", () => {
     expect(locate(text, squeezed("a quick note"), "", "")).toBeUndefined();
     expect(locate(text, "", "", "")).toBeUndefined();

@@ -11,9 +11,18 @@ import type { Quote } from "./notes.svelte";
 /** How much text either side of a quote is kept (server/src/notes.rs → AROUND). */
 const AROUND = 64;
 
-/** Text without its spaces and line breaks, as quotes are compared. */
+/**
+ * Punctuation as quotes are compared (decision 0247): an English article's
+ * typewriter marks are shown set properly (punctuation.ts), so a highlight
+ * kept either way is found either way: curly quotes as straight ones, a dash
+ * as two hyphens, an ellipsis as three dots.
+ */
+const FOLDED: Record<string, string> = { "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u2014": "--", "\u2026": "..." };
+const fold = (character: string) => FOLDED[character] ?? character;
+
+/** Text without its spaces and line breaks, and its punctuation folded, as quotes are compared. */
 export function squeezed(text: string): string {
-  return text.replace(/\s+/g, "");
+  return text.replace(/\s+/g, "").replace(/[\u2018\u2019\u201c\u201d\u2014\u2026]/g, fold);
 }
 
 /** Text with each run of spaces and line breaks as one space, trimmed: as a quote is kept. */
@@ -51,8 +60,11 @@ function mapOf(root: Element): { text: string; places: Place[] } {
     const data = (node as Text).data;
     for (let offset = 0; offset < data.length; offset++) {
       if (/\s/.test(data[offset]!)) continue;
-      text += data[offset];
-      places.push({ node: node as Text, offset });
+      // A folded mark stands for its two or three characters, all at its one place.
+      for (const character of fold(data[offset]!)) {
+        text += character;
+        places.push({ node: node as Text, offset });
+      }
     }
   }
   return { text, places };

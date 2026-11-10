@@ -115,7 +115,7 @@ export class LoadedLibrary {
     };
   }
 
-  /** Pauses every source of a person or publication not paused yet (dropped on the sidebar's Pause, decision 0247), with Undo. */
+  /** Pauses every source of a person or publication not paused yet (dropped on the sidebar's Pause, decision 0248), with Undo. */
   async pause(row: Feed): Promise<Removed> {
     const name = this.shownAs(row)?.title ?? row.title;
     const ids = (row.places ?? [row.id]).filter((id) => this.feeds?.find((feed) => feed.id === id)?.pausedAt == null);

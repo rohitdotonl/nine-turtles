@@ -19,7 +19,7 @@
 // `data-drop-folder="3"` on a folder's row and `data-drop-loose="person"` or
 // `"publication"` on the lists under the folders, and `data-drop-act="pause"`
 // or `"unsubscribe"` on the places the sidebar's foot shows while someone is
-// held (decision 0247). This file sets
+// held (decision 0248). This file sets
 // `data-dragging` (on the page: "folder", "person", or "copy" while Option or
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
@@ -36,7 +36,7 @@ export type Over =
   | { kind: "act"; act: Act }
   | null;
 
-/** What dropping someone on the sidebar's foot does to them (decision 0247). */
+/** What dropping someone on the sidebar's foot does to them (decision 0248). */
 export type Act = "pause" | "unsubscribe";
 
 export type DragOptions = {
