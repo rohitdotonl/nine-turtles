@@ -4,7 +4,7 @@ description: Star the articles you want to keep or come back to. Starred article
 groupId: reading
 order: 3
 spec: 9
-updated: 2026-11-08
+updated: 2026-11-10
 related: [search-everything, download-everything, mark-read-or-unread]
 ---
 
@@ -27,6 +27,8 @@ Choose **Starred** in the sidebar, or press <kbd>G</kbd> then <kbd>S</kbd>.
 ## Good to know
 
 - Took a star off by mistake? Press <kbd>U</kbd> or **Undo**.
+- If you've been signed out (on another device, say), a star can't be saved:
+  the note says so, with **Sign in**.
 - Starred is the one place to keep articles.
 - Starred articles can be read without a connection: each device keeps the
   newest 200.

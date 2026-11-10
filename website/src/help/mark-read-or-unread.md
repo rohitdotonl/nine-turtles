@@ -57,4 +57,6 @@ nothing is deleted, and everything stays in its feed and in search.
 
 - Without a connection, what you mark is kept on your device and sent when
   you're back online.
-- If marking fails, the note offers **Try again**.
+- If marking fails, the note offers **Try again**. If it failed because
+  you've been signed out (on another device, say), it says so and offers
+  **Sign in** instead.

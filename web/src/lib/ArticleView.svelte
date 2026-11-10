@@ -32,6 +32,7 @@
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
+  import LateLine from "./LateLine.svelte";
   import AwayNote from "./AwayNote.svelte";
   import type { ListNote } from "./listNote";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
@@ -593,6 +594,9 @@
           {#if connection.offline}{NOT_KEPT}{:else}This article couldn't be loaded.
             <TextButton onclick={retryArticle}>Try again</TextButton>{/if}
         </p>
+      {:else}
+        <!-- Its text still on its way: after half a second a line says so, under the byline (decision 0230). -->
+        {#key article.id}<LateLine class="mt-6 font-serif text-muted" words="Loading the article…" />{/key}
       {/if}
       {#if full}
         <!-- The article's last word is the reader's: their highlights and note (SPEC section 42), then writing back to whoever wrote it (SPEC section 37). -->

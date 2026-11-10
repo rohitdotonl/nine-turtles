@@ -64,6 +64,8 @@ export type KeyHands = {
   /** In the open article: write back to whoever wrote it (SPEC section 37), highlight the words chosen, or write a note (SPEC section 42). */
   inArticle(what: "write-back" | "highlight" | "note"): void;
   markUnread(): void;
+  /** `s`, `m`, `w` or `n` on a list with no article chosen: the list's note says to choose one (decision 0230). */
+  needsArticle(): void;
   undo(): void;
   refresh(): void;
   setTextSize(size: number): void;
@@ -164,14 +166,17 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
       break;
     case "star":
       if (scene.selected && scene.onList) hands.star();
+      else if (scene.onList) hands.needsArticle();
       break;
     case "write-back":
     case "highlight":
     case "note":
       if (scene.selected && scene.article && scene.onList) hands.inArticle(action.kind);
+      else if (!scene.selected && scene.onList && action.kind !== "highlight") hands.needsArticle();
       break;
     case "mark-unread":
       if (scene.selected && scene.onList) hands.markUnread();
+      else if (scene.onList) hands.needsArticle();
       break;
     case "mark-all-read":
       if (canMarkAll(scene)) hands.markAllRead();

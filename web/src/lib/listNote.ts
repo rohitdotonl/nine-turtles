@@ -7,5 +7,7 @@ export type ListNote = {
   words: string;
   undo?: () => void;
   retry?: () => void;
+  /** "Try again", or "Sign in" when being signed out is why (decision 0230). */
+  retryWord?: string;
   close: () => void;
 };

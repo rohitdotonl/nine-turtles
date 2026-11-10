@@ -4,7 +4,7 @@ description: Follow a YouTube channel and watch its new videos in nine turtles, 
 groupId: reading
 order: 9
 spec: 38
-updated: 2026-11-08
+updated: 2026-11-10
 related: [follow-someone, listen-to-podcasts, one-person-several-places]
 ---
 
@@ -29,7 +29,8 @@ Google Takeout gives you.
 
 Open a video and press **Play video**. If you stopped part of the way
 through, the button says where you'll pick up, such as **Resume from 4:00**,
-on any of your devices.
+on any of your devices. Until YouTube's player is ready, the box stays and
+says "Starting the video…".
 
 When the description lists times, they appear as **Chapters**: press one to
 jump there.

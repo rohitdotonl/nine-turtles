@@ -76,7 +76,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
   menu, the arrow keys work as they always do.
 - A key with nothing to do says why in the note at the bottom: <kbd>K</kbd>
   on the first article says "That's the first article here.", and
-  <kbd>U</kbd> with nothing to undo says "Nothing to undo."
+  <kbd>U</kbd> with nothing to undo says "Nothing to undo." <kbd>S</kbd>,
+  <kbd>M</kbd>, <kbd>W</kbd> and <kbd>N</kbd> with no article chosen say
+  "Choose an article first. j chooses the first one."
 - The keys are the same for everyone, and can't be changed.
 - With <a href="/help/unread-on-or-off/">Unread off</a>, the keys for Unread
   and marking all as read are left out.

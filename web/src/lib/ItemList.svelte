@@ -42,11 +42,12 @@
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { sourceOf, writerOf, type OneSource } from "./people";
-  import { NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
+  import { CHOOSE_FIRST, NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
   import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
-  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, couldNotLoad, resultCount } from "./lists";
-  import { markRead, markStarred } from "./saving";
+  import LateLine from "./LateLine.svelte";
+  import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, notSavedSignedOut, couldNotLoad, resultCount } from "./lists";
+  import { markRead, markStarred, signedOut } from "./saving";
   import { prefetch } from "./articles";
   import { exactly, nothingNewSince, when } from "./times";
   import { hugEllipsis } from "./hug";
@@ -79,6 +80,7 @@
     found = $bindable(""),
     rowActions = () => [],
     note = $bindable(),
+    loading = "Loading…",
   }: {
     source: Source;
     order: Order;
@@ -108,6 +110,8 @@
     rowActions?: (article: Article) => MenuItem[];
     /** The note, for the reading area to show while the list isn't on screen (decision 0229). */
     note?: ListNote;
+    /** What a slow first load says where the rows will be, "Loading Outdoors…" (decision 0230). */
+    loading?: string;
   } = $props();
 
   /** How often the list asks whether new items are waiting. */
@@ -143,6 +147,7 @@
   let actions = 0;
   /** After a mark couldn't be saved: what Try again sends again. */
   let retryLast: (() => void) | undefined = $state();
+  let retryWord = $state("Try again");
   /**
    * The note was put away: by its Close button, or by opening an article on a
    * screen with a keyboard (the reader has moved on). `u` still undoes until the list is left; whatever
@@ -154,7 +159,7 @@
   let saying = $derived(!closed && !!(line || undoLast));
   /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
   let noteFor: number | undefined = $state();
-  $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, close: () => (closed = true) } : undefined));
+  $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
   // The notice is read when the list opens, and again when a move brings a new one to the same list.
   $effect(() => {
     if (!notice || !firstShowing(notice)) return;
@@ -403,7 +408,7 @@
         for (const article of changed) confirmed.set(`${field}:${article.id}`, value);
         if (retryLast) settled();
       },
-      () => {
+      (problem) => {
         const takenBack: Article[] = [];
         for (const article of changed) {
           const key = `${field}:${article.id}`;
@@ -415,14 +420,18 @@
           }
         }
         if (takenBack.length === 0) return;
-        const retry = () => {
+        // Signed out meanwhile: it says so, and Sign in (a reload, which asks and comes back here) is the fix (decision 0230).
+        const out = signedOut(problem);
+        const retry = out ? () => location.reload() : () => {
           // Only those still as the server has them: anything changed since is left alone.
           const again = takenBack.filter((article) => article[field] !== value);
           if (again.length > 0) save(field, again, value, send, put, failed);
         };
-        if (actions === action) say(failed, retry);
+        const words = out ? notSavedSignedOut(field, value, takenBack.length) : failed;
+        retryWord = out ? "Sign in" : "Try again";
+        if (actions === action) say(words, retry);
         else {
-          line = failed;
+          line = words;
           retryLast = retry;
           // A failure always shows, even if the note was put away.
           closed = false;
@@ -467,6 +476,8 @@
 
   /** A passing answer (decision 0229): `u` still undoes the last action; a failed save's line, which matters, stays. */
   let passing = $state(false);
+  /** A key that needs an article, with none chosen, says so (decision 0230); an empty list has none to choose. */
+  export const needsArticle = () => void (articles.length > 0 && inform(CHOOSE_FIRST));
   function inform(message: string) {
     if (retryLast) return;
     [line, passing, closed, noteFor] = [message, true, false, selected?.id];
@@ -554,21 +565,8 @@
     retry?.();
   }
 
-  function retryByButton() {
-    retryNow();
-    keepPlaceNearby();
-  }
-
-  /** The note's Close button: it goes now; Undo stays on `u`, and the keyboard's place stays nearby. */
-  function closeByButton() {
-    closed = true;
-    keepPlaceNearby();
-  }
-
-  function undoByButton() {
-    undo();
-    keepPlaceNearby();
-  }
+  /** The note's Try again, Undo and Close (after which Undo stays on `u`): the button goes, and the keyboard's place stays nearby. */
+  const byButton = (press: () => unknown) => () => (press(), keepPlaceNearby());
 
   /** A note's button is gone once pressed: the keyboard's place stays nearby, on the chosen article or the first. */
   function keepPlaceNearby() {
@@ -726,6 +724,8 @@
     <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0214). -->
     {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={() => (markAllRead(), keepPlaceNearby())}>Mark all as read</button>{/if}
   {/if}
+{:else if !loaded && !problem}
+  <LateLine class="list-end" words={loading} />
 {/if}
 {#if menuAt && menuArticle}
   {@const article = menuArticle}
@@ -755,13 +755,13 @@
       <span role="status" class="min-w-0 py-2">{line}</span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
-        <TextButton onclick={retryByButton} class="-mr-2 px-2">Try again</TextButton>
+        <TextButton onclick={byButton(retryNow)} class="-mr-2 px-2">{retryWord}</TextButton>
       {/if}
       {#if undoLast && saying && !passing}
-        <TextButton onclick={undoByButton} class="-mr-2 px-2">Undo</TextButton>
+        <TextButton onclick={byButton(undo)} class="-mr-2 px-2">Undo</TextButton>
       {/if}
       {#if saying}
-        <button type="button" onclick={closeByButton} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
+        <button type="button" onclick={byButton(() => (closed = true))} aria-label="Close the note" title="Close the note" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size={18} /></button>
       {/if}
     </p>
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>

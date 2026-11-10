@@ -8,10 +8,10 @@
   shown word is in the button's name.
 -->
 <script lang="ts">
+  import { SAY_AFTER_MS } from "./messages";
+
   let { busy, word, doing }: { busy: boolean; word: string; doing: string } = $props();
 
-  /** How long a press waits before its button says it's working. */
-  const AFTER_MS = 500;
   let late = $state(false);
 
   $effect(() => {
@@ -19,7 +19,7 @@
       late = false;
       return;
     }
-    const timer = setTimeout(() => (late = true), AFTER_MS);
+    const timer = setTimeout(() => (late = true), SAY_AFTER_MS);
     return () => clearTimeout(timer);
   });
 </script>
