@@ -31,7 +31,7 @@
   In the sheet (and its page on a phone), an address typed and not yet
   added is kept on this device: Escape, a press on the dimmed page or going
   elsewhere leave it in the field for next time; Cancel clears it
-  (decision 0233).
+  (decision 0235).
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -82,7 +82,7 @@
     alternative?: Snippet;
   } = $props();
 
-  // In the sheet, an address typed earlier and not added waits in the field (decision 0233).
+  // In the sheet, an address typed earlier and not added waits in the field (decision 0235).
   // svelte-ignore state_referenced_locally
   const keeps = onCancel !== undefined || page;
   let address = $state((keeps && keptWords("add")) || "");

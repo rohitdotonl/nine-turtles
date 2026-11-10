@@ -2,7 +2,7 @@
   Edit (SPEC section 36, decision 0163): a person's or publication's page,
   turned into its settings in place by its Edit button, the same for both.
   Done saves and turns it back; Cancel turns it back unchanged. Changes not
-  saved yet are kept on this device (decision 0233): Escape, Back or a
+  saved yet are kept on this device (decision 0235): Escape, Back or a
   press on an article leaves them waiting here, and coming back shows them
   with "Not saved yet. Going elsewhere keeps these changes here for you."
   under the title. Cancel is the one way to throw them away.
@@ -87,7 +87,7 @@
   let busy = $state(false);
   let message = $state("");
 
-  // Changes kept from before (decision 0233): the form starts from them, and says so.
+  // Changes kept from before (decision 0235): the form starts from them, and says so.
   const draftName = `edit:feed:${start.id}`;
   const original = (() => ({ title, address, who, chosen: [...chosen], newFolder, paused, shorts, liveStreams }))();
   const kept = keptDraft(draftName);

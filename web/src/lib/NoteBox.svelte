@@ -4,7 +4,7 @@
   the article's end), and on a person. Its name, the words, a quiet line
   saying who sees it, then Save and Not now.
 
-  Nothing typed is thrown away (decision 0233): the box stays open with the
+  Nothing typed is thrown away (decision 0235): the box stays open with the
   words until the save is confirmed, and Save says "Saving…" while it
   waits. If it fails, the message sits right under the words, in oxblood
   with the alert icon, and Save becomes Try again. A box opened onto words

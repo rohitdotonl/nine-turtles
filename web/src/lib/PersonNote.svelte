@@ -5,7 +5,7 @@
   reader sees it; search's sidebar filter finds the person by it, and Your
   data exports it. It's the same on each of the person's places. Words not
   saved yet are kept on this device, and the box opens with them when the
-  reader comes back (decision 0233).
+  reader comes back (decision 0235).
 -->
 <script lang="ts">
   import { tick } from "svelte";

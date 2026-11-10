@@ -118,7 +118,7 @@ const FAILED: Record<"highlight" | "remove", string> = {
   remove: "The highlight couldn't be removed.",
 };
 
-/** A note that couldn't be saved: its box stays open with the words (decision 0233), and says so under them. */
+/** A note that couldn't be saved: its box stays open with the words (decision 0235), and says so under them. */
 export const NOTE_NOT_SAVED = "The note couldn't be saved, so your words are still here. Try again in a moment.";
 
 /** Why a change wasn't kept, in plain words (shown, never silently dropped). */
@@ -146,7 +146,7 @@ export async function sendWaiting(): Promise<void> {
       waiting.list = waiting.list.slice(1);
       save();
       if (made && change.kind === "highlight") {
-        // A note left unsaved on it follows it to its number (decision 0233).
+        // A note left unsaved on it follows it to its number (decision 0235).
         renameDraft(`note:highlight:${change.id}`, `note:highlight:${made.id}`);
         renumbered.get(change.article)?.(change.id, made.id);
       }

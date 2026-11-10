@@ -19,7 +19,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("what the reader typed and hasn't saved (decision 0233)", () => {
+describe("what the reader typed and hasn't saved (decision 0235)", () => {
   it("keeps each draft under its own name until it's forgotten", () => {
     const kept = storage();
     vi.stubGlobal("localStorage", kept);

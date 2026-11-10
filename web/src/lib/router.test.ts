@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HELP_URL, SETTINGS_PAGES, helpPage, inSettings, knownPath, parentOf, parse, pathFor, placeAddressesBy, rowFor, sidebarViews, titleFor, type SettingsPage } from "./router";
+import { HELP_URL, SETTINGS_PAGES, articleIn, helpPage, inSettings, knownPath, parentOf, parse, pathFor, placeAddressesBy, rowFor, sidebarViews, titleFor, withArticle, type SettingsPage } from "./router";
 
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
@@ -136,5 +136,30 @@ describe("the sidebar's lists", () => {
   it("shows Notes from the first day, so its empty list can say how to fill it (decision 0222)", () => {
     expect(sidebarViews(false)).toEqual(["unread", "starred", "notes", "all"]);
     expect(sidebarViews(true)).toEqual(["starred", "notes", "all"]);
+  });
+});
+
+describe("an open article's address (decision 0233)", () => {
+  it("sits under its list's", () => {
+    expect(withArticle("/people/5", 29)).toBe("/people/5/articles/29");
+    expect(withArticle("/unread", 7)).toBe("/unread/articles/7");
+    expect(withArticle("/folders/3", undefined)).toBe("/folders/3");
+  });
+
+  it("is read back into the list and the article, and the list is the place", () => {
+    expect(articleIn("/people/5/articles/29")).toEqual({ list: "/people/5", article: 29 });
+    expect(articleIn("/all/articles/3/")).toEqual({ list: "/all", article: 3 });
+    expect(articleIn("/people/5")).toEqual({ list: "/people/5" });
+    expect(articleIn("/people/5/articles/0")).toEqual({ list: "/people/5/articles/0" });
+    expect(parse("/folders/3/articles/12")).toEqual({ kind: "folder", id: 3 });
+    expect(parse("/starred/articles/12")).toEqual({ kind: "view", view: "starred" });
+  });
+
+  it("opens only under a list of articles", () => {
+    expect(knownPath("/people/5/articles/29")).toBe(true);
+    expect(knownPath("/unread/articles/29")).toBe(true);
+    expect(knownPath("/settings/articles/29")).toBe(false);
+    expect(knownPath("/articles/29")).toBe(false);
+    expect(knownPath("/people/5/articles/nope")).toBe(false);
   });
 });

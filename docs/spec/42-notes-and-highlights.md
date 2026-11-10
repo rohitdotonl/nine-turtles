@@ -29,7 +29,7 @@ anywhere or counted.
   until something else is done.
 - A note is written in a box in place, with **Save** and **Not now**. An
   empty note takes the note off, never the highlight.
-- **Nothing typed is thrown away** (decision 0233). The box stays open, with
+- **Nothing typed is thrown away** (decision 0235). The box stays open, with
   the words, until the save is confirmed (Save says "Saving…" after half a
   second). If it fails, the message sits under the words in oxblood with the
   alert icon, "The note couldn't be saved, so your words are still here.

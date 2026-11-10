@@ -10,7 +10,7 @@
   red words, with Cancel and Save at the right end (decision 0039). On a
   phone, the phone sheet's one build (decision 0052): an X beside the title,
   no Cancel, Delete as a group of its own and Save at the screen's foot.
-  Changes not saved yet are kept on this device (decision 0233): Escape or a
+  Changes not saved yet are kept on this device (decision 0235): Escape or a
   press on the dimmed page leaves them waiting, and reopening shows them
   with "Not saved yet. …" at the top; Cancel (on a phone, the X) throws
   them away.
@@ -56,7 +56,7 @@
   let busy = $state(false);
   let message = $state("");
 
-  // Changes kept from before (decision 0233): the form starts from them, and says so.
+  // Changes kept from before (decision 0235): the form starts from them, and says so.
   // svelte-ignore state_referenced_locally
   const draftName = `edit:folder:${folder.id}`;
   const kept = keptDraft(draftName);

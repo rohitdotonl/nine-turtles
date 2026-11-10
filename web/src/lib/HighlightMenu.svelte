@@ -9,7 +9,7 @@
   the window, and closes with Escape or a press outside it. A note being
   written is kept as it's typed (onWords), so closing the menu, however it
   happens, never loses it; opened again, the box starts with those words
-  and says "Not saved yet.", with Discard (decision 0233).
+  and says "Not saved yet.", with Discard (decision 0235).
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";

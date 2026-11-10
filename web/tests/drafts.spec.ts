@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, choose, follow, signIn } from "./screens";
 
-// Nothing the reader typed is thrown away (decision 0233), in a browser: a
+// Nothing the reader typed is thrown away (decision 0235), in a browser: a
 // half-written note survives going to another article, and Discard throws
 // it away with Undo; a note that couldn't be saved keeps its words, with Try
 // again; a note on highlighted words survives Escape; changes on Edit survive

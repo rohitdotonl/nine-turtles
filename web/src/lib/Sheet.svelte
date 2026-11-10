@@ -4,7 +4,7 @@
   modal dialog, so the keyboard stays inside while it's open; Escape, or a
   click on the dimmed page around it, closes it without saving. A sheet the
   reader types in (Add, Edit folder) keeps what was typed for next time,
-  and only its Cancel throws it away (decision 0233); a password is never kept.
+  and only its Cancel throws it away (decision 0235); a password is never kept.
 
   Every sheet has the same build (DESIGN.md → "Visual language"; decision
   0042): a title in the same serif as every other title (the list's,

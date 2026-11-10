@@ -16,7 +16,7 @@
   Without a connection all of it still works, and one quiet line at the
   foot of the article says where it's kept (OFFLINE_LINE) until it's sent.
 
-  Nothing typed is thrown away (decision 0233): a note left unsaved (by
+  Nothing typed is thrown away (decision 0235): a note left unsaved (by
   Not now, Escape, a press outside its box, or going to another article)
   is kept on this device. Coming back, its box is open at the article's
   end with the words and "Not saved yet. Kept from when you left this

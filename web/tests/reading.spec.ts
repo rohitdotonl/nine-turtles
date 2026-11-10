@@ -422,7 +422,8 @@ test.describe("on a wide window", () => {
     const text = article(page).locator(".article-text");
     await text.locator("sup").getByRole("link", { name: "1" }).click();
     await expect(text.getByText("1. Written in Python, a long time ago.")).toBeFocused();
-    await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+    // Still the article's own address (decision 0233), in this tab.
+    await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
   });
 
