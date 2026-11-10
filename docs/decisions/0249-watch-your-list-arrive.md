@@ -27,15 +27,21 @@ screen looked exactly as it did a second after.
    as each one is checked." under it. A number in words that changes in
    place, never a bar or a spinner.
 3. **They fill in by themselves** while any feed waits, asking every five
-   seconds instead of once a minute, **until the reader opens an article**.
+   seconds instead of once a minute (never while the tab is hidden), **until
+   the reader opens an article or loads older ones**, so nothing they're
+   looking at is thrown away. Screen readers hear "New articles are in the
+   list.", as they'd hear the note.
    After that, new articles wait for `r` as always, and once every feed has
    been tried the list is back to normal. This bends "Instant and still"
    (SPEC 13: the list changes only when you ask), written in DESIGN.md's
    Exceptions log: right after an import there is nothing yet to move under
    the reader, and "Nothing unread." was untrue.
 4. **The sidebar says "checking…"** in the muted grey after each feed still
-   waiting, and loads again every five seconds until none is, so names from
-   the file become the writers' own as each feed is read.
+   waiting (", checking…" to screen readers, part of the row's name on
+   purpose: it's true of that row). It loads again only along with the
+   list's fill-in asks, so names from the file become the writers' own as
+   each feed is read, and it stays still once the reader is reading; `r`
+   brings it up to date after that.
 
 **Considered.** Adding new articles below the ones shown, so nothing moves even
 after an article is opened: it would break the list's order (newest or oldest

@@ -61,6 +61,8 @@ test("a list brought from a file fills in Unread as it's checked, and says how m
   }).toPass({ timeout: 20_000 });
   await expect(list.getByText(/^Bringing in your list:/)).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "New articles" })).toHaveCount(0);
+  // Screen readers hear it, as they'd hear the note.
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: "New articles are in the list." })).toBeAttached();
 
   // Every feed checked: the line and "checking…" go, and Unread waits for r again.
   checking = false;
@@ -85,8 +87,15 @@ test("once an article is opened, new ones wait for r as usual, even while a list
   await appReady(page);
   const list = page.getByRole("region", { name: "Unread" });
   await list.getByRole("listitem").first().getByRole("button").first().click();
+  // The sidebar stays still while you read: its feeds aren't loaded again.
+  let sidebarLoads = 0;
+  page.on("request", (request) => {
+    if (request.method() === "GET" && new URL(request.url()).pathname === "/api/feeds") sidebarLoads++;
+  });
   await expect(async () => {
     await page.clock.fastForward(5_000);
     await expect(page.getByRole("status").filter({ hasText: "New articles · press r" })).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 20_000 });
+  await page.clock.fastForward(15_000);
+  expect(sidebarLoads).toBe(0);
 });
