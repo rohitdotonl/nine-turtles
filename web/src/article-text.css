@@ -1,0 +1,141 @@
+/*
+  An article's own parts, set as a book sets them (SPEC section 7, DESIGN.md
+  → "Typography"): its headings in three clear steps, tables, rules, notes,
+  bold and italics, highlighting, keys, definitions and footnotes. Sizes are
+  in em, so they follow the reader's own text size (Aa).
+*/
+
+/*
+  Headings inside an article, in three clear steps under the title (decision
+  0246): about 26px, 22px, then the text's own size, all semibold, with more
+  room above than below, so each starts a new part.
+*/
+.article-text :where(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.4em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.article-text :where(h1, h2) {
+  margin-top: 1.9em;
+  font-size: 1.3em;
+  line-height: 1.25;
+}
+
+.article-text h3 {
+  margin-top: 1.6em;
+  font-size: 1.1em;
+}
+
+.article-text :where(h4, h5, h6) {
+  font-size: 1em;
+}
+
+.article-text table {
+  display: block;
+  /* Digits of one width, so a column of numbers lines up (decision 0246). */
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+/*
+  A table starts flush with the text's left edge, its header semibold over a
+  fine rule and its rows over fainter ones, never a heavy line (decision 0050).
+*/
+.article-text :where(th, td) {
+  padding: 0.25em 0.75em;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.article-text :where(th, td):first-child {
+  padding-left: 0;
+}
+
+.article-text th {
+  font-weight: 600;
+  border-bottom-color: var(--strong);
+}
+
+.article-text hr {
+  border: 0;
+  border-top: 1px solid var(--muted);
+}
+
+.article-text :where(sup, sub) {
+  font-size: 0.75em;
+  line-height: 0;
+}
+
+.article-text strong,
+.article-text b {
+  /* A step heavier than the words around it. */
+  font-weight: 600;
+}
+
+.article-text :where(em, i) {
+  font-style: italic;
+}
+
+/*
+  Every part of a post, set as the rest is (decision 0246). A writer's own
+  highlighting is a soft tone of the ink, never the browser's yellow nor the
+  accent, which marks only what a search found. The reader's own highlights
+  are marks too (mark.highlight, ArticleMarks.svelte), drawn their own way.
+*/
+.article-text mark:not(.highlight) {
+  padding-inline: 0.1em;
+  border-radius: var(--radius-mark);
+  background-color: var(--line);
+  color: inherit;
+}
+
+/* A key to press: a small key cap, as the app draws its own (.key). */
+.article-text kbd {
+  display: inline-block;
+  padding: 0 0.35em;
+  border: 1px solid var(--strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-mark);
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  line-height: 1.5;
+  vertical-align: 0.1em;
+}
+
+/* A term in semibold, and what it means indented under it. */
+.article-text dt {
+  margin-top: 0.8em;
+  font-weight: 600;
+}
+
+.article-text dd {
+  margin-inline-start: 1.5em;
+}
+
+/*
+  Footnotes. The cleaning keeps no class names, so they're known by their
+  shape: a number linking to a place in the article, and a numbered list
+  whose items link back. Their numbers have room to be pressed; the notes are
+  a step smaller in the second ink, as a book sets them; and the way back
+  (↩) is drawn as a mark, never as a coloured emoji.
+*/
+.article-text sup > a[href^="#article-"] {
+  padding-inline: 0.2em;
+  text-decoration: none;
+}
+
+.article-text ol:has(> li[id] a[href^="#article-"]) {
+  font-size: 0.85em;
+  color: var(--ink-2);
+}
+
+.article-text a[href^="#article-"] {
+  font-variant-emoji: text;
+}

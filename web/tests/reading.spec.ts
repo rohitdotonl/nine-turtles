@@ -625,17 +625,20 @@ test.describe("on a wide window", () => {
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
 
-  test("the title is about 32px, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
+  test("the title is about 38px in the display cut, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const heading = article(page).locator(".article-title");
-    await expect(heading).toHaveCSS("font-size", "32px");
+    await expect(heading).toHaveCSS("font-size", "38px");
+    // Regular weight, in Literata's display cut, as a book sets a chapter's title (decision 0246).
+    await expect(heading).toHaveCSS("font-weight", "400");
+    await expect(heading).toHaveCSS("font-family", /^"Literata Display"/);
     // Its lines are balanced, so a two-line title reads as two even lines (decision 0044).
     await expect(heading).toHaveCSS("text-wrap", /balance/);
-    expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 32).toBeCloseTo(1.12, 2);
-    // Tracked in only a little, with a clear 20px pause before the byline (decision 0047).
-    await expect(heading).toHaveCSS("letter-spacing", "-0.16px");
-    await expect(heading).toHaveCSS("margin-bottom", "20px");
+    expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 38).toBeCloseTo(1.1, 2);
+    // Tracked in only a little, with a clear pause before the byline, five-eighths of its size (decision 0047).
+    await expect(heading).toHaveCSS("letter-spacing", "-0.456px");
+    await expect(heading).toHaveCSS("margin-bottom", "23.75px");
     const byline = article(page).locator(".article-byline");
     // The meta size: 13px, or its touch screen twin, 15px (DESIGN.md → "The system").
     await expect(byline).toHaveCSS("font-size", /^(13|15)px$/);
@@ -649,8 +652,32 @@ test.describe("on a wide window", () => {
     ]);
     expect(publisherColor).toBe(inkColor);
     expect(bylineColor).not.toBe(inkColor);
-    // A heading inside the article is about 22px.
-    await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "22px");
+    // Headings inside the article step down clearly: 26px, then 22px (decision 0246).
+    await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "26px");
+    await expect(article(page).locator(".article-text h3").first()).toHaveCSS("font-size", "22px");
+  });
+
+  test("an article's parts are set as a book sets them: real bold italics, plain zeros in dates, spacing that follows the size (decision 0246)", async ({ page }) => {
+    await openRoom(page);
+    await page.keyboard.press("j");
+    // Bold inside italics is drawn from its own font files, never slanted by the browser.
+    const boldItalic = (family: string) =>
+      page.evaluate((name) => [...document.fonts].some((font) => font.family.replaceAll('"', "") === name && font.style === "italic" && font.weight === "600"), family);
+    expect(await boldItalic("Literata")).toBe(true);
+    expect(await boldItalic("Atkinson Hyperlegible Next")).toBe(true);
+    // A date in the interface takes the face with a plain zero; the article's own text doesn't.
+    await expect(article(page).locator(".article-byline time")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
+    // A footnote's number has room to be pressed and no underline.
+    const note = article(page).locator('.article-text sup > a[href^="#article-"]');
+    await expect(note).toHaveCSS("text-decoration-line", "none");
+    expect((await note.evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))) > 0).toBe(true);
+    // Line spacing follows the reader's size: 1.55 at the usual size, less for larger text.
+    const text = article(page).locator("article");
+    const leading = () => text.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight) / parseFloat(getComputedStyle(element).fontSize));
+    expect(await leading()).toBeCloseTo(1.55, 2);
+    await page.keyboard.press("+");
+    await expect.poll(leading).toBeCloseTo(1.52, 2);
+    await page.keyboard.press("-");
   });
 
   test("on a 1280px window the text keeps at least 56px of paper on each side", async ({ page }) => {
