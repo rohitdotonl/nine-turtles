@@ -27,8 +27,10 @@ If the change needs no review (see "Which review" below), skip steps 3 to 5.
 4. Wait for its findings and for the checks. After each push, start
    something that tells you **the moment** the checks finish (a command
    left running in the background that waits for them, or your tool's
-   pull-request notifications), never a timer: a result that sits unread
-   is time lost for nothing.
+   pull-request notifications), not a guessed timer: a result that sits
+   unread is time lost for nothing. Where nothing can tell you (the
+   notifications don't arrive and the command can't reach GitHub), look
+   again every 5 minutes, about how long the checks take, never longer.
 5. For each finding: fix it, or reply on the pull request explaining why
    not. Fix them all, together with anything the checks found, and push
    once: each push runs every check again. A decision number another change
