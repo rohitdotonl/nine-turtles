@@ -322,6 +322,9 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Design tokens (colors, fonts, spacing)
 - Brand sheet (every brand decision on one page)
 - Type scale
+- Optical size (a font's display cut for big type)
+- Fallback fonts sized to match (`size-adjust` and the metric overrides)
+- Line spacing (leading)
 - Breakpoints (where the layout changes with width)
 - Landmarks (named regions for screen readers)
 - Focus outline (`:focus-visible`)

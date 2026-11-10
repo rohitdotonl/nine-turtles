@@ -6,7 +6,7 @@
   then Settings as an icon, the way a Mac app keeps its tools at the foot of
   the sidebar. In a sidebar narrowed below 15rem, Keys keeps only its icon.
 
-  While a person or publication is held (decision 0246), the foot shows two
+  While a person or publication is held (decision 0247), the foot shows two
   places to drop them instead: Pause and, in the oxblood words, Unsubscribe,
   as words alone (no icon of their own: one icon, one meaning, BRAND.md).
   They're for the pointer only (sidebarDrag.ts reads `data-drop-act`); the

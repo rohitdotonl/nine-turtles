@@ -749,3 +749,35 @@ async fn an_imported_person_is_named_after_their_first_check_unless_the_reader_n
     names.sort();
     assert_eq!(names, ["My old friend", "Tomas Berg"]);
 }
+
+#[tokio::test]
+async fn the_sidebar_waits_for_a_feed_check_saving_at_the_same_moment() {
+    let (reader, state) = Reader::new().await;
+    let tomas = reader.follow("tomas.xml").await;
+    // Not guessed yet, so loading the sidebar reads, then writes its guess.
+    sqlx::query("UPDATE subscriptions SET kind = NULL, place = NULL WHERE feed_id = ?")
+        .bind(tomas)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    // A feed check is saving: it holds the write lock until it's done.
+    let mut check = state.db.begin_with("BEGIN IMMEDIATE").await.unwrap();
+    sqlx::query("UPDATE feeds SET fetched_at = fetched_at WHERE id = ?")
+        .bind(tomas)
+        .execute(&mut *check)
+        .await
+        .unwrap();
+    let asked = tokio::spawn(
+        Client::new()
+            .get(format!("{}/api/feeds", reader.base))
+            .header("cookie", &reader.cookie)
+            .send(),
+    );
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    check.commit().await.unwrap();
+    // Begun the ordinary way, the guess failed here ("database is locked",
+    // code 517) and the sidebar said its feeds couldn't be loaded.
+    let answer = asked.await.unwrap().unwrap();
+    assert_eq!(answer.status(), StatusCode::OK);
+    assert_eq!(reader.feed(tomas).await["kind"], "person");
+}

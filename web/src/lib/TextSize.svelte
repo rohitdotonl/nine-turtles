@@ -67,7 +67,6 @@
   .sign {
     margin-left: 0.25rem;
     font-size: var(--text-base);
-    font-weight: 500;
     color: var(--ink-2);
   }
   /* The segmented settings' own track (app.css → .choices): 4px round, a faint tone, 10px corners. */

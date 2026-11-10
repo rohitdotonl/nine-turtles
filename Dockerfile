@@ -19,6 +19,19 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY rust-toolchain.toml ./
+# 2a. The libraries first, from Cargo.toml and Cargo.lock alone, with a
+# stand-in for nine turtles' own code. This step changes only when the
+# libraries do, so the image build reuses it and rebuilds just nine turtles
+# itself (decision 0114). The stand-in's own build is thrown away.
+COPY server/Cargo.toml server/Cargo.lock server/
+RUN mkdir server/src \
+    && echo 'fn main() {}' > server/src/main.rs \
+    && touch server/src/lib.rs \
+    && cd server \
+    && cargo build --locked --release \
+    && cargo clean --release --package nine-turtles \
+    && rm -r src
+# 2b. nine turtles itself.
 COPY server/ server/
 COPY --from=web /src/web/dist web/dist
 # Shown in Settings → Status and on the status page: the build date and commit.

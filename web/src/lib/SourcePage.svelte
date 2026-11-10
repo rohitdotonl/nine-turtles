@@ -87,7 +87,7 @@
   <div class={["flex flex-col", !phone && "gap-1"]}>
     <div class={phone ? "top-back" : "contents"}><button type="button" onclick={() => onDone(false)} title="Back to Edit {name} (Esc)" class="btn-quiet nav-back -ml-2 self-start text-ink-2"><Icon name="back" size="alone" />Edit {name}</button></div>
     <div class={["flex items-center justify-between gap-3", phone && "top-title"]}>
-      <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">
+      <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-display text-heading font-semibold break-words text-ink">
         {PLACE_NAMES[source.place ?? "blog"]}<span class="font-normal text-muted"> · {placeShownAs(source)}</span>
       </h2>
       {#if !phone}<button type="submit" form={formId} aria-disabled={busy} class="btn-primary shrink-0"><Waiting {busy} word="Done" doing="Saving…" /></button>{/if}

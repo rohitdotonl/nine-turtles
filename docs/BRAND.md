@@ -28,10 +28,10 @@ what's live.
 - **How it sounds:** warm, never cute. True, specific facts, never invented feelings. No stories or metaphors (letters, fountain pens) told about the brand: it wins on craft. One exception: the website's front page is Rohit's own letter, his true story in his voice, signed, ending "P.S. Write back to me" (decision 0169). Nothing else takes a letter's form. (Live)
 - **Marketing copy** isn't written fresh by an agent: use settled copy word for word, and ask Rohit before adding any. (Live)
 
-## Typefaces (Live, decision 0141)
+## Typefaces (Live, decisions 0141 and 0246)
 
-- **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600).
-- **Atkinson Hyperlegible Next** (400, 500, 600) for the whole interface, on every device. It replaced the device's own font and Inter.
+- **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600). Titles of 24px and more in the app use its **display cut**, the optical size drawn for big type; an article's own title is regular weight (decision 0246, approved by the owner on 10 November 2026).
+- **Atkinson Hyperlegible Next** (400 and 600, each upright and italic) for the whole interface, on every device. It replaced the device's own font and Inter. Dates set on their own (a list's, a byline's, a page's, each a `<time>`) use a copy of it whose zero has no slash ("20 Oct", not "2Ø Oct"); addresses and codes keep the crossed zero, and so, for now, does a date inside a sentence, such as "kept until 10 Dec" (decision 0246).
 - **Atkinson Hyperlegible Mono** for code in articles. It replaced JetBrains Mono.
 - **Noto Serif Devanagari** and **Noto Naskh Arabic** carry Literata into Hindi (and the other Devanagari languages) and Arabic (and Persian, Urdu…): a serif Devanagari and the book style of Arabic, wherever Literata is used. Each is downloaded only when a page shows its letters. Chinese, Japanese, Korean and other scripts use the device's own fonts (decision 0227, approved by the owner on 9 November 2026).
 - The reader can still pick another reading font in the Aa panel: Atkinson Hyperlegible Next or the device's own serif.

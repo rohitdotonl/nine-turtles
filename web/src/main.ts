@@ -2,6 +2,7 @@ import "./app.css";
 import "./tops.css";
 import "./lists.css";
 import "./article-lists.css";
+import "./article-text.css";
 import "./arranging.css";
 import "./reading-column.css";
 import "./scripts.css";

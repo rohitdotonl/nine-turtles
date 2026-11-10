@@ -1,4 +1,4 @@
-// Following by dropping (SPEC section 3, decision 0246): a link dragged out
+// Following by dropping (SPEC section 3, decision 0247): a link dragged out
 // of an article, or a page's address dragged from another browser tab,
 // dropped anywhere on nine turtles opens "Follow <name>?" for it, as a page
 // shared here does; dropped on a folder, whoever is followed goes into that

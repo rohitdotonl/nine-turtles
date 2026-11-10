@@ -745,7 +745,6 @@ footer .links.small a {
   color: var(--muted);
   font-family: var(--sans);
   font-size: 0.875rem;
-  font-weight: 500;
 }
 
 .wrong-turn .turtles {

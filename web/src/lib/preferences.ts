@@ -16,18 +16,22 @@ export type Preferences = {
   textSize: number;
 };
 
+/** Each size's line spacing (decision 0246): larger text needs less room between lines, as a book's does. */
 export const TEXT_SIZES = [
-  { label: "Smaller", rem: 1 },
-  { label: "Small", rem: 1.125 },
-  { label: "Medium", rem: 1.25 },
-  { label: "Large", rem: 1.375 },
-  { label: "Larger", rem: 1.5 },
-  { label: "Largest", rem: 1.75 },
+  { label: "Smaller", rem: 1, leading: 1.6 },
+  { label: "Small", rem: 1.125, leading: 1.58 },
+  { label: "Medium", rem: 1.25, leading: 1.55 },
+  { label: "Large", rem: 1.375, leading: 1.52 },
+  { label: "Larger", rem: 1.5, leading: 1.5 },
+  { label: "Largest", rem: 1.75, leading: 1.5 },
 ] as const;
 
-/** `rest` is the end of a long name, said to screen readers but not shown, so three choices fit one row. */
-export const READING_FONTS: Record<ReadingFont, { label: string; rest?: string; family: string }> = {
-  literata: { label: "Literata", family: "var(--font-serif)" },
+/**
+ * `rest` is the end of a long name, said to screen readers but not shown, so three choices fit one row.
+ * `title` is the face for an article's title, where it isn't the text's own: Literata's display cut (decision 0246).
+ */
+export const READING_FONTS: Record<ReadingFont, { label: string; rest?: string; family: string; title?: string }> = {
+  literata: { label: "Literata", family: "var(--font-serif)", title: "var(--font-display)" },
   atkinson: { label: "Atkinson", rest: " Hyperlegible Next", family: '"Atkinson Hyperlegible Next", var(--font-sans)' },
   // rohit.onl's font (decision 0063): the device's own serif, New York on Apple
   // devices and Georgia on most others. Nothing to download.
@@ -90,7 +94,10 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   root.dataset.mode = LOOKS[theme].mode;
   const font = READING_FONTS[preferences.readingFont];
   root.style.setProperty("--reading-font", font.family);
-  root.style.setProperty("--reading-size", `${TEXT_SIZES[preferences.textSize]?.rem ?? 1.25}rem`);
+  root.style.setProperty("--reading-title-font", font.title ?? font.family);
+  const size = TEXT_SIZES[preferences.textSize] ?? TEXT_SIZES[2];
+  root.style.setProperty("--reading-size", `${size.rem}rem`);
+  root.style.setProperty("--reading-leading", String(size.leading));
   // The phone's own bar above the page takes the showing page's color too
   // (index.html starts with White's by day and Night's by night).
   for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {

@@ -72,6 +72,13 @@ describe("reader preferences", () => {
     expect(root.dataset.mode).toBe("dark");
     expect(set.get("--reading-font")).toContain("Atkinson Hyperlegible Next");
     expect(set.get("--reading-size")).toBe("1rem");
+    // The smallest text gets the most room between its lines; Atkinson's title is Atkinson.
+    expect(set.get("--reading-leading")).toBe("1.6");
+    expect(set.get("--reading-title-font")).toBe(set.get("--reading-font"));
+    apply({ ...DEFAULTS, textSize: 5 }, page, false);
+    expect(set.get("--reading-leading")).toBe("1.5");
+    // Literata's title is its display cut (decision 0246).
+    expect(set.get("--reading-title-font")).toBe("var(--font-display)");
 
     // Paper is a day page, whatever the device.
     apply({ ...DEFAULTS, page: "paper" }, page, true);
