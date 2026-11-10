@@ -39,6 +39,7 @@
   server fetched them already.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import Icon from "./Icon.svelte";
   import { onMount, tick } from "svelte";
   import type { Article, Source } from "./shapes";
@@ -643,7 +644,7 @@
 {/if}
 
 {#if loaded && articles.length === 0}
-  <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
+  <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class="item-list">
     {#each articles as article, index (article.id)}
@@ -732,7 +733,7 @@
   >
     <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->
     <p class={["flex items-center gap-x-2", !saying && "sr-only"]}>
-      <span role="status" class="dated min-w-0 py-2">{line}</span>
+      <span role="status" class="min-w-0 py-2"><Dated text={line} /></span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
         <TextButton onclick={byButton(retryNow)} class="-mr-2 px-2">{retryWord}</TextButton>

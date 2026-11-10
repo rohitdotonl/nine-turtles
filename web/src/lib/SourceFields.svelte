@@ -12,6 +12,7 @@
   The values belong to the form around it, which saves them with the rest.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import FailingLine from "./FailingLine.svelte";
   import Icon from "./Icon.svelte";
   import type { Sick } from "./health";
@@ -67,7 +68,7 @@
         <span class="setting-name">Pause for a while</span>
         <span id="{id}-pause-hint" class="setting-hint"
           >Their new articles wait until you untick this.{#if feed.pausedAt != null}
-            <span class="dated">{pausedSince(feed.pausedAt)}</span>{/if}</span
+            <Dated text={pausedSince(feed.pausedAt)} />{/if}</span
         >
       </span>
       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>

@@ -8,6 +8,7 @@
   has moved, the line says so, and stays until the reader leaves.
 -->
 <script lang="ts">
+  import Dated from "./Dated.svelte";
   import { tick, untrack } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import type { Feed } from "./shapes";
@@ -60,7 +61,7 @@
   <div class={["failing", look]}>
     {#if !moved}
       <p class="text-meta text-ink-2">
-        <span class="dated">{brokenSince(feed.failingSince ?? 0)}</span>
+        <Dated text={brokenSince(feed.failingSince ?? 0)} />
         {#if !choosing}
           <button
             bind:this={button}

@@ -399,8 +399,8 @@
 }
 
 /*
-  Dates in the interface take the face with a plain zero (decision 0246), a
-  <time> or, for a date inside a sentence, the sentence's .dated words. It
+  Dates in the interface take the face with a plain zero (decision 0246): a
+  <time>, or a date inside a sentence, marked .dated (Dated.svelte). It
   holds one glyph and no features: never ask a <time> for tabular figures,
   or its zero keeps its own width while the other digits change.
 */

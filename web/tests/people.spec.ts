@@ -226,6 +226,8 @@ test("a source's own settings: Take out of the person, and Undo puts it back", a
   ).toHaveCount(0);
   await page.getByRole("button", { name: `Take out of Eli ${eli}` }).click();
   await expect(line(page)).toHaveText(`${fay}.example is on its own now.`);
+  // Only a date takes the face with a plain zero; an address keeps the crossed zero (decision 0246).
+  await expect(line(page).locator(".dated")).toHaveCount(0);
   await expect(rowsNamed(page, `Blog ${fay}`)).toHaveCount(1);
 
   await page.getByRole("button", { name: "Undo" }).click();
