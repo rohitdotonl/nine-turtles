@@ -4,6 +4,7 @@ import {
   boldParts,
   chipsFor,
   emptyQuery,
+  fold,
   isSearching,
   resultsTitle,
   searchParams,
@@ -107,5 +108,24 @@ describe("bold matches", () => {
 
   it("leaves a title alone when nothing is searched", () => {
     expect(boldParts("A quiet morning", [])).toEqual([{ text: "A quiet morning", bold: false }]);
+  });
+
+  it("bolds Chinese and Japanese characters where they stand together, and finds Arabic without its vowel marks", () => {
+    expect(searchedTerms("阅读器 Rust语言")).toEqual(["阅读器", "rust", "语言"]);
+    expect(boldParts("我又开始用阅读器了", searchedTerms("阅读器"))).toEqual([
+      { text: "我又开始用", bold: false },
+      { text: "阅读器", bold: true },
+      { text: "了", bold: false },
+    ]);
+    expect(boldParts("朝のコーヒー", searchedTerms("コーヒー"))).toEqual([
+      { text: "朝の", bold: false },
+      { text: "コーヒー", bold: true },
+    ]);
+    expect(fold("أَحمد")).toBe("أحمد");
+    expect(boldParts("阅读，然后器", searchedTerms("阅读器"))).toEqual([{ text: "阅读，然后器", bold: false }]);
+    expect(boldParts("دفتر القِرَاءَة", searchedTerms("القراءة"))).toEqual([
+      { text: "دفتر ", bold: false },
+      { text: "القِرَاءَة", bold: true },
+    ]);
   });
 });

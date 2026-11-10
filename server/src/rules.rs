@@ -126,16 +126,19 @@ pub(crate) async fn rules(
 
 /// Text cut into lower-case words, so a phrase is found whatever its capital
 /// letters and punctuation, and only as whole words: "AI" never matches
-/// "said". Marks inside a word (Hindi's vowel signs) stay in it.
+/// "said". Marks inside a word (Hindi's vowel signs) stay in it. As search
+/// does, each Chinese character and kana is a word, and Arabic and Hebrew
+/// vowel marks are left out (decision 0228).
 pub fn words_of(text: &str) -> Vec<String> {
-    text.split(|c: char| {
-        c.is_whitespace()
-            || c.is_ascii_punctuation()
-            || "‘’‚‛“”„‟–—―…«»‹›·•।॥、。，！？：；（）".contains(c)
-    })
-    .filter(|word| !word.is_empty())
-    .map(str::to_lowercase)
-    .collect()
+    search::words::searchable(text)
+        .split(|c: char| {
+            c.is_whitespace()
+                || c.is_ascii_punctuation()
+                || "‘’‚‛“”„‟–—―…«»‹›·•।॥、。，！？：；（）".contains(c)
+        })
+        .filter(|word| !word.is_empty())
+        .map(str::to_lowercase)
+        .collect()
 }
 
 /// Whether `phrase`'s words appear together, in order, in `text`'s.
@@ -661,6 +664,14 @@ mod tests {
         let hindi = rule("किताब", false);
         assert!(hindi.matches(&article("नई किताब।", "")));
         assert!(!hindi.matches(&article("किताबें", "")));
+    }
+
+    #[test]
+    fn chinese_words_are_found_inside_sentences_and_vowel_marks_never_matter() {
+        let chinese = rule("推荐", false);
+        assert!(chinese.matches(&article("我删掉了所有的推荐类应用", "")));
+        assert!(!chinese.matches(&article("推一下，荐", "")));
+        assert!(rule("القراءة", false).matches(&article("أُحِبُّ القِرَاءَةَ", "")));
     }
 
     #[test]
