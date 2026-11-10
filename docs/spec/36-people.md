@@ -101,8 +101,12 @@ PLAN.md → V1, item 1.*
   **Hide articles about…**, opens Settings › Hiding with the field set to
   them ("Only from …", section 27).
 - **Edit** (`/people/12/edit`) turns the same
-  page into their settings. **Done** saves and turns it back; **Cancel** or
-  Escape turns it back unchanged. Top to bottom (the owner's core path,
+  page into their settings. **Done** saves and turns it back; **Cancel**
+  turns it back unchanged. Changes not saved yet are kept on this device
+  (decision 0235): Escape, Back or a press on an article leaves them
+  waiting, and coming back shows them, with "**Not saved yet.** Going
+  elsewhere keeps these changes here for you." under the title; Cancel is
+  the one way to throw them away. Top to bottom (the owner's core path,
   points 11 and 12):
   - **Name**;
   - for one source, **This is: A person / A publication**;

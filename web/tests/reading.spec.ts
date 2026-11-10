@@ -678,7 +678,7 @@ test.describe("on a wide window", () => {
     // It comes after the short closing line; only Write back follows it, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
     expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
-    // Then only the credit line that shows on paper alone (decision 0235).
+    // Then only the credit line that shows on paper alone (decision 0236).
     expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
     await expect(article(page).locator(".print-credit")).toBeHidden();
   });

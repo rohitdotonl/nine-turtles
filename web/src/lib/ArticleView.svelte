@@ -599,7 +599,7 @@
         {/key}
         <WriteBack bind:this={writeBack} {article} {library} quotes={() => marks?.quotes() ?? []} />
       {/if}
-      <!-- Only on paper (print.css, decision 0235): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
+      <!-- Only on paper (print.css, decision 0236): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
       <p class="print-credit" lang="en" data-credit={`From ${apart(article.feedTitle)}${author ? `, by ${apart(author)}` : ""}, ${date(article.at)}.${article.link ? ` The original: ${article.link}` : ""}`}></p>
     </article>
   </div>

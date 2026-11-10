@@ -4,7 +4,7 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-09
+updated: 2026-11-10
 related: [star-an-article, search-everything, download-everything]
 ---
 
@@ -33,6 +33,17 @@ which starts an email to them with those words quoted
 Choose **More › Add a note…**, or press <kbd>N</kbd> with
 no words chosen. The note sits at the end of the article, under your
 highlights.
+
+## A note you haven't saved yet
+
+Left a note half-written? It isn't lost. Whether you pressed **Not now**,
+went to another article or closed the box by mistake, nine turtles keeps it
+on this device. Come back and its box is open again with your words and
+**Not saved yet.** Press **Save** to keep it, or **Discard** to throw it
+away (**Undo** brings it back).
+
+If a note can't be saved, its words stay in the box with a line saying so.
+Press **Try again** in a moment.
 
 ## Write a note on a person
 

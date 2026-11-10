@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, choose, follow, openReadingRoom, signIn } from "./screens";
 
-// Printing an article prints the article (decision 0235, SPEC section 7):
+// Printing an article prints the article (decision 0236, SPEC section 7):
 // its title, byline and words, and a credit line with the original's
 // address; nothing of the app's own.
 

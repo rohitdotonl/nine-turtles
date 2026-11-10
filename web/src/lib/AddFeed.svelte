@@ -27,6 +27,11 @@
   (FollowPerson.svelte, decision 0138). A YouTube video's address asks
   whether to follow its channel, and a playlist's whether to follow the
   whole channel or only the playlist (decision 0144), the same way.
+
+  In the sheet (and its page on a phone), an address typed and not yet
+  added is kept on this device: Escape, a press on the dimmed page or going
+  elsewhere leave it in the field for next time; Cancel clears it
+  (decision 0235).
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";
@@ -35,6 +40,7 @@
   import Icon from "./Icon.svelte";
   import type { Feed } from "./shapes";
   import { onDestroy, tick } from "svelte";
+  import { keepDraft, keptWords } from "./drafts";
   import { addFeed, editFeed, explain, type Choice } from "./feeds";
   import { followedTogether } from "./several";
   import { runningInstalled } from "./installing.svelte";
@@ -76,7 +82,19 @@
     alternative?: Snippet;
   } = $props();
 
-  let address = $state("");
+  // In the sheet, an address typed earlier and not added waits in the field (decision 0235).
+  // svelte-ignore state_referenced_locally
+  const keeps = onCancel !== undefined || page;
+  let address = $state((keeps && keptWords("add")) || "");
+  $effect(() => {
+    if (keeps) keepDraft("add", address.trim() ? address : undefined);
+  });
+
+  /** Cancel: the sheet closes, and what was typed goes with it. */
+  function cancel() {
+    keepDraft("add", undefined);
+    onCancel?.();
+  }
   let busy = $state(false);
   let message = $state("");
   /** The message is a problem, not a next step. */
@@ -225,6 +243,8 @@
 
   /** Followed: the question "… is…" a person or a publication, before it opens. */
   async function followed(feed: Feed, newest?: string) {
+    // Followed: the address it was typed as is done with.
+    keepDraft("add", undefined);
     // Closed while looking: nothing is left to ask in, so it only joins the sidebar.
     if (closed) {
       onAdded(feed, note);
@@ -284,6 +304,7 @@
     // A source joined to others is always a person (SPEC section 36), so nothing is asked.
     const { refusal } = await join(together.added.map((each) => each.feed.id));
     busy = false;
+    keepDraft("add", undefined);
     onAdded({ ...first.feed, kind: "person" }, [refusal, note].filter(Boolean).join(" ") || undefined);
   }
 
@@ -539,7 +560,7 @@
   {:else if onCancel}
     <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add at the right end. -->
     <div class="sheet-actions mt-3.5">
-      {#if !asking}<button type="button" onclick={onCancel} class="btn">Cancel</button>{/if}
+      {#if !asking}<button type="button" onclick={cancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
         >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
       >
