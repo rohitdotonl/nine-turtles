@@ -290,7 +290,9 @@ export class Marks {
 
   /** Its number on the server, waiting for its save if need be; none if that save was refused. */
   private async onServer(id: number): Promise<number | undefined> {
-    const known = this.saving.has(id) ? await this.saving.get(id) : id;
+    // Made again after a refused save, it's the new one that's asked about.
+    const now = this.here(id);
+    const known = this.saving.has(now) ? await this.saving.get(now) : now;
     // Made offline, it takes its number when it's sent later (`renumbered`).
     return known === undefined ? undefined : this.here(known);
   }
