@@ -16,7 +16,10 @@ P03-1, P03-4, P03-5 and P03-7; the others get their own notes.
    All articles, with the words in the list's search field. With no name
    found, the line says "No person or folder is called “soup”." rather than
    naming "the sidebar", our word for it. The field itself still finds only
-   names as you type (the Exceptions log entry is unchanged).
+   names as you type; DESIGN.md's Exceptions log entry for it now names the
+   one row and Enter. On a phone, Settings goes back with ‹ Home instead of
+   an X: DESIGN.md's "One phone sheet" and "One close rule" name it as their
+   exception.
 2. **Command Z undoes (P03-4).** Command Z (Ctrl Z off a Mac) does what `u`
    does, never while typing in a field. It's the first shortcut with Command
    or Ctrl; every other one stays the browser's. It's one more key in the

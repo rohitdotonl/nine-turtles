@@ -3,7 +3,7 @@
   centred column of grouped inset lists, each group with a small uppercase
   header above it (decision 0120). It fills the list and reading areas while
   the sidebar stays, so the reader never loses their place. "Close settings"
-  or Escape goes back.
+  (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
   (Unread on or off and sort order, shared across

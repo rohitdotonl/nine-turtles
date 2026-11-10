@@ -74,6 +74,8 @@ test.describe("on a phone", () => {
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
     await expect(list(page)).toBeHidden();
+    // The browser tab names the article open on screen, and the list's name again once back (decision 0231).
+    await expect(page).toHaveTitle("The pleasure of a slow letter · nine turtles");
     // The back button says where it goes, in words as well as for screen readers.
     const back = article(page).getByRole("button", { name: "Back to Reading Room" });
     await expect(back).toBeVisible();
@@ -106,6 +108,18 @@ test.describe("on a phone", () => {
 
     await page.goForward();
     await expect(list(page)).toBeVisible();
+  });
+
+  test("the feeds' search also searches articles, opening All articles with the words (decision 0231)", async ({ page }) => {
+    await openHome(page);
+    const search = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
+    await search.fill("slow letter");
+    await sidebar(page).getByRole("button", { name: "Search articles for “slow letter”" }).click();
+    await expect(page).toHaveURL(/\/all$/);
+    await expect(sidebar(page)).toBeHidden();
+    const field = page.getByRole("textbox", { name: "Search articles", exact: true });
+    await expect(field).toHaveValue("slow letter");
+    await expect(page.getByRole("region", { name: "All articles" }).getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
   });
 
   test("arriving straight at a list, its back arrow still leads to the feeds", async ({ page }) => {
