@@ -20,3 +20,4 @@ the reason for the setting is tested, not just remembered.
 
 **Not covered.** Chinese and Japanese, which don't put spaces between words,
 need a different approach; they're not in V1 (DESIGN.md → "Languages").
+*Since 10 November 2026 they are: decision 0228.*

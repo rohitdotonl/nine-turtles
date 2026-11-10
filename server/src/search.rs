@@ -31,6 +31,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::{QueryBuilder, Sqlite, SqliteConnection};
 
+pub(crate) mod words;
+
+use words::{Term, found_at, holds_all, searchable, searched_words, word_spans};
+
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
@@ -54,14 +58,23 @@ pub fn routes() -> Router<AppState> {
 }
 
 /// An article's text as plain words, for the index: tags removed, each
-/// piece of text kept apart from the next ("one</p><p>two" is two words).
+/// piece of text kept apart from the next ("one</p><p>two" is two words),
+/// except where pieces touch beside Chinese or Japanese, which need no spaces
+/// ("友だちに<b>手紙</b>"). Every space the writer typed is kept, as one.
 pub fn plain_words(html: &str) -> String {
-    scraper::Html::parse_fragment(html)
-        .root_element()
-        .text()
-        .flat_map(str::split_whitespace)
-        .collect::<Vec<_>>()
-        .join(" ")
+    let mut words = String::new();
+    let mut spaced = false;
+    for node in scraper::Html::parse_fragment(html).root_element().text() {
+        spaced |= node.starts_with(char::is_whitespace);
+        for (index, piece) in node.split_whitespace().enumerate() {
+            if !words.is_empty() && (index > 0 || spaced || words::need_space(&words, piece)) {
+                words.push(' ');
+            }
+            words.push_str(piece);
+        }
+        spaced = node.ends_with(char::is_whitespace) || (spaced && node.trim().is_empty());
+    }
+    words
 }
 
 /// Adds an article to the search index, or replaces what the index had for
@@ -77,8 +90,8 @@ pub async fn index(
     let body = content.or(summary).map(plain_words).unwrap_or_default();
     sqlx::query("INSERT OR REPLACE INTO articles_search (rowid, title, body) VALUES (?, ?, ?)")
         .bind(id)
-        .bind(title)
-        .bind(body)
+        .bind(searchable(title))
+        .bind(searchable(&body))
         .execute(connection)
         .await?;
     Ok(())
@@ -187,9 +200,9 @@ pub fn fts_question(typed: &str) -> Option<String> {
     for (index, piece) in typed.split('"').enumerate() {
         // Odd pieces were between quotation marks: one part. Even ones: a part per word.
         if index % 2 == 1 {
-            parts.push(piece.to_owned());
+            parts.push(searchable(piece));
         } else {
-            parts.extend(piece.split_whitespace().map(str::to_owned));
+            parts.extend(piece.split_whitespace().map(searchable));
         }
     }
     let quoted: Vec<String> = parts
@@ -243,105 +256,24 @@ pub struct Piece {
 const EXCERPT_CHARS: usize = 90;
 const LEAD_CHARS: usize = 24;
 
-/// A character that belongs to a word, as the search index splits words:
-/// letters, numbers and the marks that join them (FTS5_TOKENIZER).
-fn is_word_char(c: char) -> bool {
-    c.is_alphanumeric()
-        || matches!(c,
-            '\u{0300}'..='\u{036F}'
-            | '\u{0483}'..='\u{0489}'
-            | '\u{0591}'..='\u{05C7}'
-            | '\u{0610}'..='\u{061A}'
-            | '\u{064B}'..='\u{065F}'
-            | '\u{0900}'..='\u{0903}'
-            | '\u{093A}'..='\u{094F}'
-            | '\u{0951}'..='\u{0957}'
-            | '\u{0962}'..='\u{0963}'
-            | '\u{0981}'..='\u{0983}'
-            | '\u{1AB0}'..='\u{1AFF}'
-            | '\u{1DC0}'..='\u{1DFF}'
-            | '\u{20D0}'..='\u{20FF}'
-            | '\u{FE20}'..='\u{FE2F}')
-}
-
-/// Where each word starts and ends in `text`, in bytes.
-fn word_spans(text: &str) -> Vec<(usize, usize)> {
-    let mut spans = Vec::new();
-    let mut start = None;
-    for (at, c) in text.char_indices() {
-        match (is_word_char(c), start) {
-            (true, None) => start = Some(at),
-            (false, Some(begun)) => {
-                spans.push((begun, at));
-                start = None;
-            }
-            _ => {}
-        }
-    }
-    if let Some(begun) = start {
-        spans.push((begun, text.len()));
-    }
-    spans
-}
-
-/// A Latin letter without its accent, as the index's `remove_diacritics`
-/// compares them ("cafe" finds "café").
-fn base_letter(c: char) -> char {
-    match c {
-        'à'..='å' | 'ā' | 'ă' | 'ą' => 'a',
-        'ç' | 'ć' | 'ĉ' | 'ċ' | 'č' => 'c',
-        'ď' | 'đ' => 'd',
-        'è'..='ë' | 'ē' | 'ĕ' | 'ė' | 'ę' | 'ě' => 'e',
-        'ĝ' | 'ğ' | 'ġ' | 'ģ' => 'g',
-        'ĥ' | 'ħ' => 'h',
-        'ì'..='ï' | 'ĩ' | 'ī' | 'ĭ' | 'į' | 'ı' => 'i',
-        'ĵ' => 'j',
-        'ķ' => 'k',
-        'ĺ' | 'ļ' | 'ľ' | 'ŀ' | 'ł' => 'l',
-        'ñ' | 'ń' | 'ņ' | 'ň' => 'n',
-        'ò'..='ö' | 'ø' | 'ō' | 'ŏ' | 'ő' => 'o',
-        'ŕ' | 'ŗ' | 'ř' => 'r',
-        'ś' | 'ŝ' | 'ş' | 'š' => 's',
-        'ţ' | 'ť' | 'ŧ' => 't',
-        'ù'..='ü' | 'ũ' | 'ū' | 'ŭ' | 'ů' | 'ű' | 'ų' => 'u',
-        'ŵ' => 'w',
-        'ý' | 'ÿ' | 'ŷ' => 'y',
-        'ź' | 'ż' | 'ž' => 'z',
-        other => other,
-    }
-}
-
-/// A word as search compares it: small letters, Latin accents set aside.
-fn fold(word: &str) -> String {
-    word.chars()
-        .flat_map(char::to_lowercase)
-        .filter(|c| !matches!(c, '\u{0300}'..='\u{036F}'))
-        .map(base_letter)
-        .collect()
-}
-
-/// The searched words, as `fold` gives them, each to be found at the start
-/// of a word in the text, as the search itself matches ("read" finds "reading").
-pub fn searched_words(typed: &str) -> Vec<String> {
-    word_spans(typed)
-        .into_iter()
-        .map(|(start, end)| fold(&typed[start..end]))
-        .filter(|word| !word.is_empty())
-        .collect()
-}
-
 /// A line of `text` around the first of the `searched` words in it: a few
 /// words before it, then on to about 90 characters, cut only between words,
 /// with "…" where text was left out (three typed dots in the text become
 /// "…" too). Every searched word in the line is
 /// marked. None if no searched word is in the text.
-pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
+pub fn excerpt(text: &str, searched: &[Term]) -> Option<Vec<Piece>> {
     let spans = word_spans(text);
-    let is_match = |&(start, end): &(usize, usize)| {
-        let word = fold(&text[start..end]);
-        searched.iter().any(|term| word.starts_with(term.as_str()))
-    };
-    let first = spans.iter().position(is_match)?;
+    // Which words are searched ones: a run of characters marks each of them.
+    let mut marked = vec![false; spans.len()];
+    for at in 0..spans.len() {
+        let length = searched
+            .iter()
+            .map(|term| found_at(text, &spans, at, term))
+            .max()
+            .unwrap_or(0);
+        marked[at..at + length].fill(true);
+    }
+    let first = marked.iter().position(|&is| is)?;
     let chars = |from: usize, to: usize| text[from..to].chars().count();
 
     // Back a few whole words, then on to the last whole word that fits.
@@ -382,8 +314,8 @@ pub fn excerpt(text: &str, searched: &[String]) -> Option<Vec<Piece>> {
         add("…", false);
     }
     let mut at = start;
-    for span in &spans[from..=to] {
-        if is_match(span) {
+    for (span, &is) in spans[from..=to].iter().zip(&marked[from..=to]) {
+        if is {
             add(&text[at..span.0], false);
             add(&text[span.0..span.1], true);
             at = span.1;
@@ -430,15 +362,7 @@ async fn noted_matching(
     .await?;
     let mut found: Vec<i64> = notes
         .into_iter()
-        .filter(|(_, text)| {
-            let words: Vec<String> = word_spans(text)
-                .into_iter()
-                .map(|(start, end)| fold(&text[start..end]))
-                .collect();
-            searched
-                .iter()
-                .all(|term| words.iter().any(|word| word.starts_with(term.as_str())))
-        })
+        .filter(|(_, text)| holds_all(text, &searched))
         .map(|(article, _)| article)
         .collect();
     found.sort_unstable();
@@ -704,6 +628,8 @@ mod tests {
             Some("\"NEAR(a\"* \"OR\"* \"b)*\"*")
         );
         assert_eq!(fts_question("किताबें").as_deref(), Some("\"किताबें\"*"));
+        // Chinese and Japanese characters are words of their own, to be found together.
+        assert_eq!(fts_question("阅读器").as_deref(), Some("\"阅 读 器\"*"));
         assert_eq!(fts_question("  - ... \" \""), None);
     }
 
@@ -714,6 +640,18 @@ mod tests {
             "One two three"
         );
         assert_eq!(plain_words("a &amp; b"), "a & b");
+        // Chinese and Japanese gain no space where tags split a sentence, and
+        // keep every space the writer typed.
+        assert_eq!(
+            plain_words("友だちに<b>手紙</b>を書いた"),
+            "友だちに手紙を書いた"
+        );
+        assert_eq!(plain_words("<p>我用 Rust 写代码</p>"), "我用 Rust 写代码");
+        assert_eq!(
+            plain_words("<p>第一段</p>\n<p>English</p>"),
+            "第一段 English"
+        );
+        assert_eq!(plain_words("<p>第一段 </p><p><i> </i>二</p>"), "第一段 二");
     }
 
     /// An excerpt as text, with the searched words in [brackets].

@@ -4,7 +4,7 @@ description: nine turtles reads writing in any language and script, and sets eac
 groupId: reading
 order: 12
 spec: 24
-updated: 2026-11-09
+updated: 2026-11-10
 related: [search-everything, change-how-it-looks, highlight-and-take-notes]
 ---
 
@@ -41,6 +41,8 @@ in the direction of what you type.
 - nine turtles' own words (buttons, dates, Settings) are in English.
 - Articles are never translated: you see what the writer wrote. Your browser
   can translate a page if you'd like.
-- <a href="/help/search-everything/">Search</a> understands English, other
-  languages written in the Latin alphabet, and Hindi. Chinese and Japanese
-  aren't searchable yet.
+- <a href="/help/search-everything/">Search</a> understands English,
+  Hindi, Chinese, Japanese, Arabic, Hebrew and every language written in the
+  Latin alphabet (not yet Thai, Lao, Khmer or Burmese). Type two or three Chinese or Japanese characters to find
+  them anywhere in a sentence; Arabic and Hebrew are found with or without
+  their vowel marks.

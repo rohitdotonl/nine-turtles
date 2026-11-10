@@ -4,7 +4,7 @@ description: Find any article from the people you follow, in the list you're in 
 groupId: reading
 order: 5
 spec: 14
-updated: 2026-11-09
+updated: 2026-11-10
 related: [star-an-article, every-keyboard-key, find-your-way-around]
 ---
 
@@ -42,5 +42,6 @@ up there, press **Search all articles** to look everywhere for the same words.
 
 - Search needs a connection.
 - **Mark all as read** works on what a search found.
-- Search understands English, other languages written in the Latin alphabet,
-  and Hindi. More in <a href="/help/read-in-other-languages/">Read in other languages</a>.
+- Search understands English and other languages written in the Latin
+  alphabet, Hindi, Chinese, Japanese, Arabic, Hebrew and Korean. Thai, Lao,
+  Khmer and Burmese can't be searched yet. More in <a href="/help/read-in-other-languages/">Read in other languages</a>.

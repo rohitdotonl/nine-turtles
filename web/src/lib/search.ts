@@ -68,9 +68,13 @@ export function withoutChip(query: Query, key: Chip["key"]): Query {
   return key === "scope" ? { ...query, scope: { kind: "all" } } : { ...query, starred: false };
 }
 
-/** Letters compared without capitals or Latin accents ("Café" is "cafe"); other scripts as written. */
+/** Letters compared without capitals, Latin accents, or Arabic and Hebrew vowel marks ("Café" is "cafe"; hamza and madda stay); other scripts as written. */
 export function fold(text: string): string {
-  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").normalize("NFC").toLocaleLowerCase();
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f\u064b-\u0652\u0656-\u065f\u0670\u0591-\u05bd\u05bf\u05c1\u05c2\u05c4\u05c5\u05c7]/g, "")
+    .normalize("NFC")
+    .toLocaleLowerCase();
 }
 
 /** What the server is asked (server/src/search.rs → `Search`). */
@@ -87,29 +91,48 @@ export function searchParams(query: Query): Record<string, string> {
   return params;
 }
 
-/** The searched words, for bold: quoted parts as their words. */
+// A Chinese character or kana: in Chinese and Japanese, written without
+// spaces, each is a word of its own, as the server's search splits them
+// (the same ranges as `is_ideograph` in server/src/search/words.rs, decision 0228).
+const IDEOGRAPH = "\\u3040-\\u309f\\u30a1-\\u30fa\\u30fc-\\u30ff\\u31f0-\\u31ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\uff66-\\uff9f\\u{20000}-\\u{3134f}";
+const PIECES = new RegExp(`[${IDEOGRAPH}]|(?:(?![${IDEOGRAPH}])[\\p{L}\\p{M}\\p{N}])+|[^\\p{L}\\p{M}\\p{N}]+`, "gu");
+const RUN = new RegExp(`[${IDEOGRAPH}]+|(?:(?![${IDEOGRAPH}])[\\p{L}\\p{M}\\p{N}])+`, "gu");
+const isIdeograph = (piece: string) => new RegExp(`^[${IDEOGRAPH}]$`, "u").test(piece);
+
+/** The searched words, for bold: quoted parts as their words, a run of Chinese characters or kana as one. */
 export function searchedTerms(words: string): string[] {
   return words
     .replace(/"/g, " ")
     .split(/\s+/)
     .filter(Boolean)
-    .flatMap((word) => word.match(/[\p{L}\p{M}\p{N}]+/gu) ?? [])
+    .flatMap((word) => word.match(RUN) ?? [])
     .map(fold);
 }
 
 /**
  * A title in pieces, each bold or not: a word is bold when it starts with a
- * searched word, as the search itself matches ("read" finds "reading").
+ * searched word, as the search itself matches ("read" finds "reading"); a
+ * searched run of Chinese characters or kana is bold where they stand together.
  */
 export function boldParts(title: string, terms: string[]): { text: string; bold: boolean }[] {
   if (terms.length === 0) return [{ text: title, bold: false }];
+  const pieces = [...title.matchAll(PIECES)].map(([piece]) => piece);
+  const bold = pieces.map(() => false);
+  pieces.forEach((piece, at) => {
+    for (const term of terms) {
+      const characters = [...term];
+      if (isIdeograph(characters[0] ?? "")) {
+        if (characters.every((character, i) => pieces[at + i] === character)) bold.fill(true, at, at + characters.length);
+      } else if (/[\p{L}\p{M}\p{N}]/u.test(piece) && fold(piece).startsWith(term)) {
+        bold[at] = true;
+      }
+    }
+  });
   const parts: { text: string; bold: boolean }[] = [];
-  for (const [piece] of title.matchAll(/[\p{L}\p{M}\p{N}]+|[^\p{L}\p{M}\p{N}]+/gu)) {
-    const isWord = /[\p{L}\p{M}\p{N}]/u.test(piece);
-    const bold = isWord && terms.some((term) => fold(piece).startsWith(term));
+  pieces.forEach((piece, at) => {
     const last = parts[parts.length - 1];
-    if (last && last.bold === bold) last.text += piece;
-    else parts.push({ text: piece, bold });
-  }
+    if (last && last.bold === bold[at]) last.text += piece;
+    else parts.push({ text: piece, bold: bold[at] ?? false });
+  });
   return parts;
 }

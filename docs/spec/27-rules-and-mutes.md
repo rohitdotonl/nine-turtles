@@ -9,7 +9,7 @@ words that can last a while (6 November 2026, decision 0201).*
 Hiding is a list of words. Each one hides articles about it, from everyone or from one person, for a week, a month or for good. Never code, no guessing, no ranking: only what the feed holds and what the reader wrote are used.
 
 **What it does**
-- **About:** a word or phrase, found as whole words in an article's title or text, whatever their capital letters ("AI" never matches "said"; the HTML's own words never count).
+- **About:** a word or phrase, found as whole words in an article's title or text, whatever their capital letters ("AI" never matches "said"; the HTML's own words never count). Chinese and Japanese characters are found side by side anywhere in a sentence, and Arabic and Hebrew with or without vowel marks, as search finds them (decision 0228).
 - **From:** **everyone**, or one person or publication. A person's rule covers every one of their sources, as their row does in the sidebar.
 - **Hidden** means the article is kept, counts as read, and waits in no list: not Unread, All articles, their list or a folder's; only search, **Hidden articles** and, if it's starred, Starred show it. Rules act on articles as they arrive, a new person's first ones included.
 - **Settings › Hiding ›** (`/settings/hiding`; decision 0120) starts with one field, **Hide articles about…** (its placeholder; screen readers hear the same as its name), with **Add** beside it, and under them how long, as three choices: **For a week**, **For a month** and **For good**, the usual one, chosen each time the page opens and again after each word. Return in the field adds too. Quote marks around a word are dropped.
