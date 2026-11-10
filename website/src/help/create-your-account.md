@@ -4,7 +4,7 @@ description: Sign up with your email address, confirm it, sign in on each device
 groupId: getting-started
 order: 1
 spec: 1 and 41
-updated: 2026-11-06
+updated: 2026-11-10
 related: [follow-someone, install-the-app, delete-your-account]
 ---
 
@@ -21,7 +21,10 @@ related: [follow-someone, install-the-app, delete-your-account]
    Press **Show** in the field to see what you typed.
 3. If you like, tell me how you heard about nine turtles. It's optional,
    and only ever counted, never shown with your name.
-4. Press **Sign up**.
+4. Press **Sign up**. If the part after the @ looks like a slip of a big
+   provider's name (say <code>gmial.com</code>), nine turtles asks "Did you
+   mean …@gmail.com?" first. Press **Use that** to fix it, or press **Sign
+   up** again to keep what you typed.
 5. Open the email called **Confirm your email for nine turtles**, press its
    link and press **Confirm email**. If you open it in another browser or on
    another device, type your password first.

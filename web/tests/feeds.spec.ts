@@ -553,7 +553,51 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
 
   await field(page).fill("not an address");
   await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address.");
+  await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address. An address looks like example.com.");
+});
+
+test("a mistyped address is said with its one repair, as a button: nothing is changed or looked up by itself (decision 0234)", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  const name = newBlog();
+  const meant = `${FEED_SITE}/blog/${name}/`;
+  const typed = meant.replace("://", "//");
+  let lookups = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/feeds" && request.method() === "POST") lookups += 1;
+  });
+  await field(page).fill(typed);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText(`That doesn't look like a web address. Did you mean ${meant}?`);
+  // The field keeps what was typed, marked, and nothing was sent.
+  await expect(field(page)).toHaveValue(typed);
+  await expect(field(page)).toHaveAttribute("aria-invalid", "true");
+  expect(lookups).toBe(0);
+  const use = page.getByRole("button", { name: `Use ${meant}` });
+  expect((await use.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // Typing again takes the offer away with its message.
+  await field(page).press("End");
+  await page.keyboard.type(" ");
+  await expect(use).toHaveCount(0);
+  await expect(page.locator("#feed-address-status")).toHaveText("");
+  await page.keyboard.press("Enter");
+  // Pressed (here from the keyboard), the repair goes in the field and is followed.
+  await tabTo(page, use);
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("group", { name: `Blog ${name} is…` })).toBeVisible();
+  expect(lookups).toBe(1);
+});
+
+test("Add pressed again after a repair is offered looks the address up as typed", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  await field(page).fill("gardenletters,blog");
+  await page.keyboard.press("Enter");
+  const status = page.locator("#feed-address-status");
+  await expect(status).toHaveText("That doesn't look like a web address. Did you mean gardenletters.blog, with a dot?");
+  const sent = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/feeds" && request.method() === "POST");
+  await page.keyboard.press("Enter");
+  expect((await sent).postDataJSON()).toMatchObject({ address: "gardenletters,blog" });
+  // nine turtles can't read it either, so the repair is offered again.
+  await expect(page.getByRole("button", { name: "Use gardenletters.blog" })).toBeVisible();
 });
 
 test("changing the address after a choice of feeds takes the old choices away", async ({ page }) => {
