@@ -32,8 +32,8 @@ V1, item 5; decision 0140). Once a week or off since 5 November 2026
   and their next email says so once, under its first line: "This email now
   comes once a week, on Saturday mornings, instead of twice."
 - **What it says** ("New from the people you read", from nine turtles,
-  signed by Rohit like every email, BRAND.md → Emails): "Here's what the
-  people you read wrote this week."; then each person or publication with something unread that arrived
+  signed by Rohit like every email, BRAND.md → Emails): "Here's what's new
+  from the people you read that you haven't read yet." (it lists only what's unread, so it never says "wrote this week"); then each person or publication with something unread that arrived
   since the last one (never more than a week back), by name, A to Z (a
   person with several sources is one, section 36). Under each name, their
   newest titles, at most three, each with the first line of its words, cut
