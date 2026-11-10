@@ -15,8 +15,8 @@ what happened.
 - **Leaving** (suggestion 4): Delete data… and Delete account… leave
   Settings › Account for a group of their own at the very end of Settings,
   "Leaving", with "Each one says exactly what goes before anything is
-  removed." under it, then Help and the version. Account keeps Email,
-  Password, Weekly email and Sign out (SPEC section 18).
+  removed." under it, then Help and the version. Account keeps Your plan,
+  Email, Password, Weekly email and Sign out (SPEC section 18).
 - **Messages that say the fix** (suggestion 8): "The highlight couldn't be
   saved. Choose the words and press Highlight again in a moment.", "The
   highlight couldn't be removed, so it's still here. Try again in a

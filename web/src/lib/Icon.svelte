@@ -221,7 +221,7 @@
     <path d="M17.25 2.75 2.75 8.75l5.5 3 3 5.5Z" />
     <path d="M8.25 11.75 17.25 2.75" />
   {:else if name === "trash"}
-    <!-- Settings › Account › Delete data and Delete account: a bin. -->
+    <!-- Settings › Leaving › Delete data and Delete account: a bin. -->
     <path d="M3.75 5.75h12.5M8 5.75V4.25a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v1.5" />
     <path d="M5.25 5.75l.75 9.5a1 1 0 0 0 1 .95h6a1 1 0 0 0 1-.95l.75-9.5" />
   {/if}

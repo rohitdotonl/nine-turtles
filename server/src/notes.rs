@@ -404,7 +404,7 @@ pub async fn kept_by(
     }))
 }
 
-/// Unsubscribing with "Remove them too": what the reader kept from these
+/// Unsubscribing with the red "Remove … too": what the reader kept from these
 /// places goes once the unsubscribe is cleared for good (`drop_kept`); Undo
 /// before then brings it all back (`feeds::store::follow_again`).
 pub async fn drop_later(

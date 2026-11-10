@@ -35,7 +35,7 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // Screen readers hear that each row opens a page.
   const rules = page.getByRole("link", { name: "Hiding", exact: true });
   await expect(rules).toHaveAccessibleDescription("Opens its own page.");
-  // Account: Email, Password, then Sign out, then Delete data…; the owner has no Delete account….
+  // Account: Email, Password, then Sign out; Delete data… under Leaving at the end; the owner has no Delete account….
   await expect(page.getByText("Email", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change… password" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();

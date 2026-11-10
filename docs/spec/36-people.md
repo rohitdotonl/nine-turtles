@@ -79,7 +79,8 @@ PLAN.md → V1, item 1.*
   their list. It shows their name with **Edit** beside it, a quiet underlined
   word (44px tall and wide to touch), so Write to is the page's one strong button (decision 0215); for one
   source whose own title isn't their name, that title under it, in the
-  reading serif ("Notes from Tomas" under Tomas Berg); under that, for a
+  reading serif ("Notes from Tomas" under Tomas Berg); while a source is
+  paused, the line saying so with Resume (section 15, decision 0237); under that, for a
   person, **Write to Tomas Berg**, the solid ink button with the paper plane, with the
   address under it once nine turtles knows it (section 37; the owner's core
   path, point 9); then your private note on them (section 42); then

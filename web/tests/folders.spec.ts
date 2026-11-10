@@ -589,7 +589,9 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   await sheet.getByRole("button", { name: "Done" }).click();
   await page.goto(new URL(`/people/${paused}`, FEEDS_APP).href);
   await appReady(page);
-  await page.getByRole("button", { name: "Resume", exact: true }).click();
+  // With only the keyboard: Tab to Resume, Enter, and the keyboard lands on what happened.
+  await tabTo(page, page.getByRole("button", { name: "Resume", exact: true }));
+  await page.keyboard.press("Enter");
   await expect(page.getByText("Resumed.", { exact: true })).toBeFocused();
   await expect(page.getByText(/Their new articles arrive already read/)).toHaveCount(0);
   await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
