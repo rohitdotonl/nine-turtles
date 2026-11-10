@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 15
-updated: 2026-11-09
+updated: 2026-11-10
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -65,7 +65,9 @@ Moving takes them out of the folders they were in. **Undo** puts them back.
 ## Rename or delete a folder
 
 Choose the folder, then **More › Edit folder…** Change its **Name** and
-press **Save**, or press **Delete**.
+press **Save**, or press **Delete**. Close it any other way and your
+changes wait there, marked **Not saved yet.**, until you press Save or
+**Cancel**.
 
 Deleting a folder never unfollows anyone: they simply leave the folder.
 **Undo** brings it back as it was.

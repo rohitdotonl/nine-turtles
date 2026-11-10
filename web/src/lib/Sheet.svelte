@@ -2,7 +2,9 @@
   A sheet: a small card over the place you were (adding a feed, editing a feed
   or a folder), so the list and the article stay in view behind it. A native
   modal dialog, so the keyboard stays inside while it's open; Escape, or a
-  click on the dimmed page around it, closes it without saving.
+  click on the dimmed page around it, closes it without saving. A sheet the
+  reader types in (Add, Edit folder) keeps what was typed for next time,
+  and only its Cancel throws it away (decision 0235); a password is never kept.
 
   Every sheet has the same build (DESIGN.md → "Visual language"; decision
   0042): a title in the same serif as every other title (the list's,
