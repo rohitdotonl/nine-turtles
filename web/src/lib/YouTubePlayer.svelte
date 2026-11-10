@@ -7,8 +7,9 @@
   (9 : 16), any other video's wide (16 : 9).
 
   Pressing Play swaps the box for YouTube's privacy-enhanced player, in the
-  same place and size (nothing else moves), which starts at once and takes
-  the keyboard, so Space and its own keys work straight away. Tab leaves it.
+  same place and size (nothing else moves); until that player has loaded, the
+  box stays over it saying "Starting the video…" (decision 0230). The player
+  starts at once and takes the keyboard, so Space and its own keys work straight away. Tab leaves it.
 
   It picks up where you stopped, on any device: while it plays the player
   tells this page its time, which is kept as a podcast episode's place is
@@ -45,6 +46,8 @@
   } = $props();
 
   let playing = $state(false);
+  /** YouTube's player has loaded in the frame: until then the box stays over it, saying "Starting the video…" (decision 0230). */
+  let started = $state(false);
   let frame: HTMLIFrameElement | undefined = $state();
   let box: HTMLButtonElement | undefined = $state();
   /** Where the player starts: where you stopped, or a chapter you pressed. */
@@ -73,6 +76,7 @@
     playerState = undefined;
     speed = videoSpeed(deviceText(VIDEO_SPEED_KEY));
     speedTaken = speed === 1;
+    started = false;
     playing = true;
   }
 
@@ -173,12 +177,19 @@
       bind:this={frame}
       src={playerAddress(video, start, location.origin)}
       title="YouTube video: {title}"
-      onload={() => send(toPlayer("listening"))}
+      onload={() => ((started = true), send(toPlayer("listening")))}
       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
       allowfullscreen
       referrerpolicy="strict-origin"
       sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
     ></iframe>
+    {#if !started}
+      <!-- The box stays, in the player's place and size, until YouTube's player has loaded: the press shows it worked. -->
+      <div class="video-play video-starting" aria-live="polite">
+        <span class="video-title" aria-hidden="true">{title}</span>
+        <span class="video-word">Starting the video…</span>
+      </div>
+    {/if}
   {:else}
     <!-- Named by its visible words first, so voice control finds it by what it says. -->
     <button
@@ -215,6 +226,7 @@
 <style>
   /* The shape is the box's and the player's own, so large text can make the box taller rather than cut its words. */
   .video {
+    position: relative;
     margin-top: 1.75em;
     width: 100%;
     --shape: 16 / 9;
@@ -249,7 +261,13 @@
     font-size: var(--text-ui);
     cursor: pointer;
   }
-  .video-play:hover {
+  /* Over the loading player, the same box, not a button any more. */
+  .video-starting {
+    position: absolute;
+    inset: 0;
+    cursor: default;
+  }
+  button.video-play:hover {
     background-color: color-mix(in srgb, var(--ink) 10%, transparent);
   }
   .video-title {

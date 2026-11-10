@@ -114,6 +114,26 @@ export class LoadedLibrary {
     };
   }
 
+  /**
+   * Just followed (decision 0230): "You're following Maya Chen.", then the
+   * line about any ticked feeds that couldn't be followed. Undo unfollows
+   * them (nothing read or starred yet, so nothing is lost) and `back` leaves
+   * their list, which is no longer there.
+   */
+  followed(feed: Feed, back: (notice: Notice) => void, note?: string): Notice {
+    const name = this.shownAs(feed)?.title ?? feed.title;
+    return {
+      message: [`You're following ${name}.`, note].filter(Boolean).join(" "),
+      undo: async () => {
+        const { refusal } = await unsubscribeAll(feed.id);
+        if (refusal) return refusal;
+        await this.loadFeeds();
+        back({ message: `You're no longer following ${name}.` });
+        return undefined;
+      },
+    };
+  }
+
   /** Deletes a folder (never its feeds): "Deleted the folder … · Undo", which puts its feeds back. */
   async deleteFolder(folder: Folder): Promise<Removed> {
     const inside = (this.feeds ?? []).filter((feed) => feed.folders.includes(folder.id)).map((feed) => feed.id);

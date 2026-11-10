@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { endOfList, markedAllMessage, newItemsMessage, noFurther, resultCount } from "./lists";
+import { endOfList, markedAllMessage, newItemsMessage, noFurther, notSavedSignedOut, resultCount } from "./lists";
+import { Refused, signedOut } from "./saving";
 
 describe("mark all as read", () => {
   it("says how many items it marked, in plain words", () => {
@@ -40,5 +41,21 @@ describe("a search's count", () => {
     expect(resultCount(1, false)).toBe("1 result");
     expect(resultCount(12, false)).toBe("12 results");
     expect(resultCount(50, true)).toBe("50+ results");
+  });
+});
+
+describe("signed out (decision 0230)", () => {
+  it("names the real reason a mark wasn't saved", () => {
+    expect(notSavedSignedOut("starred", true, 1)).toBe("You're signed out, so the star wasn't saved.");
+    expect(notSavedSignedOut("starred", false, 1)).toBe("You're signed out, so the star wasn't removed.");
+    expect(notSavedSignedOut("read", false, 1)).toBe("You're signed out, so the article wasn't marked as unread.");
+    expect(notSavedSignedOut("read", true, 12)).toBe("You're signed out, so the 12 articles weren't marked as read.");
+  });
+
+  it("counts only the server's 401 as signed out", () => {
+    expect(signedOut(new Refused(401))).toBe(true);
+    expect(signedOut(new Refused(403))).toBe(false);
+    expect(signedOut(new Refused(503))).toBe(false);
+    expect(signedOut(new TypeError("offline"))).toBe(false);
   });
 });

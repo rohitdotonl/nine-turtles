@@ -50,6 +50,7 @@ function hands(next?: Route) {
     star: note("star"),
     inArticle: note("inArticle"),
     markUnread: note("markUnread"),
+    needsArticle: note("needsArticle"),
     undo: note("undo"),
     refresh: note("refresh"),
     setTextSize: note("setTextSize"),
@@ -122,8 +123,10 @@ describe("carryOut", () => {
       ["mark-unread", "markUnread"],
     ] as const) {
       expect(run({ kind }, scene())).toEqual([[did]]);
-      expect(run({ kind }, scene({ selected: false }))).toEqual([]);
+      // With none chosen, the list's note says to choose one (decision 0230).
+      expect(run({ kind }, scene({ selected: false }))).toEqual([["needsArticle"]]);
       expect(run({ kind }, scene({ onList: false }))).toEqual([]);
+      expect(run({ kind }, scene({ selected: false, onList: false }))).toEqual([]);
     }
   });
 
@@ -139,7 +142,10 @@ describe("carryOut", () => {
     expect(run({ kind: "write-back" }, scene())).toEqual([["inArticle", "write-back"]]);
     expect(run({ kind: "highlight" }, scene())).toEqual([["inArticle", "highlight"]]);
     expect(run({ kind: "note" }, scene({ article: false }))).toEqual([]);
-    expect(run({ kind: "write-back" }, scene({ selected: false }))).toEqual([]);
+    expect(run({ kind: "write-back" }, scene({ selected: false }))).toEqual([["needsArticle"]]);
+    expect(run({ kind: "note" }, scene({ selected: false }))).toEqual([["needsArticle"]]);
+    // A highlight needs words chosen in an article: nothing to say about choosing one first.
+    expect(run({ kind: "highlight" }, scene({ selected: false }))).toEqual([]);
     expect(run({ kind: "write-back" }, scene({ article: false }))).toEqual([]);
     expect(run({ kind: "write-back" }, scene({ onList: false }))).toEqual([]);
   });

@@ -17,6 +17,7 @@
     refusal = false,
     onUndo,
     onRetry,
+    retryWord = "Try again",
     onClose,
     busy = false,
     announce = false,
@@ -29,6 +30,8 @@
     onUndo?: () => void;
     /** Shown when trying again is the fix. */
     onRetry?: () => void;
+    /** What that button says: "Sign in" when being signed out is why (decision 0230). */
+    retryWord?: string;
     onClose: () => void;
     busy?: boolean;
     /** The words carry the status role themselves, without the buttons. */
@@ -44,7 +47,7 @@
     >
     {#if message}
       {#if onRetry}
-        <TextButton class="-mr-2 px-2" aria-disabled={busy} onclick={onRetry}>Try again</TextButton>
+        <TextButton class="-mr-2 px-2" aria-disabled={busy} onclick={onRetry}>{retryWord}</TextButton>
       {/if}
       {#if onUndo}
         <TextButton bind:element={undoButton} class="-mr-2 px-2" data-focus="undo" aria-disabled={busy} onclick={onUndo}>Undo</TextButton>

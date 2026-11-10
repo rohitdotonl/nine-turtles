@@ -555,7 +555,7 @@
   async function added(feed: Feed, note?: string) {
     const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
     await loadFeeds();
-    if (!stay) go({ kind: "feed", id: library.rowOf(feed.id) }, note ? { message: note } : undefined); // As one person, if several were followed together.
+    if (!stay) go({ kind: "feed", id: library.rowOf(feed.id) }, library.followed(feed, (back) => go(home, back), note)); // As one person, if several were followed together.
   }
 
   /**
@@ -871,7 +871,7 @@
     star: () => itemList?.toggleStar(),
     inArticle: (what) => articleView?.act(what),
     markUnread: () => itemList?.markUnread(),
-    undo: () => itemList?.undo(),
+    undo: () => itemList?.undo(), needsArticle: () => itemList?.needsArticle(),
     refresh: () => itemList?.refresh(true),
     setTextSize: (size) => (preferences.textSize = size),
   };
@@ -1194,7 +1194,7 @@
                 <ItemList
                   bind:this={itemList} bind:note={listNote}
                   bind:selected
-                  {source}
+                  {source} loading={searching.shown ? "Searching…" : `Loading ${headingText}…`}
                   order={settings.sort}
                   {notice}
                   empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => (searching.everywhere(), queueMicrotask(() => searchBar?.focus()))) : emptyText(under, currentFeed?.checkedAt ?? null)}

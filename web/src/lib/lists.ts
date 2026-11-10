@@ -86,6 +86,13 @@ export function noFurther(step: 1 | -1, more: boolean): string {
   return more ? "That's the last one so far. More load as you scroll down." : "That's the last article here.";
 }
 
+/** A mark the server refused because the reader is signed out (decision 0230): the real reason, for Sign in beside it. */
+export function notSavedSignedOut(field: "read" | "starred", value: boolean, count: number): string {
+  if (field === "starred") return `You're signed out, so the star wasn't ${value ? "saved" : "removed"}.`;
+  const what = count === 1 ? "the article wasn't" : `the ${count} articles weren't`;
+  return `You're signed out, so ${what} marked as ${value ? "read" : "unread"}.`;
+}
+
 /** What the note at the foot of the list says when new items are waiting: no number. On a touch screen a Show button follows it. */
 export function newItemsMessage(touch: boolean): string {
   return touch ? "New articles" : "New articles · press r";

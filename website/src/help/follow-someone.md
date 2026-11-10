@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-09
+updated: 2026-11-10
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -106,5 +106,6 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
 
 ## Good to know
 
-- Nobody is followed until you press **Add** or **Follow**.
+- Nobody is followed until you press **Add** or **Follow**. Then their list
+  says "You're following …", with **Undo** if you followed the wrong one.
 - You can follow up to 1,000 at once.

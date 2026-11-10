@@ -72,6 +72,11 @@ export function worthRetrying(problem: unknown): boolean {
   return !(problem instanceof Refused) || OUT_OF_REACH.has(problem.status);
 }
 
+/** The server no longer knows this device's reader: signed out elsewhere, or the session ran out (decision 0230). */
+export function signedOut(problem: unknown): boolean {
+  return problem instanceof Refused && problem.status === 401;
+}
+
 export function send(path: string, body: unknown): Promise<void> {
   const giveUpAt = Date.now() + KEEP_TRYING_FOR;
   const once = async () => {

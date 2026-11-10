@@ -8,6 +8,12 @@ export const UNREACHABLE = "nine turtles can't be reached right now. Try again i
 /** A successful Undo, everywhere. */
 export const UNDONE = "Undone.";
 
+/** How long a wait goes unsaid: a quicker answer never flickers a word (decision 0229). */
+export const SAY_AFTER_MS = 500;
+
+/** `s`, `m`, `w` or `n` with no article chosen says what to do (decision 0230). */
+export const CHOOSE_FIRST = "Choose an article first. j chooses the first one.";
+
 /** `u` with nothing to undo says so, rather than nothing (decision 0229). */
 export const NOTHING_TO_UNDO = "Nothing to undo.";
 
