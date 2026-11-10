@@ -144,7 +144,8 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
-  await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
+  // The folder, with the article still open in it (decision 0233).
+  await expect(page).toHaveURL(new RegExp(`/folders/${folderId}(/articles/[0-9]+)?$`));
 });
 
 test("Mark all as read marks only the results, and u undoes it", async ({ page }) => {

@@ -8,7 +8,7 @@
 // Shell still corrects the address in place (`history.replaceState`) when it
 // opens and when Back lands somewhere it leads on from.
 
-import { parentOf, pathFor, rowFor, type Route } from "./router";
+import { articleIn, parentOf, pathFor, rowFor, type Route } from "./router";
 import { stepOf, type Screen, type Step } from "./steps";
 
 /** A place that shows a list of articles: a view, a feed or a folder. */
@@ -146,7 +146,8 @@ export class Steps {
   /** The sheet on screen was opened with a step in the browser's history, so closing it is a step back. */
   #sheetPushed = false;
 
-  constructor(hands: StepHands, browser: Browser = history, path: () => string = () => location.pathname) {
+  /** `path`: the list or page in the address, without an open article (decision 0233). */
+  constructor(hands: StepHands, browser: Browser = history, path: () => string = () => articleIn(location.pathname).list) {
     this.#hands = hands;
     this.#browser = browser;
     this.#path = path;

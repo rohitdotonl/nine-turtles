@@ -56,7 +56,8 @@
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu } from "./rowMenu";
   import { longPress } from "./longPress";
-  import type { MenuItem } from "./MoreMenu.svelte";
+  import type { MenuGroup } from "./MoreMenu.svelte";
+  import { opensElsewhere } from "./articleLinks";
   import type { EmptyWords } from "./listWording";
   import { boldParts } from "./search";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
@@ -79,6 +80,7 @@
     first = $bindable(),
     found = $bindable(""),
     rowActions = () => [],
+    addressOf = () => "",
     note = $bindable(),
     loading = "Loading…",
   }: {
@@ -106,8 +108,10 @@
     first?: Article;
     /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
     found?: string;
-    /** A row's menu, after its star and read: writing back and the page about its writer (`rowMenu.ts` → `writerItems`). */
-    rowActions?: (article: Article) => MenuItem[];
+    /** A row's menu, after its star and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
+    rowActions?: (article: Article) => MenuGroup[];
+    /** An article's own address (decision 0233), for Command-click and a middle click on its row. */
+    addressOf?: (article: Article) => string;
     /** The note, for the reading area to show while the list isn't on screen (decision 0229). */
     note?: ListNote;
     /** What a slow first load says where the rows will be, "Loading Outdoors…" (decision 0230). */
@@ -148,12 +152,8 @@
   /** After a mark couldn't be saved: what Try again sends again. */
   let retryLast: (() => void) | undefined = $state();
   let retryWord = $state("Try again");
-  /**
-   * The note was put away: by its Close button, or by opening an article on a
-   * screen with a keyboard (the reader has moved on). `u` still undoes until the list is left; whatever
-   * the line says next brings the note back. A failed save is never put away
-   * by moving on: it still matters.
-   */
+  /** The note was put away: by its Close button, or by opening an article on a screen with a keyboard (the reader has moved on).
+   * `u` still undoes until the list is left; whatever the line says next brings the note back. A failed save is never put away by moving on: it still matters. */
   let closed = $state(false);
   /** What the note's first line shows: nothing once it's put away. */
   let saying = $derived(!closed && !!(line || undoLast));
@@ -644,9 +644,8 @@
             openMenu(index, event.clientX || undefined, event.clientY || undefined);
           }}
           use:longPress={(x, y) => openMenu(index, x, y)}
-          class={[
-            "item-row place block cursor-pointer pr-4 text-left",
-          ]}
+          use:opensElsewhere={() => addressOf(article)}
+          class="item-row place block cursor-pointer pr-4 text-left"
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
           {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}

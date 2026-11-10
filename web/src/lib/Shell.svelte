@@ -54,7 +54,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, type Route } from "./router";
+  import { articleIn, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
@@ -70,7 +70,9 @@
   import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
-  import { arrivedBySwitching, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
+  import { linkItems } from "./articleLinks";
+  import { readArticle } from "./articles";
+  import { arrivedBySwitching, settleBack, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
   import { deviceText, setDeviceText } from "./device";
 
   let {
@@ -131,6 +133,8 @@
   /** What the next list's line says on arrival (after unsubscribing or deleting a folder). */
   let notice: Notice | undefined = $state();
   let preferences = $state(load());
+  /** The article the address opened on names, if any (decision 0233). */
+  const fromAddress = articleIn(location.pathname).article;
   /** Which screen this history entry shows (see steps.ts). */
   const firstStep = startingStep(history.state, currentWidth() === "narrow", location.pathname, isList(start));
   let cheatSheetOpen = $state(false);
@@ -218,7 +222,8 @@
   $effect(() => {
     const rows = library.rows;
     placeAddressesBy((id) => rowFor(id, rows ?? [])?.kind === "publication");
-    if (rows && (route.kind === "feed" || isWho(route)) && location.pathname !== pathFor(route)) untrack(() => history.replaceState(history.state, "", pathFor(route)));
+    const { list, article } = articleIn(location.pathname);
+    if (rows && (route.kind === "feed" || isWho(route)) && list !== pathFor(route)) untrack(() => history.replaceState(history.state, "", withArticle(pathFor(route), article)));
   });
   /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
   let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);
@@ -295,6 +300,9 @@
     // While an article is open the tab names it, as every website does (decision 0231).
     const open = selected && (phone ? reading : isList(route)) ? selected.title.trim() || untitledOpening(selected) : undefined;
     document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName, open);
+    // And the address names it, under its list (decision 0233), so reload, Back and bookmarks keep it.
+    const address = withArticle(pathFor(route), open === undefined ? undefined : selected?.id);
+    if (isList(route) && location.pathname !== address) history.replaceState(history.state, "", address);
   });
 
   // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes,
@@ -347,6 +355,8 @@
   onMount(() => {
     // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
+    // An address naming an article opens it in its list (decision 0233); the address names it again once open.
+    if (fromAddress && isList(route)) void readArticle(fromAddress).then((article) => selected ?? openFromOutside(article, true), () => {});
 
     // Arriving here by switching to a new version: the screen is as the reader left it, and the
     // keyboard's place goes to the heading, as going here without the switch would have done.
@@ -486,31 +496,7 @@
     layout.putBack(was);
     const place = parse(was.lastPlace);
     if (isList(place) && !isList(route)) lastPlace = place;
-    let [focused, scrolled] = [false, was.sidebarScroll <= 0];
-    let frames = 0;
-    const settle = () => {
-      // Once the reader has put the keyboard's place somewhere, it stays there.
-      // (Opening puts it on the wordmark, or the heading, first; see onMount.)
-      const at = document.activeElement;
-      if (!focused && at && at !== document.body && at !== wordmark && at !== placeFocus(route)) focused = true;
-      if (!focused) {
-        const heading = placeFocus(route);
-        if (heading) {
-          heading.focus();
-          focused = document.activeElement === heading;
-        }
-      }
-      if (!scrolled) {
-        const scroller = sidebar?.querySelector(".scroller");
-        if (scroller && scroller.scrollHeight - scroller.clientHeight >= was.sidebarScroll) {
-          scroller.scrollTop = was.sidebarScroll;
-          scrolled = true;
-        }
-      }
-      // About three seconds at most, then the page is left as it is.
-      if (!(focused && scrolled) && ++frames < 180) requestAnimationFrame(settle);
-    };
-    requestAnimationFrame(settle);
+    settleBack(() => placeFocus(route), wordmark, () => sidebar?.querySelector(".scroller"), was.sidebarScroll);
   }
 
   /**
@@ -763,10 +749,13 @@
     else layout.makeWayForArticle();
   }
 
-  /** Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list opens with it chosen, keyboard on it. */
-  function openFromOutside(article: Article) {
+  /**
+   * Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list
+   * opens with it chosen, keyboard on it. `here`: from the address, in the list it names (decision 0233).
+   */
+  function openFromOutside(article: Article, here = false) {
     if (selected?.id !== article.id) {
-      if (!(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
+      if (!here && !(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
       selected = article;
     }
     if (phone && !reading) {
@@ -776,6 +765,9 @@
     layout.makeWayForArticle();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
+
+  /** An article's own address, under the list on screen (decision 0233). */
+  const addressOf = (article: Article) => withArticle(pathFor(isList(route) ? route : under), article.id);
 
   /** Back from the article to its row in the list. */
   function backToList() {
@@ -1205,7 +1197,11 @@
                   {unreadOff}
                   bind:first={listFirst}
                   bind:found={listFound}
-                  rowActions={(article) => writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) })}
+                  rowActions={(article) => [
+                    { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) }) },
+                    { items: linkItems(article, addressOf(article), (message) => itemList?.say(message)) },
+                  ]}
+                  {addressOf}
                 />
               {/key}
             {/if}

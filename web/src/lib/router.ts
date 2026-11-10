@@ -72,9 +72,23 @@ function whoPath(id: number): string {
   return `/${publication(id) ? "publications" : "people"}/${id}`;
 }
 
-/** The place an address points to. Anything unknown opens Unread. */
+/**
+ * An open article's address, under its list's (decision 0233): "/people/5/articles/29",
+ * "/unread/articles/29". With no article, the list's own.
+ */
+export function withArticle(path: string, article: number | undefined): string {
+  return article ? `${path}/articles/${article}` : path;
+}
+
+/** The list's address and the article an address names, if any: "/people/5/articles/29" → "/people/5", 29. */
+export function articleIn(path: string): { list: string; article?: number } {
+  const found = path.match(/^(.*)\/articles\/([1-9][0-9]{0,15})\/?$/);
+  return found ? { list: found[1] || "/", article: Number(found[2]) } : { list: path };
+}
+
+/** The place an address points to (an article in it aside). Anything unknown opens Unread. */
 export function parse(path: string): Route {
-  const name = path.replace(/^\/+|\/+$/g, "");
+  const name = articleIn(path).list.replace(/^\/+|\/+$/g, "");
   if (name === "settings") return { kind: "settings" };
   // The old Feed health page is part of Everyone you follow now (decision 0186).
   if (name === "settings/feeds" || name === "settings/feed-health") return { kind: "your-feeds" };
@@ -103,7 +117,10 @@ export function parse(path: string): Route {
 
 /** Whether an address is one of nine turtles' places. Any other opens the "Wrong turn?" page (SPEC section 4). */
 export function knownPath(path: string): boolean {
-  const name = path.replace(/^\/+|\/+$/g, "");
+  const { list, article } = articleIn(path);
+  const name = list.replace(/^\/+|\/+$/g, "");
+  // An article opens only under a list of articles (decision 0233).
+  if (article && (name === "" || !["view", "feed", "folder"].includes(parse(list).kind))) return false;
   if (name === "" || name === "unread") return true;
   const place = parse(path);
   return !(place.kind === "view" && place.view === "unread");

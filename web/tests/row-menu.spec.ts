@@ -35,7 +35,7 @@ test.describe("on a wide window", () => {
     const first = rows(page).nth(0);
     await first.click({ button: "right" });
     const menu = rowMenu(page);
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Star\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`)]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Star\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`), /Open in a new tab/, /Copy link/]);
     // No keys printed: the same actions have theirs elsewhere.
     await expect(menu.locator("kbd")).toHaveCount(0);
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
