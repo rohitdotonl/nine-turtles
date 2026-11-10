@@ -103,7 +103,10 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
   pull request and checks it starts and answers `/status`. On main it also
   stores it and deploys it (decision 0011). It needs Docker, so it isn't in
   `scripts/check.sh`; run `docker build .` to try it yourself. Skipped on
-  pull requests that change only documents.
+  pull requests that change only documents. The libraries' build is kept in
+  GitHub's package storage as the image's `buildcache` tag and reused until
+  `server/Cargo.toml`, `server/Cargo.lock` or the Rust version changes, so
+  only nine turtles itself is rebuilt (decision 0114).
 - **Publishing the website:** `.github/workflows/website.yml` builds the
   website and publishes it to GitHub Pages when a merge into main changes it
   (decision 0066, `website-and-domain.md`).

@@ -68,3 +68,9 @@ quick parts and the browser test files for what it changed
 (`NINE_TURTLES_BROWSER_TESTS`). On a cloud computer the whole set took
 10½ minutes, on top of building the program, and then ran again on GitHub,
 which is what decides: nothing merges unless every test passes there.
+
+The container image's build keeps the libraries too: the Dockerfile builds
+them first, from `Cargo.toml` and `Cargo.lock` alone, and GitHub keeps that
+step in its package storage (the image's `buildcache` tag), so a merge
+rebuilds only nine turtles itself. Plain `docker buildx`, no new building
+block; a host without the kept copy simply builds everything, as before.

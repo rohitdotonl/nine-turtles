@@ -130,7 +130,11 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
     let listed: Result<Sidebar, sqlx::Error> = async {
         let mut connection = state.db.acquire().await?;
         // Each place not yet guessed a person or publication is, once (decision 0163).
-        let mut guessing = sqlx::Connection::begin(&mut *connection).await?;
+        // It reads, then writes, so it takes the write lock first: a plain
+        // transaction failed at once ("database is locked", code 517) whenever
+        // a feed check wrote in between, and the sidebar couldn't load.
+        let mut guessing =
+            sqlx::Connection::begin_with(&mut *connection, "BEGIN IMMEDIATE").await?;
         crate::writers::kind::fill(&mut guessing, person, None).await?;
         guessing.commit().await?;
         // One snapshot, so the feeds, folders and memberships agree.
