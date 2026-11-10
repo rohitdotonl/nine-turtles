@@ -4,8 +4,8 @@
 // is asking (GET /api/oauth/request) and sends the reader's answer
 // (POST /api/oauth/approve or /api/oauth/deny), then follows the redirect
 // the server gives back. Settings › Connected assistants lists the
-// connections, disconnects them, and brings back feeds an assistant
-// unsubscribed from, which are kept for 30 days.
+// connections and disconnects them. What an assistant unsubscribes from is
+// kept for 30 days under Recently unsubscribed in Everyone you follow.
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
@@ -94,9 +94,7 @@ export async function answerRequest(answer: "approve" | "deny", search: string):
 }
 
 export type Assistant = { id: number; name: string; connectedAt: number; lastUsedAt: number | null };
-/** A feed an assistant unsubscribed from, kept for 30 days so it can be brought back. */
-export type Unsubscribed = { feedId: number; title: string; unsubscribedAt: number; keptUntil: number };
-export type Assistants = { assistants: Assistant[]; unsubscribed: Unsubscribed[] };
+export type Assistants = { assistants: Assistant[] };
 
 /** Reads GET /api/assistants, leaving out anything malformed. */
 export function readAssistants(body: unknown): Assistants {
@@ -106,18 +104,7 @@ export function readAssistants(body: unknown): Assistants {
     const lastUsedAt = typeof item.last_used_at === "number" ? item.last_used_at : null;
     return [{ id: item.id, name: item.name, connectedAt: item.connected_at, lastUsedAt }];
   });
-  const unsubscribed = (Array.isArray(record.unsubscribed) ? record.unsubscribed : []).flatMap((item): Unsubscribed[] => {
-    if (
-      !isRecord(item) ||
-      typeof item.feed_id !== "number" ||
-      typeof item.title !== "string" ||
-      typeof item.unsubscribed_at !== "number" ||
-      typeof item.kept_until !== "number"
-    )
-      return [];
-    return [{ feedId: item.feed_id, title: item.title, unsubscribedAt: item.unsubscribed_at, keptUntil: item.kept_until }];
-  });
-  return { assistants, unsubscribed };
+  return { assistants };
 }
 
 export async function listAssistants(): Promise<Assistants> {

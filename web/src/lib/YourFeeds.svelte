@@ -6,7 +6,9 @@
   since …" after six months, and their folders. A row opens their page.
   Choose…, as Edit in Apple Books, puts a tick box on each row; with some
   chosen, the bar at the foot moves them to one folder or unsubscribes from
-  them all, in one go, with one Undo until your next action.
+  them all, in one go, with one Undo until your next action. Last,
+  Recently unsubscribed: who was left in the last 30 days, each with Bring
+  back (RecentlyUnsubscribed.svelte, decision 0239).
 -->
 <script lang="ts">
   import type { LoadedLibrary } from "./library.svelte";
@@ -14,6 +16,8 @@
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import NotWorking from "./NotWorking.svelte";
+  import RecentlyUnsubscribed from "./RecentlyUnsubscribed.svelte";
+  import type { Kept } from "./recentlyUnsubscribed";
   import PageHead from "./PageHead.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
@@ -57,6 +61,7 @@
 
   let feeds: Tended[] | undefined = $state();
   let folders: Folder[] = $state([]);
+  let kept: Kept[] = $state([]);
   let failed = $state(false);
   let editing = $state(false);
   let chosen: number[] = $state([]);
@@ -95,7 +100,7 @@
 
   async function load() {
     try {
-      ({ feeds, folders } = await listTended());
+      ({ feeds, folders, kept } = await listTended());
       failed = false;
     } catch {
       failed = true;
@@ -158,6 +163,23 @@
     }
     await done(unsubscribedMessage(going.map((feed) => feed.title)), async () => {
       const refusal = await resubscribeAll(placeIds(going));
+      if (refusal) throw refusal;
+    });
+  }
+
+  /** Bring back, under Recently unsubscribed: they're followed again, with Undo until the next action. */
+  async function bringBack(row: Kept) {
+    if (busy) return;
+    busy = true;
+    const why = await resubscribeAll(row.ids);
+    busy = false;
+    if (why) {
+      [message, undo, refusal] = [why === "too-late" ? `${row.title} can't be brought back: they're already gone.` : refused(why, "feed"), undefined, true];
+      await load();
+      return;
+    }
+    await done(`${row.title} is back.`, async () => {
+      const refusal = await unsubscribeAll(row.ids);
       if (refusal) throw refusal;
     });
   }
@@ -269,6 +291,7 @@
             {/if}
           </section>
         {/each}
+        <RecentlyUnsubscribed {kept} {busy} onBringBack={bringBack} />
       {/if}
 
       <!-- With Choose on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->

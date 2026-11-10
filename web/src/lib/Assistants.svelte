@@ -8,8 +8,8 @@
   the line brings the same connection back until the next action here
   (decision 0238), so a slip never means connecting again from inside the
   assistant. For an assistant that can't show the connect
-  page, "Make an assistant key" makes a key, shown once with Copy. Feeds an assistant unsubscribed from are
-  kept for 30 days and listed below, each with Bring back.
+  page, "Make an assistant key" makes a key, shown once with Copy. What an assistant unsubscribes from is
+  kept for 30 days under Recently unsubscribed in Everyone you follow (decision 0239), as the reader's own is.
 -->
 <script lang="ts">
   import LoadFailed from "./LoadFailed.svelte";
@@ -17,7 +17,6 @@
   import { tick } from "svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
   import { date } from "./times";
-  import { resubscribe } from "./feeds";
   import {
     disconnect,
     listAssistants,
@@ -27,14 +26,10 @@
     TOO_LATE_TO_RECONNECT,
     shortName,
     type Assistant,
-    type Unsubscribed,
   } from "./assistants";
-
-  let { onFeedsChanged }: { onFeedsChanged?: () => void } = $props();
 
   /** Unknown until the server answers. */
   let assistants: Assistant[] | undefined = $state();
-  let unsubscribed: Unsubscribed[] = $state([]);
   let failed = $state(false);
   /** What the last action did, in oxblood when it failed (`refusal`), with Undo after a disconnect. */
   let message = $state("");
@@ -53,7 +48,6 @@
     listAssistants().then(
       (list) => {
         assistants = list.assistants;
-        unsubscribed = list.unsubscribed;
         failed = false;
       },
       () => {
@@ -152,24 +146,6 @@
     }
     busy = false;
   }
-
-  async function bringBack(feed: Unsubscribed, index: number) {
-    if (busy) return;
-    busy = true;
-    say("");
-    const why = await resubscribe(feed.feedId);
-    busy = false;
-    const name = shortName(feed.title || "This feed");
-    if (why === undefined || why === "too-late" || why === "gone") {
-      unsubscribed = unsubscribed.filter((each) => each.feedId !== feed.feedId);
-      if (why === undefined) say(`${name} is back in your feeds.`);
-      else say(`${name} can't be brought back: it's already gone.`, true);
-      if (why === undefined) onFeedsChanged?.();
-      await refocus("unsubscribed", index);
-      return;
-    }
-    say(`${name} couldn't be brought back. Try again in a moment.`, true);
-  }
 </script>
 
 <section bind:this={section} aria-labelledby="assistants-heading">
@@ -248,27 +224,9 @@
     assistant. An assistant that can't show nine turtles' connect page can use an assistant key instead.
   </p>
 
-  {#if unsubscribed.length > 0}
-    <h4 id="assistant-unsubscribed-heading" class="inset-head mt-6">Unsubscribed by an assistant</h4>
-    <div class="inset-group" role="group" aria-labelledby="assistant-unsubscribed-heading">
-      {#each unsubscribed as feed, index (feed.feedId)}
-        {@const name = shortName(feed.title || "Untitled feed")}
-        <div class="inset-row item-row">
-          <p class="min-w-0 flex-1 break-words">
-            {name}<br /><span class="text-meta text-muted"
-              >Unsubscribed {date(feed.unsubscribedAt)} · kept until {date(feed.keptUntil)}</span
-            >
-          </p>
-          <button type="button" data-group="unsubscribed" aria-disabled={busy} onclick={() => bringBack(feed, index)} class="btn btn-small"
-            >Bring back<span class="sr-only"> {name}</span></button
-          >
-        </div>
-      {/each}
-    </div>
-    <p class="inset-foot">
-      Feeds an assistant unsubscribes from are kept for 30 days, with their articles, so you can bring them back.
-    </p>
-  {/if}
+  <p class="inset-foot">
+    What an assistant unsubscribes from is kept for 30 days, under Recently unsubscribed in Everyone you follow.
+  </p>
 </section>
 
 <style>

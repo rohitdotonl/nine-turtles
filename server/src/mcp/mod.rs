@@ -13,7 +13,8 @@
 //! own text, feeds, folders and rules; marking, starring, adding and
 //! unsubscribing. Nothing about the account (password, email, payments,
 //! sign-up) is reachable. A feed an assistant unsubscribes from is kept for
-//! 30 days (`KEPT_FOR`) so the reader can bring it back in Settings.
+//! 30 days (`folders::KEPT_FOR`), as the reader's own unsubscribes are, so
+//! the reader can bring it back in Settings.
 //!
 //! Guards, since an assistant can be told things by the articles it reads:
 //! each reader's calls are limited (`CALLS_A_MINUTE`, `CALLS_A_DAY`), lists
@@ -52,8 +53,6 @@ use crate::{AppState, VERSION, assistants::Assistant, subscriptions};
 /// for another is answered with the newest, as the standard says.
 pub const PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26"];
 
-/// How long a feed an assistant unsubscribed from is kept for Bring back.
-pub const KEPT_FOR: i64 = 30 * 24 * 60 * 60;
 /// Each reader's assistants together may call this many tools a minute, and a day.
 const CALLS_A_MINUTE: u32 = 60;
 const CALLS_A_DAY: u32 = 3_000;

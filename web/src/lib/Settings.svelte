@@ -576,7 +576,7 @@
       {:else if page === "newsletters"}
         <Newsletters />
       {:else if page === "assistants"}
-        <Assistants onFeedsChanged={onImported} />
+        <Assistants />
       {:else if page === "passkeys"}
         <PasskeysGroup origin={passkeys} />
         {#if !passkeysShown}

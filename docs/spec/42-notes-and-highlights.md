@@ -109,7 +109,10 @@ anywhere or counted.
   **Remove them too** and **Cancel**. Keep them works as unsubscribing
   always has. Remove them too removes those articles, their highlights and
   notes, and the note on the person as well. Either can be undone straight
-  afterwards; once the unsubscribe can't be undone, what was chosen is done.
+  afterwards; once Undo's ten minutes are over, what was chosen is done.
+  The place itself is still kept 30 days under Recently unsubscribed
+  (section 15, decision 0239); Bring back returns it without what was
+  removed.
 - With nothing kept, Unsubscribe doesn't ask.
 
 **Your data** (section 18)

@@ -417,3 +417,61 @@ async fn moving_to_a_folder_named_like_one_that_exists_uses_it() {
     assert_eq!(moved["created"], false);
     assert_eq!(reader.feeds().await, [row("alpha", &["News"])]);
 }
+
+#[tokio::test]
+async fn a_readers_own_unsubscribes_are_kept_thirty_days_with_bring_back() {
+    let reader = Reader::new().await;
+    let alpha = reader.follow("alpha-2020").await;
+    let beta = reader.follow("beta-2020").await;
+    let alpha_post: i64 = sqlx::query_scalar("SELECT id FROM articles WHERE feed_id = ?")
+        .bind(alpha)
+        .fetch_one(&reader.state.db)
+        .await
+        .unwrap();
+    reader
+        .post(
+            "/api/articles/read",
+            json!({ "ids": [alpha_post], "read": true }),
+        )
+        .await;
+    reader
+        .post(&format!("/api/feeds/{alpha}/unsubscribe"), json!({}))
+        .await;
+    // Unsubscribing from another, and a day of background rounds, leave the first kept.
+    reader
+        .post("/api/tidy/unsubscribe", json!({ "feeds": [beta] }))
+        .await;
+    let now = nine_turtles::now();
+    nine_turtles::checking::round(&reader.state, now + 24 * 60 * 60)
+        .await
+        .unwrap();
+
+    // Listed under Recently unsubscribed, each the reader's own and kept 30 days.
+    let listed = reader.get("/api/tidy/feeds").await;
+    let kept = listed["unsubscribed"].as_array().unwrap();
+    assert_eq!(kept.len(), 2, "{listed}");
+    let first = kept.iter().find(|row| row["feed_id"] == alpha).unwrap();
+    assert_eq!(first["title"], "alpha");
+    assert_eq!(first["by_assistant"], false);
+    let (left, until) = (
+        first["unsubscribed_at"].as_i64().unwrap(),
+        first["kept_until"].as_i64().unwrap(),
+    );
+    assert_eq!(until - left, nine_turtles::folders::KEPT_FOR);
+
+    // Bring back: followed again with its read history.
+    let (status, answer) = reader
+        .post("/api/tidy/resubscribe", json!({ "feeds": [alpha] }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{answer}");
+    let read: i64 =
+        sqlx::query_scalar("SELECT read FROM entries WHERE person_id = 1 AND article_id = ?")
+            .bind(alpha_post)
+            .fetch_one(&reader.state.db)
+            .await
+            .unwrap();
+    assert_eq!(read, 1);
+    let listed = reader.get("/api/tidy/feeds").await;
+    assert_eq!(listed["unsubscribed"].as_array().unwrap().len(), 1);
+    assert_eq!(listed["unsubscribed"][0]["feed_id"], beta);
+}

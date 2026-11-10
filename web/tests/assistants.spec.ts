@@ -62,12 +62,11 @@ test("a connection link that isn't valid says so and sends the reader nowhere", 
   await expect(page).toHaveURL(/\/oauth\/authorize/);
 });
 
-test("Settings › Connected assistants: the address, each connection, a key shown once, and feeds to bring back", async ({ page }) => {
+test("Settings › Connected assistants: the address, each connection, a key shown once, and where its unsubscribes are kept", async ({ page }) => {
   await page.route("**/api/assistants", (route) =>
     route.fulfill({
       json: {
         assistants: [{ id: 3, name: "Claude", connected_at: 1793000000, last_used_at: null }],
-        unsubscribed: [{ feed_id: 999999, title: "Some blog", unsubscribed_at: 1793000000, kept_until: 1795592000 }],
       },
     }),
   );
@@ -79,7 +78,6 @@ test("Settings › Connected assistants: the address, each connection, a key sho
       json: { key: `nt_${"0123456789abcdef".repeat(4)}`, assistant: { id: 7, name: "My helper", connected_at: 1793000000, last_used_at: null } },
     }),
   );
-  await page.route("**/api/feeds/999999/resubscribe", (route) => route.fulfill({ status: 409, json: { error: "too-late" } }));
 
   await page.goto("/settings/assistants");
   await appReady(page);
@@ -111,8 +109,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   await expect(group.getByText("Copy it now: it won't be shown again.", { exact: false })).toBeVisible();
   await expect(group.getByRole("button", { name: "Disconnect My helper" })).toBeVisible();
 
-  // Too late to bring back: said calmly, and the row goes.
-  await group.getByRole("button", { name: "Bring back Some blog" }).click();
-  await expect(group.getByRole("status").filter({ hasText: "Some blog can't be brought back: it's already gone." })).toBeVisible();
-  await expect(group.getByText("Unsubscribed by an assistant")).toHaveCount(0);
+  // What an assistant unsubscribes from is listed with the reader's own (decision 0239).
+  await expect(group.getByText("What an assistant unsubscribes from is kept for 30 days, under Recently unsubscribed in Everyone you follow.")).toBeVisible();
+  await expect(group.getByRole("button", { name: /^Bring back/ })).toHaveCount(0);
 });

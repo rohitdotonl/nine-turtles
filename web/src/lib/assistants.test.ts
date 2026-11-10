@@ -62,7 +62,7 @@ describe("the answer to Connect or Cancel", () => {
 });
 
 describe("the connected assistants", () => {
-  it("reads each connection and each feed kept after an assistant unsubscribed", () => {
+  it("reads each connection", () => {
     expect(
       readAssistants({
         assistants: [
@@ -70,19 +70,17 @@ describe("the connected assistants", () => {
           { id: 4, name: "Assistant key", connected_at: 1793000001, last_used_at: null },
           { id: "x", name: "broken" },
         ],
-        unsubscribed: [{ feed_id: 12, title: "Some blog", unsubscribed_at: 1793000000, kept_until: 1795592000 }, { feed_id: 13 }],
       }),
     ).toEqual({
       assistants: [
         { id: 3, name: "Claude", connectedAt: 1793000000, lastUsedAt: 1793050000 },
         { id: 4, name: "Assistant key", connectedAt: 1793000001, lastUsedAt: null },
       ],
-      unsubscribed: [{ feedId: 12, title: "Some blog", unsubscribedAt: 1793000000, keptUntil: 1795592000 }],
     });
   });
   it("is empty when the server sends nothing usable", () => {
-    expect(readAssistants(null)).toEqual({ assistants: [], unsubscribed: [] });
-    expect(readAssistants({ assistants: [] })).toEqual({ assistants: [], unsubscribed: [] });
+    expect(readAssistants(null)).toEqual({ assistants: [] });
+    expect(readAssistants({ assistants: [] })).toEqual({ assistants: [] });
   });
 });
 

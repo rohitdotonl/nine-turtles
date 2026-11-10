@@ -160,7 +160,8 @@ PLAN.md → V1, item 1.*
   the address bar is tidied to the new one. An address for someone the
   reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
-  them all back). To leave one source only, take it out first. Following a
+  them all back, and so does Bring back for 30 days, as one row under
+  Recently unsubscribed, decision 0239). To leave one source only, take it out first. Following a
   source again later starts it afresh, on its own. Find new address keeps the
   source in its person. Each reader's people and publications are theirs
   alone.

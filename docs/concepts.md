@@ -207,6 +207,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Hiding articles about… (rules the reader writes)
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
+- Soft deletion (kept, hidden, for a while: Recently unsubscribed, decision 0239)
 - Collections (the reader's old shelves of articles, retired for Starred, decision 0174) and tags (in JSON Feed)
 - Highlights and notes (anchoring words by their text, not a position) and Markdown
 - Episode progress (each reader's place in an episode)

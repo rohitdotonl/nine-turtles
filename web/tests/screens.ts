@@ -228,8 +228,7 @@ export const SCREENS: Screen[] = [
   { name: "settings", path: "/settings", signedIn: true, library: true },
   { name: "settings-install", path: "/settings/install", signedIn: true, library: true },
   {
-    // Settings › Connected assistants with one assistant and a feed it unsubscribed from
-    // (SPEC section 33). The list is answered here, so no feed is really unsubscribed.
+    // Settings › Connected assistants with one assistant (SPEC section 33).
     name: "connected-assistants",
     path: "/settings/assistants",
     signedIn: true,
@@ -239,13 +238,12 @@ export const SCREENS: Screen[] = [
         route.fulfill({
           json: {
             assistants: [{ id: 1, name: "Claude", connected_at: now - 86400, last_used_at: now - 3600 }],
-            unsubscribed: [{ feed_id: 7, title: "Quiet Notes", unsubscribed_at: now - 86400, kept_until: now + 29 * 86400 }],
           },
         }),
       );
       await page.reload();
       await appReady(page);
-      const kept = page.getByRole("heading", { name: "Unsubscribed by an assistant" });
+      const kept = page.getByText(/kept for 30 days, under Recently unsubscribed/);
       await kept.scrollIntoViewIfNeeded();
       await expect(kept).toBeVisible();
     },
@@ -275,6 +273,31 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
+  {
+    // Everyone you follow scrolled to Recently unsubscribed (decision 0239): one the reader
+    // left today and one an assistant left, answered here so nothing is really unsubscribed.
+    name: "your-feeds-recently-unsubscribed",
+    path: "/settings/feeds",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const now = Math.floor(Date.now() / 1000);
+      const day = 24 * 60 * 60;
+      await page.route("**/api/tidy/feeds", async (route) => {
+        const listed = await (await route.fetch()).json();
+        listed.unsubscribed = [
+          { feed_id: 9998, title: "Quiet Notes", person: null, unsubscribed_at: now - 60, kept_until: now + 30 * day, by_assistant: false },
+          { feed_id: 9999, title: "Field Recordings", person: null, unsubscribed_at: now - 3 * day, kept_until: now + 27 * day, by_assistant: true },
+        ];
+        await route.fulfill({ json: listed });
+      });
+      await page.reload();
+      await appReady(page);
+      const kept = page.getByRole("heading", { name: "Recently unsubscribed" });
+      await kept.scrollIntoViewIfNeeded();
+      await expect(kept).toBeVisible();
+    },
+  },
   {
     name: "your-feeds-editing",
     path: "/settings/feeds",

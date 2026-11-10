@@ -551,7 +551,7 @@ async fn an_address_kept_for_its_stars_is_refused_rather_than_merged() {
         .post(&format!("/api/feeds/{earlier}/unsubscribe"), json!({}))
         .await;
     assert!(status.is_success(), "{status}");
-    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, nine_turtles::now() + 1)
+    nine_turtles::folders::clear_unsubscribed(&reader.state.db, None, i64::MAX)
         .await
         .unwrap();
 
