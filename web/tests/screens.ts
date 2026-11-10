@@ -614,20 +614,32 @@ export async function markAllFromMenu(page: Page): Promise<void> {
  * been, so the sidebar's feeds, which grow as the tests follow more, never
  * make it run out of presses. A test that means "within so many presses"
  * gives its own limit.
+ *
+ * If the place the keyboard was on leaves the page meanwhile (the sidebar
+ * redrew as new articles came in), Tab carries on from near where it was and
+ * may pass places it has already been, so the walk starts afresh rather than
+ * calling that a full lap (decision 0114).
  */
 export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<void> {
+  type Walk = { tabbed: WeakSet<Element>; last: Element | null; fresh: number };
   await page.evaluate(() => {
-    (window as unknown as { tabbed: WeakSet<Element> }).tabbed = new WeakSet();
+    (window as unknown as { walk: Walk }).walk = { tabbed: new WeakSet(), last: null, fresh: 0 };
   });
   for (let i = 0; i <= limit; i++) {
     const where = await target.evaluate((element) => {
       const here = document.activeElement;
       if (element === here) return "reached";
-      const tabbed = (window as unknown as { tabbed: WeakSet<Element> }).tabbed;
+      const walk = (window as unknown as { walk: Walk }).walk;
+      if (walk.last && !walk.last.isConnected && walk.fresh < 20) {
+        walk.tabbed = new WeakSet();
+        walk.last = null;
+        walk.fresh += 1;
+      }
       // Inside a frame (a video player) the place stays on the frame itself.
       if (here && here !== document.body && here.tagName !== "IFRAME") {
-        if (tabbed.has(here)) return "round";
-        tabbed.add(here);
+        if (walk.tabbed.has(here)) return "round";
+        walk.tabbed.add(here);
+        walk.last = here;
       }
       return "on";
     });

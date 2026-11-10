@@ -111,18 +111,20 @@ jobs:
         run: cargo clean --package nine-turtles
 
   browser:
-    name: Browser tests (part ${{ matrix.shard }} of 4)
+    name: Browser tests (part ${{ matrix.shard }} of 6)
     needs: changes
     if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       # Let every part finish, so one failure shows every failing test.
-      # Four parts, each on its own computer: one computer runs two tests at
-      # a time at best, so more parts is what makes them finish sooner.
+      # Six parts, each on its own computer: one computer runs two tests at
+      # a time at best, so more parts is what makes them finish sooner. With
+      # four, the slowest part took about 6 minutes and held up every pull
+      # request (decision 0114).
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -145,6 +147,15 @@ jobs:
           restore-keys: |
             rust-release-${{ runner.os }}-
 
+      # The browser is the same until Playwright's version changes, so keep
+      # it rather than download it every time; a slow download sometimes
+      # took over 3 minutes (decision 0114).
+      - name: Remember the browser used by the tests
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+
       - name: Install the browser used by the tests
         working-directory: web
         run: |
@@ -153,7 +164,7 @@ jobs:
 
       - name: Run the browser tests
         env:
-          NINE_TURTLES_SHARD: ${{ matrix.shard }}/4
+          NINE_TURTLES_SHARD: ${{ matrix.shard }}/6
         run: scripts/check.sh browser
 
       - name: Keep only the libraries for next time
@@ -186,6 +197,15 @@ jobs:
           cache-dependency-path: |
             web/package-lock.json
             website/package-lock.json
+
+      # The browser is the same until Playwright's version changes, so keep
+      # it rather than download it every time; a slow download sometimes
+      # took over 3 minutes (decision 0114).
+      - name: Remember the browser used by the tests
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
 
       - name: Install the browser used by the check
         working-directory: web

@@ -49,3 +49,12 @@ stand alone say so.
 
 **Revisit if** a browser test part passes about two minutes (add parts), or
 the Rust tests pass about two minutes (run their files side by side).
+
+**Later (November 2026).** Six parts instead of four. On the eight pull
+requests merged on 10 November, the slowest quarter took about 5 minutes of
+tests and held up every pull request, while the others took 2 to 3½. The
+browser the tests use is now remembered between runs too: its download
+usually took under half a minute but sometimes over three. And `tabTo`
+starts its walk afresh when the place the keyboard was on leaves the page
+(the shared app's sidebar redrawing as new articles came in), which it had
+mistaken for Tab coming all the way round.

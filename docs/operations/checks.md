@@ -12,8 +12,10 @@ On GitHub the script runs in parts at once, each on its own computer
 (decisions 0065 and 0114): `scripts/check.sh docs` (the first step below, for every pull request), `scripts/check.sh frontend` (the next nine),
 `scripts/check.sh rust` (formatting, lint, tests), and `scripts/check.sh
 browser` (builds the frontend and the release program, then runs the browser
-tests) four times, each with a quarter of the browser tests
-(`NINE_TURTLES_SHARD=1/4` to `4/4`; decision 0114). Another, `scripts/check.sh website`, builds the website and checks it
+tests) six times, each with a sixth of the browser tests
+(`NINE_TURTLES_SHARD=1/6` to `6/6`; decision 0114). The browser the tests
+use is remembered between runs, so it's downloaded only when Playwright's
+version changes. Another, `scripts/check.sh website`, builds the website and checks it
 in a real browser (decision 0066). The required **All checks** waits for all
 of them and passes only if every one passed. Each part is still a plain script anyone can run; no
 arguments runs everything in order, as before.
