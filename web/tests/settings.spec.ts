@@ -18,7 +18,7 @@ async function openSettings(page: Page, path = "/settings") {
 test("Settings' first page keeps the everyday settings, and the rest are rows that open pages", async ({ page }) => {
   await openSettings(page);
   const groups = page.locator('section[aria-labelledby="settings-heading"] h3');
-  await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account"]);
+  await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account", "Leaving"]);
   // Reading and Look and feel hold their controls on the page itself.
   await expect(page.getByRole("switch", { name: "Unread", exact: true })).toBeVisible();
   for (const name of ["Sort order", "Page", "Font"])
