@@ -94,11 +94,13 @@ pub async fn run(state: AppState) {
 /// Checks the feeds due at `now`: at most 20, four at a time, never two on
 /// the same site at once. Returns how many were checked. First, feeds unsubscribed long enough ago that Undo
 /// is no longer offered are cleared for good (`folders::clear_unsubscribed`),
+/// and so are assistants disconnected that long ago (`assistants::forget_disconnected`),
 /// newsletter senders are told of those unsubscribes in the background
 /// (`newsletters::tell_senders`), and emailed links past their time are
 /// deleted (`accounts::tidy_links`).
 pub async fn round(state: &AppState, now: i64) -> Result<usize, sqlx::Error> {
     folders::clear_unsubscribed(&state.db, None, now - folders::UNDO_FOR).await?;
+    crate::assistants::forget_disconnected(&state.db, None, now - folders::UNDO_FOR).await?;
     // In the background: a slow sender's server never holds up feed checks.
     // Each sender is claimed before it's told, so overlapping rounds are fine.
     let telling = state.clone();

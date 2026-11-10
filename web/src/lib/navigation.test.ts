@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
+import { isList } from "./router";
+import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
 
 const unread: Route = { kind: "view", view: "unread" };

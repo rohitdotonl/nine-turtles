@@ -185,7 +185,8 @@
     try {
       const why = await undo();
       importUndo = undefined;
-      importLines = [];
+      // Undone, the summary is no longer true; too late, it still is.
+      if (why === undefined) importLines = [];
       importUndone = why === "too-late" ? { words: "It's too late to undo that.", refusal: true } : { words: UNDONE, refusal: false };
       if (why === undefined) onImported();
     } catch {
@@ -548,20 +549,19 @@
             <p>{line}</p>
           {/each}
         </div>
-        <!-- The import's Undo, drawn as every Undo line is (SPEC section 8), and what it said. -->
-        {#if importUndo || importUndone.words}
-          <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", importUndone.refusal ? "text-danger" : "text-ink"]}>
-            <NoteLine
-              announce={importUndone.words !== ""}
-              message={importUndone.words || "Wrong file?"}
-              refusal={importUndone.refusal}
-              busy={undoingImport}
-              undoWord="Undo the import"
-              onUndo={importUndo ? undoTheImport : undefined}
-              onClose={() => (endImportUndo(), void tick().then(() => heading?.focus()))}
-            />
-          </div>
-        {/if}
+        <!-- The import's Undo, drawn as every Undo line is (SPEC section 8), and what it said: always in the page, so its words are heard. -->
+        <div class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1", importUndone.refusal ? "text-danger" : "text-ink", !importUndo && !importUndone.words && "sr-only"]}>
+          <NoteLine
+            announce
+            message={importUndone.words || (importUndo ? "Wrong file?" : "")}
+            refusal={importUndone.refusal}
+            busy={undoingImport}
+            undoWord="Undo the import"
+            onUndo={importUndo ? undoTheImport : undefined}
+            onClose={() => (endImportUndo(), void tick().then(() => heading?.focus()))}
+          />
+        </div>
+
         <p class="inset-foot">
           OPML is the file feed readers use to move your feeds and folders between apps; export one now and then, and
           keep it somewhere safe. Starred articles are saved as a JSON Feed file, which other feed readers can open,

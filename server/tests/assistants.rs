@@ -805,6 +805,23 @@ async fn an_assistant_key_works_until_turned_off() {
     )
     .await;
     assert_eq!(status, StatusCode::CONFLICT);
+    // A background round forgets it for good once Undo's ten minutes are up.
+    let waiting = async || -> i64 {
+        sqlx::query_scalar("SELECT COUNT(*) FROM assistant_connections WHERE id = ?")
+            .bind(other)
+            .fetch_one(&state.db)
+            .await
+            .unwrap()
+    };
+    let now = nine_turtles::now();
+    nine_turtles::checking::round(&state, now + 9 * 60)
+        .await
+        .unwrap();
+    assert_eq!(waiting().await, 1);
+    nine_turtles::checking::round(&state, now + 11 * 60)
+        .await
+        .unwrap();
+    assert_eq!(waiting().await, 0);
 }
 
 #[tokio::test]

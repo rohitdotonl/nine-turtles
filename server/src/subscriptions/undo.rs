@@ -24,12 +24,9 @@ use super::Added;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    folders::{clear, hide},
+    folders::{UNDO_FOR, clear, hide},
     now,
 };
-
-/// How long an import can be undone, in seconds.
-pub const UNDO_FOR: i64 = 10 * 60;
 
 /// Each reader's last import that added something, and when.
 #[derive(Default)]

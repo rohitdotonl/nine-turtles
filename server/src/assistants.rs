@@ -72,6 +72,7 @@ const LONGEST_ADDRESS: usize = 2_000;
 const KEY_PREFIX: &str = "nt_";
 
 mod settings;
+pub use settings::forget_disconnected;
 
 pub fn routes() -> Router<AppState> {
     Router::new()

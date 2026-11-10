@@ -21,6 +21,16 @@ async function openBlog(page: Page): Promise<void> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  // A list's "latest" is the newest article anyone has (server/src/feeds/lists.rs → LATEST), so
+  // another test adding a feed at the same moment looked like news to Refresh. Each list here keeps
+  // the first number it was given; routed before the page loads (see marking.spec.ts).
+  let latest: unknown;
+  await page.route(/\/api\/articles\?/, async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    latest ??= body.latest;
+    await route.fulfill({ response, json: { ...body, latest } });
+  });
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(newestRow(page)).toBeVisible();

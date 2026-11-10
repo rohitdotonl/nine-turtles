@@ -27,6 +27,7 @@
   within thumb reach, above a hairline; one that can't act is faded in place.
 -->
 <script lang="ts">
+  import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
   import { authorBesides } from "./byline";
   import { edge } from "./edge";
   import { rightToLeft, scriptFamily } from "./scripts";
@@ -151,10 +152,6 @@
   /** A long video description shows its first paragraph, the rest behind "Show the full description" (decision 0144). */
   let unfoldedFor: number | undefined = $state();
   let folded = $derived(unfoldedFor !== article.id && video !== undefined && foldable(full?.content));
-
-  /** Phones get the system's share sheet; computers get Copy link (SPEC section 21). */
-  const sharing =
-    typeof navigator.share === "function" && matchMedia("(hover: none) and (pointer: coarse)").matches;
 
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
@@ -358,18 +355,9 @@
     else heading?.focus({ preventScroll: true });
   }
 
-  async function share() {
-    const link = article.link;
-    if (!link) return;
-    if (sharing) {
-      try {
-        await navigator.share({ url: link, title: article.title });
-      } catch {
-        // Closing the share sheet without sharing is fine.
-      }
-      return;
-    }
-    await copyLink();
+  /** Phones get the system's share sheet; computers get Copy link (SPEC section 21). */
+  function share() {
+    return sharing ? shareOriginal(article) : copyLink();
   }
 
   /**
@@ -382,12 +370,7 @@
     if (!link) return;
     // Emptied first, so the same words are said again for a second copy.
     copied = "";
-    try {
-      await navigator.clipboard.writeText(link);
-      copied = "Link copied.";
-    } catch {
-      copied = "The link couldn't be copied. Use View original and copy it from there.";
-    }
+    copied = await copyOriginal(link);
   }
 
   /**

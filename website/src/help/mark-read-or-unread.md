@@ -50,7 +50,9 @@ still undoes, even after the note has gone.
 **Mark all as read** is the exception, as it's often noticed a moment later:
 its note says which list it was ("Marked 3 articles as read in Reading
 Room.") and follows you to the next list, with **Undo** and <kbd>U</kbd>,
-until you do something else that can be undone. Undo works for marking read and unread, starring, unfollowing someone and
+until you do something else that can be undone.
+
+Undo works for marking read and unread, starring, unfollowing someone and
 deleting a folder.
 
 ## Let old articles go

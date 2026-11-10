@@ -24,13 +24,9 @@ use super::{KEY_PREFIX, clean_name};
 use crate::{
     AppState,
     auth::{SignedIn, database_problem, new_token, scramble},
+    folders::UNDO_FOR,
     log, now,
 };
-
-/// How long Undo can bring a disconnected assistant back, in seconds. The
-/// screen offers Undo only until the reader's next action, which is almost
-/// always sooner.
-pub const UNDO_FOR: i64 = 10 * 60;
 
 #[derive(Serialize, sqlx::FromRow)]
 struct Connected {
@@ -48,22 +44,30 @@ struct Kept {
     kept_until: i64,
 }
 
-/// Deletes for good reader `person`'s disconnected assistants that Undo
-/// can't reach any more: those disconnected at or before `before`.
-async fn forget_disconnected(db: &SqlitePool, person: i64, before: i64) -> Result<(), sqlx::Error> {
-    sqlx::query("DELETE FROM assistant_connections WHERE person_id = ? AND disconnected_at <= ?")
-        .bind(person)
-        .bind(before)
-        .execute(db)
-        .await
-        .map(|_| ())
+/// Deletes for good, tickets and all, the disconnected assistants that Undo
+/// can't reach any more (those disconnected at or before `before`): one
+/// reader's, or (`None`) everyone's, as each background round does.
+pub async fn forget_disconnected(
+    db: &SqlitePool,
+    person: Option<i64>,
+    before: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "DELETE FROM assistant_connections
+         WHERE (?1 IS NULL OR person_id = ?1) AND disconnected_at <= ?2",
+    )
+    .bind(person)
+    .bind(before)
+    .execute(db)
+    .await
+    .map(|_| ())
 }
 
 /// Settings: the reader's connected assistants, and the feeds an assistant
 /// unsubscribed from that can still be brought back.
 pub async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
     let listed = async {
-        forget_disconnected(&state.db, person, now() - UNDO_FOR).await?;
+        forget_disconnected(&state.db, Some(person), now() - UNDO_FOR).await?;
         let assistants: Vec<Connected> = sqlx::query_as(
             "SELECT id, name, created_at AS connected_at, last_used_at
              FROM assistant_connections WHERE person_id = ? AND disconnected_at IS NULL
@@ -102,7 +106,7 @@ pub async fn disconnect(
 ) -> Response {
     let at = now();
     let done = async {
-        forget_disconnected(&state.db, person, i64::MAX).await?;
+        forget_disconnected(&state.db, Some(person), i64::MAX).await?;
         sqlx::query(
             "UPDATE assistant_connections SET disconnected_at = ?
              WHERE id = ? AND person_id = ? AND disconnected_at IS NULL",

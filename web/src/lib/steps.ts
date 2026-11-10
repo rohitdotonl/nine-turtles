@@ -6,6 +6,8 @@
 // back in history or, after arriving straight from a link or a reload, a move
 // in place.
 
+import { articleIn } from "./router";
+
 /** The feeds list (home on a phone), a list of articles, an open article, or a page such as Settings. */
 export type Screen = "home" | "list" | "article" | "page";
 
@@ -25,13 +27,13 @@ export function stepOf(state: unknown): Step | undefined {
 }
 
 /**
- * The step the app opens on. A reload keeps the screen it was on, except an
- * open article: what was selected isn't remembered, so it opens its list.
- * The front page on a phone opens the feeds list.
+ * The step the app opens on. A reload keeps the screen it was on; an open
+ * article stays open only while its address names it (decision 0233), else
+ * it opens its list. The front page on a phone opens the feeds list.
  */
 export function startingStep(state: unknown, narrow: boolean, path: string, list: boolean): Step {
   const before = stepOf(state);
   if (before?.screen === "home" || (!before && narrow && (path === "/" || path === ""))) return { screen: "home" };
-  if (before?.screen === "article") return { screen: "list", back: undefined };
+  if (before?.screen === "article") return articleIn(path).article ? before : { screen: "list", back: undefined };
   return { screen: list ? "list" : "page", back: before?.back };
 }

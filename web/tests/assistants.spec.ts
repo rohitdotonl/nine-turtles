@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { OWNER_EMAIL, TEST_PASSWORD } from "../playwright.config";
-import { appReady, signIn } from "./screens";
+import { appReady, signIn, tabTo } from "./screens";
 
 // Connecting an AI assistant through MCP: the "Connect this assistant?" page
 // and Settings › Connected assistants. The server's answers are stood in for
@@ -96,9 +96,12 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   await expect(group.getByRole("status").filter({ hasText: "Claude is disconnected" })).toBeVisible();
 
   // Undo, drawn like every Undo line: the same connection is back (decision 0235).
-  await group.getByRole("button", { name: "Undo" }).click();
+  // From the keyboard: Undo, then the keyboard's place waits on the group's heading.
+  await tabTo(page, group.getByRole("button", { name: "Undo" }));
+  await page.keyboard.press("Enter");
   await expect(group.getByRole("button", { name: "Disconnect Claude" })).toBeVisible();
   await expect(group.getByRole("status").filter({ hasText: "Undone." })).toBeVisible();
+  await expect(group.getByRole("heading", { name: "Connected assistants" })).toBeFocused();
 
   // A key: shown once, with Copy, which has the keyboard's place.
   await group.getByLabel(/Name for a new assistant key/).fill("My helper");

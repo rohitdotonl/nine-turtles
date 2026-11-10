@@ -365,8 +365,11 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
 
   // Wrong file? Undo the import takes away exactly what it added (decision 0235).
   await expect(page.getByText("Wrong file?")).toBeVisible();
-  await page.getByRole("button", { name: "Undo the import" }).click();
+  // From the keyboard: then the keyboard's place waits on the page's heading.
+  await tabTo(page, page.getByRole("button", { name: "Undo the import" }));
+  await page.keyboard.press("Enter");
   await expect(page.getByText("Undone.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toHaveCount(0);
 
   // Starred articles download as a JSON Feed file.
@@ -502,7 +505,8 @@ test("their page opens in the reading area in the article's place; Escape gives 
   await expect(page.locator(".item-row")).toHaveCount(3);
   await page.keyboard.press("Escape");
   await expect(about).toHaveCount(0);
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  // Back to the list, with its open article's address (decision 0233).
+  await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
 });
 
 test.describe("on a touch screen beside the list", () => {
