@@ -54,7 +54,7 @@
   import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { articleIn, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
+  import { articleIn, isList, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
@@ -67,10 +67,10 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isList, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
-  import { linkItems } from "./articleLinks";
+  import { ADDRESS_GONE, linkItems } from "./articleLinks";
   import { readArticle } from "./articles";
   import { arrivedBySwitching, settleBack, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
   import { deviceText, setDeviceText } from "./device";
@@ -355,8 +355,7 @@
   onMount(() => {
     // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
     history.replaceState(firstStep, "", pathFor(route));
-    // An address naming an article opens it in its list (decision 0233); the address names it again once open.
-    if (fromAddress && isList(route)) void readArticle(fromAddress).then((article) => selected ?? openFromOutside(article, true), () => {});
+    openAddressed(fromAddress);
 
     // Arriving here by switching to a new version: the screen is as the reader left it, and the
     // keyboard's place goes to the heading, as going here without the switch would have done.
@@ -403,6 +402,7 @@
       }
       if (move.closing && sheetOpener.giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
+      if (!phone) openAddressed(articleIn(location.pathname).article); // On a phone the article is a step of its own.
     };
     addEventListener("popstate", back);
 
@@ -499,10 +499,7 @@
     settleBack(() => placeFocus(route), wordmark, () => sidebar?.querySelector(".scroller"), was.sidebarScroll);
   }
 
-  /**
-   * Goes to a place, and moves the keyboard's place to its heading. A list
-   * arrived at with a `withNotice` shows it in its line, with Undo.
-   */
+  /** Goes to a place, and moves the keyboard's place to its heading. A list arrived at with a `withNotice` shows it in its line, with Undo. */
   function go(next: Route, withNotice?: Notice) {
     const move = moveTo({ route, under, phone }, next);
     // A newer nine turtles is live: going somewhere else redraws the screen
@@ -702,10 +699,7 @@
     return articleHeading?.closest("section")?.contains(document.activeElement) ?? false;
   }
 
-  /**
-   * j and k, Home and End: another article in the list
-   * (`moving.ts`). The keyboard's place follows, to the article or its row.
-   */
+  /** j and k, Home and End: another article in the list (`moving.ts`). The keyboard's place follows, to the article or its row. */
   function move(to: ArticleMove, step: 1 | -1) {
     const focus = moveArticle(itemList, to, step, { ...panes, reading, inArticle: inArticle() });
     if (!focus) return;
@@ -719,10 +713,7 @@
     return nextInSidebar({ feeds: library.rows, folders: library.folders }, sidebarViews(unreadOff), phone, sidebarFeeds?.openFolders(), route, step);
   }
 
-  /**
-   * Enter and o: open the selected article (the first, if none is selected
-   * yet) to read.
-   */
+  /** Enter and o: open the selected article (the first, if none is selected yet) to read. */
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
@@ -759,11 +750,17 @@
       selected = article;
     }
     if (phone && !reading) {
-      steps.openArticle();
+      if (!here || stepOf(history.state)?.screen !== "article") steps.openArticle(); // A reloaded article is its step already.
       reading = true;
     }
     layout.makeWayForArticle();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
+  }
+
+  /** An address naming an article opens it in its list (decision 0233), or says why not; the address names it again once open. */
+  function openAddressed(id: number | undefined) {
+    if (!id || selected?.id === id || !isList(route)) return;
+    void readArticle(id).then((article) => selected ?? openFromOutside(article, true), () => (notice = { message: ADDRESS_GONE }));
   }
 
   /** An article's own address, under the list on screen (decision 0233). */
@@ -1199,7 +1196,7 @@
                   bind:found={listFound}
                   rowActions={(article) => [
                     { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) }) },
-                    { items: linkItems(article, addressOf(article), (message) => itemList?.say(message)) },
+                    { items: linkItems(article, addressOf(article), (message) => itemList?.inform(message)) },
                   ]}
                   {addressOf}
                 />

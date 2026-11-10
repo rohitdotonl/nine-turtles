@@ -8,13 +8,8 @@
 // Shell still corrects the address in place (`history.replaceState`) when it
 // opens and when Back lands somewhere it leads on from.
 
-import { articleIn, parentOf, pathFor, rowFor, type Route } from "./router";
+import { articleIn, isList, parentOf, pathFor, rowFor, type Route } from "./router";
 import { stepOf, type Screen, type Step } from "./steps";
-
-/** A place that shows a list of articles: a view, a feed or a folder. */
-export function isList(place: Route): boolean {
-  return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
-}
 
 /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
 export function isOver(place: Route): boolean {

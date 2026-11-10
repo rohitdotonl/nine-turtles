@@ -86,6 +86,11 @@ export function articleIn(path: string): { list: string; article?: number } {
   return found ? { list: found[1] || "/", article: Number(found[2]) } : { list: path };
 }
 
+/** A place that shows a list of articles: a view, a feed or a folder. */
+export function isList(place: Route): boolean {
+  return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
+}
+
 /** The place an address points to (an article in it aside). Anything unknown opens Unread. */
 export function parse(path: string): Route {
   const name = articleIn(path).list.replace(/^\/+|\/+$/g, "");
@@ -120,7 +125,7 @@ export function knownPath(path: string): boolean {
   const { list, article } = articleIn(path);
   const name = list.replace(/^\/+|\/+$/g, "");
   // An article opens only under a list of articles (decision 0233).
-  if (article && (name === "" || !["view", "feed", "folder"].includes(parse(list).kind))) return false;
+  if (article && (name === "" || !isList(parse(list)))) return false;
   if (name === "" || name === "unread") return true;
   const place = parse(path);
   return !(place.kind === "view" && place.view === "unread");

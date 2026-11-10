@@ -74,6 +74,23 @@ test.describe("on a computer", () => {
     expect(path(fromMenu)).toMatch(new RegExp(`^${list}/articles/[0-9]+$`));
   });
 
+  test("Back and Forward keep the open article; an article that can't be opened says so", async ({ page }) => {
+    const { name, list } = await openBlog(page);
+    await row(page, name, NEWEST).click();
+    await expect(page).toHaveURL(new RegExp(`${list}/articles/[0-9]+$`));
+    const opened = path(page);
+    await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Starred", exact: true }).click();
+    await expect(page).toHaveURL(/\/starred$/);
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`${opened}$`));
+    await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
+
+    await page.goto(new URL(`${list}/articles/999999999`, FEEDS_APP).href);
+    await appReady(page);
+    await expect(page.getByText("That article couldn't be opened. It may be gone, or nine turtles can't be reached just now.")).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${list}$`));
+  });
+
   test("an address naming an article under a page that isn't a list is a wrong turn", async ({ page }) => {
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
@@ -95,6 +112,10 @@ test.describe("on a phone", () => {
     await expect(page).toHaveURL(new RegExp(`${list}$`));
 
     await page.goto(new URL(opened, FEEDS_APP).href);
+    await appReady(page);
+    await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
+    // A reload keeps it, and one Back goes to its list.
+    await page.reload();
     await appReady(page);
     await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
     await page.goBack();

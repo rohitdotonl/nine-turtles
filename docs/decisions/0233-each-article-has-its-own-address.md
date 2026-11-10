@@ -14,8 +14,10 @@ Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"
    Opening that address, by reloading, from a bookmark or in a new tab, opens
    the list with the article chosen and open; on a phone, Back from it goes to
    its list. Choosing another article changes the address in place, so j and
-   k don't fill the browser's history. An article address under anything but
-   a list of articles is a wrong turn.
+   k don't fill the browser's history; Back and Forward open the article an
+   address names again. An address whose article can't be opened opens its
+   list, whose note says so. An article address under anything but a list of
+   articles is a wrong turn.
 2. **Command-click, Ctrl-click or a middle click on a row** opens the
    article in a new tab, as on a link. A plain click does what it did.
 3. **A row's own menu** gains a group: on a computer **Open in a new tab**

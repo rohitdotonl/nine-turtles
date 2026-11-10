@@ -478,7 +478,7 @@
   let passing = $state(false);
   /** A key that needs an article, with none chosen, says so (decision 0230); an empty list has none to choose. */
   export const needsArticle = () => void (articles.length > 0 && inform(CHOOSE_FIRST));
-  function inform(message: string) {
+  export function inform(message: string) {
     if (retryLast) return;
     [line, passing, closed, noteFor] = [message, true, false, selected?.id];
   }

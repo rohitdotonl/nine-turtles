@@ -68,3 +68,6 @@ export function linkItems(article: Article, address: string, say: (message: stri
     ...(link ? [{ label: "Copy link", onSelect: () => void copyOriginal(link).then(say) }] : []),
   ];
 }
+
+/** An article's address that can't be opened (deleted with the yearly clean-up, unfollowed, or out of reach) says so (decision 0233). */
+export const ADDRESS_GONE = "That article couldn't be opened. It may be gone, or nine turtles can't be reached just now.";
