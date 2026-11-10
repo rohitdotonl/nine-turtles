@@ -13,7 +13,7 @@
 - **One way to set a backlog down** (decision 0171): Mark all as read, with Undo, is the only one. There's no "Catch me up", no setting that lets unread go by itself, and no marking above, below or older than an article. With no counts anywhere (decision 0148), a backlog weighs little; mark what's shown as read, or simply leave it.
 - Undo reverses **the last action only**, of these: mark all as read, mark unread, star/unstar, unsubscribe, delete folder.
 - Read state is recorded whether Unread is on or off, so switching never loses it.
-- The feed's dot in the sidebar comes or goes at the same moment (decision 0148).
+- Unread's dot in the sidebar comes or goes at the same moment (decision 0242; folders and people carry none).
 - If nine turtles can't be reached when a mark is made (the connection dropped, or a new version is going live and the server is restarting), it quietly tries again for about a minute, so a short gap loses nothing and says nothing. With no connection at all, the mark waits on the device and is sent once the connection is back, the latest mark winning (section 32).
 - If a mark still can't be saved, it's taken back and the note at the bottom of the list says so plainly, such as "The star couldn't be saved.", with a **Try again** button in the Undo's place. The message goes as soon as a later mark is saved (the connection is back), or when you press Try again. A failure never takes back a later action on the same article.
 

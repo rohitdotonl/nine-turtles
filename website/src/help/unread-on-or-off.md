@@ -4,7 +4,7 @@ description: Keep an Unread list to work through, or switch it off and let every
 groupId: reading
 order: 1
 spec: 10
-updated: 2026-11-04
+updated: 2026-11-10
 related: [mark-read-or-unread, find-your-way-around]
 ---
 
@@ -16,7 +16,7 @@ related: [mark-read-or-unread, find-your-way-around]
 ## Unread on (the usual way)
 
 Every new article waits in **Unread** with a dot beside it, until you've read
-it. The people with something new have a small dot in the sidebar.
+it. While anything is new, **Unread** in the sidebar has a small dot too.
 
 ## Unread off
 

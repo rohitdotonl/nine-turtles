@@ -50,6 +50,13 @@ test("on a phone, a tap on the text puts the bars away, and another brings them 
   await link.click();
   await expect(toolbar(page)).toBeVisible();
 
+  // A tap that closes a menu only closes it: the bars stay.
+  await toolbar(page).getByRole("button", { name: "More actions" }).click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await article(page).getByText("Three things, mostly").click();
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(toolbar(page)).toBeVisible();
+
   // Away, the keyboard reaching a bar brings them back.
   await article(page).getByText("Three things, mostly").click();
   await expect(toolbar(page)).toHaveClass(/sr-only/);

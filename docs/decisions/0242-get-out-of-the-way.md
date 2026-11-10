@@ -19,7 +19,10 @@ files): the interface is the frame, not the picture.
   moves by the top bar's height. Only the reader's own tap or scroll
   changes anything, never a timer; nothing slides or fades. Put away, the
   bars stay in place for screen readers (drawn as `sr-only`), so nothing is
-  lost to them. Scrolling never hides them by itself (principle 8). On a
+  lost to them. Scrolling never hides them by itself (principle 8). A tap
+  that closes a menu, the Aa panel or a choice of words only closes it. While
+  they're away, space as tall as each bar is kept above and below the text,
+  so it scrolls exactly as far as before. On a
   computer, full-screen reading (`f`, decision 0241) is the same idea.
 - **One search field at a time** (GW-2): on a computer too, the list's
   search waits behind a Search button (a magnifier, tooltip "Search (/)")
@@ -40,7 +43,9 @@ files): the interface is the frame, not the picture.
   still clearly the way on, quieter than the writing it follows (principle
   2). This replaces decision 0183's "only solid button in the reading pane"
   for the article's end; Start reading stays the reading pane's one solid
-  button, and Write to on their page stays solid.
+  button, and Write to on their page stays solid. When no address is known
+  yet, the box that asks for one at the article's end has its Write back as
+  the same everyday bordered button, as Not working's cards already do.
 
 **Not done.** GW-4 (no note after starring) and GW-6 (no drawn Start
 reading button in a phone's list) weren't asked for.

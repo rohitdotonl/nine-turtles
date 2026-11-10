@@ -5,7 +5,9 @@
 // Only the reader's own tap or scroll changes anything, never a timer, and
 // nothing slides: the bars are there, then not. The text stays where it was
 // on the screen: while they're away, the text's area starts with a space as
-// tall as the top bar was (`room`), so nothing in it moves.
+// tall as the top bar was and ends with one as tall as the toolbar, so
+// nothing in it moves and it scrolls exactly as far as before. A tap that
+// closes a menu, the Aa panel or a choice of words only closes it.
 //
 // Put away, the bars are drawn as `sr-only`: screen readers still have every
 // button, and Tab still reaches them (and brings them back).
@@ -16,16 +18,27 @@ const THEIRS = "a, button, input, textarea, select, label, summary, mark, img, v
 export class Bars {
   /** Whether the bars are put away. */
   away = $state(false);
-  /** While away, the top bar's height, kept as space above the text. */
-  room = $state(0);
+  /** While away, the space kept above and below the text, in pixels. */
+  room = $state({ above: 0, below: 0 });
+  /** This tap started with a menu, a panel or chosen words open: it only closes them. */
+  #closing = false;
+
+  /** A press starting anywhere, before any menu closes on it: whether something was open. */
+  pressed() {
+    const chosen = window.getSelection();
+    this.#closing = !!document.querySelector("[role='menu'], [role='dialog']") || (!!chosen && !chosen.isCollapsed);
+  }
 
   /** A tap on the text: puts the bars away or brings them back, unless the tap was for something in the text. */
-  tap(event: MouseEvent, top: HTMLElement | undefined) {
+  tap(event: MouseEvent, scroller: HTMLElement, top: HTMLElement | undefined, bottom: HTMLElement | undefined) {
     const target = event.target;
-    if (event.defaultPrevented || !(target instanceof Element) || target.closest(THEIRS)) return;
+    const closing = this.#closing;
+    this.#closing = false;
+    if (closing || event.defaultPrevented || !(target instanceof Element) || target.closest(THEIRS)) return;
     const chosen = window.getSelection();
     if (chosen && !chosen.isCollapsed) return;
-    this.#set(!this.away, top);
+    if (!this.away) this.room = { above: top?.offsetHeight ?? 0, below: (bottom?.offsetHeight ?? 0) + parseFloat(getComputedStyle(scroller).paddingBottom) };
+    this.away = !this.away;
   }
 
   /** The reader scrolled: at the article's end the bars come back, with the end still in view. */
@@ -38,10 +51,5 @@ export class Bars {
   /** Back, with no scrolling: a new article, or the keyboard reaching a bar. */
   show() {
     this.away = false;
-  }
-
-  #set(away: boolean, top: HTMLElement | undefined) {
-    if (away) this.room = top?.offsetHeight ?? 0;
-    this.away = away;
   }
 }

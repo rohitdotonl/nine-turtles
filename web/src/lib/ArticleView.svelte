@@ -135,6 +135,7 @@
   /** On a phone, a tap on the text puts the bars away and back (decision 0242). */
   const bars = new Bars();
   let topBar: HTMLDivElement | undefined = $state();
+  let toolbar: HTMLDivElement | undefined = $state();
   /** The article's own text, whose blocks mark your place in it. */
   let text: HTMLDivElement | undefined = $state();
   /** The Aa reading panel, and its button (there's one, on the top bar or the phone's bottom bar). */
@@ -223,9 +224,15 @@
   $effect(() => {
     const area = scroller;
     if (!area || !phone) return;
-    const tapped = (event: MouseEvent) => bars.tap(event, topBar);
+    const tapped = (event: MouseEvent) => bars.tap(event, area, topBar, toolbar);
+    // Before anything open closes on the same press (menus close on pointerdown).
+    const pressed = () => bars.pressed();
     area.addEventListener("click", tapped);
-    return () => area.removeEventListener("click", tapped);
+    document.addEventListener("pointerdown", pressed, { capture: true });
+    return () => {
+      area.removeEventListener("click", tapped);
+      document.removeEventListener("pointerdown", pressed, { capture: true });
+    };
   });
 
   // A wheel, a touch or a press (the scroll bar too), and a key that scrolls (below): the reader is moving through the article themselves.
@@ -515,7 +522,8 @@
     use:edge
     bind:this={scroller}
     onscroll={scrolled}
-    style:padding-top={bars.away ? `${bars.room}px` : undefined}
+    style:padding-top={bars.away ? `${bars.room.above}px` : undefined}
+    style:padding-bottom={bars.away ? `${bars.room.below}px` : undefined}
     class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-14", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
@@ -643,7 +651,7 @@
       faded, as iOS dims a toolbar button, so the bar never shows a hole; it
       says "dimmed" to screen readers and does nothing (decision 0047).
     -->
-    <div role="group" aria-label="Article actions" onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]"}>
+    <div bind:this={toolbar} role="group" aria-label="Article actions" onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]"}>
       <!-- Share (or Copy link) and Mark unread, in a menu that opens upwards. -->
       <MoreMenu id="article-menu" label="More actions" groups={more} size={22} up start />
       {@render aa(22, "")}
