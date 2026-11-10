@@ -33,8 +33,8 @@ false alarms, and agents stop losing time around them.
   change has since taken one of this branch's numbers; each change's own
   checks ran before the other merged, so they can't see it.
 
-Automatic retries of failed tests were considered and rejected: they would
-hide real bugs, like the sidebar's save clash found by one "random" failure
-the same day (decision 0019).
+Automatic retries of failed tests stay out (decision 0114, "Not done"):
+they would hide real bugs, like the sidebar's save clash that one "random"
+failure found the same day (decision 0019).
 
 The steps are in `docs/operations/second-agent-review.md`.

@@ -43,12 +43,18 @@ if (argument === "--check") {
   }
   console.log(`Decisions: ${notes.length} notes, each with its one line and its own number.`);
 } else if (argument === "--free") {
-  const git = (...words) => execFileSync("git", words, { encoding: "utf8" });
+  // From the repository's top folder, wherever this is run from.
+  const git = (...words) => execFileSync("git", words, { encoding: "utf8", cwd: join(folder, "..", "..") });
   git("fetch", "--quiet", "origin", "main");
-  const onMain = git("ls-tree", "--name-only", "origin/main", "docs/decisions/")
+  const onMain = git("ls-tree", "--full-tree", "--name-only", "origin/main", "docs/decisions/")
     .split("\n")
     .map((path) => path.replace("docs/decisions/", ""))
     .filter((name) => /^\d{4}-.+\.md$/.test(name));
+  // An empty list means git couldn't read main's notes: never say "free" without having looked.
+  if (onMain.length === 0) {
+    console.error("Couldn't read main's decision notes (git ls-tree origin/main docs/decisions/), so nothing was checked.");
+    process.exit(1);
+  }
   const mainNames = new Set(onMain);
   const taken = new Map(onMain.map((name) => [name.slice(0, 4), name]));
   const highest = Math.max(...[...onMain, ...notes.map((note) => note.name)].map((name) => Number(name.slice(0, 4))));
