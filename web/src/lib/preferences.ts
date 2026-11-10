@@ -23,7 +23,7 @@ export const TEXT_SIZES = [
   { label: "Medium", rem: 1.25, leading: 1.55 },
   { label: "Large", rem: 1.375, leading: 1.52 },
   { label: "Larger", rem: 1.5, leading: 1.5 },
-  { label: "Largest", rem: 1.75, leading: 1.45 },
+  { label: "Largest", rem: 1.75, leading: 1.5 },
 ] as const;
 
 /**

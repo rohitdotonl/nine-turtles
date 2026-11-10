@@ -24,36 +24,40 @@ was left was inside the article, and a few steps nearer a well-set book.
    Atkinson's zero with its slash taken out (its inner counter redrawn as
    the outer shape, scaled into the slashed halves' box), in front of
    Atkinson. Addresses, codes and the article's own text keep the crossed
-   zero, where it tells 0 from O. The licence (SIL OFL 1.1, no reserved
+   zero, where it tells 0 from O. A date written inside a sentence ("kept
+   until 10 Dec", "Nothing new has arrived since 10:05.") is text, not a
+   `<time>`, and keeps the crossed zero for now. The licence (SIL OFL 1.1, no reserved
    name) allows a changed copy under its own name.
 4. **Two weights.** Settings' row names lose their medium weight (decision
    0120) and are regular, as the sidebar's rows; the 500 files go.
 5. **Literata's display cut for titles.** Every title of 24px and more uses
    `--font-display`: Literata at its 36pt optical size, made from Google's
    variable Literata (Fontsource's `literata-latin-opsz-normal`) at weights
-   400 and 600, basic Latin only. The article's title, when Literata is the
-   reading font, is regular weight at 1.9 times the text (38px by default),
-   as a book sets a chapter's title (Rohit's pick of the bold option). Its
-   face comes from `--reading-title-font`, set with the reading font
-   (`web/src/lib/preferences.ts`), so Atkinson and System serif keep their
-   own titles.
+   400 and 600, basic Latin only. The article's title is regular weight at
+   1.9 times the text (38px by default), whatever the reading font, as a
+   book sets a chapter's title (Rohit's pick of the bold option). Its face
+   comes from `--reading-title-font`, set with the reading font
+   (`web/src/lib/preferences.ts`): the display cut with Literata, while
+   Atkinson and System serif keep their own face for the title.
 6. **Every part of a post** (`web/src/article-text.css`, split from app.css):
    a writer's `mark` in a soft tone of the ink, never yellow or the accent;
    `kbd` as key caps; `dt` semibold over an indented `dd`; tables in
    digits of one width; footnotes known by their shape (the cleaning keeps
-   no class names): their numbers padded and not underlined, their list a
+   no class names): their numbers padded, and underlined as every article link is, their list a
    step smaller in the second ink, their ↩ drawn as text
    (`font-variant-emoji`); on Apple's browsers, a paragraph's opening
    quote mark hangs outside the column (`hanging-punctuation`).
-7. **Line spacing follows the size**: 1.6, 1.58, 1.55, 1.52, 1.5 and 1.45
+7. **Line spacing follows the size**: 1.6, 1.58, 1.55, 1.52, 1.5 and 1.5
    for the six text sizes (`--reading-leading`), a twentieth less on a
-   phone as before. The usual size is unchanged.
+   phone as before but never under 1.5 (WCAG 1.4.8's line spacing, AAA as
+   article text aims for). The usual size is unchanged.
 8. **Nothing moves while the fonts arrive.** Each face is followed by
    stand-ins, the device's Georgia or Noto Serif for Literata and Arial or
    Roboto for Atkinson, resized with `size-adjust` and the ascent, descent
    and line-gap overrides to take the same room: size-adjust is our average
    letter width over theirs, the others ours divided by it (the figures are
-   Capsize's published metrics).
+   Capsize's published metrics). They carry only the Latin our own fonts
+   do (`unicode-range`), so any other script keeps the device's own font.
 
 **Not done, and why.** Numbers in a table aren't moved to the right: which
 column holds numbers can't be told without reading it. The display cut has

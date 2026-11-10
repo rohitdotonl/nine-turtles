@@ -76,7 +76,7 @@ describe("reader preferences", () => {
     expect(set.get("--reading-leading")).toBe("1.6");
     expect(set.get("--reading-title-font")).toBe(set.get("--reading-font"));
     apply({ ...DEFAULTS, textSize: 5 }, page, false);
-    expect(set.get("--reading-leading")).toBe("1.45");
+    expect(set.get("--reading-leading")).toBe("1.5");
     // Literata's title is its display cut (decision 0246).
     expect(set.get("--reading-title-font")).toBe("var(--font-display)");
 

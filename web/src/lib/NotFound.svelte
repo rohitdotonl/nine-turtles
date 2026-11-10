@@ -35,7 +35,7 @@
         <svg viewBox="-10 -4.5 22 8.5" focusable="false"><path d="M-9 3.5 A7.5 7.5 0 0 1 6 3.5 Z" /><circle cx="8.6" cy="0.6" r="2" /></svg>
       {/each}
     </div>
-    <h1 tabindex="-1" bind:this={heading} class="mt-12 font-serif text-display font-semibold outline-none">Wrong turn?</h1>
+    <h1 tabindex="-1" bind:this={heading} class="mt-12 font-display text-display font-semibold outline-none">Wrong turn?</h1>
     <div class="mt-5 flex max-w-[32.5rem] flex-col gap-4 font-serif text-large leading-8 text-ink-2">
       <p>There's nothing at this address. It may have moved, or the link may have a typing mistake in it.</p>
       <p>If a link in this app brought you here, <a class="underline underline-offset-4" href={tellMe}>tell me which one</a> and I'll fix it.</p>

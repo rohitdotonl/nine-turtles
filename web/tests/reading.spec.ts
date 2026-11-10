@@ -667,16 +667,34 @@ test.describe("on a wide window", () => {
     expect(await boldItalic("Atkinson Hyperlegible Next")).toBe(true);
     // A date in the interface takes the face with a plain zero; the article's own text doesn't.
     await expect(article(page).locator(".article-byline time")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
-    // A footnote's number has room to be pressed and no underline.
-    const note = article(page).locator('.article-text sup > a[href^="#article-"]');
-    await expect(note).toHaveCSS("text-decoration-line", "none");
+    const words = article(page).locator(".article-text");
+    expect(await words.locator("p").first().evaluate((element) => getComputedStyle(element).fontFamily)).not.toContain("Plain Zero");
+    // A footnote's number has room to be pressed, and is underlined as every article link is.
+    const note = article(page).locator('.article-text sup > a[href^="#article-"]').first();
+    await expect(note).toHaveCSS("text-decoration-line", "underline");
     expect((await note.evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))) > 0).toBe(true);
-    // Line spacing follows the reader's size: 1.55 at the usual size, less for larger text.
+    // A writer's highlighting is a soft tone of the ink, never the browser's yellow; keys are key caps; a term is semibold; a table's figures line up.
+    const mark = words.locator("mark");
+    await expect(mark).not.toHaveCSS("background-color", "rgb(255, 255, 0)");
+    await expect(mark).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(words.locator("kbd")).toHaveCSS("border-bottom-width", "2px");
+    await expect(words.locator("dt")).toHaveCSS("font-weight", "600");
+    await expect(words.locator("table")).toHaveCSS("font-variant-numeric", "tabular-nums");
+    // In high contrast the system's own highlight colors show it.
+    await page.emulateMedia({ forcedColors: "active" });
+    await expect(mark).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await page.emulateMedia({ forcedColors: "none" });
+    // Line spacing follows the reader's size: 1.55 at the usual size, less for larger text, never under 1.5.
     const text = article(page).locator("article");
     const leading = () => text.evaluate((element) => parseFloat(getComputedStyle(element).lineHeight) / parseFloat(getComputedStyle(element).fontSize));
     expect(await leading()).toBeCloseTo(1.55, 2);
     await page.keyboard.press("+");
     await expect.poll(leading).toBeCloseTo(1.52, 2);
+    await page.keyboard.press("+");
+    await page.keyboard.press("+");
+    await expect.poll(leading).toBeCloseTo(1.5, 2);
+    await page.keyboard.press("-");
+    await page.keyboard.press("-");
     await page.keyboard.press("-");
   });
 

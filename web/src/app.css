@@ -416,7 +416,8 @@ textarea {
   lower lip in a soft mix of the text color, so it reads as a key, not a
   tag. Its letter is in the text color; the edge is only its shape.
 */
-.key {
+.key,
+.article-text kbd {
   display: inline-flex;
   min-width: 1.375rem;
   height: 1.375rem;
@@ -1271,7 +1272,7 @@ input {
 .article {
   /* Its column, face and size: reading-column.css (decision 0219). Line
      spacing follows the reader's size: 1.6 for the smallest text, easing to
-     1.45 for the largest (preferences.ts, decision 0246). */
+     1.5 for the largest, and never under 1.5 (preferences.ts, decision 0246). */
   line-height: var(--reading-leading, 1.55);
 }
 
@@ -1380,7 +1381,7 @@ input {
 */
 @media (max-width: 40rem) {
   .article {
-    line-height: calc(var(--reading-leading, 1.55) - 0.05);
+    line-height: max(1.5, calc(var(--reading-leading, 1.55) - 0.05));
   }
 }
 
@@ -1516,11 +1517,6 @@ input {
   font-size: var(--text-meta);
   color: var(--muted);
   text-align: center;
-}
-
-/* Dates in the interface take its face with a plain zero (fonts.css, decision 0246). */
-time:not(.article-text *) {
-  font-family: var(--font-dates);
 }
 
 /* The note at the bottom of the list floats, so it alone has a shadow, on the lifted surface (decision 0052). */
