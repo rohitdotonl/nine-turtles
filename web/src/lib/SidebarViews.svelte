@@ -11,6 +11,9 @@
   there, and each row leads on with a chevron (decision 0041). Nor while the
   welcome shows: you're on the welcome, not in Unread (decision 0191).
 
+  An article dragged from the list and let go on Starred is starred
+  (decision 0250).
+
   Unread alone carries a dot while something waits in it, the list's unread
   dot a step smaller (decision 0242): the one sign in the sidebar that
   anything is new. Folders and people carry none, so nothing calls from
@@ -53,6 +56,7 @@
         href={pathFor({ kind: "view", view })}
         aria-current={current ? "page" : undefined}
         aria-describedby={view === "unread" && waiting ? "unread-waiting" : undefined}
+        data-drop-star={view === "starred" ? "" : undefined /* an article dragged from the list stars here (decision 0250, articleDrag.ts) */}
         onclick={(event) => follow(event, { kind: "view", view })}
         class={[
           "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-ui",

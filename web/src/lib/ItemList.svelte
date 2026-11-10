@@ -61,6 +61,7 @@
   import { longPress } from "./longPress";
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { opensElsewhere } from "./articleLinks";
+  import { carriesArticle, listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -315,7 +316,15 @@
 
   onMount(() => {
     const asking = setInterval(askForNew, ASK_EVERY_MS);
-    return () => clearInterval(asking);
+    // A row let go on Starred is starred, as `s` does (decision 0250).
+    const stopStarring = listenForStarring((id) => {
+      const article = articles.find((each) => each.id === id);
+      if (article && !article.starred) toggleStar(article);
+    });
+    return () => {
+      clearInterval(asking);
+      stopStarring();
+    };
   });
 
   function select(index: number) {
@@ -671,6 +680,7 @@
           }}
           use:longPress={(x, y) => openMenu(index, x, y)}
           use:opensElsewhere={() => addressOf(article)}
+          use:carriesArticle={() => article}
           class="item-row place block cursor-pointer pr-4 text-left"
         >
           <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->

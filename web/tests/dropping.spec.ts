@@ -5,7 +5,9 @@ import { appReady, follow, signIn } from "./screens";
 // Pick up and drop (decision 0248): someone held in the sidebar can be
 // dropped on the foot's Pause or Unsubscribe (SPEC section 5), and a link
 // dropped on nine turtles, or on a folder, opens "Follow <name>?" (SPEC
-// section 3). Each test follows blogs of its own, since every test shares
+// section 3). Decision 0250: someone dropped onto someone else makes one
+// person (SPEC section 36), and an article dragged from the list carries
+// the publisher's link and stars on Starred (SPEC section 6). Each test follows blogs of its own, since every test shares
 // the one nine turtles that has feeds.
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside the list");
@@ -19,12 +21,14 @@ function unique(prefix: string): string {
   return `${prefix}-${test.info().workerIndex}-${Date.now()}`;
 }
 
-/** Signs in and follows a blog of the test's own, in no folder (or in `folder`); its name in the sidebar. */
-async function aBlog(page: Page, prefix: string, folder?: string): Promise<{ name: string; id: number }> {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto(new URL("/all", FEEDS_APP).href);
-  await appReady(page);
-  await signIn(page);
+/** Signs in (unless `signedIn`) and follows a blog of the test's own, in no folder (or in `folder`); its name in the sidebar. */
+async function aBlog(page: Page, prefix: string, folder?: string, signedIn = false): Promise<{ name: string; id: number }> {
+  if (!signedIn) {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+  }
   const blog = unique(prefix);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
   const name = `Blog ${blog}`;
@@ -44,6 +48,9 @@ async function dragTo(page: Page, row: Locator, target: Locator, hold = false) {
   await expect(target).toBeVisible();
   const to = (await target.boundingBox())!;
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });
+  // Held near the sidebar's edge, it scrolls (and while someone is held, Publications opens a place to drop): follow the target to where it is now.
+  const now = (await target.boundingBox())!;
+  if (Math.abs(now.y - to.y) > 1) await page.mouse.move(now.x + now.width / 2, now.y + now.height / 2, { steps: 2 });
   if (!hold) await page.mouse.up();
 }
 
@@ -223,4 +230,46 @@ test("a list of feeds (OPML) dropped on nine turtles is imported, and Undo takes
   await expect(row(page, `Blog ${blog}`)).toBeVisible();
   await sidebar(page).getByRole("button", { name: "Undo" }).click();
   await expect(row(page, `Blog ${blog}`)).toHaveCount(0);
+});
+
+test("someone dropped onto someone else makes one person, under the name of the one dropped on; Undo parts them", async ({ page }) => {
+  const { name: theirs } = await aBlog(page, "join-onto");
+  const { name: mine } = await aBlog(page, "join-held", undefined, true);
+  // Room for both rows away from the sidebar's foot, where holding scrolls the list.
+  await page.setViewportSize({ width: 1280, height: 1100 });
+  await dragTo(page, row(page, mine), row(page, theirs), true);
+  await expect(page.locator(".drag-ghost")).toHaveText(`One person with ${theirs}`);
+  await expect(row(page, theirs)).toHaveAttribute("data-drop", "");
+  await page.mouse.up();
+  await expect(note(page)).toContainText(`${theirs} is one person now.`);
+  await expect(row(page, mine)).toHaveCount(0);
+  await expect(row(page, theirs)).toBeVisible();
+  await sidebar(page).getByRole("button", { name: "Undo" }).click();
+  await expect(note(page)).toContainText("Undone.");
+  await expect(row(page, mine)).toBeVisible();
+  await expect(row(page, theirs)).toBeVisible();
+});
+
+test("an article dragged from the list carries the publisher's link, and let go on Starred it's starred, with Undo", async ({ page }) => {
+  const { name, id } = await aBlog(page, "drag-article");
+  await row(page, name).click();
+  const first = page.locator(".item-row").first();
+  await expect(first).toHaveAttribute("draggable", "true");
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${id}`, FEEDS_APP).href)).json();
+  const article = listed.articles.find((each: { title: string }) => (each.title ?? "") !== "") ?? listed.articles[0];
+  const rowOf = page.locator(".item-row").filter({ hasText: article.title });
+  const data = await page.evaluateHandle(() => new DataTransfer());
+  await rowOf.dispatchEvent("dragstart", { dataTransfer: data });
+  expect(await data.evaluate((transfer) => transfer.getData("text/uri-list"))).toBe(article.link);
+  const starred = sidebar(page).getByRole("link", { name: "Starred" });
+  await starred.dispatchEvent("dragover", { dataTransfer: data });
+  await expect(starred).toHaveAttribute("data-drop", "");
+  await starred.dispatchEvent("drop", { dataTransfer: data });
+  await rowOf.dispatchEvent("dragend", { dataTransfer: data });
+  await expect(starred).not.toHaveAttribute("data-drop");
+  await expect(page.getByText("Starred.", { exact: true })).toBeVisible();
+  const kept = async () => (await (await page.request.get(new URL("/api/articles?view=starred", FEEDS_APP).href)).json()).articles.map((each: { id: number }) => each.id);
+  await expect.poll(kept).toContain(article.id);
+  await page.getByRole("button", { name: "Undo" }).first().click();
+  await expect.poll(kept).not.toContain(article.id);
 });

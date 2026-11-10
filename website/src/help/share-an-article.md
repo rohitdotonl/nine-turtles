@@ -3,7 +3,7 @@ title: Share an article with a friend
 description: Send someone the link to an article, always the publisher's own page.
 groupId: reading
 order: 7
-spec: 21
+spec: 6 and 21
 updated: 2026-11-10
 related: [write-back, star-an-article]
 ---
@@ -24,7 +24,8 @@ related: [write-back, star-an-article]
 
 You can do the same without opening it: right-click its row in the list
 (or press and hold it on a phone) and choose **Copy link** (**Share** on a
-phone).
+phone). On a computer, you can also drag its row into a note, an email or
+another tab: the writer's own link goes with it.
 
 ## Good to know
 

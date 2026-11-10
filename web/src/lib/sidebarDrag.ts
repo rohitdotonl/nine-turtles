@@ -19,7 +19,9 @@
 // `data-drop-folder="3"` on a folder's row and `data-drop-loose="person"` or
 // `"publication"` on the lists under the folders, and `data-drop-act="pause"`
 // or `"unsubscribe"` on the places the sidebar's foot shows while someone is
-// held (decision 0248). This file sets
+// held (decision 0248), and `data-drop-person="12"` on each person's row, to
+// drop someone onto them and make the two one person (decision 0250). This
+// file sets
 // `data-dragging` (on the page: "folder", "person", or "copy" while Option or
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
@@ -34,6 +36,7 @@ export type Over =
   | { kind: "folder"; id: number }
   | { kind: "loose"; who: "person" | "publication" }
   | { kind: "act"; act: Act }
+  | { kind: "person"; id: number }
   | null;
 
 /** What dropping someone on the sidebar's foot does to them (decision 0248). */
@@ -46,6 +49,8 @@ export type DragOptions = {
   drop: (dragged: Dragged, over: Over, keep: boolean) => void;
   /** Over a place that refuses, a sentence saying why, shown beside it; `over` null clears it. `dropped` is true once it's let go there anyway. */
   refuse?: (dragged: Dragged, over: Over, dropped?: boolean) => void;
+  /** What the lifted copy says over `over`, in place of the name ("One person with Maya Chen"). */
+  ghostText?: (dragged: Dragged, over: Over) => string | undefined;
 };
 
 /** How far a mouse moves before a press becomes a drag, and a finger may wander while it holds. */
@@ -86,6 +91,8 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
   let over: Over = null;
   let marked: HTMLElement | undefined;
   let ghost: HTMLElement | undefined;
+  /** The lifted copy's own words: the name it was picked up by. */
+  let named = "";
   let line: HTMLElement | undefined;
   let pointer = { x: 0, y: 0 };
   let frame = 0;
@@ -138,7 +145,8 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     ghost = document.createElement("div");
     ghost.className = "drag-ghost";
     ghost.setAttribute("aria-hidden", "true");
-    ghost.textContent = press.source.querySelector<HTMLElement>("[title]")?.title ?? press.source.textContent?.trim() ?? "";
+    named = press.source.querySelector<HTMLElement>("[title]")?.title ?? press.source.textContent?.trim() ?? "";
+    ghost.textContent = named;
     document.body.append(ghost);
     try {
       node.setPointerCapture(press.id);
@@ -174,6 +182,8 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     // The foot sits outside these lists, under them.
     const act = under?.closest<HTMLElement>("[data-drop-act]")?.dataset.dropAct;
     if (act === "pause" || act === "unsubscribe") return { kind: "act", act };
+    const person = under?.closest<HTMLElement>("[data-drop-person]");
+    if (person && node.contains(person)) return { kind: "person", id: Number(person.dataset.dropPerson) };
     const folder = under?.closest<HTMLElement>("[data-drop-folder]");
     if (folder && node.contains(folder)) return { kind: "folder", id: Number(folder.dataset.dropFolder) };
     const loose = under?.closest<HTMLElement>("[data-drop-loose]");
@@ -190,6 +200,9 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     if (accepted && over?.kind === "folder") target = node.querySelector<HTMLElement>(`[data-drop-folder="${over.id}"]`) ?? undefined;
     if (accepted && over?.kind === "loose") target = node.querySelector<HTMLElement>(`[data-drop-loose="${over.who}"]`) ?? undefined;
     if (accepted && over?.kind === "act") target = document.querySelector<HTMLElement>(`[data-drop-act="${over.act}"]`) ?? undefined;
+    // The row under the pointer itself: someone in two folders has a row in each.
+    if (accepted && over?.kind === "person") target = document.elementFromPoint(pointer.x, pointer.y)?.closest<HTMLElement>("[data-drop-person]") ?? undefined;
+    if (ghost) ghost.textContent = (accepted && options.ghostText?.(press.dragged, over)) || named;
     if (target !== marked) {
       delete marked?.dataset.drop;
       marked = target;

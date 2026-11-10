@@ -35,7 +35,9 @@
   noted anything of theirs, the foot first asks whether to keep it, as
   Edit's Unsubscribe does (KeepOrRemove). A link dropped anywhere on nine
   turtles, or on a folder here, opens "Follow <name>?" (linkDrop.svelte.ts);
-  a list of feeds dropped there is imported, said in the same note.
+  a list of feeds dropped there is imported, said in the same note. Someone
+  dropped onto someone else makes the two one person, under the name of the
+  one dropped on (decision 0250).
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
@@ -142,6 +144,7 @@
     const row = rowNamed(dragged.id);
     if (!row || !over || over.kind === "between") return false;
     if (over.kind === "act") return over.act === "unsubscribe" || !library.allPaused(row);
+    if (over.kind === "person") return over.id !== row.id && !(row.places ?? [row.id]).includes(over.id);
     if (over.kind === "folder") return !row.folders.includes(over.id);
     if (over.who === "publication" && several(row)) return false;
     return dragged.from !== null || over.who !== (row.kind ?? "person");
@@ -173,6 +176,9 @@
       const to = folderNamed(over.id);
       await arranged(library.file(row, from, to, keep));
       if (to) openFolder([to.id]);
+    } else if (over.kind === "person") {
+      const into = rowNamed(over.id);
+      if (into) await arranged(library.joinInto(row, into));
     } else if (over.kind === "act") {
       if (over.act === "pause") await arranged(library.pause(row));
       else await leave(row);
@@ -180,6 +186,11 @@
       // Out of a folder onto People or Publications: out of it, and the one dropped on.
       await arranged(from ? library.file(row, from, null, false, over.who) : library.makeKind(row, over.who));
     }
+  }
+
+  /** Held over someone else, the lifted name says what letting go makes (decision 0250). */
+  function ghostText(_dragged: Dragged, over: Over): string | undefined {
+    return over?.kind === "person" ? `One person with ${rowNamed(over.id)?.title ?? ""}` : undefined;
   }
 
   /** Unsubscribes from someone dropped on Unsubscribe; with something kept, asks first (`removeKept` is the answer). */
@@ -323,6 +334,7 @@
       aria-current={here ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       title={feed.title}
+      data-drop-person={feed.id}
       data-unread={unreadOff ? undefined : feed.unread}
       class={[
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui",
@@ -388,7 +400,7 @@
 {/snippet}
 
 <div
-  use:sidebarDrag={{ accepts, drop, refuse }}
+  use:sidebarDrag={{ accepts, drop, refuse, ghostText }}
   class="arranging"
   data-editing={editing || undefined}
 >

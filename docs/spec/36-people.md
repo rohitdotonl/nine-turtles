@@ -149,6 +149,15 @@ PLAN.md → V1, item 1.*
   had; a source followed just then is unfollowed again. The person keeps
   the name they had, or, for two sources on their own, takes the first one's
   (the one the reader started from).
+- **Dropped onto someone** (decision 0250): in the sidebar, someone held
+  (section 5) and let go on another person or publication's row makes the
+  two one person, at once, under the name of the one dropped on (their name,
+  or, for a source on its own, its title). While they're held over the row,
+  the row takes the drop tone and the lifted name says "One person with
+  Maya Chen". They keep every folder either was in, and the note at the
+  sidebar's foot says "Maya Chen is one person now." with Undo, which puts
+  each source back as + Add a source's Undo does. For the pointer only; the
+  keyboard joins them with + Add a source.
 - **nine turtles never joins sources by itself, and never asks.** Only the
   reader joins them (decision 0163 removed "Is this the same person?").
 - **A folder can become a person:** Edit folder has a tick box row, **This
@@ -193,8 +202,12 @@ PLAN.md → V1, item 1.*
 7. Make a folder holding two sources, open Edit folder, tick **This is one
    person** and Save: the folder is gone, one row with its name. Undo: the
    folder is back with both.
-8. Visit an old `/feeds/N` address: the list opens and the address bar shows
+8. In the sidebar, drag one blog onto another's row: the lifted name says
+   "One person with …" and the row darkens. Let go: one row, under the
+   name of the one dropped on, with "… is one person now." and Undo, which
+   parts them again (decision 0250).
+9. Visit an old `/feeds/N` address: the list opens and the address bar shows
    `/people/N` or `/publications/N`.
-9. Highlight words in an article of someone's, then open their page: under
+10. Highlight words in an article of someone's, then open their page: under
    Write to and your note, **Your highlights** shows those words, "From" the
    article's title, and there is no Lately. Press the title: the article opens.

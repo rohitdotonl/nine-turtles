@@ -11,7 +11,7 @@ import { filedAfter, saveOrder } from "./arranging";
 import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, saveOpenFolders, savedOpenFolders, undoRefused, type Notice, type Refusal } from "./feeds";
 import { importMessage, importOpml, undoImport } from "./importing";
 import { newestAnswer } from "./inorder";
-import { folderToPerson, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
+import { folderToPerson, join, joinedNotice, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
 import { moveAll, movedMessage, restoreFolders } from "./tidy";
 
@@ -139,6 +139,14 @@ export class LoadedLibrary {
         return back ? undoRefused(back, "feed") : undefined;
       },
     };
+  }
+
+  /** `row` dropped onto `into` in the sidebar (decision 0250): one person, under `into`'s name, in both their folders; Undo puts each back. */
+  async joinInto(row: Feed, into: Feed): Promise<Removed> {
+    const { refusal, before } = await join([into.id, row.id]);
+    if (refusal) return refusal;
+    await this.loadFeeds();
+    return joinedNotice(this.shownAs(into)?.title ?? into.title, before, () => this.loadFeeds());
   }
 
   /** Whether every source of theirs is paused already (dropped on Pause, nothing would change). */
