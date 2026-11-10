@@ -8,12 +8,11 @@
 */
 
 /* Devanagari (Hindi, Marathi, Nepali…): its marks sit above the headline and
-   below the line, so the lines need more room, and the title is lighter. */
+   below the line, so the lines need more room. */
 .article[data-script="devanagari"] {
   line-height: 1.8;
 }
 .article[data-script="devanagari"] .article-title {
-  font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0;
 }

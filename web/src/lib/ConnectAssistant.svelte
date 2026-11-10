@@ -64,7 +64,7 @@
   {#if request?.kind === "ok"}
     {@const name = shortName(request.clientName)}
     <div class="connect flex w-full flex-col gap-5">
-      <h1 bind:this={heading} tabindex="-1" class="text-center font-serif text-heading font-semibold leading-tight break-words">
+      <h1 bind:this={heading} tabindex="-1" class="text-center font-display text-heading font-semibold leading-tight break-words">
         Connect {name} to nine turtles?
       </h1>
       <div class="flex flex-col gap-2">
@@ -105,7 +105,7 @@
     </div>
   {:else if request?.kind === "invalid" || request?.kind === "trouble"}
     <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
-      <h1 bind:this={heading} tabindex="-1" class="font-serif text-heading font-semibold leading-tight">
+      <h1 bind:this={heading} tabindex="-1" class="font-display text-heading font-semibold leading-tight">
         {request.kind === "invalid" ? "This link can't be used" : "Not connected"}
       </h1>
       <p role="status">{request.kind === "invalid" ? INVALID : UNREACHABLE}</p>

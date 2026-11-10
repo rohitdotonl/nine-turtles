@@ -125,7 +125,7 @@
       <div class="flex flex-col gap-2">
         <div class={["flex justify-between gap-4", phone ? "top-title" : "items-start"]}>
           <!-- The page's heading, at every place's title size (DESIGN.md → "The system"). -->
-          <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">{name}</h2>
+          <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-display text-heading font-semibold break-words text-ink">{name}</h2>
           <button type="button" class="text-link min-w-11 shrink-0 justify-end" aria-label="Edit {name}" onclick={() => go({ kind: "edit-feed", id: feed.id })}>Edit</button>
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}

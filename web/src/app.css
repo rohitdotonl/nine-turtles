@@ -17,10 +17,15 @@
 */
 
 @theme {
-  --font-serif: "Literata", "Noto Serif Devanagari", "Noto Naskh Arabic", Georgia, serif;
+  /* Each face is followed by its stand-ins, sized to take the same room while it arrives (fonts.css, decision 0246). */
+  --font-serif: "Literata", "Literata stand-in", "Literata stand-in 2", "Noto Serif Devanagari", "Noto Naskh Arabic", Georgia, serif;
   /* The interface's one typeface on every device, and code's (decision 0141). */
-  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", "Atkinson stand-in", "Atkinson stand-in 2", system-ui, sans-serif;
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
+  /* Titles of 24px and more: Literata's display cut (decision 0246). */
+  --font-display: "Literata Display", var(--font-serif);
+  /* Dates: the interface's face with a plain zero (decision 0246). */
+  --font-dates: "Atkinson Hyperlegible Next Plain Zero", var(--font-sans);
 
   --text-*: initial;
   /* Three interface sizes, each with a touch screen's twin (below). */
@@ -411,7 +416,8 @@ textarea {
   lower lip in a soft mix of the text color, so it reads as a key, not a
   tag. Its letter is in the text color; the edge is only its shape.
 */
-.key {
+.key,
+.article-text kbd {
   display: inline-flex;
   min-width: 1.375rem;
   height: 1.375rem;
@@ -520,7 +526,7 @@ textarea {
 
   /* A sheet's title: the same serif, size and weight as every other title (the list's, Settings'). */
   .sheet-title {
-    font-family: var(--font-serif);
+    font-family: var(--font-display);
     font-size: var(--text-heading);
     font-weight: 600;
     line-height: 1.2;
@@ -673,7 +679,6 @@ textarea {
     margin: 0;
     color: var(--ink);
     font-size: var(--text-ui);
-    font-weight: 500;
     line-height: var(--setting-line);
     overflow-wrap: anywhere;
   }
@@ -1265,8 +1270,10 @@ input {
   Images never overflow.
 */
 .article {
-  /* Its column, face and size: reading-column.css (decision 0219). */
-  line-height: 1.55;
+  /* Its column, face and size: reading-column.css (decision 0219). Line
+     spacing follows the reader's size: 1.6 for the smallest text, easing to
+     1.5 for the largest, and never under 1.5 (preferences.ts, decision 0246). */
+  line-height: var(--reading-leading, 1.55);
 }
 
 /*
@@ -1291,21 +1298,22 @@ input {
 }
 
 /*
-  The one large thing on the screen, about 32px at the default text size:
-  set tight, clearly above the article's own headings. It sits in the same
-  column as the text, and its lines are balanced, so a two-line title
-  reads as two even lines rather than a long one over a stub, as Apple
-  Books sets a title (decision 0044, replacing 0040's lone-word rule).
-  Tracked in only a little, so its letters never touch, with a clear pause
-  before the byline: five-eighths of the title's own size (about 20px by
-  default), so the pause keeps its proportion at every text size and on a
-  phone (decision 0047).
+  The one large thing on the screen, about 38px at the default text size:
+  regular weight in Literata's display cut, as a book sets a chapter's title
+  (decision 0246), clearly above the article's own headings. It sits in the
+  same column as the text, and its lines are balanced, so a two-line title
+  reads as two even lines rather than a long one over a stub (decision 0044,
+  replacing 0040's lone-word rule). Tracked in only a little, so its letters
+  never touch, with a clear pause before the byline: five-eighths of the
+  title's own size, so the pause keeps its proportion at every text size and
+  on a phone (decision 0047).
 */
 .article-title {
-  font-size: 1.6em;
-  line-height: 1.12;
-  font-weight: 600;
-  letter-spacing: -0.005em;
+  font-family: var(--reading-title-font, var(--reading-font));
+  font-size: 1.9em;
+  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: -0.012em;
   margin-block-end: 0.625em;
   text-wrap: balance;
   overflow-wrap: break-word;
@@ -1373,14 +1381,20 @@ input {
 */
 @media (max-width: 40rem) {
   .article {
-    line-height: 1.5;
+    line-height: max(1.5, calc(var(--reading-leading, 1.55) - 0.05));
   }
 }
 
+/*
+  On Apple's browsers, a quote mark that opens a paragraph hangs just outside
+  the column, so the words keep one left edge, as a set book does (decision
+  0246). Others ignore it.
+*/
 .article-text {
   margin-top: 1.75em;
   overflow-wrap: break-word;
   font-weight: 400;
+  hanging-punctuation: first;
 }
 
 /* Only an article's last paragraph avoids a lone last word: elsewhere it left visibly short lines (decision 0040). */
@@ -1398,29 +1412,6 @@ input {
 
 .article-text :where(p, ul, ol, dl, blockquote, pre, table, figure, hr) {
   margin-block: 0.8em;
-}
-
-/* Headings inside an article: a step down from the title, with more room above than below, so each starts a new part. */
-.article-text :where(h1, h2, h3, h4, h5, h6) {
-  margin-top: 1.8em;
-  margin-bottom: 0.5em;
-  line-height: 1.3;
-  font-weight: 600;
-  text-wrap: balance;
-}
-
-/* About 22px at the default text size. */
-.article-text :where(h1, h2) {
-  margin-top: 2em;
-  font-size: 1.1em;
-}
-
-.article-text h3 {
-  font-size: 1.05em;
-}
-
-.article-text :where(h4, h5, h6) {
-  font-size: 1em;
 }
 
 /*
@@ -1526,54 +1517,6 @@ input {
   font-size: var(--text-meta);
   color: var(--muted);
   text-align: center;
-}
-
-.article-text table {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  border-collapse: collapse;
-  font-size: 0.9em;
-}
-
-/*
-  A table starts flush with the text's left edge, its header semibold over a
-  fine rule and its rows over fainter ones, never a heavy line (decision 0050).
-*/
-.article-text :where(th, td) {
-  padding: 0.25em 0.75em;
-  border-bottom: 1px solid var(--line);
-  text-align: left;
-  vertical-align: top;
-}
-
-.article-text :where(th, td):first-child {
-  padding-left: 0;
-}
-
-.article-text th {
-  font-weight: 600;
-  border-bottom-color: var(--strong);
-}
-
-.article-text hr {
-  border: 0;
-  border-top: 1px solid var(--muted);
-}
-
-.article-text :where(sup, sub) {
-  font-size: 0.75em;
-  line-height: 0;
-}
-
-.article-text strong,
-.article-text b {
-  /* A step heavier than the words around it. */
-  font-weight: 600;
-}
-
-.article-text :where(em, i) {
-  font-style: italic;
 }
 
 /* The note at the bottom of the list floats, so it alone has a shadow, on the lifted surface (decision 0052). */

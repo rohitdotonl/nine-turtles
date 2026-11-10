@@ -53,7 +53,7 @@
         <a
           href={`/people/${feed.id}`}
           onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
-          class="font-serif text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
+          class="font-display text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
       {/if}
       <p class="text-meta text-ink-2">You're following {feed.title}. What they write next will be waiting for you here.</p>

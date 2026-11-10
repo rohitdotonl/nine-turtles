@@ -46,3 +46,5 @@ Text size and font are only in **Aa**, next to the text they change.
   and Night, and brown on Paper.
 - Every article has the same comfortable line width, about 71 letters
   across. A larger text size makes the lines shorter by itself.
+- Larger text sizes get a little less room between lines, as a printed
+  book's larger type does, so the page never looks loose.
