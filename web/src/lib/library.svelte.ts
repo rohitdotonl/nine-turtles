@@ -36,6 +36,9 @@ export class LoadedLibrary {
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
+  /** How many feeds brought from a file still wait for their first check (decision 0249); the list that fills in loads the feeds again as it asks. */
+  checking: number = $derived(this.feeds?.filter((feed) => feed.waiting).length ?? 0);
+
   /** People and folders together, as search names them: a person by their row. */
   get names(): Library {
     return { feeds: this.rows ?? [], folders: this.folders };
@@ -78,6 +81,7 @@ export class LoadedLibrary {
     } catch {
       this.feedsFailed = true;
     }
+
   }
 
   /** Loads the feeds again as the reader arrives on them (a phone's feeds screen): a failure keeps the dots as they were and says nothing. */

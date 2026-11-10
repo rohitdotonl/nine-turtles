@@ -1136,7 +1136,7 @@
                 <ItemList
                   bind:this={itemList} bind:note={listNote}
                   bind:selected
-                  {source} place={headingText}
+                  {source} place={headingText} checking={library.checking} onChecking={loadFeeds}
                   order={settings.sort}
                   {notice}
                   empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => (searching.everywhere(), queueMicrotask(() => searchBar?.focus()))) : emptyText(under, currentFeed?.checkedAt ?? null)}

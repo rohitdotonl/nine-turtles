@@ -36,7 +36,10 @@
   The list never changes on its own (SPEC section 13). Every minute it asks
   the server whether articles have arrived for it; if so, it says "New
   items" and waits. `r` or Refresh loads it again, instantly, since the
-  server fetched them already.
+  server fetched them already. The one exception (decision 0249): while
+  feeds brought from a file wait for their first check, Unread and All
+  articles say how many are left (`ListArriving`) and fill in by themselves,
+  until an article is opened or older ones are loaded.
 -->
 <script lang="ts">
   import Dated from "./Dated.svelte";
@@ -62,6 +65,8 @@
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { opensElsewhere } from "./articleLinks";
   import type { EmptyWords } from "./listWording";
+  import ListArriving from "./ListArriving.svelte";
+  import { askingEvery, bringsIn } from "./asking";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
@@ -84,6 +89,8 @@
     addressOf = () => "",
     note = $bindable(),
     place,
+    checking = 0,
+    onChecking = () => {},
   }: {
     source: Source;
     order: Order;
@@ -115,13 +122,17 @@
     note?: ListNote;
     /** The list's own name, "Outdoors": a slow first load says "Loading Outdoors…" (decision 0230), and Mark all as read names it. */
     place?: string;
+    /** How many feeds brought from a file are still waiting for their first check (decision 0249). */
+    checking?: number;
+    /** While the list fills in, at each ask: the sidebar's feeds load again. */
+    onChecking?: () => void;
   } = $props();
 
   /** What a slow first load says where the rows will be. */
   let loading = $derived(results ? "Searching…" : place ? `Loading ${place}…` : "Loading…");
 
-  /** How often the list asks whether new items are waiting. */
-  const ASK_EVERY_MS = 60_000;
+  /** A list brought from a file is being checked, and this is Unread or All articles (decision 0249, `asking.ts`). */
+  let bringingIn = $derived(bringsIn(checking, source));
 
   let articles: Article[] = $state([]);
   let next: string | null = $state(null);
@@ -142,6 +153,8 @@
   /** Bumped each time the list loads from the top, so an older "anything new?" answer is ignored. */
   let topLoads = 0;
   let newWaiting = $state(false);
+  /** Older articles were loaded below the first page: the list no longer fills in by itself, so they stay (decision 0249). */
+  let loadedMore = false;
   // Touch screens have no r key; their note has a Show button instead (same test as the keyboard hint).
   const touch = matchMedia("(hover: none) and (pointer: coarse)").matches;
 
@@ -214,6 +227,7 @@
     try {
       const page = await listArticles(source, order, after);
       articles = after === null ? page.articles : [...articles, ...page.articles];
+      loadedMore = after !== null;
       next = page.next;
       if (after === null) {
         latest = page.latest;
@@ -278,6 +292,7 @@
       loadedAt = new Date();
       topLoads++;
       newWaiting = false;
+      loadedMore = false;
       fromDevice = page.kept === true;
       loaded = true;
       if (fromDevice) say(REFRESH_NEEDS_CONNECTION);
@@ -301,22 +316,27 @@
   }
 
   /** Asks the server, quietly, whether new items are waiting for this list. */
-  async function askForNew() {
+  async function askForNew(filling = false) {
     if (!loaded || newWaiting || busy || document.hidden || fromDevice) return;
     const asked = topLoads;
     try {
       const waiting = await newItemsWaiting(source, latest);
       // A refresh while asking already brought whatever was new.
-      if (topLoads === asked && !busy) newWaiting = waiting;
+      if (topLoads !== asked || busy) return;
+      if (!waiting || !filling) newWaiting = waiting;
+      // Filled in by itself (decision 0249), and said to screen readers, as the note would be.
+      else void refresh().then(() => ((spoken = ""), tick().then(() => (spoken = "New articles are in the list."))));
     } catch {
       // Nothing to say: it asks again in a minute.
     }
   }
 
-  onMount(() => {
-    const asking = setInterval(askForNew, ASK_EVERY_MS);
-    return () => clearInterval(asking);
-  });
+  // Asks every few seconds while filling in, otherwise once a minute (`asking.ts`).
+  onMount(() => askingEvery(() => bringingIn && !selected && !loadedMore, (filling) => {
+    // The sidebar follows the same asks, so names and "checking…" catch up, and never while the reader reads.
+    if (filling) onChecking();
+    void askForNew(filling);
+  }));
 
   function select(index: number) {
     const article = articles[index];
@@ -643,7 +663,9 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
 {/if}
 
-{#if loaded && articles.length === 0}
+{#if bringingIn && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} />{/if}
+
+{#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
   <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class="item-list">
