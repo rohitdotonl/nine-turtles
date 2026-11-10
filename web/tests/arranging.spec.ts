@@ -62,7 +62,8 @@ test("a folder dragged above another stays there, after a reload too, and Undo p
   const [first, second] = [unique("Aaa"), unique("Bbb")];
   await blogsInFolders(page, [first, second]);
   const names = await folderNames(page);
-  expect(names.indexOf(second)).toBe(names.indexOf(first) + 1);
+  // Below it, though not always just below: another test may make a folder in between.
+  expect(names.indexOf(second)).toBeGreaterThan(names.indexOf(first));
 
   const from = await middleOf(folderRow(page, second).locator(".folder-row"));
   const top = (await folderRow(page, first).locator(".folder-row").boundingBox())!;
@@ -97,7 +98,8 @@ test("Escape while dragging changes nothing", async ({ page }) => {
   await page.mouse.up();
   await expect(note(page)).toHaveCount(0);
   const names = await folderNames(page);
-  expect(names.indexOf(second)).toBe(names.indexOf(first) + 1);
+  // Below it, though not always just below: another test may make a folder in between.
+  expect(names.indexOf(second)).toBeGreaterThan(names.indexOf(first));
 });
 
 test("someone dragged onto another folder moves there; their old folder, left empty, goes too and comes back on Undo", async ({ page }) => {
