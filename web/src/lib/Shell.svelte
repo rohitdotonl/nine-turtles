@@ -71,6 +71,7 @@
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
+  import { topTapScrolls } from "./topTap";
   import { readArticle } from "./articles";
   import { arrivedBySwitching, settleBack, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
   import { deviceText, setDeviceText } from "./device";
@@ -289,6 +290,7 @@
   const loadFeeds = () => library.loadFeeds(); // Loads the feeds and folders.
   // A phone opens on the welcome while you follow no one (decision 0137); Back goes home. Only on opening: feeds arriving after a move change nothing.
   $effect(() => void (firstVisit && untrack(() => !layout.moved && phone && screenNow() === "home" && isList(route) && go(route))));
+  $effect(() => (phone ? topTapScrolls() : undefined)); // Tapping the top of an iPhone's screen scrolls to the top (decision 0237).
 
   $effect(() => {
     // device.dark: "Match device" follows the device's own switch while nine turtles is open.
@@ -305,9 +307,8 @@
     if (isList(route) && location.pathname !== address) history.replaceState(history.state, "", address);
   });
 
-  // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes,
-  // its row scrolls just far enough to show, at once, never smoothly (decision 0051). Not when
-  // the feeds' counts change, so nothing moves unless you move it. The phone's feeds screen marks no place.
+  // Where you are is always in sight in the sidebar (SPEC section 5): when the place changes, its row scrolls just far enough
+  // to show, at once (decision 0051); not when the counts change, so nothing moves unless you move it. The phone's feeds screen marks no place.
   let sidebarPlace = $derived(!phone && panes.sidebar && library.feeds !== undefined ? pathFor(route) : "");
   $effect(() => {
     if (sidebarPlace === "") return;
@@ -317,8 +318,7 @@
     });
   });
 
-  // An article counts as read as soon as the reading area shows it (SPEC section 8). Only a newly
-  // shown article is marked, so `m` on the one already showing keeps it unread until you move away and back.
+  // An article counts as read once the reading area shows it (SPEC section 8); only a newly shown one, so `m` on it keeps it unread until you move away and back.
   let lastShown: number | undefined;
   $effect(() => {
     const showing = panes.article ? selected : undefined;
