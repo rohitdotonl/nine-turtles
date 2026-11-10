@@ -22,6 +22,8 @@
   import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { explain, signIn } from "./session";
+  import EmailFix from "./EmailFix.svelte";
+  import { emailFix } from "./typos";
   import { SIGN_IN_LINK_MINUTES, SIGN_UP_PAGE, askForLink, explainAsked } from "./accounts";
   import {
     type PasskeySignIn,
@@ -135,6 +137,15 @@
   /** Where a link was asked for: the form gives way to "Check your email". */
   let sent = $state("");
   let sentHeading: HTMLHeadingElement | undefined = $state();
+  /** After a failed sign-in only: a likely slip in the email's provider, offered with the message (decision 0234). */
+  let fix: string | undefined = $state();
+
+  /** Use that: the email takes the address offered, and the keyboard goes to the password, emptied by the failure. */
+  function useFix(meant: string) {
+    email = meant;
+    fix = undefined;
+    document.getElementById("password")?.focus();
+  }
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -148,6 +159,7 @@
     }
     if (password === "") return;
     busy = true;
+    fix = undefined;
     const result = await signIn(email, password);
     busy = false;
     if (result.ok) {
@@ -155,6 +167,7 @@
     } else {
       message = explain(result);
       refused = result.reason === "wrong-password";
+      if (refused) fix = emailFix(email);
       password = "";
     }
   }
@@ -193,6 +206,7 @@
     sent = "";
     message = "";
     refused = false;
+    fix = undefined;
     password = "";
     tick().then(() => emailField?.focus());
   }
@@ -242,7 +256,8 @@
         autofocus
         bind:this={emailField}
         bind:value={email}
-        aria-describedby={asking ? "link-help sign-in-message" : "sign-in-message"}
+        oninput={() => (fix = undefined)}
+        aria-describedby={asking ? "link-help sign-in-message" : "sign-in-message sign-in-fix"}
         aria-invalid={refused && email.trim() !== "" ? "true" : undefined}
         class="field"
       />
@@ -289,6 +304,8 @@
       <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-small", "text-danger", !message && "sr-only"]}>
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{message}{/if}
       </p>
+      <!-- After "That email and password don't match.", a likely slip in the email, in the text color, centred under it. -->
+      <EmailFix id="sign-in-fix" centred {fix} onUse={useFix} />
       <!-- Busy is said with aria-disabled, not disabled, so the button keeps its look and the keyboard's place (decision 0045). Its corners match the field's. -->
       <button type="submit" aria-disabled={busy} class="btn-primary rounded-lg"><Waiting {busy} word={asking ? "Email me a link" : "Sign in"} doing={asking ? "Sending…" : "Signing in…"} /></button>
       {#if asking}

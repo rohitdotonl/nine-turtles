@@ -47,6 +47,7 @@
   import { join } from "./people";
   import type { WhoKind } from "./shapes";
   import { question } from "./youtube";
+  import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
 
   let {
@@ -114,6 +115,10 @@
   /** The address the choices were found at: Add adds the chosen one while the field still holds it. */
   let choicesFor = $state("");
   let alreadyId: number | undefined = $state();
+  /** The address's one obvious repair, offered as a button under the message (decision 0234). */
+  let slip: AddressFix | undefined = $state();
+  /** The address Add already paused for once to offer a repair: pressed again, it's looked up as typed. */
+  let pausedFor = "";
   /** Just added: "{title} is…" a person or a publication, with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
   /** Their newest title, shown with their site above the question. */
@@ -154,6 +159,13 @@
    * everything said about them (a problem's red edge, "Go to …"), and Add looks again.
    */
   function edited() {
+    // A repair offered for what was there before no longer fits: it goes with its message.
+    if (slip) {
+      slip = undefined;
+      message = "";
+      problem = false;
+      badAddress = false;
+    }
     if (choices.length > 0 && address !== choicesFor) {
       choices = [];
       message = "";
@@ -190,6 +202,7 @@
         message = "You already follow this.";
         break;
       case "problem":
+        if (result.reason === "not-an-address" && offerRepair(text)) break;
         message = explain(result.reason);
         problem = true;
         badAddress = !NOT_THE_ADDRESS.includes(result.reason);
@@ -207,6 +220,25 @@
     alreadyId = undefined;
     noFeed = "";
     note = undefined;
+    slip = undefined;
+  }
+
+  /** Says what looks mistyped in `text` and offers its one repair, if it has one; never changes the field by itself. */
+  function offerRepair(text: string): boolean {
+    slip = addressFix(text);
+    if (!slip) return false;
+    message = addressSlip(slip);
+    problem = true;
+    badAddress = true;
+    return true;
+  }
+
+  /** Use …: the repaired address goes in the field, and is looked up. */
+  function useRepair() {
+    if (!slip) return;
+    address = slip.address;
+    field?.focus();
+    add(address);
   }
 
   /** Followed: the question "… is…" a person or a publication, before it opens. */
@@ -311,7 +343,11 @@
     if (choices.length > 0 && address === choicesFor) {
       if (!oneOnly) void followTicked();
       else if (chosen) add(chosen, true);
-    } else if (address.trim()) add(address);
+    } else if (address.trim()) {
+      // A likely slip is offered first; never blocking, so a second press looks the address up as typed.
+      if (pausedFor !== address && offerRepair(address)) pausedFor = address;
+      else add(address);
+    }
     else {
       message = "Paste an address first.";
       problem = true;
@@ -385,6 +421,10 @@
     >
       {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : "Looking…"}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}{/if}
     </p>
+    {#if slip && !busy}
+      <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->
+      <button type="button" onclick={useRepair} class={["btn mt-1.5 max-w-full rounded-lg break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
+    {/if}
 
     {#if choices.length > 0}
       <!--

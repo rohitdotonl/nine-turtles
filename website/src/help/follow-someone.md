@@ -18,7 +18,10 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 1. Press **+ Add** at the foot of the sidebar (or press <kbd>A</kbd>).
 2. Paste their website's address, such as <code>example.com</code>.
    You can leave off the <code>https://</code>.
-3. Press **Add**.
+3. Press **Add**. If the address has an obvious slip, such as a comma for
+   a dot or <code>.con</code> for <code>.com</code>, nine turtles says what
+   it thinks you meant and offers a button to use it. It never changes what
+   you typed by itself; press **Add** again to keep it.
 4. nine turtles asks what they are: "Maya Chen is…", with their site
    and newest title. Choose **A person** (someone you might write back to)
    or **A publication** (anything you only read or watch, such as a
