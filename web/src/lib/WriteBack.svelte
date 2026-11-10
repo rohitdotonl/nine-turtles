@@ -79,7 +79,8 @@
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
-  /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened. */
+  /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened.
+   * A polite live line, not a second "status": the toolbar's line is the pane's one status. */
   let opening = $state(false);
   let copied = $state("");
   let copyFailed = $state(false);
@@ -208,7 +209,7 @@
       <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" size={18} /><span>{verb} <bdi>{name}</bdi></span></a>
       <p class="to">{address}</p>
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
-      <p class={["opening", !opening && "sr-only"]} role="status">
+      <p class={["opening", !opening && "sr-only"]} aria-live="polite">
         {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-1.5", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
       </p>
     {:else}
