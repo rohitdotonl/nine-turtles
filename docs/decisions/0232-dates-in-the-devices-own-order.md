@@ -13,7 +13,7 @@ device writes them, read from its language and region settings:
   United States, Canada, Japan) gets "Oct 20" and "Oct 20, 2025"; every other
   "20 Oct" and "20 Oct 2025", as before.
 - **The clock.** A 12-hour device gets "2:05 PM" ("2:05 pm" where the day
-  comes first, as in Australia); a 24-hour one "14:05", as before. The
+  comes first, as in India and Australia); a 24-hour one "14:05", as before. The
   tooltip's exact time follows both: "Sunday, November 8, 2026 at 6:00 AM".
 
 What 0215 settled stays: one form for every date, months always three
