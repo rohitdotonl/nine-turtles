@@ -79,7 +79,6 @@
     oneFeed = false,
     unreadOff = false,
     first = $bindable(),
-    found = $bindable(""),
     rowActions = () => [],
     addressOf = () => "",
     note = $bindable(),
@@ -107,8 +106,6 @@
     unreadOff?: boolean;
     /** The first article listed, for the empty reading area. */
     first?: Article;
-    /** What the line above search results says ("28 results"): empty until they load, and when this isn't a search. */
-    found?: string;
     /** A row's menu, after its star and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
     rowActions?: (article: Article) => MenuGroup[];
     /** An article's own address (decision 0233), for Command-click and a middle click on its row. */
@@ -201,10 +198,6 @@
 
   $effect(() => {
     first = articles[0];
-  });
-
-  $effect(() => {
-    found = results && loaded ? resultCount(articles.length, next !== null) : "";
   });
 
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
@@ -641,7 +634,7 @@
 
 {#if results}
   <!-- How many were found, quietly above the results. Present from the start and filled once they load, so screen readers hear it. -->
-  <p role="status" data-result-count class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
+  <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
 {#if fromDevice}

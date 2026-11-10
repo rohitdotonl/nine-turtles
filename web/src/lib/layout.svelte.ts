@@ -90,7 +90,7 @@ export class ScreenLayout {
   width: Width = $state("wide");
   /** The reader's last use of the sidebar toggle; on a phone, whether the feeds (the home screen) show. */
   sidebarChoice: SidebarChoice = $state("auto");
-  /** On a computer, the reader hid the article list (] or its button) to give the article its room. */
+  /** On a computer, the reader hid the article list, with the sidebar, for full-screen reading (`f`, decision 0241). */
   listHidden = $state(false);
   /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
   sidebarWidth: number | undefined = $state(storedWidth(SIDEBAR_WIDTH_KEY));
@@ -154,14 +154,7 @@ export class ScreenLayout {
     return hiding;
   }
 
-  /** On a computer, hides the article list or shows it again; answers whether it hid. */
-  toggleList(): boolean {
-    const hiding = this.panes.list;
-    this.listHidden = hiding;
-    return hiding;
-  }
-
-  /** \: hides the sidebar and the list together, for just the article, or brings both back; answers whether they hid. */
+  /** Full-screen reading (`f`, or the article's More menu): hides the sidebar and the list together, for just the article, or brings both back; answers whether they hid. */
   toggleBoth(): boolean {
     const hiding = this.panes.sidebar || this.panes.list;
     this.sidebarChoice = hiding ? "hidden" : "shown";
@@ -192,6 +185,7 @@ export class ScreenLayout {
   putBack(was: Pick<Carried, "sidebar" | "listHidden">) {
     if (this.phone) return;
     this.sidebarChoice = was.sidebar;
-    this.listHidden = was.listHidden;
+    // The list hides only with the sidebar now (decision 0241), so a list hidden on its own comes back.
+    this.listHidden = was.listHidden && was.sidebar === "hidden";
   }
 }

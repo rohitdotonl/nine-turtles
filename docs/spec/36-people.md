@@ -121,10 +121,9 @@ PLAN.md → V1, item 1.*
     (and a YouTube channel's two switches);
   - for someone with two or more sources, their **Sources**, each a row
     whose › opens that source's own settings, and **+ Add a source** under
-    them; for a person with one source, no Sources heading, only a line near
-    the foot: "Does Tomas Berg also write a newsletter, make videos or host a
-    podcast? Add it, and everything Tomas Berg makes shows in one place." and
-    a link, **+ Add another place**, which opens the same box;
+    them; for a person with one source, no Sources heading, only one link
+    near the foot that says what it adds, **+ Add their newsletter, videos or
+    podcast**, which opens the same box (decision 0241);
   - at the foot, **Unsubscribe from Alpha** in red words, which leaves every
     source of theirs at once, with Undo.
 - **A source's settings** (`/people/12/sources/34`, from Edit's ›), titled

@@ -27,8 +27,8 @@ folders." Their articles arrive over the next few minutes.
 Chose the wrong file? Press **Undo the import** on the line under it: exactly
 what that import added goes again, and everything you followed before stays.
 
-New here? On the welcome screen, **Bring your list from another app…** does
-the same thing.
+New here? At the foot of the welcome screen, **Bring your list from another
+app…** does the same thing.
 
 ## Bring your starred articles
 

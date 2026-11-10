@@ -5,9 +5,9 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "sliders" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "a-plus" | "text" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
 </script>
 
 <script lang="ts">
@@ -51,10 +51,6 @@
   {:else if name === "search"}
     <circle cx="8.5" cy="8.5" r="5.75" />
     <path d="m12.75 12.75 4.5 4.5" />
-  {:else if name === "sliders"}
-    <path d="M3 6h2M9 6h8M3 14h8M15 14h2" />
-    <circle cx="7" cy="6" r="2" />
-    <circle cx="13" cy="14" r="2" />
   {:else if name === "plus"}
     <path d="M10 4v12M4 10h12" />
   {:else if name === "settings"}
@@ -108,8 +104,8 @@
     <circle cx="10" cy="10" r="6.75" />
     <path d="M10 6.75v3.75" />
     <circle cx="10" cy="13.25" r="1" fill="currentColor" stroke="none" />
-  {:else if name === "aa" || name === "a-plus"}
-    <!-- The reading panel, and Settings › Text size: a large A and a small a. -->
+  {:else if name === "aa"}
+    <!-- The reading panel: a large A and a small a. -->
     <!-- A clear gap between the two letters, and the small a's stem no taller than its bowl, so it reads as "a", not "d". -->
     <path d="M2.75 16 6.5 4.75 10.25 16M4.1 12.25h4.8" />
     <circle cx="14.25" cy="13.5" r="2.5" />
@@ -142,9 +138,6 @@
     <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
-  {:else if name === "text"}
-    <!-- Settings › Font: lines of text, the last one short. -->
-    <path d="M3.25 5h13.5M3.25 8.75h13.5M3.25 12.5h13.5M3.25 16.25h8" />
   {:else if name === "feed"}
     <!-- Settings › Everyone you follow: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />

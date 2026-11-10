@@ -24,4 +24,4 @@
 4. Press `Shift+A` in a feed: everything shown turns grey at once, and the note says "Marked 3 articles as read in" the feed's name. Press `u`: they're unread again. Press `Shift+A` again and open All articles: the note is still there, and Undo still brings them back. Star something, then go to another list: the note has gone.
 5. Wait until "New articles · press r" appears, then mark all as read *without* pressing `r`. Press `r`: the new items are still unread.
 6. Turn the Wi-Fi off, open an unread article, and turn it back on within half a minute: the article stays read and nothing is said. Leave it off longer: "An article couldn't be marked as read. It's still unread." appears with Try again; once the Wi-Fi is back, opening another unread article (or pressing Try again) clears it.
-7. Open a list's More (…) menu: it has Mark all as read and Refresh, and nothing else for marking. Settings › Reading has Unread and Sort order only. `Shift+O` does nothing.
+7. Open a list's More (…) menu: it has Mark all as read and Refresh, and nothing else for marking. Settings › Reading has Unread only (sort order is in this menu, decision 0241). `Shift+O` does nothing.

@@ -6,9 +6,10 @@
   (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
-  (Unread on or off and sort order, shared across
-  the reader's devices) and Look and feel (Page, Text size and Font, for
-  this device). Everything else is a row ending in › that opens a page of its own
+  (Unread on or off, shared across the reader's devices) and Look and feel
+  (Page, for this device). Each setting has one place, where it acts
+  (decision 0241): sort order is in each list's More menu, text size and
+  font in the Aa panel above an article. Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
   Your library (Everyone you follow, a page of its own, then Your data); More
@@ -48,12 +49,10 @@
   import Readers from "./Readers.svelte";
   import Rules from "./Rules.svelte";
   import PageHead from "./PageHead.svelte";
-  import TextSize from "./TextSize.svelte";
   import { LOOKS, PAGES, swatch } from "./themes";
   import type { Feed } from "./shapes";
-  import type { Order } from "./reading";
   import { HELP_URL, SETTINGS_PAGES, type SettingsPage } from "./router";
-  import { READING_FONTS, type Preferences } from "./preferences";
+  import type { Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -65,8 +64,7 @@
   let {
     page = undefined,
     preferences = $bindable(),
-    sort,
-    onSort,
+    loaded,
     unread,
     onUnread,
     heading = $bindable(),
@@ -91,10 +89,8 @@
     /** One of Settings' own pages, or Settings itself (decision 0120). */
     page?: SettingsPage;
     preferences: Preferences;
-    /** Newest or oldest first; unknown until the server answers. */
-    sort: Order | undefined;
-    /** Saves a new sort order; fails if it couldn't be saved. */
-    onSort: (sort: Order) => Promise<void>;
+    /** The shared settings have come from the server, so Unread can be switched. */
+    loaded: boolean;
     /** Whether Unread is on (SPEC section 10). */
     unread: boolean;
     /** Switches Unread on or off; fails if it couldn't be saved. */
@@ -133,11 +129,6 @@
     besideToggle?: boolean;
   } = $props();
 
-  const SORT_CHOICES = [
-    { value: "newest", label: "Newest first" },
-    { value: "oldest", label: "Oldest first" },
-  ] as const;
-
   /** Hiding started from someone's page or an article: the word field waits, set to them. */
   let hideFor: number | undefined = $state();
 
@@ -170,7 +161,7 @@
   }
 
   let message = $state("");
-  let sortMessage = $state("");
+  let unreadMessage = $state("");
   /** What the last import (OPML or starred articles) did, in plain words. */
   let importLines: string[] = $state([]);
   /** After an import that added something, "Wrong file? Undo the import" until the next action here (decision 0238). */
@@ -210,20 +201,11 @@
   ]);
 
   async function chooseUnread(next: boolean) {
-    sortMessage = "";
+    unreadMessage = "";
     try {
       await onUnread(next);
     } catch {
-      sortMessage = "Unread couldn't be switched. Try again in a moment.";
-    }
-  }
-
-  async function chooseSort(next: Order) {
-    sortMessage = "";
-    try {
-      await onSort(next);
-    } catch {
-      sortMessage = "The sort order couldn't be saved. Try again in a moment.";
+      unreadMessage = "Unread couldn't be switched. Try again in a moment.";
     }
   }
 
@@ -350,37 +332,14 @@
                 aria-label="Unread"
                 aria-describedby="unread-hint"
                 checked={unread}
-                disabled={sort === undefined}
+                disabled={!loaded}
                 onchange={(event) => chooseUnread(event.currentTarget.checked)}
               />
             </label>
           </div>
-          <div class="inset-row setting has-control">
-            <div class="setting-label">
-              {@render icon("sort")}
-              <div class="setting-words">
-                <p id="sort-name" class="setting-name">Sort order</p>
-              </div>
-            </div>
-            <div role="group" aria-labelledby="sort-name" class="choices setting-control" style="--columns: 2">
-              {#each SORT_CHOICES as choice (choice.value)}
-                <label class="choice">
-                  <input
-                    type="radio"
-                    name="sort"
-                    value={choice.value}
-                    checked={sort === choice.value}
-                    disabled={sort === undefined}
-                    onchange={() => chooseSort(choice.value)}
-                  />
-                  {choice.label}
-                </label>
-              {/each}
-            </div>
-          </div>
         </div>
-        <p class="inset-foot">These apply on all your devices.</p>
-        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !sortMessage && "sr-only"]}>{#if sortMessage}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{sortMessage}</p>
+        <p class="inset-foot">Applies on all your devices.</p>
+        <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{unreadMessage}</p>
       </section>
 
       <section aria-labelledby="reader-heading">
@@ -402,34 +361,9 @@
               {/each}
             </div>
           </div>
-          <div class="inset-row setting has-control">
-            <div class="setting-label">
-              {@render icon("a-plus")}
-              <div class="setting-words"><p id="text-size-name" class="setting-name">Text size</p></div>
-            </div>
-            <!-- A flat "A | step | A" capsule: a small A and a large A at its ends, the current step between them as plain words, parted by hairlines (decisions 0045, 0055). -->
-            <div class="setting-control">
-              <TextSize bind:size={preferences.textSize} labelledby="text-size-name" />
-            </div>
-          </div>
-          <!-- The reading font: each name set in its own font, so the choice shows itself. Articles keep one line width (decision 0187). -->
-          <div class="inset-row setting has-control">
-            <div class="setting-label">
-              {@render icon("text")}
-              <div class="setting-words"><p id="reading-font-name" class="setting-name">Font</p></div>
-            </div>
-            <div role="group" aria-labelledby="reading-font-name" class="choices setting-control" style="--columns: 3">
-              {#each Object.entries(READING_FONTS) as [value, font] (value)}
-                <label class="choice" style:font-family={font.family}>
-                  <input type="radio" name="reading-font" {value} bind:group={preferences.readingFont} />
-                  {font.label}{#if font.rest}<span class="sr-only">{font.rest}</span>{/if}
-                </label>
-              {/each}
-            </div>
-          </div>
         </div>
-        <!-- The same preferences as the Aa panel above an article (decision 0034). -->
-        <p class="inset-foot">Apply to this device only. The Aa button above an article changes these too.</p>
+        <!-- Text size and font are only in the Aa panel, beside the text they change (decision 0241). -->
+        <p class="inset-foot">This device only. Text size and font are in Aa, above any article.</p>
       </section>
 
       <section aria-labelledby="library-heading">

@@ -8,17 +8,17 @@ import type { Route } from "./router";
 export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred" | "notes" } | { kind: "feed"; id: number } | { kind: "folder"; id: number };
 
 /**
- * Everything searched for: `words` is what's typed outside the chips, then
- * where (`scope`) and whether only starred ones (decision 0189: nothing else).
+ * Everything searched for: `words` is what's typed outside the chip, then
+ * where (`scope`). Nothing else (decision 0241): a search from Starred finds
+ * only starred ones.
  */
 export type Query = {
   words: string;
   scope: Scope;
-  starred: boolean;
 };
 
-/** A chip in the field: `label` in plain words, as the Search options menu names the same choice ("in: Tech", "Starred"). */
-export type Chip = { key: "scope" | "starred"; label: string };
+/** The chip in the field, in plain words ("in: Tech"). */
+export type Chip = { key: "scope"; label: string };
 
 /** A search starts out limited to where you are (SPEC.md section 14). */
 export function scopeFor(route: Route): Scope {
@@ -29,12 +29,12 @@ export function scopeFor(route: Route): Scope {
 }
 
 export function emptyQuery(route: Route): Query {
-  return { words: "", scope: scopeFor(route), starred: false };
+  return { words: "", scope: scopeFor(route) };
 }
 
 /** Is there anything to search for? The scope alone isn't a search. */
 export function isSearching(query: Query): boolean {
-  return searchParams(query).q !== undefined || query.starred;
+  return searchParams(query).q !== undefined;
 }
 
 export function scopeName(scope: Scope, library: Library): string {
@@ -55,17 +55,14 @@ export function resultsTitle(scope: Scope, library: Library): string {
   return `Results in ${scopeName(scope, library)}`;
 }
 
-/** The chips inside the field, in a fixed order, so the field shows exactly what's searched. */
+/** The chip inside the field, if the search is limited to one place, so the field shows exactly what's searched. */
 export function chipsFor(query: Query, library: Library): Chip[] {
-  const chips: Chip[] = [];
-  if (query.scope.kind !== "all") chips.push({ key: "scope", label: `in: ${scopeName(query.scope, library)}` });
-  if (query.starred) chips.push({ key: "starred", label: "Starred" });
-  return chips;
+  return query.scope.kind === "all" ? [] : [{ key: "scope", label: `in: ${scopeName(query.scope, library)}` }];
 }
 
-/** The query without one chip. Without its scope chip, a search covers everything. */
-export function withoutChip(query: Query, key: Chip["key"]): Query {
-  return key === "scope" ? { ...query, scope: { kind: "all" } } : { ...query, starred: false };
+/** The query without its chip: a search that covers everything. */
+export function withoutChip(query: Query): Query {
+  return { ...query, scope: { kind: "all" } };
 }
 
 /** Letters compared without capitals, Latin accents, or Arabic and Hebrew vowel marks ("Café" is "cafe"; hamza and madda stay); other scripts as written. */
@@ -87,7 +84,7 @@ export function searchParams(query: Query): Record<string, string> {
   if (scope.kind === "folder") params.folder = String(scope.id);
   if (scope.kind === "view" && scope.view === "unread") params.unread = "true";
   if (scope.kind === "view" && scope.view === "notes") params.notes = "true";
-  if (query.starred || (scope.kind === "view" && scope.view === "starred")) params.starred = "true";
+  if (scope.kind === "view" && scope.view === "starred") params.starred = "true";
   return params;
 }
 

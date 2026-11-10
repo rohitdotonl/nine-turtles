@@ -68,24 +68,41 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
   });
 
-  test("the list's button hides and shows the article list, and f both; with both hidden one button brings both back", async ({ page }) => {
+  test("one layout button: the sidebar's hides the sidebar; f hides the sidebar and list, and the one button brings both back", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
-    const listButton = page.getByRole("button", { name: "Article list", exact: true });
-    await expect(listButton).toBeVisible();
-
-    await listButton.click();
-    await expect(list).toBeHidden();
-    await listButton.click();
+    const nav = page.getByRole("navigation", { name: "Sidebar" });
+    // The list has no button of its own (decision 0241).
+    await expect(page.getByRole("button", { name: "Article list", exact: true })).toHaveCount(0);
+    const sidebarButton = page.getByRole("button", { name: "Sidebar", exact: true });
+    await sidebarButton.click();
+    await expect(nav).toBeHidden();
     await expect(list).toBeVisible();
+    await sidebarButton.click();
+    await expect(nav).toBeVisible();
 
     await page.keyboard.press("f");
     await expect(list).toBeHidden();
-    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
-    await expect(listButton).toHaveCount(0);
+    await expect(nav).toBeHidden();
     await page.getByRole("button", { name: "Sidebar and article list" }).click();
     await expect(list).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+    await expect(nav).toBeVisible();
+
+    // Full-screen reading is never only a key: an article's More menu has it, with the key named.
+    await page.keyboard.press("j");
+    const more = article(page).getByRole("button", { name: "More actions" });
+    await more.click();
+    await expect(page.getByRole("menuitem", { name: /^Full-screen reading/ })).toContainText("F");
+    await page.getByRole("menuitem", { name: /^Full-screen reading/ }).click();
+    await expect(list).toBeHidden();
+    await expect(nav).toBeHidden();
+    // From the keyboard: Enter opens the menu and the item, and both come back.
+    await more.focus();
+    await page.keyboard.press("Enter");
+    await page.getByRole("menuitem", { name: /^Leave full-screen reading/ }).focus();
+    await page.keyboard.press("Enter");
+    await expect(list).toBeVisible();
+    await expect(nav).toBeVisible();
   });
 
   test("the keyboard starts on the list's title, and Skip to articles is the first Tab stop", async ({ page }) => {
@@ -275,12 +292,12 @@ test.describe("on a wide window", () => {
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note, Hide articles about… and Full-screen reading (decision 0241), their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/, /Full-screen reading/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -405,15 +422,15 @@ test.describe("on a wide window", () => {
     await expect(aa).toHaveAttribute("aria-expanded", "false");
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
 
-    // A press outside closes it too, and Settings shows the same choices.
+    // A press outside closes it too. Settings shows the same Page; text size and font are only here (decision 0241).
     await aa.click();
     await expect(panel).toBeVisible();
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("The Aa button above an article changes these too")).toBeVisible();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toBeChecked();
+    await expect(page.getByText("Text size and font are in Aa, above any article.")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
   test("a footnote link stays inside the article", async ({ page }) => {
@@ -832,7 +849,7 @@ test.describe("on a wide window", () => {
     expect(await fillsWindow()).toEqual(still);
   });
 
-  test("+ and - change the text size while reading, and Settings remembers it", async ({ page }) => {
+  test("+ and - change the text size while reading, and the Aa panel shows it", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const text = article(page).locator("article");
@@ -845,8 +862,9 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("-");
     await expect.poll(size).toBe("18px");
 
-    await page.getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Small");
+    // The same setting as the Aa panel's, the one place for it (decision 0241).
+    await article(page).getByRole("button", { name: "Reading appearance" }).first().click();
+    await expect(page.getByRole("dialog", { name: "Reading appearance" }).getByRole("status")).toHaveText("Small");
   });
 
   test("a YouTube video plays in YouTube's own player, and nothing loads from YouTube until Play is pressed", async ({ page }) => {

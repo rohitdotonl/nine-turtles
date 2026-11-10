@@ -544,8 +544,10 @@ test("Edit keeps only Name, This is, Email address, Folders and Pause, then Unsu
   await expect(sheet.getByText(/^(Posts about|Posts less|Hasn't posted in|Too new to tell)/)).toHaveCount(0);
   // One source: no Sources heading, and a quiet line near the foot to add another place (point 12).
   await expect(sheet.getByText("Sources", { exact: true })).toHaveCount(0);
-  await expect(sheet.getByText(`Does Blog ${blog} also write a newsletter, make videos or host a podcast?`, { exact: false })).toBeVisible();
-  await expect(sheet.getByRole("button", { name: "+ Add another place" })).toBeVisible();
+  // One link that says what it adds; no line repeats what a control already says (decision 0241).
+  await expect(sheet.getByRole("button", { name: "+ Add their newsletter, videos or podcast" })).toBeVisible();
+  await expect(sheet.getByText(/also write a newsletter|Listed under/)).toHaveCount(0);
+  // The new-folder field keeps its line: a placeholder vanishes once you type (the first floor).
   await expect(sheet.getByText("Type a name to make a folder.")).toBeVisible();
   await expect(sheet.getByRole("checkbox", { name: "Pause for a while" })).toBeVisible();
   // In that order, top to bottom: Email address under This is, as only a person has one (decision 0192).

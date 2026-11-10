@@ -327,61 +327,18 @@ test("Settings: appearance, font and size apply at once and are remembered on th
   await expect(page.getByLabel("Paper", { exact: true })).toBeChecked();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("White", { exact: true })).toBeChecked();
-  // Each row's control sits at its right end, and every control is the same width.
+  // Each setting has one place, where it acts (decision 0241): sort order in the list's More menu,
+  // text size and font in the Aa panel above an article. The group's foot says where they went.
   const look = page.getByRole("region", { name: "Look and feel" });
-  const widths = (where: Locator) => where.locator(".setting-control").evaluateAll((all) => all.map((each) => Math.round(each.getBoundingClientRect().width)));
-  const controls = [...(await widths(page.getByRole("region", { name: "Reading" }))), ...(await widths(look))];
-  // Sort order, Page, Text size and Font (Unread is a switch, decision 0172).
-  expect(controls).toHaveLength(4);
-  expect(new Set(controls).size).toBe(1);
-  // Text size is a stepper, as in the Aa panel: one flat capsule, a small A and a large A at its ends
-  // and the step's name between them, parted by hairlines, nothing raised, so it never reads as a
-  // chosen segment (decision 0055).
-  const larger = look.getByRole("button", { name: "Larger text" });
-  const [smallerBox, nameBox, largerBox] = await Promise.all([
-    look.getByRole("button", { name: "Smaller text" }).boundingBox(),
-    look.getByRole("status").boundingBox(),
-    larger.boundingBox(),
-  ]);
-  expect(nameBox!.x).toBeGreaterThanOrEqual(smallerBox!.x + smallerBox!.width);
-  expect(nameBox!.x + nameBox!.width).toBeLessThanOrEqual(largerBox!.x);
-  await expect(look.getByRole("status")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(look.locator(".sizes")).toHaveCSS("border-radius", "10px");
-  await expect(larger).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
-  await expect(larger).toHaveCSS("box-shadow", "none");
-  // The hairline before the large A is the name's own straight right edge, not the rounded cell's.
-  await expect(look.getByRole("status")).not.toHaveCSS("border-right-color", "rgba(0, 0, 0, 0)");
-  await expect(larger).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
-  expect(largerBox!.x - (smallerBox!.x + smallerBox!.width)).toBeGreaterThan(80);
-  for (let step = 0; step < 3; step++) await larger.click();
-  await expect(look.getByRole("status")).toHaveText("Largest");
-  await expect(larger).toHaveAttribute("aria-disabled", "true");
-
-  // Font is on Settings itself, with no line width (decision 0187). It's a segmented control: the chosen one is
-  // raised (a small shadow) and semibold, and by day a thin edge sets it at 3 : 1 against the rest of the control (decision 0118).
-  await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
-  const font = look.getByRole("group", { name: "Font", exact: true });
-  const literata = font.locator("label.choice").filter({ hasText: "Literata" });
-  const system = font.locator("label.choice").filter({ hasText: "System serif" });
-  await expect(literata).toHaveCSS("font-weight", "600");
-  await expect(literata).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(literata).not.toHaveCSS("box-shadow", "none");
-  await expect(system).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await expect(system).toHaveCSS("font-weight", "400");
-  // rohit.onl's font, the device's own serif (decision 0063), then Atkinson; articles take it at once.
-  const reading = () => page.locator("html").evaluate((html) => html.style.getPropertyValue("--reading-font"));
-  await page.getByLabel("System serif").check();
-  await expect.poll(reading).toContain("ui-serif");
-  await page.getByLabel("Atkinson Hyperlegible").check();
-  await expect.poll(reading).toContain("Atkinson");
+  for (const name of ["Sort order", "Font"]) await expect(page.getByRole("group", { name, exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Larger text" })).toHaveCount(0);
+  await expect(look).toContainText("Text size and font are in Aa, above any article.");
 
   await page.reload();
   await appReady(page);
   // Remembered on this device.
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
-  await expect(page.getByLabel("Atkinson Hyperlegible")).toBeChecked();
   await expect(page.getByLabel("White", { exact: true })).toBeChecked();
-  await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("status")).toHaveText("Largest");
 
   // Escape closes Settings and returns to where you were.
   await page.keyboard.press("Escape");
@@ -454,8 +411,9 @@ test("every font comes from nine turtles itself", async ({ page }) => {
     if (request.resourceType() === "font") fontOrigins.push(new URL(request.url()).origin);
   });
   await page.setViewportSize({ width: 1280, height: 800 });
+  // Atkinson chosen (in the Aa panel, decision 0241), so its file loads too.
+  await page.addInitScript(() => localStorage.setItem("nine-turtles.preferences", JSON.stringify({ readingFont: "atkinson" })));
   await openApp(page, "/settings");
-  await page.getByLabel("Atkinson Hyperlegible").check();
   await page.evaluate(() => document.fonts.ready);
   const families = await page.evaluate(() =>
     [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family.replaceAll('"', "")),
@@ -779,17 +737,18 @@ test("a tab left open across an update opens the new version at the next place i
 
   // The screen stays as the reader arranged it: the hidden list stays hidden,
   // and closing Settings goes back to the list they came from.
-  await page.getByRole("button", { name: "Article list", exact: true }).click();
+  await page.keyboard.press("f");
   await expect(list(page)).toBeHidden();
   samePage = await markPage(page);
   await newerVersionLive(page);
-  await page.getByRole("link", { name: "Settings" }).click();
+  await page.keyboard.press("g");
+  await page.keyboard.press(",");
   await expect(page).toHaveURL(/\/settings$/);
   await expect.poll(samePage).toBe(false);
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(page).toHaveURL(/\/starred$/);
   await expect(list(page)).toBeHidden();
-  await page.getByRole("button", { name: "Article list", exact: true }).click();
+  await page.getByRole("button", { name: "Sidebar and article list" }).click();
   await expect(list(page)).toBeVisible();
 
   // Back switches too: the address has already changed, so that's the page that loads.

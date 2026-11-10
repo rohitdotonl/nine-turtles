@@ -73,14 +73,12 @@ describe("the screen's layout", () => {
     expect(layout.moved).toBe(true);
   });
 
-  it("toggles the sidebar and the list, saying whether each hid", () => {
+  it("toggles the sidebar, or the sidebar and list together, saying whether they hid", () => {
     const layout = new ScreenLayout("wide", 1400, () => false, true);
     expect(layout.toggleSidebar()).toBe(true);
     expect(layout.panes.sidebar).toBe(false);
     expect(layout.toggleSidebar()).toBe(false);
-    expect(layout.toggleList()).toBe(true);
-    expect(layout.panes).toEqual({ sidebar: true, list: false, article: true });
-    // \: either one showing hides both; pressed again, both come back.
+    // f: either one showing hides both; pressed again, both come back. The list never hides alone (decision 0241).
     expect(layout.toggleBoth()).toBe(true);
     expect(layout.panes).toEqual({ sidebar: false, list: false, article: true });
     expect(layout.toggleBoth()).toBe(false);
@@ -114,6 +112,10 @@ describe("the screen's layout", () => {
     const after = new ScreenLayout("wide", 1400, () => false, true);
     after.putBack(before.carried());
     expect(after.panes).toEqual({ sidebar: false, list: false, article: true });
+    // A list hidden on its own, from before decision 0241, comes back: nothing could show it again.
+    const alone = new ScreenLayout("wide", 1400, () => false, true);
+    alone.putBack({ sidebar: "shown", listHidden: true });
+    expect(alone.panes).toEqual({ sidebar: true, list: true, article: true });
     const phone = new ScreenLayout("narrow", 400, () => false, true);
     phone.putBack(before.carried());
     expect(phone.panes.sidebar).toBe(true);

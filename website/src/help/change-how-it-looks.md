@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-09
+updated: 2026-11-10
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -19,9 +19,14 @@ Open any article and press **Aa** at its top. The panel holds everything on
 this page: text size, the page and the font. To change
 only the size, press <kbd>+</kbd> or <kbd>-</kbd>.
 
+- **Text size:** six steps, from Smaller to Largest.
+- **Font:** **Literata**, **Atkinson** (made to be easy to read), or your
+  device's own serif.
+
 ## In Settings
 
-Open **Settings**. Under **Look and feel**:
+Open **Settings**. Under **Look and feel**, the one thing that changes the
+whole app, not just the article:
 
 - **Page:** the page you read on. Each choice shows a small square of that
   page, so you can see it before you pick it.
@@ -30,9 +35,8 @@ Open **Settings**. Under **Look and feel**:
   - **Night:** a near-black page with soft white words.
   - **Match device** (where you start): White by day and Night by night,
     following your device's own setting.
-- **Text size:** six steps, from Smaller to Largest.
-- **Font:** **Literata**, **Atkinson** (made to be easy to read), or your
-  device's own serif.
+
+Text size and font are only in **Aa**, next to the text they change.
 
 ## Good to know
 

@@ -30,7 +30,7 @@ export type MenuHands = {
   shortcut(kind: Action["kind"]): string | undefined;
   markAllRead(): void;
   refresh(): void;
-  /** Saves the sort order (Settings › Reading's setting); rejects when it couldn't. */
+  /** Saves the sort order (shared across the reader's devices; only here, decision 0241); rejects when it couldn't. */
   changeSort(next: Order): Promise<void>;
   /** A line in the list, for when something didn't work. */
   say(message: string): void;
@@ -72,7 +72,7 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
 }
 
 /**
- * The sort order, chosen from the menu: the same setting as in Settings › Reading.
+ * The sort order, chosen from the menu: the one place for it (decision 0241), shared across the reader's devices.
  * It compares with the order the menu was drawn with; the screen draws the
  * menu again whenever the setting changes, so that is the order showing now.
  */

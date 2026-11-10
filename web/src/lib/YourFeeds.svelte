@@ -293,12 +293,6 @@
                 </li>
               {/each}
             </ul>
-            {#if index === groups.length - 1}
-              <p class="inset-foot">
-                Each one opens their page, to write back, keep a note about them, or edit how you follow them. Choose lets you move
-                several to a folder, or unsubscribe from them, in one go.
-              </p>
-            {/if}
           </section>
         {/each}
         <RecentlyUnsubscribed {kept} {busy} onBringBack={bringBack} />

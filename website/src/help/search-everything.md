@@ -37,10 +37,11 @@ Search starts in the list you're in, shown as a small label such as
 
 ## Narrow it down
 
-Press **Search options** (the sliders beside the field) to choose where to
-look, **This list** or **Everything**, and to show only **Starred** articles.
-To search one person or folder, open it first, then search. If nothing turns
-up there, press **Search all articles** to look everywhere for the same words.
+Search looks in the list you're in, and the field says so ("in: Tech").
+Press the **×** on that to search everything instead. To search one person
+or folder, open it first, then search; to search only your starred
+articles, open **Starred** first. If nothing turns up there, press
+**Search all articles** to look everywhere for the same words.
 
 ## Good to know
 

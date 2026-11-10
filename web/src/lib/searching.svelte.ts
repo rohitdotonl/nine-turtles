@@ -78,7 +78,7 @@ export class Searching {
   /** The sidebar's search handed over its words (decision 0231): these words, everywhere, at once, with the field out. */
   wordsEverywhere(words: string) {
     this.started(null);
-    this.changed({ words, scope: { kind: "all" }, starred: false }, true);
+    this.changed({ words, scope: { kind: "all" } }, true);
   }
 
   /** Escape: back to `place`'s own list; answers what had the keyboard before `/`, if anything. */

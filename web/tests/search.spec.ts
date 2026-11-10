@@ -83,14 +83,8 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(results(page).filter({ hasText: `Blog ${loose}` })).toHaveCount(1);
   await expect(results(page).filter({ hasText: `Blog ${filed}` })).toHaveCount(1);
 
-  // "This list", in the options, brings the place chip back (decision 0189).
-  await page.getByRole("button", { name: "Search options" }).click();
-  await page.getByRole("radio", { name: `${folder} This list` }).check();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
-  await expect(field(page)).toHaveValue("walking");
-  await expect(results(page)).toHaveCount(1);
-  await expect(results(page).first()).toContainText(`Blog ${filed}`);
+  // Nothing else to choose: no options button (decision 0241).
+  await expect(page.getByRole("button", { name: "Search options" })).toHaveCount(0);
 
   // Results behave like the list: j and s star the result.
   await results(page).first().getByRole("button").focus();
@@ -98,43 +92,12 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("s");
   await expect(results(page).first()).toContainText("Starred");
 
-  // 3. Starred, in the options, becomes a chip; only starred articles are listed, and typing a filter is gone (decision 0180).
+  // 3. Typing a filter is gone (decision 0180): "is:starred" is searched as words.
   await field(page).fill("is:starred");
   await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
-  await field(page).fill("");
-  await page.getByRole("button", { name: "Search options" }).click();
-  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
-  await expect(field(page)).toHaveValue("");
-  await expect(results(page)).toHaveCount(1);
-  await expect(results(page).first()).toContainText("Walking the long way home");
+  await field(page).fill("walking");
 
-  // 4. The options panel, opened from the keyboard, shows the same choices.
-  await page.getByRole("button", { name: "Search options" }).focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("button", { name: "Search options" })).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("checkbox", { name: "Starred", exact: true })).toBeChecked();
-  // It floats over the list instead of pushing it down.
-  await expect(page.locator("#search-options")).toHaveCSS("position", "absolute");
-  // A short menu of checkmark rows: the list search started from and Everything, then Starred;
-  // nothing else (decision 0189). Tab from the field lands on the row chosen.
-  await field(page).focus();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("radio", { name: `${folder} This list` })).toBeFocused();
-  await expect(page.getByRole("radio", { name: `${folder} This list` })).toBeChecked();
-  await expect(page.getByRole("radio", { name: "Everything" })).not.toBeChecked();
-  await expect(page.locator("#search-options").getByRole("radio")).toHaveCount(2);
-  await expect(page.locator("#search-options").getByRole("checkbox")).toHaveCount(1);
-  await expect(page.locator("#search-options").getByRole("combobox")).toHaveCount(0);
-  // Everything takes the place chip away; the Starred chip stays.
-  await page.getByRole("radio", { name: "Everything" }).check();
-  await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toBeVisible();
-
-  // 5 is the Hindi test below. 6. Escape closes the options, then a second Escape: back exactly where you were, the search gone.
-  await page.keyboard.press("Escape");
-  await expect(page.locator("#search-options")).toBeHidden();
+  // 5 is the Hindi test below. 6. Escape: back exactly where you were, the search gone.
   await page.keyboard.press("Escape");
   await expect(heading(page)).toHaveText(folder);
   await expect(heading(page)).toBeFocused();
@@ -143,7 +106,6 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(field(page)).toHaveAttribute("placeholder", "Search articles");
   await field(page).focus();
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
   // The folder, with the article still open in it (decision 0233).
   await expect(page).toHaveURL(new RegExp(`/folders/${folderId}/articles/[0-9]+$`));
 });
@@ -250,77 +212,30 @@ test("with nothing found, the reading area doesn't offer j", async ({ page }) =>
   await expect(reading).not.toContainText(/press j/i);
 });
 
-test("with both chips the search box wraps, and no chip slides under the options button", async ({ page }) => {
-  const blog = unique("chips");
-  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
-  // With an article open, the list is at its narrowest.
-  await heading(page).focus();
-  await page.keyboard.press("j");
-  await expect(page.getByRole("region", { name: "Article", exact: true }).locator(".article-title")).toBeVisible();
-  await page.getByRole("button", { name: "Search options" }).click();
-  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: /^Remove / })).toHaveCount(2);
-  const options = (await page.getByRole("button", { name: "Search options" }).boundingBox())!;
-  for (const chip of await page.getByRole("button", { name: /^Remove / }).all()) {
-    // The chip itself (its remove button's 44px reaches a little past it, by design).
-    const box = (await chip.locator("..").boundingBox())!;
-    expect(box.x + box.width).toBeLessThanOrEqual(options.x + 1);
-  }
-});
-
-test("the search options float over the list; Escape closes them first, then the search", async ({ page }) => {
-  const blog = unique("options");
-  const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
-  await field(page).focus();
-  const button = page.getByRole("button", { name: "Search options" });
-  await button.click();
-  const options = page.locator("#search-options");
-  await expect(options).toBeVisible();
-  // Starred becomes a chip at once.
-  await page.getByRole("checkbox", { name: "Starred", exact: true }).check();
-  const remove = page.getByRole("button", { name: "Remove Starred", exact: true });
-  await expect(remove).toBeVisible();
-  // The first Escape closes only the options, back to their button; the search stays.
-  await page.keyboard.press("Escape");
-  await expect(options).toBeHidden();
-  await expect(button).toBeFocused();
-  await expect(remove).toBeVisible();
-  // Leaving the search with the keyboard closes them too.
-  await button.click();
-  await expect(options).toBeVisible();
-  await heading(page).focus();
-  await expect(options).toBeHidden();
-});
-
-test("how many were found shows once: the options repeat it only while they cover the list's line", async ({ page }) => {
-  const blog = unique("count");
+test("a search from Starred finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {
+  const blog = unique("starred-search");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
   await field(page).focus();
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");
-  const line = page.locator("[data-result-count]");
-  await expect(line).toHaveText("1 result");
-  await page.getByRole("button", { name: "Search options" }).click();
-  const options = page.locator("#search-options");
-  await expect(options).toBeVisible();
-  // The wide list leaves the line beside the options in view, so they don't repeat it.
-  const menu = (await options.boundingBox())!;
-  const words = await line.evaluate((element) => {
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    return range.getBoundingClientRect().right;
-  });
-  expect(words).toBeLessThan(menu.x - 8);
-  await expect(options).not.toContainText("result");
-  // Narrow enough that the options cover it, they say it at their foot instead.
-  await page.setViewportSize({ width: 1100, height: 800 });
-  await expect(options).toBeVisible();
-  await expect.poll(async () => (await options.boundingBox())!.x).toBeLessThan(words + 8);
-  await expect(options).toContainText("1 result");
+  await expect(results(page)).toHaveCount(1);
+  await results(page).first().getByRole("button").focus();
+  await page.keyboard.press("j");
+  await page.keyboard.press("s");
+  await expect(results(page).first()).toContainText("Starred");
+  await page.keyboard.press("Escape");
+  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Starred", exact: true }).click();
+  await expect(heading(page)).toHaveText("Starred");
+  await field(page).focus();
+  await expect(page.getByRole("button", { name: "Remove in: Starred" })).toBeVisible();
+  await page.keyboard.type("walking");
+  await page.keyboard.press("Enter");
+  // Other tests star articles here too, so: this blog's one starred match, and nothing unstarred.
+  await expect(results(page).filter({ hasText: `Blog ${blog}` })).toHaveCount(1);
+  await expect(results(page).filter({ hasText: `Blog ${blog}` })).toContainText("Walking the long way home");
+  await expect(results(page).filter({ hasNotText: "Starred" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Search options" })).toHaveCount(0);
 });
 
 test("a search that found nothing in one place offers Search all articles, which looks everywhere", async ({ page }) => {
