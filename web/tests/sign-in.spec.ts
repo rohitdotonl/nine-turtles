@@ -106,6 +106,27 @@ test("a wrong password says so calmly and keeps you out", async ({ page, request
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
+test("after a failed sign-in, a likely slip in the email's provider is offered, never changed by itself (decision 0234)", async ({ page, request }, testInfo) => {
+  await ownerHasEmail(request);
+  await page.goto("/");
+  await appReady(page);
+  // Before signing in, nothing is said: a right email is never second-guessed.
+  const typed = `slip-${testInfo.project.name}@gmial.com`;
+  await page.keyboard.type(typed);
+  await page.keyboard.press("Tab");
+  await expect(page.getByText("Did you mean")).toHaveCount(0);
+  await page.keyboard.type("not the password");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toHaveText("That email and password don't match.");
+  await expect(page.locator("#sign-in-fix")).toHaveText(`Did you mean slip-${testInfo.project.name}@gmail.com? Use that`);
+  await expect(page.getByLabel("Email")).toHaveValue(typed);
+  await tabTo(page, page.getByRole("button", { name: "Use that" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("Email")).toHaveValue(`slip-${testInfo.project.name}@gmail.com`);
+  await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
+  await expect(page.getByText("Did you mean")).toHaveCount(0);
+});
+
 test("while signing in, the button says it's busy and a second press sends nothing more", async ({ page, request }, testInfo) => {
   await ownerHasEmail(request);
   await page.goto("/");

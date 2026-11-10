@@ -30,3 +30,6 @@ export const WRONG_PASSWORD = "That isn't your password.";
 export function tooManyTries(wait: string): string {
   return `Too many wrong tries. Try again in ${wait}.`;
 }
+
+/** The start of what Add says to an address it can't read; what follows says how to fix it (decision 0234). */
+export const NOT_AN_ADDRESS = "That doesn't look like a web address.";

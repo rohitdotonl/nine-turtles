@@ -249,8 +249,13 @@ test("a reader changes their email by a link to the new one, then deletes their 
   await page.getByRole("button", { name: "Change… email" }).click();
   const sheet = page.getByRole("dialog", { name: "Change email" });
   await expect(sheet.getByLabel("New email")).toBeFocused();
-  await page.keyboard.type(next);
+  // A likely slip in a well-known provider is offered on leaving the field (decision 0234).
+  await page.keyboard.type(`moved-${stamp}@outlok.com`);
   await page.keyboard.press("Tab");
+  await expect(sheet.locator("#change-email-fix")).toHaveText(`Did you mean moved-${stamp}@outlook.com? Use that`);
+  await sheet.getByLabel("New email").fill(next);
+  await expect(sheet.locator("#change-email-fix")).toHaveText("");
+  await sheet.getByLabel("Your password").focus();
   await page.keyboard.type("not my password");
   await page.keyboard.press("Enter");
   await expect(sheet.getByRole("status")).toHaveText("That isn't your password.");
