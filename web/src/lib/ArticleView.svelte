@@ -70,6 +70,7 @@
     onMarkUnread,
     onHide,
     onWriter,
+    fullScreen,
     beforeToolbar,
     library,
     listNote = false,
@@ -77,7 +78,7 @@
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
     heading?: HTMLHeadingElement;
-    /** The reader's own controls, which the Aa panel changes (the same as Settings › Look and feel). */
+    /** The reader's own controls, which the Aa panel changes (Page is in Settings › Look and feel too). */
     preferences: Preferences;
     /** On a phone-narrow window: the list to go back to, and moving to the previous or next article. */
     phone?: {
@@ -96,6 +97,8 @@
     onHide: (feed: number) => void;
     /** The writer's name under the title: the page about them (their row's place, `library.rowOf`). */
     onWriter: (row: number) => void;
+    /** On a computer, full-screen reading (`f`): whether it's on, and how to switch it (decision 0241). */
+    fullScreen?: { on: boolean; toggle: () => void };
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
@@ -176,6 +179,8 @@
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
+        // The sidebar and list hide only together now, so full-screen reading has a visible way in, not only its key (decision 0241).
+        ...(fullScreen && !phone ? [{ label: fullScreen.on ? "Leave full-screen reading" : "Full-screen reading", shortcut: keyFor("toggle-both"), onSelect: fullScreen.toggle }] : []),
       ],
     },
   ]);

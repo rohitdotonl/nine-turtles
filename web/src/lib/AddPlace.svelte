@@ -8,7 +8,8 @@
   person, with Undo on the line that follows. It opens in place, under its
   button, and never inside a form of its own, so it can sit in Edit's. For
   someone with one source it opens from a quiet line near Edit's foot
-  instead (`invite`), ending in the link "+ Add another place".
+  instead (`invite`): one link that says what it adds, "+ Add their
+  newsletter, videos or podcast" (decision 0241).
 -->
 <script lang="ts">
   import { tick } from "svelte";
@@ -163,10 +164,7 @@
 </script>
 
 {#if !open && invite}
-  <div class="flex flex-col items-start gap-1">
-    <p class="text-ink-2">Does {name} also write a newsletter, make videos or host a podcast? Add it, and everything {name} makes shows in one place.</p>
-    <button type="button" class="text-link" bind:this={opener} onclick={show}>+ Add another place</button>
-  </div>
+  <button type="button" class="text-link self-start" bind:this={opener} onclick={show}>+ Add their newsletter, videos or podcast</button>
 {:else if !open}
   <button
     type="button"

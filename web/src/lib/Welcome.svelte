@@ -1,9 +1,9 @@
 <!--
   The welcome, before the first feed (SPEC section 2): a title in the reading serif, one
-  sentence, a wide field with Add, then just under it "Bring your list from another app…" for
-  someone who already reads feeds, then "Or try one": three example addresses to follow in one
-  press (decision 0198), and "New to feeds?", all in one centred 420px column: one message, one
-  main action (Add).
+  sentence, a wide field with Add, then "Or try one": three example addresses to follow in one
+  press (decision 0198), and at the foot one quiet line with the two other ways in, "New to
+  feeds? Start here · Bring your list from another app…" (decision 0241), all in one centred
+  420px column: one message, one main action (Add).
   On a phone (`start`) it's left-aligned on the screen's 20px margin instead (decision 0052).
   With the Add a feed sheet open over it (`covered`), the sheet has the only field.
 -->
@@ -55,22 +55,24 @@
   </div>
   {#if !covered}
     <!--
-      Importing sits just under the field, centred as everything here is (on a phone, on the
-      screen's margin), as the other way in (decisions 0045, 0048): a link in the text color,
-      underlined as the article's note links are, with no side padding so its words line up
-      with the heading's, in a 44px-tall target (decision 0055). It opens the device's file
-      chooser at once (decision 0137); what came in is said on the list that follows, and a
-      file that brought nothing is said here, under it.
+      The field and its examples sit together; the two other ways in share one quiet line at the
+      foot (decision 0241), centred as everything here is, and on a phone one under the other on
+      the screen's margin. Each is a link in the text color, underlined, in a 44px-tall target
+      (decision 0055). Importing opens the device's file chooser at once (decision 0137); what
+      came in is said on the list that follows, and a file that brought nothing is said here, under it.
     -->
     <AddFeed bind:field bind:asked feeds={[]} {onAdded} {onOpen} {start}>
       {#snippet alternative()}
-        <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
+        <!-- For someone new: three examples to follow in one press (decision 0198). -->
+        {#if !asked}<TryOne {follow} {onTried} />{/if}
+        <!-- What feeds are (decision 0079), and a list from another app, on one line. -->
+        <div class={["flex", start ? "flex-col items-start" : "flex-wrap items-baseline justify-center gap-x-2"]}>
+          {#if !trying.current}<a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>{#if !start}<span aria-hidden="true" class="text-ink-2">·</span>{/if}{/if}
+          <ImportOpml link={BRING} bind:lines={importLines} onImported={(lines, added) => added > 0 && onImported(lines.join(" "))} />
+        </div>
         <div role="status" class={["flex flex-col gap-1 text-small text-ink-2", importLines.length === 0 && "sr-only"]}>
           {#each importLines as line, index (index)}<p>{line}</p>{/each}
         </div>
-        <!-- Then, for someone new: three examples to follow in one press (decision 0198), and what feeds are (decision 0079). -->
-        {#if !asked}<TryOne {follow} {onTried} />{/if}
-        {#if !trying.current}<a href="/new-to-feeds" onclick={(event) => follow(event, { kind: "new-to-feeds" })} class="text-link">New to feeds? Start here</a>{/if}
       {/snippet}
     </AddFeed>
   {:else}
@@ -85,9 +87,11 @@
         <span class="btn-primary rounded-lg">Add</span>
       </div>
       <div class={["flex min-h-[5.8rem] flex-col", start ? "items-start" : "items-center"]}>
-        <span class="text-link">{BRING}</span>
         <TryOne {follow} {onTried} />
-        <span class="text-link">New to feeds? Start here</span>
+        <div class={["flex", start ? "flex-col items-start" : "flex-wrap items-baseline justify-center gap-x-2"]}>
+          <span class="text-link">New to feeds? Start here</span>{#if !start}<span class="text-ink-2">·</span>{/if}
+          <span class="text-link">{BRING}</span>
+        </div>
       </div>
     </div>
   {/if}

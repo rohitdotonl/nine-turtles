@@ -21,9 +21,10 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   await expect(groups).toHaveText(["Reading", "Look and feel", "Your library", "More", /^Your nine turtles/, "Account", "Leaving"]);
   // Reading and Look and feel hold their controls on the page itself.
   await expect(page.getByRole("switch", { name: "Unread", exact: true })).toBeVisible();
-  for (const name of ["Sort order", "Page", "Font"])
-    await expect(page.getByRole("group", { name, exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Smaller text" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Page", exact: true })).toBeVisible();
+  // Sort order, text size and font each have one place, where they act (decision 0241).
+  for (const name of ["Sort order", "Font"]) await expect(page.getByRole("group", { name, exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Smaller text" })).toHaveCount(0);
   // One line width for everyone (decision 0187).
   await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
@@ -124,13 +125,13 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
 
   if (testInfo.project.name === "phone") {
     // On a phone, a control sits under its name, across the row.
-    const control = page.getByRole("group", { name: "Sort order" });
-    const name = page.locator("#sort-name");
+    const control = page.getByRole("group", { name: "Page" });
+    const name = page.locator("#page-name");
     const [box, words] = [await control.boundingBox(), await name.boundingBox()];
     expect(box!.y).toBeGreaterThan(words!.y + words!.height - 1);
   } else {
-    const control = page.getByRole("group", { name: "Sort order" });
-    const name = page.locator("#sort-name");
+    const control = page.getByRole("group", { name: "Page" });
+    const name = page.locator("#page-name");
     const [box, words] = [await control.boundingBox(), await name.boundingBox()];
     expect(box!.x).toBeGreaterThan(words!.x + words!.width);
   }

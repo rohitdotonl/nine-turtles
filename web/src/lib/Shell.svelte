@@ -58,7 +58,7 @@
   import { articleIn, isList, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
-  import { scopeFor, scopeName, searchParams, searchedTerms } from "./search";
+  import { scopeName, searchParams, searchedTerms } from "./search";
   import { Searching } from "./searching.svelte";
   import { LoadedLibrary } from "./library.svelte";
   import { emptyText, insteadOfList, missingFrom, nothingFound, type Found } from "./listWording";
@@ -188,7 +188,6 @@
   });
 
   let sidebarToggle: HTMLButtonElement | undefined = $state();
-  let listToggle: HTMLButtonElement | undefined = $state();
 
   /**
    * On a window wide enough for the list, the short tasks (adding a feed, editing a folder,
@@ -276,7 +275,6 @@
   /** The list's first article: the empty reading area offers j only when there's one to open. */
   let listFirst: Article | undefined = $state();
   /** The list's "28 results" while it shows search results, so the search options can repeat it where they'd cover it. */
-  let listFound = $state("");
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
   /** Who Add just found, while it asks whether they're a person or a publication: the sheet's title asks about them. */
@@ -664,18 +662,11 @@
     }
   }
 
-  /** ] and the list's button: on a computer, hide the article list so the article has its room, or show it again. */
-  function toggleList() {
-    if (phone || !isList(route)) return;
-    const focusWasInside = listSection?.contains(document.activeElement) ?? false;
-    if (layout.toggleList() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
-  }
-
   /** \: hide the sidebar and the list together, for just the article; pressed again, both come back. */
   function toggleBoth() {
     if (phone || !isList(route)) return;
     const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
-    if (layout.toggleBoth() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : listToggle)?.focus());
+    if (layout.toggleBoth() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : sidebarToggle)?.focus());
   }
 
   /**
@@ -1012,8 +1003,7 @@
           onOpen={(event, page) => follow(event, { kind: "settings", page })}
           onBack={closeSettingsPage}
           bind:preferences
-          sort={settings.sort}
-          onSort={(next) => settings.changeSort(next)}
+          loaded={settings.sort !== undefined}
           unread={settings.unread}
           onUnread={(next) => settings.changeUnread(next)}
           bind:heading={headings.settings}
@@ -1071,36 +1061,6 @@
           </section>
         {/key}
       {:else}
-        {#if !phone && !welcoming && !bothHidden}
-          <!--
-            The article list's button, on a computer: at the right end of the list's own top line, as the
-            sidebar's sits on its own; with the list hidden it waits at the start of the article's top
-            line, after the sidebar's. One button that moves, so the keyboard stays on it.
-          -->
-          <div
-            class={[
-              "absolute top-1.5 z-20",
-              !panes.list
-                ? panes.sidebar ? "left-2" : "left-14"
-                : panes.article ? (layout.listPx ? "" : "left-[calc(22rem-3.25rem)] xl:left-[calc(24rem-3.25rem)] 2xl:left-[calc(26rem-3.25rem)]") : "right-2",
-            ]}
-            style:left={panes.list && panes.article && layout.listPx ? `${layout.listPx - 52}px` : undefined}
-          >
-            <button
-              type="button"
-              bind:this={listToggle}
-              aria-label="Article list"
-              aria-expanded={panes.list}
-              aria-controls="list-pane"
-              title={panes.list ? "Hide the article list" : "Show the article list"}
-              onclick={toggleList}
-              class="bar-button flex size-11 items-center justify-center rounded-md text-ink-2"
-            >
-              <!-- The same sidebar icon as the sidebar's button, as Apple Mail uses one for each pane; where it sits says which. -->
-              <Icon name="sidebar" size={20} />
-            </button>
-          </div>
-        {/if}
         <section
           aria-labelledby="list-heading"
           bind:this={listSection}
@@ -1144,14 +1104,14 @@
               The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
               Its title starts 32px in, where the search field and every article title start (decision 0041).
             -->
-            <div class={["pane-bar", welcoming ? "pr-[var(--list-end)]" : "pr-14", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
+            <div class={["pane-bar", "pr-[var(--list-end)]", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
               {@render listHead()}
             </div>
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
-              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} here={scopeFor(under)} found={listFound} onChange={(next, now) => searching.changed(next, now)} />
+              <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>
@@ -1190,7 +1150,6 @@
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {unreadOff}
                   bind:first={listFirst}
-                  bind:found={listFound}
                   rowActions={(article) => [
                     { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) }) },
                     { items: linkItems(article, addressOf(article), (message) => itemList?.inform(message)) },
@@ -1202,7 +1161,7 @@
           </div>
         </section>
         {#if panes.article}
-          <!-- The reading area; with the list hidden, the list's button waits at the start of its top line. -->
+          <!-- The reading area; with the sidebar and list hidden, their one button waits at the start of its top line. -->
           <div class="flex min-w-0 flex-1">
           {#if whoShown && !phone}
             {@render who()}
@@ -1210,12 +1169,13 @@
             <ArticleView
               bind:this={articleView}
               article={selected} {library} listNote={panes.list ? false : listNote}
-              toggles={phone || panes.list ? 0 : 1}
+              toggles={phone || panes.list || panes.sidebar ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onHide={hideFrom}
+              fullScreen={phone ? undefined : { on: bothHidden, toggle: toggleBoth }}
               onWriter={(id) => go({ kind: "about", id })}
               beforeToolbar={nowPlayingAboveToolbar}
               phone={phone

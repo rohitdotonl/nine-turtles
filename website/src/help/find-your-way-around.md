@@ -94,8 +94,10 @@ phone, the dots in the sidebar catch up each time you come back to it.
 
 ## Make room to read
 
-On a computer, <kbd>F</kbd> hides or shows the sidebar and the list at once,
-for full-screen reading, and each has a small button of its own. You can also
+On a computer, the small button at the top of the sidebar hides it. For
+full-screen reading, press <kbd>F</kbd>, or choose **Full-screen reading**
+in an article's **More** menu: the sidebar and the list hide together, and
+one button brings them back. You can also
 drag the edge between two parts to make one wider; double-click the edge to
 put it back.
 

@@ -54,7 +54,7 @@ blog and its podcast. A feed that only repeats another in a different format
 isn't listed.
 
 Already follow their blog, and now want their channel too? Add it from
-their page instead, with **+ Add another place** in Edit: see
+their page instead, with **+ Add their newsletter, videos or podcast** in Edit: see
 <a href="/help/one-person-several-places/">See everything one person makes
 in one place</a>.
 

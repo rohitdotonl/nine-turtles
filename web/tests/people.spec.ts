@@ -151,7 +151,7 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
   await appReady(page);
 
   // One source: the quiet line's link near Edit's foot (the owner's core path, point 12).
-  const add = page.getByRole("button", { name: "+ Add another place" });
+  const add = page.getByRole("button", { name: "+ Add their newsletter, videos or podcast" });
   await add.click();
   const who = page.getByRole("combobox", {
     name: "Someone you already follow",
@@ -320,7 +320,7 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  await page.getByRole("button", { name: "+ Add another place" }).click();
+  await page.getByRole("button", { name: "+ Add their newsletter, videos or podcast" }).click();
   await page
     .getByRole("textbox", {
       name: /address of their blog, channel or newsletter/,

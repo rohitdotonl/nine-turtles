@@ -588,51 +588,31 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
 });
 
-test("Settings: the sort order is saved for every device", async ({ page, isMobile }) => {
+test("the list's More menu sets the sort order, saved for every device", async ({ page, isMobile }) => {
   test.skip(isMobile, "one browser at a time changes this shared setting");
   // The nine turtles with no feeds, so changing its sort order affects no other test's list.
   await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto("/settings");
-  await appReady(page);
-  await signIn(page);
-  const reading = page.getByRole("region", { name: "Reading" });
-  const newest = reading.getByRole("radio", { name: "Newest first" });
-  await expect(newest).toBeChecked();
-  // With only the keyboard: Tab to the choice, an arrow key changes it.
-  await tabTo(page, newest);
-  // Each change is saved before the next page loads, or that page could still show the old order.
-  let saved = settingsSaved(page);
-  await page.keyboard.press("ArrowDown");
-  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
-  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeFocused();
-  await saved;
-  await page.reload();
-  await appReady(page);
-  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
-  saved = settingsSaved(page);
-  await reading.getByRole("radio", { name: "Newest first" }).check();
-  await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
-  await saved;
-
-  // The list's More menu sets the same sort order (Starred has a list even with no feeds).
+  // Starred has a list even with no feeds. Sort order lives only here, not in Settings (decision 0241).
   await page.goto("/starred");
   await appReady(page);
+  await signIn(page);
   const more = page.getByRole("button", { name: "More", exact: true });
   await more.click();
   await expect(page.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
-  saved = settingsSaved(page);
+  // Each change is saved before the next page loads, or that page could still show the old order.
+  let saved = settingsSaved(page);
   await page.getByRole("menuitemradio", { name: "Oldest first" }).click();
   await saved;
+  await page.reload();
+  await appReady(page);
   await more.click();
   await expect(page.getByRole("menuitemradio", { name: "Oldest first" })).toHaveAttribute("aria-checked", "true");
-  await page.keyboard.press("Escape");
-  await page.goto("/settings");
-  await appReady(page);
-  await expect(reading.getByRole("radio", { name: "Oldest first" })).toBeChecked();
   saved = settingsSaved(page);
-  await reading.getByRole("radio", { name: "Newest first" }).check();
-  await expect(reading.getByRole("radio", { name: "Newest first" })).toBeChecked();
+  await page.getByRole("menuitemradio", { name: "Newest first" }).click();
   await saved;
+  await more.click();
+  await expect(page.getByRole("menuitemradio", { name: "Newest first" })).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
 });
 
 test("Unread off: no Unread view, no dots, no read styling, and it opens on All articles", async ({ page, isMobile }) => {

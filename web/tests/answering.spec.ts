@@ -44,9 +44,8 @@ test("a mark made while the list is out of sight is said in the article, with Un
   await expect(
     article(page).getByRole("heading", { level: 2, name: NEWEST }),
   ).toBeVisible();
-  // On a computer, the list hidden with its own button; on a phone the article is a screen of its own.
-  if (!phone())
-    await page.getByRole("button", { name: "Article list" }).click();
+  // On a computer, full-screen reading (f) hides the list; on a phone the article is a screen of its own.
+  if (!phone()) await page.keyboard.press("f");
   await article(page)
     .getByRole("button", { name: "Star", exact: true })
     .first()
@@ -176,7 +175,7 @@ test("the note in the article is reached by Tab, and its Undo leaves the keyboar
   test.skip(phone(), "The keyboard, on a computer.");
   await openBlog(page);
   await newestRow(page).click();
-  await page.getByRole("button", { name: "Article list" }).click();
+  await page.keyboard.press("f");
   await page.keyboard.press("s");
   const undo = article(page).getByRole("button", { name: "Undo" });
   await tabTo(page, undo);

@@ -205,7 +205,6 @@
           <label class="choice"><input type="radio" name="{formId}-who" value="person" bind:group={who} />A person</label>
           <label class="choice"><input type="radio" name="{formId}-who" value="publication" bind:group={who} />A publication</label>
         </div>
-        <span class="field-help mt-0">{who === "person" ? "Listed under People." : "Listed under Publications."}</span>
       </fieldset>
     {/if}
 
@@ -234,10 +233,9 @@
         {/each}
         <label class="inset-row">
           <span class="sr-only">New folder</span>
-          <input bind:value={newFolder} type="text" autocomplete="off" placeholder="New folder…" class="inset-input" aria-describedby="{formId}-new-folder" />
+          <input bind:value={newFolder} type="text" autocomplete="off" placeholder="New folder…" class="inset-input" />
         </label>
       </div>
-      <span id="{formId}-new-folder" class="field-help mt-0">Type a name to make a folder.</span>
     </fieldset>
 
     {#if one}

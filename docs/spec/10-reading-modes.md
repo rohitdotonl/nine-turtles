@@ -11,7 +11,7 @@
 - With Unread off the sidebar has no Unread, `g u` does nothing, and "Mark all as read" (in the More menu, and `Shift+A`) is hidden. The app opens on **All articles** with Unread off and on **Unread** with it on.
 - With Unread off every title in the list looks the same: full ink, regular weight, with no unread dot, and screen readers don't hear "unread". The feeds and folders show no dots.
 - The Unread address (and `/`) leads to All articles with Unread off, without a step in the browser's history. Switching Unread off while on Unread moves you to All the same way.
-- The `?` list leaves out "Go to Unread" and "Mark all as read" with Unread off, and search can't be limited to Unread (there's no Unread view), though its "Show only: Unread" filter stays. "Mark unread" (and `m`) stay: read state is still recorded, and shows again once Unread is back on.
+- The `?` list leaves out "Go to Unread" and "Mark all as read" with Unread off, and search can't be limited to Unread (there's no Unread view). "Mark unread" (and `m`) stay: read state is still recorded, and shows again once Unread is back on.
 - The switch's description says what it does: "An Unread list, and a dot where something is new." when on, "No Unread list and no dots. What you've read is still remembered." when off. Each device remembers what it last saw, so it opens that way before the server answers; the server's answer decides.
 - The switch is for everything at once: there's no per-feed choice (a single feed's River went with decision 0172). To see less from one busy source, a rule hides its topics (section 27) or Pause sets it aside (section 15).
 

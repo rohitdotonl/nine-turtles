@@ -68,24 +68,25 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
   });
 
-  test("the list's button hides and shows the article list, and f both; with both hidden one button brings both back", async ({ page }) => {
+  test("one layout button: the sidebar's hides the sidebar; f hides the sidebar and list, and the one button brings both back", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
-    const listButton = page.getByRole("button", { name: "Article list", exact: true });
-    await expect(listButton).toBeVisible();
-
-    await listButton.click();
-    await expect(list).toBeHidden();
-    await listButton.click();
+    const nav = page.getByRole("navigation", { name: "Sidebar" });
+    // The list has no button of its own (decision 0241).
+    await expect(page.getByRole("button", { name: "Article list", exact: true })).toHaveCount(0);
+    const sidebarButton = page.getByRole("button", { name: "Sidebar", exact: true });
+    await sidebarButton.click();
+    await expect(nav).toBeHidden();
     await expect(list).toBeVisible();
+    await sidebarButton.click();
+    await expect(nav).toBeVisible();
 
     await page.keyboard.press("f");
     await expect(list).toBeHidden();
-    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
-    await expect(listButton).toHaveCount(0);
+    await expect(nav).toBeHidden();
     await page.getByRole("button", { name: "Sidebar and article list" }).click();
     await expect(list).toBeVisible();
-    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+    await expect(nav).toBeVisible();
   });
 
   test("the keyboard starts on the list's title, and Skip to articles is the first Tab stop", async ({ page }) => {

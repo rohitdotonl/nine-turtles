@@ -70,7 +70,7 @@ joined, as one person.
 To join sources you already follow:
 
 1. Open their page and press **Edit**.
-2. Press **+ Add another place** (or, for someone with two or more
+2. Press **+ Add their newsletter, videos or podcast** (or, for someone with two or more
    sources already, **+ Add a source**).
 3. Choose someone you already follow, or paste the address of their blog,
    channel or newsletter.

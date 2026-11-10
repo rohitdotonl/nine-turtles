@@ -33,15 +33,6 @@ describe("the results' title", () => {
   });
 });
 
-describe("chips", () => {
-  it("say what's searched in plain words, as the options menu names it", () => {
-    const query: Query = { ...emptyQuery({ kind: "folder", id: 7 }), starred: true };
-    expect(chipsFor(query, library).map((chip) => chip.label)).toEqual(["in: Tech", "Starred"]);
-    // Starred is the one thing to show only (decision 0189); its chip goes on its own.
-    expect(withoutChip(query, "starred")).toEqual({ ...query, starred: false });
-  });
-});
-
 describe("where a search starts", () => {
   it("is limited to where you are, shown as a chip", () => {
     const query = emptyQuery({ kind: "folder", id: 7 });
@@ -51,16 +42,15 @@ describe("where a search starts", () => {
   });
 
   it("covers everything once the chip is removed", () => {
-    const query = withoutChip(emptyQuery({ kind: "feed", id: 1 }), "scope");
+    const query = withoutChip(emptyQuery({ kind: "feed", id: 1 }));
     expect(query.scope).toEqual({ kind: "all" });
     expect(searchParams({ ...query, words: "tomatoes" })).toEqual({ q: "tomatoes" });
   });
 
-  it("isn't a search until something is typed or filtered", () => {
+  it("isn't a search until something is typed", () => {
     expect(isSearching(emptyQuery({ kind: "folder", id: 7 }))).toBe(false);
     expect(isSearching({ ...all, words: " " })).toBe(false);
     expect(isSearching({ ...all, words: "slow" })).toBe(true);
-    expect(isSearching({ ...all, starred: true })).toBe(true);
   });
 });
 
@@ -78,11 +68,8 @@ describe("what the server is asked", () => {
     // From Notes, only the articles the reader marked (decision 0189).
     expect(searchParams({ ...emptyQuery({ kind: "view", view: "notes" }), words: "soup" })).toEqual({ q: "soup", notes: "true" });
     expect(resultsTitle(emptyQuery({ kind: "view", view: "notes" }).scope, library)).toBe("Results in Notes");
-    expect(searchParams({ ...emptyQuery({ kind: "folder", id: 7 }), words: "x", starred: true })).toEqual({
-      q: "x",
-      folder: "7",
-      starred: "true",
-    });
+    // From Starred, only starred ones: the place is the filter (decision 0241).
+    expect(searchParams({ ...emptyQuery({ kind: "view", view: "starred" }), words: "x" })).toEqual({ q: "x", starred: "true" });
   });
 });
 
