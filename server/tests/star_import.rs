@@ -273,13 +273,7 @@ async fn nine_turtles_starred_export_comes_back_into_a_fresh_one() {
     first.follow(&alpha).await;
     let (_, answer) = first.send("/api/starred/import", export(&alpha)).await;
     assert_eq!(answer["summary"]["starred"], 3);
-    let response = Client::new()
-        .get(format!("{}/api/starred/export", first.base))
-        .header("cookie", &first.cookie)
-        .send()
-        .await
-        .unwrap();
-    let exported = response.text().await.unwrap();
+    let exported = common::from_everything(&first.base, &first.cookie, "starred.json").await;
     // Each star keeps the real address and name of the feed it came from.
     let file: Value = serde_json::from_str(&exported).unwrap();
     let sources: Vec<(String, String)> = file["items"]
@@ -378,15 +372,7 @@ async fn stars_without_a_feed_address_keep_their_own_feeds_name() {
     );
     // Its export says no feed address, and comes back into a fresh nine
     // turtles credited the same.
-    let exported = Client::new()
-        .get(format!("{base}/api/starred/export"))
-        .header("cookie", &reader.cookie)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+    let exported = common::from_everything(&base, &reader.cookie, "starred.json").await;
     assert!(!exported.contains("imported:"), "{exported}");
     let fresh = {
         let base = common::start(common::config()).await;

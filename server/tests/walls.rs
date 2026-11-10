@@ -226,7 +226,11 @@ async fn folders_stay_with_the_reader_who_made_them() {
     for feed in other.get("/api/feeds").await["feeds"].as_array().unwrap() {
         assert_eq!(feed["folders"], json!([]));
     }
-    assert!(!other.get_text("/api/opml").await.contains("Garden\""));
+    assert!(
+        !common::from_everything(&other.base, &other.cookie, "follows.opml")
+            .await
+            .contains("Garden\"")
+    );
     // The folder's list and a search inside it find nothing for them.
     let listed = other.get(&format!("/api/articles?folder={folder}")).await;
     assert_eq!(listed["articles"], json!([]));
@@ -599,17 +603,25 @@ async fn each_reader_marks_names_and_sets_up_a_shared_feed_alone() {
             .unwrap()
             .is_empty()
     );
-    let export = owner.get("/api/starred/export").await;
+    let export = common::starred_file(&owner.base, &owner.cookie).await;
     assert_eq!(export["items"].as_array().unwrap().len(), 1);
     assert_eq!(export["items"][0]["title"], "Post 2 about tomatoes");
-    let export = other.get("/api/starred/export").await;
+    let export = common::starred_file(&other.base, &other.cookie).await;
     assert_eq!(export["items"].as_array().unwrap().len(), 1);
     assert_eq!(
         export["items"][0]["_nine_turtles"]["feed_title"],
         "Their garden"
     );
-    assert!(other.get_text("/api/opml").await.contains("Their garden"));
-    assert!(!owner.get_text("/api/opml").await.contains("Their garden"));
+    assert!(
+        common::from_everything(&other.base, &other.cookie, "follows.opml")
+            .await
+            .contains("Their garden")
+    );
+    assert!(
+        !common::from_everything(&owner.base, &owner.cookie, "follows.opml")
+            .await
+            .contains("Their garden")
+    );
     assert_eq!(
         other.get("/api/tidy/feeds").await["feeds"][0]["title"],
         "Their garden"
@@ -664,8 +676,15 @@ async fn a_reader_sees_and_changes_nothing_of_a_feed_they_dont_follow() {
         other.get("/api/search?q=tomatoes").await["articles"],
         json!([])
     );
-    assert_eq!(other.get("/api/starred/export").await["items"], json!([]));
-    assert!(!other.get_text("/api/opml").await.contains("Garden notes"));
+    assert_eq!(
+        common::starred_file(&other.base, &other.cookie).await["items"],
+        json!([])
+    );
+    assert!(
+        !common::from_everything(&other.base, &other.cookie, "follows.opml")
+            .await
+            .contains("Garden notes")
+    );
     assert_eq!(other.get("/api/tidy/feeds").await["feeds"], json!([]));
     assert_eq!(other.get("/api/health").await["feeds"], json!([]));
     for id in &ids {
@@ -983,7 +1002,7 @@ async fn a_second_reader_imports_opml_without_a_second_copy_of_a_shared_feed() {
     assert_eq!(mine["feeds"][0]["title"], "Garden notes");
     assert_eq!(mine["feeds"][0]["unread"], 2);
     assert_eq!(mine["folders"], json!([]));
-    let opml = owner.get_text("/api/opml").await;
+    let opml = common::from_everything(&owner.base, &owner.cookie, "follows.opml").await;
     assert!(
         !opml.contains("only-mine") && !opml.contains("Reading"),
         "{opml}"
@@ -1484,7 +1503,11 @@ async fn importing_opml_files_feeds_only_in_the_importers_folders() {
         .await,
         0
     );
-    assert!(!owner.get_text("/api/opml").await.contains("only-theirs"));
+    assert!(
+        !common::from_everything(&owner.base, &owner.cookie, "follows.opml")
+            .await
+            .contains("only-theirs")
+    );
 }
 
 #[tokio::test]
@@ -1724,7 +1747,11 @@ async fn empty_library(reader: &Reader) {
     );
     assert_eq!(reader.get("/api/rules").await["rules"], json!([]));
     assert_eq!(reader.get("/api/muted").await["count"], 0);
-    assert!(!reader.get_text("/api/opml").await.contains("Garden"));
+    assert!(
+        !common::from_everything(&reader.base, &reader.cookie, "follows.opml")
+            .await
+            .contains("Garden")
+    );
 }
 
 #[tokio::test]

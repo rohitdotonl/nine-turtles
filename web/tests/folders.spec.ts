@@ -354,11 +354,15 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByText("1 line couldn't be read: Broken line.")).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toBeVisible();
 
-  const exportLink = page.getByRole("link", { name: "Export OPML" });
-  await expect(exportLink).toHaveAttribute("download", "");
-  const exported = await page.request.get(new URL((await exportLink.getAttribute("href")) ?? "", FEEDS_APP).href);
-  expect(exported.headers()["content-disposition"]).toContain("attachment");
-  const text = await exported.text();
+  // Download everything holds them, in an OPML file beside its pages (decision 0251).
+  const everything = page.getByRole("link", { name: "Download everything" });
+  await expect(everything).toHaveAttribute("download", "");
+  const exported = await page.request.get(new URL((await everything.getAttribute("href")) ?? "", FEEDS_APP).href);
+  expect(exported.headers()["content-type"]).toBe("application/zip");
+  expect(exported.headers()["content-disposition"]).toMatch(/^attachment; filename="nine-turtles-\d{4}-\d{2}-\d{2}\.zip"$/);
+  // The zip stores its files as they are, so the OPML file's words are in it as written.
+  const text = (await exported.body()).toString("utf8");
+  expect(text).toContain("/index.html");
   expect(text).toContain(`<outline text="${folder}"`);
   expect(text).toContain(`xmlUrl="${FEED_SITE}/blog/${one}/feed.xml"`);
 
@@ -370,13 +374,6 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByText("Undone.")).toBeVisible();
   await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toHaveCount(0);
-
-  // Starred articles download as a JSON Feed file.
-  const starredLink = page.getByRole("link", { name: "Export starred articles" });
-  await expect(starredLink).toHaveAttribute("download", "");
-  const starred = await page.request.get(new URL((await starredLink.getAttribute("href")) ?? "", FEEDS_APP).href);
-  expect(starred.headers()["content-disposition"]).toContain("attachment");
-  expect((await starred.json()).version).toBe("https://jsonfeed.org/version/1.1");
 
   // Stars come over from another feed reader's export, into Starred.
   const title = unique("Brought over");
@@ -477,11 +474,11 @@ test("with only the keyboard: Edit, a new folder, opening it, Edit folder, Unsub
     },
     "json",
   );
-  // So does Export starred articles: Enter downloads the file.
-  await tabTo(page, page.getByRole("link", { name: "Export starred articles" }));
+  // So does Download everything: Enter downloads the file.
+  await tabTo(page, page.getByRole("link", { name: "Download everything" }));
   const download = page.waitForEvent("download");
   await page.keyboard.press("Enter");
-  expect((await download).suggestedFilename()).toBe("nine-turtles-starred.json");
+  expect((await download).suggestedFilename()).toMatch(/^nine-turtles-\d{4}-\d{2}-\d{2}\.zip$/);
 });
 
 test("their page opens in the reading area in the article's place; Escape gives the keyboard back to the list", async ({ page }) => {

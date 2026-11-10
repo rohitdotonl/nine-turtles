@@ -20,9 +20,9 @@ use std::collections::HashMap;
 use axum::{
     Json, Router,
     extract::State,
-    http::{StatusCode, header},
+    http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::post,
 };
 use opml::{OPML, Outline};
 use reqwest::Url;
@@ -47,7 +47,7 @@ pub use undo::Imports;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
-        .route("/api/opml", get(export).post(import))
+        .route("/api/opml", post(import))
         .route("/api/opml/undo", post(undo::undo))
 }
 
@@ -319,28 +319,8 @@ struct Followed {
     site_url: Option<String>,
 }
 
-/// Downloads an OPML file of every followed feed: each folder A to Z with
-/// its feeds, then the feeds in no folder.
-async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    match opml_for(&state.db, person).await {
-        Ok(Some(file)) => (
-            [
-                (header::CONTENT_TYPE, "text/x-opml; charset=utf-8"),
-                (
-                    header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"nine-turtles-feeds.opml\"",
-                ),
-            ],
-            file,
-        )
-            .into_response(),
-        Ok(None) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        Err(error) => database_problem("exporting an OPML file", &error),
-    }
-}
-
-/// Reader `person`'s OPML file, as Export downloads it and an assistant
-/// asks for it (`mcp`). None if it couldn't be written.
+/// Reader `person`'s OPML file, as Download everything holds it
+/// (`everything`) and an assistant asks for it (`mcp`). None if it couldn't be written.
 pub async fn opml_for(db: &sqlx::SqlitePool, person: i64) -> Result<Option<String>, sqlx::Error> {
     let gathered: Result<_, sqlx::Error> = async {
         let mut transaction = db.begin().await?;

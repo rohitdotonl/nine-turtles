@@ -286,10 +286,8 @@ test("a reader changes their email by a link to the new one, then deletes their 
   await page.getByRole("button", { name: "Delete account…" }).click();
   const sure = page.getByRole("dialog", { name: "Delete your account?" });
   await expect(sure.getByRole("heading", { name: "Delete your account?" })).toBeFocused();
-  await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
-  // Nothing starred yet: said, not offered as an empty file (decision 0191).
-  await expect(sure.getByText("Nothing starred yet", { exact: true })).toBeVisible();
-  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
+  // Everything kept, in one download (decision 0251).
+  await expect(sure.getByRole("link", { name: "Download everything" })).toHaveAttribute("href", "/api/everything");
   // Escape keeps everything.
   await page.keyboard.press("Escape");
   await expect(sure).toHaveCount(0);
@@ -349,10 +347,8 @@ test("Delete data empties the account and keeps the reader signed in", async ({ 
   const sure = page.getByRole("dialog", { name: "Delete your data?" });
   await expect(sure.getByRole("heading", { name: "Delete your data?" })).toBeFocused();
   // The downloads first.
-  await expect(sure.getByRole("link", { name: "Export OPML" })).toHaveAttribute("href", "/api/opml");
-  // Nothing starred yet: said, not offered as an empty file (decision 0191).
-  await expect(sure.getByText("Nothing starred yet", { exact: true })).toBeVisible();
-  await expect(sure.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
+  // Everything kept, in one download (decision 0251).
+  await expect(sure.getByRole("link", { name: "Download everything" })).toHaveAttribute("href", "/api/everything");
   // Escape keeps everything.
   await page.keyboard.press("Escape");
   await expect(sure).toHaveCount(0);
@@ -498,28 +494,18 @@ test("the weekly email is off until switched on in Settings, and its stop page i
   await page.context().close();
 });
 
-test("Your data says when there's nothing starred or no notes, and offers each export once there is (decision 0191)", async ({ browser }, testInfo) => {
+test("Your data offers Download everything from the first day, even with nothing kept yet (decision 0251)", async ({ browser }, testInfo) => {
   const email = `nothing-yet-${testInfo.project.name}-${Date.now()}@example.com`;
   const page = await newReader(browser, email);
   await page.goto("/settings/data");
   const data = page.getByRole("region", { name: "Your data" });
-  // Said in the muted grey, and not a button or link: nothing to download yet.
-  for (const words of ["Nothing starred yet", "No notes yet"]) {
-    const line = data.getByText(words, { exact: true });
-    await expect(line).toBeVisible();
-    expect(await line.evaluate((element) => element.tagName)).toBe("P");
-  }
-  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveCount(0);
-  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveCount(0);
-  // Once the server says something is starred and noted, each row is its download again.
-  await page.route("**/api/feeds", async (route) => {
-    const response = await route.fetch();
-    await route.fulfill({ response, json: { ...(await response.json()), starred: true, notes: true } });
-  });
-  await page.reload();
-  await expect(data.getByRole("link", { name: "Export starred articles" })).toHaveAttribute("href", "/api/starred/export");
-  await expect(data.getByRole("link", { name: "Export notes and highlights" })).toHaveAttribute("href", "/api/notes/export");
-  await expect(data.getByText("Nothing starred yet", { exact: true })).toHaveCount(0);
+  const everything = data.getByRole("link", { name: "Download everything" });
+  await expect(everything).toHaveAttribute("href", "/api/everything");
+  // With nothing kept, its front page says how to keep something.
+  const zip = await page.request.get("/api/everything");
+  const text = (await zip.body()).toString("utf8");
+  expect(text).toContain("Nothing yet. Star an article, or highlight words in it, and it's kept here.");
+  expect(text).toContain("starred.json");
   await page.context().close();
 });
 

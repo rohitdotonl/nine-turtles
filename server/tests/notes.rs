@@ -194,20 +194,21 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     .await;
     assert_eq!(status, StatusCode::OK);
 
-    // The export holds all of it.
-    let response = Client::new()
-        .get(format!("{base}/api/notes/export"))
-        .header("cookie", &cookie)
-        .send()
-        .await
-        .unwrap();
+    // Download everything holds all of it: the Markdown file, and the
+    // article's own page with its highlight and note.
+    let text = common::from_everything(&base, &cookie, "notes-and-highlights.md").await;
+    let index = common::from_everything(&base, &cookie, "index.html").await;
+    assert!(index.contains("<h1>Your reading</h1>"), "{index}");
+    assert!(index.contains("Kitchen Notes"), "{index}");
+    assert!(index.contains("Soup 2</a>"), "{index}");
+    assert!(index.contains(" · Your notes"), "{index}");
+    let page = common::from_everything(&base, &cookie, &format!("{}-soup-2.html", ids[1])).await;
+    assert!(page.contains("<h1>Soup 2</h1>"), "{page}");
     assert!(
-        response.headers()[header::CONTENT_TYPE]
-            .to_str()
-            .unwrap()
-            .starts_with("text/markdown")
+        page.contains("<blockquote>A warm soup</blockquote>\n<p>Try with leeks</p>"),
+        "{page}"
     );
-    let text = response.text().await.unwrap();
+    assert!(!page.contains("<script"), "{page}");
     assert!(
         text.contains("## Kitchen Notes\n\nMet at the market.\n"),
         "{text}"
@@ -277,15 +278,7 @@ async fn another_reader_can_neither_see_nor_change_notes() {
     .await;
     let (_, mine) = ask(&base, &cookie, &format!("/api/articles/{}", ids[0])).await;
     assert_eq!(mine["article"]["notes"][0]["quote"], "soup");
-    let text = Client::new()
-        .get(format!("{base}/api/notes/export"))
-        .header("cookie", &cookie)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+    let text = common::from_everything(&base, &cookie, "notes-and-highlights.md").await;
     assert!(!text.contains("Theirs"));
 }
 

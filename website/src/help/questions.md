@@ -6,7 +6,7 @@ order: 6
 # The sections its answers explain: Help, fetching, newsletters, podcasts,
 # phones, accessibility, OPML, YouTube, writing back, the weekly email.
 spec: [40, 11, 28, 35, 20, 22, 16, 38, 37, 39]
-updated: 2026-11-09
+updated: 2026-11-11
 related: [bring-your-feeds, install-the-app, write-back]
 ---
 
@@ -47,8 +47,8 @@ always leave.
 Not any more. Until November 2026, other feed reader apps could sync with
 nine turtles, but reading there skipped the part that matters most here:
 the writer's page, your notes, and writing back. To take everyone you
-follow to another app, **Settings › Your data › Export OPML** saves your
-list in a file any feed reader opens. If you miss syncing, write to
+follow to another app, **Settings › Your data › Download everything**
+includes your list as follows.opml, a file any feed reader opens. If you miss syncing, write to
 hello@nineturtles.app.
 
 ## Why do some articles show only a summary?

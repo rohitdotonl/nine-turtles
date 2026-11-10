@@ -26,7 +26,6 @@
   import { edge } from "./edge";
   import { deleteAccount, deleteData, explainConfirm } from "./accounts";
   import { forget } from "./offline";
-  import { stars } from "./stars.svelte";
 
   let {
     heading = $bindable(),
@@ -111,20 +110,12 @@
     <div class="flex flex-col gap-2">
       <p class="text-meta text-ink-2">Before you go, you can download them</p>
       <div class="inset-group">
-        <a href="/api/opml" download class="inset-row inset-action"
-          >Export OPML<span class="row-glyph"><Icon name="download" /></span></a
+        <a href="/api/everything" download class="inset-row inset-action"
+          >Download everything<span class="row-glyph"><Icon name="download" /></span></a
         >
-        {#if stars.any}
-          <a href="/api/starred/export" download class="inset-row inset-action"
-            >Export starred articles<span class="row-glyph"><Icon name="download" /></span></a
-          >
-        {:else}
-          <!-- Nothing to download: said in a row that isn't a button (decision 0191). -->
-          <p class="inset-row text-muted">Nothing starred yet</p>
-        {/if}
       </div>
       <p class="field-help">
-        Your feeds and folders as an OPML file, and your starred articles as a JSON Feed file.
+        One folder of plain pages any browser opens: who you follow, what you starred or highlighted, and your notes.
       </p>
     </div>
     <!-- Asked for, as for a new email, so a device left signed in can't delete anything (decision 0200). -->

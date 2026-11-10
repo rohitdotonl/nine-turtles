@@ -29,7 +29,7 @@ use mail_parser::{MessageParser, PartKind};
 use reqwest::Url;
 use scraper::ElementRef;
 
-use crate::feed::{self, ParsedArticle};
+use crate::feed::{self, ParsedArticle, escape};
 
 /// One email, read and cleaned.
 #[derive(Debug)]
@@ -688,14 +688,6 @@ fn blank(html: &str) -> bool {
         | '\u{ad}' => true,
         character => character.is_whitespace(),
     })
-}
-
-/// Text written safely into HTML.
-fn escape(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
 }
 
 #[cfg(test)]

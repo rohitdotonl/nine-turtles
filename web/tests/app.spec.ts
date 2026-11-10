@@ -671,9 +671,9 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   const width = Math.round((await data.locator(".inset-group").boundingBox())!.width);
   for (const row of [
     page.getByRole("button", { name: "Import OPML" }),
-    page.getByRole("link", { name: "Export OPML" }),
     page.getByRole("button", { name: "Import YouTube subscriptions" }),
     page.getByRole("button", { name: "Import starred articles" }),
+    page.getByRole("link", { name: "Download everything" }),
   ]) {
     const box = (await row.boundingBox())!;
     expect(Math.round(box.width)).toBe(width);

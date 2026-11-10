@@ -1,32 +1,16 @@
-//! Export of starred articles (SPEC section 23): every starred article as a
+//! Starred articles as a file (SPEC section 23): every starred article as a
 //! JSON Feed file (<https://jsonfeed.org/version/1.1>), a standard, open
-//! format other feed tools can read. With the OPML export, it's the
-//! reader's safety net in V1, which has no backups.
+//! format other feed tools can read. It goes into Download everything
+//! (`everything`, decision 0251) as `starred.json`.
 //!
 //! Each article keeps what the publisher sent, its original link and the
 //! feed it came from, so the credit travels with it (the publisher floor).
 //! Starred articles of feeds since unsubscribed are included too: they stay
 //! in Starred.
 
-use axum::{
-    Router,
-    extract::State,
-    http::header,
-    response::{IntoResponse, Response},
-    routing::get,
-};
 use serde_json::{Map, Value, json};
 
-use crate::{
-    AppState,
-    auth::{SignedIn, database_problem},
-    dates::rfc3339,
-    feeds,
-};
-
-pub fn routes() -> Router<AppState> {
-    Router::new().route("/api/starred/export", get(export))
-}
+use crate::{dates::rfc3339, feeds};
 
 /// One starred article, with the feed it came from.
 #[derive(sqlx::FromRow)]
@@ -65,27 +49,6 @@ pub const EXPORT: &str = concat!(
     "? AND entries.starred = 1
      ORDER BY entries.sort_at DESC, entries.article_id DESC"
 );
-
-async fn export(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    let starred: Result<Vec<Starred>, sqlx::Error> = sqlx::query_as(EXPORT)
-        .bind(person)
-        .fetch_all(&state.db)
-        .await;
-    match starred {
-        Ok(starred) => (
-            [
-                (header::CONTENT_TYPE, "application/feed+json; charset=utf-8"),
-                (
-                    header::CONTENT_DISPOSITION,
-                    "attachment; filename=\"nine-turtles-starred.json\"",
-                ),
-            ],
-            write(&starred).to_string(),
-        )
-            .into_response(),
-        Err(error) => database_problem("exporting starred articles", &error),
-    }
-}
 
 /// The JSON Feed file for these articles, newest first as given.
 pub fn write(starred: &[Starred]) -> Value {
