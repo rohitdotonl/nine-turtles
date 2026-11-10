@@ -170,16 +170,21 @@ export class Marks {
   private full: FullArticle;
   /**
    * A highlight still on its way to the server has only a stand-in number
-   * (below zero). Removing it or changing its note then waits for its own
-   * number, here, or the server would be asked about one it never had.
+   * (below zero), which a menu or box opened meanwhile may still hold.
+   * Removing it or changing its note waits for its own number, here (none if
+   * its save was refused), and `renamed` finds it by the stand-in afterwards.
    */
   private saving = new Map<number, Promise<number | undefined>>();
+  private renamed = new Map<number, number>();
 
   constructor(full: FullArticle) {
     this.full = full;
     loadWaiting();
     this.notes = withWaiting(full.notes ?? [], full.id, waiting.list);
-    renumbered.set(full.id, (was, now) => this.keep(this.notes.map((each) => (each.id === was ? { ...each, id: now } : each))));
+    renumbered.set(full.id, (was, now) => {
+      this.renamed.set(was, now);
+      this.keep(this.notes.map((each) => (each.id === was ? { ...each, id: now } : each)));
+    });
   }
 
   /** This article has changes still waiting on this device. */
@@ -238,46 +243,57 @@ export class Marks {
     // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
     this.saving.set(made.id, sent.then(({ answer, refusal }) => (refusal ? undefined : isRecord(answer?.highlight) ? toNote(answer.highlight).id : made.id)));
     const { answer, refusal } = await sent;
-    this.saving.delete(made.id);
     if (refusal) return { problem: refusal };
     const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
-    // A note given meanwhile (setNote, waiting for this number) stays: it's sent next.
-    if (saved) this.keep(this.notes.map((each) => (each.id === made.id ? { ...saved, note: each.note } : each)));
+    if (saved) {
+      this.renamed.set(made.id, saved.id);
+      // A note given meanwhile (setNote, waiting for this number) stays: it's sent next.
+      this.keep(this.notes.map((each) => (each.id === made.id ? { ...saved, note: each.note } : each)));
+      // A note left unsaved on it follows it to its number (decision 0235).
+      renameDraft(`note:highlight:${made.id}`, `note:highlight:${saved.id}`);
+    }
     return { made: saved ?? made };
   }
 
-  /**
-   * The highlight's number on the server, waiting for it if it's still being
-   * saved, and `before` with that number, to go back to if the change is refused.
-   * None if its saving was refused: it's gone already, and the reader was told why.
-   */
-  private async numbered(id: number, before: Note[]): Promise<[number, Note[]] | undefined> {
-    const now = this.saving.has(id) ? await this.saving.get(id) : id;
-    return now === undefined ? undefined : [now, before.map((each) => (each.id === id ? { ...each, id: now } : each))];
+  /** The highlight's number here now: its own, once a stand-in's save has answered. */
+  here(id: number): number {
+    return this.renamed.get(id) ?? id;
+  }
+
+  /** Its number on the server, waiting for its save if need be; none if that save was refused. */
+  private async onServer(id: number): Promise<number | undefined> {
+    const known = this.saving.has(id) ? await this.saving.get(id) : id;
+    // Made offline, it takes its number when it's sent later (`renumbered`).
+    return known === undefined ? undefined : this.here(known);
   }
 
   /** Changes a highlight's note; an empty one takes it off. Answers why, if it couldn't be kept. */
   async setNote(id: number, note: string | null): Promise<string | undefined> {
-    const before = this.notes;
+    const was = this.notes.find((each) => each.id === this.here(id));
     const clean = note?.trim() || null;
-    this.keep(this.notes.map((each) => (each.id === id ? { ...each, note: clean } : each)));
-    const numbered = await this.numbered(id, before);
-    if (!numbered) return undefined;
-    const [now, then] = numbered;
-    return (await this.change({ kind: "change", article: this.full.id, id: now, note: clean }, then)).refusal;
+    this.keep(this.notes.map((each) => (each.id === this.here(id) ? { ...each, note: clean } : each)));
+    const server = await this.onServer(id);
+    // Its highlight couldn't be saved (and the reader was told): the words stay in the box (decision 0235).
+    if (server === undefined) return NOTE_NOT_SAVED;
+    // Refused, only this note goes back, whatever else was done meanwhile.
+    const then = this.notes.map((each) => (each.id === this.here(id) ? { ...each, note: was?.note ?? null } : each));
+    return (await this.change({ kind: "change", article: this.full.id, id: server, note: clean }, then)).refusal;
   }
 
   /** Removes a highlight (and its note). Answers it, for Undo, or why it couldn't be removed. */
   async remove(id: number): Promise<{ was?: Note; problem?: string }> {
-    const before = this.notes;
-    const was = this.notes.find((each) => each.id === id);
+    const at = this.notes.findIndex((each) => each.id === this.here(id));
+    const was = this.notes[at];
     if (!was) return {};
-    this.keep(this.notes.filter((each) => each.id !== id));
-    const numbered = await this.numbered(id, before);
-    if (!numbered) return {};
-    const [now, then] = numbered;
-    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id: now }, then);
-    return refusal ? { problem: refusal } : { was };
+    this.keep(this.notes.filter((each) => each.id !== was.id));
+    const server = await this.onServer(id);
+    // Its save was refused: it's gone already, and the reader was told why.
+    if (server === undefined) return {};
+    // Refused, only this highlight comes back, in its place, whatever else was done meanwhile.
+    const back = { ...was, id: this.here(id) };
+    const then = [...this.notes.slice(0, at), back, ...this.notes.slice(at)];
+    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id: server }, then);
+    return refusal ? { problem: refusal } : { was: back };
   }
 
   /** Undo for a removed highlight: it's made again, with its note. Answers why, if it couldn't be. */

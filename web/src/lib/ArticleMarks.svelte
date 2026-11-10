@@ -85,7 +85,8 @@
   // The names the unsaved notes are kept under on this device (drafts.ts); each article has its own.
   // svelte-ignore state_referenced_locally
   const articleDraft = `note:article:${full.id}`;
-  const highlightDraft = (id: number) => `note:highlight:${id}`;
+  // By the highlight's own number once its save has answered, even from a box opened with its stand-in.
+  const highlightDraft = (id: number) => `note:highlight:${marks.here(id)}`;
   /** One note on words chosen but not yet highlighted, for each article: its words, and the note. */
   // svelte-ignore state_referenced_locally
   const wordsDraft = `note:words:${full.id}`;
@@ -120,7 +121,7 @@
   $effect(() => {
     for (const each of open) {
       if (each.highlight !== undefined) {
-        const saved = marks.highlights.find((highlight) => highlight.id === each.highlight)?.note ?? "";
+        const saved = marks.highlights.find((highlight) => highlight.id === marks.here(each.highlight!))?.note ?? "";
         keepDraft(highlightDraft(each.highlight), worthKeeping(each.words, saved) ? each.words : undefined);
       } else if (each.quote) keepDraft(wordsDraft, worthKeeping(each.words, "") ? { quote: each.quote, words: each.words } : undefined);
     }
@@ -209,7 +210,8 @@
     // A small menu beside the new highlight says so, and offers a note on it there and then, or Done.
     await tick();
     const at = text?.querySelector(`[data-highlight="${made.id}"]`);
-    if (at) menu = { anchor: at.getBoundingClientRect(), highlight: made, fresh: true, writing: false, from };
+    // Not over a menu or note box the reader opened while it was being saved.
+    if (at && !menu) menu = { anchor: at.getBoundingClientRect(), highlight: made, fresh: true, writing: false, from };
   }
 
   /** Saves a note on a highlight, or highlights words with their note. The box stays open, with the words, until it's saved; answers why, if it couldn't be. */

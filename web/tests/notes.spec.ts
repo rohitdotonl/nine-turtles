@@ -86,32 +86,73 @@ test("highlights and a note stay with the article, and Notes and search find the
   await expect(page.getByText(/Your note · .*hedgerow/).first()).toBeVisible();
 });
 
-test("a highlight removed or noted while it's still being saved waits for it, then goes, with Undo", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the keys are the computer's; the phone uses the same menu");
-  const blog = `notes-slow-${test.info().workerIndex}-${Date.now()}`;
+/** Signed in, on a new blog's newest article, with each new highlight's save answering late (or refused), as on a busy server. */
+async function slowSaves(page: Page, name: string, refuse = false) {
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await openNewest(page, blog);
-  // A busy server: each new highlight's save answers a second and a half late.
+  await openNewest(page, `${name}-${test.info().workerIndex}-${Date.now()}`);
   await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
-    if (route.request().method() === "POST") await new Promise((done) => setTimeout(done, 1500));
-    await route.continue();
+    if (route.request().method() !== "POST") return route.continue();
+    await new Promise((done) => setTimeout(done, 1500));
+    await (refuse ? route.fulfill({ status: 500, body: "" }) : route.continue());
   });
-  const ends = article(page).getByRole("list", { name: "Your highlights" });
-
-  // Removed at once, before its save has answered: it goes, with Undo, and stays gone.
   await choose(page, "for article");
   await page.keyboard.press("h");
   await page.keyboard.press("Escape");
-  await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
-  await expect(article(page).locator("mark.highlight")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
-  await expect(page.getByText("couldn't be removed")).toHaveCount(0);
+  return article(page).getByRole("list", { name: "Your highlights" });
+}
+
+async function reopen(page: Page) {
   await page.reload();
   await appReady(page);
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
-  await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+}
+
+test.describe("a highlight still being saved", () => {
+  test.skip(({ isMobile }) => isMobile, "the keys are the computer's; the phone uses the same menu");
+
+  test("removed at once, it goes, with Undo, and stays gone", async ({ page }) => {
+    const ends = await slowSaves(page, "slow-remove");
+    // The remove reaches the server once the save answers, under the highlight's own number.
+    const removed = page.waitForResponse((answer) => /\/api\/highlights\/\d+\/delete$/.test(answer.url()));
+    await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
+    expect((await removed).ok()).toBe(true);
+    await expect(page.getByText("couldn't be removed")).toHaveCount(0);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+  });
+
+  for (const when of ["before", "after"] as const) {
+    test(`a note on it, saved ${when} its save answers, is kept`, async ({ page }) => {
+      const ends = await slowSaves(page, `slow-note-${when}`);
+      await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+      await page.getByRole("textbox", { name: "A note on these words" }).fill(`Saved ${when}`);
+      // After: the box, opened with the stand-in, is still there when the save answers.
+      if (when === "after") await page.waitForResponse((answer) => /\/highlights$/.test(answer.url()) && answer.request().method() === "POST");
+      // The note itself reaches the server, under the highlight's own number (never the stand-in's).
+      const noted = page.waitForResponse((answer) => /\/api\/highlights\/\d+$/.test(answer.url()) && answer.request().method() === "POST");
+      await page.getByRole("button", { name: "Save" }).click();
+      await expect(ends.getByText(`Saved ${when}`)).toBeVisible();
+      expect((await noted).ok()).toBe(true);
+      await expect(page.getByText("couldn't be saved")).toHaveCount(0);
+      await reopen(page);
+      await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+      await expect(ends.getByText(`Saved ${when}`)).toBeVisible();
+    });
+  }
+
+  test("refused, a note written on it meanwhile keeps its words in the box", async ({ page }) => {
+    const ends = await slowSaves(page, "slow-refused", true);
+    await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+    const box = page.getByRole("textbox", { name: "A note on these words" });
+    await box.fill("Words worth keeping");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("The note couldn't be saved, so your words are still here.")).toBeVisible();
+    await expect(box).toHaveValue("Words worth keeping");
+  });
 });
 
 test("without a connection a highlight is kept on the device, and sent once back", async ({ page, context, isMobile }) => {
