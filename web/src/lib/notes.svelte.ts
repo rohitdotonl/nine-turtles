@@ -168,6 +168,12 @@ let temporary = 0;
 export class Marks {
   notes: Note[] = $state([]);
   private full: FullArticle;
+  /**
+   * A highlight still on its way to the server has only a stand-in number
+   * (below zero). Removing it or changing its note then waits for its own
+   * number, here, or the server would be asked about one it never had.
+   */
+  private saving = new Map<number, Promise<number | undefined>>();
 
   constructor(full: FullArticle) {
     this.full = full;
@@ -228,11 +234,26 @@ export class Marks {
     const before = this.notes;
     const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
     this.keep([...this.notes, made]);
-    const { answer, refusal } = await this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, before);
+    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, before);
+    // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
+    this.saving.set(made.id, sent.then(({ answer, refusal }) => (refusal ? undefined : isRecord(answer?.highlight) ? toNote(answer.highlight).id : made.id)));
+    const { answer, refusal } = await sent;
+    this.saving.delete(made.id);
     if (refusal) return { problem: refusal };
     const saved = isRecord(answer?.highlight) ? toNote(answer.highlight) : undefined;
-    if (saved) this.keep(this.notes.map((each) => (each.id === made.id ? saved : each)));
+    // A note given meanwhile (setNote, waiting for this number) stays: it's sent next.
+    if (saved) this.keep(this.notes.map((each) => (each.id === made.id ? { ...saved, note: each.note } : each)));
     return { made: saved ?? made };
+  }
+
+  /**
+   * The highlight's number on the server, waiting for it if it's still being
+   * saved, and `before` with that number, to go back to if the change is refused.
+   * None if its saving was refused: it's gone already, and the reader was told why.
+   */
+  private async numbered(id: number, before: Note[]): Promise<[number, Note[]] | undefined> {
+    const now = this.saving.has(id) ? await this.saving.get(id) : id;
+    return now === undefined ? undefined : [now, before.map((each) => (each.id === id ? { ...each, id: now } : each))];
   }
 
   /** Changes a highlight's note; an empty one takes it off. Answers why, if it couldn't be kept. */
@@ -240,7 +261,10 @@ export class Marks {
     const before = this.notes;
     const clean = note?.trim() || null;
     this.keep(this.notes.map((each) => (each.id === id ? { ...each, note: clean } : each)));
-    return (await this.change({ kind: "change", article: this.full.id, id, note: clean }, before)).refusal;
+    const numbered = await this.numbered(id, before);
+    if (!numbered) return undefined;
+    const [now, then] = numbered;
+    return (await this.change({ kind: "change", article: this.full.id, id: now, note: clean }, then)).refusal;
   }
 
   /** Removes a highlight (and its note). Answers it, for Undo, or why it couldn't be removed. */
@@ -249,7 +273,10 @@ export class Marks {
     const was = this.notes.find((each) => each.id === id);
     if (!was) return {};
     this.keep(this.notes.filter((each) => each.id !== id));
-    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id }, before);
+    const numbered = await this.numbered(id, before);
+    if (!numbered) return {};
+    const [now, then] = numbered;
+    const { refusal } = await this.change({ kind: "remove", article: this.full.id, id: now }, then);
     return refusal ? { problem: refusal } : { was };
   }
 

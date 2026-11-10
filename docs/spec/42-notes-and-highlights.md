@@ -26,7 +26,9 @@ anywhere or counted.
   publisher's name and the article's link) and **Remove highlight**, then,
   for a person's article, **Write back about this** under a hairline. A
   removed highlight shows "Highlight removed · Undo" at the article's foot
-  until something else is done.
+  until something else is done. A highlight can be removed, or given a
+  note, the moment it's made: if its save hasn't answered yet, the change
+  waits for it, then follows.
 - A note is written in a box in place, with **Save** and **Not now**. An
   empty note takes the note off, never the highlight.
 - **Nothing typed is thrown away** (decision 0235). The box stays open, with

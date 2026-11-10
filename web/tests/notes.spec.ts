@@ -86,6 +86,34 @@ test("highlights and a note stay with the article, and Notes and search find the
   await expect(page.getByText(/Your note · .*hedgerow/).first()).toBeVisible();
 });
 
+test("a highlight removed or noted while it's still being saved waits for it, then goes, with Undo", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the keys are the computer's; the phone uses the same menu");
+  const blog = `notes-slow-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await openNewest(page, blog);
+  // A busy server: each new highlight's save answers a second and a half late.
+  await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+    if (route.request().method() === "POST") await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
+  const ends = article(page).getByRole("list", { name: "Your highlights" });
+
+  // Removed at once, before its save has answered: it goes, with Undo, and stays gone.
+  await choose(page, "for article");
+  await page.keyboard.press("h");
+  await page.keyboard.press("Escape");
+  await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
+  await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
+  await expect(page.getByText("couldn't be removed")).toHaveCount(0);
+  await page.reload();
+  await appReady(page);
+  await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
+  await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+});
+
 test("without a connection a highlight is kept on the device, and sent once back", async ({ page, context, isMobile }) => {
   test.skip(isMobile, "the same on a phone");
   const blog = `notes-offline-${test.info().workerIndex}-${Date.now()}`;
