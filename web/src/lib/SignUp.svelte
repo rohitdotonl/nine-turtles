@@ -124,7 +124,7 @@
     </div>
   {:else}
   <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <label for="email" class="text-meta text-ink-2">Email</label>
       <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->
       <input
@@ -148,7 +148,7 @@
       <EmailFix id="sign-up-fix" {fix} onUse={useFix} />
     </div>
     <!-- The same room above the password's name as on sign-in, where "Forgot?" sits, so the two pages line up. -->
-    <div class="flex flex-col gap-1.5 pt-3">
+    <div class="flex flex-col gap-2 pt-3">
       <label for="password" class="text-meta text-ink-2">Password</label>
       <PasswordField
         id="password"
@@ -160,7 +160,7 @@
       <p id="sign-up-help" class="field-help mt-0">At least {PASSWORD_MINIMUM} characters.</p>
     </div>
     <!-- One optional question (decision 0155): a plain list, "Rather not say" until something is chosen. -->
-    <div class="flex flex-col gap-1.5 pt-3">
+    <div class="flex flex-col gap-2 pt-3">
       <label for="heard-about" class="text-meta text-ink-2">How did you hear about nine turtles?</label>
       <select id="heard-about" name="heard-about" bind:value={heardAbout} aria-describedby="heard-about-help" class="field">
         <option value="">Rather not say</option>
@@ -172,7 +172,7 @@
     </div>
     <!-- Room for a message kept at the column's foot, as on sign-in (decision 0045), so a message moves only what's under it. -->
     <div class="flex min-h-[10.5rem] flex-col gap-3">
-      <p id="sign-up-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+      <p id="sign-up-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
         {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
       </p>
       <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Sign up" doing="Signing up…" /></button>

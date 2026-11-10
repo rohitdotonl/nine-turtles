@@ -52,7 +52,7 @@
     {:else}
       <p id="stop-help">Press Stop to turn the weekly email off.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="stop-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", result !== "trouble" && "sr-only"]}>
+        <p id="stop-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", result !== "trouble" && "sr-only"]}>
           {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" /></span>The weekly email couldn't be turned off. Try again in a moment.{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->

@@ -525,7 +525,7 @@
     onscroll={scrolled}
     style:padding-top={bars.away ? `${bars.room.above}px` : undefined}
     style:padding-bottom={bars.away ? `${bars.room.below}px` : undefined}
-    class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-14", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
+    class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", listNote ? "pb-24" : "pb-8" /* room under the article's end for the list's note (decision 0229) */]}>
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
@@ -703,7 +703,7 @@
     least 44px square, in the second ink (a starred star in full ink).
   */
   .toolbar {
-    border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-top: 1px solid var(--line);
   }
   .toolbar > :global(*) {
     display: flex;
@@ -726,7 +726,7 @@
     height: 1.5rem;
     align-self: center;
     margin-inline: 0.25rem;
-    background: color-mix(in srgb, var(--ink) 18%, transparent);
+    background: var(--strong);
   }
   /*
     One that can't act right now (Previous on the first article) stays in

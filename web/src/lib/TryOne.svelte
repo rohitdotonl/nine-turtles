@@ -76,15 +76,15 @@
       </ul>
     </section>
   {/if}
-  <p role="status" class={["flex items-start gap-1.5 text-meta", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
+  <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
 </div>
 
 <style>
   .try-row {
-    border-top: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-top: 1px solid var(--line);
   }
   .try-row:last-child {
-    border-bottom: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-bottom: 1px solid var(--line);
   }
   .try-word {
     text-decoration: underline;

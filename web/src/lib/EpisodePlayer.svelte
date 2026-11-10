@@ -156,7 +156,7 @@
   /* A still panel in a faint tone of the text, like the video's box, 12px corners. */
   .episode {
     margin-top: 1.5em;
-    padding: 0.75rem 1rem 0.875rem;
+    padding: 0.75rem 1rem;
     border-radius: var(--radius-hold);
     background-color: var(--tone);
     font-family: var(--font-sans);
@@ -181,7 +181,7 @@
   }
   .episode-button:hover,
   .episode-speed:hover {
-    background-color: color-mix(in srgb, var(--ink) 8%, transparent);
+    background-color: var(--hover);
   }
   .episode-speed {
     padding-inline: 0.5rem;
@@ -220,7 +220,7 @@
   .episode-times {
     display: flex;
     justify-content: space-between;
-    margin-top: -0.375rem;
+    margin-top: -0.5rem;
     color: var(--muted);
     font-size: var(--text-meta);
     font-variant-numeric: tabular-nums;

@@ -13,9 +13,13 @@
 // 4. Labels: small spaced capitals; a group's name is the one label (.label).
 // 5. Icons: an icon size other than "word" (16px) or "alone" (20px), and the
 //    two named exceptions.
-// 6. Spacing and grey tones: older values off the spacing scale, and tones
-//    mixed from the ink, are counted. No new one may appear: the counts below
-//    may only go down, and must be lowered in the same change that lowers them.
+// 6. Spacing: a padding, margin or gap off the scale (4, 8, 12, 16, 20, 24,
+//    32, 40, 48, 64px; 44px only as room kept for a 44px target; 96 and 192px
+//    only as a page's room above or below). Sizes in `em`, `vh`, `vw` or `%`
+//    follow the text or the window, so they pass.
+// 7. Grey tones: the ink mixed at anything but the four tones (5% a fill, 10%
+//    a line, 20% something strong, 65% an edge that must reach 3 : 1), or the
+//    ink faded with Tailwind's "/" (ink/10).
 //
 // Each exception is named, with its reason, in DESIGN.md's table and in
 // EXCEPTIONS below. It matches text, not meaning: a value built in script or
@@ -28,12 +32,8 @@ const root = join(import.meta.dirname, "..");
 const src = join(root, "web/src");
 const problems = [];
 
-// Older spacing values off the scale (4, 8, 12, 16, 20, 24, 32, 40, 48, 64px), counted
-// across the app. Lower this when you move some onto the scale; never raise it.
-const SPACING_LEFT = 193;
-// The ink tones in use today (the text color mixed at these percentages). No
-// new one may be added; when one goes, take it off this list.
-const TONES = ["3", "5", "6", "7", "8", "9", "10", "11", "12", "14", "15", "16", "18", "22", "25", "30", "45", "55", "60", "65", "88", "96"];
+// The four grey tones, mixed from the ink (DESIGN.md → "The system"), and the main button's own shade.
+const TONES = ["5", "10", "20", "65"];
 
 // Named exceptions: [file, the exact value, why]. Mirrored in DESIGN.md.
 const EXCEPTIONS = [
@@ -42,6 +42,13 @@ const EXCEPTIONS = [
   ["web/src/lists.css", "var(--row-title-size, 1.1875rem)", "the list's titles are 19px with a mouse (decision 0128)"],
   ["web/src/lib/TextSize.svelte", "text-[0.9375rem]", "the text-size stepper's small A is a picture of small text"],
   ["web/src/lib/TextSize.svelte", "text-[1.375rem]", "the text-size stepper's large A is a picture of large text"],
+  ["web/src/lib/ArticleView.svelte", "pl-14", "the article's bar keeps room for the one pane button at its left (8 + 44 + 4px)"],
+  ["web/src/lib/ArticleView.svelte", "pl-[6.5rem]", "the article's bar keeps room for the two pane buttons at its left (8 + 44 + 8 + 44px)"],
+  ["web/src/lib/Shell.svelte", "pr-13", "the sidebar's top line keeps room for the sidebar button (44 + 8px)"],
+  ["web/src/lib/PasswordField.svelte", "pr-[4.5rem]", "the password field keeps room for its Show button"],
+  ["web/src/lib/EpisodePlayer.svelte", "ml-[2px]", "the Play triangle sits 2px right of centre, so it looks centred"],
+  ["web/src/lib/YouTubePlayer.svelte", "margin-left: 2px", "the Play triangle sits 2px right of centre, so it looks centred"],
+  ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
 ];
 const excepted = (file, value) => EXCEPTIONS.some(([f, v]) => f === file && v === value);
 
@@ -79,16 +86,13 @@ const CORNERS = new Set(["var(--radius-press)", "var(--radius-hold)", "var(--rad
 const ROUNDED = /(?<![\w-])rounded(?:-(?:t|r|b|l|s|e|tl|tr|br|bl|ss|se|es|ee))?(?:-([\w.[\]%()-]+))?(?![\w-])/g;
 const ROUNDED_OK = new Set(["press", "hold", "mark", "full", "none"]);
 const TEXT_OK = /^(var\(--text-[a-z-]+\)|var\(--reading-size\)|calc\(var\(--reading-size\)[^;]*\)|[\d.]+em|inherit|100%)$/;
-const SCALE_PX = new Set([0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64]);
-const TW_SCALE = new Set(["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "px", "auto"]);
+const SCALE_PX = new Set([0, 4, 8, 12, 16, 20, 24, 32, 40, 44, 48, 64, 96, 192]);
+const TW_SCALE = new Set(["0", "1", "2", "3", "4", "5", "6", "8", "10", "11", "12", "16", "24", "48", "px", "auto"]);
 // Tailwind's spacing utilities (padding, margin, gaps, space between).
 const TW_SPACE = /(?<![\w-])-?(?:px|py|pt|pr|pb|pl|ps|pe|p|mx|my|mt|mr|mb|ml|ms|me|m|gap-x|gap-y|gap|space-x|space-y|scroll-p[trblxy]?|scroll-m[trblxy]?)-([\w.[\]()-]+)(?![\w-])/g;
 const CSS_SPACE = /(?<![\w-])(padding|margin|gap|row-gap|column-gap)(-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?\s*:\s*([^;}{]+)/g;
 const TONE = /color-mix\(in srgb, var\(--(?:color-)?ink\) ([\d.]+)%/g;
 
-let spacing = 0;
-const spacingAt = [];
-const tones = new Map();
 
 function lengthPx(token) {
   const m = token.match(/^(-?[\d.]+)(px|rem)$/);
@@ -140,43 +144,21 @@ for (const file of files(src, [".svelte", ".css", ".ts"])) {
 
   for (const m of text.matchAll(TW_SPACE)) {
     // A value from a variable (the list's edges, the phone's safe area) is named elsewhere.
-    if (!TW_SCALE.has(m[1]) && !/^\[(var|env|calc)\(/.test(m[1])) {
-      spacing++;
-      spacingAt.push(`${name} line ${lineOf(text, m.index)}: ${m[0]}`);
-    }
+    const relative = /^\[(var|env|calc)\(|^\[-?[\d.]+(em|vh|vw|dvh|%)\]$/.test(m[1]);
+    if (!TW_SCALE.has(m[1]) && !relative && !excepted(name, m[0].replace(/^-/, ""))) say(m.index, `a gap off the spacing scale (${m[0]})`);
   }
   for (const m of text.matchAll(CSS_SPACE)) {
     for (const token of split(m[3].replace(/\s*!important/, ""), " ")) {
       const px = lengthPx(token);
-      if (px !== null && !SCALE_PX.has(px)) {
-        spacing++;
-        spacingAt.push(`${name} line ${lineOf(text, m.index)}: ${m[0].trim()}`);
-      }
+      if (px !== null && !SCALE_PX.has(px) && !excepted(name, m[0].trim())) say(m.index, `a gap off the spacing scale (${m[0].trim()})`);
     }
   }
   for (const m of text.matchAll(TONE)) {
-    const tone = m[1];
-    if (!tones.has(tone)) tones.set(tone, `${name} line ${lineOf(text, m.index)}`);
+    if (!TONES.includes(m[1]) && !excepted(name, `${m[1]}%`)) say(m.index, `a grey tone not in the table (the ink at ${m[1]}%); use var(--hover), var(--tone), var(--line), var(--strong) or one of the 65% edges`);
   }
-}
-
-if (process.argv[2] === "count") {
-  console.log(`spacing off the scale: ${spacing}`);
-  console.log(`ink tones: ${[...tones.keys()].sort((a, b) => a - b).join(", ")} (${tones.size})`);
-  if (process.argv[3] === "spacing") console.log(spacingAt.join("\n"));
-  process.exit(0);
-}
-
-if (spacing > SPACING_LEFT) {
-  problems.push(`${spacing - SPACING_LEFT} new spacing value(s) off the scale (4, 8, 12, 16, 20, 24, 32, 40, 48, 64px). Run \`node scripts/check-system.mjs count spacing\` to list them all.`);
-} else if (spacing < SPACING_LEFT) {
-  problems.push(`Good: spacing off the scale is down to ${spacing}. Lower SPACING_LEFT in scripts/check-system.mjs to ${spacing}, so it can't creep back.`);
-}
-for (const [tone, at] of tones) {
-  if (!TONES.includes(tone)) problems.push(`${at}: a new grey tone (the ink at ${tone}%); use one already in the table`);
-}
-for (const tone of TONES) {
-  if (!tones.has(tone)) problems.push(`Good: the ink at ${tone}% is no longer used. Take it off TONES in scripts/check-system.mjs.`);
+  for (const m of text.matchAll(/(?<![\w-])(?:bg|border|text|ring|outline|divide|fill|stroke|decoration)-ink(?:-2)?\/\d+/g)) {
+    say(m.index, `the ink faded with "/" (${m[0]}); use a named tone, such as bg-[var(--line)]`);
+  }
 }
 
 if (problems.length > 0) {

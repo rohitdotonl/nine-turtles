@@ -108,7 +108,7 @@
         for good, along with your email and password. This can't be undone.
       {/if}
     </p>
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <p class="text-meta text-ink-2">Before you go, you can download them</p>
       <div class="inset-group">
         <a href="/api/opml" download class="inset-row inset-action"
@@ -128,7 +128,7 @@
       </p>
     </div>
     <!-- Asked for, as for a new email, so a device left signed in can't delete anything (decision 0200). -->
-    <label class="flex flex-col gap-1.5">
+    <label class="flex flex-col gap-2">
       <span class="text-meta text-ink-2">Your password</span>
       <input
         bind:this={passwordField}
@@ -141,7 +141,7 @@
         class="field"
       />
     </label>
-    <p id="delete-account-message" role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    <p id="delete-account-message" role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
     {#if sheet}

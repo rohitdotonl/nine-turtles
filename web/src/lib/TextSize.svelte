@@ -65,7 +65,7 @@
     content: attr(data-sign);
   }
   .sign {
-    margin-left: 0.1875rem;
+    margin-left: 0.25rem;
     font-size: var(--text-base);
     font-weight: 500;
     color: var(--ink-2);
@@ -111,7 +111,7 @@
   */
   .step + .sizes-name {
     /* Both hairlines are the name's own edges, so each is straight: a rounded cell's edge would curve. */
-    border-inline: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+    border-inline: 1px solid var(--line);
     align-self: stretch;
     display: flex;
     align-items: center;

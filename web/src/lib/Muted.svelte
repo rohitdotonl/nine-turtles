@@ -115,10 +115,10 @@
 <style>
   .muted-row {
     flex-wrap: nowrap;
-    padding-block: 0.625rem;
+    padding-block: 0.75rem;
   }
   .muted-row > span {
-    gap: 0.125rem;
+    gap: 0.25rem;
     line-height: 1.4;
   }
 </style>

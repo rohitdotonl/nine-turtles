@@ -91,7 +91,7 @@
         <p>Afterwards you'll go back to <span class="font-semibold break-words" translate="no">{request.redirectHost}</span>.</p>
       </div>
       <div class="flex flex-col gap-3">
-        <p id="connect-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="connect-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- Cancel, then the main action at the right end, as in a sheet. Busy is said with aria-disabled, so the buttons keep their look and the keyboard's place. -->

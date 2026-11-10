@@ -29,8 +29,8 @@
   */
   .time {
     display: inline;
-    padding: 0.625rem 0.125rem;
-    margin: -0.625rem -0.125rem;
+    padding: 0.75rem 0.25rem;
+    margin: -0.75rem -0.25rem;
     color: inherit;
     font: inherit;
     font-variant-numeric: tabular-nums;

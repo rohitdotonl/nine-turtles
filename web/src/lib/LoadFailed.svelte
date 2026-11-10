@@ -32,7 +32,7 @@
   }
 </script>
 
-<p role="status" class={["flex flex-wrap items-center gap-x-1.5 text-danger", extra]}>
+<p role="status" class={["flex flex-wrap items-center gap-x-2 text-danger", extra]}>
   <span class="shrink-0"><Icon name="alert" /></span>{words}
   <TextButton class="px-1" onclick={retry}>Try again</TextButton>
 </p>

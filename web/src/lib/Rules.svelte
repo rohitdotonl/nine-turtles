@@ -215,7 +215,7 @@
     {#each rules ?? [] as rule, index (rule.id)}
       {@const line = ruleLine(rule, people, now)}
       <div class="inset-row word-row">
-        <span class="flex min-w-0 flex-1 flex-col py-1.5">
+        <span class="flex min-w-0 flex-1 flex-col py-2">
           <span class="break-words">{wordShown(rule)}</span>
           <span class="text-meta text-muted">{line}</span>
         </span>
@@ -229,7 +229,7 @@
     {/if}
   </div>
   <!-- Always here, so screen readers hear the words as they appear. -->
-  <p id="hide-empty" role="alert" class={["inset-foot flex items-start gap-1.5 text-danger", !empty && "sr-only"]}>
+  <p id="hide-empty" role="alert" class={["inset-foot flex items-start gap-2 text-danger", !empty && "sr-only"]}>
     {#if empty}<span class="mt-px shrink-0"><Icon name="alert" /></span>Type a word or phrase first.{/if}
   </p>
   <div role="status" class={["inset-foot flex flex-wrap items-center gap-x-3 gap-y-1 text-ink", !message && "sr-only"]}>

@@ -64,7 +64,7 @@
     <!-- Left out once an address is filled in: it would only add a choice. -->
     <a class="btn self-start" href={site} target="_blank" rel="noopener noreferrer"><Icon name="open" />Find it on their site<span class="sr-only"> (opens in a new tab)</span></a>
   {/if}
-  <div class="flex flex-col gap-1.5">
+  <div class="flex flex-col gap-2">
     <label for={`${id}-address`} class="text-meta text-ink-2">Their email address</label>
     <input
       id={`${id}-address`}
@@ -80,7 +80,7 @@
       class="field min-w-0"
     />
   </div>
-  <p id={`${id}-message`} role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+  <p id={`${id}-message`} role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   <div class="flex flex-wrap gap-2">
@@ -94,8 +94,8 @@
   /* The same quiet bordered box as Add a source, across the column. */
   .ask {
     align-self: stretch;
-    padding: 1rem 1.125rem;
-    border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    padding: 1rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-hold);
     text-align: left;
   }

@@ -24,7 +24,7 @@
 </script>
 
 <svg
-  class={["logo flex-none", inline && "mr-[9px] inline align-baseline"]}
+  class={["logo flex-none", inline && "mr-2 inline align-baseline"]}
   viewBox="8.15 18.1 83.74 63.83"
   width={Math.round((height * 83.74) / 63.83)}
   height={height}

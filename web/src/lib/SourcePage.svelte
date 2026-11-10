@@ -97,11 +97,11 @@
   <form id={formId} onsubmit={save} class={["flex flex-col gap-5", phone && "flex-1"]}>
     <SourceFields feed={source} bind:paused bind:shorts bind:liveStreams {onMoved} />
 
-    <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    <p role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
 
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
       <button type="button" class="btn self-start" aria-disabled={busy} aria-describedby="{formId}-take-out" onclick={takeOut}>Take out of {name}</button>
       <span id="{formId}-take-out" class="field-help mt-0">It becomes a person or publication of its own. You can undo it straight afterwards.</span>
     </div>

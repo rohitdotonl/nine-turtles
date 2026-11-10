@@ -191,7 +191,7 @@
     <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
     {#if phone}
       <!-- The X stands for Cancel, as on a phone's Edit folder (decision 0235). -->
-      <button type="button" onclick={cancel} aria-label="Close" title="Close without saving" class="btn-quiet btn-icon -mr-2.5 shrink-0"><Icon name="close" size="alone" /></button>
+      <button type="button" onclick={cancel} aria-label="Close" title="Close without saving" class="btn-quiet btn-icon -mr-3 shrink-0"><Icon name="close" size="alone" /></button>
     {:else}
     <div class="flex shrink-0 gap-2">
       <button type="button" class="btn" onclick={cancel}>Cancel</button>
@@ -203,15 +203,15 @@
   </div>
 
   <form id={formId} onsubmit={save} class={["flex flex-col gap-5", phone && "flex-1"]}>
-    <label class="flex flex-col gap-1.5">
+    <label class="flex flex-col gap-2">
       <span class="text-meta text-ink-2">Name</span>
       <input bind:value={title} type="text" autocomplete="off" class="field" />
     </label>
 
     {#if chooses}
       <!-- Someone or something (decision 0163): a choice of two, as Settings draws one. -->
-      <fieldset class="flex min-w-0 flex-col gap-1.5">
-        <legend class="mb-1.5 text-meta text-ink-2">This is</legend>
+      <fieldset class="flex min-w-0 flex-col gap-2">
+        <legend class="mb-2 text-meta text-ink-2">This is</legend>
         <div class="choices" style="--columns: 2">
           <label class="choice"><input type="radio" name="{formId}-who" value="person" bind:group={who} />A person</label>
           <label class="choice"><input type="radio" name="{formId}-who" value="publication" bind:group={who} />A publication</label>
@@ -222,8 +222,8 @@
     <!-- Where Write back writes: a person only, as a publication has no Write back (decision 0192). Under This is, so choosing
       A publication takes away only what's below the choice, and nothing above the pointer moves. -->
     {#if who === "person"}
-    <div class="flex flex-col gap-1.5">
-      <label class="flex flex-col gap-1.5">
+    <div class="flex flex-col gap-2">
+      <label class="flex flex-col gap-2">
         <span class="text-meta text-ink-2">Email address</span>
         <input bind:value={address} type="text" inputmode="email" autocomplete="off" autocapitalize="none" spellcheck="false" class="field" aria-describedby="{formId}-address" />
       </label>
@@ -231,8 +231,8 @@
     </div>
     {/if}
 
-    <fieldset class="flex min-w-0 flex-col gap-1.5">
-      <legend class="mb-1.5 text-meta text-ink-2">Folders</legend>
+    <fieldset class="flex min-w-0 flex-col gap-2">
+      <legend class="mb-2 text-meta text-ink-2">Folders</legend>
       <!-- A checklist (decision 0045): square tick boxes, as they can be in several; "New folder…" is the last row. -->
       <div class="inset-group">
         {#each folders as folder (folder.id)}
@@ -256,7 +256,7 @@
     {/if}
 
     {#if !one}
-      <div class="flex min-w-0 flex-col gap-1.5">
+      <div class="flex min-w-0 flex-col gap-2">
         <span class="text-meta text-ink-2" id="{formId}-sources">Sources</span>
         <!-- Each source a row; its › opens that source's own settings. -->
         <ul class="inset-group" aria-labelledby="{formId}-sources">
@@ -280,7 +280,7 @@
     {/if}
 
     <!-- A problem, in red words with an icon, only once there is one. -->
-    <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !message && "sr-only"]}>
+    <p role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
       {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
     </p>
 

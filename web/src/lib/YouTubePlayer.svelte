@@ -269,7 +269,7 @@
     cursor: default;
   }
   button.video-play:hover {
-    background-color: color-mix(in srgb, var(--ink) 10%, transparent);
+    background-color: var(--line);
   }
   .video-title {
     max-width: 22ch;
@@ -289,7 +289,7 @@
   .video-word {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.75rem;
   }
   .video-mark {
     display: flex;

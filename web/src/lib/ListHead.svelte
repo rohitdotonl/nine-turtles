@@ -47,7 +47,7 @@
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
       <button type="button" onclick={onAbout} title={tip(`Info about ${text}`, "about")} aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
-        ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-1.5 shrink-0 font-normal text-muted">›</span></button
+        ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-2 shrink-0 font-normal text-muted">›</span></button
       >
     {:else}
       {text}

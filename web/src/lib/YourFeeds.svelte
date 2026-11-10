@@ -257,7 +257,7 @@
         {/if}
         {#each groups as group, index (group.id)}
           <section aria-labelledby={`following-${group.id}`}>
-            <div class="mb-1.5 flex min-h-11 items-center justify-between gap-3">
+            <div class="mb-2 flex min-h-11 items-center justify-between gap-3">
               <h3 id={`following-${group.id}`} class="inset-head mb-0">{group.name}</h3>
               {#if index === 0}
                 <div class="flex items-center gap-2">
@@ -275,7 +275,7 @@
                   {#if editing}
                     <label class="inset-row check-row tended">
                       <input type="checkbox" value={feed.id} bind:group={chosen} />
-                      <span class="flex min-w-0 flex-1 flex-col py-1.5">
+                      <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words">{line}</span>
                       </span>
@@ -283,7 +283,7 @@
                     </label>
                   {:else}
                     <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
-                      <span class="flex min-w-0 flex-1 flex-col py-1.5">
+                      <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words">{line}</span>
                       </span>
@@ -344,7 +344,7 @@
     gap: 0.75rem;
     margin-top: auto;
     padding-block: 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
-    border-top: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+    border-top: 1px solid var(--line);
     background-color: var(--paper);
   }
   /* Unsubscribe alone at the left; the count sits beside Move to… at the right. */

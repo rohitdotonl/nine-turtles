@@ -55,7 +55,7 @@
         aria-describedby={view === "unread" && waiting ? "unread-waiting" : undefined}
         onclick={(event) => follow(event, { kind: "view", view })}
         class={[
-          "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-2.5 pr-3.5 pl-3 text-ui",
+          "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-ui",
           current ? "font-semibold text-ink" : "text-ink-2",
         ]}
         ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} /></span

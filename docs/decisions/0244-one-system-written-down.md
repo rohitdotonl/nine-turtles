@@ -65,7 +65,7 @@ Two parts of the critique are follow-ups, not done here: moving the 193
 older gaps onto the scale (6px is written into several decisions, such as
 a field's name 6px over it, decision 0122, so each needs a look), and
 gathering the 22 grey tones into four named ones (each is held to a
-contrast floor). The check already stops new drift in both.
+contrast floor). The check already stops new drift in both. (Both done the same day: decision 0245.)
 
 Visual only: no feature, wording or data changed, every button stays 44px,
 every text keeps its contrast.

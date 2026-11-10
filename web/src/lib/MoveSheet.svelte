@@ -60,8 +60,8 @@
 <div role="presentation" onkeydown={keepEscape}>
   <Sheet title="Move to a folder" bind:heading {onClose}>
     <form onsubmit={move} class="flex flex-col gap-5">
-      <fieldset class="flex min-w-0 flex-col gap-1.5">
-        <legend class="mb-1.5 text-meta text-ink-2">To</legend>
+      <fieldset class="flex min-w-0 flex-col gap-2">
+        <legend class="mb-2 text-meta text-ink-2">To</legend>
         <!-- A choice of one: a round mark at each row's end, as a Mac draws a radio button. -->
         <div class="inset-group">
           <label class="inset-row check-row">
@@ -92,7 +92,7 @@
         <span class="field-help mt-0">{help}</span>
       </fieldset>
       <!-- A problem, in red words with an icon, only once there is one: the sheet grows by its line. -->
-      <p role="status" class={["flex items-start gap-1.5 text-meta text-danger", !problem && "sr-only"]}>
+      <p role="status" class={["flex items-start gap-2 text-meta text-danger", !problem && "sr-only"]}>
         {#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{/if}
       </p>
       <div class="sheet-actions">

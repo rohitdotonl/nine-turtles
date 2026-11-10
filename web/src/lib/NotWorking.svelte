@@ -207,7 +207,7 @@
   .card {
     container: card / inline-size;
     min-width: 0;
-    padding: 1rem 1.125rem;
+    padding: 1rem;
     border-radius: var(--radius-hold);
     background-color: var(--group, var(--list));
     color: var(--ink);
@@ -236,9 +236,9 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
-    margin-top: 0.875rem;
-    padding-top: 0.875rem;
-    border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
   }
   .write-to {
     margin-top: 0.5rem;

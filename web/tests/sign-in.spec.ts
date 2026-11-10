@@ -30,15 +30,15 @@ test("sign-in is one centred column, at the phone's one 20px margin, each field 
   await appReady(page);
   const email = (await page.getByLabel("Email").boundingBox())!;
   const field = page.getByLabel("Password", { exact: true });
-  // Real names you can see, above their fields on the column's left edge, 6px over them (decision 0122), not placeholders.
+  // Real names you can see, above their fields on the column's left edge, 8px over them (decisions 0122, 0245), not placeholders.
   const emailName = (await page.locator('label[for="email"]').boundingBox())!;
   const passwordName = (await page.locator('label[for="password"]').boundingBox())!;
   await expect(page.locator('label[for="email"]')).toBeVisible();
   await expect(page.locator('label[for="password"]')).toBeVisible();
-  expect(Math.abs(email.y - (emailName.y + emailName.height) - 6)).toBeLessThan(1);
+  expect(Math.abs(email.y - (emailName.y + emailName.height) - 8)).toBeLessThan(1);
   expect(Math.abs(emailName.x - 20)).toBeLessThan(1);
   const fieldBox = (await field.boundingBox())!;
-  expect(Math.abs(fieldBox.y - (passwordName.y + passwordName.height) - 6)).toBeLessThan(1);
+  expect(Math.abs(fieldBox.y - (passwordName.y + passwordName.height) - 8)).toBeLessThan(1);
   // The password's name 24px under the email field: a group to each field.
   expect(Math.abs(passwordName.y - (email.y + email.height) - 24)).toBeLessThan(1);
   await expect(page.getByLabel("Email")).not.toHaveAttribute("placeholder");

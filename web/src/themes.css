@@ -90,7 +90,7 @@
   --raised-edge: rgb(255 255 255 / 0.08);
   --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
   --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
-  --group: color-mix(in srgb, var(--ink) 7%, var(--paper));
+  --group: color-mix(in srgb, var(--ink) 10%, var(--paper));
   --chosen: color-mix(in srgb, var(--ink) 65%, var(--paper));
   --chosen-ink: var(--paper);
   --chosen-edge: transparent;

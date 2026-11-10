@@ -99,7 +99,7 @@
         <a href="/" onclick={leave} class="btn-primary">Open nine turtles</a>
       {:else}
         <form class="flex flex-col gap-3" onsubmit={choose}>
-          <div class="flex flex-col gap-1.5">
+          <div class="flex flex-col gap-2">
             <label for="password" class="text-meta text-ink-2">New password</label>
             <PasswordField
               id="password"
@@ -113,7 +113,7 @@
           </div>
           <!-- Room for a message kept at the foot, as on sign-in (decision 0045). -->
           <div class="flex min-h-[8.5rem] flex-col gap-3">
-            <p id="choose-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+            <p id="choose-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
               {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
             </p>
             <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word="Set password" doing="Saving…" /></button>
@@ -130,7 +130,7 @@
     {:else}
       <p id="link-help">Press Sign in to read on this device.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
-        <p id="link-message" role="status" class={["flex items-start justify-center gap-1.5 text-center text-meta text-danger", !message && "sr-only"]}>
+        <p id="link-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>
           {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
         </p>
         <!-- svelte-ignore a11y_autofocus: the only thing to do on this page. -->

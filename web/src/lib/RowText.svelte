@@ -54,7 +54,7 @@
       (a faint accent tone behind them, and an underline) and in full ink, so they show by
       tone and shape.
     -->
-    <span class="excerpt mt-0.5 line-clamp-2 text-meta text-muted"
+    <span class="excerpt mt-1 line-clamp-2 text-meta text-muted"
       >{#each article.excerpt as piece, pieceIndex (pieceIndex)}{#if piece.match}<mark class="match"
             >{piece.text}</mark
           >{:else}{piece.text}{/if}{/each}</span
@@ -91,7 +91,7 @@
     tone alone (SPEC.md section 6, decision 0037).
   */
   .match {
-    padding: 0 1px;
+    padding: 0;
     text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
     text-underline-offset: 0.2em;
     border-radius: var(--radius-mark);
