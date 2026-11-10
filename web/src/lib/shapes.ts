@@ -24,6 +24,8 @@ export type Feed = {
   failingSince?: number | null;
   /** When it was last checked with an answer (seconds since 1970), for an empty feed's "Last checked…" (decision 0142). */
   checkedAt?: number | null;
+  /** Brought from a file and not tried yet: the sidebar says "checking…" (decision 0249). */
+  waiting?: boolean;
   /** The person it's one place of, when the reader joined it to others (SPEC section 36); null on its own. */
   person?: number | null;
   /** What kind of source it is: a blog, a video channel, a newsletter or a podcast. */
@@ -229,6 +231,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     pausedAt: typeof feed.paused_at === "number" ? feed.paused_at : null,
     failingSince: typeof feed.failing_since === "number" ? feed.failing_since : null,
     checkedAt: typeof feed.checked_at === "number" ? feed.checked_at : null,
+    waiting: feed.waiting === true,
     person: typeof feed.person === "number" ? feed.person : null,
     place: PLACE_KINDS.find((kind) => kind === feed.place) ?? "blog",
     kind: feed.kind === "publication" ? "publication" : "person",

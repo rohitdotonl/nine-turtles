@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyText, insteadOfList, missingFrom, nothingFound, NOT_FOUND, type Found } from "./listWording";
+import { checkingLine, emptyText, insteadOfList, missingFrom, nothingFound, NOT_FOUND, type Found } from "./listWording";
 
 /** Everything loaded, and the place the address names is one the reader has. */
 function found(changes: Partial<Found> = {}): Found {
@@ -70,5 +70,12 @@ describe("nothingFound", () => {
     const wider = () => undefined;
     expect(nothingFound("walking", "Starred", wider).wider).toBe(wider);
     expect(nothingFound("", "Unread")).toEqual({ fact: "Nothing found in Unread." });
+  });
+});
+
+describe("checkingLine", () => {
+  it("says how many feeds brought from a file are still to check, in words (decision 0249)", () => {
+    expect(checkingLine(1)).toBe("Bringing in your list: 1 feed still to check.");
+    expect(checkingLine(42)).toBe("Bringing in your list: 42 feeds still to check.");
   });
 });

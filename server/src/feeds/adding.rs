@@ -400,6 +400,7 @@ async fn follow(
         paused_at: None,
         failing_since: None,
         checked_at: Some(now),
+        waiting: false,
         person: None,
         place,
         kind,

@@ -51,6 +51,7 @@ export function rowsOf(feeds: Feed[], people: Person[]): Feed[] {
       ...first,
       title: person.name,
       unread: places.reduce((sum, place) => sum + place.unread, 0),
+      waiting: places.some((place) => place.waiting),
       folders: [...new Set(places.flatMap((place) => place.folders))],
       places: places.map((place) => place.id),
     });

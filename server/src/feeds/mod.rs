@@ -65,6 +65,10 @@ struct FeedRow {
     /// "Last checked today at 14:20." (decision 0142). None for a newsletter,
     /// which is never checked: its emails arrive by themselves.
     checked_at: Option<i64>,
+    /// Not tried yet: followed from a file and waiting for its first check,
+    /// so the sidebar says "checking…" and Unread fills in as it's checked
+    /// (decision 0249). A newsletter, or a feed whose first try failed, isn't.
+    waiting: bool,
     /// The person it's one place of, when the reader joined it to others
     /// (`writers`); none for a place on its own.
     person: Option<i64>,
@@ -104,6 +108,8 @@ pub const FEEDS: &str =
         subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
         CASE WHEN feeds.url NOT LIKE 'newsletter:%' THEN feeds.fetched_at END AS checked_at,
+        (feeds.fetched_at IS NULL AND feeds.failures = 0
+             AND feeds.url NOT LIKE 'newsletter:%') AS waiting,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
         subscriptions.note, feeds.email, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,

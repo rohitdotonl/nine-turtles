@@ -36,6 +36,9 @@ export class LoadedLibrary {
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
+  /** How many feeds brought from a file still wait for their first check (decision 0249); the list that fills in loads the feeds again as it asks. */
+  checking: number = $derived(this.feeds?.filter((feed) => feed.waiting).length ?? 0);
+
   /** People and folders together, as search names them: a person by their row. */
   get names(): Library {
     return { feeds: this.rows ?? [], folders: this.folders };
@@ -78,6 +81,7 @@ export class LoadedLibrary {
     } catch {
       this.feedsFailed = true;
     }
+
   }
 
   /** Loads the feeds again as the reader arrives on them (a phone's feeds screen): a failure keeps the dots as they were and says nothing. */
@@ -143,10 +147,12 @@ export class LoadedLibrary {
 
   /** `row` dropped onto `into` in the sidebar (decision 0250): one person, under `into`'s name, in both their folders; Undo puts each back. */
   async joinInto(row: Feed, into: Feed): Promise<Removed> {
-    const { refusal, before } = await join([into.id, row.id]);
+    // Named for the one dropped on, even when the one held is the person already (the server keeps the first person it finds).
+    const name = this.shownAs(into)?.title ?? into.title;
+    const { refusal, before } = await join([into.id, row.id], name);
     if (refusal) return refusal;
     await this.loadFeeds();
-    return joinedNotice(this.shownAs(into)?.title ?? into.title, before, () => this.loadFeeds());
+    return joinedNotice(name, before, () => this.loadFeeds());
   }
 
   /** Whether every source of theirs is paused already (dropped on Pause, nothing would change). */

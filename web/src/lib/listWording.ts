@@ -68,3 +68,8 @@ export function nothingFound(words: string, where: string, wider?: () => void): 
   const typed = words.trim();
   return { fact: typed === "" ? `Nothing found in ${where}.` : `Nothing found for “${typed}” in ${where}.`, wider };
 }
+
+/** While a list brought from a file is being checked: how many feeds are left, never a bar (decision 0249). */
+export function checkingLine(left: number): string {
+  return `Bringing in your list: ${left} ${left === 1 ? "feed" : "feeds"} still to check.`;
+}

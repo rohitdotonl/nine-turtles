@@ -10,6 +10,7 @@
 // it alone) and Starred, under the pointer, takes the drop tone
 // (arranging.css), unless the article is starred already.
 
+import { dropMarker, liftedCopy } from "./dropMark";
 import type { Article } from "./shapes";
 
 /** The kind of drag only a row of this list makes: its article's id. */
@@ -37,15 +38,17 @@ export function carriesArticle(row: HTMLElement, article: () => Article) {
     for (const [type, value] of carried(held)) transfer.setData(type, value);
     transfer.effectAllowed = "copyLink";
     // The lifted copy: the title, in the sidebar's lifted name's look.
-    const ghost = Object.assign(document.createElement("div"), { className: "drag-ghost", textContent: held.title || "Untitled" });
+    const ghost = liftedCopy(held.title || "Untitled");
     ghost.style.top = "-100px";
-    document.body.append(ghost);
     transfer.setDragImage(ghost, 12, 12);
     setTimeout(() => ghost.remove(), 0);
     document.documentElement.dataset.dragging = "article";
+    // The row stays in its place, faded, as a sidebar row does while held.
+    row.dataset.dragging = "";
   };
   const end = () => {
     held = undefined;
+    delete row.dataset.dragging;
     if (document.documentElement.dataset.dragging === "article") delete document.documentElement.dataset.dragging;
   };
   row.addEventListener("dragstart", start);
@@ -60,13 +63,7 @@ export function carriesArticle(row: HTMLElement, article: () => Article) {
 
 /** Listens for a row let go on Starred (`[data-drop-star]`); `star` stars it. Returns what stops listening. */
 export function listenForStarring(star: (id: number) => void): () => void {
-  let marked: HTMLElement | undefined;
-  const mark = (target: HTMLElement | undefined) => {
-    if (target === marked) return;
-    delete marked?.dataset.drop;
-    marked = target;
-    if (marked) marked.dataset.drop = "";
-  };
+  const { mark } = dropMarker();
   const starTarget = (event: DragEvent) =>
     held && !held.starred && event.dataTransfer?.types.includes(ARTICLE) && event.target instanceof Element
       ? (event.target.closest<HTMLElement>("[data-drop-star]") ?? undefined)

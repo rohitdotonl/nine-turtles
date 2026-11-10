@@ -21,8 +21,11 @@ out of the folder you dragged them from.
 
 - To keep them in both folders, hold **Option** on a Mac (**Ctrl** on
   Windows and Linux) as you let go.
-- To take someone out of a folder, drag them onto **People** or
-  **Publications**.
+- To take someone out of a folder, drag them onto the heading **People**
+  or **Publications**. Let go on someone's name instead and the two become
+  one person (the name you're holding says **One person with …** first;
+  see <a href="/help/one-person-several-places/">One person, several
+  places</a>). Undo puts them back.
 - On a phone or tablet, press and hold their name until it lifts, then move
   it. A quick swipe still scrolls.
 - While you hold someone, the bottom of the sidebar offers **Pause** and

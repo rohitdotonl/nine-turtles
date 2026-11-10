@@ -25,6 +25,7 @@
 // `data-dragging` (on the page: "folder", "person", or "copy" while Option or
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
+import { dropMarker, liftedCopy } from "./dropMark";
 import { onMac } from "./keyboard";
 
 /** What's being dragged. */
@@ -89,7 +90,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
   let holding: ReturnType<typeof setTimeout> | undefined;
   let lifted = false;
   let over: Over = null;
-  let marked: HTMLElement | undefined;
+  const { mark: markDrop } = dropMarker();
   let ghost: HTMLElement | undefined;
   /** The lifted copy's own words: the name it was picked up by. */
   let named = "";
@@ -142,12 +143,8 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     lifted = true;
     press.source.dataset.dragging = "";
     document.documentElement.dataset.dragging = press.dragged.kind;
-    ghost = document.createElement("div");
-    ghost.className = "drag-ghost";
-    ghost.setAttribute("aria-hidden", "true");
     named = press.source.querySelector<HTMLElement>("[title]")?.title ?? press.source.textContent?.trim() ?? "";
-    ghost.textContent = named;
-    document.body.append(ghost);
+    ghost = liftedCopy(named);
     try {
       node.setPointerCapture(press.id);
     } catch {
@@ -163,8 +160,9 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     const above = pointer.y + 8 + ghost.offsetHeight > innerHeight;
     ghost.style.left = `${Math.min(pointer.x + 12, innerWidth - ghost.offsetWidth - 8)}px`;
     ghost.style.top = `${above ? pointer.y - 8 - ghost.offsetHeight : pointer.y + 8}px`;
-    document.documentElement.dataset.dragging = keep && press.dragged.kind === "person" ? "copy" : press.dragged.kind;
     over = whereIs(press.dragged);
+    // Option's + ("keep in both places") only where it means something: a folder or a list, not a join or the foot.
+    document.documentElement.dataset.dragging = keep && press.dragged.kind === "person" && (over?.kind === "folder" || over?.kind === "loose") ? "copy" : press.dragged.kind;
     mark();
   }
 
@@ -203,11 +201,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     // The row under the pointer itself: someone in two folders has a row in each.
     if (accepted && over?.kind === "person") target = document.elementFromPoint(pointer.x, pointer.y)?.closest<HTMLElement>("[data-drop-person]") ?? undefined;
     if (ghost) ghost.textContent = (accepted && options.ghostText?.(press.dragged, over)) || named;
-    if (target !== marked) {
-      delete marked?.dataset.drop;
-      marked = target;
-      if (marked) marked.dataset.drop = "";
-    }
+    markDrop(target);
     drawLine(accepted && over?.kind === "between" ? over.before : undefined);
   }
 
@@ -279,8 +273,7 @@ export function sidebarDrag(node: HTMLElement, initial: DragOptions) {
     cancelAnimationFrame(frame);
     if (press) delete press.source.dataset.dragging;
     delete document.documentElement.dataset.dragging;
-    delete marked?.dataset.drop;
-    marked = undefined;
+    markDrop(undefined);
     ghost?.remove();
     ghost = undefined;
     line?.remove();

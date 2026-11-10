@@ -273,3 +273,38 @@ test("an article dragged from the list carries the publisher's link, and let go 
   await page.getByRole("button", { name: "Undo" }).first().click();
   await expect.poll(kept).not.toContain(article.id);
 });
+
+test("held someone who's a person already and dropped onto a blog, the one person takes the blog's name", async ({ page }) => {
+  const { name: theirs } = await aBlog(page, "join-lone");
+  const { name: first, id: one } = await aBlog(page, "join-pair-a", undefined, true);
+  const { id: two } = await aBlog(page, "join-pair-b", undefined, true);
+  await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: [one, two] } });
+  await page.reload();
+  await appReady(page);
+  await page.setViewportSize({ width: 1280, height: 1100 });
+  await dragTo(page, row(page, first), row(page, theirs), true);
+  await expect(page.locator(".drag-ghost")).toHaveText(`One person with ${theirs}`);
+  await page.mouse.up();
+  await expect(note(page)).toContainText(`${theirs} is one person now.`);
+  await expect(row(page, theirs)).toBeVisible();
+  await expect(row(page, first)).toHaveCount(0);
+  await sidebar(page).getByRole("button", { name: "Undo" }).click();
+  await expect(row(page, first)).toBeVisible();
+  await expect(row(page, theirs)).toBeVisible();
+});
+
+test("an article dragged with the mouse onto Starred is starred; one starred already isn't taken", async ({ page }) => {
+  const { name } = await aBlog(page, "drag-real");
+  await row(page, name).click();
+  const rows = page.locator(".item-row");
+  await expect(rows.first()).toBeVisible();
+  const starred = sidebar(page).getByRole("link", { name: "Starred" });
+  await rows.first().dragTo(starred);
+  await expect(page.getByText("Starred.", { exact: true })).toBeVisible();
+  // Starred already: Starred takes no drop tone, and nothing changes.
+  const data = await page.evaluateHandle(() => new DataTransfer());
+  await rows.first().dispatchEvent("dragstart", { dataTransfer: data });
+  await starred.dispatchEvent("dragover", { dataTransfer: data });
+  await expect(starred).not.toHaveAttribute("data-drop");
+  await rows.first().dispatchEvent("dragend", { dataTransfer: data });
+});
