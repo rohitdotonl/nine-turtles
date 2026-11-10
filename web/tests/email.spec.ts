@@ -324,7 +324,7 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   await page.goto("/settings");
   await expect(page.getByText(/^Version /)).toBeVisible();
   await expect(page.getByRole("button", { name: "Delete account…" })).toHaveCount(0);
-  // Their data, though, they can delete (decision 0117), in Leaving at the very end, apart from Sign out (decision 0237).
+  // Their data, though, they can delete (decision 0117), in Leaving at the very end, apart from Sign out (decision 0239).
   const leaving = page.getByRole("region", { name: "Leaving" });
   await expect(leaving.getByRole("button", { name: "Delete data…" })).toBeVisible();
   // With one row, the owner's line says "It says"; a reader with two hears "Each one says".

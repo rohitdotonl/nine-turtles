@@ -1,4 +1,4 @@
-# 0237: Deleting sits apart, removals say what goes, a pause shows
+# 0239: Deleting sits apart, removals say what goes, a pause shows
 
 *10 November 2026.*
 

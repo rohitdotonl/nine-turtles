@@ -112,7 +112,7 @@ async function send(change: Waiting): Promise<Sent | "offline"> {
   return { answer, refusal };
 }
 
-/** What couldn't be done and what to do, by the kind of change, when the trouble was nine turtles' own (decision 0237). */
+/** What couldn't be done and what to do, by the kind of change, when the trouble was nine turtles' own (decision 0239). */
 const FAILED: Record<"highlight" | "remove", string> = {
   highlight: "The highlight couldn't be saved. Choose the words and press Highlight again in a moment.",
   remove: "The highlight couldn't be removed, so it's still here. Try again in a moment.",

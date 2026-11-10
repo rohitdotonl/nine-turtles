@@ -106,7 +106,7 @@ anywhere or counted.
 - When the reader starred, highlighted or wrote a note on any of a place's
   articles, or wrote a note on the person, Unsubscribe asks first: "Keep
   what you saved from {name}?", saying what there is, with **Keep them**
-  and **Cancel** together; then, under a hairline, apart (decision 0237),
+  and **Cancel** together; then, under a hairline, apart (decision 0239),
   "Or, if you don't want them any more:" and an oxblood button that names
   exactly what goes: "Remove the 2 starred articles too", "Remove the
   starred article, the 3 highlighted or noted articles and your note on

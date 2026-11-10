@@ -17,7 +17,7 @@
   owner only); and Account
   (Your plan while nine turtles takes payments, Email with Change…, Password,
   Weekly email, Sign out); and, apart at the very end, Leaving (Delete data…
-  and, for everyone but the owner, Delete account…, decision 0237).
+  and, for everyone but the owner, Delete account…, decision 0239).
 
   Each row on the first page has its icon at the left, in the muted grey,
   lined up with the first line of its name, and a setting's description
@@ -522,7 +522,7 @@
         {/if}
       </section>
 
-      <!-- Deleting sits apart from Sign out, at the very end (decision 0237): a slip aimed at an everyday row can't land on one that removes something. -->
+      <!-- Deleting sits apart from Sign out, at the very end (decision 0239): a slip aimed at an everyday row can't land on one that removes something. -->
       <section aria-labelledby="leaving-heading">
         <h3 id="leaving-heading" class="settings-head">Leaving</h3>
         <div class="inset-group">

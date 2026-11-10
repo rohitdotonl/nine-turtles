@@ -8,7 +8,7 @@ describe("what was kept from a place (SPEC section 42)", () => {
     );
   });
 
-  it("names exactly what the red button removes (decision 0237)", () => {
+  it("names exactly what the red button removes (decision 0239)", () => {
     expect(removeWords({ starred: 2, marked: 0, note: false })).toBe("Remove the 2 starred articles too");
     expect(removeWords({ starred: 1, marked: 0, note: false })).toBe("Remove the starred article too");
     expect(removeWords({ starred: 0, marked: 0, note: true })).toBe("Remove your note on them too");

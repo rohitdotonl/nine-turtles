@@ -34,7 +34,7 @@ export function keptWords(kept: Kept): string {
 }
 
 /**
- * The red button's own words, naming exactly what goes (decision 0237):
+ * The red button's own words, naming exactly what goes (decision 0239):
  * "Remove the 2 starred articles too", "Remove the starred article, the 3
  * highlighted or noted articles and your note on them too".
  */

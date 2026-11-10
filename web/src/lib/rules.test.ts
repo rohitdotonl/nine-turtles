@@ -45,7 +45,7 @@ group("a word in Settings › Hiding", () => {
     expect(ruleRefused("trouble")).not.toMatch(/[0-9]/);
   });
 
-  it("says how to fix what failed (decision 0237)", () => {
+  it("says how to fix what failed (decision 0239)", () => {
     expect(ruleRefused("trouble")).toBe("The word couldn't be added. Press Add again in a moment.");
     expect(ruleRefused("gone")).toBe("This isn't here any more; it may have been removed on another device.");
   });

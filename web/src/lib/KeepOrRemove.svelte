@@ -5,7 +5,7 @@
   the person, where they are (Starred, Notes, search). The safe answers sit
   together (Keep them, Cancel); under a hairline, apart, the oxblood button
   names exactly what it removes ("Remove the 2 starred articles too",
-  decision 0237). Either can be undone straight afterwards, as any
+  decision 0239). Either can be undone straight afterwards, as any
   unsubscribe can. Asked only when there's something kept.
 -->
 <script lang="ts">

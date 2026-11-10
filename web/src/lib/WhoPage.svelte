@@ -125,7 +125,7 @@
         </div>
         {#if ownTitle}<p class="-mt-1 font-serif text-large break-words text-ink-2">{ownTitle}</p>{/if}
       </div>
-      <!-- Paused, it says so here as above their list, with Resume (decision 0237). -->
+      <!-- Paused, it says so here as above their list, with Resume (decision 0239). -->
       {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}
       <WriteBack feedId={feed.id} {library} />
       <!-- The reader's private note on them (SPEC section 42). -->

@@ -1,6 +1,6 @@
 <!--
   A paused source says so where the reader already looks (SPEC section 15,
-  decision 0237): one quiet line in the second ink above their list and on
+  decision 0239): one quiet line in the second ink above their list and on
   their page, "Paused since 23 Oct. Their new articles arrive already read.",
   and Resume, which unticks Pause for a while as Edit does. No color, no
   badge, no count. For a person with several sources, each paused one is

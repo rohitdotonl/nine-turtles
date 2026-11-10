@@ -570,7 +570,7 @@ test("with only the keyboard: pausing a feed in Edit is remembered, with since w
   await tabTo(page, sheet.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
-  // It says so on their page and above their list, with Resume (decision 0237).
+  // It says so on their page and above their list, with Resume (decision 0239).
   await expect(page.getByText("Paused today. Their new articles arrive already read.")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(2);
 
