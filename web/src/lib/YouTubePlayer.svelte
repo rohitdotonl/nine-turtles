@@ -256,7 +256,7 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background-color: var(--tone);
+    background-color: var(--fill);
     color: var(--ink);
     font-family: var(--font-sans);
     font-size: var(--text-ui);

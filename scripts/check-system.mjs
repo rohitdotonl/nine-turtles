@@ -14,12 +14,14 @@
 // 5. Icons: an icon size other than "word" (16px) or "alone" (20px), and the
 //    two named exceptions.
 // 6. Spacing: a padding, margin or gap off the scale (4, 8, 12, 16, 20, 24,
-//    32, 40, 48, 64px; 44px only as room kept for a 44px target; 96 and 192px
-//    only as a page's room above or below). Sizes in `em`, `vh`, `vw` or `%`
-//    follow the text or the window, so they pass.
-// 7. Grey tones: the ink mixed at anything but the four tones (5% a fill, 10%
-//    a line, 20% something strong, 65% an edge that must reach 3 : 1), or the
-//    ink faded with Tailwind's "/" (ink/10).
+//    32, 40, 48, 64px). 44px is meant only as room kept for a 44px target,
+//    and 96 and 192px only as a page's room above or below: the check lets
+//    them pass anywhere, and the review checks what they're used for. Sizes
+//    in `em`, `vh`, `vw` or `%` follow the text or the window, so they pass.
+// 7. Grey tones: the ink (or the text's own color, currentColor) mixed at
+//    anything but the four tones (5% a fill, 10% a line, 20% something
+//    strong, 65% an edge or underline that must reach 3 : 1), in CSS or in a
+//    Tailwind value (in_srgb), or the ink faded with Tailwind's "/" (ink/10).
 //
 // Each exception is named, with its reason, in DESIGN.md's table and in
 // EXCEPTIONS below. It matches text, not meaning: a value built in script or
@@ -32,7 +34,7 @@ const root = join(import.meta.dirname, "..");
 const src = join(root, "web/src");
 const problems = [];
 
-// The four grey tones, mixed from the ink (DESIGN.md → "The system"), and the main button's own shade.
+// The four grey tones, mixed from the ink (DESIGN.md → "The system"). The main button's 88% is in EXCEPTIONS.
 const TONES = ["5", "10", "20", "65"];
 
 // Named exceptions: [file, the exact value, why]. Mirrored in DESIGN.md.
@@ -47,6 +49,7 @@ const EXCEPTIONS = [
   ["web/src/lib/Shell.svelte", "pr-13", "the sidebar's top line keeps room for the sidebar button (44 + 8px)"],
   ["web/src/lib/PasswordField.svelte", "pr-[4.5rem]", "the password field keeps room for its Show button"],
   ["web/src/lib/EpisodePlayer.svelte", "ml-[2px]", "the Play triangle sits 2px right of centre, so it looks centred"],
+  ["web/src/lib/Logo.svelte", "mr-[9px]", "the drawn turtle sits 9px from the name, the owner's choice (BRAND.md, DESIGN.md's Exceptions log)"],
   ["web/src/lib/YouTubePlayer.svelte", "margin-left: 2px", "the Play triangle sits 2px right of centre, so it looks centred"],
   ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
 ];
@@ -91,7 +94,7 @@ const TW_SCALE = new Set(["0", "1", "2", "3", "4", "5", "6", "8", "10", "11", "1
 // Tailwind's spacing utilities (padding, margin, gaps, space between).
 const TW_SPACE = /(?<![\w-])-?(?:px|py|pt|pr|pb|pl|ps|pe|p|mx|my|mt|mr|mb|ml|ms|me|m|gap-x|gap-y|gap|space-x|space-y|scroll-p[trblxy]?|scroll-m[trblxy]?)-([\w.[\]()-]+)(?![\w-])/g;
 const CSS_SPACE = /(?<![\w-])(padding|margin|gap|row-gap|column-gap)(-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?\s*:\s*([^;}{]+)/g;
-const TONE = /color-mix\(in srgb, var\(--(?:color-)?ink\) ([\d.]+)%/g;
+const TONE = /color-mix\(in[ _](?:srgb|oklab),[ _]*(?:var\(--(?:color-)?ink(?:-2)?\)|currentColor)[ _]([\d.]+)%/g;
 
 
 function lengthPx(token) {
@@ -154,7 +157,7 @@ for (const file of files(src, [".svelte", ".css", ".ts"])) {
     }
   }
   for (const m of text.matchAll(TONE)) {
-    if (!TONES.includes(m[1]) && !excepted(name, `${m[1]}%`)) say(m.index, `a grey tone not in the table (the ink at ${m[1]}%); use var(--hover), var(--tone), var(--line), var(--strong) or one of the 65% edges`);
+    if (!TONES.includes(m[1]) && !excepted(name, `${m[1]}%`)) say(m.index, `a grey tone not in the table (the ink at ${m[1]}%); use var(--fill), var(--line), var(--strong) or one of the 65% edges`);
   }
   for (const m of text.matchAll(/(?<![\w-])(?:bg|border|text|ring|outline|divide|fill|stroke|decoration)-ink(?:-2)?\/\d+/g)) {
     say(m.index, `the ink faded with "/" (${m[0]}); use a named tone, such as bg-[var(--line)]`);

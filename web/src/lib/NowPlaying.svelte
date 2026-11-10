@@ -73,7 +73,7 @@
     cursor: pointer;
   }
   .now-playing-title:hover {
-    background-color: var(--hover);
+    background-color: var(--fill);
   }
   @media (forced-colors: active) {
     .now-playing {

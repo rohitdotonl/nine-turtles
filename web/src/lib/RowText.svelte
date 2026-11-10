@@ -92,7 +92,7 @@
   */
   .match {
     padding: 0;
-    text-decoration: underline 1px color-mix(in srgb, currentColor 45%, transparent);
+    text-decoration: underline 1px color-mix(in srgb, currentColor 65%, transparent);
     text-underline-offset: 0.2em;
     border-radius: var(--radius-mark);
     background-color: var(--mark);

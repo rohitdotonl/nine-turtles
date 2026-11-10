@@ -546,7 +546,7 @@
   :global(mark.highlight) {
     color: inherit;
     background-color: var(--line);
-    box-shadow: inset 0 -1.5px 0 var(--strong);
+    box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--ink) 65%, transparent);
     border-radius: var(--radius-mark);
     cursor: pointer;
   }

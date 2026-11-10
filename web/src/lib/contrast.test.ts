@@ -7,6 +7,7 @@ import themesCss from "../themes.css?raw";
 import pressedCss from "../pressed.css?raw";
 import html from "../../index.html?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
+import articleMarks from "./ArticleMarks.svelte?raw";
 import { LOOKS, THEMES as THEME_NAMES } from "./themes";
 
 // The themes' colors (themes.css) and everything drawn with them (app.css).
@@ -114,7 +115,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
 
 // The faint tones under a pointer, behind a search chip and filling the search
 // field are the text color mixed into whatever is behind them, read from
-// app.css (--hover, --tone, --search-fill); the press's (--pressed) from pressed.css.
+// app.css (--fill); the press's (--pressed) from pressed.css.
 function mix(ink: string, background: string, share: number): string {
   const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
   return (
@@ -126,10 +127,13 @@ function mix(ink: string, background: string, share: number): string {
   );
 }
 
+// The fill tone (a pointer, a chip, a segmented choice's track), read from app.css.
+const FILL = Number(css.match(/--fill: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
+
 describe.each(Object.entries(THEMES))("the %s theme's pointer and chip tones", (_name, colors) => {
   // Never drawn on the selected row's tint: the selected row isn't tinted under the pointer.
   it("keep text at 7 : 1 and muted grey at 4.5 : 1 on the three areas", () => {
-    const shares = ["hover", "tone", "search-fill", "pressed"].map((name) => {
+    const shares = ["fill", "pressed"].map((name) => {
       const found = (css + pressedCss).match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`));
       expect(found, name).not.toBeNull();
       return Number(found![1]) / 100;
@@ -149,7 +153,7 @@ describe.each(Object.entries(THEMES))("the %s theme's search field", (_name, col
   it("keeps a chip's words at 4.5 : 1, where the faint tones stack", () => {
     const share = (name: string) =>
       Number(css.match(new RegExp(`--${name}: color-mix\\(in srgb, var\\(--ink\\) (\\d+)%, transparent\\)`))![1]) / 100;
-    const stacked = 1 - (1 - share("search-fill")) * (1 - share("tone"));
+    const stacked = 1 - (1 - share("fill")) * (1 - share("fill"));
     for (const background of ["paper", "list", "sidebar"]) {
       expect(contrast(colors.ink!, mix(colors.ink!, colors[background]!, stacked)), background).toBeGreaterThanOrEqual(4.5);
     }
@@ -214,7 +218,7 @@ describe.each(Object.entries(THEMES))("the %s theme's selection pill", (_name, c
   });
 
   it("is clearly deeper than a row under the pointer, which stays neutral", () => {
-    const share = Number(css.match(/--hover: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
+    const share = Number(css.match(/--fill: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
     for (const [area, pane] of [["list", "paper"], ["sidebar", "sidebar"]] as const) {
       const hovered = mix(colors.ink!, colors[pane]!, share);
       expect(contrast(colors[`tint-${area}`]!, colors[pane]!), area).toBeGreaterThan(contrast(hovered, colors[pane]!) + 0.05);
@@ -230,7 +234,7 @@ function markShare(name: string): number {
   const pattern = /--mark: color-mix\(in srgb, var\(--accent\) (\d+)%, transparent\);/;
   const start = css.indexOf(SELECTORS[name]!);
   const own = css.slice(start, css.indexOf("}", start)).match(pattern);
-  const shared = css.slice(css.indexOf("--hover: color-mix")).match(pattern);
+  const shared = css.slice(css.indexOf("--fill: color-mix")).match(pattern);
   expect(shared).not.toBeNull();
   return Number((own ?? shared)![1]) / 100;
 }
@@ -322,7 +326,7 @@ describe.each(Object.entries(SELECTORS))(
     const dark = luminance(colors.paper!) < 0.5;
     const groupShare = darkShare(selector, "group");
     const group = dark ? mix(colors.ink!, colors.paper!, groupShare!) : colors.list!;
-    const track = mix(colors.ink!, group, 0.07);
+    const track = mix(colors.ink!, group, FILL);
 
     it("set a dark theme's group a clear step off the page", () => {
       if (!dark) return expect(groupShare).toBeUndefined();
@@ -331,7 +335,7 @@ describe.each(Object.entries(SELECTORS))(
     });
 
     it("keep text at 7 : 1 and the second ink, muted grey and red at 4.5 : 1 on the group and under a pointer", () => {
-      for (const background of [group, mix(colors.ink!, group, 0.05)]) {
+      for (const background of [group, mix(colors.ink!, group, FILL)]) {
         expect(contrast(colors.ink!, background)).toBeGreaterThanOrEqual(7);
         for (const color of ["ink-2", "muted", "danger"]) expect(contrast(colors[color]!, background), color).toBeGreaterThanOrEqual(4.5);
       }
@@ -382,7 +386,7 @@ describe.each(Object.entries(SELECTORS))(
         const tile = mix(colors.ink!, colors.paper!, share(block, "chosen"));
         expect(contrast(colors.paper!, tile)).toBeGreaterThanOrEqual(4.5);
         for (const [surface, background] of Object.entries(surfaces)) {
-          expect(contrast(tile, mix(colors.ink!, background, 0.07)), `on ${surface}`).toBeGreaterThanOrEqual(3);
+          expect(contrast(tile, mix(colors.ink!, background, FILL)), `on ${surface}`).toBeGreaterThanOrEqual(3);
         }
       } else {
         // By day: the page's own tone, with a thin edge that stands out from both the tile and the track.
@@ -392,7 +396,7 @@ describe.each(Object.entries(SELECTORS))(
         expect(contrast(edge, colors.paper!)).toBeGreaterThanOrEqual(3);
         expect(contrast(colors.ink!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
         for (const [surface, background] of Object.entries(surfaces)) {
-          expect(contrast(edge, mix(colors.ink!, background, 0.07)), `on ${surface}`).toBeGreaterThanOrEqual(3);
+          expect(contrast(edge, mix(colors.ink!, background, FILL)), `on ${surface}`).toBeGreaterThanOrEqual(3);
         }
       }
     });
@@ -423,8 +427,8 @@ describe.each(Object.entries(THEMES))("the %s theme's raised surface", (_name, c
     const group = dark ? mix("#ffffff", raised, groupShare) : raised;
     // The surface, a button or chip on it, a group inside it and a row of that group under a pointer.
     // The red (Unsubscribe, Delete) sits on the surface itself (or its pointer tone), never on a chip or in a group there.
-    const hover = (base: string) => mix(colors.ink!, base, share("hover"));
-    const onSurface = [raised, hover(raised), mix(colors.ink!, raised, share("tone"))];
+    const hover = (base: string) => mix(colors.ink!, base, share("fill"));
+    const onSurface = [raised, hover(raised), mix(colors.ink!, raised, share("fill"))];
     for (const background of [...onSurface, group, hover(group)]) {
       expect(contrast(colors.ink!, background), background).toBeGreaterThanOrEqual(7);
       for (const color of ["ink-2", "muted"]) expect(contrast(colors[color]!, background), `${color} on ${background}`).toBeGreaterThanOrEqual(4.5);
@@ -484,5 +488,17 @@ describe.each(Object.entries(THEMES))("the %s theme's appearance swatches", (_na
     const edge = share(readingPanel, /\.dot \{[^}]*border: 1px solid color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
     const surface = colors["surface-raised"]!;
     expect(contrast(mix(colors.ink!, surface, edge), surface)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// A highlight is a faint line tone with a fine line under it, so it never
+// shows by tone alone (DESIGN.md → "The system", Exceptions): the line keeps
+// 3 : 1 against the page, the article's only area.
+describe.each(Object.entries(THEMES))("the %s theme's highlight", (_name, colors) => {
+  it("has a line under it at 3 : 1 against the page", () => {
+    const found = articleMarks.match(/mark\.highlight\) \{[^}]*box-shadow: inset 0 -1\.5px 0 color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/);
+    expect(found).not.toBeNull();
+    const line = mix(colors.ink!, colors.paper!, Number(found![1]) / 100);
+    expect(contrast(line, colors.paper!)).toBeGreaterThanOrEqual(3);
   });
 });

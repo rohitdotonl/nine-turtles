@@ -415,7 +415,7 @@
       class={[
         "flex items-start gap-2 text-meta",
         problem && !busy && "text-danger",
-        choosing && "mt-4 self-stretch text-left text-ink-2",
+        choosing && "mt-3 self-stretch text-left text-ink-2",
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
@@ -487,7 +487,7 @@
           In the welcome, the list's own row of actions at its foot, 20px under it: Cancel, then
           Follow at the right end. On a phone, Follow alone, the list's full width.
         -->
-        <div class={["mt-4 mb-2 flex gap-3 self-stretch", start ? "flex-col" : "justify-end"]}>
+        <div class={["mt-3 mb-2 flex gap-3 self-stretch", start ? "flex-col" : "justify-end"]}>
           {#if !start}<button type="button" onclick={putAway} class="btn">Cancel</button>{/if}
           <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary">Follow</button>
         </div>
@@ -559,7 +559,7 @@
     </div>
   {:else if onCancel}
     <!-- The sheet's one row of actions, 20px under what's above it (with the form's 6px gap): Cancel, then Add at the right end. -->
-    <div class="sheet-actions mt-4">
+    <div class="sheet-actions mt-3">
       {#if !asking}<button type="button" onclick={cancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
         >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
@@ -613,7 +613,7 @@
   }
   @media (hover: hover) {
     .tile:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   @media (forced-colors: active) {

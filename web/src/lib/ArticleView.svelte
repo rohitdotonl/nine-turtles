@@ -450,7 +450,7 @@
     class={[style, panelOpen && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-9 items-center justify-center rounded-press", panelOpen && "bg-[var(--tone)]"]}><Icon name="aa" size="alone" /></span>
+    <span class={["flex size-9 items-center justify-center rounded-press", panelOpen && "bg-[var(--pressed)]"]}><Icon name="aa" size="alone" /></span>
   </button>
 {/snippet}
 

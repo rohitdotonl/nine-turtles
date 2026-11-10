@@ -218,7 +218,7 @@
   }
   @media (hover: hover) {
     .menu-item:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   .menu-item:focus-visible {

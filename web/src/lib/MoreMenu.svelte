@@ -97,7 +97,7 @@
     class={["btn-quiet btn-icon", open && "text-ink"]}
   >
     <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-8 items-center justify-center rounded-press", open && "bg-[var(--tone)]"]}><Icon name={icon} size="alone" /></span>
+    <span class={["flex size-8 items-center justify-center rounded-press", open && "bg-[var(--pressed)]"]}><Icon name={icon} size="alone" /></span>
   </button>
   {#if open}
     <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />

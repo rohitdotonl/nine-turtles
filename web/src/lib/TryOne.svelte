@@ -53,7 +53,7 @@
         <a
           href={`/people/${feed.id}`}
           onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
-          class="font-serif text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_30%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
+          class="font-serif text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
       {/if}
       <p class="text-meta text-ink-2">You're following {feed.title}. What they write next will be waiting for you here.</p>
@@ -90,7 +90,7 @@
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
-    text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
   }
   .group:hover .try-word {
     text-decoration-color: currentColor;

@@ -28,17 +28,27 @@ different strengths of the text color used as greys.
    beside words, and 96 and 192px only as a page's room above or below. Room
    measured from buttons (the article bar's pane buttons, the sidebar
    button, the password's Show) and the Play triangle's 2px optical nudge
-   are named exceptions, in the table and the check.
+   are named exceptions, in the table and the check, and so is the logo's
+   9px beside the name (the owner's choice, DESIGN.md's Exceptions log).
 3. **Four grey tones,** each the text color at one strength, named for its
    job: fill 5%, line 10%, strong 20%, edge 65%. The press, every hairline
    and card edge share the line tone; a field's fill is the fill tone, like
    the search field's; a field's edge, a chosen tile's edge and the
    keyboard's ring on rows are the edge tone (a field's edge was 55%, so it
    is a little clearer now). The main button stays the ink at 88% (decision
-   0045) and is the full ink under the pointer (it was 96%).
+   0045) and is the full ink under the pointer (it was 96%). The pointer's
+   tone, a chip's and the search field's fill were three names for nearly
+   the same grey (5%, 7%, 6%); they are one, `--fill`. An open Aa or More
+   button sits on the press's line tone, so it stays a step deeper than the
+   pointer's. The underline under a link, a highlight or a searched word is
+   the edge tone: at 45% the highlight's line fell just under 3 : 1 on White
+   and Paper (2.99 and 2.82), and it is the sign that the words are marked,
+   so it must reach 3 : 1 (the first floor); a test now holds it there.
 4. **The check holds it.** `scripts/check-system.mjs` now fails any gap off
-   the scale and any grey outside the four, including Tailwind's faded ink
-   (`bg-ink/10`), instead of only counting them.
+   the scale and any grey outside the four, including the text's own color
+   (`currentColor`) mixed in, Tailwind's spelling (`in_srgb`) and Tailwind's
+   faded ink (`bg-ink/10`), instead of only counting them. It lets 44, 96 and
+   192px pass anywhere; the review checks they are room, not gaps.
 
 **Why these strengths.** The accessibility checks (`contrast.test.ts`)
 decided them: muted text must keep 4.5 : 1 on a pressed row in the sidebar,

@@ -158,7 +158,7 @@
     margin-top: 1.5em;
     padding: 0.75rem 1rem;
     border-radius: var(--radius-hold);
-    background-color: var(--tone);
+    background-color: var(--fill);
     font-family: var(--font-sans);
     font-size: var(--text-meta);
     color: var(--ink-2);
@@ -181,7 +181,7 @@
   }
   .episode-button:hover,
   .episode-speed:hover {
-    background-color: var(--hover);
+    background-color: var(--fill);
   }
   .episode-speed {
     padding-inline: 0.5rem;

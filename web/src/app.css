@@ -315,7 +315,7 @@ body {
 @media (hover: hover) {
   .list-more:hover {
     color: var(--ink);
-    background-color: var(--hover);
+    background-color: var(--fill);
   }
 }
 .list-more[aria-disabled="true"] {
@@ -364,7 +364,7 @@ body {
 */
 @media (hover: hover) {
   .place:hover:not([aria-current], [data-here]) {
-    background-color: var(--hover);
+    background-color: var(--fill);
   }
 }
 
@@ -505,7 +505,7 @@ textarea {
   */
   .sheet-actions > .btn {
     border-color: transparent;
-    background-color: var(--tone);
+    background-color: var(--fill);
   }
   @media (hover: hover) {
     .sheet-actions > .btn:hover {
@@ -556,7 +556,7 @@ textarea {
   }
   @media (hover: hover) {
     .btn-danger:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
 
@@ -716,7 +716,7 @@ textarea {
   }
   @media (hover: hover) {
     .inset-action:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   /* Its trailing glyph (› for a flow, a tray for a download, a door for Sign out), in the muted grey at the row's right end. */
@@ -916,7 +916,7 @@ textarea {
   }
   @media (hover: hover) {
     .check-row:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
 
@@ -932,7 +932,7 @@ textarea {
     gap: 0.25rem;
     padding: 0.25rem;
     border-radius: var(--radius-press);
-    background-color: var(--tone);
+    background-color: var(--fill);
   }
   /* On a narrow screen the choices fill the width in even columns instead of wrapping ragged. */
   @media (width < 40rem) {
@@ -967,7 +967,7 @@ textarea {
   }
   @media (hover: hover) {
     .choice:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   .choice input {
@@ -1033,7 +1033,7 @@ textarea {
   @media (hover: hover) {
     .btn:hover,
     .btn-quiet:hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
 
     /*
@@ -1168,7 +1168,7 @@ textarea {
     min-height: var(--search-height);
     border: 0;
     border-radius: var(--radius-press);
-    background-color: var(--search-fill);
+    background-color: var(--fill);
     color: var(--ink);
     font-size: var(--text-ui);
   }
@@ -1184,10 +1184,8 @@ textarea {
 }
 
 :root {
-  /* The four grey tones (DESIGN.md → "The system"): fill 5% (a pointer, a chip, the search field), line 10%, strong 20%; the edge, 65%, is below. contrast.test.ts checks text on them. */
-  --hover: color-mix(in srgb, var(--ink) 5%, transparent);
-  --tone: color-mix(in srgb, var(--ink) 5%, transparent);
-  --search-fill: color-mix(in srgb, var(--ink) 5%, transparent);
+  /* The four grey tones (DESIGN.md → "The system"): fill 5% (a pointer, a chip, the search field, a field), line 10% (and a press, pressed.css), strong 20%; the edge, 65%, is below. contrast.test.ts checks text on them. */
+  --fill: color-mix(in srgb, var(--ink) 5%, transparent);
   --line: color-mix(in srgb, var(--ink) 10%, transparent);
   --strong: color-mix(in srgb, var(--ink) 20%, transparent);
   /* The search field's height: 44px to touch, 36px with a mouse on a window wide enough for the list. */

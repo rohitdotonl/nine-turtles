@@ -112,7 +112,7 @@
     <!-- One line: the chip shrinks and ends in "…" (its whole text is in its tooltip and its Remove button's name). -->
     <div class="flex min-w-0 flex-1 items-center gap-1">
       {#each shownChips as chip (chip.key)}
-        <span class={["chip my-2 flex min-w-0 shrink items-center rounded-press bg-[var(--tone)] pl-2 text-meta whitespace-nowrap max-w-[60%]"]}>
+        <span class={["chip my-1 flex h-6 min-w-0 shrink items-center rounded-press bg-[var(--fill)] pl-2 text-meta whitespace-nowrap max-w-[60%]"]}>
           <span class="min-w-0 truncate" title={chip.label}>{chip.label}</span>
           <button type="button" aria-label="Remove {chip.label}" onclick={remove} class="-my-3 -mr-2 -ml-1 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center">
             <Icon name="close" />

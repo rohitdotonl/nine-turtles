@@ -93,9 +93,9 @@
       class={["shortcuts-list min-h-0 overflow-y-auto border-b px-6 pt-1 pb-2 shortcut-region", more ? "border-[var(--line)]" : "border-transparent"]}
     >
       <!-- Two columns, each its own stack, so a short group never leaves a hole beside a long one; on a narrow screen they stack in that order. -->
-      <div class="grid gap-x-12 gap-y-8 md:grid-cols-2">
+      <div class="grid gap-x-12 gap-y-6 md:grid-cols-2">
         {#each COLUMNS as column, side (side)}
-          <div class="flex min-w-0 flex-col gap-8">
+          <div class="flex min-w-0 flex-col gap-6">
             {#each column.filter((each) => shown.some((shortcut) => shortcut.group === each)) as group (group)}
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
@@ -103,10 +103,10 @@
                 <table class="w-full text-left text-meta">
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
-                      <tr>
-                        <td class="py-1 pr-4 align-middle">{shortcut.action}</td>
+                      <tr class="h-7">
+                        <td class="pr-4 align-middle">{shortcut.action}</td>
                         <!-- Each shortcut stays whole; on a narrow phone the alternatives wrap at the slashes. -->
-                        <td class="py-1 text-right align-middle whitespace-nowrap">
+                        <td class="text-right align-middle whitespace-nowrap">
                           {#each shortcut.keys as key, index (key)}{#if index > 0}{" "}{/if}<span class="whitespace-nowrap"
                               >{#if index > 0}<span class="text-muted">{shortcut.either ? "or " : "/ "}</span>{/if}{@render caps(key)}</span
                             >{/each}

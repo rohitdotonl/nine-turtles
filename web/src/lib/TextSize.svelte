@@ -79,7 +79,7 @@
     gap: 0.25rem;
     padding: 0.25rem;
     border-radius: var(--radius-press);
-    background-color: var(--tone);
+    background-color: var(--fill);
   }
   /* Each A is a flat cell of the capsule: no fill, no shadow, the segments' 7px corners for the pointer's tone. */
   .step {
@@ -124,7 +124,7 @@
   }
   @media (hover: hover) {
     .step:not([aria-disabled="true"]):hover {
-      background-color: var(--hover);
+      background-color: var(--fill);
     }
   }
   @media (forced-colors: active) {
