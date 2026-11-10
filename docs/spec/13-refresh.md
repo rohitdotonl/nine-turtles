@@ -8,7 +8,7 @@
 - **Refresh** (its key, `r`, shown beside it) is in the More (…) menu beside every list's title, on phones too (section 6).
 - Because fetching already happened in the background, pressing `r` is instant. It shows the list from the top again, with the new items, and updates the sidebar's unread numbers. Those numbers also wait for `r`, so nothing in the sidebar changes under you either. When nothing new has arrived, the note says so: "Nothing new has arrived since 14:05." (when the list last loaded; a day for an older load), with ×, so a refresh is never silent (decision 0229). It's a passing line: it never takes away an Undo (`u` still undoes the last action) or covers a failed save's line.
 - Opening or reloading the app always shows the latest state.
-- On a phone, the feeds screen (section 20) has no Refresh of its own: its unread dots catch up as you arrive on it (back from a list, or coming back to the app), and then stay still while you look at it (decision 0188).
+- On a phone, the feeds screen (section 20) has no Refresh of its own: Unread's dot catches up as you arrive on it (back from a list, or coming back to the app), and then stay still while you look at it (decision 0188).
 - No pull-to-refresh on phones; there's Refresh in the list's More menu, and Show in the "New articles" note, instead.
 
 **How to check it**

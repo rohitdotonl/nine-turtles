@@ -8,8 +8,9 @@ V1, item 2). Its look gets a refinement round.*
 - **Write back on every article** of a person you follow (never a
   publication's, decision 0192): at the article's
   end, under its closing rule (and under "Read the rest on …" for a summary), one
-  centred button, **Write back to Tomas Berg**: the solid ink button with a
-  paper-plane icon, the only solid button in the reading pane, naming them
+  centred button, **Write back to Tomas Berg**: an outlined button with a
+  paper-plane icon, as Mark all as read ends a list, so it's quieter than
+  the writing (decision 0242; solid ink before), naming them
   in full, by the name in the sidebar ("Write back to Maya Chen"; the
   owner's core path, points 6 and 7, decision 0183; the first-name rule
   went), with the address

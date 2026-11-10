@@ -82,7 +82,7 @@ async function openBlogs(page: Page, names: string[]): Promise<number[]> {
   return ids;
 }
 
-test("a feed put in two folders appears under both, with its unread dot in each", async ({ page }) => {
+test("a feed put in two folders appears under both", async ({ page }) => {
   const blog = unique("filed");
   const [first, second] = [unique("Essays"), unique("Letters")];
   await openBlogs(page, [blog]);
@@ -125,10 +125,10 @@ test("a feed put in two folders appears under both, with its unread dot in each"
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.locator("#list-heading")).toContainText(`Renamed ${blog}`);
 
-  // Folders are listed with their dots. Each one Edit made or chose opened, to show them in it
+  // Folders are listed (their unread kept only for the tests). Each one Edit made or chose opened, to show them in it
   // (the owner's core path, point 14); its arrow closes and opens it again.
   for (const folder of [first, second]) {
-    await expect(sidebar(page).getByRole("link", { name: `${folder} unread` }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
+    await expect(sidebar(page).getByRole("link", { name: `${folder}`, exact: true }).and(page.locator(`[data-unread="3"]`))).toBeVisible();
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await toggle.click();
@@ -137,10 +137,10 @@ test("a feed put in two folders appears under both, with its unread dot in each"
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
   }
   // Under both, and nowhere else.
-  await expect(sidebar(page).getByRole("link", { name: `Renamed ${blog} unread` }).and(page.locator(`[data-unread="3"]`))).toHaveCount(2);
-  // A folder's arrow sits at the row's right end, over its dot, so the name starts on the
-  // margin with nothing before it; every dot still sits at one right edge (decisions 0041, 0123).
-  const folderLink = sidebar(page).getByRole("link", { name: `${first} unread` }).and(page.locator(`[data-unread="3"]`));
+  await expect(sidebar(page).getByRole("link", { name: `Renamed ${blog}`, exact: true }).and(page.locator(`[data-unread="3"]`))).toHaveCount(2);
+  // A folder's arrow sits at the row's right end, so the name starts on the
+  // margin with nothing before it (decisions 0041, 0123).
+  const folderLink = sidebar(page).getByRole("link", { name: `${first}`, exact: true }).and(page.locator(`[data-unread="3"]`));
   const arrow = (await sidebar(page).getByRole("button", { name: `What's in ${first}` }).boundingBox())!;
   const folderBox = (await folderLink.boundingBox())!;
   expect(Math.abs(arrow.x + arrow.width - (folderBox.x + folderBox.width))).toBeLessThan(1);
@@ -154,13 +154,12 @@ test("a feed put in two folders appears under both, with its unread dot in each"
     });
   const labelEdge = await nameStart(sidebar(page).getByRole("link", { name: "Unread", exact: true }));
   expect(Math.abs((await nameStart(folderLink)) - labelEdge + 26)).toBeLessThan(1);
-  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog} unread` }).and(page.locator(`[data-unread="3"]`)).first())) - labelEdge)).toBeLessThan(1);
-  const dotEnd = (link: Locator) => link.locator(".sidebar-dot").evaluate((element) => element.getBoundingClientRect().right);
-  const feedLink = sidebar(page).getByRole("link", { name: `Renamed ${blog} unread` }).and(page.locator(`[data-unread="3"]`)).first();
-  expect(Math.abs((await dotEnd(folderLink)) - (await dotEnd(feedLink)))).toBeLessThan(1);
+  expect(Math.abs((await nameStart(sidebar(page).getByRole("link", { name: `Renamed ${blog}`, exact: true }).and(page.locator(`[data-unread="3"]`)).first())) - labelEdge)).toBeLessThan(1);
+  // No dots on folders or people: only Unread carries one (decision 0242).
+  await expect(sidebar(page).locator("[data-folder-link] .sidebar-dot, [data-unread] .sidebar-dot")).toHaveCount(0);
 
   // A folder's own list holds its feeds' articles.
-  await sidebar(page).getByRole("link", { name: `${first} unread` }).and(page.locator(`[data-unread="3"]`)).click();
+  await sidebar(page).getByRole("link", { name: `${first}`, exact: true }).and(page.locator(`[data-unread="3"]`)).click();
   await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: first })).toBeFocused();
   await expect(page.getByRole("region", { name: first }).getByRole("listitem")).toHaveCount(3);
@@ -240,7 +239,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(page.getByRole("region", { name: `Blog ${blog}` }).getByRole("listitem")).toHaveCount(3);
   // One article read.
   await page.keyboard.press("j");
-  await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="2"]`))).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: `Blog ${blog}`, exact: true }).and(page.locator(`[data-unread="2"]`))).toBeVisible();
 
   await editWho(page, `Blog ${blog}`);
   // At the foot of Edit, in red words that say what it does, a full row to press.
@@ -260,7 +259,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
 
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(line(page)).toHaveText("Undone.");
-  await expect(sidebar(page).getByRole("link", { name: `Blog ${blog} unread` }).and(page.locator(`[data-unread="2"]`))).toBeVisible();
+  await expect(sidebar(page).getByRole("link", { name: `Blog ${blog}`, exact: true }).and(page.locator(`[data-unread="2"]`))).toBeVisible();
 
   // The other blog: star its newest article, then unsubscribe.
   await sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${other}`) }).click();

@@ -10,7 +10,7 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 <p class="lede">
   Liked something? Tell the person who wrote it. At the end of each article
-  from someone you follow is a button to write back to them, by email.
+  from someone you follow is an outlined button to write back to them, by email.
 </p>
 
 Write back is for people. A publication, such as a magazine, has no Write
