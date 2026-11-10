@@ -5,8 +5,9 @@
 import type { Folder } from "./shapes";
 import { change, type Refusal } from "./feeds";
 import { api } from "./updates.svelte";
-import { isRecord } from "./http";
+import { isRecord, sendChange } from "./http";
 import { dayOrToday } from "./times";
+import { readKept, type Kept } from "./recentlyUnsubscribed";
 
 /** One row: a person with every place they were joined from, or a place on its own. */
 export type Tended = {
@@ -30,8 +31,8 @@ export type Tended = {
 /** A place as the server lists it, with the person it was joined into, if any. */
 type Place = Omit<Tended, "places"> & { person: number | null; personName: string | null };
 
-/** Everyone, one row per person, as the sidebar's rows; see `foldPeople`. */
-export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[] }> {
+/** Everyone, one row per person, as the sidebar's rows (see `foldPeople`), and who's kept from recent unsubscribes. */
+export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]; kept: Kept[] }> {
   const response = await api("/api/tidy/feeds", { cache: "no-store" });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   const body: unknown = await response.json();
@@ -52,6 +53,7 @@ export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]
       })),
     ),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
+    kept: readKept(isRecord(body) ? body.unsubscribed : undefined),
   };
 }
 
@@ -144,6 +146,11 @@ export async function unsubscribeAll(ids: number[]): Promise<Refusal | undefined
 /** Undo for unsubscribing from several feeds. */
 export async function resubscribeAll(ids: number[]): Promise<Refusal | undefined> {
   return (await change("/api/tidy/resubscribe", { feeds: ids })).refusal;
+}
+
+/** Bring back, under Recently unsubscribed (decision 0240): "too-many" past the most feeds a reader follows. */
+export async function bringBackAll(ids: number[]): Promise<Refusal | "too-many" | undefined> {
+  return (await sendChange("/api/tidy/resubscribe", { feeds: ids, bring_back: true }, ["too-late", "too-many"])).refusal;
 }
 
 /**

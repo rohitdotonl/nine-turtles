@@ -3,16 +3,15 @@
 //! unsubscribing, with undo.
 //!
 //! Unsubscribing hides the feed from that reader at once (its background
-//! checks stop once nobody follows it), but keeps everything for a few
-//! minutes, so Undo can bring it back whole, read history included. After
-//! that (or as soon as the reader unsubscribes from another feed, since Undo
-//! only ever reverses the last action) the reader's unstarred entries and
-//! folder pairs for it are removed for good, and a folder it was the last
-//! one in goes with it. Their starred articles stay in
-//! Starred, so their subscription's line stays too, hidden, for its name.
-//! Other readers who follow the feed keep it exactly as it was; when nobody
-//! follows it any more, its articles nobody starred go too
-//! (ENGINEERING.md → "Data").
+//! checks stop once nobody follows it), but keeps everything for 30 days
+//! (`KEPT_FOR`, decision 0240), so Undo straight afterwards, or Bring back
+//! under Recently unsubscribed, can bring it back whole, read history
+//! included. After that the reader's unstarred entries and folder pairs for
+//! it are removed for good, and a folder it was the last one in goes with
+//! it. Their starred articles stay in Starred, so their subscription's line
+//! stays too, hidden, for its name. Other readers who follow the feed keep
+//! it exactly as it was; when nobody follows it any more, its articles
+//! nobody starred go too (ENGINEERING.md → "Data").
 
 use axum::{
     Json, Router,
@@ -41,6 +40,10 @@ pub use shared::{Deleted, Renamed, delete, named, put_back, rename};
 /// offers Undo only until the reader's next action, which is almost always
 /// sooner.
 pub const UNDO_FOR: i64 = 10 * 60;
+
+/// How long a feed the reader (or an assistant) unsubscribed from is kept,
+/// hidden, for Bring back, in seconds (decision 0240).
+pub const KEPT_FOR: i64 = 30 * 24 * 60 * 60;
 
 /// The longest name a feed or folder can have, in characters.
 pub const LONGEST_NAME: usize = 200;
@@ -353,23 +356,19 @@ async fn unsubscribe(
     }
 }
 
-/// Where a reader unsubscribed, which decides how long the feed waits,
-/// hidden, to be brought back.
+/// Who unsubscribed: Recently unsubscribed says when it was an assistant.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Leaving {
-    /// Ten minutes (SPEC section 15). Any feed the reader unsubscribed from
-    /// before is cleared for good first, since Undo only reverses the last
-    /// action.
+    /// The reader, on the screen.
     Screen,
-    /// 30 days (`mcp::KEPT_FOR`), with Bring back in Settings (SPEC
-    /// section 33). Only a feed this hides: one the reader unsubscribed from
-    /// elsewhere keeps its own time.
+    /// An assistant (SPEC section 33). Only a feed this hides is marked:
+    /// one the reader unsubscribed from elsewhere stays theirs.
     Assistant,
 }
 
 /// Unsubscribes the reader from a feed: it's hidden straight away, and no
 /// longer checked if nobody else follows it. Background checking clears it
-/// for good once its time is up. Answers whether they followed it.
+/// for good once its 30 days are up. Answers whether they followed it.
 pub async fn leave(
     db: &sqlx::SqlitePool,
     person: i64,
@@ -377,25 +376,25 @@ pub async fn leave(
     at: i64,
     leaving: Leaving,
 ) -> Result<bool, sqlx::Error> {
-    if leaving == Leaving::Screen {
-        clear_unsubscribed(db, Some(person), i64::MAX).await?;
-    }
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let hidden = hide(&mut transaction, person, &[id], at).await? > 0;
     if hidden && leaving == Leaving::Assistant {
-        sqlx::query("UPDATE subscriptions SET kept_until = ? WHERE person_id = ? AND feed_id = ?")
-            .bind(at + crate::mcp::KEPT_FOR)
-            .bind(person)
-            .bind(id)
-            .execute(&mut *transaction)
-            .await?;
+        sqlx::query(
+            "UPDATE subscriptions SET by_assistant = 1 WHERE person_id = ? AND feed_id = ?",
+        )
+        .bind(person)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await?;
     }
     transaction.commit().await?;
     Ok(hidden)
 }
 
-/// Hides these feeds from the reader, as unsubscribed at `now`, and stops
-/// checking any that nobody else follows. Answers how many they followed.
+/// Hides these feeds from the reader, as unsubscribed at `now` and kept
+/// until `KEPT_FOR` later, and stops checking any that nobody else follows.
+/// Answers how many they followed. (The import's Undo clears them at once
+/// after this, with `clear`, which doesn't wait.)
 pub async fn hide(
     connection: &mut SqliteConnection,
     person: i64,
@@ -403,12 +402,14 @@ pub async fn hide(
     now: i64,
 ) -> Result<u64, sqlx::Error> {
     let hidden: Vec<i64> = sqlx::query_scalar(
-        "UPDATE subscriptions SET unsubscribed_at = ?, kept_until = NULL
-         WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))
+        "UPDATE subscriptions SET unsubscribed_at = ?1, kept_until = ?1 + ?2, by_assistant = 0,
+             removed_at = NULL
+         WHERE person_id = ?3 AND feed_id IN (SELECT value FROM json_each(?4))
              AND unsubscribed_at IS NULL
          RETURNING feed_id",
     )
     .bind(now)
+    .bind(KEPT_FOR)
     .bind(person)
     .bind(serde_json::to_string(feeds).unwrap_or_else(|_| "[]".to_owned()))
     .fetch_all(&mut *connection)
@@ -420,7 +421,8 @@ pub async fn hide(
 }
 
 /// Undo for unsubscribing: the feed comes back as it was, and is checked
-/// again soon. Too late once it has been cleared.
+/// again soon. Too late once it has been cleared, or once what the reader
+/// chose to remove with it has gone.
 async fn resubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -428,6 +430,11 @@ async fn resubscribe(
 ) -> Response {
     let back: Result<bool, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        // What the reader chose to remove has gone: Undo would bring back
+        // less than it says, so it's too late (Bring back still can).
+        if crate::feeds::removed_already(&mut transaction, person, &[id]).await? {
+            return Ok(false);
+        }
         let back = follow_again(&mut transaction, person, id, now()).await?;
         transaction.commit().await?;
         Ok(back)
@@ -458,24 +465,24 @@ pub async fn take_out_of_folders(
     Ok(())
 }
 
-/// Clears, for good, every subscription unsubscribed at or before `before`
-/// that isn't cleared yet: one reader's, or (`None`) everyone's. A feed an
-/// assistant unsubscribed from waits until its `kept_until` has passed
-/// (30 days, `mcp::KEPT_FOR`), whatever `before` says. Answers how many.
+/// Clears, for good, every subscription whose time to be brought back has
+/// passed by `at`: one reader's, or (`None`) everyone's. That's its
+/// `kept_until` (30 days, `KEPT_FOR`), or for one unsubscribed before
+/// unsubscribes were kept, `UNDO_FOR` after it. Answers how many.
 pub async fn clear_unsubscribed(
     db: &sqlx::SqlitePool,
     person: Option<i64>,
-    before: i64,
+    at: i64,
 ) -> Result<usize, sqlx::Error> {
     let waiting: Vec<(i64, i64)> = sqlx::query_as(
         "SELECT person_id, feed_id FROM subscriptions
-         WHERE unsubscribed_at <= ? AND cleared = 0 AND (?2 IS NULL OR person_id = ?2)
-             AND (kept_until IS NULL OR kept_until <= ?3)
+         WHERE unsubscribed_at IS NOT NULL AND cleared = 0 AND (?2 IS NULL OR person_id = ?2)
+             AND COALESCE(kept_until, unsubscribed_at + ?3) <= ?1
          ORDER BY person_id, feed_id",
     )
-    .bind(before)
+    .bind(at)
     .bind(person)
-    .bind(now())
+    .bind(UNDO_FOR)
     .fetch_all(db)
     .await?;
     let mut cleared = 0;

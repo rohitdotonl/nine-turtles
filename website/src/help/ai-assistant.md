@@ -42,7 +42,8 @@ brings it straight back, with no need to connect it again.
 
 ## Good to know
 
-- If an assistant unfollows someone, they're kept for 30 days, listed in
-  **Connected assistants** with **Bring back**.
+- If an assistant unfollows someone, they're kept for 30 days, listed under
+  **Recently unsubscribed** in **Settings › Everyone you follow** with
+  **Bring back**, as your own unfollows are.
 - For an assistant that can't open the Connect page, press **Make an
   assistant key** and give it that key instead. It's shown once.

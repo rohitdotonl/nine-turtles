@@ -473,7 +473,7 @@ struct PlaceForm {
 
 /// "Unsubscribe from …": with `remove_kept`, what the reader starred or
 /// marked in every place of theirs, and the note on the person, go too once
-/// it's cleared for good (SPEC section 42, `notes::drop_kept`).
+/// Undo has passed (SPEC section 42, `notes::drop_kept_due`).
 #[derive(Deserialize)]
 struct LeavingForm {
     feed: i64,
@@ -591,7 +591,6 @@ async fn unsubscribe_person(
     Json(form): Json<LeavingForm>,
 ) -> Response {
     let left = async {
-        folders::clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let places: Vec<i64> = sqlx::query_scalar(
             "SELECT feed_id FROM subscriptions

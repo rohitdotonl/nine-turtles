@@ -485,11 +485,20 @@ async fn a_feed_unsubscribed_with_no_stars_is_removed_entirely() {
     reader
         .post(&format!("/api/feeds/{gamma}/unsubscribe"), json!({}))
         .await;
-    // Unsubscribing from another feed ends the first one's undo.
+    // Unsubscribing from another feed no longer ends the first one's keep
+    // (decision 0240); its 30 days passing does.
     let beta = reader.follow("beta").await;
     reader
         .post(&format!("/api/feeds/{beta}/unsubscribe"), json!({}))
         .await;
+    sqlx::query("UPDATE subscriptions SET kept_until = 0 WHERE feed_id = ?")
+        .bind(gamma)
+        .execute(&reader.state.db)
+        .await
+        .unwrap();
+    folders::clear_unsubscribed(&reader.state.db, None, nine_turtles::now())
+        .await
+        .unwrap();
     let (status, _) = reader
         .post(&format!("/api/feeds/{gamma}/resubscribe"), json!({}))
         .await;
@@ -678,7 +687,7 @@ async fn undoing_an_import_takes_away_exactly_what_it_added() {
 }
 
 #[tokio::test]
-async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and_never_after_undo()
+async fn background_rounds_clear_an_unsubscribed_feed_only_after_thirty_days_and_never_after_undo()
 {
     let reader = Reader::new().await;
     let alpha = reader.follow("alpha").await;
@@ -695,11 +704,16 @@ async fn background_rounds_clear_an_unsubscribed_feed_only_after_ten_minutes_and
         .await;
     let now = nine_turtles::now();
 
-    // Nine minutes later: still there, so Undo would still work.
-    checking::round(&reader.state, now + 9 * 60).await.unwrap();
+    // A day short of 30 days later: still there, so Bring back would still work.
+    let days = |count: i64| count * 24 * 60 * 60;
+    checking::round(&reader.state, now + days(29))
+        .await
+        .unwrap();
     assert_eq!(feed_lines(alpha).await, 1);
-    // Eleven minutes later: gone for good (nothing starred kept it).
-    checking::round(&reader.state, now + 11 * 60).await.unwrap();
+    // A day past: gone for good (nothing starred kept it).
+    checking::round(&reader.state, now + days(31))
+        .await
+        .unwrap();
     assert_eq!(feed_lines(alpha).await, 0);
 
     // Undo that arrives before the clean-up wins: clearing then leaves the

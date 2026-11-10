@@ -78,10 +78,26 @@ const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
      FROM subscriptions WHERE person_id = ? AND unsubscribed_at IS NULL
      ORDER BY title COLLATE NOCASE, feed_id";
 
+/// A feed the reader unsubscribed from (or an assistant did) that's still
+/// kept, so Bring back can follow it again (decision 0240).
+#[derive(Serialize, sqlx::FromRow)]
+struct Kept {
+    feed_id: i64,
+    /// Their person's name, else the place's (the place's own while the
+    /// person is still followed elsewhere).
+    title: String,
+    /// The person it was joined into, so their places left together are one
+    /// row; none while the person is still followed.
+    person: Option<i64>,
+    unsubscribed_at: i64,
+    kept_until: i64,
+    by_assistant: bool,
+}
+
 /// Every followed feed, A to Z, with its newest article and its folders,
-/// and every folder.
+/// every folder, and what's kept from recent unsubscribes, newest first.
 async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
-    let listed: Result<(Vec<Listed>, Vec<Folder>), sqlx::Error> = async {
+    let listed = async {
         let mut transaction = state.db.begin().await?;
         let mut feeds: Vec<Listed> = sqlx::query_as(LISTED)
             .bind(person)
@@ -95,6 +111,24 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
             .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
+        let kept: Vec<Kept> = sqlx::query_as(
+            "SELECT feed_id, CASE WHEN followed THEN subscriptions.title
+                     ELSE COALESCE(writers.name, subscriptions.title) END AS title,
+                 CASE WHEN followed THEN NULL ELSE writer_id END AS person,
+                 unsubscribed_at, kept_until, by_assistant
+             FROM (SELECT *, EXISTS (SELECT 1 FROM subscriptions AS theirs
+                       WHERE theirs.person_id = subscriptions.person_id
+                           AND theirs.writer_id = subscriptions.writer_id
+                           AND theirs.unsubscribed_at IS NULL) AS followed
+                   FROM subscriptions) AS subscriptions
+                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
+             WHERE subscriptions.person_id = ? AND kept_until IS NOT NULL
+                 AND unsubscribed_at IS NOT NULL AND cleared = 0
+             ORDER BY unsubscribed_at DESC, feed_id",
+        )
+        .bind(person)
+        .fetch_all(&mut *transaction)
+        .await?;
         transaction.commit().await?;
         let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
         for (feed, folder) in memberships {
@@ -103,11 +137,14 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
         for feed in &mut feeds {
             feed.folders = by_feed.remove(&feed.id).unwrap_or_default();
         }
-        Ok((feeds, folders))
+        Ok::<_, sqlx::Error>((feeds, folders, kept))
     }
     .await;
     match listed {
-        Ok((feeds, folders)) => Json(json!({ "feeds": feeds, "folders": folders })).into_response(),
+        Ok((feeds, folders, kept)) => {
+            Json(json!({ "feeds": feeds, "folders": folders, "unsubscribed": kept }))
+                .into_response()
+        }
         Err(error) => database_problem("listing feeds to tidy", &error),
     }
 }
@@ -115,6 +152,16 @@ async fn list(SignedIn(person): SignedIn, State(state): State<AppState>) -> Resp
 #[derive(Deserialize)]
 struct Chosen {
     feeds: Vec<i64>,
+}
+
+#[derive(Deserialize)]
+struct BringingBack {
+    feeds: Vec<i64>,
+    /// Bring back under Recently unsubscribed, rather than Undo: it may
+    /// bring a place back without what "Remove them too" removed, and
+    /// counts towards the most feeds a reader follows (decision 0240).
+    #[serde(default)]
+    bring_back: bool,
 }
 
 /// The chosen feeds as one JSON list, for `json_each`; None if there are
@@ -126,8 +173,8 @@ fn as_list(feeds: &[i64]) -> Option<String> {
     serde_json::to_string(feeds).ok()
 }
 
-/// Unsubscribes from every chosen feed at once. Feeds unsubscribed before
-/// are cleared for good first, since Undo only reverses the last action.
+/// Unsubscribes from every chosen feed at once, each kept 30 days
+/// (`folders::KEPT_FOR`).
 async fn unsubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
@@ -137,7 +184,6 @@ async fn unsubscribe(
         return problem(StatusCode::BAD_REQUEST, "none-chosen");
     }
     let done: Result<u64, sqlx::Error> = async {
-        folders::clear_unsubscribed(&state.db, Some(person), i64::MAX).await?;
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         let hidden = folders::hide(&mut transaction, person, &form.feeds, now()).await?;
         transaction.commit().await?;
@@ -151,30 +197,40 @@ async fn unsubscribe(
     }
 }
 
-/// Undo for unsubscribing from several feeds: every one still waiting comes
-/// back as it was. Too late once they've been cleared.
+/// Undo for unsubscribing from several feeds, or Bring back: every one still
+/// waiting comes back as it was. Too late once they've been cleared, or,
+/// for Undo, once what the reader chose to remove with them has gone.
 async fn resubscribe(
     SignedIn(person): SignedIn,
     State(state): State<AppState>,
-    Json(form): Json<Chosen>,
+    Json(form): Json<BringingBack>,
 ) -> Response {
     if as_list(&form.feeds).is_none() {
         return problem(StatusCode::BAD_REQUEST, "none-chosen");
     }
-    let back: Result<u64, sqlx::Error> = async {
+    let back: Result<Option<u64>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
+        if form.bring_back {
+            let following = crate::admin::following(&mut transaction, person).await?;
+            if following + form.feeds.len() as i64 > crate::admin::MOST_FEEDS {
+                return Ok(None);
+            }
+        } else if crate::feeds::removed_already(&mut transaction, person, &form.feeds).await? {
+            return Ok(Some(0));
+        }
         let now = now();
         let mut back = 0;
         for &feed in &form.feeds {
             back += u64::from(follow_again(&mut transaction, person, feed, now).await?);
         }
         transaction.commit().await?;
-        Ok(back)
+        Ok(Some(back))
     }
     .await;
     match back {
-        Ok(0) => problem(StatusCode::CONFLICT, "too-late"),
-        Ok(back) => Json(json!({ "resubscribed": back })).into_response(),
+        Ok(None) => problem(StatusCode::CONFLICT, "too-many"),
+        Ok(Some(0)) => problem(StatusCode::CONFLICT, "too-late"),
+        Ok(Some(back)) => Json(json!({ "resubscribed": back })).into_response(),
         Err(error) => database_problem("undoing unsubscribing from several feeds", &error),
     }
 }

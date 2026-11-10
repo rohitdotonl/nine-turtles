@@ -6,7 +6,9 @@
   since …" after six months, and their folders. A row opens their page.
   Choose…, as Edit in Apple Books, puts a tick box on each row; with some
   chosen, the bar at the foot moves them to one folder or unsubscribes from
-  them all, in one go, with one Undo until your next action.
+  them all, in one go, with one Undo until your next action. Last,
+  Recently unsubscribed: who was left in the last 30 days, each with Bring
+  back (RecentlyUnsubscribed.svelte, decision 0240).
 -->
 <script lang="ts">
   import type { LoadedLibrary } from "./library.svelte";
@@ -14,10 +16,13 @@
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import NotWorking from "./NotWorking.svelte";
+  import RecentlyUnsubscribed from "./RecentlyUnsubscribed.svelte";
+  import type { Kept } from "./recentlyUnsubscribed";
+  import { shortName } from "./assistants";
   import PageHead from "./PageHead.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
-  import { deleteFolder, refused, undoRefused } from "./feeds";
+  import { deleteFolder, explain, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import LoadFailed from "./LoadFailed.svelte";
@@ -25,6 +30,7 @@
   import {
     folderNames,
     listTended,
+    bringBackAll,
     moveAll,
     movedMessage,
     placeIds,
@@ -57,6 +63,7 @@
 
   let feeds: Tended[] | undefined = $state();
   let folders: Folder[] = $state([]);
+  let kept: Kept[] = $state([]);
   let failed = $state(false);
   let editing = $state(false);
   let chosen: number[] = $state([]);
@@ -95,7 +102,7 @@
 
   async function load() {
     try {
-      ({ feeds, folders } = await listTended());
+      ({ feeds, folders, kept } = await listTended());
       failed = false;
     } catch {
       failed = true;
@@ -158,6 +165,31 @@
     }
     await done(unsubscribedMessage(going.map((feed) => feed.title)), async () => {
       const refusal = await resubscribeAll(placeIds(going));
+      if (refusal) throw refusal;
+    });
+  }
+
+  /** Bring back, under Recently unsubscribed: they're followed again, with Undo until the next action. */
+  async function bringBack(row: Kept) {
+    if (busy) return;
+    busy = true;
+    const index = kept.indexOf(row);
+    const name = shortName(row.title || "Untitled");
+    const why = await bringBackAll(row.ids);
+    busy = false;
+    if (why) {
+      const words =
+        why === "too-late" ? `${name} can't be brought back: they're already gone.` : why === "too-many" ? explain("too-many") : refused(why, "feed");
+      [message, undo, refusal] = [words, undefined, true];
+      await load();
+      // The row may have gone: the keyboard's place moves to the one now there, or the line.
+      await tick();
+      const left = [...document.querySelectorAll<HTMLButtonElement>("[data-kept]")];
+      (left[Math.min(index, left.length - 1)] ?? editButton)?.focus();
+      return;
+    }
+    await done(`${name} is back.`, async () => {
+      const refusal = await unsubscribeAll(row.ids);
       if (refusal) throw refusal;
     });
   }
@@ -269,6 +301,7 @@
             {/if}
           </section>
         {/each}
+        <RecentlyUnsubscribed {kept} {busy} onBringBack={bringBack} />
       {/if}
 
       <!-- With Choose on: what's chosen, and what can be done with it, in one bar that stays at the foot. -->
