@@ -14,8 +14,8 @@ no answer, mostly while waiting.
 2. **An article on its way says so:** "Loading the article…" under the
    byline, muted, in the reading face, after half a second.
 3. **A video on its way says so.** Pressed, the Play box stays over
-   YouTube's player, saying "Starting the video…", until the player has
-   loaded. The publisher's player still plays it (second floor).
+   YouTube's player until the player has loaded, saying "Starting the
+   video…" after half a second. The publisher's player still plays it (second floor).
 4. **Signed out says so.** A mark the server refused because the reader is
    no longer signed in says "You're signed out, so the star wasn't saved."
    with **Sign in** in Try again's place (a reload: the sign-in page, then

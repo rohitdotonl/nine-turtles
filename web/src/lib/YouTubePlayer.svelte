@@ -8,7 +8,7 @@
 
   Pressing Play swaps the box for YouTube's privacy-enhanced player, in the
   same place and size (nothing else moves); until that player has loaded, the
-  box stays over it saying "Starting the video…" (decision 0230). The player
+  box stays over it, saying "Starting the video…" once that takes half a second (decision 0230). The player
   starts at once and takes the keyboard, so Space and its own keys work straight away. Tab leaves it.
 
   It picks up where you stopped, on any device: while it plays the player
@@ -25,6 +25,7 @@
 -->
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
+  import LateLine from "./LateLine.svelte";
   import { clock, devicePlace, resumeFrom, savePlace, SAVE_EVERY_MS, serverPlace } from "./podcasts";
   import { deviceText, setDeviceText } from "./device";
   import { PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, VIDEO_SPEED_KEY, videoSpeed, type Chapter } from "./youtube";
@@ -184,10 +185,10 @@
       sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
     ></iframe>
     {#if !started}
-      <!-- The box stays, in the player's place and size, until YouTube's player has loaded: the press shows it worked. -->
-      <div class="video-play video-starting" aria-live="polite">
+      <!-- The box stays, in the player's place and size, until YouTube's player has loaded; after half a second it says so. -->
+      <div class="video-play video-starting">
         <span class="video-title" aria-hidden="true">{title}</span>
-        <span class="video-word">Starting the video…</span>
+        <LateLine class="min-h-6" words="Starting the video…" />
       </div>
     {/if}
   {:else}

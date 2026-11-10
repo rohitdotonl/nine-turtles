@@ -62,8 +62,8 @@ you paste.
   rather than cut its words), then a round Play mark and **Play video**. Still nothing
   loads from YouTube until it's pressed (decision 0072). A Short's box stands
   up (9 : 16, at most 20rem wide); every other video's is 16 : 9. Pressed,
-  the box stays over YouTube's player, its words now "Starting the video…",
-  until the player has loaded, so the press shows it worked (decision 0230).
+  the box stays over YouTube's player until the player has loaded, its words
+  "Starting the video…" once that takes half a second, so the press shows it worked (decision 0230).
 - **Chapters you can press:** when the description lists at least two times,
   each at the start or end of a line and each later than the one before
   ("0:00 First light", "The heron – 4:00"), they're listed under the box as
