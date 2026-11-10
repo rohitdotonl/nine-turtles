@@ -97,13 +97,16 @@ export function until(at: number, now: Date = new Date()): string {
   return shortDay(date, now);
 }
 
-/** When a paused feed was paused, for Edit feed: "Paused today.", "Paused on 23 Oct." (SPEC section 15). */
-export function pausedSince(at: number, now: Date = new Date()): string {
+/**
+ * When a paused feed was paused (SPEC section 15): "Paused today.", and
+ * "Paused on 23 Oct." in Edit, or "Paused since 23 Oct." on its list and page.
+ */
+export function pausedSince(at: number, now: Date = new Date(), word: "on" | "since" = "on"): string {
   const date = new Date(at * 1000);
   const sameDay =
     date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth() && date.getDate() === now.getDate();
   if (sameDay) return "Paused today.";
-  return `Paused on ${shortDay(date, now)}.`;
+  return `Paused ${word} ${shortDay(date, now)}.`;
 }
 
 /** Refresh found nothing new (decision 0229): "Nothing new has arrived since 14:05.", or "… since 3 Oct." for an older load. */

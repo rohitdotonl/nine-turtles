@@ -15,8 +15,9 @@
   (Install the app on any device, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
-  (Your plan while nine turtles takes payments, Email with Change…, Weekly
-  email, Sign out, Delete data… and, for everyone but the owner, Delete account…).
+  (Your plan while nine turtles takes payments, Email with Change…, Password,
+  Weekly email, Sign out); and, apart at the very end, Leaving (Delete data…
+  and, for everyone but the owner, Delete account…, decision 0237).
 
   Each row on the first page has its icon at the left, in the muted grey,
   lined up with the first line of its name, and a setting's description
@@ -506,15 +507,6 @@
           <button type="button" onclick={leave} class="inset-row inset-action setting"
             ><span class="setting-label">{@render icon("sign-out")}<span class="setting-name">Sign out</span></span></button
           >
-          <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
-          <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action setting"
-            ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete data…</span></span></button
-          >
-          {#if !owner}
-            <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action setting"
-              ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete account…</span></span></button
-            >
-          {/if}
         </div>
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
         <p role="status" class={["inset-foot flex items-start gap-1.5 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" size={16} /></span>{/if}{message}</p>
@@ -528,6 +520,23 @@
             you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
           </p>
         {/if}
+      </section>
+
+      <!-- Deleting sits apart from Sign out, at the very end (decision 0237): a slip aimed at an everyday row can't land on one that removes something. -->
+      <section aria-labelledby="leaving-heading">
+        <h3 id="leaving-heading" class="settings-head">Leaving</h3>
+        <div class="inset-group">
+          <!-- Red words: these remove something. What each removes is said in the sheet it opens, before anything goes. -->
+          <button bind:this={dataButton} type="button" onclick={() => (task = "data")} class="inset-row inset-action setting"
+            ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete data…</span></span></button
+          >
+          {#if !owner}
+            <button bind:this={deleteButton} type="button" onclick={() => (task = "delete")} class="inset-row inset-action setting"
+              ><span class="setting-label">{@render icon("trash")}<span class="setting-name danger-name">Delete account…</span></span></button
+            >
+          {/if}
+        </div>
+        <p class="inset-foot">Each one says exactly what goes before anything is removed.</p>
         <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
       </section>
       {:else if page === "data"}
