@@ -188,7 +188,7 @@
 <div class={["flex flex-col gap-6", phone && "flex-1"]}>
   <div class="flex flex-col gap-2">
   <div class="flex items-center justify-between gap-3">
-    <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-serif text-heading font-semibold break-words text-ink">Edit {name}</h2>
+    <h2 bind:this={heading} tabindex="-1" class="min-w-0 font-display text-heading font-semibold break-words text-ink">Edit {name}</h2>
     {#if phone}
       <!-- The X stands for Cancel, as on a phone's Edit folder (decision 0235). -->
       <button type="button" onclick={cancel} aria-label="Close" title="Close without saving" class="btn-quiet btn-icon -mr-3 shrink-0"><Icon name="close" size="alone" /></button>

@@ -171,7 +171,8 @@ test("a setting's description sits straight under its name, and group names are 
   // Settings' Reading rows: the description straight under the name, smaller and muted.
   const name = page.locator("#unread-name");
   const hint = page.locator("#unread-hint");
-  await expect(name).toHaveCSS("font-weight", "500");
+  // Regular, as the sidebar's rows: two weights in the app, not three (decision 0246).
+  await expect(name).toHaveCSS("font-weight", "400");
   await expect(hint).toHaveCSS("line-height", /^\d+(\.\d+)?px$/);
   const [n, h] = [await name.boundingBox(), await hint.boundingBox()];
   expect(h!.y).toBeGreaterThanOrEqual(n!.y + n!.height - 1);

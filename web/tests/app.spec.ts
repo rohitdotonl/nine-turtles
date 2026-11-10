@@ -415,10 +415,13 @@ test("every font comes from nine turtles itself", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("nine-turtles.preferences", JSON.stringify({ readingFont: "atkinson" })));
   await openApp(page, "/settings");
   await page.evaluate(() => document.fonts.ready);
+  // The stand-ins are the device's own fonts, resized while ours arrive (decision 0246): nothing is downloaded for them.
   const families = await page.evaluate(() =>
-    [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family.replaceAll('"', "")),
+    [...document.fonts].filter((face) => face.status === "loaded").map((face) => face.family.replaceAll('"', "")).filter((name) => !name.includes("stand-in")),
   );
-  expect(new Set(families)).toEqual(new Set(["Literata", "Atkinson Hyperlegible Next"]));
+  // Settings' title is in Literata's display cut (decision 0246).
+  expect(families).toEqual(expect.arrayContaining(["Literata Display", "Atkinson Hyperlegible Next"]));
+  for (const family of families) expect(["Literata", "Literata Display", "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Next Plain Zero"]).toContain(family);
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
 

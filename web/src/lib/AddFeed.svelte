@@ -502,7 +502,7 @@
         shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
       <fieldset bind:this={whoGroup} class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
-        <legend class={framed ? "sr-only" : "mb-4 font-serif text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
+        <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
             {#if siteName(asking.siteUrl)}<span class="text-meta break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
