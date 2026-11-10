@@ -32,7 +32,8 @@ async function open(page: Page, path: string, name: string) {
   await appReady(page);
   // A person's list title is their name, a button ending in a "›" that screen readers don't hear.
   await expect(heading(page)).toHaveAccessibleName(name);
-  await expect(field(page)).toBeVisible();
+  // The field waits behind Search, beside More (decision 0242).
+  await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
 }
 
 test("a search starts where you are, marks the words it found, and Escape brings you back", async ({ page }) => {
@@ -101,10 +102,9 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("Escape");
   await expect(heading(page)).toHaveText(folder);
   await expect(heading(page)).toBeFocused();
-  await expect(field(page)).toHaveValue("");
-  // At rest the field says "Search articles"; back in it, the search starts in the folder again.
-  await expect(field(page)).toHaveAttribute("placeholder", "Search articles");
-  await field(page).focus();
+  // The field goes back behind Search (decision 0242); opened again it starts in the folder again.
+  await expect(field(page)).toHaveCount(0);
+  await page.keyboard.press("/");
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   // The folder, with the article still open in it (decision 0233).
   await expect(page).toHaveURL(new RegExp(`/folders/${folderId}/articles/[0-9]+$`));
@@ -115,7 +115,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
   const [id] = await start(page, [`${FEED_SITE}/blog/${name}/`]);
   await open(page, `/people/${id}`, `Blog ${name}`);
   const count = (unread: number) =>
-    page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name} unread` }).and(page.locator(`[data-unread="${unread}"]`));
+    page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name}`, exact: true }).and(page.locator(`[data-unread="${unread}"]`));
   await expect(count(3)).toBeVisible();
 
   await page.keyboard.press("/");
@@ -216,7 +216,7 @@ test("a search from Starred finds only starred ones: the place is the filter (de
   const blog = unique("starred-search");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
-  await field(page).focus();
+  await page.keyboard.press("/");
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");
   await expect(results(page)).toHaveCount(1);
@@ -227,7 +227,7 @@ test("a search from Starred finds only starred ones: the place is the filter (de
   await page.keyboard.press("Escape");
   await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Starred", exact: true }).click();
   await expect(heading(page)).toHaveText("Starred");
-  await field(page).focus();
+  await page.keyboard.press("/");
   await expect(page.getByRole("button", { name: "Remove in: Starred" })).toBeVisible();
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");

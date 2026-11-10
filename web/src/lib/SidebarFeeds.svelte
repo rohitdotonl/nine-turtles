@@ -1,31 +1,28 @@
 <!--
   The sidebar's folders and feeds (SPEC section 5): folders in the reader's
   own order (decision 0207), each
-  with a small dot when any of its feeds has something unread, and a button that
+  with a button that
   shows or hides the people and publications in it, then those in no
   folder, A to Z, under two headings: People, then Publications (decision
   0163). One in two folders is listed under both. Which folders are open is
   remembered on this device.
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
-  sits before its name, so every row's dot sits at the same right edge,
-  in one column. There are no numbers (decision 0148): a dot says something
-  is new, never how much. Unread, Starred and All start their names 46px
+  sits before its name. No row here says what's unread (decision 0242):
+  Unread's own dot does, above them. Unread, Starred and All start their names 46px
   into the sidebar, after their icons; folders, and the people and
   publications in no folder, start at the 20px margin; a folder's feeds
   start one step in, on the 46px edge, so an indent always means "inside a
   folder" (decisions 0043, 0225).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
-  selected there, and every row ends in a chevron, after its dot, because
+  selected there, and every row ends in a chevron, because
   it leads on to a screen of its own. So a folder there has no arrow of its
   own (one chevron per row): its feeds are always listed under it, a step
   in, and a tap on its name opens its list (decision 0043).
 
   While the sidebar search holds text, a flat list of the folders and feeds
   whose name contains it takes their place.
-
-  With Unread off (SPEC section 10) there are no dots.
 
   Arranging (decision 0207): a folder drags up or down, and a person or
   publication drags onto a folder, out of one, or between People and
@@ -65,7 +62,7 @@
     follow: (event: MouseEvent, next: Route) => void;
     /** The phone's feeds screen: no selection, and a chevron on every row. */
     phone?: boolean;
-    /** Unread off: no unread dots. */
+    /** Unread off: no unread state on the rows, even for the tests. */
     unreadOff?: boolean;
     /** Searches every article for what's typed in the sidebar search (decision 0231). */
     searchArticles: (words: string) => void;
@@ -217,21 +214,13 @@
 </script>
 
 <!--
-  Something unread here: the list's own unread dot, a step smaller to suit the
-  sidebar's names, at the row's end. No number is shown (decision 0148); the
-  row keeps it only as `data-unread`, unseen and unheard, for the tests.
-  Screen readers hear "unread" after the name, never a number.
+  A name alone: folders, people and publications carry no unread dot (decision
+  0242); only Unread above them does. How many are unread stays only as the
+  row's `data-unread`, unseen and unheard, for the tests.
 -->
-{#snippet dot(unread: number)}
-  {#if !unreadOff && unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}
-{/snippet}
-
-<!-- "unread" sits inside the name, so screen readers hear "Alpha unread", never a number. -->
-{#snippet name(text: string, unread = 0)}
+{#snippet name(text: string)}
   <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}
-    ><bdi>{text}</bdi>{#if !unreadOff && unread > 0}<span class="sr-only"> unread</span>{/if}</span
-  >
+  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}><bdi>{text}</bdi></span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -273,7 +262,7 @@
         editing ? "pr-12" : "pr-3.5",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title), feed.unread)}{#if !editing}{@render dot(feed.unread)}{/if}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{@render leadsOn()}</a
     >
     {@render personHandle(feed)}
   </li>
@@ -301,7 +290,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-md pr-3.5 text-ui pointer-fine:text-small", padded ? "gap-3 pl-[38px]" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name, folderUnread(folder, feeds))}{#if !editing}<span class="folder-dot flex shrink-0">{@render dot(folderUnread(folder, feeds))}</span>{/if}{@render leadsOn()}</a
+    >{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -388,10 +377,9 @@
               {/if}
             {:else if !phone}
               <!--
-                The show-or-hide arrow at the row's right end, over the dot, shown when the
-                pointer is on the row, the keyboard is on it, or on a touch screen; the dot
-                steps aside while it shows, so the folder's name starts on the margin with
-                nothing before it (decision 0123).
+                The show-or-hide arrow at the row's right end, shown when the
+                pointer is on the row, the keyboard is on it, or on a touch screen, so the
+                folder's name starts on the margin with nothing before it (decision 0123).
               -->
               <button
                 type="button"
@@ -470,18 +458,6 @@
     }
   }
   /*
-    The sidebar's dot (decision 0148): the list's unread dot (app.css
-    .unread-dot: the accent, round, CanvasText in forced colors), a step
-    smaller (6px) as the sidebar's names are smaller than the list's titles,
-    and in the row's flow at its end rather than in a gutter.
-  */
-  .sidebar-dot {
-    position: static;
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-  }
-  /*
     A faint line down the left of an open folder's feeds, under the folder's
     name, so the feeds read as its contents at a glance (decision 0123).
   */
@@ -495,18 +471,13 @@
     left: 21px;
     border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   }
-  /*
-    With a mouse or keyboard the arrow hides until it's wanted, and the dot
-    shows in its place meanwhile: made see-through rather than hidden. On a touch screen the
-    arrow always shows, and the dot steps left of it rather than under it.
-  */
+  /* With a mouse or keyboard the arrow hides until it's wanted: made see-through rather than hidden. On a touch screen it always shows. */
   @media not (pointer: coarse) {
-    .folder-row:not(:hover) .disclosure:not(:focus-visible),
-    .folder-row:is(:hover, :has(.disclosure:focus-visible)) :global(.folder-dot) {
+    .folder-row:not(:hover) .disclosure:not(:focus-visible) {
       opacity: 0;
     }
   }
-  /* A touch screen's arrow, or Edit's handle, takes the row's end: the name stops short of it. On a phone (no arrow) the dot and chevron line up with everyone else's. */
+  /* A touch screen's arrow, or Edit's handle, takes the row's end: the name stops short of it. On a phone (no arrow) the chevron lines up with everyone else's. */
   @media (pointer: coarse) {
     .folder-row:has(.disclosure, .handle) > :global(a) {
       padding-right: 2.75rem;

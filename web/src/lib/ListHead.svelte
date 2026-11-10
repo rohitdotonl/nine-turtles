@@ -1,8 +1,9 @@
 <!--
   The list's title line. The title is one line, as Apple Books' collection titles are (decision 0041): a long
   name ends in "…", with its whole name as its tooltip and read in full by screen readers, so
-  the search field below and More beside it never move. In a pane narrower than 340px it
-  steps down from 24px to 22px. Beside it, one quiet More (…) button, as Apple Books has one
+  Search and More beside it never move. In a pane narrower than 340px it
+  steps down from 24px to 22px. Beside it, Search (a magnifier, the field waiting under the title until
+  it's asked for) and one quiet More (…) button, as Apple Books has one
   per collection (decision 0038): Mark all as read, Refresh, the sort order, and "Info about …" or
   Edit folder in a person's, publication's or folder's own list (SPEC section 6). A person's or
   publication's name is itself the way to their page, a button ending in › (decision 0163).
@@ -15,7 +16,6 @@
   let {
     text,
     actions,
-    phone,
     searchOpen,
     onSearch,
     menu,
@@ -26,8 +26,6 @@
     text: string;
     /** Whether Search and More show: only over a list that exists. */
     actions: boolean;
-    /** A phone keeps its way into search here, beside More. */
-    phone: boolean;
     searchOpen: boolean;
     onSearch: () => void;
     /** More's groups, built each time the line is drawn (`listMenu.ts`). */
@@ -58,12 +56,10 @@
   {#if onAbout}<span id="list-heading-about" class="sr-only">Opens the page about them.</span>{/if}
   {#if actions}
     <div class="-mr-3 flex shrink-0 items-center">
-      {#if phone}
-        <!-- The way into search, beside More, as an iOS list keeps it (decision 0060). -->
-        <button type="button" aria-label="Search" title="Search" aria-expanded={searchOpen} onclick={onSearch} class="btn-quiet btn-icon"
-          ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
-        >
-      {/if}
+      <!-- The way into search, beside More, as an iOS list keeps it (decisions 0060 and 0242): the field waits until asked for. -->
+      <button type="button" aria-label="Search" title={tip("Search", "search")} aria-expanded={searchOpen} onclick={onSearch} class="btn-quiet btn-icon"
+        ><span class="flex size-8 items-center justify-center"><Icon name="search" size={20} /></span></button
+      >
       <MoreMenu id="list-menu" groups={menu()} />
     </div>
   {/if}

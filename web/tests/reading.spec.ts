@@ -448,14 +448,15 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     // At rest, the field says "Search articles", so it isn't mistaken for the sidebar's find field (decision 0217).
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
-    await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toHaveAttribute("placeholder", "Search articles");
+    // At rest the field waits behind Search, beside More (decision 0242); opened, its name is "Search articles" (decision 0217).
+    await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: "Search", exact: true }).click();
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
-    await page.getByRole("textbox", { name: "Search articles", exact: true }).focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
     // Shift+Tab reaches the chip's Remove button, and the chip stays while it has the keyboard.
     await page.keyboard.press("Shift+Tab");
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeFocused();
-    // Leaving an empty search puts the field back at rest.
+    // Leaving an empty search puts the field back at rest, still open until Search or Escape.
     await page.locator("#list-heading").focus();
     await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
     // A click on the words "Search articles" opens the search without removing its scope.

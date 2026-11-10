@@ -34,7 +34,8 @@ test("Write back asks once for an address, keeps it on their page, then opens th
 
   await page.locator(".item-row").first().click();
   const start = pane(page).getByRole("button", { name: `Write back to Blog ${name}` });
-  await expect(start).toHaveClass(/btn-primary/);
+  // Outlined at an article's end (decision 0242); solid on their page, above.
+  await expect(start).not.toHaveClass(/btn-primary/);
   await start.focus();
   await page.keyboard.press("Enter");
   const field = pane(page).getByRole("textbox", { name: "Their email address" });

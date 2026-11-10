@@ -708,9 +708,12 @@ test("Settings: no unread counts to show or hide, and no letting unread go", asy
     return route.fulfill({ json: settings });
   });
   const name = await openBlog(page);
-  // A dot and no number (decision 0148): screen readers hear "unread", never how many.
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name} unread`);
-  await expect(feedLink(page, name).locator(".sidebar-dot")).toBeVisible();
+  // One dot, on Unread, and no number (decisions 0148 and 0242): a person's row has none.
+  const unreadLink = sidebar(page).getByRole("link", { name: "Unread", exact: true });
+  await expect(unreadLink).toHaveAccessibleDescription("Something new");
+  await expect(unreadLink.locator(".sidebar-dot")).toBeVisible();
+  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+  await expect(feedLink(page, name).locator(".sidebar-dot")).toHaveCount(0);
 
   // Mark all as read is the list's one way to set a backlog down (decision 0171).
   await page.getByRole("button", { name: "More", exact: true }).click();
@@ -731,6 +734,6 @@ test("Settings: no unread counts to show or hide, and no letting unread go", asy
   // Unread off: the sidebar has no dots.
   await reading.getByRole("switch", { name: "Unread" }).click();
   await expect(reading).toContainText("No Unread list and no dots. What you've read is still remembered.");
-  await expect(feedLink(page, name)).toHaveAccessibleName(`Blog ${name}`);
+  await expect(sidebar(page).getByRole("link", { name: "Unread" })).toHaveCount(0);
   await expect(sidebar(page).locator(".sidebar-dot")).toHaveCount(0);
 });

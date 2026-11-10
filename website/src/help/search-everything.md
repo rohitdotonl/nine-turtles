@@ -15,7 +15,8 @@ related: [star-an-article, every-keyboard-key, find-your-way-around]
 
 ## Search
 
-1. Press <kbd>/</kbd>, or choose the **Search articles** field above the list.
+1. Press <kbd>/</kbd>, or the magnifier beside the list's title: the
+   **Search articles** field opens under it.
 2. Type a few words. Matching articles appear, with the words picked out.
 
 Typed something in **Find a person or folder** at the top of the sidebar

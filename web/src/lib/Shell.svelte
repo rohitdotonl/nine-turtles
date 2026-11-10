@@ -787,7 +787,7 @@
     tick().then(() => searchBar?.focus());
   }
 
-  /** The phone's Search button: shows the field, ready to type in; pressed again with nothing searched, puts it away. */
+  /** The list's Search button: shows the field, ready to type in; pressed again with nothing searched, puts it away. */
   function toggleSearch() {
     if (!searching.putAway()) startSearch();
   }
@@ -861,7 +861,6 @@
   <ListHead
     text={headingText}
     actions={!!itemList && !missing}
-    {phone}
     searchOpen={searching.open}
     onSearch={toggleSearch}
     menu={() => listMenu(menuScene(), menuHands)}
@@ -964,7 +963,7 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} />
+      <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} waiting={!!library.feeds?.some((feed) => feed.unread > 0)} />
       {#if library.feeds}
         <SidebarFeeds
           bind:this={sidebarFeeds}
@@ -1109,7 +1108,7 @@
           {/if}
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-20 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
-            {#if library.feeds && library.feeds.length > 0 && !missing && (!phone || searching.open)}
+            {#if library.feeds && library.feeds.length > 0 && !missing && searching.open}
               <SearchBar bind:this={searchBar} query={searching.query} feeds={library.rows ?? []} folders={library.folders} onChange={(next, now) => searching.changed(next, now)} />
             {/if}
             {#if listInstead}

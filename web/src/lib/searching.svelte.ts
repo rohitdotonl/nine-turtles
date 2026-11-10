@@ -1,6 +1,6 @@
 // The search as the signed-in screen holds it (SPEC section 14): what the
 // search field holds, the search whose results the list shows, whether the
-// phone's field is out, and where the keyboard was before `/`. Typing
+// field is out, and where the keyboard was before `/`. Typing
 // searches a moment after it stops; a chip or Enter searches at once.
 // The field itself is SearchBar.svelte; search.ts reads and words a search.
 //
@@ -20,13 +20,14 @@ export class Searching {
   /** The search whose results the list shows, or none: the place's own list. */
   shown: Query | undefined = $state();
   /**
-   * On a phone the search field waits behind a Search button beside More, so
-   * the list starts right under its title (decision 0060). Once asked for,
+   * The search field waits behind a Search button beside More, so the list
+   * starts right under its title (decision 0060; on a computer too since
+   * decision 0242). Once asked for,
    * it stays until you press the button again with nothing searched, press
    * Escape, or go to another place: never on its own, so nothing under your
    * finger moves.
    */
-  phoneField = $state(false);
+  field = $state(false);
   /** Where the keyboard's place was before `/`, to go back to on Escape. */
   #before: Element | null = null;
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -35,29 +36,29 @@ export class Searching {
     this.query = emptyQuery(start);
   }
 
-  /** Searching, or about to: results show, the field holds something, or the phone's field is out. */
+  /** Searching, or about to: results show, the field holds something, or the field is out. */
   get open(): boolean {
-    return this.shown !== undefined || isSearching(this.query) || this.phoneField;
+    return this.shown !== undefined || isSearching(this.query) || this.field;
   }
 
   /** Starts afresh, limited to `place`. */
   reset(place: Route) {
     this.stop();
-    this.phoneField = false;
+    this.field = false;
     this.query = emptyQuery(place);
     this.shown = undefined;
   }
 
-  /** The field is asked for (`/` or the phone's button); `from` had the keyboard, to give it back on Escape (left out: keep the last). */
+  /** The field is asked for (`/` or the Search button); `from` had the keyboard, to give it back on Escape (left out: keep the last). */
   started(from?: Element | null) {
     if (from !== undefined) this.#before = from;
-    this.phoneField = true;
+    this.field = true;
   }
 
-  /** The phone's Search button pressed again: puts the field away if nothing is searched, and answers whether it did. */
+  /** The Search button pressed again: puts the field away if nothing is searched, and answers whether it did. */
   putAway(): boolean {
-    if (!this.phoneField || this.shown || isSearching(this.query)) return false;
-    this.phoneField = false;
+    if (!this.field || this.shown || isSearching(this.query)) return false;
+    this.field = false;
     return true;
   }
 

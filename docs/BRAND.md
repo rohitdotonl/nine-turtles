@@ -40,7 +40,7 @@ what's live.
 ## Color
 
 - **Themes are named by the page they give** (Live, decision 0176): one setting, **Page**, with **White**, **Paper** (warm cream) and **Night**, and **Match device** (the default), which shows White by day and Night by night. There are no separate day and night versions and no Appearance setting.
-- **Each page has one color, its accent:** the unread dot (beside an article, and a smaller one at the end of a sidebar row with something new, decision 0148) and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
+- **Each page has one color, its accent:** the unread dot (beside an article, and a smaller one at the end of the sidebar's Unread row while anything is new, decision 0242) and the faint tone behind a search match, nothing else. Never a button, a link or a focus outline. (Live)
 
   | Page | Page color | Words | Accent |
   |---|---|---|---|

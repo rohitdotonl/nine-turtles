@@ -27,7 +27,7 @@
   - **Recently unsubscribed**, the last group (decision 0240): everyone you, or an assistant, unsubscribed from in the last 30 days, newest first, one row per person (a person's sources left together are one row): their name, then "Unsubscribed today · kept until 8 Dec" (or "Unsubscribed by an assistant 4 Nov · kept until 4 Dec") in the small muted line, and **Bring back** at the right. Under the group: "Kept for 30 days, with their articles, so you can bring them back." Bring back follows them again whole and says "Hal Brennan is back." with Undo, on the same line as the page's other actions; one already cleared says "… can't be brought back: they're already gone.", and the keyboard moves to the next Bring back. Bring back counts towards the 1,000 people and publications one reader can follow, and says so when it would pass them. A folder hidden because everyone in it is waiting here never blocks its name: renaming another folder to it takes its place, and Bring back lands in that one. The group isn't shown while it's empty.
 
 **How to check it**
-1. Put a feed in two folders. It appears under both, with its unread dot in each.
+1. Put a feed in two folders. It appears under both.
 2. Rename a folder: it keeps its place among the folders (decision 0207).
 3. Delete a folder: its feeds remain (under other folders or the "no folder" group).
 4. Unsubscribe from a feed, then undo: it's back with its read history.

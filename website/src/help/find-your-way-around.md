@@ -30,8 +30,9 @@ From the top:
   a folder, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, **Keys** and **Settings**.
 
-A small dot at the end of a row means something there is new. There are no
-numbers: you never have a pile to clear.
+A small dot beside **Unread** means something new has arrived. The people
+and folders below it carry no dots and no numbers: you never have a pile to
+clear, and nothing calls to you from every row.
 
 ## The list of articles
 
@@ -90,7 +91,7 @@ The list never changes while you look at it. When new articles have arrived,
 a note at the bottom says **New articles**. Press <kbd>R</kbd>, or **Show**
 on a phone, to bring them in. If you refresh and nothing has come in, the
 note says so: "Nothing new has arrived since 14:05." Opening the app always shows the latest. On a
-phone, the dots in the sidebar catch up each time you come back to it.
+phone, Unread's dot catches up each time you come back to the sidebar.
 
 ## Make room to read
 
@@ -100,6 +101,10 @@ in an article's **More** menu: the sidebar and the list hide together, and
 one button brings them back. You can also
 drag the edge between two parts to make one wider; double-click the edge to
 put it back.
+
+On a phone, tap the words of an article once to put its top and bottom bars
+away, so only the writing shows. Tap again, or read to the end, and they're
+back.
 
 ## Good to know
 

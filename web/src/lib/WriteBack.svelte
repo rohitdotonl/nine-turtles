@@ -1,14 +1,15 @@
 <!--
   Write back (SPEC section 37, decision 0147): at the end of every article of
-  someone the reader follows, under its closing rule, one solid ink button
-  with a paper plane, "Write back to Tomas Berg" (their full name, the one in
-  the sidebar; the owner's core path, points 6 and 7), with the address it
-  writes to under it. It's the only solid button in the reading pane. It opens
+  someone the reader follows, under its closing rule, one outlined button
+  with a paper plane, as Mark all as read ends a list (`quiet`, decision
+  0242), "Write back to Tomas Berg" (their full name, the one in the sidebar;
+  the owner's core path, points 6 and 7), with the address it writes to under
+  it: the way on, quieter than the writing it follows. It opens
   the reader's own email app with the address and "Re: the title" filled in;
   nine turtles never sends or reads that email.
 
-  On their page (no article), the same button says "Write to Tomas Berg",
-  under their name, and opens the email app with the address only and an
+  On their page (no article), the same button, solid there, says "Write to
+  Tomas Berg", under their name, and opens the email app with the address only and an
   empty subject (point 9).
 
   When nine turtles doesn't know their address (neither their feed nor its
