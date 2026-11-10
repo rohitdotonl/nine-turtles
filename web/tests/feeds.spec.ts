@@ -580,8 +580,9 @@ test("a mistyped address is said with its one repair, as a button: nothing is ch
   await expect(use).toHaveCount(0);
   await expect(page.locator("#feed-address-status")).toHaveText("");
   await page.keyboard.press("Enter");
-  // Pressed, the repair goes in the field and is followed.
-  await use.click();
+  // Pressed (here from the keyboard), the repair goes in the field and is followed.
+  await tabTo(page, use);
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("group", { name: `Blog ${name} is…` })).toBeVisible();
   expect(lookups).toBe(1);
 });

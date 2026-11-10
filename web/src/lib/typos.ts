@@ -13,7 +13,7 @@ import { NOT_AN_ADDRESS } from "./messages";
 const PROVIDERS = ["gmail.com", "outlook.com", "hotmail.com", "icloud.com", "yahoo.com", "proton.me"];
 
 /** Real providers one slip away from one above: never "corrected" into it. */
-const ALSO_REAL = ["mail.com", "ymail.com", "email.com", "gmx.com", "aol.com"];
+const ALSO_REAL = ["mail.com", "ymail.com", "email.com", "gmx.com", "aol.com", "cloud.com"];
 
 /** A US keyboard's rows, to know which keys sit beside each other. */
 const ROWS = ["1234567890-", "qwertyuiop", "asdfghjkl;", "zxcvbnm,./"];
@@ -79,8 +79,30 @@ const ENDINGS: Record<string, string> = {
   nte: "net",
 };
 
-/** Quotes and brackets a paste brings along. */
-const WRAPPING = /^["'“”‘’<([{\s]+|["'“”‘’>)\]}\s]+$/g;
+/** The quotes and brackets a paste brings along, each opening one with its closing one. */
+const PAIRS: Record<string, string> = { '"': '"', "'": "'", "“": "”", "‘": "’", "<": ">", "(": ")", "[": "]", "{": "}" };
+
+/**
+ * `text` without the quotes or brackets wrapped around it. An address never
+ * starts with one, so an opening one goes; a closing one only with its
+ * opening one, as "Foo_(bar)" or "?x=[1]" may end in one.
+ */
+function unwrapped(text: string): string {
+  const opened: string[] = [];
+  let rest = text;
+  while (rest[0] && PAIRS[rest[0]]) {
+    opened.push(PAIRS[rest[0]]!);
+    rest = rest.slice(1).trim();
+  }
+  while (rest.length > 0 && rest[rest.length - 1] === opened[opened.length - 1]) {
+    opened.pop();
+    rest = rest.slice(0, -1).trim();
+  }
+  return rest;
+}
+
+/** Servers people are followed on by a handle (`@name@server`), not a website: no site to offer. */
+const HANDLE_SERVER = /(^|\.)(mastodon|mstdn)\.|\.social$/i;
 
 export type AddressFix = {
   /** The address as it was probably meant. */
@@ -99,13 +121,13 @@ export type AddressFix = {
  */
 export function addressFix(typed: string): AddressFix | undefined {
   const text = typed.trim();
-  const bare = text.replace(WRAPPING, "").replace(/[.,;:\\]+$/, "");
+  const bare = unwrapped(text.replace(/[.,;:]+$/, "")).replace(/[.,;:\\]+$/, "");
   let rest = bare;
   // An email address pasted in: their website is the part after the @, unless that's an email provider.
   const email = /^[^\s@/:]+@([^\s@/:]+\.[^\s@/:]+)$/.exec(rest.replace(/^mailto:/i, ""));
   if (email) {
     const site = email[1]!.toLowerCase();
-    return mailProvider(site) || PROVIDERS.includes(site) || ALSO_REAL.includes(site) ? undefined : { address: site, email: true };
+    return mailProvider(site) || PROVIDERS.includes(site) || ALSO_REAL.includes(site) || HANDLE_SERVER.test(site) ? undefined : { address: site, email: true };
   }
   // "htps://", "https;//", "http//", "https:/": the start of an address, mistyped.
   let start = "";
@@ -132,7 +154,9 @@ export function addressFix(typed: string): AddressFix | undefined {
   if (labels.length > 1 && ending) labels[labels.length - 1] = ending;
   const address = start + labels.join(".") + port + path;
   if (labels.length < 2 || labels.some((label) => !/^[\p{L}\p{N}-]+$/u.test(label))) return undefined;
-  if (address === text || address === text.replace(/^https:\/\//i, "")) return undefined;
+  // Capitals change nothing in an address's start or its site's name.
+  const typedAs = text.toLowerCase();
+  if ([typedAs, typedAs.replace(/^https:\/\//, "")].includes(address.toLowerCase())) return undefined;
   // A dot where a comma, semicolon or space was is all that changed.
   const dot = bare === text && start === "" && /[,;\s]/.test(host) && host.replace(/\s*[,;\s]\s*/g, ".") === labels.join(".") + port;
   return { address, ...(dot ? { dot } : {}) };
@@ -142,4 +166,32 @@ export function addressFix(typed: string): AddressFix | undefined {
 export function addressSlip(fix: AddressFix): string {
   if (fix.email) return `That's an email address. Did you mean their website, ${fix.address}?`;
   return `${NOT_AN_ADDRESS} Did you mean ${fix.address}${fix.dot ? ", with a dot" : ""}?`;
+}
+
+/** How long a fix must have been on screen to count as seen: a press after that sends what was typed. */
+const SEEN_MS = 1000;
+
+/**
+ * When the button under an email field pauses, once, to offer a fix instead of
+ * sending (decision 0234). Not when the fix has been on screen for a moment
+ * already (it appeared on leaving the field, and the reader went on), and
+ * never twice for one email: a second press sends it as typed.
+ */
+export function slipPause() {
+  let shown = "";
+  let at = 0;
+  let paused = "";
+  return {
+    /** The fix for `email` appeared on leaving the field. */
+    shown(email: string) {
+      if (shown !== email.trim()) [shown, at] = [email.trim(), Date.now()];
+    },
+    /** Whether this press, with a fix for `email`, pauses rather than sends. */
+    pauses(email: string): boolean {
+      const typed = email.trim();
+      if (paused === typed || (shown === typed && Date.now() - at >= SEEN_MS)) return false;
+      paused = typed;
+      return true;
+    },
+  };
 }

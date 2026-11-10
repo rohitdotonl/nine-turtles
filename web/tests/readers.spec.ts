@@ -102,8 +102,8 @@ test("sign-up offers a likely slip in the email's provider before sending, and n
   await expect(fix).toHaveText("");
 
   // Pressing Sign up offers it first; pressing again sends the email as typed.
-  await page.getByLabel("Email").fill(`asha-${stamp}@yahoo.con`);
   await page.getByLabel("Password", { exact: true }).fill(READER_PASSWORD);
+  await page.getByLabel("Email").fill(`asha-${stamp}@yahoo.con`);
   await page.keyboard.press("Enter");
   await expect(fix).toHaveText(`Did you mean asha-${stamp}@yahoo.com? Use that`);
   expect(sent).toBe(0);

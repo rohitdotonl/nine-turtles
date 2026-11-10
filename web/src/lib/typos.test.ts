@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { addressFix, emailFix } from "./typos";
+import { describe, expect, it, vi } from "vitest";
+import { addressFix, emailFix, slipPause } from "./typos";
 
 describe("a mistyped email provider (decision 0234)", () => {
   it("is fixed when one slip from a well-known provider", () => {
@@ -29,6 +29,7 @@ describe("a mistyped email provider (decision 0234)", () => {
       "asha@hotmail.co.uk",
       "asha@protonmail.com",
       "asha@me.com",
+      "asha@cloud.com",
       "asha@gardenletters.blog",
       "asha@gmeil.com", // e isn't beside a: no single obvious slip
       "asha",
@@ -55,6 +56,9 @@ describe("a mistyped web address (decision 0234)", () => {
     expect(addressFix('"gardenletters.blog"')).toEqual({ address: "gardenletters.blog" });
     expect(addressFix("<https://gardenletters.blog/>")).toEqual({ address: "https://gardenletters.blog/" });
     expect(addressFix("(gardenletters.blog)")).toEqual({ address: "gardenletters.blog" });
+    expect(addressFix("“gardenletters.blog”.")).toEqual({ address: "gardenletters.blog" });
+    expect(addressFix('"gardenletters.blog')).toEqual({ address: "gardenletters.blog" });
+    expect(addressFix("HTPS://Example.com")).toEqual({ address: "https://Example.com" });
     expect(addressFix("example.con")).toEqual({ address: "example.com" });
     expect(addressFix("example.cmo/feed")).toEqual({ address: "example.com/feed" });
     expect(addressFix("example.ocm")).toEqual({ address: "example.com" });
@@ -79,6 +83,13 @@ describe("a mistyped web address (decision 0234)", () => {
       "https://user@example.com",
       "maya@gmail.com",
       "maya@yahoo.com",
+      "maya@mastodon.social",
+      "https://en.wikipedia.org/wiki/Foo_(bar)",
+      "example.com/a?x=[1]",
+      "example.com/?x='a'",
+      "HTTPS://example.com",
+      "Https://Example.com/feed",
+      "Example.COM",
       "garden letters.blog",
       "garden letters blog",
       "gardenletters",
@@ -87,5 +98,24 @@ describe("a mistyped web address (decision 0234)", () => {
     ]) {
       expect(addressFix(address), address).toBeUndefined();
     }
+  });
+});
+
+describe("the press that offers an email's fix (decision 0234)", () => {
+  it("pauses once, unless the fix has been on screen a moment already", () => {
+    vi.useFakeTimers();
+    const pause = slipPause();
+    expect(pause.pauses("a@gmial.com")).toBe(true);
+    expect(pause.pauses("a@gmial.com")).toBe(false);
+    // Shown on leaving the field, then pressed straight away (the press itself left the field): it pauses.
+    const quick = slipPause();
+    quick.shown("b@gmial.com");
+    expect(quick.pauses("b@gmial.com")).toBe(true);
+    // Shown, and the reader went on to the password: the press sends.
+    const seen = slipPause();
+    seen.shown("c@gmial.com");
+    vi.advanceTimersByTime(1500);
+    expect(seen.pauses("c@gmial.com")).toBe(false);
+    vi.useRealTimers();
   });
 });

@@ -15,7 +15,7 @@
   import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import EmailFix from "./EmailFix.svelte";
-  import { emailFix } from "./typos";
+  import { emailFix, slipPause } from "./typos";
   import PasswordField from "./PasswordField.svelte";
   import SendAgain from "./SendAgain.svelte";
   import { SIGN_IN_PAGE } from "./accounts";
@@ -37,8 +37,14 @@
   let emailField: HTMLInputElement | undefined = $state();
   /** A likely slip in the email's provider, offered under the field (decision 0234). */
   let fix: string | undefined = $state();
-  /** The email Sign up already paused for once: pressed again, it's sent as typed. */
-  let pausedFor = "";
+  /** When Sign up pauses, once, to offer the fix rather than sending. */
+  const pause = slipPause();
+
+  /** Leaving the field: a likely slip is offered under it. */
+  function offerFix() {
+    fix = emailFix(email);
+    if (fix) pause.shown(email);
+  }
 
   /** Use that: the field takes the address offered, and the keyboard goes back to it. */
   function useFix(meant: string) {
@@ -50,12 +56,9 @@
   async function submit(event: SubmitEvent) {
     event.preventDefault();
     if (busy || email.trim() === "" || password === "") return;
-    // A likely slip is offered first; never blocking, so a second press sends the email as typed.
+    // A likely slip is offered first, unless it's been on screen a moment; never blocking, so a second press sends the email as typed.
     fix = emailFix(email);
-    if (fix && pausedFor !== email.trim()) {
-      pausedFor = email.trim();
-      return;
-    }
+    if (fix && pause.pauses(email)) return;
     busy = true;
     const result = await signUp(email.trim(), password, heardAbout || undefined);
     busy = false;
@@ -136,7 +139,7 @@
         autofocus
         bind:this={emailField}
         bind:value={email}
-        onblur={() => (fix = emailFix(email))}
+        onblur={offerFix}
         oninput={() => (fix = undefined)}
         aria-describedby="sign-up-fix sign-up-message"
         aria-invalid={refusedField === "email" ? "true" : undefined}
