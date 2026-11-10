@@ -433,15 +433,42 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
-  test("a footnote link stays inside the article", async ({ page }) => {
+  test("a footnote opens where you are, and the article's typewriter marks are set properly", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const text = article(page).locator(".article-text");
-    await text.locator("sup").getByRole("link", { name: "1" }).click();
-    await expect(text.getByText("1. Written in Python, a long time ago.")).toBeFocused();
-    // Still the article's own address (decision 0233), in this tab.
+    // A footnote's number opens its note in a card just under the line (decision 0247); the notes stay at the end too.
+    const one = text.locator("sup").getByRole("link", { name: "1", exact: true });
+    await one.click();
+    const card = page.getByRole("dialog", { name: "Footnote 1" });
+    await expect(card).toBeFocused();
+    await expect(card).toContainText("Written in Python, a long time ago.");
+    await expect(card).not.toContainText("1. Written");
+    const [line, box] = [(await one.boundingBox())!, (await card.boundingBox())!];
+    expect(box.y).toBeGreaterThan(line.y + line.height - 1);
+    expect(box.y).toBeLessThan(line.y + line.height + 12);
+    // Escape closes it and gives the keyboard back to the number; nothing left this tab or the article's address.
+    await page.keyboard.press("Escape");
+    await expect(card).toHaveCount(0);
+    await expect(one).toBeFocused();
     await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
+    // A note in a list, without its way back; × closes it, and so does a press anywhere else.
+    await text.locator("sup").getByRole("link", { name: "2", exact: true }).click();
+    const two = page.getByRole("dialog", { name: "Footnote 2" });
+    await expect(two).toContainText("She taught for \u2018thirty years\u2019, and wrote every letter by hand.");
+    await expect(two.getByRole("link")).toHaveCount(0);
+    await two.getByRole("button", { name: "Close" }).click();
+    await expect(two).toHaveCount(0);
+    await text.locator("sup").getByRole("link", { name: "2", exact: true }).click();
+    await title(page, "The pleasure of a slow letter").click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    // A note's own way back still jumps to its place.
+    await text.locator("li").getByRole("link").click();
+    await expect(text.locator("sup").getByRole("link", { name: "2", exact: true })).toBeFocused();
+    // Curly quotes, an apostrophe, a dash and an ellipsis, as a typesetter would; code exactly as written.
+    await expect(text).toContainText("As my teacher said, \u201cDon\u2019t rush it \u2014 the words will wait\u2026\u201d");
+    await expect(text.locator("code").first()).toHaveText('print("hello")');
   });
 
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
