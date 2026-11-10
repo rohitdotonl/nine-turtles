@@ -1,5 +1,7 @@
 # 0117: Delete my data
 
+**In one line:** Delete my data: every reader, the owner too, can empty their account from Settings › Account › Delete data…, keeping the account; one "Are you sure?" with the downloads offered first, and no undo
+
 *27 October 2026, at the owner's request ("Add a delete my data. And delete
 my account buttons too."). The owner chose one "Are you sure?" with the
 downloads offered first and no undo, on a decision card.*

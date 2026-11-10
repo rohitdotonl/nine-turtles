@@ -1,5 +1,7 @@
 # 0133: Our own eight design principles
 
+**In one line:** Our own eight ranked design principles (nothing pulls › the writer comes first › clear at a glance › honest by default › made by a person › instant and still › power is findable › built to last); principles broken only on purpose, logged; no feedback through motion; one system for spacing, type and names; goal: cited for taste and coherence, recognisable from one screenshot
+
 *1 November 2026.*
 
 **Decision.** The owner adopted eight ranked design principles, replacing

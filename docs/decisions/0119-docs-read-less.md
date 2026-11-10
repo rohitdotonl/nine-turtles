@@ -1,5 +1,7 @@
 # 0119: Documents agents can read less of, and trust
 
+**In one line:** Documents agents read less of: one fact in one place (others link), finished milestones and one-off reports in `docs/archive/` (skipped unless asked), and a check for broken links between documents that runs on every pull request
+
 *October 2026.*
 
 **Decision.** The documents are tidied so an agent reads only what's still

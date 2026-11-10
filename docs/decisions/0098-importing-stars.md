@@ -1,5 +1,7 @@
 # 0098: Bringing stars over from other feed readers
 
+**In one line:** Importing starred articles from other feed readers (Google Reader format and JSON Feed) in Settings › Your data; a star of an article nine turtles already has goes on it, any other is kept in a hidden feed of the reader's own, never shared; read, never fetched, no Undo needed, no structure change; Pocket left out
+
 *26 October 2026. Asked for by the owner ("Bringing your stars over from
 other services"), with merging approved.*
 

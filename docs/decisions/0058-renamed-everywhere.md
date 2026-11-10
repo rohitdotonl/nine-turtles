@@ -1,5 +1,7 @@
 # 0058: nine turtles everywhere, with the old names still working
 
+**In one line:** nine turtles everywhere: repository, image, program, `NINE_TURTLES_*` settings, database file, cookie and saved preferences, with the old names still read for now; Render's address and disk keep slowfeed (changes 0056)
+
 *24 October 2026. The owner's request: change the name completely,
 everywhere. Changes 0056, which kept slowfeed behind the scenes.*
 

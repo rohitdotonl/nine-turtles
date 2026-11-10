@@ -1,5 +1,7 @@
 # 0189: A shorter search menu
 
+**In one line:** (Replaced by 0241: the panel is gone.) Search options keep only Search in (This list, Everything) and Show only: Starred; Other feed or folder, Unread, With notes and the Published dates go; a search from Notes looks only at marked articles
+
 *6 November 2026.*
 
 **Context.** Point 4 of the owner's whole-app review of what to remove or

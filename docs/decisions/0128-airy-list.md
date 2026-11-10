@@ -1,5 +1,7 @@
 # 0128: The article list in the reading serif, with more room
 
+**In one line:** The article list in the reading serif (19px with a mouse), with more room around each row (22px above, 28px below), like a book's contents page; fewer rows fit, by the owner's choice
+
 *28 October 2026.*
 
 **Decision.** The owner looked at twenty versions of the article list,

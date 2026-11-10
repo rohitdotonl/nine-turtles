@@ -1,5 +1,7 @@
 # 0087: Signing in by email, and the sign-up switch
 
+**In one line:** Signing in by email and password (structure change 13), the owner still by password alone; wrong tries slowed per account, never saying whether an email exists; the owner's sign-up switch (Closed, Invite link, Open waiting for confirmation emails), at most 20 sign-up tries an hour, one at a time
+
 > **Partly replaced by [0115](0115-sign-up-always-open.md):** the sign-up switch and invite links are gone; sign-up is always open. **And by [0116](0116-email-for-everyone.md):** the owner signs in with an email too; the password alone signs nobody in.
 
 *25 October 2026. Part three of "Many readers in one app" (decision 0086),

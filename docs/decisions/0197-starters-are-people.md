@@ -1,5 +1,7 @@
 # 0197: The starters are five people's own blogs
 
+**In one line:** "New to feeds?" offers five people's own blogs (James, Derek Sivers, Herman Martinus, Jeff Kaufman, Ava), each filed as a person
+
 *6 November 2026. The owner's onboarding review, finding 6; the owner chose the five.*
 
 **Decision.** "New to feeds?" (decision 0079) now offers five people who

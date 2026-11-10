@@ -1,5 +1,7 @@
 # 0214: Fewer steps for what readers do most
 
+**In one line:** The byline name opens their page (and `i` works from any list); Write back is a paper plane beside Star, out of More; a row's own menu (right-click, long press, Menu key): Star, Mark read, Write back, Info about; Mark all as read at the end of a list with unread articles
+
 *8 November 2026.*
 
 **Decision.** Four everyday actions take fewer steps:

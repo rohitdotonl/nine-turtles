@@ -1,5 +1,7 @@
 # 0069: WebSub, instant updates from publishers who offer them
 
+**In one line:** WebSub: subscribe to a feed's hub at `NINE_TURTLES_PUBLIC_URL`/websub/{token}, a secret per feed, signed deliveries only (hmac, sha1, sha2), 10-day leases renewed a day early, backup checks at most twice a day
+
 *25 October 2026. Asked for by the owner (V2, Milestone 12; SPEC section 12).*
 
 **Decision.** When a feed names a WebSub hub, nine turtles subscribes to it,

@@ -1,5 +1,7 @@
 # 0005: Screenshots appear as a comment on each pull request
 
+**In one line:** Screenshots appear as a comment on each pull request
+
 *October 2026, Milestone 1. Chosen by the owner.*
 
 **Decision.** The browser tests photograph every screen listed in

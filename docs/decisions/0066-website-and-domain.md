@@ -1,5 +1,7 @@
 # 0066: A website at nineturtles.app, the app at app.nineturtles.app, one repository
 
+**In one line:** A website at nineturtles.app (Eleventy, GitHub Pages), the app at app.nineturtles.app, in one repository; website-only changes skip the app's checks and deploy
+
 *25 October 2026. Asked for by the owner.*
 
 **Decision.** nine turtles gets a website and its own domain:

@@ -1,5 +1,7 @@
 # 0116: Everyone signs in with an email, the owner too
 
+**In one line:** Everyone signs in with an email, the owner too: the password alone signs nobody in (replaces that part of 0087); on a brand-new install the owner's first sign-in saves their email
+
 *October 2026.*
 
 **Decision.** The password alone no longer signs anyone in. Every reader,

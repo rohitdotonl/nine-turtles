@@ -1,5 +1,7 @@
 # 0234: Typos get a fix you can press
 
+**In one line:** Typos get a fix you can press: Add offers the one obvious repair of a mistyped address ("Did you mean gardenletters.blog, with a dot?" and Use …), and sign-up, Change email and (after a failure) sign-in offer "Did you mean …@gmail.com? Use that"; never changed by itself, never blocking
+
 *10 November 2026.*
 
 Rohit's "Implement every suggestion from round 1. From round 2, implement

@@ -1,5 +1,7 @@
 # 0111: Assistants connect through MCP
 
+**In one line:** Your own AI assistant connects over MCP at `/mcp`: the open standard only, OAuth 2.1 with PKCE and dynamic registration (or an assistant key), 15 tools plus bring back, a feed an assistant unsubscribes from kept 30 days, limits per reader, no new library, checked every 15 days
+
 *October 2026.*
 
 **Decision.** On 27 October 2026 the owner chose to let each reader connect

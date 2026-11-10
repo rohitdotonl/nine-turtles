@@ -1,5 +1,7 @@
 # 0140: The V1 feature list, and the rules it changes
 
+**In one line:** The V1 list: person pages, write back, no unread counts and YouTube first-class (musts); the weekly email in Settings, installing said plainly and "How did you hear?" (shoulds); tags and a note to bloggers to discuss; trial and pause last; blogroll dropped; new mission line; the weekly email the one exception to "no notifications"
+
 *2 November 2026. Settled with the owner, after the positioning
 (`docs/RnD/positioning.md`) and the ideal reader
 (`docs/RnD/ideal-reader.md`).*

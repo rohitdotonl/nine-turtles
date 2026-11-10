@@ -1,5 +1,7 @@
 # 0238: Ways back: Undo for Disconnect, for an import, and a Mark all as read noticed later
 
+**In one line:** Ways back: Disconnect has Undo (the assistant is refused at once, Undo brings the same connection back), "Wrong file? Undo the import" takes away exactly what an import added, and Mark all as read's Undo names the list and follows you to the next until your next undoable action
+
 *10 November 2026.*
 
 Rohit's "Implement every suggestion from round 1. From round 2, implement

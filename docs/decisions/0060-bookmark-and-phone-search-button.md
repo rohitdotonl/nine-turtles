@@ -1,5 +1,7 @@
 # 0060: A bookmark in every article, and the phone list's search behind a button
 
+**In one line:** A bookmark in every article (your place kept per device, by paragraph, forgotten at the top or the end) and, on a phone, the list's search field behind a Search button beside More
+
 *25 October 2026. The owner asked for both after a fresh-eyes review of the
 app ("Implement 2, 6").*
 

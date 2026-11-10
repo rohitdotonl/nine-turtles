@@ -1,5 +1,7 @@
 # 0105: Recently read, hiding sidebar lists, and how often a feed posts
 
+**In one line:** *(Recently read replaced by 0174.)* Recently read (the last 50 articles opened, kept on each entry as `opened_at`, structure change 22; no counts, not offline), hiding Starred, All, Recently read or Saved searches from the sidebar (`person_settings` `hidden`), and how often a feed posts in rounded words in Edit feed and Feed health
+
 *Recently read is replaced by [0174](0174-keep-starred.md); hiding lists and how often a feed posts stay.*
 
 *27 October 2026.*

@@ -1,5 +1,7 @@
 # 0131: Our own design language, not Apple Books
 
+**In one line:** Apple Books is no longer the design reference (replaces 0059); nine turtles gets its own design principles and design language, being written with the owner; until then the floors, then DESIGN.md as it stands
+
 *1 November 2026.*
 
 **Decision.** The owner dropped Apple Books as nine turtles' design

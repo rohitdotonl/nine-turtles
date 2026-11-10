@@ -1,5 +1,7 @@
 # 0212: No dead ends
 
+**In one line:** Add's no-feed message offers Ask them for a feed, Write to {site} (reads its home page and one contact page); a person's Not working card says they may not know and offers Write to (an everyday button); a search that found nothing in one place offers Search all articles
+
 *6 November 2026.*
 
 **Decision.** Two places where nine turtles stopped the reader now offer a

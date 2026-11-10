@@ -1,5 +1,7 @@
 # 0233: Each article has its own address
 
+**In one line:** Each open article has its own address under its list (`/people/5/articles/29`): reload, bookmarks, Back and new tabs keep it; Command-click or a middle click on a row opens a new tab; the row menu adds Open in a new tab and Copy link (Share on a phone)
+
 *10 November 2026.*
 
 Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"

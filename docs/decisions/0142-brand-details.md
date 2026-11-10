@@ -1,5 +1,7 @@
 # 0142: The brand's details: empty lists, "Wrong turn?", emails, the share picture, the tab icon
 
+**In one line:** The brand's details: one shape for empty lists ("Nothing … yet." and how to start), Unread ends "That's everything for now.", the welcome says "Hello. Who would you like to read?", "Wrong turn?" on one left edge, emails signed by Rohit, a black-tile share picture, and the tab icon always a black square
+
 *2 November 2026. Chosen by the owner from mockups (today, a safe and a bold
 option for each, with a creative director's review), in the brand work's
 "details" area.*

@@ -1,5 +1,7 @@
 # 0134: Ten principles, warm never cute, three panes and the logo kept
 
+**In one line:** Ten ranked principles (forgiving and cohesive added; clear answers before you ask; instant shows changes live; beauty a goal; less but better and light); "useful" and "challenges the status quo" as feature checks; warm, never cute; three panes and the logo kept
+
 *1 November 2026.*
 
 **Decision.** After checking every chapter of his design field guide and

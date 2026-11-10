@@ -1,5 +1,7 @@
 # 0100: Starter packs on the website
 
+**In one line:** *(Replaced by 0158.)* Starter packs at nineturtles.app/packs/: hand-picked blogs by theme, website only, the same for everyone and never ranked; each blog credited and linked; an OPML download once a pack has blogs; a made-up test pack is built only for the checks
+
 *Replaced by 0158: the starter packs were removed on 3 November 2026.*
 
 *26 October 2026. From the marketing plan, part of the owner's plan for 100

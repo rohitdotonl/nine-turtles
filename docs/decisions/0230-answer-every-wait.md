@@ -1,5 +1,7 @@
 # 0230: Every wait is answered
 
+**In one line:** Every wait is answered: "Loading Outdoors…", "Loading the article…" and "Starting the video…" after half a second, "You're signed out" with Sign in, "You're following …" with Undo, and keys that need an article saying to choose one
+
 *10 November 2026.*
 
 Rohit's "implement all" (10 November 2026) on round 2 of the critique

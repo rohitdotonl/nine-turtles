@@ -1,5 +1,7 @@
 # 0188: No Refresh on the phone's feeds screen
 
+**In one line:** The Refresh icon leaves the phone's feeds screen; its unread dots catch up each time the reader arrives on it, then stay still while they look
+
 *6 November 2026.*
 
 **Decision.** The Refresh icon beside the wordmark on the phone's feeds

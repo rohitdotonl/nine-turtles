@@ -1,5 +1,7 @@
 # 0090: The owner's Readers page, and fair limits
 
+**In one line:** The owner's Readers page (Settings › Readers › All readers): counts, what needs a look, and each reader's feed count, never which feeds (showing "last here" waits for the owner); at most 1,000 feeds per reader; feeds whose followers have all been away 30 days checked once a day; no structure change
+
 > **Partly replaced:** [0093](0093-readers-page-shows-last-here.md) shows "last here" on the Readers page; [0115](0115-sign-up-always-open.md) removed the count of sign-ups waiting for their email.
 
 *26 October 2026. Milestone 5 of the plan for 100 to 200 readers

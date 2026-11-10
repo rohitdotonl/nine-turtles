@@ -1,5 +1,7 @@
 # 0173: Rules become one sentence, "Hide articles about…"
 
+**In one line:** *(Switched-off rules deleted by 0174.)* Rules become one sentence: "Hide articles about [words] from [everyone / this person]", started from an article's More menu or a person's page; star, mark read, author, folders and the title-only choice go; Settings › Hiding and Hidden articles (no count); folder rules become one per person, rules with an author or star / mark read are kept but never shown or run (structure change 39)
+
 *The switched-off rules were deleted by [0174](0174-keep-starred.md).*
 
 *4 November 2026. Step 8 of the owner's review plan. Rohit said go on the

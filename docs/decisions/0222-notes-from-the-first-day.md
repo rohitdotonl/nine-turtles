@@ -1,5 +1,7 @@
 # 0222: Notes in the sidebar from the first day
 
+**In one line:** Notes shows in the sidebar from the first day, with its empty list saying how to make one (no longer only after a first highlight)
+
 *9 November 2026.*
 
 **Context.** Suggestion SW-2 of the "Show what's possible" critique (an

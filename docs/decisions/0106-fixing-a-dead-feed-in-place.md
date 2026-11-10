@@ -1,5 +1,7 @@
 # 0106: Fixing a dead feed where you are
 
+**In one line:** Fixing a dead feed where you are: a quiet line above a failing feed's list and in Edit feed with Find new address, still only on request; one candidate is a plain "Use … instead?" question; one component in all three places
+
 *October 2026.*
 
 **Decision.** A feed that isn't working now says so where the reader

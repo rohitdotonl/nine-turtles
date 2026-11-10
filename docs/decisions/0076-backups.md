@@ -1,5 +1,7 @@
 # 0076: Nightly backups to any S3-compatible storage, with no new library
 
+**In one line:** Nightly backups to any S3-compatible storage (R2 first), a copy before every structure change, 30 nightly + 12 monthly + 10 before-change kept, restore onto an empty disk with `NINE_TURTLES_RESTORE_FROM`; the S3 requests written in-house with reqwest, hmac and sha2 (replaces 0012's "no backups")
+
 *25 October 2026. At the owner's request, the first step of making nine
 turtles ready for 100 to 200 readers. Replaces the "no backups" part of
 decision 0012.*

@@ -1,5 +1,7 @@
 # 0227: Reading faces for Devanagari and Arabic
 
+**In one line:** Reading faces for Devanagari and Arabic (Noto Serif Devanagari, Noto Naskh Arabic) follow Literata, downloaded only for pages with those letters; each has its own 150 KB budget
+
 *9 November 2026. Approved by the owner ("just implement your suggestions"),
 the bold choice of OS-5 in the "other scripts" critique.*
 

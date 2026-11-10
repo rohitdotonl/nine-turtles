@@ -1,5 +1,7 @@
 # 0177: Add from anywhere in one tap
 
+**In one line:** Add from anywhere in one tap: a bookmark button to drag to the bookmarks bar (Copy kept for keyboard users) and a ready-made Apple Shortcut from its iCloud link, shown only once the owner has made it; the Shortcuts address row and build-it-yourself steps go
+
 *4 November 2026.*
 
 **Decision.** Settings › Add from anywhere stops asking readers to build

@@ -1,5 +1,7 @@
 # 0163: People and publications
 
+**In one line:** People and publications (refines 0146): everything followed is someone or something, under People and Publications in the sidebar, guessed once from the feed and changeable; one page for both, opened from their name, with Edit on it (+ Add a source, Take out, Unsubscribe from everyone's sources at once, all with Undo); + Add replaces Add feed; "Is this the same person?" removed; structure change 33
+
 *3 November 2026. Agreed with the owner, Rohit. Refines decision 0146
 (people); the refinement round PLAN.md → V1, item 1 asked for. SPEC
 section 36.*

@@ -1,5 +1,7 @@
 # 0072: YouTube videos play in YouTube's own player, only once you press Play
 
+**In one line:** YouTube videos play in YouTube's own privacy-enhanced player, loaded only once Play is pressed; a YouTube player inside a blog post becomes a link (first numbered 0068, which river mode also took; 0071 is the feed health page)
+
 *25 October 2026. Asked for by the owner ("viewing yt videos with their native player"); from DESIGN.md's V2 parking lot.*
 
 **Decision.** An article whose link is a YouTube video (a channel's feed,

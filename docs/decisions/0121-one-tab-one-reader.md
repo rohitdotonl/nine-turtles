@@ -1,5 +1,7 @@
 # 0121: One tab, one reader
 
+**In one line:** One tab, one reader: every request from a tab names its reader; a tab left open when another reader signs in on the browser is refused and offers Reload, and its waiting marks are never sent as the new reader's
+
 *27 October 2026.*
 
 **Decision.** Every request from a tab of the web app says which reader the

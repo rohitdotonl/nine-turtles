@@ -1,5 +1,7 @@
 # 0071: The feed health page
 
+**In one line:** The feed health page: in Settings › Feeds, listed after two failures in a row, no status colors, Retry respects "slow down", Find new address moves a feed keeping everything
+
 *25 October 2026. Built in V2 from SPEC section 17, at the owner's request.*
 
 **Decision.** Settings gets a **Feeds** group with one row, **Feed health ›**,

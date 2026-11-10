@@ -1,5 +1,7 @@
 # 0218: Dates in words, a summary only when it is one, list numbers in the margin
 
+**In one line:** Dates say Today, Yesterday, the weekday for the past week, then 20 Oct (exact time in the tooltip); an RSS description is the whole article unless it ends in … or […] or has a Read more link; a summary's note links "Read the rest on {publisher} ↗"; on a computer an article's list numbers hang in the margin
+
 *9 November 2026.*
 
 Three of Rohit's picks (R4-3, R4-1 and R4-5) from a design critique an

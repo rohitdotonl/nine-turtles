@@ -1,5 +1,7 @@
 # 0171: One way to set down a backlog
 
+**In one line:** One way to set down a backlog: Mark all as read (with Undo) stays; Catch me up, Let unread go after, Mark all above / below as read and Mark older as read (`Shift+O`) go; readers who had let unread go have their older unread marked read once, and the setting is deleted (structure change 37)
+
 *4 November 2026. Step 6 of the owner's review plan. Rohit said go on the
 whole plan and permitted removing these features and their data, including
 the one-time data path below.*

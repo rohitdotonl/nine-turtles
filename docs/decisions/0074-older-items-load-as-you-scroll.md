@@ -1,5 +1,7 @@
 # 0074: Older items load as you reach the bottom of a list
 
+**In one line:** Older items load by themselves as you reach the bottom of a list (replacing the "Show older items" button, which stays for the keyboard and screen readers); the list still ends with "You're all caught up."
+
 *25 October 2026. Asked for by the owner ("Implement 1 … I choose auto-load. Change the rule.").*
 
 **Decision.** A list no longer waits behind a "Show older items" button.

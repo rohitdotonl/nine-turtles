@@ -1,5 +1,7 @@
 # 0148: No unread counts: a small dot says something is new
 
+**In one line:** No unread counts: a small dot in the accent at a sidebar row's end says a feed, person or folder has something new (the dot moved to Unread alone, 0242); Settings › Reading › Unread counts is gone; other apps syncing over the Google Reader protocol still get counts
+
 *2 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 3, decision 0140); the owner gave advance permission to build and ship it
 ("Go on V1. Ship each one."). The smaller choices below were made by the

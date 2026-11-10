@@ -1,5 +1,7 @@
 # 0014: No separate plan to approve before building
 
+**In one line:** No separate plan to approve: agents build from PLAN and SPEC, asking only when needed
+
 *23 October 2026, after Milestone 4. Decided by the owner.*
 
 **Decision.** "How a change happens" (AGENTS.md) used to start with the

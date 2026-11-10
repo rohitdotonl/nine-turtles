@@ -1,5 +1,7 @@
 # 0193: Confirm sign-up in the same browser with one press
 
+**In one line:** Confirming sign-up in the browser that signed up asks no password (a secret cookie from Sign up, with the emailed link, is proof enough); anywhere else the password is asked as before; no "You're signed up" stop: the app opens at once (changes 0154)
+
 *6 November 2026.*
 
 **Decision.** Changes decision 0154. Opening the "Confirm your email" link

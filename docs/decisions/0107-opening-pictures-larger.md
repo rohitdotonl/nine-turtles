@@ -1,5 +1,7 @@
 # 0107: Opening a picture in an article larger
 
+**In one line:** A picture an article shows clearly smaller than it really is (a fifth and 40px bigger), once loaded and not inside a link, is a button that opens it alone on a dimmed sheet with its alt text as a caption, an X and "Open in new tab"; looked at again on every size change; full brightness by night
+
 *October 2026.*
 
 **Decision.** The owner approved, on 27 October 2026, letting a picture in

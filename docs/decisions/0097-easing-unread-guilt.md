@@ -1,5 +1,7 @@
 # 0097: Easing unread guilt
 
+**In one line:** Easing unread guilt: unread that lets go after a chosen time, "Catch me up", and Unread counts that can be hidden (counts replaced by 0148; the rest replaced by 0171)
+
 *Catch me up and letting unread go were replaced by 0171 (removed 4 November 2026); the counts part was already replaced by 0148.*
 
 *October 2026.*

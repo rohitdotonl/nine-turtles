@@ -1,5 +1,7 @@
 # 0150: The weekly email
 
+**In one line:** The weekly email: off until the reader chooses Weekly or Twice a week in Settings › Account; Saturday (and Wednesday) at 08:00 their time; the people with something unread, a title, a line and the publisher's link each, never a count; nothing new, nothing sent; only to a confirmed address; off in one press from its link; kept in `person_settings`, no structure change
+
 *3 November 2026. V1 item 5 (decision 0140), built while the owner was away
 under his "Go on V1. Ship each one." The smaller choices below are for the
 refinement round.*

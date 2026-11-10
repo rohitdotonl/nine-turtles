@@ -1,5 +1,7 @@
 # 0168: Write back visits the writer's site once
 
+**In one line:** The second floor's new line: a site is visited only when the reader asks, never an article's page; Write back with no known address looks once on the writer's home page and one contact or about page it links to, never twice for the same writer; what it finds fills the field for the reader to check (structure change 36)
+
 *3 November 2026, the owner's review plan, step 4 (item 15, part 2). Rohit's
 yes, in his own words, 3 November 2026; the floor's wording settled by the
 owner's critique thread, which Rohit asked to decide copy and floors for

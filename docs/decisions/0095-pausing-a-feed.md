@@ -1,5 +1,7 @@
 # 0095: Pausing a feed
 
+**In one line:** Pausing a feed from Edit feed: while paused, its new articles still arrive but nothing from it piles up as unread (structure change 19, `subscriptions.paused_at`)
+
 *26 October 2026. One of the ways to ease "unread guilt" the owner chose
 (with "Unread lets go by itself", "Catch me up" and "Unread without
 numbers"); he dropped the daily limit for busy feeds.*

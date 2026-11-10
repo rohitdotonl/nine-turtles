@@ -1,5 +1,7 @@
 # 0169: The front page is Rohit's letter
 
+**In one line:** The front page is Rohit's signed letter, ending "P.S. Write back to me": for that page only, no band and no single text size (0153), and the one exception to "no stories or metaphors"; its picture shows only what Write back does today, and no price or trial until they're set
+
 *3 November 2026. Step 4b of the owner's review plan. Rohit chose the bold
 front page in the owner's review of the website, and handed copy, visuals and
 rules to the owner's critique thread, which approved this wording and the

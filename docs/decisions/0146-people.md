@@ -1,5 +1,7 @@
 # 0146: People: one row and one page per person
 
+**In one line:** *(Refined by 0163.)* People: one sidebar row and one page per person, whose places (blog, channel, newsletter) list as one; joined only by the reader (Add another place, "Is this the same person?" on clear evidence, or "This is one person" on a folder), each with Undo; Edit feed becomes Edit person; in the code they're `writers`
+
 *2 November 2026. The shape was agreed with the owner (PLAN.md → V1, item
 1, and the pictures at https://claude.ai/artifact/N6VBtfpfGavgN8Dz7bPyFS);
 the owner gave advance permission to build and ship it. The smaller choices

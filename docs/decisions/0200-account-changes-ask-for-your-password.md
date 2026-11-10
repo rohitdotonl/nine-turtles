@@ -1,5 +1,7 @@
 # 0200: Change your password in Settings; deleting asks for your password
 
+**In one line:** Settings › Account › Password › Change… (current and new password; other devices signed out); Delete account… and Delete data… ask for your password; every link email opens "Someone, hopefully you, asked to …" and ends "If you didn't ask, ignore this email: …"
+
 *6 November 2026.*
 
 **Decision.** Three changes from the owner's review of the account flows

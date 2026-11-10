@@ -1,5 +1,7 @@
 # 0109: Passkey sign-in
 
+**In one line:** Passkey sign-in beside passwords: added in Settings › Passkeys after the password, signed in with from a button or the email field's autofill; checked by webauthn-rs (the one new library); challenges in memory, five minutes, used once; only at `NINE_TURTLES_PUBLIC_URL` (or localhost); remove with Undo; structure change 25
+
 *27 October 2026. The owner asked for it, and said yes to one new library
 for it.*
 

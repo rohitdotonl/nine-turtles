@@ -1,5 +1,7 @@
 # 0127: Six questions before writing code
 
+**In one line:** Six questions before writing code (can it work without new code, is it already here, does the standard library, SQLite or the browser do it, an existing library, a line or two, only then the smallest thing with its tests; about code, never about whether a feature should exist), in ENGINEERING.md, after Ponytail's ladder; the plugin itself not installed
+
 *29 October 2026.*
 
 **Decision.** Before writing code, an agent asks six questions in order and

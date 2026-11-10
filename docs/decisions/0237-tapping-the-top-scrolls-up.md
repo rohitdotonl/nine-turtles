@@ -1,5 +1,7 @@
 # 0237: Tapping the top of an iPhone's screen scrolls up
 
+**In one line:** Tapping the top of an iPhone's or iPad's screen scrolls the list, article or page on screen back to its top, at once, as in every app there; iOS only, phone layout only
+
 *10 November 2026.*
 
 Rohit's "implement all suggestions from rounds 1 and 2 except P03-8"

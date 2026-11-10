@@ -1,5 +1,7 @@
 # 0103: More keys, marking past an article, and one list of keys
 
+**In one line:** More keys (Space and Shift+Space scroll the article, n / Shift+N next unread, Shift+O mark older as read, e fold the folder, Shift+E edit, c copy link) and Mark all above / below as read, reaching the part of the list not loaded yet (`/api/articles/read-past`, never past the list's `latest`); every key written once in one table that the key reader and the cheat sheet share, with a check that they agree (marking above, below and older replaced by 0171)
+
 *Marking older, above and below as read (`Shift+O`) was replaced by 0171 (removed 4 November 2026); the other keys stay.*
 
 *27 October 2026.*

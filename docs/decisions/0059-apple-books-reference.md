@@ -1,5 +1,7 @@
 # 0059: Apple Books is the design reference, written down
 
+**In one line:** *(Replaced by 0131.)* Apple Books is the design reference, written into DESIGN.md: floors first, then Apple Books; principles brought up to date; each screen described once, in SPEC.md
+
 *25 October 2026. The owner's request: bring the documents in line with
 the Apple Books direction the app has followed since 24 October, and make
 them shorter.*

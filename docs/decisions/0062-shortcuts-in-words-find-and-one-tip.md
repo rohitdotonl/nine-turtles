@@ -1,5 +1,7 @@
 # 0062: Shortcuts in words, a list you can search, and one welcome tip
 
+**In one line:** Shortcuts in words at the sidebar's foot; the shortcut list grouped by what you're doing, with a find field; one welcome tip, once, under "No article open" (changes 0041's no-hint rule)
+
 > **Partly replaced by [0064](0064-a-beautiful-empty-page-and-capital-keys.md):** "Shortcuts" became "Keys", and "No article open" became "Time to read something beautiful."
 
 *25 October 2026. The owner asked for these after a fresh-eyes review: "A

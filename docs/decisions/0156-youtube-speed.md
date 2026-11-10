@@ -1,5 +1,7 @@
 # 0156: A video plays at the speed last chosen; captions are left to YouTube
 
+**In one line:** YouTube speed and captions: a test in real browsers showed YouTube's player remembers captions but not speed, so this device remembers the speed last chosen in a video and gives it to the next one; captions are left to YouTube
+
 *3 November 2026. Decision 0144, item 7, said to remember a video's speed
 and captions only if a test in real browsers showed YouTube's player doesn't
 already; decision 0149 left it for that test. The owner said go ahead.*

@@ -1,5 +1,7 @@
 # 0179: The original turtles are back
 
+**In one line:** The logo is the original nine turtles again (half-circle shells, round heads); the heavier redrawn nine (D2) is dropped; sizes, baseline, black app icon and tab icon unchanged
+
 *4 November 2026.*
 
 **Decision.** The logo goes back to the original drawing of decision 0067:

@@ -1,5 +1,7 @@
 # 0195: Sign-up never says who has an account
 
+**In one line:** Sign-up never says whether an address has an account: it answers "Check your email" and that address is emailed "You already have a nine turtles account" (replaces what 0115 accepted); up to 100 sign-ups an hour (was 20); a quiet "Open Gmail/Outlook/iCloud Mail/Proton Mail" link under Check your email
+
 *6 November 2026.*
 
 **Decision.** Three changes to signing up, from the owner's onboarding

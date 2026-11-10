@@ -1,5 +1,7 @@
 # 0110: Keys of your own, and five more keys
 
+**In one line:** *(Changing keys removed by 0170.)* Keys of your own: Change keys… at the foot of the `?` list (and Settings › Keyboard) edits keys in place, asking before taking a key from another shortcut; Enter, Escape, ? and the g keys fixed; kept as `keys` in person_settings (no structure change), a copy on each device. New keys Shift+J / Shift+K (feeds in the sidebar's order), Home / End, g then f, g then , and, once Recently read exists, g then r
+
 *27 October 2026.*
 
 **Decision.** The owner approved five more keys, and keys the reader can

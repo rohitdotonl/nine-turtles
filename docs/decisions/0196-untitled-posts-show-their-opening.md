@@ -1,5 +1,7 @@
 # 0196: A post with no title shows its opening once
 
+**In one line:** A post with no title shows its opening words once in every list: the reading serif, regular weight, two lines then "…", no line of text under it; "Untitled" only when it has no words
+
 *6 November 2026.*
 
 **Decision.** In every article list, a post whose feed gives it no title

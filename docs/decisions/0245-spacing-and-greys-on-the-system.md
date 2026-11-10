@@ -1,5 +1,7 @@
 # 0245: Every gap on the scale, four grey tones
 
+**In one line:** Every gap on the scale and four grey tones: 6px gaps become 8 (a field's name 8px over it), cards 16px inside, a list's rows 24px above and below, 64px of paper beside an article on a computer; greys are fill 5%, line 10%, strong 20% and edge 65%; the one-system check now fails anything off the table
+
 *10 November 2026.*
 
 Rohit's "Yes, don't be lazy. Finish the work." (10 November 2026), on the

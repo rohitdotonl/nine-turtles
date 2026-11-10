@@ -1,5 +1,7 @@
 # 0015: Spending fewer tokens per change
 
+**In one line:** Spending fewer tokens: one milestone per thread, light reviews, shorter AGENTS.md and DESIGN.md
+
 *23 October 2026, after Milestone 4. Chosen by the owner.*
 
 *Point 2 partly replaced by 0021: documents-only changes and tiny fixes now get no review.*

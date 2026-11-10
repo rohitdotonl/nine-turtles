@@ -1,5 +1,7 @@
 # 0144: YouTube as a first-class citizen
 
+**In one line:** YouTube first-class: any YouTube link follows the maker; Shorts and live out by default with switches; import from Google Takeout; chapters and a folded description, no picture before Play; resume where you stopped; nothing at the end; videos in Unread, read once opened; on the website one of the places people publish; never recommendations, counts, comments, downloads or Google sign-in
+
 *2 November 2026. Settled with the owner in the YouTube thread, after the
 V1 list (decision 0140) named it a must. Built on 3 November 2026: how, and
 the one change to item 2 (which of YouTube's lists sorts out Shorts), is in

@@ -1,5 +1,7 @@
 # 0201: Hiding as a list of words
 
+**In one line:** Settings › Hiding becomes a list of words: one field with Add and For a week, For a month or For good (the usual one); adding hides what already matches at once, with Undo; each word a row with whose, how long and Remove; no switch, no Edit sheet, no question; a word ends on its own (structure change 45)
+
 *6 November 2026.*
 
 **Context.** Point 9 of the owner's whole-app review of what to remove or

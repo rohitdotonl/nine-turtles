@@ -1,5 +1,7 @@
 # 0102: "Wrong turn?", one 404 page for the app and the website
 
+**In one line:** "Wrong turn?": one 404 page for the app and the website, with a small "404 error", eight turtles one way and one the other, and "tell me which one"; the website footer's turtles and line move to About
+
 *October 2026.*
 
 **Decision.** The owner chose the page on 27 October 2026, from mockups. An

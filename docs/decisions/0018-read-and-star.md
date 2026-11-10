@@ -1,5 +1,7 @@
 # 0018: Read state, stars and undo
 
+**In one line:** Read state, stars and undo: two marks per article, partial indexes, marks shown first and saved in order, shared sort order
+
 *23 October 2026, Milestone 7. Built from SPEC sections 8, 9 and 18 without a separate plan (decision 0014).*
 
 **Two marks on each article.** Read and starred are two yes/no columns on

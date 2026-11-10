@@ -1,5 +1,7 @@
 # 0158: The starter packs come off the website
 
+**In one line:** The starter packs come off the website (replaces 0100): their pages, downloads and footer link go, and SPEC section 31 is retired; the app's starter feeds, "New to feeds?", the feed finder and Help stay
+
 *3 November 2026. Replaces decision 0100. The owner had dropped the starter
 packs from the plan; on 3 November he asked for them to be removed.*
 
