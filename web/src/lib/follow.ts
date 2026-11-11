@@ -81,6 +81,11 @@ export function siteOf(address: string): string {
   return address.replace(/^https?:\/\/(www\.)?/i, "").replace(/[/?#].*$/s, "");
 }
 
+/** Whether pressing Follow again may work: only after no answer, no connection or a passing trouble. A guard against bots stays. */
+export function worthTryingAgain(reason: Problem): boolean {
+  return reason === "unreachable" || reason === "offline" || reason === "trouble";
+}
+
 /** Why following didn't happen, in plain words with no "feed" or "RSS" in them: Add feed's own, where those have none. */
 export function sayProblem(reason: Problem): string {
   switch (reason) {

@@ -1,7 +1,7 @@
 //! Telling a site's guard from the site itself (decision 0255).
 //!
 //! Many sites sit behind a guard against bots (Cloudflare's bot check,
-//! Vercel's, Sucuri's, Imperva's, Akamai's, DDoS-Guard's…) that can turn a
+//! Vercel's, Sucuri's, Imperva's, Akamai's, Amazon's…) that can turn a
 //! feed reader away before the site ever sees the request. The reader should
 //! know it's the site's guard, not nine turtles and not a broken feed, so the
 //! answer is recognised here: first by the headers the guards add, and only
@@ -42,18 +42,19 @@ pub fn may_say_so(status: StatusCode, headers: &HeaderMap) -> bool {
             && !headers.contains_key(reqwest::header::RETRY_AFTER))
 }
 
-/// Words only a guard's own page carries.
+/// Words only a guard's own page carries, never ones a site's own refusal
+/// might use.
 const MARKS: &[&str] = &[
     // Cloudflare: its check ("Just a moment...") and its block page.
     "<title>Just a moment...</title>",
     "/cdn-cgi/challenge-platform/",
     "Attention Required! | Cloudflare",
-    "Sorry, you have been blocked",
     "Sucuri WebSite Firewall",
+    // Imperva (once Incapsula).
     "Incapsula incident ID",
     "_Incapsula_Resource",
+    // Akamai's refusal links to its own error pages.
     "errors.edgesuite.net",
-    "DDoS-Guard",
     "Vercel Security Checkpoint",
 ];
 
@@ -133,5 +134,7 @@ mod tests {
             b"<h1>Forbidden</h1><p>You don't have permission.</p>"
         ));
         assert!(!page_says_so(b""));
+        // A site's own refusal in a guard's words isn't a guard.
+        assert!(!page_says_so(b"<h1>Sorry, you have been blocked</h1>"));
     }
 }

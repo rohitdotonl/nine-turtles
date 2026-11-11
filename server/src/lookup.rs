@@ -159,8 +159,9 @@ enum Elsewhere {
 
 /// Tries the other places for a page naming no feed, in order, one at a
 /// time. A site that asks to slow down, stops answering or whose guard
-/// turns nine turtles away isn't asked again, and the reader is told so ("try again later"), not "no feed"; an
-/// address that isn't there (or isn't a feed) moves on to the next.
+/// turns nine turtles away isn't asked again, and the reader is told which
+/// ("try again later", or the guard), not "no feed"; an address that isn't
+/// there (or isn't a feed) moves on to the next.
 async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, FetchError> {
     let local = state.config.local_feeds_allowed;
     for place in places(page) {

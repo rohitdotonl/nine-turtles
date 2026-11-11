@@ -73,12 +73,13 @@ it never pretends to be one, so the guard turns it away and your readers
 stop getting your posts. They see "The site's guard against bots turns
 nine turtles away", so they know it isn't you or them.
 
-To let it in, allow visitors whose user agent starts with
-<code>nine-turtles/</code>, at least for your feed's address. In
-Cloudflare, that's a custom rule under **Security › WAF** that skips the
-bot checks for that user agent. Other feed readers are in the same
-spot, so allowing your feed's address for everyone helps them too. The
-[blog checkup](/blog-checkup/) tells you if a guard turns it away.
+To let it in, the best way is to let everyone reach your feed's address
+past the bot checks: a feed is meant to be read by programs, and every
+feed reader then gets through, not only nine turtles. In Cloudflare,
+that's a custom rule under **Security › WAF** that skips the bot checks
+when the address is your feed's. If you'd rather not, allow visitors
+whose user agent starts with <code>nine-turtles/</code>; anyone can write
+that, though, so it's the weaker door to leave open.
 
 ## Credit
 
