@@ -50,7 +50,8 @@ V1, item 2). Its look gets a refinement round.*
   **Write in Outlook.com** and **Copy their address** (underlined words, as
   the list's note's buttons, apart by a middle dot); Copy their address
   copies it and says "Copied.": on a computer with no email app set up, the
-  press otherwise does nothing you can see (decision 0229).
+  press otherwise does nothing you can see (decision 0229). Pressing one of
+  them puts the keyboard back on Write back, as the button pressed goes.
 - **Write in Gmail or Outlook.com** (decision 0257): on a computer whose
   email lives in the browser, pressing Write in Gmail opens the same email
   (address, subject, quotes) as a new Gmail draft in a new tab, at once, and
@@ -59,10 +60,15 @@ V1, item 2). Its look gets a refinement round.*
   new tab instead of the email app, and the line says "Opening Gmail in a
   new tab…" and "Wrong place?" with **Write in your email app**, **Write in
   Outlook.com** and **Copy their address**. Outlook.com works the same way.
-  On a touch screen, whose email app always answers, the line offers only
-  Copy their address (and Write in your email app, if Gmail or Outlook.com
-  was chosen there). nine turtles still never sends or sees the email: it
-  only opens Gmail's or Outlook.com's own page for a new email, filled in. The line goes once you come back from the email app (the page was hidden while it opened) or another article opens. A copy that fails says so in oxblood with the alert icon.
+  While Gmail or Outlook.com is chosen, a line under the address always says
+  so, "Opens Gmail in a new tab.", with **Use your email app**, which goes
+  back without writing: the choice is never stuck. On a touch screen, whose
+  email app always answers, the line asks only "Nothing opened?" with Copy
+  their address (and Write in your email app, if Gmail or Outlook.com was
+  chosen there). Started later than the press (a row's menu, while the
+  article's text loads), a new tab may be blocked by the browser, so then
+  nothing opens and the keyboard goes to Write back for one more press. nine turtles still never sends or sees the email: it
+  only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question and its ways on stay, for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
   Pressed away from the article's end (the paper plane, `w`, a row's menu,
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's

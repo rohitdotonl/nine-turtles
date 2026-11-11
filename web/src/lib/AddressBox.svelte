@@ -36,7 +36,7 @@
     looked: "looking" | "found" | "none" | "couldn't" | undefined;
     /** The address found is still what's in the field. */
     showingFound: boolean;
-    /** The address typed is kept for them ("Paste it here and it's saved."). */
+    /** The address typed is kept for them ("nine turtles doesn't have their address yet."). */
     saved: boolean;
     /** The main button's words: "Write back" or "Write". */
     submit: string;

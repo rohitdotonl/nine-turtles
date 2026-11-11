@@ -21,7 +21,18 @@ all three ideas and the three bug fixes (the bug fixes shipped first, in #359).
    phone's email app always answers. nine turtles still never sends or sees
    the email: Gmail's and Outlook.com's own "new email" pages are filled in,
    as the `mailto:` link is. Only these two, the most used web email, so the
-   line stays short; anyone else copies the address.
+   line stays short; anyone else copies the address. While one is chosen, a
+   line under the address always says so, with **Use your email app**, so a
+   wrong press is never stuck (forgiving). Back from the email app, the
+   line's "Opening…" goes but its ways on stay, for an app that opened
+   wrong.
+
+   **Not a branded share button** (DESIGN.md → "Never"): that rule keeps
+   nine turtles from pushing articles out to platforms ("Share on X"). These
+   are plain words, with no logo or brand color, that open the reader's own
+   email, the same email the `mailto:` link writes, offered only after the
+   email app didn't do it. Rohit chose them from a mockup naming Gmail and
+   Outlook.
 2. **One thing to do in the address box.** "Find it on their site" was a
    bordered button above the field, as loud as Write back. It's now a link
    at the end of the box's line ("Paste it here, or look on their site."),

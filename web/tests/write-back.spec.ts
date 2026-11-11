@@ -209,6 +209,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await plane.click();
   const note = pane(page).locator(".away");
   await expect(note).toContainText("Opening your email app… Nothing opened, or the wrong app?");
+  await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeVisible();
   await note.getByRole("button", { name: "Copy their address" }).click();
   await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await note.getByRole("button", { name: "Close the note" }).click();
@@ -251,14 +252,23 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   const line = pane(page).locator(".write-back .opening");
   await expect(line).toContainText("Opening your email app…");
   await expect(line).toContainText("Nothing opened, or the wrong app?");
+  // Back from the email app (the page was hidden while it opened): "Opening…" goes, the ways on stay, for an app that opened wrong.
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await expect(line).not.toContainText("Opening your email app…");
+  await expect(line).toContainText("Nothing opened, or the wrong app?");
+  // By keyboard: Enter on Write in Gmail, and the keyboard goes back to Write back as the button goes.
   const gmail = page.context().waitForEvent("page");
-  await line.getByRole("button", { name: "Write in Gmail" }).click();
+  await line.getByRole("button", { name: "Write in Gmail" }).focus();
+  await page.keyboard.press("Enter");
   // The same email, now in Gmail, at once.
   const draft = await gmail;
   expect(draft.url()).toMatch(/^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=gm%40gm\.example&su=Re%3A%20/);
   await draft.close();
   await expect(line).toContainText("Opening Gmail in a new tab…");
+  await expect(link).toBeFocused();
   await expect(line.getByRole("button", { name: "Write in your email app" })).toBeVisible();
+  // Always said under the address while Gmail is chosen, so the choice is never stuck.
+  await expect(pane(page)).toContainText("Opens Gmail in a new tab.");
 
   // Kept on this device: another article's Write back is a Gmail draft, in a new tab.
   await page.locator(".item-row").nth(1).click();
@@ -268,11 +278,35 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await appReady(page);
   await expect(link).toHaveAttribute("href", /^https:\/\/mail\.google\.com\//);
 
-  // And back: Write in your email app is the mailto: link again.
-  const again = page.context().waitForEvent("page");
-  await link.click();
-  await (await again).close();
-  await pane(page).locator(".write-back .opening").getByRole("button", { name: "Write in your email app" }).click();
+  // And back, without writing: Use your email app, under the address, makes it the mailto: link again.
+  await pane(page).getByRole("button", { name: "Use your email app" }).click();
   await expect(link).toHaveAttribute("href", /^mailto:gm@gm\.example/);
   await expect(link).not.toHaveAttribute("target", "_blank");
+  await expect(link).toBeFocused();
+  await expect(pane(page)).not.toContainText("Opens Gmail in a new tab.");
+});
+
+test("On a touch screen, whose email app always answers, the line offers only Copy their address", async ({ page }) => {
+  const name = `wbtouch${test.info().workerIndex}x${Date.now()}`;
+  // A touch screen: no fine pointer.
+  await page.addInitScript(() => {
+    const real = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) => (query.includes("pointer: fine") ? { ...real(query), matches: false } : real(query));
+  });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.context().route("https://outlook.live.com/**", (route) => route.fulfill({ body: "A made-up Outlook" }));
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "t@t.example" } })).ok()).toBe(true);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  await pane(page).getByRole("link", { name: `Write back to Blog ${name}` }).click();
+  const line = pane(page).locator(".write-back .opening");
+  await expect(line).toContainText("Nothing opened?");
+  await expect(line).not.toContainText("the wrong app");
+  await expect(line.getByRole("button")).toHaveText(["Copy their address"]);
 });
