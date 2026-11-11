@@ -22,7 +22,7 @@
   shows it, Change beside it changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
-  Where it opens is this device's choice (decision 0257): the email app (`mailto:`), or, once
+  Where it opens is this device's choice (decision 0258): the email app (`mailto:`), or, once
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
   The paper plane, its key (`w`), a row's menu and the menu beside chosen words do the same
@@ -98,7 +98,7 @@
   /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened.
    * A polite live line, not a second "status": the toolbar's line is the pane's one status. */
   let opening = $state(false);
-  /** Back from the email app (the page was hidden while it opened): "Opening…" has done its job, but the ways on stay, for an app that opened wrong (decision 0257). */
+  /** Back from the email app (the page was hidden while it opened): "Opening…" has done its job, but the ways on stay, for an app that opened wrong (decision 0258). */
   let returned = $state(false);
   let copied = $state("");
   let copyFailed = $state(false);
@@ -108,7 +108,7 @@
     return () => document.removeEventListener("visibilitychange", back);
   });
 
-  /** Where this device writes email (decision 0257): its email app, or Gmail or Outlook.com in a new tab. */
+  /** Where this device writes email (decision 0258): its email app, or Gmail or Outlook.com in a new tab. */
   let writesIn: MailPlace = $state(mailPlace());
   /** What the last email started with, to start it again in another place. */
   let lastQuotes: string[] = [];
