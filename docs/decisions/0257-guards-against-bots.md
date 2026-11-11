@@ -1,4 +1,4 @@
-# 0255: A site's guard against bots is named as such
+# 0257: A site's guard against bots is named as such
 
 **In one line:** When a guard in front of a site (Cloudflare's bot check, Vercel's, Sucuri's, Imperva's, Akamai's, Amazon's) turns nine turtles away, the fetch says `Blocked` (by the guard's own headers, or for a 403 or a 503 with no time to wait, by the first 32 KB of its page), the reader sees "The site's guard against bots turns nine turtles away. Only the site can let it in.", a guarded site isn't asked again in the same lookup, and the publishers' page tells site owners how to let nine turtles in
 

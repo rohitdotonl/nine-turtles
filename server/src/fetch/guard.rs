@@ -1,4 +1,4 @@
-//! Telling a site's guard from the site itself (decision 0255).
+//! Telling a site's guard from the site itself (decision 0257).
 //!
 //! Many sites sit behind a guard against bots (Cloudflare's bot check,
 //! Vercel's, Sucuri's, Imperva's, Akamai's, Amazon's…) that can turn a

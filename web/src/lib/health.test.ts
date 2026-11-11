@@ -36,7 +36,7 @@ describe("the words for who isn't working", () => {
       expect(words).not.toMatch(/\d{3}|-/);
     }
     expect(reason("answered-403")).toBe("The site refuses to share this feed.");
-    // A guard against bots is named as such, and the reader learns only the site can fix it (decision 0255).
+    // A guard against bots is named as such, and the reader learns only the site can fix it (decision 0257).
     expect(reason("blocked")).toMatch(/guard against bots .* Only the site can let it in\./);
     expect(refusalMessage({ error: "blocked" }, "find")).toMatch(/guard against bots/);
   });

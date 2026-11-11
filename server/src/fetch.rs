@@ -100,7 +100,7 @@ pub enum FetchError {
     SlowDown(Option<i64>),
     /// A guard in front of the site (Cloudflare's bot check and the like)
     /// turned nine turtles away before the site itself could answer
-    /// (`fetch::guard`, decision 0255).
+    /// (`fetch::guard`, decision 0257).
     Blocked,
 }
 

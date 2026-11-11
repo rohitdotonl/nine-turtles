@@ -233,7 +233,7 @@ pub(crate) enum Problem {
     NotAnAddress,
     NotAllowed,
     Unreachable,
-    /// The site's guard against bots turned nine turtles away (decision 0255).
+    /// The site's guard against bots turned nine turtles away (decision 0257).
     Blocked,
     PageNotFound,
     TooBig,
