@@ -6,7 +6,8 @@ use reqwest::Url;
 
 use super::*;
 
-/// Content made safe to show: no scripts, styles, frames or event handlers;
+/// Content made safe to show: no scripts, styles, frames or event handlers
+/// (a frame other than YouTube's leaves a note with a link to it, `embeds`);
 /// no tracking images and no tracking tags on links (`without_trackers`);
 /// pictures load only as the reader reaches them; links open safely, in a new tab, without telling the
 /// site where the reader came from; relative addresses made whole. Plain
@@ -18,9 +19,13 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
         return ammonia::clean_text(body);
     }
     // Trackers and YouTube players go first, so the safety cleaning always
-    // has the last word.
-    let body = without_youtube_players(&without_trackers(body, Some(base)));
-    ammonia::Builder::default()
+    // has the last word. Any other embedded frame leaves a mark, which
+    // becomes a note saying what was there once the cleaning is done.
+    let (body, embedded) = super::embeds::marked(&without_youtube_players(&without_trackers(
+        body,
+        Some(base),
+    )));
+    let cleaned = ammonia::Builder::default()
         .url_relative(ammonia::UrlRelative::Custom(Box::new(Whole(base.clone()))))
         .add_generic_attributes(["id"])
         .id_prefix(Some(ANCHOR_PREFIX))
@@ -36,7 +41,8 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
             _ => Some(Cow::Borrowed(value)),
         })
         .clean(&body)
-        .to_string()
+        .to_string();
+    super::embeds::noted(&cleaned, &embedded)
 }
 
 /// The video a YouTube address shows, as its 11-character ID: a watch page
@@ -250,7 +256,7 @@ const TRACKERS: &[&str] = &[
 ];
 
 /// Whether an address belongs to a known tracker (`TRACKERS`).
-fn is_tracker(url: &Url) -> bool {
+pub(super) fn is_tracker(url: &Url) -> bool {
     let Some(host) = url.host_str() else {
         return false;
     };
@@ -442,7 +448,7 @@ pub fn text_only(html: &str) -> String {
 }
 
 /// A size written as `1`, `1px` or ` 1 `, in whole pixels.
-fn pixels(text: &str) -> Option<u32> {
+pub(super) fn pixels(text: &str) -> Option<u32> {
     let text = text.trim();
     text.strip_suffix("px").unwrap_or(text).trim().parse().ok()
 }
@@ -624,6 +630,7 @@ mod tests {
 
     #[test]
     fn an_embedded_youtube_player_becomes_a_link_to_the_video() {
+        // Frames that aren't one video leave a note instead (decision 0255).
         let html = clean(
             "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
              <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\
@@ -634,7 +641,8 @@ mod tests {
         assert_eq!(
             html,
             "<p>Watch this:</p><a href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Watch the video on YouTube</a>\
-             "
+             <span class=\"embed-note\">Something from evil.example is embedded here. <a href=\"https://evil.example/embed/dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Open it ↗</a></span>\
+             <span class=\"embed-note\">Something from youtube.com is embedded here. <a href=\"https://www.youtube.com/embed/videoseries?list=PL1\" target=\"_blank\" rel=\"noopener noreferrer\">Open it ↗</a></span>"
         );
     }
 

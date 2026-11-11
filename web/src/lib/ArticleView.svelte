@@ -63,8 +63,10 @@
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
+  import { markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
+  import { pathFor } from "./router";
 
   let {
     article,
@@ -345,13 +347,22 @@
     void full?.summary;
     if (!body) return;
     const pictures = () => body.querySelectorAll("img");
-    const look = () => pictures().forEach(markPicture);
+    // A table wider than the column says so under it, with a word for a touch screen (decision 0255).
+    const touch = matchMedia("(pointer: coarse)").matches;
+    const look = () => {
+      pictures().forEach(markPicture);
+      body.querySelectorAll("table").forEach((table) => markWide(table, touch));
+    };
     const sizes = new ResizeObserver(look);
     sizes.observe(body);
     pictures().forEach((image) => sizes.observe(image));
+    // A picture that didn't load leaves a note with a link to the original instead (decision 0255).
+    const broken = (event: Event) => {
+      if (event.target instanceof HTMLImageElement && body.contains(event.target)) markMissing(event.target, article.link);
+    };
     // A picture's load doesn't bubble; listening on the way down catches each one.
     body.addEventListener("load", look, true);
-    body.addEventListener("error", look, true);
+    body.addEventListener("error", broken, true);
     const press = (event: MouseEvent | KeyboardEvent) => {
       const image = event.target;
       if (!(image instanceof HTMLImageElement) || !image.classList.contains(OPENABLE)) return;
@@ -366,7 +377,7 @@
     return () => {
       sizes.disconnect();
       body.removeEventListener("load", look, true);
-      body.removeEventListener("error", look, true);
+      body.removeEventListener("error", broken, true);
       body.removeEventListener("click", press);
       body.removeEventListener("keydown", press);
     };
@@ -537,9 +548,15 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <p class="article-byline" lang="en">
         {#if followed}
-          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows. -->
-          <button type="button" class="publisher writer-link" title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about" onclick={() => onWriter(library.rowOf(article.feedId))}
-            ><bdi>{article.feedTitle}</bdi></button
+          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
+               A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0255). -->
+          <a class="publisher writer-link" href={pathFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
+            onclick={(event) => {
+              // A click meant for a new tab or window is the browser's.
+              if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              onWriter(library.rowOf(article.feedId));
+            }}><bdi>{article.feedTitle}</bdi></a
           ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
         {:else if full?.siteUrl}
           <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only"> (opens in a new tab)</span></a>
@@ -749,11 +766,11 @@
   .toolbar > [aria-disabled="true"] > :global(svg) {
     opacity: 0.35;
   }
-  /* The writer's name under the title: a 44px target to touch, taller than its line without moving it. */
+  /* The writer's name under the title: a 44px target to touch, taller than its line without moving it
+     (an inline link's padding above and below never moves the line, on each line a long name wraps onto). */
   /* Underlined at rest, as every link is (the 65% edge), so it reads as a way in; the line comes up to the ink under the pointer. */
   .writer-link {
-    padding-block: calc((2.75rem - 1lh) / 2);
-    margin-block: calc((1lh - 2.75rem) / 2);
+    padding-block: calc((2.75rem - 1em) / 2);
     cursor: pointer;
     text-decoration: underline;
     text-decoration-thickness: 1px;

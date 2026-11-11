@@ -44,6 +44,19 @@ PLAN.md → V1, item 1.*
   guess the next time the sidebar loads; an imported feed gets it once
   nine turtles has checked it for the first time, so the guess sees its
   writers.
+- **A feed's own name, tidied** (decision 0255). Many feeds wrap their
+  name in words that only say it's a feed: nine turtles takes them off
+  once, as the feed arrives, so "Blog – Pete's Site » Latest Posts" is
+  "Pete's Site", "Posts on Small Kitchen" is "Small Kitchen" and "Maren
+  Holt's Blog RSS Feed" is "Maren Holt". Only the wrapping goes (Blog, Feed,
+  RSS, Atom, Posts, Latest posts, Home and the like, as a part of their own
+  between – | » · and similar, or "Posts on …", "… RSS Feed", "…'s Blog"); a
+  name made only of such words stays whole. Someone already followed by the
+  feed's untidied name is tidied at its next check; a name the reader gave,
+  or brought from another app under another name, is never touched. A
+  title whose symbols a blog coded twice ("Tom &amp;amp; Jerry",
+  "&amp;#8217;") shows them as themselves ("Tom & Jerry", "’"), for
+  articles arriving from now on.
 - **Called by their name** (owner's plan, step 2). When a source on its
   own is first guessed a person and every one of its articles is signed by
   the same one author (in any capitalisation), the person is called by that

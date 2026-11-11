@@ -205,9 +205,11 @@ test.describe("on a wide window", () => {
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0214).
-    const writer = article(page).locator(".article-byline").getByRole("button", { name: "Reading Room" });
+    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0214),
+    // a link that wraps as text does (decision 0255).
+    const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
     await expect(writer).toHaveAttribute("title", "Info about Reading Room (I)");
+    await expect(writer).toHaveAttribute("href", /^\/(people|publications)\/[0-9]+\/about$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
@@ -602,7 +604,7 @@ test.describe("on a wide window", () => {
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
     await page.keyboard.press("Tab");
-    const publisher = article(page).locator(".article-byline").getByRole("button", { name: "Reading Room" });
+    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
     await expect(publisher).toBeFocused();
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
@@ -703,7 +705,7 @@ test.describe("on a wide window", () => {
     // The meta size: 13px, or its touch screen twin, 15px (DESIGN.md → "The system").
     await expect(byline).toHaveCSS("font-size", /^(13|15)px$/);
     await expect(byline).toHaveCSS("margin-top", "0px");
-    const publisher = byline.getByRole("button", { name: "Reading Room" });
+    const publisher = byline.getByRole("link", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "600");
     const [inkColor, bylineColor, publisherColor] = await Promise.all([
       page.evaluate(() => getComputedStyle(document.body).color),

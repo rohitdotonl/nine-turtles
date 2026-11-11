@@ -56,6 +56,11 @@
 //                      (two seconds), whose audio files are silence made here
 //                      (/podcast/audio/long.wav, short.wav), served in parts
 //                      as browsers ask for audio (Range requests)
+//   /messy/NAME/       a blog sending things messily (decision 0255): its
+//                      name wrapped as "Blog – Messy NAME » Latest Posts",
+//                      a title with its symbols coded twice, and an article
+//                      with a picture that won't load, a map in a frame and
+//                      a table too wide for the column
 
 import { createServer } from "node:http";
 
@@ -141,6 +146,20 @@ Filmed on one still morning, from a folding stool on the bank, with the camera o
 <link rel="alternate" href="https://www.youtube.com/watch?v=BBBBBBBBBBB"/><published>${new Date(NEWEST - DAY).toISOString()}</published>
 <media:group><media:content url="https://www.youtube.com/v/BBBBBBBBBBB?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>Rain on a tin roof</media:title></media:group></entry>
 </feed>`;
+
+/** A blog that sends its name, a title and an article messily, as real ones do (decision 0255). */
+function messyFeed(name, host) {
+  const home = `https://messy-${name}.example/`;
+  const cells = (tag) => Array.from({ length: 12 }, (_, at) => `<${tag}>${tag === "th" ? "Column" : "Measurement"} ${at + 1}</${tag}>`).join("");
+  const body = `<p>Here is the map:</p><iframe src="https://www.maps.example/embed?town=1" width="600" height="400"></iframe>
+<p>And the photo from the walk:</p><img src="${host}/messy/${name}/missing.jpg" alt="The harbour at low tide">
+<p>The numbers:</p><table><tr>${cells("th")}</tr><tr>${cells("td")}</tr></table><p>The end.</p>`;
+  return `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
+<title>Blog – Messy ${name} » Latest Posts</title><link>${home}</link>
+<item><title>Tom &amp;amp; Jerry&amp;#8217;s guide</title><link>${home}guide</link><guid>${home}guide</guid>
+<pubDate>${new Date(NEWEST).toUTCString()}</pubDate><content:encoded><![CDATA[${body}]]></content:encoded></item>
+</channel></rss>`;
+}
 
 const reading = `<?xml version="1.0"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
@@ -482,6 +501,13 @@ createServer((request, response) => {
     if (writer[2] === "feed.xml") return xml(rss(`Writer ${name}`, `http://${request.headers.host}/writer/${name}/`, 1));
     if (writer[2] === "contact") return html(`<!doctype html><title>Contact</title><p>Write to me: <a href="mailto:${name}@${name}.example">${name}@${name}.example</a></p>`);
     return html(`<!doctype html><title>Writer ${name}</title><a href="/writer/${name}/contact">Contact</a>`);
+  }
+
+  const messy = path.match(/^\/messy\/([a-z0-9-]+)\/(feed\.xml)?$/);
+  if (messy) {
+    const name = messy[1];
+    if (messy[2]) return xml(messyFeed(name, `http://${request.headers.host}`));
+    return html(page(`Messy ${name}`, [[`Messy ${name}`, `/messy/${name}/feed.xml`]]));
   }
 
   const blog = path.match(/^\/blog\/([a-z0-9-]+)\/(feed\.xml|new\.xml|comments\.xml)?$/);

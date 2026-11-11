@@ -8,13 +8,15 @@ V1, item 2). Its look gets a refinement round.*
 - **Write back on every article** of a person you follow (never a
   publication's, decision 0192): at the article's
   end, under its closing rule (and under "Read the rest on …" for a summary), one
-  centred button, **Write back to Tomas Berg**: an outlined button with a
+  centred button, **Write back**: an outlined button with a
   paper-plane icon, as Mark all as read ends a list, so it's quieter than
-  the writing (decision 0242; solid ink before), naming them
-  in full, by the name in the sidebar ("Write back to Maya Chen"; the
-  owner's core path, points 6 and 7, decision 0183; the first-name rule
-  went), with the address
-  it writes to under it in small muted type. It's also one press from the
+  the writing (decision 0242; solid ink before). Under it, in small muted
+  type, who it goes to, named in full by the name in the sidebar, and the
+  address it writes to: "to Maya Chen, maya@example.com" (the owner's core
+  path, points 6 and 7, decision 0183). The button stays one short word
+  whatever the name's length, so a long name never swells it into a block
+  (decision 0255; it said "Write back to Maya Chen" before); screen readers
+  still hear "Write back to Maya Chen" as the button's name. It's also one press from the
   text, a paper plane beside Star in the article's top bar (on a phone, in
   its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
   own menu in the list, which opens the article and starts it (section 6;
@@ -128,7 +130,7 @@ V1, item 2). Its look gets a refinement round.*
 
 **How to check it**
 1. Follow a blog whose feed names no address (most WordPress blogs). Open an
-   article and scroll to its end: **Write back to …**. Press it: the box
+   article and scroll to its end: **Write back**, with "to …" under it. Press it: the box
    says "Looking on their site…", then either fills in the address it found
    there or says it didn't find one. Type "someone at home" and press Write back: it
    says it doesn't look like an email address, keeping what you typed.
