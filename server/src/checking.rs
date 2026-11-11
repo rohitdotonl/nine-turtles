@@ -314,7 +314,7 @@ async fn worked(
             if first {
                 feeds::keep_newest_unread(&mut transaction, None, feed_id).await?;
             }
-            // A name the feed gave that is now tidied (decision 0258) is tidied for
+            // A name the feed gave that is now tidied (decision 0260) is tidied for
             // the followers still calling it, or the person it's one place of, by
             // that name; a name they gave stays.
             let old: String = sqlx::query_scalar("SELECT title FROM feeds WHERE id = ?")
@@ -424,6 +424,7 @@ impl Failure {
             Self::Fetch(FetchError::Status(code)) => format!("answered-{code}"),
             Self::Fetch(FetchError::TooBig) => "too-big".into(),
             Self::Fetch(FetchError::SlowDown(_)) => "slow-down".into(),
+            Self::Fetch(FetchError::Blocked) => "blocked".into(),
         }
     }
 }

@@ -26,7 +26,7 @@ export type Sick = {
 /** Why an action on the page didn't work. */
 export type HealthRefusal =
   | { error: "asked-to-wait"; until: number }
-  | { error: "already" | "kept-stars" | "no-feed" | "not-found" | "unreachable" | "not-allowed" | "too-big" | "gone" | "trouble" };
+  | { error: "already" | "kept-stars" | "no-feed" | "not-found" | "unreachable" | "blocked" | "not-allowed" | "too-big" | "gone" | "trouble" };
 
 export async function listSick(): Promise<Sick[]> {
   const response = await api("/api/health", { cache: "no-store" });
@@ -78,7 +78,7 @@ async function post(path: string, body: unknown): Promise<Answer> {
     };
   }
   if (answer.error === "asked-to-wait" && typeof answer.until === "number") return { error: "asked-to-wait", until: answer.until };
-  const known = ["already", "kept-stars", "no-feed", "not-found", "unreachable", "not-allowed", "too-big"] as const;
+  const known = ["already", "kept-stars", "no-feed", "not-found", "unreachable", "blocked", "not-allowed", "too-big"] as const;
   const error = known.find((word) => word === answer.error);
   return { error: error ?? "trouble" };
 }
@@ -118,6 +118,8 @@ export function reason(problem: string | null): string {
       return "The site says the feed isn't there any more. It may have moved.";
     case "unreachable":
       return "The site didn't answer. It may be down for a while, or gone.";
+    case "blocked":
+      return "The site's guard against bots turns nine turtles away. Only the site can let it in.";
     case "not-a-feed":
       return "The address now leads to a page that isn't a feed. The site may have moved it.";
     case "too-big":
@@ -183,6 +185,8 @@ export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): 
       return doing === "find" ? "The site's home page wasn't found either." : "Nothing was found at that address.";
     case "unreachable":
       return "The site didn't answer. Try again later.";
+    case "blocked":
+      return "The site's guard against bots turned nine turtles away, so it couldn't look.";
     case "not-allowed":
       return "nine turtles can't visit that address.";
     case "too-big":

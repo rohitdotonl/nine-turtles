@@ -752,7 +752,7 @@ async fn a_file_of_feeds_says_which_still_wait_for_their_first_check() {
 
 #[tokio::test]
 async fn a_name_followed_before_it_was_tidied_is_tidied_at_its_next_check() {
-    // Decision 0258: names stored before tidying ("Blog – Growing » Latest
+    // Decision 0260: names stored before tidying ("Blog – Growing » Latest
     // Posts", twice-coded symbols) become the feed's tidied name, for the
     // place and the person it's part of; a name the reader gave stays.
     let reader = Reader::new().await;

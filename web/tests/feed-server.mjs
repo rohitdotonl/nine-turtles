@@ -56,7 +56,7 @@
 //                      (two seconds), whose audio files are silence made here
 //                      (/podcast/audio/long.wav, short.wav), served in parts
 //                      as browsers ask for audio (Range requests)
-//   /messy/NAME/       a blog sending things messily (decision 0258): its
+//   /messy/NAME/       a blog sending things messily (decision 0260): its
 //                      name wrapped as "Blog – Messy NAME » Latest Posts",
 //                      a title with its symbols coded twice, and an article
 //                      with a picture that won't load, a map in a frame and
@@ -147,7 +147,7 @@ Filmed on one still morning, from a folding stool on the bank, with the camera o
 <media:group><media:content url="https://www.youtube.com/v/BBBBBBBBBBB?version=3" type="application/x-shockwave-flash" width="640" height="390"/><media:title>Rain on a tin roof</media:title></media:group></entry>
 </feed>`;
 
-/** A blog that sends its name, a title and an article messily, as real ones do (decision 0258). */
+/** A blog that sends its name, a title and an article messily, as real ones do (decision 0260). */
 function messyFeed(name, host) {
   const home = `https://messy-${name}.example/`;
   const cells = (tag) => Array.from({ length: 12 }, (_, at) => `<${tag}>${tag === "th" ? "Column" : "Measurement"} ${at + 1}</${tag}>`).join("");

@@ -22,7 +22,7 @@ if (!target) throw new Error("nine turtles: the #app element is missing from ind
 // text size, before anything is drawn.
 apply(load());
 followSystemText();
-// "Opening your reading…" (index.html, decision 0258) gives way to nine turtles itself.
+// "Opening your reading…" (index.html, decision 0260) gives way to nine turtles itself.
 target.replaceChildren();
 mount(App, { target });
 

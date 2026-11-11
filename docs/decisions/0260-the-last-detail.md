@@ -1,4 +1,4 @@
-# 0258: The last detail
+# 0260: The last detail
 
 **In one line:** What arrives from outside is shown with care: the byline's name is a link that wraps as text, Write back is one short button with "to {name}, {address}" under it, a broken picture, an embedded frame and a wide table each say so in a quiet line, a feed's name loses the words that only say it's a feed and twice-coded symbols in titles show as themselves, and the chosen page shows from the first moment, with "Opening your reading…" after a second
 

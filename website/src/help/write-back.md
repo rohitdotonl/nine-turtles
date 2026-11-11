@@ -29,17 +29,28 @@ settings, choose **This is: A person**.
    "Re:" and the article's title (for a short post with no title, its
    first words). nine turtles says "Opening your email app…" under the
    button, or at the bottom of the screen if that button is out of sight
-   (when you pressed the paper plane or <kbd>W</kbd>, say). If nothing opens (on a computer with no email app set
-   up, say, when you use email in your browser), press **Copy their
-   address** there and paste it into a new email.
+   (when you pressed the paper plane or <kbd>W</kbd>, say). If nothing
+   opens, or the wrong app does, see below.
 3. Write what you'd like to say, and send it as you send any email.
+
+## If you use Gmail or Outlook.com in your browser
+
+On a computer, your email may live in a browser tab rather than an email
+app. Then pressing Write back opens nothing, or an app you don't use. Under
+the button, press **Write in Gmail** (or **Write in Outlook.com**): the same
+email opens as a new draft there, in a new tab. nine turtles remembers this
+on that computer, so from then on Write back goes straight to Gmail. To go
+back, press **Write in your email app** under the button after writing back.
+
+If neither works for you, press **Copy their address** and paste it into a
+new email.
 
 ## Write back about a line
 
 Something they wrote stayed with you? Choose those words in the article.
 The small menu beside them ends with **Write back about this**. Press it,
-and your email starts with their words, quoted, so they know what you're
-answering.
+and your email starts with their words, in quotation marks, so they know
+what you're answering.
 
 If you've highlighted words in the article, **Write back** starts your
 email with them too, and says so under the button: "Your email starts with
@@ -54,7 +65,7 @@ about page, while the box says "Looking on their site…".
 
 - **If it finds an address,** it fills it in for you. Check it's theirs,
   then press **Write back**.
-- **If it doesn't,** press **Find it on their site** to open their website
+- **If it doesn't,** press **look on their site** to open their website
   in a new tab, copy the address, and paste it into **Their email address**.
   Then press **Write back**.
 - **Not now** (or <kbd>Esc</kbd>) puts the box away.

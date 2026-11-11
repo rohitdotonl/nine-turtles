@@ -13,6 +13,7 @@
 import { sendChange } from "./http";
 import { placesOf } from "./people";
 import type { Article, Feed } from "./shapes";
+import { deviceText, setDeviceText } from "./device";
 import { date } from "./times";
 
 /** Write back is offered for a person only, never a publication (decision 0192). */
@@ -85,8 +86,8 @@ const LONGEST_QUOTES = 1500;
 
 const linkSize = (text: string) => encodeURIComponent(text).length;
 
-/** A quote as email apps write one: each line starting "> ". */
-const asQuote = (text: string) => text.trim().split(/\n+/).map((line) => `> ${line.trim()}`).join("\n");
+/** A quote as a person writes one in a letter, in curly quotes (decision 0259): "> " at each line's start reads as code to most people, and Gmail shows it as it is. */
+const asQuote = (text: string) => `“${text.trim().split(/\n+/).map((line) => line.trim()).join("\n")}”`;
 
 /** The first words of `text` that fit in `room`, ending "…"; empty when not even one does. */
 function shortened(text: string, room: number): string {
@@ -101,7 +102,7 @@ function shortened(text: string, room: number): string {
 
 /**
  * How the email starts when the reader highlighted or chose words (decision
- * 0205): each quote on lines of its own beginning "> ", as email apps quote, a
+ * 0205): each quote in curly quotes, as a person quotes in a letter (decision 0259), a
  * blank line after each, then room to write. Quotes that would make the link
  * too long are left out; when even the first is too long, its first words are
  * kept, ending "…", so the email never starts empty under a line saying it
@@ -133,6 +134,44 @@ export function writeBackLink(address: string, title: string, quotes: string[] =
   const body = quotedBody(quotes);
   if (body) parts.push(`body=${encodeURIComponent(body)}`);
   return parts.length ? `mailto:${to}?${parts.join("&")}` : `mailto:${to}`;
+}
+
+/**
+ * Where the reader writes email on this device (decision 0259): their own
+ * email app (a `mailto:` link), or Gmail or Outlook.com in the browser, for a
+ * computer whose email lives there and so has no email app to open. Chosen
+ * under Write back once it's pressed, and kept on this device only: a phone
+ * and a computer often differ.
+ */
+export type MailPlace = "app" | "gmail" | "outlook";
+
+const MAIL_KEY = "nine-turtles.write-back-in";
+
+export function mailPlace(): MailPlace {
+  const kept = deviceText(MAIL_KEY);
+  return kept === "gmail" || kept === "outlook" ? kept : "app";
+}
+
+export function keepMailPlace(place: MailPlace): void {
+  setDeviceText(MAIL_KEY, place === "app" ? null : place);
+}
+
+/** Each place by its name, as the line under Write back says it. */
+export const MAIL_NAMES: Record<MailPlace, string> = { app: "your email app", gmail: "Gmail", outlook: "Outlook.com" };
+
+/** The new email, filled in as `writeBackLink` fills it: the page that starts one in Gmail or Outlook.com, else the `mailto:` link. */
+export function composeLink(place: MailPlace, address: string, title: string, quotes: string[] = []): string {
+  if (place === "app") return writeBackLink(address, title, quotes);
+  const fields =
+    place === "gmail"
+      ? { base: "https://mail.google.com/mail/?view=cm&fs=1", to: "to", subject: "su" }
+      : { base: "https://outlook.live.com/mail/0/deeplink/compose?", to: "to", subject: "subject" };
+  const parts = [`${fields.to}=${encodeURIComponent(address)}`];
+  const subject = replySubject(title);
+  if (subject) parts.push(`${fields.subject}=${encodeURIComponent(subject)}`);
+  const body = quotedBody(quotes);
+  if (body) parts.push(`body=${encodeURIComponent(body)}`);
+  return `${fields.base}${fields.base.endsWith("?") ? "" : "&"}${parts.join("&")}`;
 }
 
 /**

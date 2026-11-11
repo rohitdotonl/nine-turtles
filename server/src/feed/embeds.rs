@@ -1,7 +1,7 @@
 //! Frames a writer embedded (a map, a Vimeo video, a CodePen), other than
 //! YouTube's (`clean`): nine turtles never shows another site's frame (the
 //! engineering floor), but the reader should know something was there, so
-//! "Here's the map:" doesn't point at nothing (decision 0258).
+//! "Here's the map:" doesn't point at nothing (decision 0260).
 //!
 //! Before the safety cleaning, each frame becomes an empty link to its
 //! address, `<a class="embed-note" href="…"></a>`, which the cleaning then

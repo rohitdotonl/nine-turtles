@@ -1,5 +1,5 @@
 /**
- * What didn't arrive inside an article says so (decision 0258).
+ * What didn't arrive inside an article says so (decision 0260).
  *
  * A picture that fails to load is swapped for a short note in the
  * interface's quiet type (the offline copy's `.offline-image` style): what

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { aboutLine, addressFor, askForFeedLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
+import { aboutLine, addressFor, askForFeedLink, composeLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], ...changes };
@@ -39,6 +39,14 @@ describe("writing back", () => {
     expect(replySubject(aboutLine({ title: "", opening: "Rain all day.", at }))).toBe("Re: Rain all day.");
   });
 
+  it("fills in the same email in Gmail or Outlook.com as in the email app", () => {
+    expect(composeLink("app", "a@b.example", "Tea", ["Cake"])).toBe("mailto:a@b.example?subject=Re%3A%20Tea&body=%E2%80%9CCake%E2%80%9D%0A%0A");
+    expect(composeLink("gmail", "a+1@b.example", "Tea & cake", ["Cake"])).toBe(
+      "https://mail.google.com/mail/?view=cm&fs=1&to=a%2B1%40b.example&su=Re%3A%20Tea%20%26%20cake&body=%E2%80%9CCake%E2%80%9D%0A%0A",
+    );
+    expect(composeLink("outlook", "a@b.example", "")).toBe("https://outlook.live.com/mail/0/deeplink/compose?to=a%40b.example");
+  });
+
   it("says Re: once", () => {
     expect(replySubject("Walking home")).toBe("Re: Walking home");
     expect(replySubject("Re: Walking home")).toBe("Re: Walking home");
@@ -51,19 +59,19 @@ describe("writing back", () => {
     expect(writeBackLink("a+b@alpha.example", "")).toBe("mailto:a%2Bb@alpha.example");
   });
 
-  it("starts the email with the reader's highlights, quoted as email apps quote", () => {
+  it("starts the email with the reader's highlights, in curly quotes, as a letter quotes", () => {
     expect(quotedBody([])).toBe("");
-    expect(quotedBody(["A letter can wait a week.", "  ", "Two\nlines"])).toBe("> A letter can wait a week.\n\n> Two\n> lines\n\n");
+    expect(quotedBody(["A letter can wait a week.", "  ", "Two\nlines"])).toBe("“A letter can wait a week.”\n\n“Two\nlines”\n\n");
     expect(writeBackLink("alpha@alpha.example", "Tea", ["Cake & tea"])).toBe(
-      "mailto:alpha@alpha.example?subject=Re%3A%20Tea&body=%3E%20Cake%20%26%20tea%0A%0A",
+      "mailto:alpha@alpha.example?subject=Re%3A%20Tea&body=%E2%80%9CCake%20%26%20tea%E2%80%9D%0A%0A",
     );
     // Past 1,500 characters once in the link, the rest are left out, so the link stays one email apps take.
-    expect(quotedBody(["a".repeat(1400), "b".repeat(200), "c"])).toBe(`> ${"a".repeat(1400)}\n\n`);
+    expect(quotedBody(["a".repeat(1400), "b".repeat(200), "c"])).toBe(`“${"a".repeat(1400)}”\n\n`);
     // Measured as written into the link: Japanese grows nine times there.
     expect(encodeURIComponent(quotedBody(["文".repeat(400)])).length).toBeLessThanOrEqual(1520);
     // One quote too long by itself keeps its first words, ending "…", never nothing.
     const long = quotedBody([`${"word ".repeat(400)}end`]);
-    expect(long).toMatch(/^> word word .*word…\n\n$/);
+    expect(long).toMatch(/^“word word .*word…”\n\n$/);
     expect(encodeURIComponent(long).length).toBeLessThanOrEqual(1520);
   });
 

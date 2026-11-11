@@ -116,6 +116,9 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
   email address, and your email app opens with a short note you can change.
 - **"That site didn't answer."** It may be down for a moment. Try again
   later.
+- **"The site's guard against bots turns nine turtles away."** The site
+  keeps bots out, and nine turtles is turned away with them. Only the site
+  can let it in, so write to them and ask.
 
 ## Good to know
 

@@ -95,6 +95,9 @@ pub(super) fn not_added(why: &NotAdded) -> String {
         NotAdded::NotAnAddress => "That isn't a web address (http or https).",
         NotAdded::NotAllowed => "nine turtles doesn't fetch from that address.",
         NotAdded::Unreachable => "That website couldn't be reached.",
+        NotAdded::Blocked => {
+            "That website's guard against bots turned nine turtles away; only the site can let it in."
+        }
         NotAdded::NotFound => "Nothing was found at that address.",
         NotAdded::TooBig => "That page is too big to be a feed.",
         NotAdded::NoFeed => "No feed was found there.",

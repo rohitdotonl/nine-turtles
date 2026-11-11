@@ -1418,7 +1418,7 @@ input {
   In a copy kept for reading offline, each image is this short note instead
   (SPEC section 32): its own quiet line in the interface font and the second
   ink, as the article's end note is, so it never reads as the author's words;
-  so are a picture that didn't load, an embedded frame, a wide table (0258). */
+  so are a picture that didn't load, an embedded frame, a wide table (0260). */
 .article-text .offline-image {
   display: block;
   margin-block: 1em;

@@ -1,4 +1,4 @@
-// The script written into index.html (decision 0258): the reader's chosen page
+// The script written into index.html (decision 0260): the reader's chosen page
 // from the first moment, the same one preferences.ts then puts into effect, and
 // its fingerprint in the server's rules, without which the browser refuses it.
 import { describe, expect, it } from "vitest";

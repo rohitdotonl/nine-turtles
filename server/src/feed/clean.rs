@@ -20,7 +20,7 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
     }
     // Trackers and YouTube players go first, so the safety cleaning always
     // has the last word. Any other embedded frame becomes an empty link to it,
-    // which the web app writes a note into (`embeds`, decision 0258).
+    // which the web app writes a note into (`embeds`, decision 0260).
     let body = super::embeds::linked(
         &without_youtube_players(&without_trackers(body, Some(base))),
         base,
@@ -630,7 +630,7 @@ mod tests {
 
     #[test]
     fn an_embedded_youtube_player_becomes_a_link_to_the_video() {
-        // Frames that aren't one video leave a note instead (decision 0258).
+        // Frames that aren't one video leave a note instead (decision 0260).
         let html = clean(
             "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
              <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\

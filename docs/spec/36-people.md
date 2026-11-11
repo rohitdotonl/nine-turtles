@@ -44,7 +44,7 @@ PLAN.md → V1, item 1.*
   guess the next time the sidebar loads; an imported feed gets it once
   nine turtles has checked it for the first time, so the guess sees its
   writers.
-- **A feed's own name, tidied** (decision 0258). Many feeds wrap their
+- **A feed's own name, tidied** (decision 0260). Many feeds wrap their
   name in words that only say it's a feed: nine turtles takes them off
   once, as the feed arrives, so "Blog – Pete's Site » Latest Posts" is
   "Pete's Site", "Posts on Small Kitchen" is "Small Kitchen" and "Maren

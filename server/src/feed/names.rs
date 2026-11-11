@@ -1,4 +1,4 @@
-//! Names and titles as the reader should see them (decision 0258).
+//! Names and titles as the reader should see them (decision 0260).
 //!
 //! Real feeds send their names and titles messily. A blog's own name often
 //! comes wrapped in words that only describe the feed ("Blog – Pete's Site »

@@ -29,13 +29,16 @@ describe("the words for who isn't working", () => {
   });
 
   it("explains every problem in plain words, never with a code", () => {
-    const problems = ["not-found", "unreachable", "not-a-feed", "too-big", "slow-down", "not-allowed", "not-an-address"];
+    const problems = ["not-found", "unreachable", "blocked", "not-a-feed", "too-big", "slow-down", "not-allowed", "not-an-address"];
     for (const problem of [...problems, "answered-403", "answered-500", "answered-418", null]) {
       const words = reason(problem);
       expect(words).toMatch(/^[A-Z].*\.$/);
       expect(words).not.toMatch(/\d{3}|-/);
     }
     expect(reason("answered-403")).toBe("The site refuses to share this feed.");
+    // A guard against bots is named as such, and the reader learns only the site can fix it (decision 0258).
+    expect(reason("blocked")).toMatch(/guard against bots .* Only the site can let it in\./);
+    expect(refusalMessage({ error: "blocked" }, "find")).toMatch(/guard against bots/);
   });
 
   it("says plainly why an action didn't work", () => {
