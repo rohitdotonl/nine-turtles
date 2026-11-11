@@ -3,7 +3,9 @@
 // the server. Without a connection a change is kept on this device and sent
 // once the connection is back, in the order it was made; until then the
 // article says so in one quiet line (OFFLINE_LINE). A highlight made offline
-// has a number below 0 until the server gives it its own.
+// has a number below 0 until the server gives it its own. Each new highlight
+// carries a key made here, so one sent twice (its first answer never came,
+// say the page was reloaded meanwhile) is saved once (decision 0255).
 
 import { isRecord, sendChange } from "./http";
 import { connection, whenBack } from "./connection.svelte";
@@ -23,7 +25,7 @@ export type Quote = { quote: string; before: string; after: string };
 
 /** A change made without a connection, waiting on this device to be sent. */
 export type Waiting =
-  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number } & Quote)
+  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number; key?: string; removed?: true } & Quote)
   | { kind: "change"; article: number; id: number; note: string | null }
   | { kind: "remove"; article: number; id: number }
   | { kind: "article-note"; article: number; note: string | null };
@@ -49,12 +51,15 @@ function save() {
  * Adds a change to those waiting, folded into what's already there: a note
  * changed on a highlight made offline goes into that highlight, a highlight
  * made and removed offline is simply gone, and a later note replaces an
- * earlier one, so only what's needed is sent.
+ * earlier one, so only what's needed is sent. One with a key may already be
+ * on the server (its answer was lost, decision 0255): removed, it's kept,
+ * marked `removed`, so it's removed there too once sent.
  */
 export function folded(list: Waiting[], change: Waiting): Waiting[] {
   if (change.kind === "change" && change.id < 0)
     return list.map((each) => (each.kind === "highlight" && each.id === change.id ? { ...each, note: change.note } : each));
-  if (change.kind === "remove" && change.id < 0) return list.filter((each) => !(each.kind === "highlight" && each.id === change.id));
+  if (change.kind === "remove" && change.id < 0)
+    return list.flatMap((each) => (each.kind === "highlight" && each.id === change.id ? (each.key ? [{ ...each, removed: true as const }] : []) : [each]));
   if (change.kind === "change" || change.kind === "remove")
     return [...list.filter((each) => !(each.kind === "change" && each.id === change.id)), change];
   if (change.kind === "article-note")
@@ -62,12 +67,21 @@ export function folded(list: Waiting[], change: Waiting): Waiting[] {
   return [...list, change];
 }
 
-/** The article's notes as the server sent them, with the changes still waiting on this device made to them. */
+/**
+ * The article's notes as the server sent them, with the changes still
+ * waiting on this device made to them. A waiting highlight the server
+ * already has (its key is there: its answer was lost) is shown once, as the
+ * server's, with what was done to it here.
+ */
 export function withWaiting(notes: Note[], article: number, list: Waiting[]): Note[] {
   let now = [...notes];
   for (const change of list) {
     if (change.article !== article) continue;
-    if (change.kind === "highlight") now.push({ id: change.id, quote: change.quote, before: change.before, after: change.after, note: change.note, madeAt: change.madeAt });
+    if (change.kind === "highlight") {
+      const saved = change.key === undefined ? undefined : now.find((each) => each.key === change.key);
+      if (saved) now = change.removed ? now.filter((each) => each !== saved) : now.map((each) => (each === saved ? { ...each, note: change.note } : each));
+      else if (!change.removed) now.push({ id: change.id, quote: change.quote, before: change.before, after: change.after, note: change.note, madeAt: change.madeAt });
+    }
     if (change.kind === "change") now = now.map((each) => (each.id === change.id ? { ...each, note: change.note } : each));
     if (change.kind === "remove") now = now.filter((each) => each.id !== change.id);
     if (change.kind === "article-note") {
@@ -83,7 +97,7 @@ export function withWaiting(notes: Note[], article: number, list: Waiting[]): No
 function request(change: Waiting): [string, unknown] {
   switch (change.kind) {
     case "highlight":
-      return [`/api/articles/${change.article}/highlights`, { quote: change.quote, before: change.before, after: change.after, note: change.note }];
+      return [`/api/articles/${change.article}/highlights`, { quote: change.quote, before: change.before, after: change.after, note: change.note, key: change.key }];
     case "change":
       return [`/api/highlights/${change.id}`, { note: change.note ?? "" }];
     case "remove":
@@ -131,15 +145,23 @@ function notKept(refusal: string, kind: Waiting["kind"]): string {
  * The changes still waiting once `sent`, the first, has been sent: by itself,
  * not by its place, as changes go on being folded in while it's on its way.
  * A highlight given a note meanwhile has that note sent next, under the
- * number the server gave it (`made`); one removed meanwhile is removed there too.
+ * number the server gave it (`made`); one removed meanwhile is removed there
+ * too. The server may answer the copy it already had (decision 0255), with
+ * the note it had (`saved`): a different note sent with it goes next.
  */
-export function afterSent(list: Waiting[], sent: Waiting, made?: number): Waiting[] {
-  if (sent.kind !== "highlight" || list.includes(sent)) return list.filter((each) => each !== sent);
+export function afterSent(list: Waiting[], sent: Waiting, made?: number, saved?: string | null): Waiting[] {
+  if (sent.kind !== "highlight" || list.includes(sent)) {
+    const rest = list.filter((each) => each !== sent);
+    if (sent.kind !== "highlight" || made === undefined) return rest;
+    if (sent.removed) return [{ kind: "remove", article: sent.article, id: made }, ...rest];
+    if (saved !== undefined && saved !== sent.note) return [{ kind: "change", article: sent.article, id: made, note: sent.note }, ...rest];
+    return rest;
+  }
   const now = list.find((each) => each.kind === "highlight" && each.id === sent.id);
   // The server didn't take it: whatever was folded into it goes with it.
   if (made === undefined) return list.filter((each) => each !== now);
-  if (now?.kind === "highlight") return list.map((each) => (each === now ? { kind: "change", article: sent.article, id: made, note: now.note } : each));
-  return [{ kind: "remove", article: sent.article, id: made }, ...list];
+  if (now?.kind === "highlight" && !now.removed) return list.map((each) => (each === now ? { kind: "change", article: sent.article, id: made, note: now.note } : each));
+  return [{ kind: "remove", article: sent.article, id: made }, ...list.filter((each) => each !== now)];
 }
 
 let sending = false;
@@ -155,7 +177,7 @@ export async function sendWaiting(): Promise<void> {
       if (sent === "offline") break;
       // One the server won't take (an article gone meanwhile) isn't sent again; the article shows the account's own once reopened.
       const made = change.kind === "highlight" && isRecord(sent.answer?.highlight) ? toNote(sent.answer.highlight) : undefined;
-      waiting.list = afterSent(waiting.list, change, made?.id);
+      waiting.list = afterSent(waiting.list, change, made?.id, made?.note);
       save();
       if (made && change.kind === "highlight") {
         // A note left unsaved on it follows it to its number (decision 0235).
@@ -174,6 +196,11 @@ const renumbered = new Map<number, (was: number, now: number) => void>();
 whenBack(() => void sendWaiting());
 
 let temporary = 0;
+
+/** A new highlight's own key: random, so the server knows it again if it's sent twice (decision 0255). */
+function newKey(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 /**
  * One article's highlights and note, as the reading area shows them, and
@@ -198,10 +225,22 @@ export class Marks {
     this.full = full;
     loadWaiting();
     this.notes = withWaiting(full.notes ?? [], full.id, waiting.list);
+    // A waiting highlight the server already has shows under the server's number: a note left unsaved on it follows it there.
+    for (const each of waiting.list) {
+      if (each.kind !== "highlight" || !each.key) continue;
+      const saved = full.notes?.find((note) => note.key === each.key && note.id > 0);
+      if (!saved) continue;
+      this.renamed.set(each.id, saved.id);
+      renameDraft(`note:highlight:${each.id}`, `note:highlight:${saved.id}`);
+    }
     renumbered.set(full.id, (was, now) => {
       this.renamed.set(was, now);
-      this.keep(this.notes.map((each) => (each.id === was ? { ...each, id: now } : each)));
+      // Sent before, it's already here under that number (from the server): this one, with what was done to it since, takes its place.
+      const twice = this.notes.some((each) => each.id === was);
+      this.keep(this.notes.filter((each) => !twice || each.id !== now).map((each) => (each.id === was ? { ...each, id: now } : each)));
     });
+    // Changes left waiting (the page was reloaded or closed before they were sent) go now, if there's a connection.
+    if (waiting.list.length > 0) void sendWaiting();
   }
 
   /** This article has changes still waiting on this device. */
@@ -254,7 +293,8 @@ export class Marks {
 
   /** Highlights the words; answers the new highlight, or why it couldn't be kept. */
   async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string; lost?: number }> {
-    const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
+    // Its key goes with the stand-in too, so a copy of the article kept meanwhile shows it once (withWaiting).
+    const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000), key: newKey() };
     this.keep([...this.notes, made]);
     const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, () => this.notes.filter((each) => each.id !== made.id));
     // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
