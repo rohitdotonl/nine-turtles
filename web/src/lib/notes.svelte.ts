@@ -3,7 +3,9 @@
 // the server. Without a connection a change is kept on this device and sent
 // once the connection is back, in the order it was made; until then the
 // article says so in one quiet line (OFFLINE_LINE). A highlight made offline
-// has a number below 0 until the server gives it its own.
+// has a number below 0 until the server gives it its own. Each new highlight
+// carries a key made here, so one sent twice (its first answer never came,
+// say the page was reloaded meanwhile) is saved once (decision 0255).
 
 import { isRecord, sendChange } from "./http";
 import { connection, whenBack } from "./connection.svelte";
@@ -23,7 +25,7 @@ export type Quote = { quote: string; before: string; after: string };
 
 /** A change made without a connection, waiting on this device to be sent. */
 export type Waiting =
-  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number } & Quote)
+  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number; key?: string } & Quote)
   | { kind: "change"; article: number; id: number; note: string | null }
   | { kind: "remove"; article: number; id: number }
   | { kind: "article-note"; article: number; note: string | null };
@@ -83,7 +85,7 @@ export function withWaiting(notes: Note[], article: number, list: Waiting[]): No
 function request(change: Waiting): [string, unknown] {
   switch (change.kind) {
     case "highlight":
-      return [`/api/articles/${change.article}/highlights`, { quote: change.quote, before: change.before, after: change.after, note: change.note }];
+      return [`/api/articles/${change.article}/highlights`, { quote: change.quote, before: change.before, after: change.after, note: change.note, key: change.key }];
     case "change":
       return [`/api/highlights/${change.id}`, { note: change.note ?? "" }];
     case "remove":
@@ -175,6 +177,11 @@ whenBack(() => void sendWaiting());
 
 let temporary = 0;
 
+/** A new highlight's own key: random, so the server knows it again if it's sent twice (decision 0255). */
+function newKey(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 /**
  * One article's highlights and note, as the reading area shows them, and
  * the reader's changes to them. Each change shows at once; it's sent to the
@@ -200,8 +207,12 @@ export class Marks {
     this.notes = withWaiting(full.notes ?? [], full.id, waiting.list);
     renumbered.set(full.id, (was, now) => {
       this.renamed.set(was, now);
-      this.keep(this.notes.map((each) => (each.id === was ? { ...each, id: now } : each)));
+      // Sent before, it's already here under that number (from the server): this one, with what was done to it since, takes its place.
+      const twice = this.notes.some((each) => each.id === was);
+      this.keep(this.notes.filter((each) => !twice || each.id !== now).map((each) => (each.id === was ? { ...each, id: now } : each)));
     });
+    // Changes left waiting (the page was reloaded or closed before they were sent) go now, if there's a connection.
+    if (waiting.list.length > 0) void sendWaiting();
   }
 
   /** This article has changes still waiting on this device. */
@@ -256,7 +267,7 @@ export class Marks {
   async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string; lost?: number }> {
     const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
     this.keep([...this.notes, made]);
-    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, () => this.notes.filter((each) => each.id !== made.id));
+    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote, key: newKey() }, () => this.notes.filter((each) => each.id !== made.id));
     // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
     this.saving.set(made.id, sent.then(({ answer, refusal }) => (refusal ? undefined : isRecord(answer?.highlight) ? toNote(answer.highlight).id : made.id)));
     const { answer, refusal } = await sent;

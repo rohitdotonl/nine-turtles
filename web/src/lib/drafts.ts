@@ -36,6 +36,11 @@ export function keptDraft(name: string): unknown {
   return all()[name];
 }
 
+/** Every draft kept under a name starting with `prefix`. */
+export function keptDrafts(prefix: string): unknown[] {
+  return Object.entries(all()).flatMap(([name, value]) => (name.startsWith(prefix) ? [value] : []));
+}
+
 /** Keeps `value` as the draft under `name`; undefined forgets it. */
 export function keepDraft(name: string, value: unknown): void {
   const drafts = all();

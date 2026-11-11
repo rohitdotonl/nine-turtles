@@ -126,6 +126,23 @@ pub struct NewHighlight {
     pub after: String,
     #[serde(default)]
     pub note: Option<String>,
+    /// The key the web app made for this highlight (decision 0255): sent
+    /// again with the same key, the highlight already saved is answered
+    /// instead of a second one. None from an assistant.
+    #[serde(default)]
+    pub key: Option<String>,
+}
+
+/// The longest key a new highlight may carry; a longer one, or one with
+/// other characters than letters, digits and `-`, is ignored.
+const LONGEST_KEY: usize = 64;
+
+fn made_key(form: &NewHighlight) -> Option<&str> {
+    form.key.as_deref().filter(|key| {
+        !key.is_empty()
+            && key.len() <= LONGEST_KEY
+            && key.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+    })
 }
 
 /// Why a highlight or note wasn't kept.
@@ -148,7 +165,8 @@ fn around(text: &str, from_end: bool) -> String {
     }
 }
 
-/// Highlights words in one of the reader's articles. Answers the highlight.
+/// Highlights words in one of the reader's articles. Answers the highlight:
+/// sent again under the same key, the one already saved (decision 0255).
 pub async fn add_highlight(
     db: &sqlx::SqlitePool,
     person: i64,
@@ -162,11 +180,13 @@ pub async fn add_highlight(
     let Ok(note) = clean_note(form.note.as_deref().unwrap_or_default()) else {
         return Ok(Err(Refusal::TooLong));
     };
+    let key = made_key(form);
     let at = now();
     let made: Option<i64> = sqlx::query_scalar(
-        "INSERT INTO notes (person_id, article_id, quote, before, after, note, made_at, changed_at)
-         SELECT person_id, article_id, ?3, ?4, ?5, ?6, ?7, ?7 FROM entries
+        "INSERT INTO notes (person_id, article_id, quote, before, after, note, made_at, changed_at, made_key)
+         SELECT person_id, article_id, ?3, ?4, ?5, ?6, ?7, ?7, ?8 FROM entries
          WHERE person_id = ?1 AND article_id = ?2
+         ON CONFLICT (person_id, made_key) WHERE made_key IS NOT NULL DO NOTHING
          RETURNING id",
     )
     .bind(person)
@@ -176,18 +196,44 @@ pub async fn add_highlight(
     .bind(around(&form.after, false))
     .bind(&note)
     .bind(at)
+    .bind(key)
     .fetch_optional(db)
     .await?;
-    Ok(made.map_or(Err(Refusal::NotFound), |id| {
-        Ok(Note {
-            id,
-            quote: Some(quote.to_owned()),
-            before: around(&form.before, true),
-            after: around(&form.after, false),
-            note,
-            made_at: at,
-        })
+    let Some(id) = made else {
+        // Sent before, under the same key: the one already saved, as it is now.
+        return Ok(match key {
+            Some(key) => saved_under(db, person, article, key)
+                .await?
+                .ok_or(Refusal::NotFound),
+            None => Err(Refusal::NotFound),
+        });
+    };
+    Ok(Ok(Note {
+        id,
+        quote: Some(quote.to_owned()),
+        before: around(&form.before, true),
+        after: around(&form.after, false),
+        note,
+        made_at: at,
     }))
+}
+
+/// The reader's highlight on this article saved under `key`, if any.
+async fn saved_under(
+    db: &sqlx::SqlitePool,
+    person: i64,
+    article: i64,
+    key: &str,
+) -> Result<Option<Note>, sqlx::Error> {
+    sqlx::query_as(
+        "SELECT id, quote, before, after, note, made_at FROM notes
+         WHERE person_id = ? AND made_key = ? AND article_id = ? AND quote IS NOT NULL",
+    )
+    .bind(person)
+    .bind(key)
+    .bind(article)
+    .fetch_optional(db)
+    .await
 }
 
 /// Changes a highlight's note (none takes it off). Answers the highlight as

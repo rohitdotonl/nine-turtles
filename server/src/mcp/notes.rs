@@ -81,6 +81,7 @@ pub(super) async fn add_highlight(state: &AppState, person: i64, asked: Highligh
         before: text[..at].to_owned(),
         after: text[at + words.len()..].to_owned(),
         note: asked.note,
+        key: None,
     };
     match notes::add_highlight(&state.db, person, asked.article_id, &form).await {
         Ok(Ok(made)) => Ok(json!({ "done": true, "highlight_id": made.id })),

@@ -27,7 +27,7 @@
   import HighlightMenu from "./HighlightMenu.svelte";
   import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
-  import { keepDraft, keptDraft, keptWords, worthKeeping } from "./drafts";
+  import { keepDraft, keptDraft, keptDrafts, keptWords, worthKeeping } from "./drafts";
   import { isRecord } from "./http";
   import { Marks, OFFLINE_LINE, type Quote } from "./notes.svelte";
   import { paint, quoteOf, unpaint } from "./highlights";
@@ -87,16 +87,23 @@
   const articleDraft = `note:article:${full.id}`;
   // By the highlight's own number once its save has answered, even from a box opened with its stand-in.
   const highlightDraft = (id: number) => `note:highlight:${marks.here(id)}`;
-  /** One note on words chosen but not yet highlighted, for each article: its words, and the note. */
-  // svelte-ignore state_referenced_locally
-  const wordsDraft = `note:words:${full.id}`;
-
-  /** The note kept for words chosen but not yet highlighted, if it's for these words. */
-  function keptOnWords(quote?: Quote): { quote: Quote; words: string } | undefined {
-    const kept = keptDraft(wordsDraft);
+  /** A note on words chosen but not yet highlighted, one for each words in each article: its words, and the note. */
+  const wordsDraft = (quote: Quote) => `note:words:${full.id}:${quote.quote}`;
+  type OnWords = { quote: Quote; words: string };
+  function onWords(kept: unknown): OnWords | undefined {
     if (!isRecord(kept) || typeof kept.words !== "string" || !isRecord(kept.quote) || typeof kept.quote.quote !== "string") return undefined;
-    const was = { quote: kept.quote as Quote, words: kept.words };
-    return quote && quote.quote !== was.quote.quote ? undefined : was;
+    return { quote: kept.quote as Quote, words: kept.words };
+  }
+  // Kept before an article had one for each words: it takes its own name.
+  // svelte-ignore state_referenced_locally
+  const older = onWords(keptDraft(`note:words:${full.id}`));
+  if (older && !keptDraft(wordsDraft(older.quote))) keepDraft(wordsDraft(older.quote), older);
+  // svelte-ignore state_referenced_locally
+  keepDraft(`note:words:${full.id}`, undefined);
+
+  /** The note kept for these words, chosen but not yet highlighted. */
+  function keptOnWords(quote: Quote): OnWords | undefined {
+    return onWords(keptDraft(wordsDraft(quote)));
   }
 
   /**
@@ -111,8 +118,7 @@
         const words = keptWords(highlightDraft(each.id));
         return words === undefined ? [] : [{ highlight: each.id, words, kept: "left" as const }];
       });
-      const onWords = keptOnWords();
-      if (onWords) kept.push({ ...onWords, kept: "left" });
+      for (const each of keptDrafts(`note:words:${full.id}:`).map(onWords)) if (each) kept.push({ ...each, kept: "left" });
       return kept;
     })(),
   );
@@ -125,7 +131,7 @@
       else if (each.highlight !== undefined) {
         const saved = marks.highlights.find((highlight) => highlight.id === marks.here(each.highlight!))?.note ?? "";
         keepDraft(highlightDraft(each.highlight), worthKeeping(each.words, saved) ? each.words : undefined);
-      } else if (each.quote) keepDraft(wordsDraft, worthKeeping(each.words, "") ? { quote: each.quote, words: each.words } : undefined);
+      } else if (each.quote) keepOnWords(each.quote, each.words, "");
     }
   });
 
@@ -141,19 +147,28 @@
     } else if (quote) keepOnWords(quote, words, startTime() ?? "");
   }
 
-  /** A note on words not highlighted yet, kept as it's typed. Another chosen words' note is left alone. */
+  /** A note on words not highlighted yet, kept as it's typed. Other words' notes are left alone. */
   function keepOnWords(quote: Quote, words: string, start: string) {
-    if (worthKeeping(words, start)) keepDraft(wordsDraft, { quote, words });
-    else if (keptOnWords(quote)) keepDraft(wordsDraft, undefined);
+    keepDraft(wordsDraft(quote), worthKeeping(words, start) ? { quote, words } : undefined);
   }
 
-  /** A highlight's save was refused: a note already kept on it becomes one on its words, unless another is (decision 0235). */
+  /** A highlight's save was refused: a note already kept on it becomes one on its words (decision 0235), after any kept on them already. */
   function keepLost(id: number) {
     const words = keptWords(highlightDraft(id));
     const quote = marks.lostQuote(id);
-    if (words === undefined || !quote || (keptOnWords() && !keptOnWords(quote))) return;
-    keepDraft(wordsDraft, { quote, words });
+    if (words === undefined || !quote) return;
+    const there = keptOnWords(quote)?.words;
+    keepDraft(wordsDraft(quote), { quote, words: there && there.trim() !== words.trim() ? `${there.trim()}\n\n${words}` : words });
     keepDraft(highlightDraft(id), undefined);
+  }
+
+  /** Words highlighted with h or Highlight while a note on them was kept unsaved: the note is now on the highlight, so Save can't highlight them twice. */
+  function moveOnto(quote: Quote, id: number) {
+    const kept = keptOnWords(quote);
+    if (!kept) return;
+    if (keptWords(highlightDraft(id)) === undefined) keepDraft(highlightDraft(id), kept.words);
+    keepDraft(wordsDraft(quote), undefined);
+    open = open.map((each) => (each.highlight === undefined && each.quote?.quote === quote.quote ? { highlight: id, words: each.words, kept: each.kept } : each));
   }
 
   /** What the small menu's box starts with, when a note on its words was kept unsaved. */
@@ -223,6 +238,7 @@
     if (lost !== undefined) keepLost(lost);
     say(problem ?? "Highlighted.");
     if (!made) return;
+    moveOnto(quote, made.id);
     // A small menu beside the new highlight says so, and offers a note on it there and then, or Done.
     await tick();
     const at = text?.querySelector(`[data-highlight="${made.id}"]`);
@@ -237,10 +253,12 @@
     if (on.highlight !== undefined) problem = await marks.setNote(on.highlight, note);
     else if (on.quote) problem = (await marks.highlight(on.quote, note.trim() || null)).problem;
     if (problem) return problem;
-    keepDraft(on.highlight !== undefined ? highlightDraft(on.highlight) : wordsDraft, undefined);
+    if (on.highlight !== undefined) keepDraft(highlightDraft(on.highlight), undefined);
+    else if (on.quote) keepDraft(wordsDraft(on.quote), undefined);
     // Saved on a highlight made again after its save was refused: the same words kept on its words go too.
     const saved = on.highlight !== undefined ? marks.highlights.find((each) => each.id === marks.here(on.highlight!)) : undefined;
-    if (saved?.quote && keptOnWords({ quote: saved.quote, before: saved.before, after: saved.after })?.words.trim() === note.trim()) keepDraft(wordsDraft, undefined);
+    const again = saved?.quote ? { quote: saved.quote, before: saved.before, after: saved.after } : undefined;
+    if (again && keptOnWords(again)?.words.trim() === note.trim()) keepDraft(wordsDraft(again), undefined);
     say("Note saved.");
     return undefined;
   }
@@ -283,7 +301,7 @@
 
   function discardOpen(each: Open) {
     open = open.filter((other) => other !== each);
-    void discard(each.highlight !== undefined ? highlightDraft(each.highlight) : wordsDraft, () => (open = [...open, { ...each, kept: "here" }]));
+    void discard(each.highlight !== undefined ? highlightDraft(each.highlight) : wordsDraft(each.quote!), () => (open = [...open, { ...each, kept: "here" }]));
   }
 
   /** Discard in the small menu: its box closes, and Undo opens the kept words at the article's end. */
@@ -293,7 +311,7 @@
     const words = keptForMenu() ?? "";
     close(true);
     const each: Open = { highlight: at.highlight?.id, quote: at.highlight ? undefined : at.quote, words, kept: "here" };
-    void discard(at.highlight ? highlightDraft(at.highlight.id) : wordsDraft, () => (open = [...open, each]));
+    void discard(at.highlight ? highlightDraft(at.highlight.id) : wordsDraft(at.quote!), () => (open = [...open, each]));
   }
 
   async function copy(highlight: Note) {
@@ -459,10 +477,10 @@
           </li>
         {/each}
         <!-- A note on words not highlighted yet: Save highlights them with it. -->
-        {#each open.filter((kept) => kept.quote) as box (box)}
+        {#each open.filter((kept) => kept.quote) as box, index (box)}
           <li class="quote">
             <p class="font-serif text-ink">{box.quote?.quote}</p>
-            <NoteBox id="kept-note-words" label="A note on these words" help="Only you see it. Save highlights the words." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
+            <NoteBox id="kept-note-words-{index}" label="A note on these words" help="Only you see it. Save highlights the words." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
           </li>
         {/each}
       </ul>

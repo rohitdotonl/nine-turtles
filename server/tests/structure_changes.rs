@@ -2986,3 +2986,58 @@ async fn ordering_folders_keeps_every_folder_in_its_a_to_z_place() {
         .unwrap();
     assert_eq!(pairs, 1);
 }
+
+#[tokio::test]
+async fn saving_highlights_once_keeps_every_highlight_and_note() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before highlights carried a key (structure change 49):
+    // reader 1 has two highlights and a note on the whole article.
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(49, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES (1, 'u', 'u', 'Garden', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at) VALUES (1, 1, 'Garden', 1)",
+        "INSERT INTO articles (id, feed_id, fingerprint, title, received_at, sort_at)
+         VALUES (1, 1, 'a', 'Roses', 1, 1)",
+        "INSERT INTO entries (person_id, article_id, feed_id, sort_at, read, starred)
+         VALUES (1, 1, 1, 1, 1, 0)",
+        "INSERT INTO notes (person_id, article_id, quote, note, made_at, changed_at)
+         VALUES (1, 1, 'pink', NULL, 1, 1), (1, 1, 'pink', 'Twice, on purpose', 2, 2),
+                (1, 1, NULL, 'Prune in March', 3, 3)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let kept: Vec<(Option<String>, Option<String>, Option<String>)> =
+        sqlx::query_as("SELECT quote, note, made_key FROM notes ORDER BY id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        kept,
+        [
+            (Some("pink".to_owned()), None, None),
+            (
+                Some("pink".to_owned()),
+                Some("Twice, on purpose".to_owned()),
+                None
+            ),
+            (None, Some("Prune in March".to_owned()), None),
+        ]
+    );
+}

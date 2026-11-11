@@ -625,3 +625,84 @@ async fn their_page_lists_the_highlights_from_their_writing() {
     let (_, found) = ask(&base, &other, &format!("/api/feeds/{theirs}/highlights")).await;
     assert_eq!(found["highlights"], json!([]));
 }
+
+#[tokio::test]
+async fn a_highlight_sent_again_under_its_key_is_saved_once() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let address = publisher().await;
+    let (_, ids) = follow(&base, &cookie, &address).await;
+    let path = format!("/api/articles/{}/highlights", ids[0]);
+    let highlight = json!({ "quote": "warm soup", "note": "First", "key": "7f1c2a9e-made-here" });
+
+    // Its answer never arrived (the page was reloaded), so the app sends it again: one highlight.
+    let (status, first) = send(&base, &cookie, &path, highlight.clone()).await;
+    assert_eq!(status, StatusCode::CREATED);
+    let id = first["highlight"]["id"].as_i64().unwrap();
+    let (status, again) = send(&base, &cookie, &path, highlight.clone()).await;
+    assert_eq!(status, StatusCode::CREATED);
+    assert_eq!(again["highlight"], first["highlight"]);
+    let mine = "SELECT COUNT(*) FROM notes WHERE person_id = ? AND quote IS NOT NULL";
+    assert_eq!(count(&state, mine, 1).await, 1);
+
+    // Its note changed meanwhile: sent again, it's answered as it is now.
+    send(
+        &base,
+        &cookie,
+        &format!("/api/highlights/{id}"),
+        json!({ "note": "Changed" }),
+    )
+    .await;
+    let (_, now) = send(&base, &cookie, &path, highlight.clone()).await;
+    assert_eq!(now["highlight"]["id"], id);
+    assert_eq!(now["highlight"]["note"], "Changed");
+
+    // Another key, or none, is another highlight; so is the same key from another reader.
+    let (_, other_key) = send(
+        &base,
+        &cookie,
+        &path,
+        json!({ "quote": "warm soup", "key": "another" }),
+    )
+    .await;
+    assert_ne!(other_key["highlight"]["id"], id);
+    let (_, no_key) = send(&base, &cookie, &path, json!({ "quote": "warm soup" })).await;
+    assert_ne!(no_key["highlight"]["id"], other_key["highlight"]["id"]);
+    assert_eq!(count(&state, mine, 1).await, 3);
+    let (person, other) = common::another_reader(&state).await;
+    follow(&base, &other, &address).await;
+    let (status, theirs) = send(&base, &other, &path, highlight.clone()).await;
+    assert_eq!(status, StatusCode::CREATED);
+    assert_ne!(theirs["highlight"]["id"], id);
+    assert_eq!(count(&state, mine, person).await, 1);
+
+    // The same key on another article is refused, never answered with this one.
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &format!("/api/articles/{}/highlights", ids[1]),
+        highlight,
+    )
+    .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    // A key that isn't one the app makes is ignored: the highlight is still made.
+    let long = "k".repeat(65);
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &path,
+        json!({ "quote": "warm soup", "key": long }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    let (status, _) = send(
+        &base,
+        &cookie,
+        &path,
+        json!({ "quote": "warm soup", "key": long }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::CREATED);
+    assert_eq!(count(&state, mine, 1).await, 5);
+}

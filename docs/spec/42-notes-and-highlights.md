@@ -44,7 +44,11 @@ anywhere or counted.
   the article, its box is open at the end with the words and "**Not saved
   yet.** Kept from when you left this article." (a note on highlighted
   words waits under its highlight; one on words chosen but not yet
-  highlighted waits under those words, and Save highlights them). Opened
+  highlighted waits under those words, and Save highlights them; each
+  words chosen keep their own, so one never replaces another). Those words
+  highlighted meanwhile with `h` or Highlight take the note with them: it
+  then waits under the new highlight, and Save never highlights them a
+  second time. Opened
   again without leaving, the box says "**Not saved yet.**". **Discard**
   beside the line throws the words away, with "Note discarded · Undo" at
   the article's foot (the keyboard on Undo). The same for the note on a
@@ -80,6 +84,10 @@ anywhere or counted.
   then one quiet line stays at the article's foot: "You're offline. This is
   saved on this device only, and reaches your account once you're back
   online."
+- A highlight is saved once, however often it's sent (decision 0255): if
+  the page is reloaded or closed the instant a highlight is saving, it's
+  sent again when the article is next open, and the server answers the one
+  it already saved instead of making a second.
 - The Notes list needs a connection; it says so, as search does.
 
 **Notes**
