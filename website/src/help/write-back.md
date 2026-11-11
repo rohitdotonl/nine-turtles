@@ -28,8 +28,8 @@ settings, choose **This is: A person**.
 2. Your own email app opens with their address, and a subject line of
    "Re:" and the article's title (for a short post with no title, its
    first words). nine turtles says "Opening your email app…" under the
-   button, or at the bottom of the screen if you pressed the paper plane
-   or <kbd>W</kbd>. If nothing opens (on a computer with no email app set
+   button, or at the bottom of the screen if that button is out of sight
+   (when you pressed the paper plane or <kbd>W</kbd>, say). If nothing opens (on a computer with no email app set
    up, say, when you use email in your browser), press **Copy their
    address** there and paste it into a new email.
 3. Write what you'd like to say, and send it as you send any email.

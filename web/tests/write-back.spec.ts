@@ -209,4 +209,18 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await note.getByRole("button", { name: "Close the note" }).click();
   await expect(note.getByText(/Opening your email app|Copied/)).toHaveCount(0);
+
+  // By keyboard: W says it at the foot; Copy their address is pressed with Enter, and the keyboard goes back to the article.
+  await page.locator(".item-row").first().focus();
+  await page.keyboard.press("w");
+  await expect(note).toContainText("Opening your email app… Nothing opened?");
+  await note.getByRole("button", { name: "Copy their address" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(note).toContainText(/Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
+  await expect(pane(page).getByRole("heading", { level: 2 })).toBeFocused();
+  // It goes with the article.
+  await page.keyboard.press("w");
+  await expect(note).toContainText("Opening your email app…");
+  await page.locator(".item-row").nth(1).click();
+  await expect(note.getByText(/Opening your email app/)).toHaveCount(0);
 });

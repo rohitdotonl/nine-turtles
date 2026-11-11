@@ -31,7 +31,11 @@ describe("writing back", () => {
     const long = "Walked to the river before breakfast and watched the herons fish in the shallows.";
     expect(aboutLine({ title: " ", opening: long, at })).toBe("Walked to the river before breakfast and watched the herons…");
     expect(aboutLine({ title: "", opening: "x".repeat(80), at })).toBe(`${"x".repeat(60)}…`);
-    expect(aboutLine({ title: "", opening: undefined, at })).toMatch(/^Your post of 18 Oct/);
+    expect(aboutLine({ title: "", opening: undefined, at })).toBe("Your post of 18 Oct 2026");
+    // No space to cut at (Japanese, say): cut at a whole character, never inside an emoji, so the link can be written.
+    const unspaced = aboutLine({ title: "", opening: `${"あ".repeat(59)}😀${"い".repeat(20)}`, at });
+    expect(unspaced).toBe(`${"あ".repeat(59)}😀…`);
+    expect(() => writeBackLink("a@b.example", unspaced)).not.toThrow();
     expect(replySubject(aboutLine({ title: "", opening: "Rain all day.", at }))).toBe("Re: Rain all day.");
   });
 

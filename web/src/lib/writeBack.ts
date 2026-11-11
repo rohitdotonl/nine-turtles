@@ -61,10 +61,12 @@ export function aboutLine(article: Pick<Article, "title" | "opening" | "at">): s
   if (article.title.trim()) return article.title;
   const words = article.opening?.replace(/\s+/g, " ").trim();
   if (!words) return `Your post of ${date(article.at)}`;
-  if (words.length <= LONGEST_OPENING) return words;
-  const cut = words.slice(0, LONGEST_OPENING + 1);
+  // Counted in whole characters, so an emoji is never cut in half (a half can't be written into the link).
+  const letters = Array.from(words);
+  if (letters.length <= LONGEST_OPENING) return words;
+  const cut = letters.slice(0, LONGEST_OPENING + 1).join("");
   const atWord = cut.lastIndexOf(" ");
-  return `${(atWord > 0 ? cut.slice(0, atWord) : cut.slice(0, LONGEST_OPENING)).replace(/[\s.,;:!?…-]+$/, "")}…`;
+  return `${(atWord > 0 ? cut.slice(0, atWord) : letters.slice(0, LONGEST_OPENING).join("")).replace(/[\s.,;:!?…-]+$/, "")}…`;
 }
 
 /** "Re: " and the title, once: a title that already starts with "Re:" keeps its own. */
