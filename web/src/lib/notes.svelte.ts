@@ -225,6 +225,14 @@ export class Marks {
     this.full = full;
     loadWaiting();
     this.notes = withWaiting(full.notes ?? [], full.id, waiting.list);
+    // A waiting highlight the server already has shows under the server's number: a note left unsaved on it follows it there.
+    for (const each of waiting.list) {
+      if (each.kind !== "highlight" || !each.key) continue;
+      const saved = full.notes?.find((note) => note.key === each.key && note.id > 0);
+      if (!saved) continue;
+      this.renamed.set(each.id, saved.id);
+      renameDraft(`note:highlight:${each.id}`, `note:highlight:${saved.id}`);
+    }
     renumbered.set(full.id, (was, now) => {
       this.renamed.set(was, now);
       // Sent before, it's already here under that number (from the server): this one, with what was done to it since, takes its place.
@@ -285,9 +293,10 @@ export class Marks {
 
   /** Highlights the words; answers the new highlight, or why it couldn't be kept. */
   async highlight(quote: Quote, note: string | null = null): Promise<{ made?: Note; problem?: string; lost?: number }> {
-    const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000) };
+    // Its key goes with the stand-in too, so a copy of the article kept meanwhile shows it once (withWaiting).
+    const made: Note = { id: -(Date.now() + ++temporary), ...quote, note, madeAt: Math.floor(Date.now() / 1000), key: newKey() };
     this.keep([...this.notes, made]);
-    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote, key: newKey() }, () => this.notes.filter((each) => each.id !== made.id));
+    const sent = this.change({ kind: "highlight", article: this.full.id, ...made, ...quote }, () => this.notes.filter((each) => each.id !== made.id));
     // Kept offline, it keeps the stand-in, which the waiting changes know it by; refused, it has none.
     this.saving.set(made.id, sent.then(({ answer, refusal }) => (refusal ? undefined : isRecord(answer?.highlight) ? toNote(answer.highlight).id : made.id)));
     const { answer, refusal } = await sent;

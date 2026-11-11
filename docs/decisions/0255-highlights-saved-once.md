@@ -31,9 +31,12 @@ did the same.
 - Changes left waiting on the device are now also sent when an article
   opens, not only when the connection comes back; before, after a reload
   they waited for the next change.
-- An open article's highlights come with their keys, so one waiting on
-  the device that the server already has is shown once, as the server's,
-  with whatever was done to it here.
+- An open article's highlights come with their keys (and a highlight's
+  stand-in carries its key too), so one waiting on the device that the
+  server already has is shown once, as the server's, with whatever was done
+  to it here; a note left unsaved on it moves to the server's number before
+  the article's kept boxes open. When a kept note moves to a number that
+  already has one, both are kept, the older first.
 - What's done to a highlight while it waits is never lost to the server
   answering its older copy: a note written on it meanwhile is sent as a
   change straight after (when the note the server answers differs from the

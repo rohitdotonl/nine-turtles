@@ -72,6 +72,8 @@ describe("changes kept on this device without a connection", () => {
     expect(withWaiting([saved(12, { key: "k1" })], 7, [keyed]).map((each) => [each.id, each.note])).toEqual([[12, "Ask her"]]);
     expect(withWaiting([saved(12, { key: "k1" })], 7, removed)).toEqual([]);
     expect(withWaiting([], 7, removed)).toEqual([]);
+    // An article's copy kept in memory already holds the stand-in: it's shown once.
+    expect(withWaiting([saved(-1, { key: "k1", note: "Ask her" })], 7, [keyed]).map((each) => each.id)).toEqual([-1]);
   });
 
   it("take the note off the whole article when it's emptied", () => {

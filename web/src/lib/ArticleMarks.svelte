@@ -178,7 +178,12 @@
     if (!kept) return;
     keepDraft(highlightDraft(id), joined(keptWords(highlightDraft(id)), kept.words));
     keepDraft(wordsDraft(quote), undefined);
-    open = open.map((each) => (each.highlight === undefined && each.quote?.quote === quote.quote ? { highlight: id, words: each.words, kept: each.kept } : each));
+    // Changed in place, so a Save already pressed in that box still finds it.
+    for (const each of open)
+      if (each.highlight === undefined && each.quote?.quote === quote.quote) {
+        each.highlight = id;
+        each.quote = undefined;
+      }
   }
 
   /** What the small menu's box starts with, when a note on its words was kept unsaved. */
@@ -257,21 +262,16 @@
   }
 
   /** Saves a note on a highlight, or highlights words with their note. The box stays open, with the words, until it's saved; answers why, if it couldn't be. */
-  async function saveOn(on: { highlight?: number; quote?: Quote }, note: string): Promise<string | undefined> {
+  async function saveOn(on: { highlight?: number; quote?: Quote }, note: string, keptOn?: Quote): Promise<string | undefined> {
     undoable = undefined;
-    // Those words were highlighted meanwhile (h while their box was open, perhaps still saving): the note goes on that highlight, never on a second one.
-    const there = on.highlight === undefined && on.quote ? highlightOn(on.quote) : undefined;
-    if (there && on.quote) {
-      keepDraft(wordsDraft(on.quote), undefined);
-      on = { highlight: there.id };
-      note = joined(there.note, note);
-    }
     let problem: string | undefined;
     if (on.highlight !== undefined) problem = await marks.setNote(on.highlight, note);
     else if (on.quote) problem = (await marks.highlight(on.quote, note.trim() || null)).problem;
     if (problem) return problem;
     if (on.highlight !== undefined) keepDraft(highlightDraft(on.highlight), undefined);
     else if (on.quote) keepDraft(wordsDraft(on.quote), undefined);
+    // Saved on the highlight its words were given meanwhile: the note kept on the words goes now, not before.
+    if (keptOn) keepDraft(wordsDraft(keptOn), undefined);
     // Saved on a highlight made again after its save was refused: the same words kept on its words go too.
     const saved = on.highlight !== undefined ? marks.highlights.find((each) => each.id === marks.here(on.highlight!)) : undefined;
     const again = saved?.quote ? { quote: saved.quote, before: saved.before, after: saved.after } : undefined;
@@ -294,7 +294,11 @@
 
   /** Saves a note in a box at the article's end; once saved, the box gives way to the highlight. */
   async function saveOpen(each: Open, note: string): Promise<string | undefined> {
-    const problem = await saveOn(each, note);
+    // Its words were highlighted meanwhile (h while the box was open, perhaps still saving): the note goes on that highlight, after any note it has, never on a second one.
+    const there = each.highlight === undefined && each.quote ? highlightOn(each.quote) : undefined;
+    const problem = there ? await saveOn({ highlight: there.id }, joined(there.note, note), each.quote) : await saveOn(each, note);
+    // Not saved, and its box moved under that highlight meanwhile (a new box, with the words): the top bar says why.
+    if (problem && there && each.highlight !== undefined) say(problem);
     if (!problem) open = open.filter((other) => other !== each);
     return problem;
   }

@@ -56,11 +56,12 @@ export function keepWhileChanged<T>(name: string, now: T, start: T): void {
   keepDraft(name, JSON.stringify(now) === JSON.stringify(start) ? undefined : now);
 }
 
-/** Moves a draft to a new name (a highlight made offline, given its number by the server). */
+/** Moves a draft to a new name (a highlight made offline, given its number by the server). Words already kept there stay, before the moved ones. */
 export function renameDraft(from: string, to: string): void {
   const kept = keptDraft(from);
   if (kept === undefined) return;
-  keepDraft(to, kept);
+  const there = keptDraft(to);
+  keepDraft(to, typeof there === "string" && typeof kept === "string" && there.trim() !== kept.trim() ? `${there.trim()}\n\n${kept}` : kept);
   keepDraft(from, undefined);
 }
 
