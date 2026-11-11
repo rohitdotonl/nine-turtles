@@ -7,7 +7,8 @@
 //!
 //! 1. It finds out how (`/.well-known/oauth-protected-resource` and
 //!    `/.well-known/oauth-authorization-server`), and registers itself
-//!    (`/oauth/register`), giving its name and where to send the reader back.
+//!    (`/oauth/register`, in `register`), giving its name and where to send
+//!    the reader back.
 //! 2. It opens `/oauth/authorize` in the reader's browser: the "Connect this
 //!    assistant?" page (`web/src/lib/ConnectAssistant.svelte`), after
 //!    signing in if needed. Approving sends the browser back with a
@@ -54,23 +55,12 @@ const ACCESS_FOR: i64 = 60 * 60;
 const REFRESH_FOR: i64 = 90 * 24 * 60 * 60;
 /// The code an approval sends back must be swapped within ten minutes.
 const CODE_FOR: i64 = 10 * 60;
-/// A registered assistant nobody connects is forgotten after a day.
-const UNUSED_CLIENT_FOR: i64 = 24 * 60 * 60;
-/// At most this many registered assistants are kept, so registering can't
-/// fill the disk: past it, the oldest nobody connected goes to make room.
-const MOST_CLIENTS: i64 = 2_000;
-/// At most this many registrations an hour from one internet address, and
-/// from everywhere together, so one stranger can't crowd out everyone else.
-const REGISTRATIONS_AN_HOUR_EACH: u32 = 10;
-const REGISTRATIONS_AN_HOUR: u32 = 300;
-/// The longest name an assistant may give itself, in characters.
-const LONGEST_NAME: usize = 80;
-/// At most this many return addresses, each this long.
-const MOST_REDIRECTS: usize = 5;
+/// The longest return address (or `state`) an assistant may give.
 const LONGEST_ADDRESS: usize = 2_000;
 /// Keys start so, so a reader (or a secret scanner) can tell one at a glance.
 const KEY_PREFIX: &str = "nt_";
 
+mod register;
 pub mod settings;
 
 pub fn routes() -> Router<AppState> {
@@ -91,7 +81,7 @@ pub fn routes() -> Router<AppState> {
             "/.well-known/oauth-authorization-server/mcp",
             get(authorization_server),
         )
-        .route("/oauth/register", post(register))
+        .route("/oauth/register", post(register::register))
         .route("/oauth/token", post(token))
         .route("/api/oauth/request", get(request))
         .route("/api/oauth/approve", post(approve))
@@ -156,6 +146,32 @@ pub fn base_url(state: &AppState, headers: &HeaderMap) -> String {
     format!("{}://{host}", if local { "http" } else { "https" })
 }
 
+/// Whether a `resource` an assistant names (RFC 8707) is this MCP server:
+/// `/mcp` (or just the address) on the public address or the one the
+/// request came to. Tickets here only ever open `/mcp`, so naming another
+/// server is refused rather than answered with tickets meant for it.
+fn names_us(resource: &str, state: &AppState, headers: &HeaderMap) -> bool {
+    let Ok(resource) = Url::parse(resource) else {
+        return false;
+    };
+    let host = headers
+        .get(header::HOST)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default();
+    [
+        base_url(state, headers),
+        format!("{}://{host}", resource.scheme()),
+    ]
+    .iter()
+    .filter_map(|base| Url::parse(base).ok())
+    .any(|base| {
+        base.origin() == resource.origin()
+            && matches!(resource.path().trim_end_matches('/'), "" | "/mcp")
+            && resource.query().is_none()
+            && resource.fragment().is_none()
+    })
+}
+
 /// Tells an assistant that the MCP server needs signing in, and where.
 async fn protected_resource(State(state): State<AppState>, headers: HeaderMap) -> Response {
     let base = base_url(&state, &headers);
@@ -195,178 +211,6 @@ fn oauth_error(status: StatusCode, error: &str, description: &str) -> Response {
         .into_response()
 }
 
-#[derive(Deserialize)]
-struct Registration {
-    #[serde(default)]
-    redirect_uris: Vec<String>,
-    #[serde(default)]
-    client_name: Option<String>,
-}
-
-/// A name as an assistant gave it: spaces tidied, controls removed, cut
-/// short. "An assistant" when it gave none.
-fn clean_name(name: Option<&str>) -> String {
-    let name: String = name
-        .unwrap_or_default()
-        .chars()
-        .filter(|c| !c.is_control())
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-    let name: String = name.chars().take(LONGEST_NAME).collect();
-    if name.is_empty() {
-        "An assistant".to_owned()
-    } else {
-        name
-    }
-}
-
-/// A return address an assistant may register (OAuth 2.1 and RFC 8252):
-/// https anywhere; http only to the computer it runs on, as desktop
-/// assistants do; or an app's own kind of address (`cursor://…`), never
-/// one a browser would run or open as a file. Never with a `#` part.
-pub fn allowed_redirect(address: &str) -> bool {
-    if address.len() > LONGEST_ADDRESS {
-        return false;
-    }
-    let Ok(url) = Url::parse(address) else {
-        return false;
-    };
-    if url.fragment().is_some() {
-        return false;
-    }
-    match url.scheme() {
-        "https" => url.host_str().is_some(),
-        "http" => matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]")),
-        "javascript" | "data" | "file" | "vbscript" | "about" | "blob" | "ftp" | "ws" | "wss" => {
-            false
-        }
-        _ => true,
-    }
-}
-
-/// Dynamic client registration (RFC 7591): an assistant introduces itself.
-/// Who is asking, as well as nine turtles can tell: the address the host's
-/// proxy says the request came from (the last one it added), as a number
-/// for `Limits`. Render's proxy adds it; it can't be faked from outside,
-/// since anything a stranger adds comes before it. None with no proxy (on
-/// a computer, in the checks): then only the limit for everyone applies.
-fn asker(headers: &HeaderMap) -> Option<i64> {
-    use std::hash::{Hash, Hasher};
-    let address = headers
-        .get_all("x-forwarded-for")
-        .iter()
-        .filter_map(|value| value.to_str().ok())
-        .flat_map(|value| value.split(','))
-        .map(str::trim)
-        .next_back()
-        .filter(|address| !address.is_empty())?;
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    address.hash(&mut hasher);
-    Some(i64::from_ne_bytes(hasher.finish().to_ne_bytes()))
-}
-
-async fn register(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(form): Json<Registration>,
-) -> Response {
-    if form.redirect_uris.is_empty()
-        || form.redirect_uris.len() > MOST_REDIRECTS
-        || !form.redirect_uris.iter().all(|uri| allowed_redirect(uri))
-    {
-        return oauth_error(
-            StatusCode::BAD_REQUEST,
-            "invalid_redirect_uri",
-            "Give one to five return addresses: https, http only to localhost, or an app's own.",
-        );
-    }
-    let hour = Duration::from_secs(3_600);
-    let limits = &state.assistant_limits;
-    let each = asker(&headers)
-        .is_none_or(|who| limits.allow("register-each", who, REGISTRATIONS_AN_HOUR_EACH, hour));
-    if !each || !limits.allow("register", 0, REGISTRATIONS_AN_HOUR, hour) {
-        return oauth_error(
-            StatusCode::TOO_MANY_REQUESTS,
-            "temporarily_unavailable",
-            "Too many assistants registered this hour. Try again later.",
-        );
-    }
-    let client_id = match new_token() {
-        Ok(token) => format!("ntc_{}", &token[..32]),
-        Err(error) => {
-            log::problem(&format!("couldn't make an assistant's client id: {error}"));
-            return StatusCode::INTERNAL_SERVER_ERROR.into_response();
-        }
-    };
-    let name = clean_name(form.client_name.as_deref());
-    let at = now();
-    let stored = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        sqlx::query(
-            "DELETE FROM assistant_clients WHERE created_at <= ?
-             AND id NOT IN (SELECT client_id FROM assistant_connections WHERE client_id IS NOT NULL)
-             AND id NOT IN (SELECT client_id FROM assistant_codes)",
-        )
-        .bind(at - UNUSED_CLIENT_FOR)
-        .execute(&mut *transaction)
-        .await?;
-        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM assistant_clients")
-            .fetch_one(&mut *transaction)
-            .await?;
-        if count >= MOST_CLIENTS {
-            let made_room = sqlx::query(
-                "DELETE FROM assistant_clients WHERE id = (SELECT id FROM assistant_clients
-                     WHERE id NOT IN (SELECT client_id FROM assistant_connections
-                                      WHERE client_id IS NOT NULL)
-                         AND id NOT IN (SELECT client_id FROM assistant_codes)
-                     ORDER BY created_at, id LIMIT 1)",
-            )
-            .execute(&mut *transaction)
-            .await?;
-            if made_room.rows_affected() == 0 {
-                return Ok(false);
-            }
-        }
-        sqlx::query(
-            "INSERT INTO assistant_clients (client_id, name, redirect_uris, created_at)
-             VALUES (?, ?, ?, ?)",
-        )
-        .bind(&client_id)
-        .bind(&name)
-        .bind(serde_json::to_string(&form.redirect_uris).unwrap_or_else(|_| "[]".to_owned()))
-        .bind(at)
-        .execute(&mut *transaction)
-        .await?;
-        transaction.commit().await?;
-        Ok::<bool, sqlx::Error>(true)
-    }
-    .await;
-    match stored {
-        Ok(true) => (
-            StatusCode::CREATED,
-            [(header::CACHE_CONTROL, "no-store")],
-            Json(json!({
-                "client_id": client_id,
-                "client_id_issued_at": at,
-                "client_name": name,
-                "redirect_uris": form.redirect_uris,
-                "grant_types": ["authorization_code", "refresh_token"],
-                "response_types": ["code"],
-                "token_endpoint_auth_method": "none",
-            })),
-        )
-            .into_response(),
-        Ok(false) => oauth_error(
-            StatusCode::SERVICE_UNAVAILABLE,
-            "temporarily_unavailable",
-            "Too many assistants are waiting to connect. Try again tomorrow.",
-        ),
-        Err(error) => database_problem("registering an assistant", &error),
-    }
-}
-
 /// What an assistant's link to the "Connect this assistant?" page asks,
 /// once checked.
 #[derive(Debug)]
@@ -398,9 +242,14 @@ fn plausible_challenge(text: &str) -> bool {
 }
 
 /// Checks the link's query string: a registered assistant, one of its own
-/// return addresses, a code asked for with an S256 challenge. Answers why
+/// return addresses, a code asked for with an S256 challenge, and, if it
+/// names one, this server as the resource (`ours`). Answers why
 /// not as a word the page turns into a sentence.
-async fn checked(db: &SqlitePool, query: &str) -> Result<Result<Asked, &'static str>, sqlx::Error> {
+async fn checked(
+    db: &SqlitePool,
+    query: &str,
+    ours: impl Fn(&str) -> bool,
+) -> Result<Result<Asked, &'static str>, sqlx::Error> {
     let pairs = query_pairs(query);
     let get = |name: &str| pairs.get(name).map(String::as_str);
     let Some(client_id) = get("client_id") else {
@@ -430,6 +279,7 @@ async fn checked(db: &SqlitePool, query: &str) -> Result<Result<Asked, &'static 
         || get("code_challenge_method") != Some("S256")
         || !plausible_challenge(challenge)
         || state.is_some_and(|state| state.len() > LONGEST_ADDRESS)
+        || get("resource").is_some_and(|resource| !ours(resource))
     {
         return Ok(Err("bad-request"));
     }
@@ -476,9 +326,11 @@ struct RequestQuery {
 async fn request(
     SignedIn(_): SignedIn,
     State(state): State<AppState>,
+    headers: HeaderMap,
     uri: axum::http::Uri,
 ) -> Response {
-    match checked(&state.db, uri.query().unwrap_or_default()).await {
+    let ours = |resource: &str| names_us(resource, &state, &headers);
+    match checked(&state.db, uri.query().unwrap_or_default(), ours).await {
         Ok(Ok(asked)) => Json(json!({
             "client_name": asked.name,
             // An app's own kind of address (`com.example.app:/callback`)
@@ -498,7 +350,8 @@ async fn approve(
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    let asked = match checked(&state.db, &form.query).await {
+    let ours = |resource: &str| names_us(resource, &state, &headers);
+    let asked = match checked(&state.db, &form.query, ours).await {
         Ok(Ok(asked)) => asked,
         Ok(Err(word)) => return refused(word),
         Err(error) => return database_problem("reading an assistant's request", &error),
@@ -545,7 +398,8 @@ async fn deny(
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    match checked(&state.db, &form.query).await {
+    let ours = |resource: &str| names_us(resource, &state, &headers);
+    match checked(&state.db, &form.query, ours).await {
         Ok(Ok(asked)) => {
             let issuer = base_url(&state, &headers);
             let redirect = back_to(&asked, &issuer, &[("error", "access_denied")]);
@@ -616,6 +470,16 @@ async fn token(
         && let Some(client_id) = basic_client_id(&headers)
     {
         form.insert("client_id".to_owned(), client_id);
+    }
+    if form
+        .get("resource")
+        .is_some_and(|resource| !names_us(resource, &state, &headers))
+    {
+        return oauth_error(
+            StatusCode::BAD_REQUEST,
+            "invalid_target",
+            "nine turtles gives tickets only for its own MCP server, at /mcp.",
+        );
     }
     let get = |name: &str| form.get(name).map(String::as_str).unwrap_or_default();
     let swapped = match get("grant_type") {
@@ -767,10 +631,16 @@ pub struct Assistant {
     pub connection: i64,
 }
 
-/// "Sign in first", with where to find out how (RFC 9728).
-pub fn sign_in_first(state: &AppState, headers: &HeaderMap) -> Response {
+/// "Sign in first", with where to find out how (RFC 9728), and, when the
+/// assistant gave a ticket, that it's no good (RFC 6750).
+fn sign_in_first(state: &AppState, headers: &HeaderMap, gave_one: bool) -> Response {
     let metadata = format!(
-        "Bearer resource_metadata=\"{}/.well-known/oauth-protected-resource/mcp\"",
+        "Bearer {}resource_metadata=\"{}/.well-known/oauth-protected-resource/mcp\"",
+        if gave_one {
+            "error=\"invalid_token\", "
+        } else {
+            ""
+        },
         base_url(state, headers)
     );
     let mut response = (
@@ -797,7 +667,7 @@ impl FromRequestParts<AppState> for Assistant {
             .and_then(|value| value.trim().strip_prefix("Bearer "))
             .map(str::trim);
         let Some(token) = token else {
-            return Err(sign_in_first(state, &parts.headers));
+            return Err(sign_in_first(state, &parts.headers, false));
         };
         let at = now();
         let found: Result<Option<(i64, i64, Option<i64>)>, sqlx::Error> = sqlx::query_as(
@@ -832,7 +702,7 @@ impl FromRequestParts<AppState> for Assistant {
                 }
                 Ok(Self { person, connection })
             }
-            Ok(None) => Err(sign_in_first(state, &parts.headers)),
+            Ok(None) => Err(sign_in_first(state, &parts.headers, true)),
             Err(error) => Err(database_problem("checking an assistant's ticket", &error)),
         }
     }
@@ -856,24 +726,6 @@ mod tests {
     }
 
     #[test]
-    fn return_addresses_are_https_or_this_computer() {
-        assert!(allowed_redirect("https://claude.ai/api/mcp/auth_callback"));
-        assert!(allowed_redirect(
-            "https://chatgpt.com/connector_platform_oauth_redirect"
-        ));
-        assert!(allowed_redirect("http://localhost:33418/callback"));
-        assert!(allowed_redirect("http://127.0.0.1:6274/oauth/callback"));
-        assert!(!allowed_redirect("http://example.com/callback"));
-        assert!(!allowed_redirect("https://example.com/callback#part"));
-        assert!(!allowed_redirect("javascript:alert(1)"));
-        assert!(allowed_redirect(
-            "cursor://anysphere.cursor-retrieval/oauth/callback"
-        ));
-        assert!(!allowed_redirect("data:text/html,hello"));
-        assert!(!allowed_redirect("file:///etc/passwd"));
-    }
-
-    #[test]
     fn a_client_id_can_come_in_basic_sign_in() {
         let mut headers = HeaderMap::new();
         // "ntc_abc:" in base64.
@@ -887,16 +739,6 @@ mod tests {
             HeaderValue::from_static("Bearer xyz"),
         );
         assert_eq!(basic_client_id(&headers), None);
-    }
-
-    #[test]
-    fn names_are_plain_and_short() {
-        assert_eq!(clean_name(Some("  Claude\n ")), "Claude");
-        assert_eq!(clean_name(None), "An assistant");
-        assert_eq!(
-            clean_name(Some(&"x".repeat(500))).chars().count(),
-            LONGEST_NAME
-        );
     }
 
     #[test]
