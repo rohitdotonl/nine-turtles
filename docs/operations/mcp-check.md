@@ -12,8 +12,9 @@ check does nothing. No "all good" issues, no messages.
 
 - Read access to this repository, and permission to open issues and pull
   requests in it.
-- Network access to `modelcontextprotocol.io`, `github.com`, `npmjs.com` and
-  `pypi.org`, and to the live app.
+- Network access to `github.com` and `raw.githubusercontent.com` (where the
+  specification is read: scheduled runs can't reach `modelcontextprotocol.io`,
+  decision 0256), `npmjs.com` and `pypi.org`, and to the live app.
 - Optionally, for step 4: an environment variable `NINE_TURTLES_ASSISTANT_KEY`,
   an assistant key the owner made in Settings › Connected assistants on a
   test reader with a feed or two (never the owner's own account), and
@@ -22,13 +23,21 @@ check does nothing. No "all good" issues, no messages.
 
 ## Steps
 
-1. **Has the standard changed?** Read the specification's versions list
-   (`https://modelcontextprotocol.io/specification`, and the changelog of the
-   newest version) and compare with `PROTOCOL_VERSIONS` in
-   `server/src/mcp/mod.rs`. A new version matters when it changes something nine
-   turtles uses: Streamable HTTP, `initialize`, `tools/list`, `tools/call`,
-   tool annotations, or the authorization rules (OAuth 2.1, PKCE, RFC 8414,
-   RFC 9728, RFC 7591, client ID metadata documents).
+1. **Has the standard changed?** List the specification's versions from its
+   repository: `https://api.github.com/repos/modelcontextprotocol/modelcontextprotocol/contents/docs/specification`
+   (each folder is a version, named by its date; ignore `draft`), and read the
+   newest one's changelog at
+   `https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/docs/specification/<version>/changelog.mdx`.
+   Compare with `MODERN` and `LEGACY` in `server/src/mcp/protocol.rs`. A
+   version newer than the newest there **always** gets at least an issue
+   (step 6), even if no assistant needs it yet: the owner hears of every new
+   version. What matters most is anything that changes what nine turtles
+   uses: Streamable HTTP and its headers, `_meta`, the discover method (server/discover),
+   `tools/list`, `tools/call`, tool annotations, or the authorization rules
+   (OAuth 2.1, PKCE, RFC 8414, RFC 8707, RFC 9728, RFC 7591, client ID
+   metadata documents). Also check the specification's deprecated features
+   list (`docs/specification/<version>/deprecated.mdx`) for anything nine
+   turtles still uses and when it goes.
 
 2. **Do the big assistants need it?** Check the current help pages for
    custom connectors in Claude and ChatGPT, and any other assistant readers
@@ -42,7 +51,8 @@ check does nothing. No "all good" issues, no messages.
    TypeScript MCP SDK client (`@modelcontextprotocol/sdk`) and the newest
    official Python one (`mcp`), each doing the whole sign-in: register,
    approve (by calling `/api/oauth/approve` with a signed-in cookie, as the
-   page does), swap the code, `initialize`, `tools/list`, and a few tool calls
+   page does), swap the code, `initialize` (or, with an SDK that speaks 2026-07-28 or
+   later, its stateless requests), `tools/list`, and a few tool calls
    (`list_feeds`, `search_articles`, `add_feed` with a local test feed). Both
    must work. Two scripts that do this are in
    [mcp-clients/](mcp-clients/) (`ts-client.mjs` and `py-client.py`; they

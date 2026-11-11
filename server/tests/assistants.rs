@@ -1276,3 +1276,202 @@ async fn an_assistant_highlights_and_writes_notes_for_the_reader() {
     let (_, opened) = get_json(&base, &format!("/api/articles/{article}"), &cookie).await;
     assert_eq!(opened["article"]["notes"].as_array().unwrap().len(), 1);
 }
+
+/// One message the stateless way (2026-07-28): the version and what the
+/// assistant can do in `_meta`, repeated in headers.
+async fn modern(base: &str, ticket: &str, method: &str, params: Value) -> reqwest::Response {
+    let mut params = params;
+    params["_meta"] = json!({
+        "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+        "io.modelcontextprotocol/clientCapabilities": {},
+        "io.modelcontextprotocol/clientInfo": { "name": "test", "version": "1" },
+    });
+    let mut request = Client::new()
+        .post(format!("{base}/mcp"))
+        .bearer_auth(ticket)
+        .header("accept", "application/json, text/event-stream")
+        .header("content-type", "application/json")
+        .header("mcp-protocol-version", "2026-07-28")
+        .header("mcp-method", method);
+    if let Some(name) = params["name"].as_str() {
+        request = request.header("mcp-name", name);
+    }
+    request
+        .body(json!({ "jsonrpc": "2.0", "id": 9, "method": method, "params": params }).to_string())
+        .send()
+        .await
+        .unwrap()
+}
+
+#[tokio::test]
+async fn an_assistant_speaking_the_stateless_version_works_without_opening() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (access, _) = connect(&base, &cookie).await;
+
+    let found: Value = modern(&base, &access, "server/discover", json!({}))
+        .await
+        .then_read()
+        .await;
+    let result = &found["result"];
+    assert_eq!(result["resultType"], "complete");
+    assert_eq!(result["supportedVersions"][0], "2026-07-28");
+    assert!(
+        result["supportedVersions"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("2025-03-26"))
+    );
+    assert_eq!(
+        result["_meta"]["io.modelcontextprotocol/serverInfo"]["name"],
+        "nine-turtles"
+    );
+    assert_eq!(result["cacheScope"], "public");
+
+    // No initialize first: the list and a tool answer straight away.
+    let listed: Value = modern(&base, &access, "tools/list", json!({}))
+        .await
+        .then_read()
+        .await;
+    assert_eq!(listed["result"]["resultType"], "complete");
+    assert!(listed["result"]["ttlMs"].as_u64().unwrap() > 0);
+    assert!(listed["result"]["tools"].as_array().unwrap().len() > 10);
+    let response = modern(
+        &base,
+        &access,
+        "tools/call",
+        json!({ "name": "list_feeds", "arguments": {} }),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let called: Value = read(response).await;
+    assert_eq!(called["result"]["resultType"], "complete");
+    assert_eq!(called["result"]["isError"], false);
+
+    // `ping` went with the opening: unknown now, and said with 404.
+    let response = modern(&base, &access, "ping", json!({})).await;
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    assert_eq!(read(response).await["error"]["code"], -32601);
+
+    // Headers that don't match the message are refused.
+    let response = Client::new()
+        .post(format!("{base}/mcp"))
+        .bearer_auth(&access)
+        .header("content-type", "application/json")
+        .header("mcp-protocol-version", "2026-07-28")
+        .header("mcp-method", "tools/call")
+        .header("mcp-name", "unsubscribe_feed")
+        .body(
+            json!({ "jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {
+                "name": "list_feeds", "arguments": {},
+                "_meta": { "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                           "io.modelcontextprotocol/clientCapabilities": {} } } })
+            .to_string(),
+        )
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(read(response).await["error"]["code"], -32020);
+
+    // A version nine turtles doesn't speak is told which it does.
+    let response = Client::new()
+        .post(format!("{base}/mcp"))
+        .bearer_auth(&access)
+        .header("content-type", "application/json")
+        .header("mcp-protocol-version", "2099-01-01")
+        .body(json!({ "jsonrpc": "2.0", "id": 4, "method": "tools/list" }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    let refused: Value = read(response).await;
+    assert_eq!(refused["error"]["code"], -32022);
+    assert_eq!(refused["error"]["data"]["requested"], "2099-01-01");
+
+    // The old way still works beside it, answered as before.
+    let answer: Value = rpc(
+        &base,
+        &access,
+        "initialize",
+        json!({ "protocolVersion": "2026-07-28" }),
+    )
+    .await
+    .then_read()
+    .await;
+    assert_eq!(answer["result"]["protocolVersion"], "2025-11-25");
+    assert!(answer["result"].get("resultType").is_none());
+}
+
+#[tokio::test]
+async fn tickets_are_only_for_this_server() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let client_id = register(&base).await;
+    // Naming another server as the resource (RFC 8707) is refused...
+    let elsewhere = format!(
+        "{}&resource={}",
+        authorize_query(&client_id),
+        "https%3A%2F%2Fother.example%2Fmcp"
+    );
+    let (status, refused) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": elsewhere }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "bad-request");
+    let (status, refused) = token(
+        &base,
+        &[
+            ("grant_type", "refresh_token"),
+            ("refresh_token", "anything"),
+            ("resource", "https://other.example/mcp"),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "invalid_target");
+
+    // ...and naming this one works, at both steps.
+    let ours = format!("{base}/mcp");
+    let mut url = Url::parse(&format!("http://x/{}", authorize_query(&client_id))).unwrap();
+    url.query_pairs_mut().append_pair("resource", &ours);
+    let query = format!("?{}", url.query().unwrap());
+    let (status, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{approved}");
+    let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+    let code = back
+        .query_pairs()
+        .find(|(key, _)| key == "code")
+        .unwrap()
+        .1
+        .into_owned();
+    let (status, tickets) = token(
+        &base,
+        &[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &client_id),
+            ("code_verifier", VERIFIER),
+            ("resource", &ours),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{tickets}");
+
+    // A ticket that's no good says so (RFC 6750).
+    let response = rpc(&base, "not-a-ticket", "tools/list", json!({})).await;
+    let challenge = response.headers()[header::WWW_AUTHENTICATE]
+        .to_str()
+        .unwrap();
+    assert!(challenge.contains("error=\"invalid_token\""));
+}

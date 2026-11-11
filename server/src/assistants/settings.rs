@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::SqlitePool;
 
-use super::{KEY_PREFIX, clean_name};
+use super::{KEY_PREFIX, register::clean_name};
 use crate::{
     AppState,
     auth::{SignedIn, database_problem, new_token, scramble},
