@@ -5,7 +5,9 @@
 //! assistant use a program's "tools". nine turtles speaks it plainly, with
 //! nothing specific to any one assistant: JSON-RPC messages POSTed to `/mcp`
 //! ("Streamable HTTP"), each answered at once with JSON. It keeps no
-//! session between messages and never streams.
+//! session between messages and never streams, so it speaks both the
+//! versions that open with `initialize` and the stateless ones that came
+//! after (`protocol`, decision 0256).
 //!
 //! An assistant signs in first (`assistants`) and then acts only for the
 //! reader who connected it, with the same walls as the reader's own screen
@@ -23,12 +25,13 @@
 //! limited too (`ADDS_AN_HOUR`), so a tricked assistant can't use nine
 //! turtles' fetching to reach many addresses.
 //!
-//! The files: this one speaks the protocol and hands each tool call to its
-//! code; `tools.rs` describes the tools; `reading.rs` and `changing.rs` do
+//! The files: this one answers each message and hands each tool call to its
+//! code; `protocol.rs` tells the versions apart; `tools.rs` describes the tools; `reading.rs` and `changing.rs` do
 //! the work.
 
 mod changing;
 mod notes;
+mod protocol;
 mod reading;
 mod tools;
 
@@ -40,18 +43,19 @@ use axum::{
     Json, Router,
     body::Bytes,
     extract::State,
-    http::{StatusCode, header},
+    http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
     routing::post,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use crate::{AppState, VERSION, assistants::Assistant, subscriptions};
-
-/// The MCP versions nine turtles speaks, newest first. An assistant asking
-/// for another is answered with the newest, as the standard says.
-pub const PROTOCOL_VERSIONS: &[&str] = &["2025-11-25", "2025-06-18", "2025-03-26"];
+use crate::{
+    AppState, VERSION,
+    assistants::{self, Assistant},
+    subscriptions,
+};
+use protocol::Era;
 
 /// Each reader's assistants together may call this many tools a minute, and a day.
 const CALLS_A_MINUTE: u32 = 60;
@@ -98,8 +102,30 @@ fn rpc_error(id: &Value, code: i64, message: &str) -> Response {
         .into_response()
 }
 
+/// Who answers: shown by assistants beside the tools.
+fn server_info(base: &str) -> Value {
+    json!({
+        "name": "nine-turtles",
+        "title": "nine turtles",
+        "version": VERSION,
+        // The settled headline and the app icon, as the installed app shows
+        // them (docs/BRAND.md): never the tab icon's single turtle.
+        "description": "Read people. Write back.",
+        "websiteUrl": "https://nineturtles.app",
+        "icons": [
+            { "src": format!("{base}/icons/icon-192.png"), "mimeType": "image/png", "sizes": ["192x192"] },
+            { "src": format!("{base}/icons/icon-512.png"), "mimeType": "image/png", "sizes": ["512x512"] },
+        ],
+    })
+}
+
 /// One JSON-RPC message from a connected assistant.
-async fn message(assistant: Assistant, State(state): State<AppState>, body: Bytes) -> Response {
+async fn message(
+    assistant: Assistant,
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    body: Bytes,
+) -> Response {
     if body.len() > LARGEST_BODY {
         return StatusCode::PAYLOAD_TOO_LARGE.into_response();
     }
@@ -114,27 +140,52 @@ async fn message(assistant: Assistant, State(state): State<AppState>, body: Byte
     let Some(id) = message.get("id").filter(|id| !id.is_null()) else {
         return StatusCode::ACCEPTED.into_response();
     };
-    match method {
+    let era = match protocol::era(&headers, &message) {
+        Ok(era) => era,
+        Err(refused) => {
+            let mut error = json!({ "code": refused.code, "message": refused.message });
+            if let Some(data) = refused.data {
+                error["data"] = data;
+            }
+            return (
+                refused.status,
+                Json(json!({ "jsonrpc": "2.0", "id": id, "error": error })),
+            )
+                .into_response();
+        }
+    };
+    let server = server_info(&assistants::base_url(&state, &headers));
+    let result = match method {
         "initialize" => {
             let asked = message["params"]["protocolVersion"]
                 .as_str()
                 .unwrap_or_default();
-            let version = PROTOCOL_VERSIONS
+            let version = protocol::LEGACY
                 .iter()
                 .find(|version| **version == asked)
-                .unwrap_or(&PROTOCOL_VERSIONS[0]);
-            rpc_result(
-                id,
-                json!({
-                    "protocolVersion": version,
-                    "capabilities": { "tools": { "listChanged": false } },
-                    "serverInfo": { "name": "nine-turtles", "title": "nine turtles", "version": VERSION },
-                    "instructions": INSTRUCTIONS,
-                }),
-            )
+                .unwrap_or(&protocol::LEGACY[0]);
+            json!({
+                "protocolVersion": version,
+                "capabilities": { "tools": { "listChanged": false } },
+                "serverInfo": server,
+                "instructions": INSTRUCTIONS,
+            })
         }
-        "ping" => rpc_result(id, json!({})),
-        "tools/list" => rpc_result(id, json!({ "tools": tools::all() })),
+        "server/discover" => protocol::cacheable(json!({
+            "supportedVersions": protocol::supported(),
+            "capabilities": { "tools": {} },
+            "instructions": INSTRUCTIONS,
+        })),
+        // The stateless versions dropped `ping`: it's unknown to them.
+        "ping" if era == Era::Legacy => json!({}),
+        "tools/list" => {
+            let list = json!({ "tools": tools::all() });
+            if era == Era::Modern {
+                protocol::cacheable(list)
+            } else {
+                list
+            }
+        }
         "tools/call" => {
             let name = message["params"]["name"].as_str().unwrap_or_default();
             if !tools::all().iter().any(|tool| tool["name"] == name) {
@@ -156,16 +207,27 @@ async fn message(assistant: Assistant, State(state): State<AppState>, body: Byte
                 ),
                 Err(problem) => (problem, true),
             };
-            rpc_result(
-                id,
-                json!({ "content": [{ "type": "text", "text": text }], "isError": is_error }),
-            )
+            json!({ "content": [{ "type": "text", "text": text }], "isError": is_error })
         }
-        _ => rpc_error(
-            id,
-            -32601,
-            &format!("nine turtles doesn't know {method:?}."),
-        ),
+        _ => {
+            let unknown = rpc_error(
+                id,
+                -32601,
+                &format!("nine turtles doesn't know {method:?}."),
+            );
+            // The stateless versions answer an unknown method with 404.
+            return if era == Era::Modern {
+                (StatusCode::NOT_FOUND, unknown).into_response()
+            } else {
+                unknown
+            };
+        }
+    };
+    // `server/discover` is the stateless versions' own, whoever asks.
+    if era == Era::Modern || method == "server/discover" {
+        rpc_result(id, protocol::complete(result, &server))
+    } else {
+        rpc_result(id, result)
     }
 }
 

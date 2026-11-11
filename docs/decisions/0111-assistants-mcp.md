@@ -55,7 +55,7 @@ and Settings); screens `web/src/lib/ConnectAssistant.svelte` and
 
 **The standard only.** The owner asked that every kind of assistant work,
 not just Claude. So nine turtles follows the MCP specification (versions
-2025-11-25, 2025-06-18 and 2025-03-26) and plain OAuth standards, with
+2025-11-25, 2025-06-18 and 2025-03-26; 2026-07-28 added in decision 0256) and plain OAuth standards, with
 nothing for any one company: "Streamable HTTP" answered with JSON (no
 streaming, no session kept), OAuth 2.1 with PKCE (S256 only), authorization
 server metadata (RFC 8414), protected resource metadata (RFC 9728), dynamic
