@@ -1490,3 +1490,98 @@ async fn tickets_are_only_for_this_server() {
         .unwrap();
     assert!(challenge.contains("error=\"invalid_token\""));
 }
+
+/// A made-up assistant that introduces itself the newer way: its client id
+/// is the address of a small file giving its name and return address
+/// (a client ID metadata document). `named` is the client id the file
+/// claims; None for its own address.
+async fn assistant_with_a_document(named: Option<&'static str>) -> String {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let own = format!("http://{}/client.json", listener.local_addr().unwrap());
+    let claimed = named.map_or_else(|| own.clone(), str::to_owned);
+    let app = Router::new().route(
+        "/client.json",
+        get(move || {
+            let claimed = claimed.clone();
+            async move {
+                axum::Json(json!({
+                    "client_id": claimed,
+                    "client_name": "Document assistant",
+                    "redirect_uris": [REDIRECT],
+                    "token_endpoint_auth_method": "none",
+                }))
+            }
+        }),
+    );
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    own
+}
+
+#[tokio::test]
+async fn an_assistant_named_by_its_own_document_connects_without_registering() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let server: Value = Client::new()
+        .get(format!("{base}/.well-known/oauth-authorization-server"))
+        .send()
+        .await
+        .unwrap()
+        .then_read()
+        .await;
+    assert_eq!(server["client_id_metadata_document_supported"], true);
+
+    let client_id = assistant_with_a_document(None).await;
+    let query = authorize_query(&client_id);
+    let (status, shown) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK, "{shown}");
+    assert_eq!(shown["client_name"], "Document assistant");
+    assert_eq!(shown["redirect_host"], "assistant.example");
+    let (status, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+    let code = back
+        .query_pairs()
+        .find(|(key, _)| key == "code")
+        .unwrap()
+        .1
+        .into_owned();
+    let (status, tickets) = token(
+        &base,
+        &[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &client_id),
+            ("redirect_uri", REDIRECT),
+            ("code_verifier", VERIFIER),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{tickets}");
+    let (_, error) = tool(
+        &base,
+        tickets["access_token"].as_str().unwrap(),
+        "list_feeds",
+        json!({}),
+    )
+    .await;
+    assert!(!error);
+
+    // A return address the document doesn't give is never sent a code.
+    let other = query.replace("assistant.example", "elsewhere.example");
+    let (status, refused) = get_json(&base, &format!("/api/oauth/request{other}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "bad-redirect");
+
+    // A document that names another assistant is refused.
+    let impostor = assistant_with_a_document(Some("https://claude.ai/client.json")).await;
+    let query = authorize_query(&impostor);
+    let (status, refused) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "unknown-client");
+}

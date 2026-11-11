@@ -6,9 +6,10 @@
 //! standard can connect, and signs in the standard way, with OAuth 2.1:
 //!
 //! 1. It finds out how (`/.well-known/oauth-protected-resource` and
-//!    `/.well-known/oauth-authorization-server`), and registers itself
-//!    (`/oauth/register`, in `register`), giving its name and where to send
-//!    the reader back.
+//!    `/.well-known/oauth-authorization-server`), and introduces itself:
+//!    its name and where to send the reader back. Either it registers
+//!    (`/oauth/register`, in `register`), or, the newer way, its client id is
+//!    the web address of a small file saying so (`metadata`).
 //! 2. It opens `/oauth/authorize` in the reader's browser: the "Connect this
 //!    assistant?" page (`web/src/lib/ConnectAssistant.svelte`), after
 //!    signing in if needed. Approving sends the browser back with a
@@ -60,6 +61,7 @@ const LONGEST_ADDRESS: usize = 2_000;
 /// Keys start so, so a reader (or a secret scanner) can tell one at a glance.
 const KEY_PREFIX: &str = "nt_";
 
+mod metadata;
 mod register;
 pub mod settings;
 
@@ -196,6 +198,7 @@ async fn authorization_server(State(state): State<AppState>, headers: HeaderMap)
         "grant_types_supported": ["authorization_code", "refresh_token"],
         "code_challenge_methods_supported": ["S256"],
         "token_endpoint_auth_methods_supported": ["none"],
+        "client_id_metadata_document_supported": true,
         "authorization_response_iss_parameter_supported": true,
     }))
     .into_response()
@@ -243,22 +246,31 @@ fn plausible_challenge(text: &str) -> bool {
 
 /// Checks the link's query string: a registered assistant, one of its own
 /// return addresses, a code asked for with an S256 challenge, and, if it
-/// names one, this server as the resource (`ours`). Answers why
-/// not as a word the page turns into a sentence.
+/// names one, this server as the resource. An assistant named by its own
+/// web address is looked up there first (`metadata`), for the reader
+/// `person`. Answers why not as a word the page turns into a sentence.
 async fn checked(
-    db: &SqlitePool,
+    app: &AppState,
+    headers: &HeaderMap,
+    person: i64,
     query: &str,
-    ours: impl Fn(&str) -> bool,
 ) -> Result<Result<Asked, &'static str>, sqlx::Error> {
     let pairs = query_pairs(query);
     let get = |name: &str| pairs.get(name).map(String::as_str);
     let Some(client_id) = get("client_id") else {
         return Ok(Err("unknown-client"));
     };
+    if metadata::is_document(client_id) {
+        match metadata::refresh(app, person, client_id).await? {
+            Ok(()) => {}
+            Err(metadata::Unusable::Invalid) => return Ok(Err("unknown-client")),
+            Err(metadata::Unusable::Unreachable) => return Ok(Err("unreachable")),
+        }
+    }
     let found: Option<(i64, String, String)> =
         sqlx::query_as("SELECT id, name, redirect_uris FROM assistant_clients WHERE client_id = ?")
             .bind(client_id)
-            .fetch_optional(db)
+            .fetch_optional(&app.db)
             .await?;
     let Some((client, name, registered)) = found else {
         return Ok(Err("unknown-client"));
@@ -279,7 +291,7 @@ async fn checked(
         || get("code_challenge_method") != Some("S256")
         || !plausible_challenge(challenge)
         || state.is_some_and(|state| state.len() > LONGEST_ADDRESS)
-        || get("resource").is_some_and(|resource| !ours(resource))
+        || get("resource").is_some_and(|resource| !names_us(resource, app, headers))
     {
         return Ok(Err("bad-request"));
     }
@@ -292,8 +304,15 @@ async fn checked(
     }))
 }
 
+/// The page says "This link can't be used" for a 400, and "try again" for
+/// an assistant's site that didn't answer.
 fn refused(word: &str) -> Response {
-    (StatusCode::BAD_REQUEST, Json(json!({ "error": word }))).into_response()
+    let status = if word == "unreachable" {
+        StatusCode::SERVICE_UNAVAILABLE
+    } else {
+        StatusCode::BAD_REQUEST
+    };
+    (status, Json(json!({ "error": word }))).into_response()
 }
 
 /// Where the reader's browser goes back to, with these parts added, and
@@ -324,13 +343,12 @@ struct RequestQuery {
 /// the website it sends the reader back to. The page passes on its own
 /// query string, as the assistant wrote it.
 async fn request(
-    SignedIn(_): SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     headers: HeaderMap,
     uri: axum::http::Uri,
 ) -> Response {
-    let ours = |resource: &str| names_us(resource, &state, &headers);
-    match checked(&state.db, uri.query().unwrap_or_default(), ours).await {
+    match checked(&state, &headers, person, uri.query().unwrap_or_default()).await {
         Ok(Ok(asked)) => Json(json!({
             "client_name": asked.name,
             // An app's own kind of address (`com.example.app:/callback`)
@@ -350,8 +368,7 @@ async fn approve(
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    let ours = |resource: &str| names_us(resource, &state, &headers);
-    let asked = match checked(&state.db, &form.query, ours).await {
+    let asked = match checked(&state, &headers, person, &form.query).await {
         Ok(Ok(asked)) => asked,
         Ok(Err(word)) => return refused(word),
         Err(error) => return database_problem("reading an assistant's request", &error),
@@ -393,13 +410,12 @@ async fn approve(
 
 /// The reader said no: the assistant is told so.
 async fn deny(
-    SignedIn(_): SignedIn,
+    SignedIn(person): SignedIn,
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    let ours = |resource: &str| names_us(resource, &state, &headers);
-    match checked(&state.db, &form.query, ours).await {
+    match checked(&state, &headers, person, &form.query).await {
         Ok(Ok(asked)) => {
             let issuer = base_url(&state, &headers);
             let redirect = back_to(&asked, &issuer, &[("error", "access_denied")]);

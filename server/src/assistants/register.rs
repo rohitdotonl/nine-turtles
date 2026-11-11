@@ -66,7 +66,7 @@ pub(super) fn clean_name(name: Option<&str>) -> String {
 /// https anywhere; http only to the computer it runs on, as desktop
 /// assistants do; or an app's own kind of address (`cursor://…`), never
 /// one a browser would run or open as a file. Never with a `#` part.
-fn allowed_redirect(address: &str) -> bool {
+pub(super) fn allowed_redirect(address: &str) -> bool {
     if address.len() > LONGEST_ADDRESS {
         return false;
     }
