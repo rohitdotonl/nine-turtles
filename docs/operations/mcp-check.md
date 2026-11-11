@@ -62,6 +62,10 @@ check does nothing. No "all good" issues, no messages.
    takes a feed address).
    Install the SDKs in a scratch folder, not in `web/`; update the scripts
    if the SDKs changed.
+   Where an SDK can sign in with a client ID metadata document (decision
+   0257), try that way too, serving its document from this computer (the
+   tests allow plain http to `localhost` for this); otherwise
+   `server/tests/assistants.rs` covers it.
 
 4. **Try the live app.** If the key is set:
    `curl -sS --max-time 60 -H "Authorization: Bearer $NINE_TURTLES_ASSISTANT_KEY" -H "content-type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_articles","arguments":{"query":"the"}}}' "$NINE_TURTLES_ADDRESS/mcp"`

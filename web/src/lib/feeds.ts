@@ -284,7 +284,7 @@ export const PLAN_ENDED = "Your free trial or plan has ended. Choose a plan in S
 /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): Add leaves the field unmarked. */
 export const NOT_THE_ADDRESS: Problem[] = ["unreachable", "blocked", "trouble", "too-many", "plan-ended", "offline"];
 
-/** A site whose guard against bots turns nine turtles away (decision 0257): only the site can let it in. */
+/** A site whose guard against bots turns nine turtles away (decision 0258): only the site can let it in. */
 export const BLOCKED_ADDING = "The site's guard against bots turns nine turtles away. You could write to them and ask them to let it in.";
 
 /** What the add field says when a feed couldn't be added. Plain and calm. */

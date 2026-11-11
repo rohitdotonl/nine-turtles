@@ -13,6 +13,7 @@ use axum::{
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
+use sqlx::SqlitePool;
 
 use super::{LONGEST_ADDRESS, oauth_error};
 use crate::{
@@ -66,7 +67,7 @@ pub(super) fn clean_name(name: Option<&str>) -> String {
 /// https anywhere; http only to the computer it runs on, as desktop
 /// assistants do; or an app's own kind of address (`cursor://…`), never
 /// one a browser would run or open as a file. Never with a `#` part.
-fn allowed_redirect(address: &str) -> bool {
+pub(super) fn allowed_redirect(address: &str) -> bool {
     if address.len() > LONGEST_ADDRESS {
         return false;
     }
@@ -142,47 +143,7 @@ pub(super) async fn register(
     };
     let name = clean_name(form.client_name.as_deref());
     let at = now();
-    let stored = async {
-        let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
-        sqlx::query(
-            "DELETE FROM assistant_clients WHERE created_at <= ?
-             AND id NOT IN (SELECT client_id FROM assistant_connections WHERE client_id IS NOT NULL)
-             AND id NOT IN (SELECT client_id FROM assistant_codes)",
-        )
-        .bind(at - UNUSED_CLIENT_FOR)
-        .execute(&mut *transaction)
-        .await?;
-        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM assistant_clients")
-            .fetch_one(&mut *transaction)
-            .await?;
-        if count >= MOST_CLIENTS {
-            let made_room = sqlx::query(
-                "DELETE FROM assistant_clients WHERE id = (SELECT id FROM assistant_clients
-                     WHERE id NOT IN (SELECT client_id FROM assistant_connections
-                                      WHERE client_id IS NOT NULL)
-                         AND id NOT IN (SELECT client_id FROM assistant_codes)
-                     ORDER BY created_at, id LIMIT 1)",
-            )
-            .execute(&mut *transaction)
-            .await?;
-            if made_room.rows_affected() == 0 {
-                return Ok(false);
-            }
-        }
-        sqlx::query(
-            "INSERT INTO assistant_clients (client_id, name, redirect_uris, created_at)
-             VALUES (?, ?, ?, ?)",
-        )
-        .bind(&client_id)
-        .bind(&name)
-        .bind(serde_json::to_string(&form.redirect_uris).unwrap_or_else(|_| "[]".to_owned()))
-        .bind(at)
-        .execute(&mut *transaction)
-        .await?;
-        transaction.commit().await?;
-        Ok::<bool, sqlx::Error>(true)
-    }
-    .await;
+    let stored = keep(&state.db, &client_id, &name, &form.redirect_uris).await;
     match stored {
         Ok(true) => (
             StatusCode::CREATED,
@@ -205,6 +166,65 @@ pub(super) async fn register(
         ),
         Err(error) => database_problem("registering an assistant", &error),
     }
+}
+
+/// Keeps an assistant's name and return addresses in `assistant_clients`,
+/// however it introduced itself (here, or by its own document,
+/// `metadata`): updated in place if it's there, so its connections stay
+/// its own. Assistants nobody connected go after a day, and past
+/// `MOST_CLIENTS` the oldest of them makes room; answers false when none can.
+pub(super) async fn keep(
+    db: &SqlitePool,
+    client_id: &str,
+    name: &str,
+    redirect_uris: &[String],
+) -> Result<bool, sqlx::Error> {
+    let at = now();
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
+    sqlx::query(
+        "DELETE FROM assistant_clients WHERE created_at <= ? AND client_id != ?
+         AND id NOT IN (SELECT client_id FROM assistant_connections WHERE client_id IS NOT NULL)
+         AND id NOT IN (SELECT client_id FROM assistant_codes)",
+    )
+    .bind(at - UNUSED_CLIENT_FOR)
+    .bind(client_id)
+    .execute(&mut *transaction)
+    .await?;
+    let known: Option<i64> =
+        sqlx::query_scalar("SELECT id FROM assistant_clients WHERE client_id = ?")
+            .bind(client_id)
+            .fetch_optional(&mut *transaction)
+            .await?;
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM assistant_clients")
+        .fetch_one(&mut *transaction)
+        .await?;
+    if known.is_none() && count >= MOST_CLIENTS {
+        let made_room = sqlx::query(
+            "DELETE FROM assistant_clients WHERE id = (SELECT id FROM assistant_clients
+                 WHERE id NOT IN (SELECT client_id FROM assistant_connections
+                                  WHERE client_id IS NOT NULL)
+                     AND id NOT IN (SELECT client_id FROM assistant_codes)
+                 ORDER BY created_at, id LIMIT 1)",
+        )
+        .execute(&mut *transaction)
+        .await?;
+        if made_room.rows_affected() == 0 {
+            return Ok(false);
+        }
+    }
+    sqlx::query(
+        "INSERT INTO assistant_clients (client_id, name, redirect_uris, created_at)
+         VALUES (?1, ?2, ?3, ?4)
+         ON CONFLICT (client_id) DO UPDATE SET name = ?2, redirect_uris = ?3, created_at = ?4",
+    )
+    .bind(client_id)
+    .bind(name)
+    .bind(serde_json::to_string(redirect_uris).unwrap_or_else(|_| "[]".to_owned()))
+    .bind(at)
+    .execute(&mut *transaction)
+    .await?;
+    transaction.commit().await?;
+    Ok(true)
 }
 
 #[cfg(test)]

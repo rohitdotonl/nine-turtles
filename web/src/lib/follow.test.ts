@@ -100,7 +100,7 @@ describe("who a shared page is by", () => {
   });
 });
 
-describe("a site's guard against bots (decision 0257)", () => {
+describe("a site's guard against bots (decision 0258)", () => {
   it("is said plainly and locks Follow, since trying again won't help", () => {
     expect(sayProblem("blocked")).toMatch(/guard against bots/);
     expect(worthTryingAgain("blocked")).toBe(false);

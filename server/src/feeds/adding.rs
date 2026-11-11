@@ -58,7 +58,7 @@ pub enum NotAdded {
     NotAnAddress,
     NotAllowed,
     Unreachable,
-    /// The site's guard against bots turned nine turtles away (decision 0257).
+    /// The site's guard against bots turned nine turtles away (decision 0258).
     Blocked,
     NotFound,
     TooBig,

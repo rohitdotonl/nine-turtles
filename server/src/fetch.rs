@@ -100,7 +100,7 @@ pub enum FetchError {
     SlowDown(Option<i64>),
     /// A guard in front of the site (Cloudflare's bot check and the like)
     /// turned nine turtles away before the site itself could answer
-    /// (`fetch::guard`, decision 0257).
+    /// (`fetch::guard`, decision 0258).
     Blocked,
 }
 
@@ -307,7 +307,7 @@ async fn check_once(
         let content_type = text(header::CONTENT_TYPE).unwrap_or_default();
         let etag = text(header::ETAG);
         let last_modified = text(header::LAST_MODIFIED);
-        let body = read_limited(response).await?;
+        let body = read_limited(response, SIZE_LIMIT).await?;
         return Ok(Answer::Changed(Fetched {
             final_url: current,
             lasting_url: lasting,
@@ -387,10 +387,10 @@ fn http_date(value: &str) -> Option<i64> {
 
 /// Reads the body bit by bit, stopping as soon as it passes the size limit,
 /// so a huge file is never held whole.
-async fn read_limited(mut response: reqwest::Response) -> Result<Vec<u8>, FetchError> {
+async fn read_limited(mut response: reqwest::Response, most: usize) -> Result<Vec<u8>, FetchError> {
     if response
         .content_length()
-        .is_some_and(|length| length > SIZE_LIMIT as u64)
+        .is_some_and(|length| length > most as u64)
     {
         return Err(FetchError::TooBig);
     }
@@ -400,7 +400,7 @@ async fn read_limited(mut response: reqwest::Response) -> Result<Vec<u8>, FetchE
         .await
         .map_err(|_| FetchError::Unreachable)?
     {
-        if body.len() + chunk.len() > SIZE_LIMIT {
+        if body.len() + chunk.len() > most {
             return Err(FetchError::TooBig);
         }
         body.extend_from_slice(&chunk);
@@ -420,6 +420,37 @@ async fn read_some(mut response: reqwest::Response, limit: usize) -> Vec<u8> {
     }
     body.truncate(limit);
     body
+}
+
+/// Downloads one small file from exactly `url`: no redirect is followed
+/// (one is answered as its status), and reading stops past `most` bytes.
+/// For a file that must be where it says it is, such as an assistant's
+/// client ID metadata document (decision 0257).
+pub async fn get_small(
+    client: &Client,
+    url: &Url,
+    local_allowed: bool,
+    most: usize,
+) -> Result<Vec<u8>, FetchError> {
+    if !allowed(url, local_allowed) {
+        return Err(FetchError::NotAllowed);
+    }
+    let response = client
+        .get(url.clone())
+        .header(header::ACCEPT, "application/json")
+        .send()
+        .await
+        .map_err(|error| {
+            if is_refused_address(&error) {
+                FetchError::NotAllowed
+            } else {
+                FetchError::Unreachable
+            }
+        })?;
+    if !response.status().is_success() {
+        return Err(FetchError::Status(response.status().as_u16()));
+    }
+    read_limited(response, most).await
 }
 
 /// Only ordinary web addresses. A written-out number address (such as

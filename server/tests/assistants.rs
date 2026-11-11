@@ -1490,3 +1490,265 @@ async fn tickets_are_only_for_this_server() {
         .unwrap();
     assert!(challenge.contains("error=\"invalid_token\""));
 }
+
+/// A made-up assistant that introduces itself the newer way: its client id
+/// is the address of a small file giving its name and return address
+/// (a client ID metadata document). `named` is the client id the file
+/// claims; None for its own address.
+async fn assistant_with_a_document(named: Option<&'static str>) -> String {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let own = format!("http://{}/client.json", listener.local_addr().unwrap());
+    let claimed = named.map_or_else(|| own.clone(), str::to_owned);
+    let app = Router::new().route(
+        "/client.json",
+        get(move || {
+            let claimed = claimed.clone();
+            async move {
+                axum::Json(json!({
+                    "client_id": claimed,
+                    "client_name": "Document assistant",
+                    "redirect_uris": [REDIRECT],
+                    "token_endpoint_auth_method": "none",
+                }))
+            }
+        }),
+    );
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    own
+}
+
+#[tokio::test]
+async fn an_assistant_named_by_its_own_document_connects_without_registering() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let server: Value = Client::new()
+        .get(format!("{base}/.well-known/oauth-authorization-server"))
+        .send()
+        .await
+        .unwrap()
+        .then_read()
+        .await;
+    assert_eq!(server["client_id_metadata_document_supported"], true);
+
+    let client_id = assistant_with_a_document(None).await;
+    let query = authorize_query(&client_id);
+    let (status, shown) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK, "{shown}");
+    assert_eq!(shown["client_name"], "Document assistant");
+    assert_eq!(shown["redirect_host"], "assistant.example");
+    let (status, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+    let code = back
+        .query_pairs()
+        .find(|(key, _)| key == "code")
+        .unwrap()
+        .1
+        .into_owned();
+    let (status, tickets) = token(
+        &base,
+        &[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &client_id),
+            ("redirect_uri", REDIRECT),
+            ("code_verifier", VERIFIER),
+        ],
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK, "{tickets}");
+    let (_, error) = tool(
+        &base,
+        tickets["access_token"].as_str().unwrap(),
+        "list_feeds",
+        json!({}),
+    )
+    .await;
+    assert!(!error);
+
+    // A return address the document doesn't give is never sent a code.
+    let other = query.replace("assistant.example", "elsewhere.example");
+    let (status, refused) = get_json(&base, &format!("/api/oauth/request{other}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "bad-redirect");
+
+    // A document that names another assistant is refused.
+    let impostor = assistant_with_a_document(Some("https://claude.ai/client.json")).await;
+    let query = authorize_query(&impostor);
+    let (status, refused) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "unknown-client");
+}
+
+/// A made-up site with many assistants' documents (`/doc/<name>`, each
+/// naming itself), one that moved (`/moved`) and one that's broken
+/// (`/broken`); answers its address and how many times it was asked.
+async fn many_assistants() -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let asked = Arc::new(AtomicUsize::new(0));
+    let (own, counter) = (base.clone(), asked.clone());
+    let app = Router::new()
+        .route(
+            "/doc/{name}",
+            get(
+                move |axum::extract::Path(name): axum::extract::Path<String>| {
+                    counter.fetch_add(1, Ordering::SeqCst);
+                    let own = own.clone();
+                    async move {
+                        axum::Json(json!({
+                            "client_id": format!("{own}/doc/{name}"),
+                            "client_name": name,
+                            "redirect_uris": [REDIRECT],
+                        }))
+                    }
+                },
+            ),
+        )
+        .route(
+            "/moved",
+            get(|| async { axum::response::Redirect::temporary("/doc/moved") }),
+        )
+        .route(
+            "/broken",
+            get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+        );
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (base, asked)
+}
+
+#[tokio::test]
+async fn an_assistants_document_is_read_once_from_exactly_its_address() {
+    use std::sync::atomic::Ordering;
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (site, asked) = many_assistants().await;
+    let shown = |client_id: String| {
+        let (base, cookie) = (base.clone(), cookie.clone());
+        async move {
+            let query = authorize_query(&client_id);
+            get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await
+        }
+    };
+
+    // Read once, then kept: opening the page again reads nothing.
+    let (status, _) = shown(format!("{site}/doc/first")).await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = shown(format!("{site}/doc/first")).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+
+    // Never followed somewhere else.
+    let (status, refused) = shown(format!("{site}/moved")).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "unknown-client");
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+    // A site in trouble says to try again.
+    let (status, _) = shown(format!("{site}/broken")).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    // A link refused anyway visits nothing.
+    let query = authorize_query(&format!("{site}/doc/unasked")).replace("S256", "plain");
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+
+    // At most 20 documents read an hour for one reader (three so far).
+    for number in 0..17 {
+        let (status, _) = shown(format!("{site}/doc/a{number}")).await;
+        assert_eq!(status, StatusCode::OK, "{number}");
+    }
+    let (status, _) = shown(format!("{site}/doc/one-too-many")).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(asked.load(Ordering::SeqCst), 18);
+}
+
+#[tokio::test]
+async fn reading_a_document_again_keeps_its_connections_and_unused_ones_go() {
+    use std::sync::atomic::Ordering;
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (site, asked) = many_assistants().await;
+    let kept = format!("{site}/doc/kept");
+    let query = authorize_query(&kept);
+    let (_, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    // Approving uses the copy the page read: none yet, so the link is refused.
+    assert_eq!(approved["error"], "unknown-client");
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+    let code = back
+        .query_pairs()
+        .find(|(key, _)| key == "code")
+        .unwrap()
+        .1
+        .into_owned();
+    let (_, tickets) = token(
+        &base,
+        &[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &kept),
+            ("code_verifier", VERIFIER),
+        ],
+    )
+    .await;
+    let access = tickets["access_token"].as_str().unwrap().to_owned();
+    let lonely = format!("{site}/doc/lonely");
+    let (status, _) = get_json(
+        &base,
+        &format!("/api/oauth/request{}", authorize_query(&lonely)),
+        &cookie,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let number = |client_id: String| {
+        let db = state.db.clone();
+        async move {
+            sqlx::query_scalar::<_, i64>("SELECT id FROM assistant_clients WHERE client_id = ?")
+                .bind(client_id)
+                .fetch_optional(&db)
+                .await
+                .unwrap()
+        }
+    };
+    let before = number(kept.clone()).await.unwrap();
+
+    // Two days on, both copies are old.
+    sqlx::query("UPDATE assistant_clients SET created_at = created_at - 2 * 86400")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let read_before = asked.load(Ordering::SeqCst);
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(asked.load(Ordering::SeqCst), read_before + 1);
+    // Read again, the same line: the connection stays, and works.
+    assert_eq!(number(kept).await, Some(before));
+    let (_, error) = tool(&base, &access, "list_feeds", json!({})).await;
+    assert!(!error);
+    // The one nobody connected went when the next one was kept.
+    assert_eq!(number(lonely).await, None);
+}
