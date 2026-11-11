@@ -4,7 +4,7 @@
   what to do, in one line that says what looking on their site found and, until an address is
   filled in, ends "or look on their site" (a link to it, in a new tab); "Their email address", the
   message line, then Write (or Write back), the box's one solid button, and Not now (decision
-  0258). A quiet bordered box with a faint edge, across the column. Its ids are its own, so several can
+  0259). A quiet bordered box with a faint edge, across the column. Its ids are its own, so several can
   be open on one page.
 -->
 <script lang="ts">

@@ -52,7 +52,7 @@ V1, item 2). Its look gets a refinement round.*
   copies it and says "Copied.": on a computer with no email app set up, the
   press otherwise does nothing you can see (decision 0229). Pressing one of
   them puts the keyboard back on Write back, as the button pressed goes.
-- **Write in Gmail or Outlook.com** (decision 0258): on a computer whose
+- **Write in Gmail or Outlook.com** (decision 0259): on a computer whose
   email lives in the browser, pressing Write in Gmail opens the same email
   (address, subject, quotes) as a new Gmail draft in a new tab, at once, and
   keeps the choice on this device only (a phone and a computer often
@@ -80,7 +80,7 @@ V1, item 2). Its look gets a refinement round.*
   the address.
 - **Write back about this** (decision 0205): when you've highlighted words
   in the article (section 42), the email starts with them, each quote in
-  curly quotes (“…”), as a person quotes in a letter (decision 0258; "> " at
+  curly quotes (“…”), as a person quotes in a letter (decision 0259; "> " at
   each line's start reads as code, and Gmail shows it as it is), a blank
   line after each, then
   room for your reply (at most 1,500 characters of quotes as written into
@@ -125,13 +125,13 @@ V1, item 2). Its look gets a refinement round.*
   address. Paste it here, or look on their site." **look on their site** is
   an underlined link to their website (the one their feed names, else their
   article's home page) in a new tab, left out once an address found there is
-  filled in (decision 0258: the field is the point, so the way to find the
+  filled in (decision 0259: the field is the point, so the way to find the
   address is words in the line, not a second button).
   Once the reader changes a found address, the box is as before. With no website known it
   doesn't look, and says "nine turtles doesn't have their address yet.
   Paste it here." Then **Their email address** (its placeholder
   "name@example.com"), **Write back**, the box's one solid button (decision
-  0258; the button that opened it at an article's end is outlined), and
+  0259; the button that opened it at an article's end is outlined), and
   **Not now**, and under them, quietly, "It sends from your own email, and
   nine turtles keeps the address for next time." (point 8). The
   keyboard starts on the field; Not now, or Escape in the field, puts the

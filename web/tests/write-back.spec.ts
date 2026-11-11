@@ -48,7 +48,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(site).toHaveAttribute("href", /^https?:\/\//);
   await expect(site).toHaveAttribute("target", "_blank");
 
-  // The box's one solid button is Write back, though the button that opened it is outlined (decision 0258).
+  // The box's one solid button is Write back, though the button that opened it is outlined (decision 0259).
   await expect(pane(page).locator("form").getByRole("button", { name: "Write back", exact: true })).toHaveClass(/btn-primary/);
   await expect(pane(page)).toContainText("It sends from your own email, and nine turtles keeps the address for next time.");
 

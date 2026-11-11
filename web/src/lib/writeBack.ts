@@ -86,7 +86,7 @@ const LONGEST_QUOTES = 1500;
 
 const linkSize = (text: string) => encodeURIComponent(text).length;
 
-/** A quote as a person writes one in a letter, in curly quotes (decision 0258): "> " at each line's start reads as code to most people, and Gmail shows it as it is. */
+/** A quote as a person writes one in a letter, in curly quotes (decision 0259): "> " at each line's start reads as code to most people, and Gmail shows it as it is. */
 const asQuote = (text: string) => `“${text.trim().split(/\n+/).map((line) => line.trim()).join("\n")}”`;
 
 /** The first words of `text` that fit in `room`, ending "…"; empty when not even one does. */
@@ -102,7 +102,7 @@ function shortened(text: string, room: number): string {
 
 /**
  * How the email starts when the reader highlighted or chose words (decision
- * 0205): each quote in curly quotes, as a person quotes in a letter (decision 0258), a
+ * 0205): each quote in curly quotes, as a person quotes in a letter (decision 0259), a
  * blank line after each, then room to write. Quotes that would make the link
  * too long are left out; when even the first is too long, its first words are
  * kept, ending "…", so the email never starts empty under a line saying it
@@ -137,7 +137,7 @@ export function writeBackLink(address: string, title: string, quotes: string[] =
 }
 
 /**
- * Where the reader writes email on this device (decision 0258): their own
+ * Where the reader writes email on this device (decision 0259): their own
  * email app (a `mailto:` link), or Gmail or Outlook.com in the browser, for a
  * computer whose email lives there and so has no email app to open. Chosen
  * under Write back once it's pressed, and kept on this device only: a phone
