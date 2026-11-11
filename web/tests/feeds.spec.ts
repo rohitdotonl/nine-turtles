@@ -549,6 +549,19 @@ test("on a phone, the welcome's offered feeds sit on a grouped card a tone off t
   expect(Math.abs(follow!.x - list!.x)).toBeLessThan(1);
 });
 
+test("+ Add offers a newsletter with no website the reader's own address, in place (decision 0261)", async ({ page }) => {
+  await openApp(page, "/add-feed");
+  const offer = page.getByRole("button", { name: "Use your nine turtles address" });
+  await expect(page.getByText("A newsletter without a website?")).toBeVisible();
+  await tabTo(page, offer);
+  await page.keyboard.press("Enter");
+  const region = page.getByRole("region", { name: "If it's a newsletter" });
+  await expect(region.getByLabel("Your nine turtles address")).toHaveValue(/@/);
+  await expect(region.getByRole("button", { name: /Copy/ })).toBeVisible();
+  // Opened from + Add, there's no site to sign up on.
+  await expect(region.getByRole("link", { name: /Open their site/ })).toHaveCount(0);
+});
+
 test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await openApp(page, "/add-feed");
   await field(page).fill(`${NO_FEED_SITE}/plain/`);

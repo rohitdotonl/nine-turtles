@@ -3,7 +3,7 @@ title: Put people in folders
 description: Group the people you follow into folders, such as Friends or Cooking, by dragging or many at once, and put the folders in your own order.
 groupId: keeping-things-tidy
 order: 1
-spec: 5 and 15
+spec: 3, 5 and 15
 updated: 2026-11-11
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---

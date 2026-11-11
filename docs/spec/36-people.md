@@ -127,8 +127,8 @@ PLAN.md → V1, item 1.*
       takes Write to and its address away at once (decision 0192);
     - **Folders**, the folders they're in, in words ("1 and Friends",
       "None"); pressed, every folder opens under it in place as a tick
-      list, each tick counting at once, with **New folder…** as its last
-      row (Enter makes it and puts them in it; the sidebar opens it; Escape
+      list, each tick counting at once, with **New folder…** as its first
+      row, above the folders (decision 0261; Enter makes it and puts them in it; the sidebar opens it; Escape
       empties it, and only an empty one's Escape leaves the page). One list
       for all their sources;
     - **Pause for a while**, every source of theirs at once;

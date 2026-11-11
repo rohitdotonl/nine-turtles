@@ -22,8 +22,14 @@ everywhere). New folder… shows a field for its
 name; Done with no name says "Name the new folder first." It starts on the folder the sheet opened over, else No folder,
 so nothing is filed unless the reader was already there. Closing the
 sheet keeps what it showed, as it keeps the guess of person or
-publication. Once followed, their folders open in the sidebar, so the
-reader sees where they went. The welcome, where nobody has folders yet,
+publication. After Done, their folders open in the sidebar, so the
+reader sees where they went. The choice is the native list (as + Add a
+source chooses a person), not Move to…'s grouped rows: inside a
+question that already holds the tiles, a row per folder would push Done
+off the sheet. The keyboard stays on the list when it changes, since on
+some systems each arrow press chooses; Tab reaches the new folder's
+name. Several feeds followed together become one person without any
+question, so they land in no folder, as before. The welcome, where nobody has folders yet,
 doesn't ask.
 
 **Comments feeds.** A WordPress blog names its posts and its comments
@@ -39,7 +45,12 @@ podcast are still both offered (decision 0206).
 limit, and the usual-address search moved on past it and said nine
 turtles "couldn't find a way to follow this site", telling the reader to
 ask the writer for a feed they already have. The limit is now 10 MB (the
-same as a newsletter's email), and a usual address too big to read is
+same as a newsletter's email; Rohit said "ship it" knowing this). It's
+the one fetch limit, so it also covers background checks, the website's
+feed finder and blog checkup, and WebSub deliveries. A feed is read
+whole into memory to be parsed, so one this size costs about 10 MB for a
+moment on the single instance, once per check (an unchanged feed answers
+"not modified" and sends nothing). And a usual address too big to read is
 said as "Their feed is too big for nine turtles to read." when nothing
 else is found. That problem no longer marks the field: the address is
 right.
