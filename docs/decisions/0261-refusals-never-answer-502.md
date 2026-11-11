@@ -20,7 +20,15 @@ The words and what the reader sees are the same; they now arrive.
 
 **Why 422.** It's a 4xx, which hosts pass through untouched; it already
 answered "no-feed" when adding, so the web app already reads it; and it
-says "understood, but couldn't be done", which is what happened. 502, 503
-and 504 stay reserved for nine turtles itself being out of reach (a
-restart for a new version), which is what saving marks retries on
-(decision 0073).
+says "understood, but couldn't be done", which is what happened. Saving
+marks still retries on 502, 503 and 504, taken as nine turtles itself
+being out of reach for a restart (decision 0073).
+
+**Not changed.** A few 503s still carry words: an installation without
+email or sign-in set up (`no-email`, `off`, `password-missing`), an
+assistant's site that didn't answer (`unreachable`, chosen in decision
+0257) and too many assistants waiting to connect. Only the 502 body was
+seen replaced by the host; whether it replaces a 503's too hasn't been
+checked. A tab still on the old version just after a new one goes live
+reads any 422 as "nine turtles was updated", so it may show that note as
+well as the reason (`NOT_UNDERSTOOD`, as for "no-feed" before).

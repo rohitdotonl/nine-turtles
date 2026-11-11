@@ -166,7 +166,7 @@ try {
     await page.route("https://app.nineturtles.app/api/find-feeds**", (route) => {
       const url = new URL(route.request().url());
       asked.push({ address: url.searchParams.get("address"), cookie: route.request().headers().cookie });
-      const answer = answers[url.searchParams.get("address")] ?? { status: 502, body: { error: "unreachable" } };
+      const answer = answers[url.searchParams.get("address")] ?? { status: 422, body: { error: "unreachable" } };
       route.fulfill({
         status: answer.status,
         contentType: "application/json",
