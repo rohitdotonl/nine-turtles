@@ -58,6 +58,8 @@ pub enum NotAdded {
     NotAnAddress,
     NotAllowed,
     Unreachable,
+    /// The site's guard against bots turned nine turtles away (decision 0258).
+    Blocked,
     NotFound,
     TooBig,
     NoFeed,
@@ -75,6 +77,7 @@ impl IntoResponse for NotAdded {
             Self::NotAnAddress => (StatusCode::BAD_REQUEST, "not-an-address"),
             Self::NotAllowed => (StatusCode::BAD_REQUEST, "not-allowed"),
             Self::Unreachable => (StatusCode::BAD_GATEWAY, "unreachable"),
+            Self::Blocked => (StatusCode::BAD_GATEWAY, "blocked"),
             Self::NotFound => (StatusCode::BAD_GATEWAY, "not-found"),
             Self::TooBig => (StatusCode::BAD_GATEWAY, "too-big"),
             Self::NoFeed => (StatusCode::UNPROCESSABLE_ENTITY, "no-feed"),
@@ -98,6 +101,7 @@ impl From<FetchError> for NotAdded {
         match error {
             FetchError::NotAllowed => Self::NotAllowed,
             FetchError::Unreachable => Self::Unreachable,
+            FetchError::Blocked => Self::Blocked,
             FetchError::Status(404 | 410) => Self::NotFound,
             FetchError::Status(_) | FetchError::SlowDown(_) => Self::Unreachable,
             FetchError::TooBig => Self::TooBig,

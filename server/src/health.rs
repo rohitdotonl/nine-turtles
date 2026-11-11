@@ -194,6 +194,7 @@ fn fetch_refusal(error: &FetchError) -> Response {
         FetchError::NotAllowed => "not-allowed",
         FetchError::Status(404 | 410) => "not-found",
         FetchError::TooBig => "too-big",
+        FetchError::Blocked => "blocked",
         _ => "unreachable",
     };
     refused(StatusCode::BAD_GATEWAY, word)

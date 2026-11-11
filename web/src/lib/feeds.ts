@@ -30,6 +30,7 @@ export type Problem =
   | "not-an-address"
   | "not-allowed"
   | "unreachable"
+  | "blocked"
   | "not-found"
   | "too-big"
   | "no-feed"
@@ -38,7 +39,7 @@ export type Problem =
   | "offline"
   | "trouble";
 
-export const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "too-many", "plan-ended"];
+export const PROBLEMS: Problem[] = ["not-an-address", "not-allowed", "unreachable", "blocked", "not-found", "too-big", "no-feed", "too-many", "plan-ended"];
 
 /** The sidebar's feeds and folders: from the server, or, without a connection, as this device last kept them. */
 export async function listFeeds(): Promise<Library> {
@@ -280,6 +281,12 @@ export function undoRefused(refusal: Refusal, what: "feed" | "folder"): string {
 /** Adding a feed or importing, once the reader's trial or plan has ended (SPEC section 29). */
 export const PLAN_ENDED = "Your free trial or plan has ended. Choose a plan in Settings to add feeds again.";
 
+/** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): Add leaves the field unmarked. */
+export const NOT_THE_ADDRESS: Problem[] = ["unreachable", "blocked", "trouble", "too-many", "plan-ended", "offline"];
+
+/** A site whose guard against bots turns nine turtles away (decision 0258): only the site can let it in. */
+export const BLOCKED_ADDING = "The site's guard against bots turns nine turtles away. You could write to them and ask them to let it in.";
+
 /** What the add field says when a feed couldn't be added. Plain and calm. */
 export function explain(reason: Problem): string {
   switch (reason) {
@@ -289,6 +296,8 @@ export function explain(reason: Problem): string {
       return "nine turtles can't visit that address.";
     case "unreachable":
       return "The site didn't answer. Try again later.";
+    case "blocked":
+      return BLOCKED_ADDING;
     case "not-found":
       return "Nothing was found at that address.";
     case "too-big":

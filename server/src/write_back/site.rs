@@ -114,11 +114,12 @@ async fn look(
         let visited = tokio::time::timeout(LOOKING_FOR, visit(&http, &home, local)).await;
         let found = match visited {
             Ok(Ok(found)) => Some(found),
-            // Their site answered, but with an error or "slow down": looked, nothing found.
+            // Their site (or its guard) answered, but with an error or "slow down": looked, nothing found.
             Ok(Err(
                 FetchError::Status(_)
                 | FetchError::TooBig
                 | FetchError::SlowDown(_)
+                | FetchError::Blocked
                 | FetchError::NotAllowed,
             )) => Some(None),
             // It didn't answer, or not in time: not looked, so a later press tries again.

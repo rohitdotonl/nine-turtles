@@ -26,7 +26,7 @@
   import type { Feed } from "./shapes";
   import { addFeed, editFeed, type Problem } from "./feeds";
   import { droppedOn } from "./linkDrop.svelte";
-  import { lookAt, sayProblem, siteOf, type Person } from "./follow";
+  import { lookAt, sayProblem, siteOf, worthTryingAgain, type Person } from "./follow";
 
   let {
     address,
@@ -74,7 +74,7 @@
 
   function said(reason: Problem) {
     problem = sayProblem(reason);
-    stuck = !["unreachable", "offline", "trouble"].includes(reason);
+    stuck = !worthTryingAgain(reason);
   }
 
   async function follow(event: SubmitEvent) {

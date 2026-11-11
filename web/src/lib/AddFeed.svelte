@@ -41,7 +41,7 @@
   import type { Feed } from "./shapes";
   import { onDestroy, tick } from "svelte";
   import { keepDraft, keptWords } from "./drafts";
-  import { addFeed, editFeed, explain, type Choice } from "./feeds";
+  import { NOT_THE_ADDRESS, addFeed, editFeed, explain, type Choice } from "./feeds";
   import { followedTogether } from "./several";
   import { runningInstalled } from "./installing.svelte";
   import { join } from "./people";
@@ -150,9 +150,6 @@
   let shareHint = $derived(page && runningInstalled());
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
-
-  /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): the field isn't marked. */
-  const NOT_THE_ADDRESS = ["unreachable", "trouble", "too-many", "plan-ended", "offline"];
 
   /**
    * The address was changed after several feeds were offered: they belong to the old one, so they go with

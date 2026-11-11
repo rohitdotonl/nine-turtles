@@ -93,6 +93,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Cache-Control (max-age)
 - User-Agent
 - Rate limiting and `Retry-After`
+- Guards against bots (Cloudflare's bot check and the like)
 - Exponential backoff
 - Dead feeds and feed health
 - Quiet feeds
