@@ -1671,3 +1671,84 @@ async fn an_assistants_document_is_read_once_from_exactly_its_address() {
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
     assert_eq!(asked.load(Ordering::SeqCst), 18);
 }
+
+#[tokio::test]
+async fn reading_a_document_again_keeps_its_connections_and_unused_ones_go() {
+    use std::sync::atomic::Ordering;
+    let (base, state) = common::start_with_state(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (site, asked) = many_assistants().await;
+    let kept = format!("{site}/doc/kept");
+    let query = authorize_query(&kept);
+    let (_, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    // Approving uses the copy the page read: none yet, so the link is refused.
+    assert_eq!(approved["error"], "unknown-client");
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK);
+    let (_, approved) = post_json(
+        &base,
+        "/api/oauth/approve",
+        Some(&cookie),
+        &json!({ "query": query }),
+    )
+    .await;
+    let back = Url::parse(approved["redirect"].as_str().unwrap()).unwrap();
+    let code = back
+        .query_pairs()
+        .find(|(key, _)| key == "code")
+        .unwrap()
+        .1
+        .into_owned();
+    let (_, tickets) = token(
+        &base,
+        &[
+            ("grant_type", "authorization_code"),
+            ("code", &code),
+            ("client_id", &kept),
+            ("code_verifier", VERIFIER),
+        ],
+    )
+    .await;
+    let access = tickets["access_token"].as_str().unwrap().to_owned();
+    let lonely = format!("{site}/doc/lonely");
+    let (status, _) = get_json(
+        &base,
+        &format!("/api/oauth/request{}", authorize_query(&lonely)),
+        &cookie,
+    )
+    .await;
+    assert_eq!(status, StatusCode::OK);
+    let number = |client_id: String| {
+        let db = state.db.clone();
+        async move {
+            sqlx::query_scalar::<_, i64>("SELECT id FROM assistant_clients WHERE client_id = ?")
+                .bind(client_id)
+                .fetch_optional(&db)
+                .await
+                .unwrap()
+        }
+    };
+    let before = number(kept.clone()).await.unwrap();
+
+    // Two days on, both copies are old.
+    sqlx::query("UPDATE assistant_clients SET created_at = created_at - 2 * 86400")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    let read_before = asked.load(Ordering::SeqCst);
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(asked.load(Ordering::SeqCst), read_before + 1);
+    // Read again, the same line: the connection stays, and works.
+    assert_eq!(number(kept).await, Some(before));
+    let (_, error) = tool(&base, &access, "list_feeds", json!({})).await;
+    assert!(!error);
+    // The one nobody connected went when the next one was kept.
+    assert_eq!(number(lonely).await, None);
+}

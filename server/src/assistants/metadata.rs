@@ -106,17 +106,19 @@ fn read(client_id: &str, body: &[u8]) -> Option<(String, Vec<String>)> {
     })
 }
 
-async fn read_lately(db: &SqlitePool, client_id: &str) -> Result<bool, sqlx::Error> {
-    let at: Option<i64> =
-        sqlx::query_scalar("SELECT created_at FROM assistant_clients WHERE client_id = ?")
-            .bind(client_id)
-            .fetch_optional(db)
-            .await?;
-    Ok(at.is_some_and(|at| at > now() - FRESH_FOR))
+/// When nine turtles last read the assistant's document, if it has a copy.
+async fn read_at(db: &SqlitePool, client_id: &str) -> Result<Option<i64>, sqlx::Error> {
+    sqlx::query_scalar("SELECT created_at FROM assistant_clients WHERE client_id = ?")
+        .bind(client_id)
+        .fetch_optional(db)
+        .await
 }
 
 /// Makes sure `assistant_clients` holds what the assistant's document says,
-/// reading it for the reader `person` if nine turtles hasn't today.
+/// reading it for the reader `person` if nine turtles hasn't today. A copy
+/// older than that is still used when the site doesn't answer or the
+/// hour's reads are used up, so nobody can stop a known assistant
+/// connecting by using them up.
 pub async fn refresh(
     state: &AppState,
     person: i64,
@@ -126,28 +128,34 @@ pub async fn refresh(
     let Some(url) = address(client_id, local) else {
         return Ok(Err(Unusable::Invalid));
     };
-    if read_lately(&state.db, client_id).await? {
+    let copy = read_at(&state.db, client_id).await?;
+    if copy.is_some_and(|at| at > now() - FRESH_FOR) {
         return Ok(Ok(()));
     }
+    let try_later = if copy.is_some() {
+        Ok(Ok(()))
+    } else {
+        Ok(Err(Unusable::Unreachable))
+    };
     let hour = Duration::from_secs(3_600);
     let limits = &state.assistant_limits;
     if !limits.allow("client-document-each", person, READS_AN_HOUR_EACH, hour)
         || !limits.allow("client-document", 0, READS_AN_HOUR, hour)
     {
-        return Ok(Err(Unusable::Unreachable));
+        return try_later;
     }
     let asking = fetch::get_small(&state.http, &url, local, LARGEST);
     let body = match tokio::time::timeout(LOOKING_FOR, asking).await {
         Ok(Ok(body)) => body,
         // Not there, somewhere else (a redirect), too big, or not allowed.
-        Ok(Err(FetchError::Status(status))) if status < 500 => {
+        Ok(Err(FetchError::Status(status))) if status < 500 && status != 429 => {
             return Ok(Err(Unusable::Invalid));
         }
         Ok(Err(FetchError::NotAllowed | FetchError::TooBig)) => {
             return Ok(Err(Unusable::Invalid));
         }
         // No answer, a server error, or asked to wait: try again later.
-        _ => return Ok(Err(Unusable::Unreachable)),
+        _ => return try_later,
     };
     let Some((name, redirects)) = read(client_id, &body) else {
         return Ok(Err(Unusable::Invalid));
@@ -155,7 +163,7 @@ pub async fn refresh(
     if register::keep(&state.db, client_id, &name, &redirects).await? {
         Ok(Ok(()))
     } else {
-        Ok(Err(Unusable::Unreachable))
+        try_later
     }
 }
 

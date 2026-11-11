@@ -41,8 +41,13 @@ only know the old way, and the standard keeps it for at least 12 months.
   can't be used to make nine turtles visit many sites. A file that isn't
   there, moved, is too big or doesn't fit makes the link "can't be used";
   a site that doesn't answer or has a server error, or a limit reached,
-  says "try again" (503). A file that didn't work isn't remembered, so
-  it's the hourly limits that bound those.
+  says "try again" (503), as does a site asking to slow down (429). A file
+  that didn't work isn't remembered, so it's the hourly limits that bound
+  those. A copy more than a day old is still used when the site doesn't
+  answer or the hour's reads are used up, so nobody can stop a known
+  assistant connecting by using them up.
+- Only opening the page reads the file: approving and denying use the copy
+  it kept (a link whose copy has gone since says "can't be used").
 
 ## Why it's allowed to visit
 

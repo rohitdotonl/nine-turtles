@@ -247,12 +247,13 @@ fn plausible_challenge(text: &str) -> bool {
 /// Checks the link's query string: a registered assistant, one of its own
 /// return addresses, a code asked for with an S256 challenge, and, if it
 /// names one, this server as the resource. An assistant named by its own
-/// web address is looked up there first (`metadata`), for the reader
-/// `person`. Answers why not as a word the page turns into a sentence.
+/// web address is looked up there first (`metadata`) when the reader opens
+/// the page (`opening` is that reader); approving and denying use the copy
+/// that kept. Answers why not as a word the page turns into a sentence.
 async fn checked(
     app: &AppState,
     headers: &HeaderMap,
-    person: i64,
+    opening: Option<i64>,
     query: &str,
 ) -> Result<Result<Asked, &'static str>, sqlx::Error> {
     let pairs = query_pairs(query);
@@ -271,7 +272,7 @@ async fn checked(
     {
         return Ok(Err("bad-request"));
     }
-    if metadata::is_document(client_id) {
+    if let Some(person) = opening.filter(|_| metadata::is_document(client_id)) {
         match metadata::refresh(app, person, client_id).await? {
             Ok(()) => {}
             Err(metadata::Unusable::Invalid) => return Ok(Err("unknown-client")),
@@ -349,7 +350,14 @@ async fn request(
     headers: HeaderMap,
     uri: axum::http::Uri,
 ) -> Response {
-    match checked(&state, &headers, person, uri.query().unwrap_or_default()).await {
+    match checked(
+        &state,
+        &headers,
+        Some(person),
+        uri.query().unwrap_or_default(),
+    )
+    .await
+    {
         Ok(Ok(asked)) => Json(json!({
             "client_name": asked.name,
             // An app's own kind of address (`com.example.app:/callback`)
@@ -369,7 +377,7 @@ async fn approve(
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    let asked = match checked(&state, &headers, person, &form.query).await {
+    let asked = match checked(&state, &headers, None, &form.query).await {
         Ok(Ok(asked)) => asked,
         Ok(Err(word)) => return refused(word),
         Err(error) => return database_problem("reading an assistant's request", &error),
@@ -411,12 +419,12 @@ async fn approve(
 
 /// The reader said no: the assistant is told so.
 async fn deny(
-    SignedIn(person): SignedIn,
+    SignedIn(_): SignedIn,
     State(state): State<AppState>,
     headers: HeaderMap,
     Json(form): Json<RequestQuery>,
 ) -> Response {
-    match checked(&state, &headers, person, &form.query).await {
+    match checked(&state, &headers, None, &form.query).await {
         Ok(Ok(asked)) => {
             let issuer = base_url(&state, &headers);
             let redirect = back_to(&asked, &issuer, &[("error", "access_denied")]);
