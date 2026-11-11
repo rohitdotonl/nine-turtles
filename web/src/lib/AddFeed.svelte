@@ -83,7 +83,7 @@
      * field, so it reads as an alternative to it rather than a footer.
      */
     alternative?: Snippet;
-    /** The reader's folders, in their order: in a sheet, "In" offers them once someone is found (decision 0259). */
+    /** The reader's folders, in their order: in a sheet, "In" offers them once someone is found (decision 0261). */
     folders?: Folder[];
     /** The folder the sheet opened over, if any: "In" starts on it. */
     here?: number;
@@ -163,7 +163,7 @@
 
   /** In a sheet or on its page: the field's name above it, and Add at the foot rather than beside the field. */
   let framed = $derived(onCancel !== undefined || page);
-  /** nine turtles takes newsletters: a sheet offers the reader's own address for one with no website (decision 0259). */
+  /** nine turtles takes newsletters: a sheet offers the reader's own address for one with no website (decision 0261). */
   let newsletters = $state(false);
   /** That offer was pressed: the address shows, with Copy. */
   let byEmail = $state(false);
@@ -573,7 +573,7 @@
       </fieldset>
         {#if framed}
           <!--
-            Where they go (decision 0259): a folder is made with someone in it, here, while the reader
+            Where they go (decision 0261): a folder is made with someone in it, here, while the reader
             knows why they followed them. It starts on the folder the sheet opened over, else none.
           -->
           <div class="flex flex-col gap-2">
@@ -619,7 +619,7 @@
     {#if alternative && choices.length === 0 && !asking}{@render alternative()}{/if}
 
     {#if framed && newsletters && !noFeed && choices.length === 0 && !asking && alreadyId === undefined}
-      <!-- A newsletter has no address to paste: the other way in, one quiet line until it's wanted (decision 0259). -->
+      <!-- A newsletter has no address to paste: the other way in, one quiet line until it's wanted (decision 0261). -->
       {#if byEmail}
         <ByEmail />
       {:else}

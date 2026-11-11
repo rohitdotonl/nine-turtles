@@ -151,7 +151,7 @@ pub async fn look_at(state: &AppState, fetched: Fetched, inside: bool) -> Result
 }
 
 /// A site's feeds without its comments feeds, while a feed of its posts is
-/// left (decision 0259): nobody follows a blog for its comments, so a
+/// left (decision 0261): nobody follows a blog for its comments, so a
 /// WordPress blog's posts are followed without a question. A site offering
 /// only comments keeps them.
 fn without_comments(found: Vec<discover::Found>) -> Vec<discover::Found> {
@@ -187,7 +187,7 @@ enum Elsewhere {
 async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, FetchError> {
     let local = state.config.local_feeds_allowed;
     // A usual address too big to read is most likely the feed: said as that,
-    // not as "no feed", if nothing else is found (decision 0259).
+    // not as "no feed", if nothing else is found (decision 0261).
     let mut too_big = false;
     for place in places(page) {
         let fetched = match fetch::get(&state.http, &place, local).await {

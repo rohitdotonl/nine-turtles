@@ -390,7 +390,7 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(1);
 
-  // The sheet's main button goes to them (decision 0259).
+  // The sheet's main button goes to them (decision 0261).
   await page.getByRole("button", { name: `Go to Blog ${name}` }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 });
@@ -554,7 +554,7 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.");
-  // Not the reader's mistake (decision 0259): no red words, no warning mark, and the field isn't marked.
+  // Not the reader's mistake (decision 0261): no red words, no warning mark, and the field isn't marked.
   await expect(page.locator("#feed-address-status")).not.toHaveClass(/text-danger/);
   await expect(page.locator("#feed-address-status svg")).toHaveCount(0);
   await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
@@ -752,7 +752,7 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
-  // Enter again, from the field: the main button now goes to them (decision 0259).
+  // Enter again, from the field: the main button now goes to them (decision 0261).
   await expect(page.getByRole("button", { name: /^Go to / })).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();

@@ -12,5 +12,7 @@ export type ListNote = {
   retryWord?: string;
   /** Something failed: oxblood, with the alert icon (BRAND.md → "Messages"). */
   refusal?: boolean;
+  /** Other ways on, before Try again: Write back's "Write in Gmail" (SPEC section 37). */
+  also?: { word: string; press: () => void }[];
   close: () => void;
 };

@@ -314,6 +314,30 @@ async fn worked(
             if first {
                 feeds::keep_newest_unread(&mut transaction, None, feed_id).await?;
             }
+            // A name the feed gave that is now tidied (decision 0260) is tidied for
+            // the followers still calling it, or the person it's one place of, by
+            // that name; a name they gave stays.
+            let old: String = sqlx::query_scalar("SELECT title FROM feeds WHERE id = ?")
+                .bind(feed_id)
+                .fetch_one(&mut *transaction)
+                .await?;
+            if old != parsed.title && feed::tidy_name(&feed::plain_title(&old)) == parsed.title {
+                sqlx::query("UPDATE subscriptions SET title = ? WHERE feed_id = ? AND title = ?")
+                    .bind(&parsed.title)
+                    .bind(feed_id)
+                    .bind(&old)
+                    .execute(&mut *transaction)
+                    .await?;
+                sqlx::query(
+                    "UPDATE writers SET name = ? WHERE name = ? AND id IN \
+                     (SELECT writer_id FROM subscriptions WHERE feed_id = ? AND writer_id IS NOT NULL)",
+                )
+                .bind(&parsed.title)
+                .bind(&old)
+                .bind(feed_id)
+                .execute(&mut *transaction)
+                .await?;
+            }
             // Where to write back, and the feed's own title, as the feed says now
             // (decisions 0147 and 0167); then its followers still waiting for a name get one.
             sqlx::query("UPDATE feeds SET email = ?, title = ? WHERE id = ?")

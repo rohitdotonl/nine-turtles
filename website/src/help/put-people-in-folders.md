@@ -70,7 +70,7 @@ as you follow them, from their page, or with **Move to…**.
 
 1. Open **Settings › Everyone you follow** and press **Choose…**.
 2. Tick everyone you'd like to move.
-3. Press **Move to…**, choose a folder (or **New folder**, or **No folder**),
+3. Press **Move to…**, choose a folder (or **No folder**, or **New folder…** at the top),
    and press **Move**.
 
 Moving takes them out of the folders they were in. **Undo** puts them back.

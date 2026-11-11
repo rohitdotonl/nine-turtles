@@ -34,7 +34,9 @@ Closed Add before pressing it? The address you typed is still there next
 time. **Cancel** clears it.
 
 When a blog signs every article with one writer's name, nine turtles calls
-them by that name, with the blog's title under it on their page. Want a
+them by that name, with the blog's title under it on their page. Otherwise
+it uses the blog's own name, without the words around it that only say it's
+a feed: "Blog – Pete's Site » Latest Posts" becomes "Pete's Site". Want a
 different name? Change it in **Name**, at the foot of their page; yours always stays.
 
 Their page (press their name at the top of their list) keeps what's

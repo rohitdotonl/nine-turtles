@@ -585,7 +585,7 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   await expect(sheet.getByRole("switch", { name: "Pause for a while" })).not.toBeChecked();
 });
 
-test("+ Add over a folder files them there, and New folder… makes one with them in it (decision 0259)", async ({ page }) => {
+test("+ Add over a folder files them there, and New folder… makes one with them in it (decision 0261)", async ({ page }) => {
   const [first, filed, made] = [unique("into"), unique("filed"), unique("made")];
   const folder = unique("Zz-into");
   const fresh = unique("Zz-fresh");

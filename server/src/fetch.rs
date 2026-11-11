@@ -43,7 +43,7 @@ const TIME_LIMIT: Duration = Duration::from_secs(20);
 const CONNECT_LIMIT: Duration = Duration::from_secs(10);
 /// The biggest file nine turtles accepts. Most feeds are far smaller, but a
 /// blog whose feed holds every post it ever wrote can pass 5 MB (danluu.com's
-/// is 6.6 MB, decision 0259); this stops a broken or hostile site from
+/// is 6.6 MB, decision 0261); this stops a broken or hostile site from
 /// filling the disk.
 pub const SIZE_LIMIT: usize = 10 * 1024 * 1024;
 /// Redirects followed before giving up.

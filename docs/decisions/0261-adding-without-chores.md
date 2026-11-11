@@ -1,4 +1,4 @@
-# 0259: Adding someone leaves no chores
+# 0261: Adding someone leaves no chores
 
 **In one line:** + Add files someone in a folder while it asks "… is…" (starting on the folder it opened over, with New folder… for a new one), so there is no separate "New folder" button; a site's comments feed is left out when its posts' feed is there; feeds up to 10 MB are read, and one too big is said as that, not as "no feed"; "You already follow this." makes the main button "Go to …"; a site with no feed is said calmly, not as an error; and a quiet line under the field gives the reader their newsletter address
 
@@ -16,7 +16,9 @@ to… (section 15). The choice sits in the question that already files
 them ("… is…" A person or A publication): **Folder**, a native list of
 No folder, New folder…, a dividing line, then each folder in the
 reader's order (New folder… near the top, as "New Playlist" leads Apple
-Music's list, at Rohit's suggestion). New folder… shows a field for its
+Music's list, at Rohit's suggestion; the Move to… sheet and the
+folder list on someone's page put it first too, so it's in one place
+everywhere). New folder… shows a field for its
 name; Done with no name says "Name the new folder first." It starts on the folder the sheet opened over, else No folder,
 so nothing is filed unless the reader was already there. Closing the
 sheet keeps what it showed, as it keeps the guess of person or

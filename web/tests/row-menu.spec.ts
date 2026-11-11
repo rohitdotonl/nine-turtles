@@ -88,7 +88,7 @@ test.describe("on a wide window", () => {
   test("the writer's name under the title opens their page, and I does from any list", async ({ page }) => {
     const name = await openBlog(page);
     await rows(page).nth(0).click();
-    const writer = pane(page).locator(".article-byline").getByRole("button", { name });
+    const writer = pane(page).locator(".article-byline").getByRole("link", { name });
     await writer.click();
     await expect(aboutPage(page, name).getByRole("heading", { level: 2, name })).toBeVisible();
 

@@ -181,6 +181,8 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .title
         .as_ref()
         .map(plain_text)
+        // Its own name, out of the words that only say it's a feed (decision 0260).
+        .map(|title| tidy_name(&title))
         .filter(|title| !title.is_empty())
         .unwrap_or_else(|| {
             feed_url
@@ -480,7 +482,8 @@ fn author_name(text: &str) -> Option<String> {
 }
 
 /// A title or name as plain words: tags removed, `&amp;` and friends turned
-/// back into characters, runs of spaces made single.
+/// back into characters (once more when a blog coded them twice, decision
+/// 0260), runs of spaces made single.
 fn plain_text(text: &feed_rs::model::Text) -> String {
     let words = if text.content_type.to_string().contains("html") {
         scraper::Html::parse_fragment(&text.content)
@@ -490,7 +493,7 @@ fn plain_text(text: &feed_rs::model::Text) -> String {
     } else {
         text.content.clone()
     };
-    words.split_whitespace().collect::<Vec<_>>().join(" ")
+    plain_title(&words.split_whitespace().collect::<Vec<_>>().join(" "))
 }
 
 #[cfg(test)]

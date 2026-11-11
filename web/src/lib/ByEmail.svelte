@@ -7,7 +7,7 @@
 <script lang="ts">
   import { copyAddress, newslettersStatus } from "./newsletters";
 
-  /** The site that had no feed, to sign up on; none when opened from + Add's own line (decision 0259). */
+  /** The site that had no feed, to sign up on; none when opened from + Add's own line (decision 0261). */
   let { site }: { site?: string } = $props();
 
   let address = $state("");
