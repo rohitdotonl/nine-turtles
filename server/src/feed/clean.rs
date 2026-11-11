@@ -630,7 +630,7 @@ mod tests {
 
     #[test]
     fn an_embedded_youtube_player_becomes_a_link_to_the_video() {
-        // Frames that aren't one video leave a note instead (decision 0255).
+        // Frames that aren't one video leave a note instead (decision 0258).
         let html = clean(
             "<p>Watch this:</p><iframe src=\"//www.youtube.com/embed/dQw4w9WgXcQ\" onload=\"x()\"></iframe>\
              <iframe src=\"https://evil.example/embed/dQw4w9WgXcQ\"></iframe>\

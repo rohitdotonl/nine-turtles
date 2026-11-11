@@ -347,7 +347,7 @@
     void full?.summary;
     if (!body) return;
     const pictures = () => body.querySelectorAll("img");
-    // A table wider than the column says so under it, with a word for a touch screen (decision 0255).
+    // A table wider than the column says so under it, with a word for a touch screen (decision 0258).
     const touch = matchMedia("(pointer: coarse)").matches;
     const look = () => {
       pictures().forEach(markPicture);
@@ -356,7 +356,7 @@
     const sizes = new ResizeObserver(look);
     sizes.observe(body);
     pictures().forEach((image) => sizes.observe(image));
-    // A picture that didn't load leaves a note with a link to the original instead (decision 0255).
+    // A picture that didn't load leaves a note with a link to the original instead (decision 0258).
     const broken = (event: Event) => {
       if (event.target instanceof HTMLImageElement && body.contains(event.target)) markMissing(event.target, article.link);
     };
@@ -549,7 +549,7 @@
       <p class="article-byline" lang="en">
         {#if followed}
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
-               A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0255). -->
+               A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0258). -->
           <a class="publisher writer-link" href={pathFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
             onclick={(event) => {
               // A click meant for a new tab or window is the browser's.

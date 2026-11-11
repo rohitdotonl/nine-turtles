@@ -15,7 +15,7 @@ V1, item 2). Its look gets a refinement round.*
   address it writes to: "to Maya Chen, maya@example.com" (the owner's core
   path, points 6 and 7, decision 0183). The button stays one short word
   whatever the name's length, so a long name never swells it into a block
-  (decision 0255; it said "Write back to Maya Chen" before); screen readers
+  (decision 0258; it said "Write back to Maya Chen" before); screen readers
   still hear "Write back to Maya Chen" as the button's name. It's also one press from the
   text, a paper plane beside Star in the article's top bar (on a phone, in
   its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's

@@ -314,7 +314,7 @@ async fn worked(
             if first {
                 feeds::keep_newest_unread(&mut transaction, None, feed_id).await?;
             }
-            // A name the feed gave that is now tidied (decision 0255) is tidied for
+            // A name the feed gave that is now tidied (decision 0258) is tidied for
             // the followers still calling it by that name; a name they gave stays.
             let old: String = sqlx::query_scalar("SELECT title FROM feeds WHERE id = ?")
                 .bind(feed_id)

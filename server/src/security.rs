@@ -22,10 +22,10 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// publisher's own address, in the browser's own audio element (decision
 /// 0113). Audio can't run code either. One script is written into the page
 /// itself, so the reader's chosen page shows from the first moment (decision
-/// 0255): only that exact script runs, named by its fingerprint (`sha256-…`);
+/// 0258): only that exact script runs, named by its fingerprint (`sha256-…`);
 /// web/src/lib/firstPage.test.ts checks the two still match.
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; \
-    script-src 'self' 'sha256-YJY5pNEmfX9u/dHdlf8weWoxskdqYGlP7Wrorxq/xbE='; \
+    script-src 'self' 'sha256-t9yt+BqJN2Wj/LWAhJFHmAV8vOsGGqOJKhnaWQNYT60='; \
     style-src 'self'; img-src 'self' data: https: http:; media-src 'self' https: http:; \
     font-src 'self'; connect-src 'self'; \
     frame-src https://www.youtube-nocookie.com; \

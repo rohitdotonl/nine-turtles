@@ -410,7 +410,7 @@ async fn a_person_whose_feed_names_one_author_is_called_by_that_name() {
     let listed = reader.feed(tomas).await;
     assert_eq!(listed["title"], "Tomas Berg");
     assert_eq!(listed["site_title"], "Notes from Tomas");
-    // A blog that signs nothing keeps its title, tidied ("Alpha's blog" is Alpha's, decision 0255);
+    // A blog that signs nothing keeps its title, tidied ("Alpha's blog" is Alpha's, decision 0258);
     // so does one with several writers.
     let blog = reader.follow("alpha.xml").await;
     assert_eq!(reader.feed(blog).await["title"], "Alpha");

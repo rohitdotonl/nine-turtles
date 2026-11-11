@@ -1,7 +1,7 @@
 //! Frames a writer embedded (a map, a Vimeo video, a CodePen), other than
 //! YouTube's (`clean`): nine turtles never shows another site's frame (the
 //! engineering floor), but the reader should know something was there, so
-//! "Here's the map:" doesn't point at nothing (decision 0255). Each frame
+//! "Here's the map:" doesn't point at nothing (decision 0258). Each frame
 //! becomes a short note in the interface's voice naming the site it came
 //! from, with a link to it, which opens in a new tab like every link in an
 //! article. Invisible frames and frames from known trackers leave nothing.

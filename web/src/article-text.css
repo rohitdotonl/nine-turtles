@@ -33,7 +33,7 @@
   font-size: 1em;
 }
 
-/* What scrolls sideways (a wide table, a long line of code) shows a thin bar where the system allows it (decision 0255). */
+/* What scrolls sideways (a wide table, a long line of code) shows a thin bar where the system allows it (decision 0258). */
 .article-text :where(table, pre) {
   scrollbar-width: thin;
   scrollbar-color: var(--muted) transparent;

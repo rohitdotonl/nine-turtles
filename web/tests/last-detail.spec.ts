@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// Decision 0255, "to the last detail", done by a browser: a blog that sends
+// Decision 0258, "to the last detail", done by a browser: a blog that sends
 // things messily (feed-server.mjs, /messy/NAME/) shows its own name, a plain
 // title, and says what didn't arrive; and the page opens in the reader's own
 // Paper or Night from the first moment.

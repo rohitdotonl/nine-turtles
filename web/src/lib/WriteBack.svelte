@@ -5,7 +5,7 @@
   0242), "Write back", with "to Tomas Berg, tomas@example.com" (their full
   name, the one in the sidebar, the owner's core path, points 6 and 7; and the
   address it writes to) in a quiet line under it, so a long name never swells
-  the button (decision 0255): the way on, quieter than the writing it follows. It opens
+  the button (decision 0258): the way on, quieter than the writing it follows. It opens
   the reader's own email app with the address and "Re: the title" filled in;
   nine turtles never sends or reads that email.
 
@@ -231,7 +231,7 @@
 
 <!--
   At an article's end the button stays one short "Write back", whatever the name's length, with who
-  it goes to in the quiet line under it (decision 0255); screen readers hear the whole "Write back to
+  it goes to in the quiet line under it (decision 0258); screen readers hear the whole "Write back to
   {name}" as the button's name, so the line under it is theirs only to see. On their page, under
   their name, it says "Write to {name}".
 -->
