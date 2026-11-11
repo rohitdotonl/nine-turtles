@@ -123,7 +123,8 @@ export type FullArticle = Article & {
  * note on the whole article. `id` is below 0 while it waits on this device
  * to reach the server (notes.svelte.ts).
  */
-export type Note = { id: number; quote: string | null; before: string; after: string; note: string | null; madeAt: number };
+/** `key`: the one the app made for a new highlight (decision 0255), sent only with an open article's highlights. */
+export type Note = { id: number; quote: string | null; before: string; after: string; note: string | null; madeAt: number; key?: string };
 
 export function toNote(note: Record<string, unknown>): Note {
   return {
@@ -133,6 +134,7 @@ export function toNote(note: Record<string, unknown>): Note {
     after: String(note.after ?? ""),
     note: text(note.note),
     madeAt: Number(note.made_at ?? 0),
+    ...(typeof note.key === "string" ? { key: note.key } : {}),
   };
 }
 

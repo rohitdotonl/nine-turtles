@@ -31,9 +31,18 @@ did the same.
 - Changes left waiting on the device are now also sent when an article
   opens, not only when the connection comes back; before, after a reload
   they waited for the next change.
-- A highlight sent again whose number is already on the screen takes that
-  place instead of showing twice.
-- Only new highlights needed this. A note on a highlight and the note on an
+- An open article's highlights come with their keys, so one waiting on
+  the device that the server already has is shown once, as the server's,
+  with whatever was done to it here.
+- What's done to a highlight while it waits is never lost to the server
+  answering its older copy: a note written on it meanwhile is sent as a
+  change straight after (when the note the server answers differs from the
+  one sent), and one removed meanwhile is kept waiting, marked removed, so
+  it's sent and then removed there too. (A highlight that never reached
+  the server, made and removed offline, is thus made and removed once the
+  connection is back: the app can't tell the two apart.) One kept on a
+  device from before this change, with no key, is simply dropped, as before.
+- Nothing else needed a key. A note on a highlight and the note on an
   article are set, not added, and a removal sent twice finds nothing the
   second time, so sending them twice changes nothing. Read and starred
   marks already carry the time they were made (decision 0101).
@@ -42,7 +51,10 @@ did the same.
 now keep their own unsaved note (before, one per article, so a second could
 strand or replace the first), and words highlighted with `h` while a note
 on them is kept take that note with them, so its Save doesn't highlight
-them again.
+them again (and Save on a kept note whose words are highlighted already,
+even one still saving, puts the note on that highlight, after any note it
+has). Several kept boxes are told apart by a screen reader: each reads its
+words after its name.
 
 **Why not match on the words?** The reader may highlight the same words
 twice on purpose, and two highlights made a moment apart look alike. A key

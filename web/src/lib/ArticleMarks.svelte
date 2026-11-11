@@ -158,15 +158,25 @@
     const quote = marks.lostQuote(id);
     if (words === undefined || !quote) return;
     const there = keptOnWords(quote)?.words;
-    keepDraft(wordsDraft(quote), { quote, words: there && there.trim() !== words.trim() ? `${there.trim()}\n\n${words}` : words });
+    keepDraft(wordsDraft(quote), { quote, words: joined(there, words) });
     keepDraft(highlightDraft(id), undefined);
+  }
+
+  /** Two notes for one place, neither lost: the second after the first, unless they're the same. */
+  function joined(first: string | null | undefined, second: string): string {
+    return first && first.trim() !== second.trim() ? `${first.trim()}\n\n${second}` : second;
+  }
+
+  /** The highlight on exactly these words, if they're highlighted already (its save may still be under way). */
+  function highlightOn(quote: Quote): Note | undefined {
+    return marks.highlights.find((each) => each.quote === quote.quote && quote.before.endsWith(each.before) && quote.after.startsWith(each.after));
   }
 
   /** Words highlighted with h or Highlight while a note on them was kept unsaved: the note is now on the highlight, so Save can't highlight them twice. */
   function moveOnto(quote: Quote, id: number) {
     const kept = keptOnWords(quote);
     if (!kept) return;
-    if (keptWords(highlightDraft(id)) === undefined) keepDraft(highlightDraft(id), kept.words);
+    keepDraft(highlightDraft(id), joined(keptWords(highlightDraft(id)), kept.words));
     keepDraft(wordsDraft(quote), undefined);
     open = open.map((each) => (each.highlight === undefined && each.quote?.quote === quote.quote ? { highlight: id, words: each.words, kept: each.kept } : each));
   }
@@ -249,6 +259,13 @@
   /** Saves a note on a highlight, or highlights words with their note. The box stays open, with the words, until it's saved; answers why, if it couldn't be. */
   async function saveOn(on: { highlight?: number; quote?: Quote }, note: string): Promise<string | undefined> {
     undoable = undefined;
+    // Those words were highlighted meanwhile (h while their box was open, perhaps still saving): the note goes on that highlight, never on a second one.
+    const there = on.highlight === undefined && on.quote ? highlightOn(on.quote) : undefined;
+    if (there && on.quote) {
+      keepDraft(wordsDraft(on.quote), undefined);
+      on = { highlight: there.id };
+      note = joined(there.note, note);
+    }
     let problem: string | undefined;
     if (on.highlight !== undefined) problem = await marks.setNote(on.highlight, note);
     else if (on.quote) problem = (await marks.highlight(on.quote, note.trim() || null)).problem;
@@ -457,13 +474,13 @@
           {@const box = open.find((kept) => kept.highlight !== undefined && marks.here(kept.highlight) === each.id)}
           <li class="quote">
             {#if missing.has(each.id)}
-              <p class="font-serif text-ink">{each.quote}</p>
+              <p id="quote-{each.id}" class="font-serif text-ink">{each.quote}</p>
               <p class="gone">No longer in the article</p>
             {:else}
-              <button type="button" class="font-serif text-ink text-left" title="Show in the article" onclick={() => show(each)}>{each.quote}</button>
+              <button type="button" id="quote-{each.id}" class="font-serif text-ink text-left" title="Show in the article" onclick={() => show(each)}>{each.quote}</button>
             {/if}
             {#if box}
-              <NoteBox id="kept-note-{each.id}" label="A note on these words" help="Only you see it." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
+              <NoteBox id="kept-note-{each.id}" about="quote-{each.id}" label="A note on these words" help="Only you see it." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
             {:else}
             {#if each.note}<div class="text-meta"><NoteText note={each.note} jump={media?.jump} /></div>{/if}
             <div class="-ml-3 flex flex-wrap">
@@ -479,8 +496,8 @@
         <!-- A note on words not highlighted yet: Save highlights them with it. -->
         {#each open.filter((kept) => kept.quote) as box, index (box)}
           <li class="quote">
-            <p class="font-serif text-ink">{box.quote?.quote}</p>
-            <NoteBox id="kept-note-words-{index}" label="A note on these words" help="Only you see it. Save highlights the words." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
+            <p id="kept-words-{index}" class="font-serif text-ink">{box.quote?.quote}</p>
+            <NoteBox id="kept-note-words-{index}" about="kept-words-{index}" label="A note on these words" help="Only you see it. Save highlights the words." bind:words={box.words} kept={box.kept} onSave={(words) => saveOpen(box, words)} onNotNow={() => (open = open.filter((other) => other !== box))} onDiscard={() => discardOpen(box)} />
           </li>
         {/each}
       </ul>

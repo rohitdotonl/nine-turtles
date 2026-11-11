@@ -48,7 +48,9 @@ anywhere or counted.
   words chosen keep their own, so one never replaces another). Those words
   highlighted meanwhile with `h` or Highlight take the note with them: it
   then waits under the new highlight, and Save never highlights them a
-  second time. Opened
+  second time (even while that highlight is still saving; a note it has
+  already comes first). Each kept box reads its words after its name, for a
+  screen reader. Opened
   again without leaving, the box says "**Not saved yet.**". **Discard**
   beside the line throws the words away, with "Note discarded · Undo" at
   the article's foot (the keyboard on Undo). The same for the note on a
@@ -87,7 +89,9 @@ anywhere or counted.
 - A highlight is saved once, however often it's sent (decision 0255): if
   the page is reloaded or closed the instant a highlight is saving, it's
   sent again when the article is next open, and the server answers the one
-  it already saved instead of making a second.
+  it already saved instead of making a second. It shows once meanwhile, and
+  a note written on it or its removal while it waited reaches the server
+  too.
 - The Notes list needs a connection; it says so, as search does.
 
 **Notes**

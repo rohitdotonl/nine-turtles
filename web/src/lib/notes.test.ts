@@ -54,6 +54,26 @@ describe("changes kept on this device without a connection", () => {
     expect(withWaiting([saved(1)], 8, list)).toEqual([saved(1)]);
   });
 
+  it("save a highlight sent twice once, and lose nothing done to it while it waited (decision 0255)", () => {
+    const keyed: Waiting = { kind: "highlight", article: 7, id: -1, note: "Ask her", madeAt: 100, ...QUOTE, key: "k1" };
+    const later: Waiting = { kind: "change", article: 7, id: 3, note: "next" };
+    // The server answers the copy it already had, with its older note: the note made here goes next.
+    expect(afterSent([keyed, later], keyed, 12, null)).toEqual([{ kind: "change", article: 7, id: 12, note: "Ask her" }, later]);
+    expect(afterSent([keyed, later], keyed, 12, "Ask her")).toEqual([later]);
+    // Removed while it waited, it may be on the server already: it's sent, then removed there.
+    const removed = folded([keyed, later], { kind: "remove", article: 7, id: -1 });
+    expect(removed).toEqual([{ ...keyed, removed: true }, later]);
+    expect(afterSent(removed, removed[0]!, 12, "Ask her")).toEqual([{ kind: "remove", article: 7, id: 12 }, later]);
+    // Removed while on its way, likewise.
+    expect(afterSent(removed, keyed, 12, "Ask her")).toEqual([{ kind: "remove", article: 7, id: 12 }, later]);
+    // One without a key (kept from before) is simply gone, as ever.
+    expect(folded([made(-1)], { kind: "remove", article: 7, id: -1 })).toEqual([]);
+    // Shown once, as the server's copy, with what was done here.
+    expect(withWaiting([saved(12, { key: "k1" })], 7, [keyed]).map((each) => [each.id, each.note])).toEqual([[12, "Ask her"]]);
+    expect(withWaiting([saved(12, { key: "k1" })], 7, removed)).toEqual([]);
+    expect(withWaiting([], 7, removed)).toEqual([]);
+  });
+
   it("take the note off the whole article when it's emptied", () => {
     expect(withWaiting([saved(9, { quote: null, note: "Old" })], 7, [{ kind: "article-note", article: 7, note: null }])).toEqual([]);
   });

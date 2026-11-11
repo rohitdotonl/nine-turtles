@@ -25,7 +25,7 @@ export type Quote = { quote: string; before: string; after: string };
 
 /** A change made without a connection, waiting on this device to be sent. */
 export type Waiting =
-  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number; key?: string } & Quote)
+  | ({ kind: "highlight"; article: number; id: number; note: string | null; madeAt: number; key?: string; removed?: true } & Quote)
   | { kind: "change"; article: number; id: number; note: string | null }
   | { kind: "remove"; article: number; id: number }
   | { kind: "article-note"; article: number; note: string | null };
@@ -51,12 +51,15 @@ function save() {
  * Adds a change to those waiting, folded into what's already there: a note
  * changed on a highlight made offline goes into that highlight, a highlight
  * made and removed offline is simply gone, and a later note replaces an
- * earlier one, so only what's needed is sent.
+ * earlier one, so only what's needed is sent. One with a key may already be
+ * on the server (its answer was lost, decision 0255): removed, it's kept,
+ * marked `removed`, so it's removed there too once sent.
  */
 export function folded(list: Waiting[], change: Waiting): Waiting[] {
   if (change.kind === "change" && change.id < 0)
     return list.map((each) => (each.kind === "highlight" && each.id === change.id ? { ...each, note: change.note } : each));
-  if (change.kind === "remove" && change.id < 0) return list.filter((each) => !(each.kind === "highlight" && each.id === change.id));
+  if (change.kind === "remove" && change.id < 0)
+    return list.flatMap((each) => (each.kind === "highlight" && each.id === change.id ? (each.key ? [{ ...each, removed: true as const }] : []) : [each]));
   if (change.kind === "change" || change.kind === "remove")
     return [...list.filter((each) => !(each.kind === "change" && each.id === change.id)), change];
   if (change.kind === "article-note")
@@ -64,12 +67,21 @@ export function folded(list: Waiting[], change: Waiting): Waiting[] {
   return [...list, change];
 }
 
-/** The article's notes as the server sent them, with the changes still waiting on this device made to them. */
+/**
+ * The article's notes as the server sent them, with the changes still
+ * waiting on this device made to them. A waiting highlight the server
+ * already has (its key is there: its answer was lost) is shown once, as the
+ * server's, with what was done to it here.
+ */
 export function withWaiting(notes: Note[], article: number, list: Waiting[]): Note[] {
   let now = [...notes];
   for (const change of list) {
     if (change.article !== article) continue;
-    if (change.kind === "highlight") now.push({ id: change.id, quote: change.quote, before: change.before, after: change.after, note: change.note, madeAt: change.madeAt });
+    if (change.kind === "highlight") {
+      const saved = change.key === undefined ? undefined : now.find((each) => each.key === change.key);
+      if (saved) now = change.removed ? now.filter((each) => each !== saved) : now.map((each) => (each === saved ? { ...each, note: change.note } : each));
+      else if (!change.removed) now.push({ id: change.id, quote: change.quote, before: change.before, after: change.after, note: change.note, madeAt: change.madeAt });
+    }
     if (change.kind === "change") now = now.map((each) => (each.id === change.id ? { ...each, note: change.note } : each));
     if (change.kind === "remove") now = now.filter((each) => each.id !== change.id);
     if (change.kind === "article-note") {
@@ -133,15 +145,23 @@ function notKept(refusal: string, kind: Waiting["kind"]): string {
  * The changes still waiting once `sent`, the first, has been sent: by itself,
  * not by its place, as changes go on being folded in while it's on its way.
  * A highlight given a note meanwhile has that note sent next, under the
- * number the server gave it (`made`); one removed meanwhile is removed there too.
+ * number the server gave it (`made`); one removed meanwhile is removed there
+ * too. The server may answer the copy it already had (decision 0255), with
+ * the note it had (`saved`): a different note sent with it goes next.
  */
-export function afterSent(list: Waiting[], sent: Waiting, made?: number): Waiting[] {
-  if (sent.kind !== "highlight" || list.includes(sent)) return list.filter((each) => each !== sent);
+export function afterSent(list: Waiting[], sent: Waiting, made?: number, saved?: string | null): Waiting[] {
+  if (sent.kind !== "highlight" || list.includes(sent)) {
+    const rest = list.filter((each) => each !== sent);
+    if (sent.kind !== "highlight" || made === undefined) return rest;
+    if (sent.removed) return [{ kind: "remove", article: sent.article, id: made }, ...rest];
+    if (saved !== undefined && saved !== sent.note) return [{ kind: "change", article: sent.article, id: made, note: sent.note }, ...rest];
+    return rest;
+  }
   const now = list.find((each) => each.kind === "highlight" && each.id === sent.id);
   // The server didn't take it: whatever was folded into it goes with it.
   if (made === undefined) return list.filter((each) => each !== now);
-  if (now?.kind === "highlight") return list.map((each) => (each === now ? { kind: "change", article: sent.article, id: made, note: now.note } : each));
-  return [{ kind: "remove", article: sent.article, id: made }, ...list];
+  if (now?.kind === "highlight" && !now.removed) return list.map((each) => (each === now ? { kind: "change", article: sent.article, id: made, note: now.note } : each));
+  return [{ kind: "remove", article: sent.article, id: made }, ...list.filter((each) => each !== now)];
 }
 
 let sending = false;
@@ -157,7 +177,7 @@ export async function sendWaiting(): Promise<void> {
       if (sent === "offline") break;
       // One the server won't take (an article gone meanwhile) isn't sent again; the article shows the account's own once reopened.
       const made = change.kind === "highlight" && isRecord(sent.answer?.highlight) ? toNote(sent.answer.highlight) : undefined;
-      waiting.list = afterSent(waiting.list, change, made?.id);
+      waiting.list = afterSent(waiting.list, change, made?.id, made?.note);
       save();
       if (made && change.kind === "highlight") {
         // A note left unsaved on it follows it to its number (decision 0235).

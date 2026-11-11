@@ -135,25 +135,39 @@ async function leaveNoteOnWords(page: Page, words: string, note: string) {
 
 const highlightSave = (page: Page) => page.waitForResponse((answer) => /\/api\/articles\/\d+\/highlights$/.test(answer.url()) && answer.request().method() === "POST");
 
+/**
+ * Signed in, on a new blog's newest article, "for article" highlighted with
+ * h: the server saves it, but its answer never reaches the page, as when the
+ * page is reloaded that instant. It waits on the device to be sent again.
+ */
+async function answerLost(page: Page, name: string) {
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await openNewest(page, `${name}-${test.info().workerIndex}-${Date.now()}`);
+  let lost = false;
+  await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+    if (route.request().method() !== "POST" || lost) return route.continue();
+    lost = true;
+    expect((await route.fetch()).status()).toBe(201);
+    await route.abort("internetdisconnected");
+  });
+  await choose(page, "for article");
+  await page.keyboard.press("h");
+  await expect(page.getByText("You're offline.", { exact: false })).toBeVisible();
+  await page.keyboard.press("Escape");
+}
+
+/** The browser says it's online again: the app asks the server, and sends what's waiting. */
+async function backOnline(page: Page) {
+  await page.evaluate(() => dispatchEvent(new Event("online")));
+}
+
 test.describe("a highlight sent twice is saved once (decision 0255)", () => {
   test.skip(({ isMobile }) => isMobile, "the keys are the computer's; the phone does the same");
 
   test("its answer lost as the page reloads, it's sent again after and kept once", async ({ page }) => {
-    await page.goto(new URL("/all", FEEDS_APP).href);
-    await appReady(page);
-    await signIn(page);
-    await openNewest(page, `twice-${test.info().workerIndex}-${Date.now()}`);
-    // The server saves it, but the answer never reaches the page, as when it's reloaded that instant.
-    let lost = false;
-    await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
-      if (route.request().method() !== "POST" || lost) return route.continue();
-      lost = true;
-      expect((await route.fetch()).status()).toBe(201);
-      await route.abort("internetdisconnected");
-    });
-    await choose(page, "for article");
-    await page.keyboard.press("h");
-    await expect(page.getByText("You're offline.", { exact: false })).toBeVisible();
+    await answerLost(page, "twice");
     // Kept on the device, it's sent again once the page is back, and the server knows it.
     const again = highlightSave(page);
     await reopen(page);
@@ -188,6 +202,61 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     await expect(article(page).locator("mark.highlight")).toHaveCount(1);
     await expect(ends.getByText("Kept on the words")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveCount(0);
+  });
+  test("its answer lost, a note written on it while it waits is saved once it's sent again", async ({ page }) => {
+    await answerLost(page, "twice-note");
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+    await page.getByRole("textbox", { name: "A note on these words" }).fill("Written while waiting");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(ends.getByText("Written while waiting")).toBeVisible();
+    const noted = onServer(page, "note");
+    await backOnline(page);
+    expect((await noted).ok()).toBe(true);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(ends.getByText("Written while waiting")).toBeVisible();
+  });
+
+  test("its answer lost, removed while it waits, it's removed on the server too", async ({ page }) => {
+    await answerLost(page, "twice-remove");
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+    const removed = onServer(page, "remove");
+    await backOnline(page);
+    expect((await removed).ok()).toBe(true);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+  });
+
+  test("a kept note's Save pressed while h is still saving its words puts the note on that highlight", async ({ page }) => {
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    await openNewest(page, `kept-then-slow-h-${test.info().workerIndex}-${Date.now()}`);
+    await leaveNoteOnWords(page, "for article", "Saved while it saves");
+    await reopen(page);
+    await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await new Promise((done) => setTimeout(done, 2500));
+      await route.continue();
+    });
+    let saves = 0;
+    page.on("request", (request) => {
+      if (/\/api\/articles\/\d+\/highlights$/.test(request.url()) && request.method() === "POST") saves += 1;
+    });
+    await choose(page, "for article");
+    await page.keyboard.press("h");
+    await page.keyboard.press("Escape");
+    const noted = onServer(page, "note");
+    await article(page).getByRole("button", { name: "Save" }).click();
+    expect((await noted).ok()).toBe(true);
+    expect(saves).toBe(1);
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(ends.getByText("Saved while it saves")).toBeVisible();
   });
 });
 
