@@ -1585,3 +1585,89 @@ async fn an_assistant_named_by_its_own_document_connects_without_registering() {
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(refused["error"], "unknown-client");
 }
+
+/// A made-up site with many assistants' documents (`/doc/<name>`, each
+/// naming itself), one that moved (`/moved`) and one that's broken
+/// (`/broken`); answers its address and how many times it was asked.
+async fn many_assistants() -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let base = format!("http://{}", listener.local_addr().unwrap());
+    let asked = Arc::new(AtomicUsize::new(0));
+    let (own, counter) = (base.clone(), asked.clone());
+    let app = Router::new()
+        .route(
+            "/doc/{name}",
+            get(
+                move |axum::extract::Path(name): axum::extract::Path<String>| {
+                    counter.fetch_add(1, Ordering::SeqCst);
+                    let own = own.clone();
+                    async move {
+                        axum::Json(json!({
+                            "client_id": format!("{own}/doc/{name}"),
+                            "client_name": name,
+                            "redirect_uris": [REDIRECT],
+                        }))
+                    }
+                },
+            ),
+        )
+        .route(
+            "/moved",
+            get(|| async { axum::response::Redirect::temporary("/doc/moved") }),
+        )
+        .route(
+            "/broken",
+            get(|| async { StatusCode::INTERNAL_SERVER_ERROR }),
+        );
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    (base, asked)
+}
+
+#[tokio::test]
+async fn an_assistants_document_is_read_once_from_exactly_its_address() {
+    use std::sync::atomic::Ordering;
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (site, asked) = many_assistants().await;
+    let shown = |client_id: String| {
+        let (base, cookie) = (base.clone(), cookie.clone());
+        async move {
+            let query = authorize_query(&client_id);
+            get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await
+        }
+    };
+
+    // Read once, then kept: opening the page again reads nothing.
+    let (status, _) = shown(format!("{site}/doc/first")).await;
+    assert_eq!(status, StatusCode::OK);
+    let (status, _) = shown(format!("{site}/doc/first")).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+
+    // Never followed somewhere else.
+    let (status, refused) = shown(format!("{site}/moved")).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(refused["error"], "unknown-client");
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+    // A site in trouble says to try again.
+    let (status, _) = shown(format!("{site}/broken")).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    // A link refused anyway visits nothing.
+    let query = authorize_query(&format!("{site}/doc/unasked")).replace("S256", "plain");
+    let (status, _) = get_json(&base, &format!("/api/oauth/request{query}"), &cookie).await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(asked.load(Ordering::SeqCst), 1);
+
+    // At most 20 documents read an hour for one reader (three so far).
+    for number in 0..17 {
+        let (status, _) = shown(format!("{site}/doc/a{number}")).await;
+        assert_eq!(status, StatusCode::OK, "{number}");
+    }
+    let (status, _) = shown(format!("{site}/doc/one-too-many")).await;
+    assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(asked.load(Ordering::SeqCst), 18);
+}

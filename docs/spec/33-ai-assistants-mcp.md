@@ -23,7 +23,7 @@ nine turtles runs no AI itself. A reader can connect their own assistant (Claude
 
 **Limits**
 - Each reader's assistants together: 60 tool calls a minute and 3,000 a day; 20 feeds added an hour (only http and https addresses, at most 2,000 characters). Past a limit the assistant is asked to wait.
-- An assistant may instead introduce itself by its own web address (a "client ID metadata document", decision 0257): nine turtles reads that small file of the assistant's when the reader opens the Connect page, at most once a day per assistant and 20 times an hour per reader, and shows the name and return address it gives. A file that doesn't name itself, or gives an unsafe return address, makes the link invalid; a site that doesn't answer says to try again.
+- An assistant may instead introduce itself by its own web address (a "client ID metadata document", decision 0257): nine turtles reads that small file of the assistant's when the reader opens a Connect link that's otherwise good (one request to exactly that address, never a redirect, at most 10 KB; 20 an hour per reader; not again for a day once it worked), and shows the name and return address it gives. A file that doesn't name itself, or gives an unsafe return address, makes the link invalid; a site that doesn't answer says to try again.
 - Registering a new assistant: at most 10 an hour from one internet address and 300 an hour in all; at most 2,000 are kept, the oldest nobody connected making room.
 - Adding a feed that the reader or an assistant unsubscribed from, in the Add field or by an assistant, within its 30 days brings it back whole, as Bring back does.
 

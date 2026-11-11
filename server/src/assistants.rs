@@ -260,6 +260,17 @@ async fn checked(
     let Some(client_id) = get("client_id") else {
         return Ok(Err("unknown-client"));
     };
+    // The cheap checks first, so a link refused anyway visits nothing.
+    let challenge = get("code_challenge").unwrap_or_default();
+    let state = get("state");
+    if get("response_type") != Some("code")
+        || get("code_challenge_method") != Some("S256")
+        || !plausible_challenge(challenge)
+        || state.is_some_and(|state| state.len() > LONGEST_ADDRESS)
+        || get("resource").is_some_and(|resource| !names_us(resource, app, headers))
+    {
+        return Ok(Err("bad-request"));
+    }
     if metadata::is_document(client_id) {
         match metadata::refresh(app, person, client_id).await? {
             Ok(()) => {}
@@ -285,16 +296,6 @@ async fn checked(
     let Ok(redirect) = Url::parse(redirect) else {
         return Ok(Err("bad-redirect"));
     };
-    let challenge = get("code_challenge").unwrap_or_default();
-    let state = get("state");
-    if get("response_type") != Some("code")
-        || get("code_challenge_method") != Some("S256")
-        || !plausible_challenge(challenge)
-        || state.is_some_and(|state| state.len() > LONGEST_ADDRESS)
-        || get("resource").is_some_and(|resource| !names_us(resource, app, headers))
-    {
-        return Ok(Err("bad-request"));
-    }
     Ok(Ok(Asked {
         client,
         name,

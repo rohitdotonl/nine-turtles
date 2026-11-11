@@ -5,17 +5,21 @@
 //! gives its name and the addresses the reader may be sent back to.
 //!
 //! nine turtles reads that file only when a signed-in reader opens the
-//! "Connect this assistant?" page for it, and at most once a day per
-//! assistant: the answer is kept in `assistant_clients` like a registered
-//! assistant's, so approving and swapping the code read nothing. The file
-//! is fetched as feeds are (public addresses only, the time and size
-//! limits, `fetch`), never followed elsewhere, and must name itself.
+//! "Connect this assistant?" page for a link that's otherwise good, and a
+//! file that works is read again at most once a day: it's kept in
+//! `assistant_clients` like a registered assistant's (`register::keep`),
+//! so approving and swapping the code read nothing. One request to exactly
+//! that address (`fetch::get_small`: public addresses only, no redirect
+//! followed, at most `LARGEST` bytes read), and the file must name itself.
+//! Such an assistant's `client_id` is that address, not a random one.
 
 use std::time::Duration;
 
 use reqwest::Url;
 use serde::Deserialize;
 use sqlx::SqlitePool;
+
+use crate::fetch::FetchError;
 
 use super::{LONGEST_ADDRESS, register};
 use crate::{AppState, fetch, now};
@@ -132,36 +136,27 @@ pub async fn refresh(
     {
         return Ok(Err(Unusable::Unreachable));
     }
-    let fetched = tokio::time::timeout(LOOKING_FOR, fetch::get(&state.http, &url, local)).await;
-    let fetched = match fetched {
-        Ok(Ok(fetched)) => fetched,
-        Ok(Err(fetch::FetchError::NotAllowed | fetch::FetchError::Status(_))) => {
+    let asking = fetch::get_small(&state.http, &url, local, LARGEST);
+    let body = match tokio::time::timeout(LOOKING_FOR, asking).await {
+        Ok(Ok(body)) => body,
+        // Not there, somewhere else (a redirect), too big, or not allowed.
+        Ok(Err(FetchError::Status(status))) if status < 500 => {
             return Ok(Err(Unusable::Invalid));
         }
+        Ok(Err(FetchError::NotAllowed | FetchError::TooBig)) => {
+            return Ok(Err(Unusable::Invalid));
+        }
+        // No answer, a server error, or asked to wait: try again later.
         _ => return Ok(Err(Unusable::Unreachable)),
     };
-    // Never one found somewhere else: the document must be where it says.
-    if fetched.final_url != url {
-        return Ok(Err(Unusable::Invalid));
-    }
-    let Some((name, redirects)) = read(client_id, &fetched.body) else {
+    let Some((name, redirects)) = read(client_id, &body) else {
         return Ok(Err(Unusable::Invalid));
     };
-    let redirects = serde_json::to_string(&redirects).unwrap_or_else(|_| "[]".to_owned());
-    // One line per assistant, kept up to date: its connections stay theirs.
-    sqlx::query(
-        "INSERT INTO assistant_clients (client_id, name, redirect_uris, created_at)
-         VALUES (?1, ?2, ?3, ?4)
-         ON CONFLICT (client_id) DO UPDATE
-             SET name = ?2, redirect_uris = ?3, created_at = ?4",
-    )
-    .bind(client_id)
-    .bind(name)
-    .bind(redirects)
-    .bind(now())
-    .execute(&state.db)
-    .await?;
-    Ok(Ok(()))
+    if register::keep(&state.db, client_id, &name, &redirects).await? {
+        Ok(Ok(()))
+    } else {
+        Ok(Err(Unusable::Unreachable))
+    }
 }
 
 #[cfg(test)]
