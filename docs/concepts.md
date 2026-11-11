@@ -218,6 +218,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 
 - Authentication (sign-in)
 - OAuth 2.1, PKCE and dynamic client registration
+- Client ID metadata documents
+- Resource indicators (RFC 8707)
 - Prompt injection
 - Password hashing (argon2id)
 - Salt

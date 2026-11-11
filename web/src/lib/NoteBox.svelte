@@ -19,6 +19,7 @@
 
   let {
     id,
+    about,
     label,
     help,
     words = $bindable(),
@@ -31,6 +32,8 @@
   }: {
     /** The words' box's id, for its label. */
     id: string;
+    /** The id of what the note is on (its highlighted words), read after the box's name, so several boxes are told apart. */
+    about?: string;
     label: string;
     /** Who sees it, under the words. */
     help: string;
@@ -84,7 +87,7 @@
       {#if onDiscard}<button type="button" class="text-link discard" onclick={onDiscard}>Discard</button>{/if}
     </p>
   {/if}
-  <textarea dir="auto" {id} bind:this={box} bind:value={words} maxlength={LONGEST_NOTE} rows="4" aria-describedby={kept ? `${id}-kept ${id}-message` : `${id}-message`} class="field note-box"></textarea>
+  <textarea dir="auto" {id} bind:this={box} bind:value={words} maxlength={LONGEST_NOTE} rows="4" aria-describedby={[about, kept && `${id}-kept`, `${id}-message`].filter(Boolean).join(" ")} class="field note-box"></textarea>
   <p id="{id}-message" role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
