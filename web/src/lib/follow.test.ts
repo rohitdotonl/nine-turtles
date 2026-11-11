@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { followTitle, readLooked, sayProblem, siteOf } from "./follow";
+import { followTitle, readLooked, sayProblem, siteOf, worthTryingAgain } from "./follow";
 import { PROBLEMS, type Problem } from "./feeds";
 
 describe("looking at a shared page", () => {
@@ -97,5 +97,13 @@ describe("who a shared page is by", () => {
     for (const reason of [...PROBLEMS, "offline", "trouble"] as Problem[]) {
       expect(sayProblem(reason)).not.toMatch(/feed|rss/i);
     }
+  });
+});
+
+describe("a site's guard against bots (decision 0258)", () => {
+  it("is said plainly and locks Follow, since trying again won't help", () => {
+    expect(sayProblem("blocked")).toMatch(/guard against bots/);
+    expect(worthTryingAgain("blocked")).toBe(false);
+    expect(worthTryingAgain("unreachable")).toBe(true);
   });
 });

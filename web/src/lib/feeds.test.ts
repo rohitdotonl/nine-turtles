@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { explain, findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, type Problem } from "./feeds";
+import { NOT_THE_ADDRESS, explain, findByName, folderChoice, folderUnread, inDevanagari, plainSourceName, type Problem } from "./feeds";
 
 describe("the add field's messages", () => {
   it("are calm, plain and never an error code", () => {
-    const problems: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "trouble"];
+    const problems: Problem[] = ["not-an-address", "not-allowed", "unreachable", "blocked", "not-found", "too-big", "no-feed", "trouble"];
     for (const problem of problems) {
       const message = explain(problem);
       expect(message).not.toMatch(/!|error|[0-9]{3}/i);
@@ -13,6 +13,13 @@ describe("the add field's messages", () => {
     expect(explain("no-feed")).toBe("nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.");
     // The one number shown is the limit itself.
     expect(explain("too-many")).toBe("You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.");
+  });
+});
+
+describe("a site's guard against bots (decision 0258)", () => {
+  it("isn't the address's fault, so the add field isn't marked", () => {
+    expect(NOT_THE_ADDRESS).toContain("blocked");
+    expect(NOT_THE_ADDRESS).not.toContain("not-found");
   });
 });
 

@@ -24,6 +24,8 @@ struct Site {
     old_gone: bool,
     /// /busy.xml asks nine turtles to wait an hour.
     busy: bool,
+    /// A guard against bots turns nine turtles away from /old.xml, /guarded.xml and the home page.
+    guarded: bool,
     /// Every path asked for.
     asked: Vec<String>,
     /// /old.xml waits for this before answering (with one more post, unless gone).
@@ -60,6 +62,9 @@ async fn serve(State(site): State<Shared>, uri: Uri) -> Response {
         }
     }
     let site = site.lock().unwrap();
+    if site.guarded && matches!(path.as_str(), "/old.xml" | "/" | "/guarded.xml") {
+        return (StatusCode::FORBIDDEN, [("cf-mitigated", "challenge")]).into_response();
+    }
     match path.as_str() {
         // The home page names the feed's new address, and one already followed.
         "/" => (
@@ -214,6 +219,37 @@ impl Reader {
     fn change(&self, change: impl FnOnce(&mut Site)) {
         change(&mut self.published.lock().unwrap());
     }
+}
+
+#[tokio::test]
+async fn a_sites_guard_against_bots_is_named_as_such() {
+    let reader = Reader::new().await;
+    let old = reader.follow("/old.xml").await;
+    reader.change(|site| site.guarded = true);
+    let now = nine_turtles::now();
+    reader.check(old, now).await;
+    reader.check(old, now + HOUR).await;
+    assert_eq!(
+        reader.listed().await,
+        [(old, "trouble".to_owned(), "blocked".to_owned())]
+    );
+    // Find new address says so too, rather than "didn't answer".
+    let (status, answer) = reader
+        .post(&format!("/api/health/{old}/find"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert_eq!(answer["error"], "blocked");
+    // And so does adding a feed behind it.
+    let (status, answer) = reader
+        .post(
+            "/api/feeds",
+            json!({ "address": format!("{}/guarded.xml", reader.site) }),
+        )
+        .await;
+    assert_eq!(
+        (status, answer["error"].as_str()),
+        (StatusCode::BAD_GATEWAY, Some("blocked"))
+    );
 }
 
 #[tokio::test]
