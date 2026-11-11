@@ -248,7 +248,7 @@ test("the welcome's New to feeds? opens a sheet that explains feeds and offers a
   await page.route("**/api/feeds", async (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     asked.push((route.request().postDataJSON() as { address: string }).address);
-    await route.fulfill({ status: 502, json: { error: "unreachable" } });
+    await route.fulfill({ status: 422, json: { error: "unreachable" } });
   });
   await sheet.getByRole("checkbox", { name: /^James/ }).check();
   await sheet.getByRole("checkbox", { name: /Jeff Kaufman/ }).check();
@@ -408,7 +408,7 @@ test("a YouTube video asks \"Follow {channel}?\" over one row, and Follow by key
         json: { asks: "video", maker: "3Blue1Brown", choices: [{ title: "3Blue1Brown", url: CHANNEL, place: "youtube.com/@3blue1brown", latest: "But what is a neural network?" }] },
       });
     }
-    return route.fulfill({ status: 502, json: { error: "unreachable" } });
+    return route.fulfill({ status: 422, json: { error: "unreachable" } });
   });
   await openApp(page, "/add-feed");
   await field(page).fill("https://www.youtube.com/watch?v=aircAruvnKk");
@@ -520,7 +520,7 @@ test("following several, one that can't be followed is named in the list's line,
   // The comments feed's follow fails; the first goes through.
   await page.route("**/api/feeds", async (route) => {
     const asked = route.request().postDataJSON() as { address: string };
-    if (route.request().method() === "POST" && asked.address.includes("comments")) await route.fulfill({ status: 502, json: { error: "unreachable" } });
+    if (route.request().method() === "POST" && asked.address.includes("comments")) await route.fulfill({ status: 422, json: { error: "unreachable" } });
     else await route.continue();
   });
   await page.getByRole("button", { name: "Follow", exact: true }).click();

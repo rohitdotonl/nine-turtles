@@ -156,6 +156,6 @@ async fn a_site_that_isnt_there_is_said_plainly() {
     let base = common::start(common::config()).await;
     let (site, _) = blog(false).await;
     let (status, _, body) = check(&base, &format!("{site}/gone")).await;
-    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(body["error"], "not-found");
 }
