@@ -22,6 +22,7 @@
     onRetry,
     retryWord = "Try again",
     onClose,
+    also,
     busy = false,
     announce = false,
     undoButton = $bindable(),
@@ -38,6 +39,8 @@
     /** What that button says: "Sign in" when being signed out is why (decision 0230). */
     retryWord?: string;
     onClose: () => void;
+    /** Other ways on, before Try again: Write back's "Write in Gmail" (SPEC section 37). */
+    also?: { word: string; press: () => void }[];
     busy?: boolean;
     /** The words carry the status role themselves, without the buttons. */
     announce?: boolean;
@@ -51,6 +54,9 @@
       >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Dated text={message} /></span
     >
     {#if message}
+      {#each also ?? [] as way (way.word)}
+        <TextButton class="-mr-2 px-2" onclick={way.press}>{way.word}</TextButton>
+      {/each}
       {#if onRetry}
         <TextButton class="-mr-2 px-2" aria-disabled={busy} onclick={onRetry}>{retryWord}</TextButton>
       {/if}

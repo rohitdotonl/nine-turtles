@@ -46,22 +46,43 @@ V1, item 2). Its look gets a refinement round.*
   it, or your inbox; it only makes the `mailto:` link your device opens. The
   body is left empty for you, unless you highlighted words in the article.
   Once pressed, a line under the address says "Opening your email app…",
-  and under it "Nothing opened?" with **Copy their address** (underlined
-  words, as the list's note's buttons), which copies it and says "Copied.":
-  on a computer with no email app set up, the press otherwise does nothing
-  you can see (decision 0229). The line goes once you come back from the email app (the page was hidden while it opened) or another article opens. A copy that fails says so in oxblood with the alert icon.
+  and under it "Nothing opened, or the wrong app?" with **Write in Gmail**,
+  **Write in Outlook.com** and **Copy their address** (underlined words, as
+  the list's note's buttons, apart by a middle dot); Copy their address
+  copies it and says "Copied.": on a computer with no email app set up, the
+  press otherwise does nothing you can see (decision 0229). Pressing one of
+  them puts the keyboard back on Write back, as the button pressed goes.
+- **Write in Gmail or Outlook.com** (decision 0259): on a computer whose
+  email lives in the browser, pressing Write in Gmail opens the same email
+  (address, subject, quotes) as a new Gmail draft in a new tab, at once, and
+  keeps the choice on this device only (a phone and a computer often
+  differ): from then on Write back (and Write to) opens a Gmail draft in a
+  new tab instead of the email app, and the line says "Opening Gmail in a
+  new tab…" and "Wrong place?" with **Write in your email app**, **Write in
+  Outlook.com** and **Copy their address**. Outlook.com works the same way.
+  While Gmail or Outlook.com is chosen, a line under the address always says
+  so, "Opens Gmail in a new tab.", with **Use your email app**, which goes
+  back without writing: the choice is never stuck. On a touch screen, whose
+  email app always answers, the line asks only "Nothing opened?" with Copy
+  their address (and Write in your email app, if Gmail or Outlook.com was
+  chosen there). Started later than the press (a row's menu, while the
+  article's text loads), a new tab may be blocked by the browser, so then
+  nothing opens and the keyboard goes to Write back for one more press. nine turtles still never sends or sees the email: it
+  only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question and its ways on stay, for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
   Pressed away from the article's end (the paper plane, `w`, a row's menu,
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's
   foot, as the list's note is shown there (section 8), "Opening your email
-  app… Nothing opened?" with **Copy their address** and a ×; after a copy,
+  app… Nothing opened, or the wrong app?" with the line's buttons and a ×; after a copy,
   "Copied." (or, failing, the same words as the line's, in oxblood). It goes as
   the line does, or with its ×. A copy that fails, here or there, says "The
   address couldn't be copied. It's …: select it and copy it yourself.", with
   the address.
 - **Write back about this** (decision 0205): when you've highlighted words
-  in the article (section 42), the email starts with them, each quote on
-  lines beginning "> " as email apps quote, a blank line after each, then
+  in the article (section 42), the email starts with them, each quote in
+  curly quotes (“…”), as a person quotes in a letter (decision 0259; "> " at
+  each line's start reads as code, and Gmail shows it as it is), a blank
+  line after each, then
   room for your reply (at most 1,500 characters of quotes as written into
   the link, so it stays one email apps take; quotes past that are left
   out, and a first quote too long by itself keeps its first words, ending
@@ -98,17 +119,21 @@ V1, item 2). Its look gets a refinement round.*
   finds an address, it fills it into the field and says "Found on their
   site. Check it, then press Write back."; the reader checks it and presses
   Write back to keep it (a page can show someone else's address too). When
-  it finds none, "No email address on their site. Paste it here and it's
-  saved." (point 8). When it couldn't look (their site didn't answer, or
-  nine turtles can't be reached), "Their site couldn't be checked for an
-  address. Paste it here and it's saved."
+  it finds none, "No email address on their site. Paste it here, or look on
+  their site." (point 8). When it couldn't look (their site didn't answer,
+  or nine turtles can't be reached), "Their site couldn't be checked for an
+  address. Paste it here, or look on their site." **look on their site** is
+  an underlined link to their website (the one their feed names, else their
+  article's home page) in a new tab, left out once an address found there is
+  filled in (decision 0259: the field is the point, so the way to find the
+  address is words in the line, not a second button).
   Once the reader changes a found address, the box is as before. With no website known it
   doesn't look, and says "nine turtles doesn't have their address yet.
-  Paste it here and it's saved."; then **Find it on their site** (an everyday button that opens their
-  website, the one their feed names or else their article's home page, in a
-  new tab; left out when nine turtles knows
-  neither, and once an address found there is filled in), **Their email address**, **Write back** and **Not now**, and
-  under them, quietly, "It sends from your own email." only (point 8). The
+  Paste it here." Then **Their email address** (its placeholder
+  "name@example.com"), **Write back**, the box's one solid button (decision
+  0259; the button that opened it at an article's end is outlined), and
+  **Not now**, and under them, quietly, "It sends from your own email, and
+  nine turtles keeps the address for next time." (point 8). The
   keyboard starts on the field; Not now, or Escape in the field, puts the
   box away and the keyboard back on the button.
   Something that isn't one address ("ivy at home", two addresses) is refused
@@ -154,8 +179,8 @@ V1, item 2). Its look gets a refinement round.*
    …** with the address under it; pressing it opens your email app with no
    subject. Press Change: the box has it; change it and press Save; the page
    shows the new one.
-4. Press **Find it on their site** in that box: their website opens in a
-   new tab, and the box is still there to paste the address into.
+4. Press **look on their site** in that box's line: their website opens in
+   a new tab, and the box is still there to paste the address into.
 5. Follow a blog whose articles end with a "Reply by email" link: after its
    next new article, Write back opens your email app at once with that
    address.
@@ -171,8 +196,12 @@ V1, item 2). Its look gets a refinement round.*
    visited twice).
 9. Highlight a sentence in an article of someone whose address is known.
    Under Write back's address: "Your email starts with the words you
-   highlighted." Press Write back: your email starts with "> " and the
-   sentence. Choose other words: the small menu ends with **Write back
+   highlighted." Press Write back: your email starts with the sentence in
+   curly quotes. Choose other words: the small menu ends with **Write back
    about this**; press it, and the email starts with those words only. (It
    counts as pressing Write back: with no address known, it opens the same
    box and the same one look on their site, decision 0168.)
+10. On a computer, press Write back, then **Write in Gmail** under it: a new
+   Gmail draft opens in a new tab with the address, "Re: " and the title.
+   Open another article and press Write back: Gmail again, straight away.
+   Press **Write in your email app** under it to go back.

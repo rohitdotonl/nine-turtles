@@ -4,7 +4,7 @@
   june.example", with the paper plane. Pressing it opens the same box in place as Write to on a
   person's page (`AddressBox`): nine turtles looks on the site's home page and one contact or about
   page for an address (the server, under the feed finder's limits), and what it finds fills the
-  field for the reader to check; else "Find it on their site" and the field to paste it in. **Write**
+  field for the reader to check; else "look on their site" (a link in its line) and the field to paste it in. **Write**
   opens the reader's own email app with a short request they can change; nine turtles keeps nothing.
 -->
 <script lang="ts">
