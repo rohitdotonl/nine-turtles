@@ -62,7 +62,9 @@ all back.
 ## Good to know
 
 - Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too. Those go once Undo has passed; **Bring back** doesn't return them.
-- Following someone again after their 30 days starts afresh, with their articles unread.
+- Following someone again after their 30 days starts afresh: their five
+  newest articles wait in **Unread**, and anything older is in their list,
+  already read.
 - For a newsletter, nine turtles also asks the sender to stop, once the 30
   days are over. See
   <a href="/help/newsletters/">Read your newsletters here</a>.
