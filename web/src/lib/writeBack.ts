@@ -12,7 +12,8 @@
 
 import { sendChange } from "./http";
 import { placesOf } from "./people";
-import type { Feed } from "./shapes";
+import type { Article, Feed } from "./shapes";
+import { date } from "./times";
 
 /** Write back is offered for a person only, never a publication (decision 0192). */
 export function writesBack(feed: Pick<Feed, "kind"> | undefined): boolean {
@@ -45,6 +46,27 @@ function webPage(address: string | null | undefined): URL | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** The longest an untitled post's opening words run in the subject, so it reads as a subject. */
+const LONGEST_OPENING = 60;
+
+/**
+ * Which post the email is about: its title; else, for a post with no title
+ * (a note), its opening words, cut at a word with "…"; else, for one with no
+ * words at all (a picture), the day it was posted. Never empty, so the writer
+ * can always tell which post it's about.
+ */
+export function aboutLine(article: Pick<Article, "title" | "opening" | "at">): string {
+  if (article.title.trim()) return article.title;
+  const words = article.opening?.replace(/\s+/g, " ").trim();
+  if (!words) return `Your post of ${date(article.at)}`;
+  // Counted in whole characters, so an emoji is never cut in half (a half can't be written into the link).
+  const letters = Array.from(words);
+  if (letters.length <= LONGEST_OPENING) return words;
+  const cut = letters.slice(0, LONGEST_OPENING + 1).join("");
+  const atWord = cut.lastIndexOf(" ");
+  return `${(atWord > 0 ? cut.slice(0, atWord) : letters.slice(0, LONGEST_OPENING).join("")).replace(/[\s.,;:!?…-]+$/, "")}…`;
 }
 
 /** "Re: " and the title, once: a title that already starts with "Re:" keeps its own. */
