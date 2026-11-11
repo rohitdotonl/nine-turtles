@@ -24,8 +24,8 @@ never pretends to be a browser.
   following your feed still means one check.
 - **On your feed's own rhythm:** often if you post often, rarely if you
   don't. Its regular checks come never more than once an hour, and at
-  least once a day. (A reader adding your feed, or pressing Retry on a
-  feed that isn't working, asks once, straight away.)
+  least once a day. (A reader adding your feed, or looking for its new
+  address when it isn't working, asks once, straight away.)
 - **Your `Cache-Control` is respected.** If your feed says `max-age`, the
   next regular check waits at least that long, up to a day.
 - **One request to your site at a time.** If several of its feeds are due,
@@ -63,6 +63,22 @@ never pretends to be a browser.
   address it keeps.
 - **A failing feed is asked less and less**, twice as long between tries
   each time, down to once a day.
+
+## If your site has a guard against bots
+
+Some sites sit behind a guard that keeps bots out, such as Cloudflare's
+Bot Fight Mode or "Under Attack" mode, or a firewall from Vercel, Sucuri
+or Imperva. nine turtles can't pass the check a guard gives browsers, and
+it never pretends to be one, so the guard turns it away and your readers
+stop getting your posts. They see "The site's guard against bots turns
+nine turtles away", so they know it isn't you or them.
+
+To let it in, allow visitors whose user agent starts with
+<code>nine-turtles/</code>, at least for your feed's address. In
+Cloudflare, that's a custom rule under **Security › WAF** that skips the
+bot checks for that user agent. Other feed readers are in the same
+spot, so allowing your feed's address for everyone helps them too. The
+[blog checkup](/blog-checkup/) tells you if a guard turns it away.
 
 ## Credit
 

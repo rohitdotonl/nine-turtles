@@ -152,7 +152,7 @@
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
 
   /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): the field isn't marked. */
-  const NOT_THE_ADDRESS = ["unreachable", "trouble", "too-many", "plan-ended", "offline"];
+  const NOT_THE_ADDRESS = ["unreachable", "blocked", "trouble", "too-many", "plan-ended", "offline"];
 
   /**
    * The address was changed after several feeds were offered: they belong to the old one, so they go with

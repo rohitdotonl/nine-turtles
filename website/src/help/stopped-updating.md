@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-09
+updated: 2026-11-11
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -50,6 +50,10 @@ worked since 12 Oct.", with a button to find its new address.
   comes back.
 - How often nine turtles checks depends on how often someone writes: from
   once an hour to once a day. When a site asks it to slow down, it does.
+- Some sites put a guard in front of them to keep bots out, and it can
+  turn nine turtles away too. Then it says "The site's guard against bots
+  turns nine turtles away." Only the site can let it in: if it's a person,
+  **Write to** them and say so. nine turtles never sneaks past a guard.
 - Quiet isn't broken: some people write once a year. In **Settings ›
   Everyone you follow**, someone with nothing new for six months says
   "Quiet since" and the date.

@@ -4,7 +4,7 @@ import { explain, findByName, folderChoice, folderUnread, inDevanagari, plainSou
 
 describe("the add field's messages", () => {
   it("are calm, plain and never an error code", () => {
-    const problems: Problem[] = ["not-an-address", "not-allowed", "unreachable", "not-found", "too-big", "no-feed", "trouble"];
+    const problems: Problem[] = ["not-an-address", "not-allowed", "unreachable", "blocked", "not-found", "too-big", "no-feed", "trouble"];
     for (const problem of problems) {
       const message = explain(problem);
       expect(message).not.toMatch(/!|error|[0-9]{3}/i);

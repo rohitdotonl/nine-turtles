@@ -233,6 +233,8 @@ pub(crate) enum Problem {
     NotAnAddress,
     NotAllowed,
     Unreachable,
+    /// The site's guard against bots turned nine turtles away (decision 0255).
+    Blocked,
     PageNotFound,
     TooBig,
     NoFeed,
@@ -247,6 +249,7 @@ impl From<fetch::FetchError> for Problem {
             fetch::FetchError::NotAllowed => Self::NotAllowed,
             fetch::FetchError::Status(404 | 410) => Self::PageNotFound,
             fetch::FetchError::TooBig => Self::TooBig,
+            fetch::FetchError::Blocked => Self::Blocked,
             fetch::FetchError::Unreachable
             | fetch::FetchError::Status(_)
             | fetch::FetchError::SlowDown(_) => Self::Unreachable,
@@ -278,6 +281,7 @@ pub(crate) fn for_website(answer: Result<impl Serialize, Problem>) -> Response {
                 Problem::NotAnAddress => (StatusCode::BAD_REQUEST, "not-an-address"),
                 Problem::NotAllowed => (StatusCode::BAD_REQUEST, "not-allowed"),
                 Problem::Unreachable => (StatusCode::BAD_GATEWAY, "unreachable"),
+                Problem::Blocked => (StatusCode::BAD_GATEWAY, "blocked"),
                 Problem::PageNotFound => (StatusCode::BAD_GATEWAY, "not-found"),
                 Problem::TooBig => (StatusCode::BAD_GATEWAY, "too-big"),
                 Problem::NoFeed => (StatusCode::UNPROCESSABLE_ENTITY, "no-feed"),

@@ -158,15 +158,17 @@ enum Elsewhere {
 }
 
 /// Tries the other places for a page naming no feed, in order, one at a
-/// time. A site that asks to slow down, or stops answering, isn't asked
-/// again, and the reader is told so ("try again later"), not "no feed"; an
+/// time. A site that asks to slow down, stops answering or whose guard
+/// turns nine turtles away isn't asked again, and the reader is told so ("try again later"), not "no feed"; an
 /// address that isn't there (or isn't a feed) moves on to the next.
 async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, FetchError> {
     let local = state.config.local_feeds_allowed;
     for place in places(page) {
         let fetched = match fetch::get(&state.http, &place, local).await {
             Ok(fetched) => fetched,
-            Err(error @ (FetchError::SlowDown(_) | FetchError::Unreachable)) => return Err(error),
+            Err(
+                error @ (FetchError::SlowDown(_) | FetchError::Unreachable | FetchError::Blocked),
+            ) => return Err(error),
             Err(_) => continue,
         };
         if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
@@ -229,18 +231,20 @@ async fn look_inside(state: &AppState, found: Vec<discover::Found>) -> Vec<Choic
             choices.push(Choice::named(found));
             continue;
         }
-        let fetched =
-            match tokio::time::timeout(left, fetch::get(&state.http, &found.url, local)).await {
-                Ok(Ok(fetched)) => fetched,
-                Ok(Err(FetchError::Status(_) | FetchError::TooBig | FetchError::NotAllowed)) => {
-                    continue;
-                }
-                Ok(Err(FetchError::SlowDown(_) | FetchError::Unreachable)) | Err(_) => {
-                    stopped = true;
-                    choices.push(Choice::named(found));
-                    continue;
-                }
-            };
+        let fetched = match tokio::time::timeout(left, fetch::get(&state.http, &found.url, local))
+            .await
+        {
+            Ok(Ok(fetched)) => fetched,
+            Ok(Err(FetchError::Status(_) | FetchError::TooBig | FetchError::NotAllowed)) => {
+                continue;
+            }
+            Ok(Err(FetchError::SlowDown(_) | FetchError::Unreachable | FetchError::Blocked))
+            | Err(_) => {
+                stopped = true;
+                choices.push(Choice::named(found));
+                continue;
+            }
+        };
         let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) else {
             continue;
         };

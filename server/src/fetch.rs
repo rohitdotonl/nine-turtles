@@ -14,6 +14,10 @@
 //!   Last-Modified), so an unchanged feed costs the publisher almost nothing,
 //!   and it listens when a publisher asks it to slow down, or says how long
 //!   its feed stays the same (`Cache-Control: max-age`).
+//! - A guard against bots in front of a site is told apart from the site
+//!   itself (`guard`), so the reader learns who turned nine turtles away.
+
+mod guard;
 
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
@@ -94,6 +98,10 @@ pub enum FetchError {
     /// The publisher asked nine turtles to slow down (429, or 503 with a time):
     /// wait this many seconds, if they said.
     SlowDown(Option<i64>),
+    /// A guard in front of the site (Cloudflare's bot check and the like)
+    /// turned nine turtles away before the site itself could answer
+    /// (`fetch::guard`, decision 0255).
+    Blocked,
 }
 
 /// Builds the one downloader nine turtles uses. `local_allowed` lets the tests
@@ -264,6 +272,17 @@ async fn check_once(
                 fresh_for: fresh,
             });
         }
+        if guard::says_so(status, response.headers()) {
+            return Err(FetchError::Blocked);
+        }
+        if guard::may_say_so(status, response.headers()) {
+            let page = read_some(response, guard::PAGE_LIMIT).await;
+            return Err(if guard::page_says_so(&page) {
+                FetchError::Blocked
+            } else {
+                FetchError::Status(status.as_u16())
+            });
+        }
         let retry_after = response
             .headers()
             .get(header::RETRY_AFTER)
@@ -387,6 +406,20 @@ async fn read_limited(mut response: reqwest::Response) -> Result<Vec<u8>, FetchE
         body.extend_from_slice(&chunk);
     }
     Ok(body)
+}
+
+/// The first `limit` bytes of an answer's body, or less if the connection
+/// breaks: enough to recognise a guard's page, never a whole file.
+async fn read_some(mut response: reqwest::Response, limit: usize) -> Vec<u8> {
+    let mut body = Vec::new();
+    while body.len() < limit {
+        match response.chunk().await {
+            Ok(Some(chunk)) => body.extend_from_slice(&chunk),
+            _ => break,
+        }
+    }
+    body.truncate(limit);
+    body
 }
 
 /// Only ordinary web addresses. A written-out number address (such as

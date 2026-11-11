@@ -400,6 +400,7 @@ impl Failure {
             Self::Fetch(FetchError::Status(code)) => format!("answered-{code}"),
             Self::Fetch(FetchError::TooBig) => "too-big".into(),
             Self::Fetch(FetchError::SlowDown(_)) => "slow-down".into(),
+            Self::Fetch(FetchError::Blocked) => "blocked".into(),
         }
     }
 }
