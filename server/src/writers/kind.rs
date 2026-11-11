@@ -1,19 +1,26 @@
-//! Person or publication (SPEC section 36, decision 0163): everything a
-//! reader follows is someone or something. A place joined to others is
-//! always a person's; for a place on its own nine turtles guesses once, from
-//! the feed alone (never fetching a page), and the reader can change it. It
+//! Person or publication (SPEC section 36, decisions 0163 and 0263): everything
+//! a reader follows is someone or something. A place joined to others is
+//! always a person's; for a place on its own nine turtles sorts it once, from
+//! the feed alone (never fetching a page), and says why, and the reader can
+//! change it. Where the feed can't tell, it says so: the place "could be
+//! either", kept with the publications until the reader settles it. It
 //! guesses what kind of source each place is too: a newsletter, a video
 //! channel, a podcast or a blog.
 //!
-//! A YouTube channel or playlist isn't guessed: it's a publication.
-//!
-//! The guess, in order:
-//! 1. One name wrote every article: a person. Several names: a publication.
-//! 2. No names: a place of someone's own on a site many people share (a
-//!    Substack, a Bluesky account) is a person; a site
-//!    the feed's own name matches (NASA at nasa.gov) is a publication.
-//! 3. Still unclear: a person, since nine turtles is for people worth
-//!    knowing. The reader sees the guess when adding and can change it.
+//! How it sorts, the first that fits (`kind_from`):
+//! 1. A YouTube channel or playlist: could be either (a vlogger's channel and
+//!    a company's sign their videos alike).
+//! 2. Several names sign its articles: a publication.
+//! 3. One name signs them, a person's name, not the feed's or the site's own:
+//!    a person.
+//! 4. No such name, and the site is someone's own (a place of theirs on a
+//!    site many people share, a title saying it's theirs, "Jim's Notes", or
+//!    an address that is the title's words run together, janedoe.com): a
+//!    person.
+//! 5. No such name, and the site's own name is a word of its title (NASA at
+//!    apod.nasa.gov): a publication.
+//! 6. A folder it came in says which ("Friends", "News"): that.
+//! 7. Anything else: could be either.
 //!
 //! A person is called by their name (owner's plan, step 2): when every
 //! article is signed by the same one author, that's what the person is called,
@@ -64,41 +71,181 @@ const PERSONAL_SITES: &[&str] = &[
     "patreon.com",
 ];
 
-/// "person" or "publication", from the names on its articles, its address,
-/// its website and its title.
-pub fn kind_from(authors: &[String], url: &str, site: Option<&str>, title: &str) -> &'static str {
-    // A YouTube channel isn't guessed (the owner, 8 November 2026): its feed
-    // signs every video with the channel's name, which can't tell a vlogger
-    // from a company. It starts as a publication; the reader can change it.
-    if Url::parse(url).is_ok_and(|url| crate::youtube::addresses::is_feed(&url)) {
-        return "publication";
+/// Why a place is filed as it is (`subscriptions.kind_why`, decision 0263):
+/// one of the reasons below when nine turtles chose, `reader` when the reader
+/// did. Null for a place sorted before nine turtles said why. A place whose
+/// reason starts `unsure-` is open: it could be either, and is kept with the
+/// publications until the reader settles it.
+pub const WHYS: &[&str] = &[
+    "one-name",
+    "own-site",
+    "several-names",
+    "site-name",
+    "folder",
+    "unsure-no-names",
+    "unsure-channel",
+    "reader",
+];
+
+/// What nine turtles knows of a place when it sorts it: the names on its
+/// newest articles, its address, its website, the reader's name for it, the
+/// feed's own title and the names of the folders it's in.
+pub struct Clues<'a> {
+    pub authors: &'a [String],
+    pub url: &'a str,
+    pub site: Option<&'a str>,
+    pub title: &'a str,
+    pub feed_title: &'a str,
+    pub folders: &'a [String],
+}
+
+/// Words in a folder's name that say what's in it (rule 6).
+const PEOPLE_FOLDERS: &[&str] = &["friends", "family", "people", "personal", "writers"];
+const PUBLICATION_FOLDERS: &[&str] = &[
+    "news",
+    "newspapers",
+    "magazines",
+    "publications",
+    "companies",
+    "media",
+    "press",
+];
+
+/// "person" or "publication", and why (`WHYS`), the first rule that fits
+/// (the module's comment lists them).
+pub fn kind_from(clues: &Clues) -> (&'static str, &'static str) {
+    if Url::parse(clues.url).is_ok_and(|url| crate::youtube::addresses::is_feed(&url)) {
+        return ("publication", "unsure-channel");
     }
-    let mut names: Vec<String> = authors
+    let host = clues.site.and_then(host_of).or_else(|| host_of(clues.url));
+    let mut names: Vec<String> = clues
+        .authors
         .iter()
         .map(|name| name.trim().to_lowercase())
-        .filter(|name| !name.is_empty())
+        .filter(|name| !name.is_empty() && !NOT_NAMES.contains(&name.as_str()))
         .collect();
     names.sort_unstable();
     names.dedup();
-    match names.len() {
-        1 => return "person",
-        0 => {}
-        _ => return "publication",
+    if names.len() > 1 {
+        return ("publication", "several-names");
     }
-    let Some(host) = site.and_then(host_of).or_else(|| host_of(url)) else {
-        return "person";
+    let named = one_author(clues.authors).is_some_and(|name| {
+        let name = squashed(&name);
+        name != squashed(clues.feed_title)
+            && host.as_deref().and_then(site_name) != Some(name.as_str())
+    });
+    if named {
+        return ("person", "one-name");
+    }
+    if let Some(host) = &host {
+        if is_own_site(host, clues.title) || is_own_site(host, clues.feed_title) {
+            return ("person", "own-site");
+        }
+        if names_the_site(host, clues.title) || names_the_site(host, clues.feed_title) {
+            return ("publication", "site-name");
+        }
+    }
+    let said = |words: &[&str]| {
+        clues.folders.iter().any(|folder| {
+            folder
+                .split(|letter: char| !letter.is_alphanumeric())
+                .any(|word| words.contains(&word.to_lowercase().as_str()))
+        })
     };
-    if PERSONAL_SITES
-        .iter()
-        .any(|shared| host == *shared || host.ends_with(&format!(".{shared}")))
-    {
-        return "person";
-    }
-    if names_the_site(&host, title) {
-        "publication"
+    if said(PEOPLE_FOLDERS) {
+        ("person", "folder")
+    } else if said(PUBLICATION_FOLDERS) {
+        ("publication", "folder")
     } else {
-        "person"
+        ("publication", "unsure-no-names")
     }
+}
+
+/// Words of a publication's name, never of a person's: an address made of a
+/// title with one of these run together is the publication's.
+const PUBLICATION_WORDS: &[&str] = &[
+    "the",
+    "magazine",
+    "news",
+    "journal",
+    "review",
+    "times",
+    "daily",
+    "weekly",
+    "digest",
+    "press",
+    "media",
+    "report",
+    "gazette",
+    "post",
+    "tribune",
+    "herald",
+    "quarterly",
+    "studio",
+    "labs",
+    "blog",
+    "notes",
+    "letters",
+    "podcast",
+    "show",
+];
+
+/// Letters and digits only, lower case: "Jane Doe" and "janedoe" alike.
+fn squashed(text: &str) -> String {
+    text.chars()
+        .filter(|letter| letter.is_alphanumeric())
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+/// The site's own name, the part of its address before the ending
+/// (`nasa` in apod.nasa.gov).
+fn site_name(host: &str) -> Option<&str> {
+    let parts: Vec<&str> = host.split('.').collect();
+    parts
+        .len()
+        .checked_sub(2)
+        .and_then(|at| parts.get(at))
+        .copied()
+}
+
+/// A site of someone's own: a place of theirs on a site many people share
+/// (a Substack, a Bluesky account), a title that says it's someone's
+/// ("Jim Nielsen's Blog"), or an address made of the title's words run
+/// together (janedoe.com for "Jane Doe").
+fn is_own_site(host: &str, title: &str) -> bool {
+    let shared = PERSONAL_SITES
+        .iter()
+        .any(|shared| host == *shared || host.ends_with(&format!(".{shared}")));
+    let words: Vec<&str> = title
+        .split(|letter: char| !letter.is_alphanumeric() && letter != '\'' && letter != '\u{2019}')
+        .filter(|word| !word.is_empty())
+        .collect();
+    // A capitalised word ending in 's, after nothing or other capitalised
+    // words: "Jim Nielsen's", never "the world's".
+    let theirs = words.iter().position(|word| {
+        word.strip_suffix("'s")
+            .or_else(|| word.strip_suffix("\u{2019}s"))
+            .is_some_and(|name| name.starts_with(char::is_uppercase))
+    });
+    let theirs = theirs.is_some_and(|at| {
+        words[..at]
+            .iter()
+            .all(|word| word.starts_with(char::is_uppercase))
+    });
+    let name = site_name(host).unwrap_or_default();
+    let lower = title.to_lowercase();
+    let named_theirs = !name.is_empty()
+        && (lower.contains(&format!("{name}'s")) || lower.contains(&format!("{name}\u{2019}s")));
+    // Only when the title reads as a name, two or three capitalised words
+    // that aren't a publication's own ("The Verge", "Low-tech Magazine").
+    let as_a_name = (2..=3).contains(&words.len())
+        && words.iter().all(|word| {
+            word.starts_with(char::is_uppercase)
+                && !PUBLICATION_WORDS.contains(&word.to_lowercase().as_str())
+        });
+    let run_together = as_a_name && squashed(name) == squashed(title);
+    shared || theirs || named_theirs || run_together
 }
 
 /// Names a blog gives its articles that are a role or a placeholder, never
@@ -166,12 +313,10 @@ fn host_of(address: &str) -> Option<String> {
 }
 
 /// The site's own name (`nasa` in apod.nasa.gov) is one whole word of the
-/// title, as a publication's is. A name made of two of its words run
-/// together (`janedoe` for "Jane Doe") is a person's own domain, and one
-/// said as someone's ("Jane's blog") is theirs: neither is this.
+/// title, as a publication's is. A site of someone's own (`is_own_site`) is
+/// sorted before this is asked.
 fn names_the_site(host: &str, title: &str) -> bool {
-    let parts: Vec<&str> = host.split('.').collect();
-    let Some(name) = parts.len().checked_sub(2).and_then(|at| parts.get(at)) else {
+    let Some(name) = site_name(host) else {
         return false;
     };
     let words: Vec<String> = title
@@ -179,26 +324,24 @@ fn names_the_site(host: &str, title: &str) -> bool {
         .filter(|word| !word.is_empty())
         .map(str::to_lowercase)
         .collect();
-    let lower = title.to_lowercase();
-    let theirs =
-        lower.contains(&format!("{name}'s")) || lower.contains(&format!("{name}\u{2019}s"));
-    !theirs && words.len() > 1 && words.iter().any(|word| word == name)
+    words.len() > 1 && words.iter().any(|word| word == name)
 }
 
-/// Guesses, and keeps, each of the reader's places that has no kind or no
+/// Sorts, and keeps, each of the reader's places that has no kind or no
 /// source kind yet, once it has been fetched: an imported feed waits for its
-/// first check, so the guess sees its authors and episodes. `only` is a feed
-/// just added, whose articles were stored then, so it's guessed at once. Their choices
-/// stay as they made them. A place first guessed a person is called by its
-/// one author's name (`name_by_author`).
+/// first check, so the guess sees its authors and episodes (and the folders
+/// the import made first). `only` is a feed just added, whose articles were
+/// stored then, so it's sorted at once. Their choices stay as they made
+/// them. A place first sorted a person by its one name is called by that
+/// name (`name_by_author`).
 pub async fn fill(
     connection: &mut SqliteConnection,
     person: i64,
     only: Option<i64>,
 ) -> Result<(), sqlx::Error> {
-    type Waiting = (i64, String, Option<String>, String, bool, bool);
+    type Waiting = (i64, String, Option<String>, String, String, bool, bool);
     let waiting: Vec<Waiting> = sqlx::query_as(
-        "SELECT feeds.id, feeds.url, feeds.site_url, subscriptions.title,
+        "SELECT feeds.id, feeds.url, feeds.site_url, subscriptions.title, feeds.title,
              subscriptions.kind IS NULL, EXISTS (SELECT 1 FROM articles WHERE articles.feed_id = feeds.id
                  AND articles.episode_url IS NOT NULL)
          FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
@@ -211,7 +354,7 @@ pub async fn fill(
     .bind(only)
     .fetch_all(&mut *connection)
     .await?;
-    for (feed, url, site, title, unguessed, has_episodes) in waiting {
+    for (feed, url, site, title, feed_title, unguessed, has_episodes) in waiting {
         let authors: Vec<String> = sqlx::query_scalar(
             "SELECT trim(author) FROM articles
              WHERE feed_id = ? AND trim(COALESCE(author, '')) != ''
@@ -220,18 +363,36 @@ pub async fn fill(
         .bind(feed)
         .fetch_all(&mut *connection)
         .await?;
-        let kind = kind_from(&authors, &url, site.as_deref(), &title);
+        let folders: Vec<String> = sqlx::query_scalar(
+            "SELECT folders.name FROM feed_folders JOIN folders ON folders.id = feed_folders.folder_id
+             WHERE folders.person_id = ? AND feed_folders.feed_id = ?",
+        )
+        .bind(person)
+        .bind(feed)
+        .fetch_all(&mut *connection)
+        .await?;
+        let (kind, why) = kind_from(&Clues {
+            authors: &authors,
+            url: &url,
+            site: site.as_deref(),
+            title: &title,
+            feed_title: &feed_title,
+            folders: &folders,
+        });
         sqlx::query(
-            "UPDATE subscriptions SET kind = COALESCE(kind, ?), place = COALESCE(place, ?)
+            "UPDATE subscriptions SET kind = COALESCE(kind, ?),
+                 kind_why = CASE WHEN kind IS NULL THEN ? ELSE kind_why END,
+                 place = COALESCE(place, ?)
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(kind)
+        .bind(why)
         .bind(place_from(&url, has_episodes))
         .bind(person)
         .bind(feed)
         .execute(&mut *connection)
         .await?;
-        if unguessed && kind == "person" {
+        if unguessed && why == "one-name" {
             name_by_author(connection, feed, Some(person)).await?;
         }
     }
@@ -307,17 +468,209 @@ mod tests {
         list.iter().map(|name| (*name).to_owned()).collect()
     }
 
+    /// Sorts a place from its authors, address, site, title and folders.
+    fn sort(
+        authors: &[&str],
+        url: &str,
+        site: Option<&str>,
+        title: &str,
+        folders: &[&str],
+    ) -> (&'static str, &'static str) {
+        kind_from(&Clues {
+            authors: &names(authors),
+            url,
+            site,
+            title,
+            feed_title: title,
+            folders: &names(folders),
+        })
+    }
+
     #[test]
-    fn one_name_is_a_person_and_several_are_a_publication() {
+    fn a_youtube_channel_could_be_either() {
+        let feed = "https://www.youtube.com/feeds/videos.xml?channel_id=UC123";
+        assert_eq!(
+            sort(
+                &["Sony LIV"],
+                feed,
+                Some("https://www.youtube.com/channel/UC123"),
+                "Sony LIV",
+                &[]
+            ),
+            ("publication", "unsure-channel")
+        );
+    }
+
+    #[test]
+    fn several_names_are_a_publication() {
         let url = "https://example.com/feed";
         assert_eq!(
-            kind_from(&names(&["Jane", " jane "]), url, None, "Example"),
-            "person"
+            sort(&["Jane", "Kai"], url, None, "Example", &[]),
+            ("publication", "several-names")
+        );
+        // A role beside a name isn't a second name.
+        assert_eq!(
+            sort(&["Jane Doe", "admin"], url, None, "Example", &[]).1,
+            "unsure-no-names"
+        );
+    }
+
+    #[test]
+    fn one_persons_name_is_a_person() {
+        let url = "https://example.com/feed";
+        assert_eq!(
+            sort(&["Jane Doe", " jane doe "], url, None, "Notes", &[]),
+            ("person", "one-name")
+        );
+        // A role, the feed's own title or the site's own name is no one's name.
+        assert_eq!(
+            sort(&["admin"], url, None, "Notes", &[]).1,
+            "unsure-no-names"
         );
         assert_eq!(
-            kind_from(&names(&["Jane", "Kai"]), url, None, "Example"),
-            "publication"
+            sort(
+                &["NASA"],
+                "https://apod.nasa.gov/apod.rss",
+                None,
+                "NASA Picture of the Day",
+                &[]
+            )
+            .1,
+            "site-name"
         );
+        assert_eq!(
+            sort(
+                &["The Verge"],
+                "https://www.theverge.com/rss",
+                None,
+                "The Verge",
+                &[]
+            )
+            .1,
+            "unsure-no-names"
+        );
+        assert_eq!(
+            sort(&["Example"], url, None, "Notes", &[]).1,
+            "unsure-no-names"
+        );
+    }
+
+    #[test]
+    fn a_site_of_someones_own_is_a_person() {
+        let none: &[&str] = &[];
+        for (url, title) in [
+            ("https://jane.substack.com/feed", "Letters"),
+            ("https://janedoe.com/feed", "Jane Doe"),
+            ("https://jim.example/feed", "Jim Nielsen's Blog"),
+            ("https://jk.example/feed", "Jeff Kaufman\u{2019}s Writing"),
+            ("https://alpha.example/feed", "alpha's blog"),
+            ("https://blog.jim-nielsen.com/feed", "Jim Nielsen"),
+        ] {
+            assert_eq!(
+                sort(none, url, None, title, &[]),
+                ("person", "own-site"),
+                "{title}"
+            );
+        }
+        // Their one name as the title, at their own address, is theirs too.
+        assert_eq!(
+            sort(
+                &["Jane Doe"],
+                "https://janedoe.com/feed",
+                None,
+                "Jane Doe",
+                &[]
+            ),
+            ("person", "own-site")
+        );
+        // A magazine at its own name run together is the magazine's.
+        assert_eq!(
+            sort(
+                none,
+                "https://solar.lowtechmagazine.com/posts/index.xml",
+                None,
+                "Low-tech Magazine",
+                &[]
+            )
+            .1,
+            "unsure-no-names"
+        );
+        // "The world's" is no one's.
+        assert_eq!(
+            sort(
+                none,
+                "https://example.com/feed",
+                None,
+                "The world's best notes",
+                &[]
+            )
+            .1,
+            "unsure-no-names"
+        );
+    }
+
+    #[test]
+    fn a_site_named_in_its_title_is_a_publication() {
+        assert_eq!(
+            sort(
+                &[],
+                "https://apod.nasa.gov/apod.rss",
+                Some("https://apod.nasa.gov/"),
+                "NASA Picture of the Day",
+                &[]
+            ),
+            ("publication", "site-name")
+        );
+    }
+
+    #[test]
+    fn a_folder_it_came_in_can_say() {
+        let url = "https://example.com/rss";
+        assert_eq!(
+            sort(&[], url, None, "Notes", &["My Friends"]),
+            ("person", "folder")
+        );
+        assert_eq!(
+            sort(&[], url, None, "Notes", &["Tech news"]),
+            ("publication", "folder")
+        );
+        // A whole word only.
+        assert_eq!(
+            sort(&[], url, None, "Notes", &["Newsletters"]).1,
+            "unsure-no-names"
+        );
+        // A name in the feed wins over the folder.
+        assert_eq!(
+            sort(&["Jane Doe"], url, None, "Notes", &["News"]),
+            ("person", "one-name")
+        );
+    }
+
+    #[test]
+    fn with_nothing_to_go_on_it_could_be_either() {
+        assert_eq!(
+            sort(&[], "https://example.com/rss", None, "Notes", &[]),
+            ("publication", "unsure-no-names")
+        );
+        assert_eq!(
+            sort(&[], "not an address", None, "Notes", &[]).1,
+            "unsure-no-names"
+        );
+    }
+
+    #[test]
+    fn every_reason_is_one_the_app_knows() {
+        for why in [
+            "one-name",
+            "own-site",
+            "several-names",
+            "site-name",
+            "folder",
+            "unsure-no-names",
+            "unsure-channel",
+        ] {
+            assert!(WHYS.contains(&why));
+        }
     }
 
     #[test]
@@ -331,58 +684,6 @@ mod tests {
         // A role or a placeholder is no one's name.
         assert_eq!(one_author(&names(&["admin"])), None);
         assert_eq!(one_author(&names(&["Staff"])), None);
-    }
-
-    #[test]
-    fn a_youtube_channel_starts_as_a_publication() {
-        let feed = "https://www.youtube.com/feeds/videos.xml?channel_id=UC123";
-        assert_eq!(
-            kind_from(
-                &names(&["Sony LIV"]),
-                feed,
-                Some("https://www.youtube.com/channel/UC123"),
-                "Sony LIV"
-            ),
-            "publication"
-        );
-    }
-
-    #[test]
-    fn with_no_names_the_site_decides() {
-        let none = names(&[]);
-        assert_eq!(
-            kind_from(
-                &none,
-                "https://jane.substack.com/feed",
-                None,
-                "Jane's Letters"
-            ),
-            "person"
-        );
-        assert_eq!(
-            kind_from(
-                &none,
-                "https://apod.nasa.gov/apod.rss",
-                Some("https://apod.nasa.gov/"),
-                "NASA Picture of the Day"
-            ),
-            "publication"
-        );
-        // A person's own domain, made of their name, is theirs, as is a site named as someone's.
-        assert_eq!(
-            kind_from(&none, "https://janedoe.com/feed", None, "Jane Doe"),
-            "person"
-        );
-        assert_eq!(
-            kind_from(&none, "https://alpha.example/feed", None, "Alpha's blog"),
-            "person"
-        );
-        // Nothing to go on: a person.
-        assert_eq!(
-            kind_from(&none, "https://example.com/rss", None, "Notes"),
-            "person"
-        );
-        assert_eq!(kind_from(&none, "not an address", None, "Notes"), "person");
     }
 
     #[test]

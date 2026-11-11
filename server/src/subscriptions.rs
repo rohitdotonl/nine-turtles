@@ -42,6 +42,7 @@ use crate::{
 /// rather than half imported.
 pub const MOST_FEEDS: usize = 5_000;
 
+pub mod note;
 mod undo;
 pub use undo::Imports;
 
@@ -49,6 +50,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/opml", post(import))
         .route("/api/opml/undo", post(undo::undo))
+        .route("/api/opml/note/close", post(note::close))
 }
 
 /// One feed as the file lists it.
@@ -241,6 +243,8 @@ pub async fn follow_all(
             adding: summary.added,
         });
     }
+    // Once they're all checked, a line says how they were sorted (decision 0263).
+    note::keep(&mut transaction, person, &added.feeds).await?;
     transaction.commit().await?;
     Ok(Imported::Done(summary, added))
 }

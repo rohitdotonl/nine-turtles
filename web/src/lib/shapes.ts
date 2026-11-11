@@ -3,6 +3,7 @@
 import type { View } from "./router";
 import { isRecord } from "./http";
 import { episodeFrom, type Episode } from "./podcasts";
+import { toWhy, type Sorted, type Why } from "./sorting";
 
 export type Feed = {
   id: number;
@@ -32,6 +33,10 @@ export type Feed = {
   place?: PlaceKind;
   /** Someone or something (decision 0163): a place joined to others is always a person's. */
   kind?: WhoKind;
+  /** Why it's filed so (decision 0263); none for one joined to others or sorted before nine turtles said why. */
+  why?: Why | null;
+  /** nine turtles couldn't tell: it could be either, kept with the publications until the reader settles it. */
+  open?: boolean;
   /** When the reader followed it (seconds since 1970), which orders a person's places. */
   addedAt?: number;
   /** Only on a sidebar row standing for a person (`people.ts` → `rowsOf`): their places' numbers. */
@@ -68,7 +73,7 @@ export function toPerson(person: Record<string, unknown>): Person {
  * Everything the sidebar lists: feeds and folders, each A to Z, and the
  * people places were joined into (SPEC section 36).
  */
-export type Library = { feeds: Feed[]; folders: Folder[]; people?: Person[] };
+export type Library = { feeds: Feed[]; folders: Folder[]; people?: Person[]; sorted?: Sorted };
 
 export type Article = {
   id: number;
@@ -237,6 +242,8 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     person: typeof feed.person === "number" ? feed.person : null,
     place: PLACE_KINDS.find((kind) => kind === feed.place) ?? "blog",
     kind: feed.kind === "publication" ? "publication" : "person",
+    why: toWhy(feed.why),
+    open: feed.open === true,
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
     writeTo: text(feed.write_to),
     email: text(feed.email),

@@ -425,10 +425,12 @@ async fn follow_elsewhere(
     .bind(new)
     .execute(&mut *transaction)
     .await?;
-    // A YouTube channel's Shorts and live streams ticks go along too (decision 0144).
+    // A YouTube channel's Shorts and live streams ticks go along too (decision
+    // 0144), and why it's a person or publication (decision 0263).
     sqlx::query(
-        "UPDATE subscriptions SET (shorts, live_streams) =
-             (SELECT shorts, live_streams FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2)
+        "UPDATE subscriptions SET (shorts, live_streams, kind_why) =
+             (SELECT shorts, live_streams, kind_why FROM subscriptions
+              WHERE person_id = ?1 AND feed_id = ?2)
          WHERE person_id = ?1 AND feed_id = ?3",
     )
     .bind(person)

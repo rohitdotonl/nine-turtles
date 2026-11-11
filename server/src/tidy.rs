@@ -29,6 +29,8 @@ use crate::{
 /// More feeds than one request may change: more than any reader follows.
 const MOST_AT_ONCE: usize = 5_000;
 
+mod settle;
+
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/tidy/feeds", get(list))
@@ -36,6 +38,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/tidy/resubscribe", post(resubscribe))
         .route("/api/tidy/move", post(move_feeds))
         .route("/api/tidy/restore", post(restore))
+        .route("/api/tidy/settle", post(settle::settle))
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -49,6 +52,15 @@ struct Listed {
     last_title: Option<String>,
     /// "person" or "publication" (decision 0163).
     kind: String,
+    /// nine turtles couldn't tell (decision 0263): it could be either, kept
+    /// with the publications until the reader settles it.
+    open: bool,
+    /// Why it's filed so (`writers::kind::WHYS`), for Undo to put back.
+    why: Option<String>,
+    /// Where it publishes, for the list to settle: its website, else its
+    /// feed's address, and whether it's a YouTube channel.
+    site: String,
+    video: bool,
     /// The person it was joined into (SPEC section 36), and their name.
     person: Option<i64>,
     person_name: Option<String>,
@@ -68,6 +80,11 @@ const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
         (SELECT name FROM writers WHERE writers.id = subscriptions.writer_id) AS person_name,
         CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
              ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
+        (subscriptions.writer_id IS NULL AND subscriptions.kind_why LIKE 'unsure-%') AS open,
+        CASE WHEN subscriptions.writer_id IS NULL THEN subscriptions.kind_why END AS why,
+        (SELECT COALESCE(site_url, url) FROM feeds WHERE feeds.id = subscriptions.feed_id) AS site,
+        (SELECT url LIKE '%youtube.com/feeds/%' FROM feeds WHERE feeds.id = subscriptions.feed_id)
+            AS video,
         (SELECT MAX(sort_at) FROM articles WHERE articles.feed_id = subscriptions.feed_id)
             AS last_posted,
         (SELECT CASE WHEN EXISTS (SELECT 1 FROM entries WHERE entries.person_id = subscriptions.person_id

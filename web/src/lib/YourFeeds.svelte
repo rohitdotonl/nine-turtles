@@ -1,7 +1,8 @@
 <!--
   Everyone you follow (SPEC section 15, decision 0186), opened from
-  Settings. Who isn't working comes first (NotWorking.svelte). Then
-  everyone, A to Z, People and Publications apart as in the sidebar, each
+  Settings. Who isn't working comes first (NotWorking.svelte), then who
+  could be either, to settle with a tick (SettleList.svelte, decision 0263).
+  Then everyone, A to Z, People and Publications apart as in the sidebar, each
   row saying the title of their newest piece and when it came, or "Quiet
   since …" after six months, and their folders. A row opens their page.
   Choose…, as Edit in Apple Books, puts a tick box on each row; with some
@@ -26,6 +27,8 @@
   import { deleteFolder, explain, refused, undoRefused } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
+  import SettleList from "./SettleList.svelte";
+  import { settle } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
   import { pathFor } from "./router";
   import {
@@ -38,6 +41,7 @@
     resubscribeAll,
     restoreFolders,
     rowLine,
+    settledMessage,
     unsubscribeAll,
     unsubscribedMessage,
     type Tended,
@@ -80,13 +84,20 @@
   let notWorking: NotWorking | undefined = $state();
 
   let listed = $derived(feeds ?? []);
-  /** People, then Publications, as the sidebar lists them; a group with nobody in it isn't shown. */
+  /** Ticked as a person in the list to settle: they stay in it, ticked, until the page is left. */
+  let settledHere: number[] = $state([]);
+  /** Who could be either, and who was ticked here; hidden while Choose is on (one kind of tick at a time). */
+  let settling = $derived(editing ? [] : listed.filter((feed) => feed.open || settledHere.includes(feed.id)));
+  /** Who's in each group: who could be either only in the list to settle, except while choosing. */
+  let grouped = $derived(editing ? listed : listed.filter((feed) => !feed.open));
+  /** People, then Publications, as the sidebar lists them, each saying how it sorts; a group with nobody in it isn't shown. */
   let groups = $derived(
     [
-      { id: "people", name: count(listed.filter((feed) => feed.kind === "person").length, "person", "people"), kind: "person" },
-      { id: "publications", name: count(listed.filter((feed) => feed.kind === "publication").length, "publication", "publications"), kind: "publication" },
+      { id: "people", one: "person", many: "people", kind: "person", how: "Filed here when one name signs everything they write, or the site is their own." },
+      { id: "publications", one: "publication", many: "publications", kind: "publication", how: "Filed here when several names sign it, or it writes under its site's own name." },
     ]
-      .map((group) => ({ ...group, rows: listed.filter((feed) => feed.kind === group.kind) }))
+      .map((group) => ({ ...group, rows: grouped.filter((feed) => feed.kind === group.kind) }))
+      .map((group) => ({ ...group, name: count(group.rows.length, group.one, group.many) }))
       .filter((group) => group.rows.length > 0),
   );
   let allChosen = $derived(listed.length > 0 && listed.every((feed) => chosen.includes(feed.id)));
@@ -195,6 +206,41 @@
     });
   }
 
+  /** A tick in the list to settle counts at once: a person; unticked, open again as it was. */
+  async function tick1(row: Tended, person: boolean): Promise<boolean> {
+    if (busy) return false;
+    endUndo();
+    busy = true;
+    const why = await settle([person ? { feed: row.id, kind: "person" } : { feed: row.id, kind: "publication", why: row.why ?? undefined }]);
+    busy = false;
+    if (why) {
+      [message, undo, refusal] = [refused(why, "feed"), undefined, true];
+      return false;
+    }
+    [row.kind, row.open] = person ? ["person", false] : ["publication", true];
+    if (!settledHere.includes(row.id)) settledHere = [...settledHere, row.id];
+    onFeedsChanged();
+    return true;
+  }
+
+  /** "The rest are publications": every one still open is settled, with Undo opening them again. */
+  async function settleRest() {
+    const rest = listed.filter((feed) => feed.open);
+    if (rest.length === 0 || busy) return;
+    busy = true;
+    const why = await settle(rest.map((feed) => ({ feed: feed.id, kind: "publication" })));
+    busy = false;
+    if (why) {
+      [message, undo, refusal] = [refused(why, "feed"), undefined, true];
+      return;
+    }
+    settledHere = [];
+    await done(settledMessage(rest.map((feed) => feed.title)), async () => {
+      const refusal = await settle(rest.map((feed) => ({ feed: feed.id, kind: "publication", why: feed.why ?? undefined })));
+      if (refusal) throw refusal;
+    });
+  }
+
   function openMove() {
     if (picked().length === 0) return;
     moving = true;
@@ -256,9 +302,12 @@
         {#if listed.length === 0}
           <p class="text-ink-2">You don't follow anyone yet.</p>
         {/if}
+        {#if settling.length > 0}
+          <SettleList rows={settling} {busy} onTick={tick1} onRest={settleRest} />
+        {/if}
         {#each groups as group, index (group.id)}
-          <section aria-labelledby={`following-${group.id}`}>
-            <div class="mb-2 flex min-h-11 items-center justify-between gap-3">
+          <section aria-labelledby={`following-${group.id}`} aria-describedby={`following-${group.id}-how`}>
+            <div class="flex min-h-11 items-center justify-between gap-3">
               <h3 id={`following-${group.id}`} class="inset-head mb-0">{group.name}</h3>
               {#if index === 0}
                 <div class="flex items-center gap-2">
@@ -269,6 +318,7 @@
                 </div>
               {/if}
             </div>
+            <p id={`following-${group.id}-how`} class="inset-foot mt-0 mb-2">{group.how}</p>
             <ul class="inset-group">
               {#each group.rows as feed (feed.id)}
                 {@const line = rowLine(feed, folderNames(feed, folders))}

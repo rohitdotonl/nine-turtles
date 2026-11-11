@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldPeople, folderNames, isQuiet, movedMessage, rowLine, unsubscribedMessage, type Tended } from "./tidy";
+import { foldPeople, folderNames, isQuiet, movedMessage, rowLine, settledMessage, settleLine, unsubscribedMessage, type Tended } from "./tidy";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -10,6 +10,10 @@ const feed = (change: Partial<Tended>): Tended => ({
   lastPosted: NOW - 3 * DAY,
   lastTitle: "On walking",
   kind: "person",
+  open: false,
+  why: null,
+  site: "https://www.a-blog.example/",
+  video: false,
   addedAt: NOW - 400 * DAY,
   folders: [],
   places: [{ id: 1, folders: [] }],
@@ -35,6 +39,18 @@ describe("everyone you follow", () => {
     expect(rowLine(feed({ lastPosted: null }), [], now)).toBe("Nothing written yet");
   });
 
+  it("says where each one who could be either publishes, and what they wrote last", () => {
+    const now = new Date(2026, 10, 6, 15, 0);
+    const at = (date: Date) => Math.floor(date.getTime() / 1000);
+    const lastPosted = at(new Date(2026, 9, 26, 9, 0));
+    expect(settleLine(feed({ lastPosted }), now)).toBe("a-blog.example · “On walking”, 26 Oct");
+    expect(settleLine(feed({ lastPosted, video: true, site: "https://www.youtube.com/channel/UC1" }), now)).toBe("YouTube channel · “On walking”, 26 Oct");
+    expect(settleLine(feed({ lastPosted: null }), now)).toBe("a-blog.example");
+    expect(settleLine(feed({ lastTitle: null }), now)).toBe("a-blog.example");
+    expect(settledMessage(["Garden Letters"])).toBe("Garden Letters is a publication now.");
+    expect(settledMessage(["A", "B", "C"])).toBe("3 are publications now.");
+  });
+
   it("folds a person's places into one row, as the sidebar does", () => {
     const place = (id: number, title: string, change: object) => ({
       id,
@@ -42,6 +58,10 @@ describe("everyone you follow", () => {
       lastPosted: NOW - id * DAY,
       lastTitle: `post ${id}`,
       kind: "publication" as const,
+      open: false,
+      why: null,
+      site: "https://example.com/",
+      video: false,
       addedAt: NOW - 100 * DAY + id,
       folders: [] as number[],
       person: null,

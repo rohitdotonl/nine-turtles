@@ -46,6 +46,7 @@
   import { runningInstalled } from "./installing.svelte";
   import { join } from "./people";
   import type { WhoKind } from "./shapes";
+  import { addedLine } from "./sorting";
   import { question } from "./youtube";
   import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
@@ -125,7 +126,8 @@
   let latest: string | undefined = $state();
   /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
   let noFeed = $state("");
-  let who: WhoKind = $state("person");
+  /** The tile chosen: nine turtles' guess to begin with, or none when it couldn't tell (decision 0263). */
+  let who: WhoKind | undefined = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
   /** Closed (Escape, Cancel, a press outside) while still looking or before Done: the feed is followed all the same. */
   let closed = false;
@@ -252,9 +254,10 @@
     asking = feed;
     asked = feed.title;
     latest = newest;
-    who = feed.kind ?? "person";
+    who = feed.open ? undefined : (feed.kind ?? "person");
     await tick();
-    whoGroup?.querySelector<HTMLInputElement>("input:checked")?.focus();
+    // With neither chosen, the question itself: a tile with the keyboard on it would look chosen.
+    (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
   }
 
   /**
@@ -318,6 +321,13 @@
   async function answered() {
     const feed = asking;
     if (!feed || busy) return;
+    // Neither chosen: left open, kept with Publications until they say.
+    if (!who) {
+      asking = undefined;
+      asked = "";
+      onAdded(feed, note);
+      return;
+    }
     busy = true;
     answering = true;
     // Always kept, so a later guess never overrides what they answered. A publication goes by
@@ -498,7 +508,7 @@
         name and meaning, the guess chosen; the chosen one has a 2px ink edge, so it shows by its
         shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
-      <fieldset bind:this={whoGroup} class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
+      <fieldset bind:this={whoGroup} tabindex="-1" class={["flex flex-col gap-4 self-stretch text-left outline-none", !framed && "mt-2"]}>
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
@@ -520,7 +530,7 @@
             <span id="feed-who-publication" class="text-meta text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>
-        <span class="field-help mt-0">You can change this later on their page.</span>
+        <span class="field-help mt-0">{addedLine(asking.why)}</span>
         {#if !framed}
           <!-- In the welcome, Done under the question, at its right, as in a sheet. -->
           <button type="submit" aria-disabled={busy} class="btn-primary self-end">Done</button>

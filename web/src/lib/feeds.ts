@@ -10,6 +10,7 @@ import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
 import { fold } from "./search";
 import { NOT_AN_ADDRESS, UNDO_FAILED } from "./messages";
+import { toSorted, type Why } from "./sorting";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 
 /**
@@ -59,6 +60,7 @@ export async function listFeeds(): Promise<Library> {
     feeds: feeds.filter(isRecord).map(toFeed),
     folders: folders.filter(isRecord).map((folder) => ({ id: Number(folder.id), name: String(folder.name ?? "") })),
     people: people.filter(isRecord).map(toPerson),
+    sorted: toSorted(isRecord(body) ? body.import_note : undefined),
   };
   keepLibrary(library);
   return library;
@@ -231,6 +233,8 @@ export type FeedChanges = Partial<VideoSettings> & {
   newFolder?: string;
   paused?: boolean;
   kind?: WhoKind;
+  /** With `kind`: the reason Undo puts back; left out, the reader chose it (decision 0263). */
+  why?: Why;
 };
 
 /** Saves Edit's or a source's settings: only what's given changes. */

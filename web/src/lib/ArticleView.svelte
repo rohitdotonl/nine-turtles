@@ -43,6 +43,7 @@
   import YouTubePlayer from "./YouTubePlayer.svelte";
   import EpisodePlayer from "./EpisodePlayer.svelte";
   import WriteBack from "./WriteBack.svelte";
+  import SettleAsk from "./SettleAsk.svelte";
   import { writesBack } from "./writeBack";
   import ArticleMarks from "./ArticleMarks.svelte";
   import FootnoteCard from "./FootnoteCard.svelte";
@@ -661,7 +662,8 @@
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
         {/key}
-        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242). -->
+        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, first the question (decision 0263). -->
+        <SettleAsk {article} {library} bind:away={writeBackNote} />
         <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} {library} quotes={() => marks?.quotes() ?? []} quiet />
       {/if}
       <!-- Only on paper (print.css, decision 0236): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->

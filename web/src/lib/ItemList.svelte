@@ -67,6 +67,7 @@
   import { carriesArticle, listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
   import ListArriving from "./ListArriving.svelte";
+  import type { SortedLine } from "./sorting";
   import { askingEvery, bringsIn } from "./asking";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
@@ -92,6 +93,7 @@
     place,
     checking = 0,
     onChecking = () => {},
+    sorted,
   }: {
     source: Source;
     order: Order;
@@ -127,6 +129,8 @@
     checking?: number;
     /** While the list fills in, at each ask: the sidebar's feeds load again. */
     onChecking?: () => void;
+    /** Once all of it is checked, how the import was sorted (decision 0263). */
+    sorted?: SortedLine;
   } = $props();
 
   /** What a slow first load says where the rows will be. */
@@ -669,7 +673,7 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
 {/if}
 
-{#if bringingIn && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} />{/if}
+{#if (bringingIn || (sorted && bringsIn(1, source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
 
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
   <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>

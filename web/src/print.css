@@ -81,6 +81,7 @@
      play on paper. The writer's name, a highlight's words at the end and a
      note's times are the article's own, so they print as plain text. */
   .article .write-back,
+  .article .settle-ask,
   .article button:not(.writer-link, .quote > button, .time),
   .article iframe,
   .article audio,

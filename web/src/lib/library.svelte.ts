@@ -14,6 +14,7 @@ import { newestAnswer } from "./inorder";
 import { folderToPerson, join, joinedNotice, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
 import { moveAll, movedMessage, restoreFolders } from "./tidy";
+import { closeSorted, type Sorted, type Why } from "./sorting";
 
 /** A removal was made, with its line and Undo; or a sentence saying why it wasn't. */
 export type Removed = Notice | string;
@@ -34,6 +35,13 @@ export class LoadedLibrary {
   people: Person[] = $state([]);
   /** The sidebar's rows, A to Z: one per person, a person's places as one (`people.ts` → `rowsOf`). */
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
+  /** How the reader's last import was sorted, once it's all checked, until they close the line (decision 0263). */
+  sorted: Sorted | undefined = $state();
+  /** Ends the import's closing line for good: closed, or the list to settle opened. */
+  closeSorted() {
+    this.sorted = undefined;
+    void closeSorted();
+  }
   /** The feeds couldn't be loaded. */
   feedsFailed = $state(false);
   /** How many feeds brought from a file still wait for their first check (decision 0249); the list that fills in loads the feeds again as it asks. */
@@ -73,6 +81,7 @@ export class LoadedLibrary {
           this.feeds = loaded.feeds;
           this.folders = loaded.folders;
           this.people = loaded.people ?? [];
+          this.sorted = loaded.sorted;
           then?.();
           break;
         }
@@ -270,7 +279,7 @@ export class LoadedLibrary {
     if (await editFeed(row.id, changing ? { folders, kind } : { folders })) return `${row.title} couldn't be moved. Try again in a moment.`;
     let said = to ? `${keep ? "Added" : "Moved"} ${row.title} to ${to.name}.` : `Took ${row.title} out of ${from?.name}.`;
     if (changing) said += ` ${row.title} is now a ${kind}.`;
-    return this.#filed(before, order, said, null, changing ? { id: row.id, kind: was } : null);
+    return this.#filed(before, order, said, null, changing ? { id: row.id, kind: was, why: row.why ?? undefined } : null);
   }
 
   /** Moves someone to one folder, out of every other, as a handle's "Move to a folder" does (`null`: no folder). */
@@ -293,7 +302,7 @@ export class LoadedLibrary {
     order: number[],
     said: string,
     made: number | null = null,
-    kindBack: { id: number; kind: WhoKind } | null = null,
+    kindBack: { id: number; kind: WhoKind; why?: Why } | null = null,
   ): Promise<Notice> {
     await this.loadFeeds();
     const left = new Set(before.flatMap((place) => place.folders));
@@ -313,7 +322,7 @@ export class LoadedLibrary {
           back = back.map((place) => ({ ...place, folders: place.folders.map((id) => (id === folder.id ? again : id)) }));
           order = order.map((id) => (id === folder.id ? again : id));
         }
-        const problem = (await restoreFolders(back)) ?? (kindBack ? await editFeed(kindBack.id, { kind: kindBack.kind }) : undefined);
+        const problem = (await restoreFolders(back)) ?? (kindBack ? await editFeed(kindBack.id, { kind: kindBack.kind, why: kindBack.why }) : undefined);
         if (!problem && made !== null) await deleteFolder(made);
         await this.loadFeeds();
         return problem ? undoRefused(problem, "feed") : undefined;
@@ -323,13 +332,14 @@ export class LoadedLibrary {
 
   /** Someone dragged between People and Publications: "Lena Fischer is now a publication. · Undo". */
   async makeKind(row: Feed, kind: WhoKind): Promise<Removed> {
-    const was = row.kind ?? "person";
+    const [was, why] = [row.kind ?? "person", row.why ?? undefined];
     if (await editFeed(row.id, { kind })) return `${row.title} couldn't be moved. Try again in a moment.`;
     await this.loadFeeds();
     return {
       message: `${row.title} is now a ${kind}.`,
       undo: async () => {
-        const problem = await editFeed(row.id, { kind: was });
+        // What it was, and why: one nine turtles couldn't tell is open again (decision 0263).
+        const problem = await editFeed(row.id, { kind: was, why });
         await this.loadFeeds();
         return problem ? undoRefused(problem, "feed") : undefined;
       },
