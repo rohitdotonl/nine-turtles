@@ -22,7 +22,9 @@
   shows it, Change beside it changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
-  The More menu's "Write back" and its key (`w`) do the same (`start`).
+  The paper plane, its key (`w`), a row's menu and the menu beside chosen words do the same
+  (`start`). Pressed away from here, the article says "Opening your email app…" at the reading
+  area's foot, where the reader is, when this line isn't on screen (`lineShown`, decision 0229).
 
   A publication has none of this (decision 0192): nothing shows, and `start` does nothing.
 -->
@@ -35,7 +37,7 @@
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Article } from "./shapes";
-  import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
+  import { aboutLine, addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
 
   let {
     article,
@@ -63,7 +65,7 @@
   let site = $derived(siteOf(place, article?.link));
   /** On their page: "Write to", an empty subject, under their name on the page's left edge. */
   let verb = $derived(article ? "Write back to" : "Write to");
-  let subject = $derived(article?.title ?? "");
+  let subject = $derived(article ? aboutLine(article) : "");
   /** What the email starts with: the words of Write back about this, else every highlight. */
   let chosen: string[] | undefined = $state();
   let quoted = $derived(article ? (chosen ?? quotes()) : []);
@@ -95,14 +97,29 @@
     return () => document.removeEventListener("visibilitychange", back);
   });
 
-  async function copyAddress() {
+  /** Copy their address: whether it was copied, and the address, for saying so where the reader is. */
+  export async function copyTheirAddress(): Promise<{ copied: boolean; address: string }> {
     try {
       await navigator.clipboard.writeText(address ?? "");
-      copied = "Copied.";
+      return { copied: true, address: address ?? "" };
     } catch {
-      copyFailed = true;
-      copied = "The address couldn't be copied. Select it above and copy it yourself.";
+      return { copied: false, address: address ?? "" };
     }
+  }
+
+  async function copyAddress() {
+    const { copied: done } = await copyTheirAddress();
+    copyFailed = !done;
+    copied = done ? "Copied." : "The address couldn't be copied. Select it above and copy it yourself.";
+  }
+
+  /** The line under Write back ("Opening your email app…"), and whether it's on screen within `scroller`. */
+  let line: HTMLParagraphElement | undefined = $state();
+  export function lineShown(scroller: Element | undefined): boolean {
+    if (!line || !scroller) return false;
+    const it = line.getBoundingClientRect();
+    const view = scroller.getBoundingClientRect();
+    return it.height > 0 && it.top >= view.top && it.bottom <= view.bottom;
   }
 
   // Another article starts with the button, not a half-typed address.
@@ -119,25 +136,28 @@
     copyFailed = false;
   });
 
-  /** Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight. */
-  export async function start(about?: string[]) {
-    if (!place) return;
+  /**
+   * Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight.
+   * True when the email app was asked to open straight away, so a press away from here can say so where the reader is.
+   */
+  export async function start(about?: string[]): Promise<boolean> {
+    if (!place) return false;
     chosen = about;
     if (address) {
       window.location.href = writeBackLink(address, subject, quoted);
       chosen = undefined;
       opening = true;
-      return;
+      return true;
     }
     asking = true;
     await tick();
     field?.focus();
-    if (!site) return;
+    if (!site) return false;
     looked = "looking";
     const asked = place.id;
     const answer = await lookOnTheirSite(place.id);
     // The reader may have moved on or closed the box meanwhile.
-    if (asked !== place?.id || !asking) return;
+    if (asked !== place?.id || !asking) return false;
     if (!answer.looked) {
       looked = "couldn't";
     } else if (!answer.address) {
@@ -149,6 +169,7 @@
       found = typed = answer.address;
       looked = "found";
     }
+    return false;
   }
 
   /** Change, beside the address on their page: the box opens with it, to correct or replace. */
@@ -264,6 +285,7 @@
         bind:field
         onsubmit={write}
         onNotNow={() => void notNow()}
+        onEscape={() => void notNow()}
       />
     {:else if address}
       <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>
@@ -274,7 +296,7 @@
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
       {/if}
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
-      <p class={["opening", !opening && "sr-only"]} aria-live="polite">
+      <p bind:this={line} class={["opening", !opening && "sr-only"]} aria-live="polite">
         {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
       </p>
     {:else}

@@ -122,8 +122,36 @@
     if (writeBackFor !== undefined && writeBackFor !== article.id) writeBackFor = undefined;
     if (writeBack && writeBackFor === article.id) {
       writeBackFor = undefined;
-      void tick().then(() => writeBack?.start());
+      void tick().then(() => writeBackNow());
     }
+  });
+  /**
+   * Write back pressed away from the article's end (the paper plane, `w`, a row's menu, the menu beside
+   * chosen words): when the line under its button is off screen, "Opening your email app…" is said at the
+   * reading area's foot, where the reader is, with Copy their address in case nothing opened (decision 0229).
+   */
+  let sentNote: ListNote | undefined = $state();
+  async function writeBackNow(about?: string[]) {
+    if (!writeBack || !(await writeBack.start(about))) return;
+    await tick();
+    if (writeBack?.lineShown(scroller)) return;
+    sentNote = { words: "Opening your email app… Nothing opened?", retry: () => void copyTheirs(), retryWord: "Copy their address", close: () => (sentNote = undefined) };
+  }
+  async function copyTheirs() {
+    const done = await writeBack?.copyTheirAddress();
+    if (!done) return;
+    const close = () => (sentNote = undefined);
+    sentNote = done.copied ? { words: "Copied.", close } : { words: `The address couldn't be copied. It's ${done.address}`, refusal: true, close };
+  }
+  // It goes with the article, and once the reader is back from the email app (the page was hidden while it opened).
+  $effect(() => {
+    void article.id;
+    sentNote = undefined;
+  });
+  $effect(() => {
+    const back = () => document.visibilityState === "visible" && (sentNote = undefined);
+    document.addEventListener("visibilitychange", back);
+    return () => document.removeEventListener("visibilitychange", back);
   });
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
@@ -415,7 +443,7 @@
    */
   export function act(what: "write-back" | "highlight" | "note") {
     if (what === "write-back") {
-      if (writeBack) void writeBack.start();
+      if (writeBack) void writeBackNow();
       else writeBackFor = article.id;
     } else if (what === "highlight") marks?.highlight();
     else marks?.note();
@@ -633,7 +661,7 @@
             phone={phone !== undefined}
             {media}
             say={(words) => (copied = words)}
-            writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
+            writeBack={writable ? (quote) => void writeBackNow([quote]) : undefined}
           />
         {/key}
         <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242). -->
@@ -644,7 +672,7 @@
     </article>
   </div>
 
-  {#if listNote !== false}<AwayNote note={listNote} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
+  {#if listNote !== false || sentNote}<AwayNote note={sentNote ?? (listNote || undefined)} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
   {#if phone && beforeToolbar}
     {@render beforeToolbar()}
   {/if}

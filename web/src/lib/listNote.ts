@@ -9,5 +9,7 @@ export type ListNote = {
   retry?: () => void;
   /** "Try again", or "Sign in" when being signed out is why (decision 0230). */
   retryWord?: string;
+  /** Something failed: oxblood, with the alert icon (BRAND.md → "Messages"). */
+  refusal?: boolean;
   close: () => void;
 };

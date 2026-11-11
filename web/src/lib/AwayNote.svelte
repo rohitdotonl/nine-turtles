@@ -19,7 +19,7 @@
 
 <div class="away" lang="en">
   <div class={["toast pointer-events-auto flex min-h-11 max-w-full items-center border px-4 text-meta", !note && "sr-only"]}>
-    <NoteLine announce message={note?.words ?? ""} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
+    <NoteLine announce message={note?.words ?? ""} refusal={note?.refusal} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
   </div>
 </div>
 

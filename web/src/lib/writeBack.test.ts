@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { addressFor, askForFeedLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
+import { aboutLine, addressFor, askForFeedLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], ...changes };
@@ -22,6 +22,17 @@ describe("writing back", () => {
     const typed = place(2, { person: 7, addedAt: 2, writeTo: "alpha@home.example", email: "letters@alpha.example" });
     expect(addressFor(blog, [blog, typed])).toBe("alpha@home.example");
     expect(addressFor(place(3), [place(3)])).toBeUndefined();
+  });
+
+  it("names the post even when it has no title: its opening words, else its day", () => {
+    const at = Date.UTC(2026, 9, 18, 12) / 1000;
+    expect(aboutLine({ title: "Walking home", opening: undefined, at })).toBe("Walking home");
+    expect(aboutLine({ title: "", opening: "Rain all day.", at })).toBe("Rain all day.");
+    const long = "Walked to the river before breakfast and watched the herons fish in the shallows.";
+    expect(aboutLine({ title: " ", opening: long, at })).toBe("Walked to the river before breakfast and watched the herons…");
+    expect(aboutLine({ title: "", opening: "x".repeat(80), at })).toBe(`${"x".repeat(60)}…`);
+    expect(aboutLine({ title: "", opening: undefined, at })).toMatch(/^Your post of 18 Oct/);
+    expect(replySubject(aboutLine({ title: "", opening: "Rain all day.", at }))).toBe("Re: Rain all day.");
   });
 
   it("says Re: once", () => {

@@ -26,9 +26,11 @@ settings, choose **This is: A person**.
    list, right-click an article (or press and hold it on a phone) and
    choose **Write back**.
 2. Your own email app opens with their address, and a subject line of
-   "Re:" and the article's title. Under the button, nine turtles says
-   "Opening your email app…". If nothing opens (on a computer with no email
-   app set up, say, when you use email in your browser), press **Copy their
+   "Re:" and the article's title (for a short post with no title, its
+   first words). nine turtles says "Opening your email app…" under the
+   button, or at the bottom of the screen if you pressed the paper plane
+   or <kbd>W</kbd>. If nothing opens (on a computer with no email app set
+   up, say, when you use email in your browser), press **Copy their
    address** there and paste it into a new email.
 3. Write what you'd like to say, and send it as you send any email.
 
@@ -55,6 +57,7 @@ about page, while the box says "Looking on their site…".
 - **If it doesn't,** press **Find it on their site** to open their website
   in a new tab, copy the address, and paste it into **Their email address**.
   Then press **Write back**.
+- **Not now** (or <kbd>Esc</kbd>) puts the box away.
 
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Write to Tomas Berg**, which opens your email app to
