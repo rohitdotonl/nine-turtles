@@ -25,7 +25,10 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 4. nine turtles asks what they are: "Maya Chen is…", with their site
    and newest title. Choose **A person** (someone you might write back to)
    or **A publication** (anything you only read or watch, such as a
-   magazine, with no Write back). Its guess is already chosen. Press **Done**.
+   magazine, with no Write back). Its guess is already chosen. Under it,
+   choose their **Folder**, or **New folder…** to make one with them in it.
+   If you pressed + Add while in a folder, it starts on that folder. Press
+   **Done**.
 
 Closed Add before pressing it? The address you typed is still there next
 time. **Cancel** clears it.
@@ -109,14 +112,24 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
   If a site has no feed at all, a service that makes feeds from websites
   (such as RSS Bridge or OpenRSS) can give you one: paste the address it
   gives you, and nine turtles follows it like any other.
-  Or ask them for one: press **Write to** under "Ask them for a feed".
+  Or ask them for one: press **Write to** under the message.
   nine turtles looks on the site's home page (and its contact page) for their
   email address, and your email app opens with a short note you can change.
 - **"That site didn't answer."** It may be down for a moment. Try again
   later.
+- **"Their feed is too big for nine turtles to read."** Their feed holds
+  more than 10 MB, usually every post they ever wrote. Look on their site for
+  a smaller feed, such as one per topic.
+- **"You already follow this."** Press **Go to …** to open them.
 - **"The site's guard against bots turns nine turtles away."** The site
   keeps bots out, and nine turtles is turned away with them. Only the site
   can let it in, so write to them and ask.
+
+## A newsletter with no website
+
+Under the address field, press **Use your nine turtles address**. Sign up
+for the newsletter with that address, and each issue arrives in nine turtles
+instead of your inbox.
 
 ## Good to know
 

@@ -38,7 +38,7 @@
   import AskForFeed from "./AskForFeed.svelte";
   import ByEmail from "./ByEmail.svelte";
   import Icon from "./Icon.svelte";
-  import type { Feed } from "./shapes";
+  import type { Feed, Folder } from "./shapes";
   import { onDestroy, tick } from "svelte";
   import { keepDraft, keptWords } from "./drafts";
   import { NOT_THE_ADDRESS, addFeed, editFeed, explain, type Choice } from "./feeds";
@@ -49,6 +49,7 @@
   import { question } from "./youtube";
   import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
+  import { newslettersStatus } from "./newsletters";
 
   let {
     field = $bindable(),
@@ -60,6 +61,8 @@
     page = false,
     start = false,
     alternative,
+    folders = [],
+    here,
   }: {
     field?: HTMLInputElement;
     /** Who was just found, while the question asks about them: a sheet's title becomes "{asked} is…". */
@@ -80,6 +83,10 @@
      * field, so it reads as an alternative to it rather than a footer.
      */
     alternative?: Snippet;
+    /** The reader's folders, in their order: in a sheet, "In" offers them once someone is found (decision 0259). */
+    folders?: Folder[];
+    /** The folder the sheet opened over, if any: "In" starts on it. */
+    here?: number;
   } = $props();
 
   // In the sheet, an address typed earlier and not added waits in the field (decision 0235).
@@ -127,6 +134,17 @@
   let noFeed = $state("");
   let who: WhoKind = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
+  /** "In": which folder they go in, by number as text; "" for none, NEW for a folder named in `newName`. */
+  // svelte-ignore state_referenced_locally
+  let into = $state(here !== undefined && folders.some((folder) => folder.id === here) ? String(here) : "");
+  let newName = $state("");
+  let newField: HTMLInputElement | undefined = $state();
+  const NEW = "new";
+  /** What "In" saves: the folder chosen, or one to make; nothing for none. */
+  function filing(): { folders: number[]; newFolder?: string } | undefined {
+    if (into === NEW) return newName.trim() ? { folders: [], newFolder: newName.trim() } : undefined;
+    return into ? { folders: [Number(into)] } : undefined;
+  }
   /** Closed (Escape, Cancel, a press outside) while still looking or before Done: the feed is followed all the same. */
   let closed = false;
   /** Done was pressed: closing while its answer is kept doesn't add it a second time. */
@@ -134,12 +152,24 @@
   onDestroy(() => {
     closed = true;
     asked = "";
-    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their page can change.
-    if (asking && !answering) onAdded(asking, note);
+    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their page can change,
+    // in the folder "In" showed, as closing keeps what the question showed.
+    const feed = asking;
+    if (feed && !answering) {
+      const filed = filing();
+      void (filed ? editFeed(feed.id, filed) : Promise.resolve(undefined)).then(() => onAdded(feed, note));
+    }
   });
 
   /** In a sheet or on its page: the field's name above it, and Add at the foot rather than beside the field. */
   let framed = $derived(onCancel !== undefined || page);
+  /** nine turtles takes newsletters: a sheet offers the reader's own address for one with no website (decision 0259). */
+  let newsletters = $state(false);
+  /** That offer was pressed: the address shows, with Copy. */
+  let byEmail = $state(false);
+  $effect(() => {
+    if (framed) newslettersStatus().then((status) => (newsletters = status.on)).catch(() => (newsletters = false));
+  });
   /** Several feeds were found: the line above them is their label. */
   let choosing = $derived(choices.length > 0 && !busy);
   /** A YouTube video's question: one row, which Follow's description reads out. */
@@ -150,12 +180,19 @@
   let shareHint = $derived(page && runningInstalled());
 
   let alreadyTitle = $derived(feeds.find((feed) => feed.id === alreadyId)?.title);
+  /** The sheet's main button says what it will do now. */
+  let mainLabel = $derived(asking ? "Done" : alreadyId !== undefined ? `Go to ${alreadyTitle ?? "them"}` : choices.length > 0 ? "Follow" : "Add");
 
   /**
    * The address was changed after several feeds were offered: they belong to the old one, so they go with
    * everything said about them (a problem's red edge, "Go to …"), and Add looks again.
    */
   function edited() {
+    // "Go to …" belonged to the address before.
+    if (alreadyId !== undefined) {
+      alreadyId = undefined;
+      message = "";
+    }
     // A repair offered for what was there before no longer fits: it goes with its message.
     if (slip) {
       slip = undefined;
@@ -201,8 +238,9 @@
       case "problem":
         if (result.reason === "not-an-address" && offerRepair(text)) break;
         message = explain(result.reason);
-        problem = true;
-        badAddress = !NOT_THE_ADDRESS.includes(result.reason);
+        // A site with no feed isn't the reader's mistake: said calmly, with what they can do under it.
+        problem = result.reason !== "no-feed";
+        badAddress = !NOT_THE_ADDRESS.includes(result.reason) && result.reason !== "no-feed";
         if (result.reason === "no-feed") noFeed = text;
         break;
     }
@@ -318,12 +356,18 @@
   async function answered() {
     const feed = asking;
     if (!feed || busy) return;
+    if (into === NEW && !newName.trim()) {
+      message = "Name the new folder first.";
+      problem = true;
+      newField?.focus();
+      return;
+    }
     busy = true;
     answering = true;
     // Always kept, so a later guess never overrides what they answered. A publication goes by
     // its own title, not the one author's name nine turtles gave the person it guessed.
     const title = who === "publication" && feed.siteTitle && feed.siteTitle !== feed.title ? feed.siteTitle : undefined;
-    const refusal = await editFeed(feed.id, { kind: who, ...(title ? { title } : {}) });
+    const refusal = await editFeed(feed.id, { kind: who, ...(title ? { title } : {}), ...filing() });
     busy = false;
     asking = undefined;
     asked = "";
@@ -335,6 +379,11 @@
     event.preventDefault();
     if (asking) {
       void answered();
+      return;
+    }
+    // Already followed: the main button goes to them.
+    if (alreadyId !== undefined) {
+      onOpen(alreadyId);
       return;
     }
     if (choices.length > 0 && address === choicesFor) {
@@ -498,7 +547,8 @@
         name and meaning, the guess chosen; the chosen one has a 2px ink edge, so it shows by its
         shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
-      <fieldset bind:this={whoGroup} class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
+      <div class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
+      <fieldset bind:this={whoGroup} class="flex flex-col gap-4">
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
@@ -520,15 +570,35 @@
             <span id="feed-who-publication" class="text-meta text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>
+      </fieldset>
+        {#if framed}
+          <!--
+            Where they go (decision 0259): a folder is made with someone in it, here, while the reader
+            knows why they followed them. It starts on the folder the sheet opened over, else none.
+          -->
+          <div class="flex flex-col gap-2">
+            <label for="feed-into" class="text-meta text-ink-2">Folder</label>
+            <select id="feed-into" bind:value={into} onchange={() => into === NEW && void tick().then(() => newField?.focus())} class="field">
+              <option value="">No folder</option>
+              {#each folders as folder (folder.id)}<option value={String(folder.id)}>{folder.name}</option>{/each}
+              <option value={NEW}>New folder…</option>
+            </select>
+            {#if into === NEW}
+              <label for="feed-into-new" class="sr-only">The new folder's name</label>
+              <input id="feed-into-new" bind:this={newField} bind:value={newName} type="text" autocomplete="off" enterkeyhint="done" placeholder="The new folder's name" class="field" />
+            {/if}
+          </div>
+        {/if}
         <span class="field-help mt-0">You can change this later on their page.</span>
         {#if !framed}
           <!-- In the welcome, Done under the question, at its right, as in a sheet. -->
           <button type="submit" aria-disabled={busy} class="btn-primary self-end">Done</button>
         {/if}
-      </fieldset>
+      </div>
     {/if}
 
-    {#if alreadyId !== undefined}
+    {#if alreadyId !== undefined && !framed}
+      <!-- In the welcome; in a sheet the main button goes to them. -->
       <p class="-mt-1 mb-2">
         <a
           href={`/people/${alreadyId}`}
@@ -545,13 +615,22 @@
     {#if noFeed && !busy}<AskForFeed site={noFeed} /><ByEmail site={noFeed} />{/if}
 
     {#if alternative && choices.length === 0 && !asking}{@render alternative()}{/if}
+
+    {#if framed && newsletters && !noFeed && choices.length === 0 && !asking && alreadyId === undefined}
+      <!-- A newsletter has no address to paste: the other way in, one quiet line until it's wanted (decision 0259). -->
+      {#if byEmail}
+        <ByEmail />
+      {:else}
+        <p class="newsletter-line">A newsletter without a website? <button type="button" class="text-link" onclick={() => (byEmail = true)}>Use your nine turtles address</button></p>
+      {/if}
+    {/if}
   </div>
 
   {#if page}
     <!-- On a phone: Add the full width at the screen's foot; the X beside the title leaves. -->
     <div class="page-action">
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
-        >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
+        >{mainLabel}</button
       >
     </div>
   {:else if onCancel}
@@ -559,7 +638,7 @@
     <div class="sheet-actions mt-3">
       {#if !asking}<button type="button" onclick={cancel} class="btn">Cancel</button>{/if}
       <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary"
-        >{asking ? "Done" : choices.length > 0 ? "Follow" : "Add"}</button
+        >{mainLabel}</button
       >
     </div>
   {/if}
@@ -590,6 +669,8 @@
     background-color: var(--group, var(--list));
     color: var(--ink);
     text-align: center;
+    /* No word left alone on a line ("write back / to."). */
+    text-wrap: balance;
     cursor: pointer;
   }
   .tile input {
@@ -627,6 +708,12 @@
     color: var(--faint);
     font-size: var(--text-date);
     line-height: 1.4;
+  }
+  /* The newsletter offer: small and in the second ink, under the field, so the field stays the way in. */
+  .newsletter-line {
+    margin: 0.5rem 0 0;
+    color: var(--ink-2);
+    font-size: var(--text-meta);
   }
   /* What's above the list (title, words, field) takes about 37rem; the list keeps at least two rows. */
   .choices-scroll {

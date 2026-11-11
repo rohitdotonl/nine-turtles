@@ -14,6 +14,14 @@ related: [one-person-several-places, unfollow-someone, hide-topics]
   set a step in under it; everyone in no folder lines up with the folders.
 </p>
 
+## Choose their folder as you follow them
+
+When you add someone with **+ Add**, nine turtles asks what they are, and
+under it, their **Folder**. Choose one, or **New folder…** to make one with
+them in it, and press **Done**. If you pressed + Add while you were in a
+folder, it starts on that folder. The folder opens in the sidebar, so you see
+where they went.
+
 ## Drag someone into a folder
 
 In the sidebar, drag a person or publication onto a folder. They move there,
@@ -55,8 +63,8 @@ readers too.
 3. Tick the folders they belong in; each one counts at once. To make a new
    one, type its name in **New folder…** and press <kbd>Enter</kbd>.
 
-There's no "new folder" button in the sidebar: a folder is made when you put
-someone in it.
+There's no "new folder" button: a folder is made when you put someone in it,
+as you follow them, from their page, or with **Move to…**.
 
 ## Move many at once
 

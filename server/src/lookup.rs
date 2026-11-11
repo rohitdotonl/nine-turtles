@@ -118,11 +118,11 @@ pub async fn look_at(state: &AppState, fetched: Fetched, inside: bool) -> Result
         return Ok(Looked::Feed(Box::new(fetched), Box::new(parsed)));
     }
     let page = String::from_utf8_lossy(&fetched.body);
-    let mut found = discover::feeds_in(&page, &fetched.final_url);
+    let mut found = without_comments(discover::feeds_in(&page, &fetched.final_url));
     if found.is_empty() {
         match elsewhere(state, &fetched.final_url).await? {
             Some(Elsewhere::Feed(fetched, parsed)) => return Ok(Looked::Feed(fetched, parsed)),
-            Some(Elsewhere::Named(named)) => found = named,
+            Some(Elsewhere::Named(named)) => found = without_comments(named),
             None => return Err(NotFound::NoFeed),
         }
     }
@@ -150,6 +150,28 @@ pub async fn look_at(state: &AppState, fetched: Fetched, inside: bool) -> Result
     Ok(Looked::Feeds(choices))
 }
 
+/// A site's feeds without its comments feeds, while a feed of its posts is
+/// left (decision 0259): nobody follows a blog for its comments, so a
+/// WordPress blog's posts are followed without a question. A site offering
+/// only comments keeps them.
+fn without_comments(found: Vec<discover::Found>) -> Vec<discover::Found> {
+    let (comments, posts): (Vec<_>, Vec<_>) = found.into_iter().partition(is_comments);
+    if posts.is_empty() { comments } else { posts }
+}
+
+/// A feed of a site's comments, by its address (`/comments/feed`,
+/// WordPress's) or its name ("… » Comments Feed", "Comments on: …").
+fn is_comments(found: &discover::Found) -> bool {
+    let title = found.title.to_lowercase();
+    found
+        .url
+        .path_segments()
+        .is_some_and(|mut parts| parts.any(|part| part == "comments"))
+        || title.contains("comments feed")
+        || title.starts_with("comments on")
+        || title.starts_with("comments for")
+}
+
 /// What one of the other places gave.
 enum Elsewhere {
     Feed(Box<Fetched>, Box<feed::ParsedFeed>),
@@ -164,12 +186,19 @@ enum Elsewhere {
 /// there (or isn't a feed) moves on to the next.
 async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, FetchError> {
     let local = state.config.local_feeds_allowed;
+    // A usual address too big to read is most likely the feed: said as that,
+    // not as "no feed", if nothing else is found (decision 0259).
+    let mut too_big = false;
     for place in places(page) {
         let fetched = match fetch::get(&state.http, &place, local).await {
             Ok(fetched) => fetched,
             Err(
                 error @ (FetchError::SlowDown(_) | FetchError::Unreachable | FetchError::Blocked),
             ) => return Err(error),
+            Err(FetchError::TooBig) => {
+                too_big = true;
+                continue;
+            }
             Err(_) => continue,
         };
         if let Some(parsed) = feed::parse(&fetched.body, &fetched.final_url) {
@@ -182,6 +211,9 @@ async fn elsewhere(state: &AppState, page: &Url) -> Result<Option<Elsewhere>, Fe
                 return Ok(Some(Elsewhere::Named(named)));
             }
         }
+    }
+    if too_big {
+        return Err(FetchError::TooBig);
     }
     Ok(None)
 }
@@ -395,6 +427,45 @@ mod tests {
             tried("https://example.com/about.html")[0],
             "https://example.com/"
         );
+    }
+
+    fn named(title: &str, url: &str) -> discover::Found {
+        discover::Found {
+            title: title.to_owned(),
+            url: Url::parse(url).unwrap(),
+        }
+    }
+
+    #[test]
+    fn a_blogs_comments_feed_is_left_out_while_its_posts_are_there() {
+        let found = without_comments(vec![
+            named("Maya » Feed", "https://maya.example/feed/"),
+            named(
+                "Maya » Comments Feed",
+                "https://maya.example/comments/feed/",
+            ),
+            named("Comments on: Walking", "https://maya.example/walking/feed/"),
+        ]);
+        let urls: Vec<&str> = found.iter().map(|each| each.url.as_str()).collect();
+        assert_eq!(urls, ["https://maya.example/feed/"]);
+    }
+
+    #[test]
+    fn a_site_offering_only_comments_keeps_them() {
+        let found = without_comments(vec![named(
+            "Comments",
+            "https://maya.example/comments/feed/",
+        )]);
+        assert_eq!(found.len(), 1);
+    }
+
+    #[test]
+    fn a_podcast_beside_the_blog_stays() {
+        let found = without_comments(vec![
+            named("Maya", "https://maya.example/feed/"),
+            named("Maya's podcast", "https://maya.example/podcast/feed/"),
+        ]);
+        assert_eq!(found.len(), 2);
     }
 
     #[test]

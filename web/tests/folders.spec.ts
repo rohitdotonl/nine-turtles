@@ -584,3 +584,47 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   await appReady(page);
   await expect(sheet.getByRole("switch", { name: "Pause for a while" })).not.toBeChecked();
 });
+
+test("+ Add over a folder files them there, and New folder… makes one with them in it (decision 0259)", async ({ page }) => {
+  const [first, filed, made] = [unique("into"), unique("filed"), unique("made")];
+  const folder = unique("Zz-into");
+  const fresh = unique("Zz-fresh");
+  const ids = await openBlogs(page, [first]);
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.reload();
+  await appReady(page);
+  const inFolders = async (title: string) => {
+    const body = (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()) as { feeds: { title: string; folders: number[] }[]; folders: { id: number; name: string }[] };
+    const ids = body.feeds.find((feed) => feed.title === title)?.folders ?? [];
+    return body.folders.filter((each) => ids.includes(each.id)).map((each) => each.name);
+  };
+
+  // Over the folder, "Folder" starts on it.
+  await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
+  await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${filed}/`);
+  await page.keyboard.press("Enter");
+  const into = page.getByLabel("Folder", { exact: true });
+  await expect(into.locator("option:checked")).toHaveText(folder);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${filed}` })).toBeVisible();
+  expect(await inFolders(`Blog ${filed}`)).toEqual([folder]);
+  // The folder opened in the sidebar, so the reader sees where they went.
+  await expect(sidebar(page).getByRole("link", { name: `Blog ${filed}` })).toBeVisible();
+
+  // New folder…: a name is asked for first, then the folder is made with them in it.
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
+  await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${made}/`);
+  await page.keyboard.press("Enter");
+  await into.selectOption({ label: "New folder…" });
+  const name = page.getByLabel("The new folder's name");
+  await expect(name).toBeFocused();
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.locator("#feed-address-status")).toHaveText("Name the new folder first.");
+  await expect(name).toBeFocused();
+  await name.fill(fresh);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${made}` })).toBeVisible();
+  expect(await inFolders(`Blog ${made}`)).toEqual([fresh]);
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${fresh}`) })).toBeVisible();
+});

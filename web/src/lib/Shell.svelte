@@ -1229,7 +1229,7 @@
   {#if route.kind === "add-feed" && shared}
     <FollowPerson address={shared} bind:name={sharedName} onFollowed={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else if route.kind === "add-feed"}
-    <AddFeed bind:field={headings.add} bind:asked={foundName} feeds={library.feeds ?? []} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
+    <AddFeed bind:field={headings.add} bind:asked={foundName} feeds={library.feeds ?? []} folders={library.folders} here={currentFolder?.id} onAdded={added} onOpen={openFeed} {onCancel} page={!inSheet} />
   {:else}
     <StarterFeeds onAdded={startersAdded} {onCancel} page={!inSheet} />
   {/if}

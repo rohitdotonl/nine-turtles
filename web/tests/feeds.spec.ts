@@ -346,7 +346,7 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await expect(asked).toBeVisible();
   await expect(page.getByRole("heading", { name: `Blog ${name} is…` })).toBeVisible();
   await expect(field(page)).toHaveCount(0);
-  await expect(asked.getByText("You can change this later on their page.")).toBeVisible();
+  await expect(page.getByText("You can change this later on their page.")).toBeVisible();
   await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeChecked();
   await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
@@ -390,7 +390,8 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
   await expect(sidebar(page).getByRole("link", { name: `Blog ${name}` })).toHaveCount(1);
 
-  await page.getByRole("link", { name: `Go to Blog ${name}` }).click();
+  // The sheet's main button goes to them (decision 0259).
+  await page.getByRole("button", { name: `Go to Blog ${name}` }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 });
 
@@ -553,7 +554,15 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await field(page).fill(`${NO_FEED_SITE}/plain/`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.");
-  // The field is marked as refused, for screen readers and by its red edge.
+  // Not the reader's mistake (decision 0259): no red words, no warning mark, and the field isn't marked.
+  await expect(page.locator("#feed-address-status")).not.toHaveClass(/text-danger/);
+  await expect(page.locator("#feed-address-status svg")).toHaveCount(0);
+  await expect(field(page)).not.toHaveAttribute("aria-invalid", "true");
+
+  await field(page).fill("not an address");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address. An address looks like example.com.");
+  // The address itself is wrong: the field is marked as refused, for screen readers and by its red edge.
   await expect(field(page)).toHaveAttribute("aria-invalid", "true");
   // While the keyboard is in it, the focus line takes the edge's place: one line, never a red edge inside a ring (decision 0042).
   await expect(field(page)).toBeFocused();
@@ -561,11 +570,6 @@ test("a page without a feed gets a calm, plain message", async ({ page }) => {
   await expect(field(page)).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   await field(page).evaluate((element) => (element as HTMLInputElement).blur());
   await expect(field(page)).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
-  await field(page).focus();
-
-  await field(page).fill("not an address");
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#feed-address-status")).toHaveText("That doesn't look like a web address. An address looks like example.com.");
 });
 
 test("a mistyped address is said with its one repair, as a button: nothing is changed or looked up by itself (decision 0234)", async ({ page }) => {
@@ -748,7 +752,8 @@ test("with only the keyboard: 'Go to' a feed you already follow", async ({ page 
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/feed.xml`);
   await page.keyboard.press("Enter");
   await expect(page.locator("#feed-address-status")).toHaveText("You already follow this.");
-  await tabTo(page, page.getByRole("link", { name: /^Go to / }));
+  // Enter again, from the field: the main button now goes to them (decision 0259).
+  await expect(page.getByRole("button", { name: /^Go to / })).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
 });
