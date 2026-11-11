@@ -17,6 +17,14 @@ October 2026; it is in the repository's history.*
   is now open to anyone (decisions 0115 and 0154), so someone qualified should read
   both soon.
 
+- **A warning for assistants that send you back to your own computer**
+  (11 November 2026, decision 0257). The MCP standard suggests the
+  "Connect this assistant?" page warn more when an assistant's only return
+  addresses are on the reader's own computer (`localhost`), since anyone
+  can claim those; desktop assistants do this. Today the page names the
+  website the reader goes back to, as it does for every assistant. A
+  stronger warning would change that screen: yours to choose, whenever.
+
 - **Payments, built in test mode** (26 October 2026, decision 0094). Each
   of these is a setting or a small change, and none blocks trying it:
   - **The price**, monthly and yearly (`NINE_TURTLES_PRICE_*`, and the
