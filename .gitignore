@@ -4,7 +4,7 @@
 # Build output and installed libraries (recreated by scripts/check.sh).
 /server/target
 /server/target-*/
-/web/node_modules/
+/web/node_modules
 /web/dist/
 /web/test-results/
 /web/playwright-report/
