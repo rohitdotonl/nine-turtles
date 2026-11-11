@@ -2,7 +2,9 @@
   The list's note in the reading area (decision 0229): while the list isn't
   on screen (an article on a phone, or the list hidden on a computer), what
   was just done is said where the reader is, with its Undo or Try again and
-  a × (SPEC section 8), in the same build as the note at the list's foot. It
+  a × (SPEC section 8), in the same build as the note at the list's foot. Write back's
+  "Opening your email app…", started while its own line is off screen, is said here too
+  (SPEC section 37). It
   floats at the reading area's foot, above a phone's toolbar, and appears at
   once, never sliding. Empty, it stays for screen readers, which hear each
   message as it arrives (the list's own note is hidden with the list).
@@ -19,7 +21,7 @@
 
 <div class="away" lang="en">
   <div class={["toast pointer-events-auto flex min-h-11 max-w-full items-center border px-4 text-meta", !note && "sr-only"]}>
-    <NoteLine announce message={note?.words ?? ""} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
+    <NoteLine announce message={note?.words ?? ""} refusal={note?.refusal} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
   </div>
 </div>
 

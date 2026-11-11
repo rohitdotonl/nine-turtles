@@ -38,7 +38,11 @@ V1, item 2). Its look gets a refinement round.*
   the place's own main button stays the only solid one.
 - **It opens your own email app,** with their address and the subject
   "Re: " and the article's title filled in (a title that already starts
-  "Re:" keeps its own). nine turtles never sends that email and never sees
+  "Re:" keeps its own). A post with no title (a note) is named by its
+  opening words, as its list row shows them, cut at a word to at most 60
+  characters with "…"; one with no words at all (a picture) by its day,
+  "Your post of 18 Oct 2026", so the subject is never empty and the writer can
+  tell which post it's about. nine turtles never sends that email and never sees
   it, or your inbox; it only makes the `mailto:` link your device opens. The
   body is left empty for you, unless you highlighted words in the article.
   Once pressed, a line under the address says "Opening your email app…",
@@ -46,6 +50,15 @@ V1, item 2). Its look gets a refinement round.*
   words, as the list's note's buttons), which copies it and says "Copied.":
   on a computer with no email app set up, the press otherwise does nothing
   you can see (decision 0229). The line goes once you come back from the email app (the page was hidden while it opened) or another article opens. A copy that fails says so in oxblood with the alert icon.
+  Pressed away from the article's end (the paper plane, `w`, a row's menu,
+  Write back about this) while that line is off the screen, the same words
+  are said where the reader is: the floating note at the reading area's
+  foot, as the list's note is shown there (section 8), "Opening your email
+  app… Nothing opened?" with **Copy their address** and a ×; after a copy,
+  "Copied." (or, failing, the same words as the line's, in oxblood). It goes as
+  the line does, or with its ×. A copy that fails, here or there, says "The
+  address couldn't be copied. It's …: select it and copy it yourself.", with
+  the address.
 - **Write back about this** (decision 0205): when you've highlighted words
   in the article (section 42), the email starts with them, each quote on
   lines beginning "> " as email apps quote, a blank line after each, then
@@ -96,7 +109,8 @@ V1, item 2). Its look gets a refinement round.*
   new tab; left out when nine turtles knows
   neither, and once an address found there is filled in), **Their email address**, **Write back** and **Not now**, and
   under them, quietly, "It sends from your own email." only (point 8). The
-  keyboard starts on the field; Not now puts it back on the button.
+  keyboard starts on the field; Not now, or Escape in the field, puts the
+  box away and the keyboard back on the button.
   Something that isn't one address ("ivy at home", two addresses) is refused
   in oxblood words, keeping what you typed. Write back opens your email app
   at once and keeps the address for the person, on every source of theirs,

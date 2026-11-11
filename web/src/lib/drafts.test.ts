@@ -51,6 +51,19 @@ describe("what the reader typed and hasn't saved (decision 0235)", () => {
     expect(keptDraft("note:highlight:-5")).toBeUndefined();
   });
 
+  it("keeps both notes when one is already kept under the new number", () => {
+    vi.stubGlobal("localStorage", storage());
+    keepDraft("note:highlight:41", "Written there");
+    keepDraft("note:highlight:-5", "Written here");
+    renameDraft("note:highlight:-5", "note:highlight:41");
+    expect(keptWords("note:highlight:41")).toBe("Written there\n\nWritten here");
+    // The same words twice are kept once.
+    keepDraft("note:highlight:50", "Same");
+    keepDraft("note:highlight:-6", "Same");
+    renameDraft("note:highlight:-6", "note:highlight:50");
+    expect(keptWords("note:highlight:50")).toBe("Same");
+  });
+
   it("forgets every reader's drafts, and nothing else, when the device is forgotten", () => {
     const kept = new Map<string, string>([
       ["nine-turtles.drafts.1", "{}"],
