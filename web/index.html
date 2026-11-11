@@ -19,7 +19,7 @@
     <script>/* The page the reader chose on this device from the first moment, so Paper or Night never opens white; after a second, "Opening your reading…" (decision 0258). Its hash is in server/src/security.rs; src/lib/preferences.ts does the rest. */try{var p=JSON.parse(localStorage.getItem("nine-turtles.preferences")||"null");p=p&&p.page;var l={white:["light","#FFFFFF"],paper:["light","#F7F3EA"],night:["dark","#121212"]}[p];if(l){var r=document.documentElement;r.dataset.theme=p;r.dataset.mode=l[0];document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.content=l[1]})}}catch(e){}setTimeout(function(){var o=document.getElementById("opening");if(o)o.hidden=false},1000)</script>
   </head>
   <body>
-    <div id="app"><p id="opening" class="opening" hidden>Opening your reading…</p></div>
+    <div id="app"><p id="opening" class="opening" role="status" hidden>Opening your reading…</p></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

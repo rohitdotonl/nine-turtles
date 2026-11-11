@@ -56,6 +56,6 @@ describe("the page's first moment", () => {
     expect(opening.hidden).toBe(true);
     later?.();
     expect(opening.hidden).toBe(false);
-    expect(page).toContain('<p id="opening" class="opening" hidden>Opening your reading…</p>');
+    expect(page).toContain('<p id="opening" class="opening" role="status" hidden>Opening your reading…</p>');
   });
 });

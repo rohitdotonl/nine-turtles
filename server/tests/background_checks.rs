@@ -749,3 +749,66 @@ async fn a_file_of_feeds_says_which_still_wait_for_their_first_check() {
     reader.round(nine_turtles::now() + MINUTE).await;
     assert_eq!(waiting(reader.get("/api/feeds").await), [false, false]);
 }
+
+#[tokio::test]
+async fn a_name_followed_before_it_was_tidied_is_tidied_at_its_next_check() {
+    // Decision 0258: names stored before tidying ("Blog – Growing » Latest
+    // Posts", twice-coded symbols) become the feed's tidied name, for the
+    // place and the person it's part of; a name the reader gave stays.
+    let reader = Reader::new().await;
+    let grow = reader.follow("/grow.xml").await;
+    let daily = reader.follow("/daily.xml").await;
+    let (status, joined) = reader
+        .post("/api/writers/join", json!({ "feeds": [grow, daily] }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{joined}");
+    let db = &reader.state.db;
+    for (feed, old, theirs) in [
+        (
+            grow,
+            "Blog – Growing » Latest Posts",
+            "Blog – Growing » Latest Posts",
+        ),
+        (daily, "Daily&#8217;s Blog", "My morning paper"),
+    ] {
+        sqlx::query("UPDATE feeds SET title = ? WHERE id = ?")
+            .bind(old)
+            .bind(feed)
+            .execute(db)
+            .await
+            .unwrap();
+        sqlx::query("UPDATE subscriptions SET title = ? WHERE feed_id = ?")
+            .bind(theirs)
+            .bind(feed)
+            .execute(db)
+            .await
+            .unwrap();
+    }
+    sqlx::query("UPDATE writers SET name = 'Blog – Growing » Latest Posts'")
+        .execute(db)
+        .await
+        .unwrap();
+
+    reader.change(|site| site.articles = 4);
+    reader.round(nine_turtles::now() + DAY).await;
+
+    let title = |feed: i64| {
+        sqlx::query_scalar::<_, String>("SELECT title FROM subscriptions WHERE feed_id = ?")
+            .bind(feed)
+            .fetch_one(db)
+    };
+    assert_eq!(title(grow).await.unwrap(), "Growing");
+    // The reader's own name for it stays.
+    assert_eq!(title(daily).await.unwrap(), "My morning paper");
+    let person: String = sqlx::query_scalar("SELECT name FROM writers")
+        .fetch_one(db)
+        .await
+        .unwrap();
+    assert_eq!(person, "Growing");
+    let feed_title: String = sqlx::query_scalar("SELECT title FROM feeds WHERE id = ?")
+        .bind(daily)
+        .fetch_one(db)
+        .await
+        .unwrap();
+    assert_eq!(feed_title, "Daily");
+}

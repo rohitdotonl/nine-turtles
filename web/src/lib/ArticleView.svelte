@@ -63,7 +63,7 @@
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
-  import { markMissing, markWide } from "./missing";
+  import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
   import { pathFor } from "./router";
@@ -144,6 +144,8 @@
   let toolbar: HTMLDivElement | undefined = $state();
   /** The article's own text, whose blocks mark your place in it. */
   let text: HTMLDivElement | undefined = $state();
+  /** The open arrow, kept hidden for the notes inside the text to draw (missing.ts). */
+  let arrow: HTMLSpanElement | undefined = $state();
   /** The article itself: a footnote's card is placed in it. */
   let column: HTMLElement | undefined = $state();
   /** The Aa reading panel, and its button (there's one, on the top bar or the phone's bottom bar). */
@@ -349,6 +351,8 @@
     const pictures = () => body.querySelectorAll("img");
     // A table wider than the column says so under it, with a word for a touch screen (decision 0258).
     const touch = matchMedia("(pointer: coarse)").matches;
+    // An embedded frame, an empty link from the server, gets its note (decision 0258).
+    body.querySelectorAll<HTMLAnchorElement>("a.embed-note").forEach((link) => markEmbedded(link, arrow?.firstElementChild));
     const look = () => {
       pictures().forEach(markPicture);
       body.querySelectorAll("table").forEach((table) => markWide(table, touch));
@@ -358,7 +362,7 @@
     pictures().forEach((image) => sizes.observe(image));
     // A picture that didn't load leaves a note with a link to the original instead (decision 0258).
     const broken = (event: Event) => {
-      if (event.target instanceof HTMLImageElement && body.contains(event.target)) markMissing(event.target, article.link);
+      if (event.target instanceof HTMLImageElement && body.contains(event.target)) markMissing(event.target, article.link, arrow?.firstElementChild);
     };
     // A picture's load doesn't bubble; listening on the way down catches each one.
     body.addEventListener("load", look, true);
@@ -491,6 +495,8 @@
 
 <section aria-label="Article" class="flex min-w-0 flex-1 flex-col bg-paper">
   <span id="new-tab-note" hidden lang="en">Opens in a new tab</span>
+  <!-- The open arrow the notes inside the text draw beside their links (missing.ts). -->
+  <span bind:this={arrow} hidden><Icon name="open" /></span>
   <!--
     The top bar is solid, in the page's own color, across the whole pane
     (scrollbar included), so its icons are anchored to the pane's edges

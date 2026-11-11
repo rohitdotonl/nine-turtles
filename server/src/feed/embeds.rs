@@ -1,38 +1,32 @@
 //! Frames a writer embedded (a map, a Vimeo video, a CodePen), other than
 //! YouTube's (`clean`): nine turtles never shows another site's frame (the
 //! engineering floor), but the reader should know something was there, so
-//! "Here's the map:" doesn't point at nothing (decision 0258). Each frame
-//! becomes a short note in the interface's voice naming the site it came
-//! from, with a link to it, which opens in a new tab like every link in an
-//! article. Invisible frames and frames from known trackers leave nothing.
+//! "Here's the map:" doesn't point at nothing (decision 0258).
 //!
-//! The safety cleaning comes between `marked` and `noted`: a mark is a
-//! number between two characters no article uses, which the cleaning keeps
-//! as text; `noted` then writes the note, from addresses it has checked
-//! itself, so nothing a feed wrote reaches the page uncleaned.
+//! Before the safety cleaning, each frame becomes an empty link to its
+//! address, `<a class="embed-note" href="…"></a>`, which the cleaning then
+//! checks like every other link: nothing is added after it. No words are
+//! stored: the web app writes the note itself ("Something from
+//! openstreetmap.org is embedded here. Open it", `web/src/lib/missing.ts`),
+//! so search, rules and the list's openings never see interface words.
+//! Invisible frames and frames from known trackers leave nothing.
 
 use reqwest::Url;
 
 use super::clean::{escape, is_tracker, pixels};
 
-/// Stands either side of a frame's number while the article is cleaned.
-const MARK: char = '\u{E001}';
+/// The class the cleaning keeps on an embedded frame's link, and the web app looks for.
+pub(super) const EMBED_CLASS: &str = "embed-note";
 
-/// An embedded frame worth a note: where it came from.
-pub(super) struct Embedded {
-    address: Url,
-}
-
-/// The same HTML with each frame worth a note swapped for a mark, and what
-/// each mark stands for. Frames without a web address, invisible ones and
-/// trackers are left for the cleaning to remove, with no note.
-pub(super) fn marked(html: &str) -> (String, Vec<Embedded>) {
+/// The same HTML with each frame worth a note swapped for an empty link to
+/// it. Frames without a web address, invisible ones and trackers are left
+/// for the cleaning to remove. A relative address, or one starting `//`, is
+/// made whole from the article's own (`base`).
+pub(super) fn linked(html: &str, base: &Url) -> String {
     if !html.to_ascii_lowercase().contains("<iframe") {
-        return (html.to_owned(), Vec::new());
+        return html.to_owned();
     }
-    // A mark a feed wrote itself is taken out first, so only ours remain.
-    let html = html.replace(MARK, "");
-    let mut document = scraper::Html::parse_fragment(&html);
+    let mut document = scraper::Html::parse_fragment(html);
     let frames = scraper::Selector::parse("iframe").expect("a fixed, valid selector");
     let worth: Vec<_> = document
         .select(&frames)
@@ -44,12 +38,7 @@ pub(super) fn marked(html: &str) -> (String, Vec<Embedded>) {
                     .and_then(pixels)
                     .is_some_and(|size| size <= 2)
             });
-            let source = element.attr("src")?.trim();
-            // An address starting `//` takes the article's own scheme.
-            let source = source
-                .strip_prefix("//")
-                .map_or(source.to_owned(), |rest| format!("https://{rest}"));
-            let address = Url::parse(&source).ok()?;
+            let address = base.join(element.attr("src")?.trim()).ok()?;
             let shown = matches!(address.scheme(), "http" | "https")
                 && address.host_str().is_some()
                 && !is_tracker(&address)
@@ -58,61 +47,44 @@ pub(super) fn marked(html: &str) -> (String, Vec<Embedded>) {
         })
         .collect();
     if worth.is_empty() {
-        return (html, Vec::new());
+        return html.to_owned();
     }
-    let mut embedded = Vec::new();
+    // A character the article doesn't hold (as written or decoded) marks
+    // each frame's place, so only these marks become links.
+    let written = document.root_element().inner_html();
+    let Some(mark) = ('\u{E001}'..='\u{E0FF}').find(|each| !written.contains(*each)) else {
+        return html.to_owned();
+    };
+    let mut links = Vec::new();
     for (id, address) in worth {
         if let Some(mut node) = document.tree.get_mut(id) {
             node.insert_after(scraper::Node::Text(scraper::node::Text {
-                text: format!("{MARK}{}{MARK}", embedded.len()).into(),
+                text: format!("{mark}{}{mark}", links.len()).into(),
             }));
             node.detach();
-            embedded.push(Embedded { address });
+            links.push(format!(
+                r#"<a class="{EMBED_CLASS}" href="{}"></a>"#,
+                escape(address.as_str())
+            ));
         }
     }
-    (document.root_element().inner_html(), embedded)
-}
-
-/// The cleaned HTML with each mark written out as its note: "Something from
-/// openstreetmap.org is embedded here. Open it ↗". A mark with no frame
-/// behind it is dropped.
-pub(super) fn noted(html: &str, embedded: &[Embedded]) -> String {
-    if !html.contains(MARK) {
-        return html.to_owned();
-    }
-    let mut parts = html.split(MARK);
+    let marked = document.root_element().inner_html();
+    let mut parts = marked.split(mark);
     let mut out = parts.next().unwrap_or_default().to_owned();
-    let rest: Vec<&str> = parts.collect();
-    let mut index = 0;
-    while index < rest.len() {
-        let frame = rest[index]
-            .parse::<usize>()
-            .ok()
-            .and_then(|at| embedded.get(at));
-        match (frame, rest.get(index + 1)) {
-            (Some(frame), Some(after)) => {
-                out.push_str(&note(frame));
-                out.push_str(after);
-                index += 2;
-            }
-            _ => {
-                out.push_str(rest[index]);
-                index += 1;
-            }
+    // Marks come in pairs around a number: odd parts are numbers, even parts the article.
+    for (at, part) in parts.enumerate() {
+        if at % 2 == 0 {
+            out.push_str(
+                part.parse::<usize>()
+                    .ok()
+                    .and_then(|n| links.get(n))
+                    .map_or("", String::as_str),
+            );
+        } else {
+            out.push_str(part);
         }
     }
     out
-}
-
-/// One frame's note, in the interface's quiet type (article-text.css).
-fn note(frame: &Embedded) -> String {
-    let host = frame.address.host_str().unwrap_or_default();
-    let site = host.strip_prefix("www.").unwrap_or(host);
-    format!(
-        r#"<span class="embed-note">Something from {} is embedded here. <a href="{}" target="_blank" rel="noopener noreferrer">Open it ↗</a></span>"#,
-        escape(site),
-        escape(frame.address.as_str())
-    )
 }
 
 #[cfg(test)]
@@ -128,14 +100,29 @@ mod tests {
     }
 
     #[test]
-    fn an_embedded_map_leaves_a_note_with_a_link_to_it() {
+    fn an_embedded_map_leaves_an_empty_link_to_it() {
         let html = cleaned(
             r#"<p>Here's the map:</p><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=1" width="600" height="400"></iframe><p>After.</p>"#,
         );
-        assert!(html.contains(r#"<span class="embed-note">Something from openstreetmap.org is embedded here. <a href="https://www.openstreetmap.org/export/embed.html?bbox=1" target="_blank" rel="noopener noreferrer">Open it ↗</a></span>"#), "{html}");
+        assert!(
+            html.contains(r#"<a class="embed-note" href="https://www.openstreetmap.org/export/embed.html?bbox=1" target="_blank" rel="noopener noreferrer"></a>"#),
+            "{html}"
+        );
         assert!(html.starts_with("<p>Here's the map:</p>"), "{html}");
         assert!(html.ends_with("<p>After.</p>"), "{html}");
         assert!(!html.contains("iframe"), "{html}");
+    }
+
+    #[test]
+    fn a_relative_or_schemeless_address_is_made_whole() {
+        let html = cleaned(
+            r#"<iframe src="/embed/map"></iframe><iframe src="//maps.example/x"></iframe>"#,
+        );
+        assert!(
+            html.contains(r#"href="https://blog.example/embed/map""#),
+            "{html}"
+        );
+        assert!(html.contains(r#"href="https://maps.example/x""#), "{html}");
     }
 
     #[test]
@@ -159,9 +146,13 @@ mod tests {
     }
 
     #[test]
-    fn a_feed_writing_the_mark_itself_gets_no_note() {
-        let html = cleaned("<p>\u{E001}0\u{E001} and <script>x</script></p>");
-        assert_eq!(html, "<p>0 and </p>");
+    fn marks_a_feed_wrote_itself_never_become_links() {
+        // Raw or coded, in the text or in an attribute.
+        let html = cleaned(
+            "<p title=\"&#xE001;0&#xE001;\">\u{E001}0\u{E001} and &#xE002;0&#xE002;</p><iframe src=\"https://maps.example/\"></iframe>",
+        );
+        assert_eq!(html.matches("embed-note").count(), 1, "{html}");
+        assert!(html.starts_with("<p title=\"\u{E001}0\u{E001}\">\u{E001}0\u{E001} and \u{E002}0\u{E002}</p><a class=\"embed-note\""), "{html}");
     }
 
     #[test]
@@ -170,5 +161,17 @@ mod tests {
             cleaned(r#"<iframe src="https://maps.example/?q=&quot;x&quot;&lt;b&gt;"></iframe>"#);
         assert!(!html.contains("<b>"), "{html}");
         assert!(html.contains("maps.example"), "{html}");
+        assert_eq!(html.matches('<').count(), 2, "{html}");
+    }
+
+    #[test]
+    fn the_cleaning_keeps_only_this_class() {
+        let html = cleaned(
+            r#"<p class="big"><a class="embed-note other" href="https://x.example/" onclick="x()">x</a></p>"#,
+        );
+        assert_eq!(
+            html,
+            r#"<p><a class="embed-note" href="https://x.example/" target="_blank" rel="noopener noreferrer">x</a></p>"#
+        );
     }
 }

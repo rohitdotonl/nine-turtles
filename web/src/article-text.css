@@ -33,6 +33,20 @@
   font-size: 1em;
 }
 
+/*
+  A link in a note (a picture that didn't load, an embedded frame, decision
+  0258): a 44px target to press, taller than its line without moving it,
+  and the open arrow after its words, as every link out of nine turtles has.
+*/
+.article-text .offline-image a {
+  padding-block: calc((2.75rem - 1em) / 2);
+}
+.article-text .offline-image a > svg {
+  display: inline;
+  margin-inline-start: 0.25em;
+  vertical-align: -0.15em;
+}
+
 /* What scrolls sideways (a wide table, a long line of code) shows a thin bar where the system allows it (decision 0258). */
 .article-text :where(table, pre) {
   scrollbar-width: thin;

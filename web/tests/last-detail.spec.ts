@@ -50,12 +50,18 @@ test.describe("a messy feed", () => {
     // A frame: a note naming its site, with a link to it, never the frame.
     await expect(text.locator("iframe")).toHaveCount(0);
     await expect(text).toContainText("Something from maps.example is embedded here.");
-    await expect(text.getByRole("link", { name: "Open it ↗" })).toHaveAttribute("href", "https://www.maps.example/embed?town=1");
+    const open = text.getByRole("link", { name: "Open it", exact: true });
+    await expect(open).toHaveAttribute("href", "https://www.maps.example/embed?town=1");
+    // Like every link out of nine turtles: the open arrow, "Opens in a new tab" aloud, and 44px to press.
+    await expect(open).toHaveAccessibleDescription("Opens in a new tab");
+    await expect(open.locator("svg")).toBeVisible();
+    expect((await open.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(text.locator(".offline-image").first()).toHaveAttribute("lang", "en");
 
     // A picture that won't load: what it showed, and where it may still be.
     await expect(text).toContainText("A picture didn’t load: The harbour at low tide.");
     await expect(text.locator("img")).toHaveCount(0);
-    await expect(text.getByRole("link", { name: "See it on the original ↗" })).toHaveAttribute(
+    await expect(text.getByRole("link", { name: "See it on the original", exact: true })).toHaveAttribute(
       "href",
       `https://messy-${name}.example/guide`,
     );
