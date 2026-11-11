@@ -1,4 +1,4 @@
-# 0261: Refusals never answer 502
+# 0262: Refusals never answer 502
 
 **In one line:** A refusal that carries words for the reader (another site couldn't be reached, wasn't found, was too big or its guard turned nine turtles away; Dodo couldn't be reached) answers 422 with `{"error": word}` instead of 502, because the host replaces a 502's body with its own page and the reader's words were lost.
 
