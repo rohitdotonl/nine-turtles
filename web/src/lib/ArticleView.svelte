@@ -750,15 +750,19 @@
     opacity: 0.35;
   }
   /* The writer's name under the title: a 44px target to touch, taller than its line without moving it. */
+  /* Underlined at rest, as every link is (the 65% edge), so it reads as a way in; the line comes up to the ink under the pointer. */
   .writer-link {
     padding-block: calc((2.75rem - 1lh) / 2);
     margin-block: calc((1lh - 2.75rem) / 2);
     cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
   }
   @media (hover: hover) {
     .writer-link:hover {
-      text-decoration: underline;
-      text-underline-offset: 4px;
+      text-decoration-color: currentColor;
     }
   }
   /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */

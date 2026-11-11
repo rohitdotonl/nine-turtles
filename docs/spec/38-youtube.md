@@ -32,7 +32,7 @@ you paste.
   A channel or playlist starts as a **publication**, without guessing (its
   feed signs every video with the channel's name, which can't tell a vlogger
   from a company); "… is…" after Follow shows it chosen, and the reader can
-  pick A person there or later in Edit (section 36, decision 0213).
+  pick A person there or later on its page (section 36, decision 0213).
 - **YouTube can be slow to answer nine turtles' server;** adding then gives
   up plainly rather than hanging (section 3). A channel whose feed holds a
   video with an empty description is followed as any other (decision 0213).
@@ -111,7 +111,7 @@ goes unused for a while (decision 0156).
    Follow follows the channel, named for it, and "… is…" has A publication
    chosen.
 2. Paste a playlist's address: it offers Only "…" (chosen) or Every video.
-3. Open a channel's settings (Edit on its page): Include Shorts and Include live streams are
+3. Open a channel's page: in its settings, Include Shorts and Include live streams are
    there, both off. A new Short from that channel doesn't arrive in Unread.
 4. In Google Takeout, export YouTube's subscriptions; in Settings › Your
    data, choose Import YouTube subscriptions… and pick `subscriptions.csv`:

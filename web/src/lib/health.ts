@@ -136,12 +136,12 @@ export function reason(problem: string | null): string {
 }
 
 /**
- * The quiet line above a failing feed's list, and in Edit feed (decision
+ * The quiet line above a failing feed's list, and on their page, naming the source (decision
  * 0106): "This feed hasn't worked since 12 Oct." (with the year when it
  * isn't this one), in the device's time zone.
  */
-export function brokenSince(failingSince: number, now: Date = new Date()): string {
-  return `This feed hasn't worked ${since(failingSince, now)}.`;
+export function brokenSince(failingSince: number, now: Date = new Date(), subject = "This feed"): string {
+  return `${subject} hasn't worked ${since(failingSince, now)}.`;
 }
 
 

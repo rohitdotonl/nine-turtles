@@ -108,33 +108,21 @@ test("a note on highlighted words survives Escape, and waits at the article's en
   await expect(ends.getByRole("textbox")).toHaveCount(0);
 });
 
-test("changes on Edit survive leaving, and Cancel throws them away", async ({ page, isMobile }) => {
+test("a new name on their page is kept the moment the field is left, so there's nothing to lose", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same page on a phone");
-  const blog = `drafts-edit-${test.info().workerIndex}-${Date.now()}`;
+  const blog = `drafts-name-${test.info().workerIndex}-${Date.now()}`;
   const id = await openNewest(page, blog);
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const name = page.getByRole("textbox", { name: "Name" });
   await name.fill("Asha Rao, garden letters");
 
-  // Escape leaves Edit for their page; Edit there brings the changes back.
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("heading", { level: 2, name: `Edit Blog ${blog}` })).toHaveCount(0);
-  await page.getByRole("button", { name: `Edit Blog ${blog}`, exact: true }).click();
-  await expect(name).toHaveValue("Asha Rao, garden letters");
-  await expect(page.getByText("Going elsewhere keeps these changes here for you.")).toBeVisible();
-
-  // So does a reload.
+  // Leaving the field keeps it, with no Save to forget; a reload shows it kept.
+  await page.getByRole("heading", { level: 2 }).first().click();
+  await expect(page.getByText("Saved.")).toBeVisible();
   await page.reload();
   await appReady(page);
   await expect(name).toHaveValue("Asha Rao, garden letters");
-  await expect(page.getByText("Going elsewhere keeps these changes here for you.")).toBeVisible();
-
-  // Cancel is the one way to throw them away.
-  await page.getByRole("button", { name: "Cancel" }).click();
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
-  await appReady(page);
-  await expect(name).toHaveValue(`Blog ${blog}`);
   await expect(page.getByText("Not saved yet.")).toHaveCount(0);
 });
 

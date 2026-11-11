@@ -9,9 +9,8 @@ export type Route =
   | { kind: "view"; view: View }
   | { kind: "feed"; id: number }
   | { kind: "folder"; id: number }
-  | { kind: "about"; id: number }
-  | { kind: "edit-feed"; id: number }
-  | { kind: "edit-source"; id: number; source: number }
+  /** Their page; `settings`: with the keyboard on their settings (the `e` key, and the old Edit addresses). */
+  | { kind: "about"; id: number; settings?: boolean }
   | { kind: "edit-folder"; id: number }
   | { kind: "add-feed" }
   | { kind: "new-to-feeds" }
@@ -107,12 +106,13 @@ export function parse(path: string): Route {
   if (page) return { kind: "settings", page };
   if (name === "add" || name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
-  // A person or publication (decision 0163): their list, page, Edit, and one source's settings. The old /feeds/ addresses still open.
+  // A person or publication (decision 0163): their list and their page. The old /feeds/ addresses still open, and so do the
+  // old Edit and source-settings addresses, which open their page at its settings (one page, no Edit mode).
   const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/sources\/([1-9][0-9]{0,15}))?$/);
   if (who) {
     const id = Number(who[2]);
-    if (who[4]) return { kind: "edit-source", id, source: Number(who[4]) };
-    return who[3] === "/edit" ? { kind: "edit-feed", id } : who[3] === "/about" ? { kind: "about", id } : { kind: "feed", id };
+    if (who[4] || who[3] === "/edit") return { kind: "about", id, settings: true };
+    return who[3] === "/about" ? { kind: "about", id } : { kind: "feed", id };
   }
   const folder = name.match(/^folders\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (folder) return folder[2] ? { kind: "edit-folder", id: Number(folder[1]) } : { kind: "folder", id: Number(folder[1]) };
@@ -149,10 +149,6 @@ export function pathFor(route: Route): string {
       return whoPath(route.id);
     case "about":
       return `${whoPath(route.id)}/about`;
-    case "edit-feed":
-      return `${whoPath(route.id)}/edit`;
-    case "edit-source":
-      return `${whoPath(route.id)}/sources/${route.source}`;
     case "folder":
       return `/folders/${route.id}`;
     case "edit-folder":
@@ -182,10 +178,6 @@ export function nameFor(route: Route, placeName?: string): string {
       return placeName || "Someone";
     case "folder":
       return placeName || "Folder";
-    case "edit-feed":
-      return `Edit ${placeName || "someone"}`;
-    case "edit-source":
-      return "Source settings";
     case "edit-folder":
       return "Edit folder";
     case "view":

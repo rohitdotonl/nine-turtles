@@ -157,9 +157,9 @@ describe("carryOut", () => {
     expect(run({ kind: "toggle-folder" }, scene({ folder: 3, sidebar: false }))).toEqual([]);
   });
 
-  it("e opens Edit for the folder or the person whose list this is; ← → move between panes, ↑ ↓ along the sidebar", () => {
+  it("e opens Edit folder for a folder, or the settings on their page for the person whose list this is; ← → move between panes, ↑ ↓ along the sidebar", () => {
     expect(run({ kind: "edit" }, scene({ folder: 3, feed: 9 }))).toEqual([["go", { kind: "edit-folder", id: 3 }]]);
-    expect(run({ kind: "edit" }, scene({ feed: 9 }))).toEqual([["go", { kind: "edit-feed", id: 9 }]]);
+    expect(run({ kind: "edit" }, scene({ feed: 9 }))).toEqual([["go", { kind: "about", id: 9, settings: true }]]);
     expect(run({ kind: "edit" }, scene({ feed: 9, searching: true }))).toEqual([]);
     expect(run({ kind: "edit" }, scene({ feed: 9, onList: false }))).toEqual([]);
     expect(run({ kind: "edit" }, scene({}))).toEqual([]);

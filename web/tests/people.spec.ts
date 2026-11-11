@@ -3,17 +3,18 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
 // SPEC section 36 (people and publications), "How to check it", done by a
-// browser: the page opened by the name at the top of the list, Edit and Done,
-// person or publication, "+ Add a source" with its folder question, a
-// source's own settings with "Take out of …", Unsubscribe from a person, each
-// Undo, and the keyboard's way through them. Each test uses blogs of its own,
+// browser: the one page opened by the name at the top of the list (its
+// settings on it, each changing as it's touched; the old Edit addresses open
+// it), person or publication, "+ Add a source" with its folder question, Take
+// out on a source's row, Unsubscribe from a person, each Undo, and the
+// keyboard's way through them. Each test uses blogs of its own,
 // since every test shares the one nine turtles that has feeds.
 
 const sidebar = (page: Page) =>
   page.getByRole("navigation", { name: "Sidebar" });
-/** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
+/** Their page, beside the list: "About Alpha" to screen readers, never the list's own name. */
 const page_ = (page: Page, name: string) =>
-  page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
+  page.getByRole("region", { name: `About ${name}`, exact: true });
 const line = (page: Page) =>
   page.getByRole("status").filter({ hasText: /\S/ }).first();
 const rowsNamed = (page: Page, name: string) =>
@@ -50,7 +51,7 @@ async function openPlaces(
   return ids;
 }
 
-test("the name opens their page beside the list, with only the keyboard; Edit, Done and Escape turn it back", async ({
+test("the name opens their page beside the list, with only the keyboard; Escape turns it back", async ({
   page,
 }) => {
   const ana = unique("pp-ana");
@@ -72,7 +73,7 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   ).toBeFocused();
   const heading = desktop ? await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox() : null;
   // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
-  await expect(about).not.toContainText("A person");
+  await expect(about).not.toContainText("A person ·");
   await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();
   await expect(
     about.getByRole("link", { name: `${ana}.example` }),
@@ -80,13 +81,9 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   // The list stays beside it.
   await expect(page.locator(".item-row")).toHaveCount(3);
 
-  await about.getByRole("button", { name: `Edit Blog ${ana}` }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/edit$`));
-  await expect(
-    page.getByRole("heading", { level: 2, name: `Edit Blog ${ana}` }),
-  ).toBeFocused();
-  await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  // No Edit mode: their settings are on the same page.
+  await expect(about.getByRole("button", { name: `Edit Blog ${ana}` })).toHaveCount(0);
+  await expect(about.getByRole("region", { name: "Settings" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 
@@ -108,7 +105,7 @@ test("the name opens their page beside the list, with only the keyboard; Edit, D
   }
 });
 
-test("Edit makes someone a publication: listed under Publications, at its own address", async ({
+test("This is: A publication moves someone under Publications, at its own address, as it's chosen", async ({
   page,
 }) => {
   const ben = unique("pp-ben");
@@ -116,10 +113,9 @@ test("Edit makes someone a publication: listed under Publications, at its own ad
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("radio", { name: "A publication" }).check();
-  await page.getByRole("button", { name: "Done" }).click();
   await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
   // Their page no longer says what they are (the core path); the address and the sidebar do.
-  await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication");
+  await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication ·");
   const publications = sidebar(page).getByRole("heading", {
     name: "Publications",
   });
@@ -150,7 +146,7 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
   await page.goto(new URL(`/people/${ids[0]}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  // One source: the quiet line's link near Edit's foot (the owner's core path, point 12).
+  // One source: the quiet line's link under their settings (the owner's core path, point 12).
   const add = page.getByRole("button", { name: "+ Add their newsletter, videos or podcast" });
   await add.click();
   const who = page.getByRole("combobox", {
@@ -195,7 +191,7 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
   ]);
 });
 
-test("a source's own settings: Take out of the person, and Undo puts it back", async ({
+test("Take out, on a source's row in their settings, makes it someone of its own, and Undo puts it back", async ({
   page,
 }) => {
   const eli = unique("pp-eli");
@@ -212,19 +208,11 @@ test("a source's own settings: Take out of the person, and Undo puts it back", a
   await page.goto(new URL(`/people/${first}/edit`, FEEDS_APP).href);
   await appReady(page);
 
-  await page
-    .getByRole("button", {
-      name: new RegExp(`${fay}\\.example\\s?: its settings$`),
-    })
-    .click();
-  await expect(page).toHaveURL(
-    new RegExp(`/people/${first}/sources/${second}$`),
-  );
   // What kind of source it is isn't a setting any more (decision 0183).
   await expect(
     page.getByRole("combobox", { name: "Kind of source" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: `Take out of Eli ${eli}` }).click();
+  await page.getByRole("region", { name: "Sources" }).getByRole("button", { name: `Take out ${fay}.example of Eli ${eli}` }).click();
   await expect(line(page)).toHaveText(`${fay}.example is on its own now.`);
   // Only a date takes the face with a plain zero; an address keeps the crossed zero (decision 0246).
   await expect(line(page).locator(".dated")).toHaveCount(0);

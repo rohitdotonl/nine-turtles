@@ -24,12 +24,12 @@ describe("addresses", () => {
     expect(parse("/new-to-feeds")).toEqual({ kind: "new-to-feeds" });
     expect(parse("/feeds/12")).toEqual({ kind: "feed", id: 12 });
     expect(parse("/folders/4")).toEqual({ kind: "folder", id: 4 });
-    expect(parse("/feeds/12/edit")).toEqual({ kind: "edit-feed", id: 12 });
+    expect(parse("/feeds/12/edit")).toEqual({ kind: "about", id: 12, settings: true });
     expect(parse("/people/12")).toEqual({ kind: "feed", id: 12 });
     expect(parse("/publications/7/")).toEqual({ kind: "feed", id: 7 });
     expect(parse("/people/12/about")).toEqual({ kind: "about", id: 12 });
-    expect(parse("/publications/7/edit")).toEqual({ kind: "edit-feed", id: 7 });
-    expect(parse("/people/12/sources/34")).toEqual({ kind: "edit-source", id: 12, source: 34 });
+    expect(parse("/publications/7/edit")).toEqual({ kind: "about", id: 7, settings: true });
+    expect(parse("/people/12/sources/34")).toEqual({ kind: "about", id: 12, settings: true });
     expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
   });
 
@@ -73,7 +73,10 @@ describe("addresses", () => {
     expect(titleFor({ kind: "readers" })).toBe("All readers · nine turtles");
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
     expect(pathFor({ kind: "about", id: 3 })).toBe("/people/3/about");
-    expect(pathFor({ kind: "edit-source", id: 3, source: 9 })).toBe("/people/3/sources/9");
+    // Their settings are on their page: the old Edit and source addresses open it there, under its own address.
+    expect(parse("/people/3/edit")).toEqual({ kind: "about", id: 3, settings: true });
+    expect(parse("/people/3/sources/9")).toEqual({ kind: "about", id: 3, settings: true });
+    expect(pathFor({ kind: "about", id: 3, settings: true })).toBe("/people/3/about");
     expect(titleFor({ kind: "about", id: 3 }, "Alpha")).toBe("Alpha · nine turtles");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
     expect(titleFor({ kind: "add-feed" })).toBe("Add a person or publication · nine turtles");
@@ -82,14 +85,13 @@ describe("addresses", () => {
     expect(titleFor({ kind: "new-to-feeds" })).toBe("New to feeds? · nine turtles");
     expect(pathFor({ kind: "edit-folder", id: 4 })).toBe("/folders/4/edit");
     expect(titleFor({ kind: "folder", id: 4 }, "Tech")).toBe("Tech · nine turtles");
-    expect(titleFor({ kind: "edit-feed", id: 3 }, "Alpha")).toBe("Edit Alpha · nine turtles");
   });
 
   it("gives a publication's places their own addresses once the sidebar says which it is (decision 0163)", () => {
     placeAddressesBy((id) => id === 7);
     try {
       expect(pathFor({ kind: "feed", id: 7 })).toBe("/publications/7");
-      expect(pathFor({ kind: "edit-feed", id: 7 })).toBe("/publications/7/edit");
+      expect(pathFor({ kind: "about", id: 7 })).toBe("/publications/7/about");
       expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
     } finally {
       placeAddressesBy(() => false);

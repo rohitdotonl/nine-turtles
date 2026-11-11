@@ -75,6 +75,7 @@
     onClose,
     onOpen,
     onBack,
+    backTo = "Settings",
     onImported,
     onYourFeeds,
     onMuted,
@@ -109,6 +110,8 @@
     onOpen: (event: MouseEvent, page: SettingsPage) => void;
     /** "‹ Settings": back from one of its pages. */
     onBack: () => void;
+    /** The way back's name: "Settings", or the person whose page opened Hiding ("‹ Jim Nielsen"). */
+    backTo?: string;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
     /** Opens Everyone you follow. */
@@ -289,7 +292,7 @@
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
 <section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex flex-1 flex-col bg-paper">
   {#if page}
-    <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} backTo="Settings" {besideToggle} column="max-w-[35rem]" />
+    <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} {besideToggle} column="max-w-[35rem]" />
   {:else if phone}
     <!-- On a phone Settings is a screen you go into, so it goes back, as every other screen there does (decision 0231). -->
     <PageHead title="Settings" id="settings-heading" bind:heading onBack={onClose} backTo="Home" column="max-w-[35rem]" />

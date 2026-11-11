@@ -9,18 +9,8 @@ import { appReady, choose, follow, signIn } from "./screens";
 // test shares the one nine turtles that has feeds.
 
 const pane = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
-/** Their page or its Edit, beside the list: "About Alpha" or "Edit Alpha" to screen readers, never the list's own name. */
-const whoPage = (page: Page, name: string) => page.getByRole("region", { name: new RegExp(`^(About|Edit) ${name}$`) });
-
-/**
- * Done, then wait until their page is back: the choice is saved by then. ("Edit Blog …"
- * already holds the name and has no Write to, so waiting for those alone could leave
- * while the save was still on its way, and the next page would show them unchanged.)
- */
-async function saved(page: Page): Promise<void> {
-  await page.getByRole("button", { name: "Done" }).click();
-  await expect(page).toHaveURL(/\/about$/);
-}
+/** Their page, beside the list: "About Alpha" to screen readers, never the list's own name. */
+const whoPage = (page: Page, name: string) => page.getByRole("region", { name: `About ${name}`, exact: true });
 
 test.skip(({ isMobile }) => isMobile, "the person's page stands in the wide window's reading pane");
 
@@ -96,19 +86,22 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(page.getByRole("menu", { name: "Highlight" }).getByRole("menuitem", { name: "Write back about this" })).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // Their page keeps it, and Edit can change it.
+  // Their page keeps it, and Change beside it corrects it in place.
   await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const about = whoPage(page, `Blog ${name}`);
   // Write to opens the email app with the address only and an empty subject.
   await expect(about.getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", "mailto:ivy@ivy.example");
   await expect(about).toContainText("ivy@ivy.example");
-  await about.getByRole("button", { name: `Edit Blog ${name}` }).click();
-  const edit = page.getByRole("textbox", { name: "Email address" });
+  await about.getByRole("button", { name: `Change Blog ${name}'s email address` }).click();
+  const edit = about.getByRole("textbox", { name: "Their email address" });
   await expect(edit).toHaveValue("ivy@ivy.example");
+  await edit.fill("not an address");
+  await about.getByRole("button", { name: "Save" }).click();
+  await expect(about).toContainText("That doesn't look like an email address.");
   await edit.fill("ivy@letters.example");
-  await page.getByRole("button", { name: "Done" }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await about.getByRole("button", { name: "Save" }).click();
+  await expect(about.getByRole("textbox", { name: "Their email address" })).toHaveCount(0);
   await expect(about.getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", "mailto:ivy@letters.example");
 });
 
@@ -135,28 +128,24 @@ test("Write back fills in the address it finds on their site, for the reader to 
   await expect(pane(page)).not.toContainText("Found on their site.");
 });
 
-test("A publication has no Write back, no Write to and no email address in Edit; A person brings them back", async ({ page }) => {
+test("A publication has no Write back and no Write to; A person brings them back, with the address kept", async ({ page }) => {
   const name = `wb-pub-${test.info().workerIndex}-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "pub@pub.example" } });
+  expect(kept.ok()).toBe(true);
   const who = () => whoPage(page, `Blog ${name}`);
-  const editAs = async (kind: "A person" | "A publication") => {
-    await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
-    await appReady(page);
-    await who().getByRole("radio", { name: kind }).check();
-  };
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 
-  // Made a publication: the Email address field (under This is) goes as soon as it's chosen (decision 0192).
-  await editAs("A person");
-  await expect(who().getByRole("textbox", { name: "Email address" })).toBeVisible();
+  // Made a publication: Write to and its address go as soon as it's chosen (decision 0192).
   await who().getByRole("radio", { name: "A publication" }).check();
-  await expect(who().getByRole("textbox", { name: "Email address" })).toHaveCount(0);
-  await saved(page);
-  await expect(who().getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
+  await expect(who()).not.toContainText("pub@pub.example");
 
   // Its article ends with no Write back, there's no paper plane, and W (which would ask for the
   // unknown address, as in the first test) does nothing.
@@ -173,14 +162,9 @@ test("A publication has no Write back, no Write to and no email address in Edit;
   await expect(page.getByRole("menuitem", { name: /Write back/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
 
-  // A person again: Write to comes back; an address typed then is kept through a spell as a publication.
-  await editAs("A person");
-  await who().getByRole("textbox", { name: "Email address" }).fill("pub@pub.example");
-  await page.getByRole("button", { name: "Done" }).click();
+  // A person again: Write to comes back, with the address kept through its spell as a publication.
+  await page.goto(new URL(`/publications/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await who().getByRole("radio", { name: "A person" }).check();
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
-  await editAs("A publication");
-  await saved(page);
-  await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
-  await editAs("A person");
-  await expect(who().getByRole("textbox", { name: "Email address" })).toHaveValue("pub@pub.example");
 });

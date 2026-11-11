@@ -12,7 +12,7 @@ import { SCREENS, THEMES, openScreen } from "./screens";
 // sheet only, to keep the pull request's pictures to a size the owner can
 // look through.
 const EVERY_SCREEN: Theme[] = ["white", "night"];
-const MAIN_SCREENS = ["articles", "article", "settings", "edit-feed"];
+const MAIN_SCREENS = ["articles", "article", "settings", "who-page"];
 
 for (const screen of SCREENS) {
   for (const theme of THEMES) {

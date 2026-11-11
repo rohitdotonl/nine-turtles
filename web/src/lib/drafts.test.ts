@@ -37,10 +37,10 @@ describe("what the reader typed and hasn't saved (decision 0235)", () => {
 
   it("keeps changes only while they differ from where they started", () => {
     vi.stubGlobal("localStorage", storage());
-    keepWhileChanged("edit:feed:4", { title: "Hal" }, { title: "Hal Brennan" });
-    expect(keptDraft("edit:feed:4")).toEqual({ title: "Hal" });
-    keepWhileChanged("edit:feed:4", { title: "Hal Brennan" }, { title: "Hal Brennan" });
-    expect(keptDraft("edit:feed:4")).toBeUndefined();
+    keepWhileChanged("edit:folder:4", { title: "Hal" }, { title: "Hal Brennan" });
+    expect(keptDraft("edit:folder:4")).toEqual({ title: "Hal" });
+    keepWhileChanged("edit:folder:4", { title: "Hal Brennan" }, { title: "Hal Brennan" });
+    expect(keptDraft("edit:folder:4")).toBeUndefined();
   });
 
   it("follows a highlight made offline to its new number", () => {

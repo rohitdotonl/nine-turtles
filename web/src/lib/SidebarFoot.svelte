@@ -10,7 +10,7 @@
   places to drop them instead: Pause and, in the oxblood words, Unsubscribe,
   as words alone (no icon of their own: one icon, one meaning, BRAND.md).
   They're for the pointer only (sidebarDrag.ts reads `data-drop-act`); the
-  keyboard and screen readers have the same in Edit.
+  keyboard and screen readers have the same on their page.
 -->
 <script lang="ts">
   import { tip } from "./keyboard";

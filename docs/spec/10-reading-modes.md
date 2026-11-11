@@ -18,4 +18,4 @@
 **How to check it**
 1. In Settings › Reading, switch Unread off. The Unread view, its dot in the sidebar and the grey "read" titles all disappear, and the app opens on All articles.
 2. Read a few articles, switch Unread back on. The ones you read are shown as read.
-3. Open anyone's Edit: there's no Reading mode, Inbox or River there.
+3. Open anyone's page: there's no Reading mode, Inbox or River among their settings.

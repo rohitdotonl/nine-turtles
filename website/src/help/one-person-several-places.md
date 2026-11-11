@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-10
+updated: 2026-11-11
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -21,7 +21,7 @@ to) or a **publication** (anything you only read or watch, such as a
 magazine). The sidebar lists them under **People** and **Publications**.
 nine turtles makes a guess when you follow them, and asks you to finish
 "Maya Chen is…" with its guess already chosen. Got it wrong? Change
-**This is** in Edit (below).
+**This is** in their settings (below).
 
 ## Their page
 
@@ -32,36 +32,37 @@ page of whoever wrote the chosen article). On a
 computer their page opens beside the list; on a phone, as a screen of its
 own.
 
-Under a person's name is **Write to Maya Chen**, which opens your own email app
-to write to them (with their address under it, once nine turtles knows it;
-see <a href="/help/write-back/">Write back to a writer</a>). Then each of
-their sources, with a link to its own website.
+Their page starts with their name and, under it, where they publish, each
+place a link to its own website. Under a person's name is **Write to Maya
+Chen**, which opens your own email app to write to them, with their address
+under it once nine turtles knows it, and **Change** beside the address to
+correct it (see <a href="/help/write-back/">Write back to a writer</a>).
+Then what's yours of them: your note, and the words you highlighted in
+their writing. On a computer, the **×** at the top right (or
+<kbd>Esc</kbd>) takes you back to their list.
 
-## Edit them
+## Their settings
 
-Press **Edit** beside their name. There
-you can:
+Their settings are at the foot of the same page: there's no Edit and no
+Save. Each one changes the moment you touch it, as in Settings. Press
+<kbd>E</kbd> in their list to go straight to them.
 
-- change their **Name**,
-- choose whether **This is** a person or a publication (while they have one
-  source; a publication has no Write back),
-- add a person's **Email address**, for
-  <a href="/help/write-back/">writing back</a>,
-- choose their **Folders** (type a name to make a new one; it opens in the
-  sidebar when you press Done),
-- **Pause for a while**, while they have one source. While they're paused,
-  their list and their page say so, "Paused since 23 Oct. Their new articles
-  arrive already read.", with **Resume** to undo it in one press,
-- see their **Sources**, when they have two or more, and press › beside
-  one for its own settings,
-- and, at the foot, **Unsubscribe from Alpha**. If they were the last one
-  in a folder, the folder goes too; **Undo** brings both back.
-
-Press **Done** to save, or **Cancel** to leave everything as it was. On a
-phone, Done is along the bottom of the screen, and the **×** at the top
-leaves everything as it was. If you
-leave Edit any other way, your changes wait there for you, marked **Not saved
-yet.**, until you press Done or Cancel (or the × on a phone).
+- **Name**: type a new one and press <kbd>Enter</kbd>, or just move on;
+  "Saved." shows under it. <kbd>Esc</kbd> while typing puts the old one
+  back.
+- **This is**: a person or a publication (while they have one source; a
+  publication has no Write to or Write back).
+- **Folders**: shows the folders they're in; press it to tick or untick
+  any, or type a name under them to make a new folder (it opens in the
+  sidebar).
+- **Pause for a while**: their new articles arrive already read. While
+  they're paused, their list and their page say so, "Paused since 23 Oct.
+  Their new articles arrive already read.", with **Resume** to undo it in
+  one press.
+- **Hide articles about…**: opens Hiding with them chosen; its back button
+  brings you back to their page.
+- At the foot, **Unsubscribe from Alpha**. If they were the last one in a
+  folder, the folder goes too; **Undo** brings both back.
 
 ## Join someone's sources
 
@@ -71,9 +72,9 @@ joined, as one person.
 
 To join sources you already follow:
 
-1. Open their page and press **Edit**.
-2. Press **+ Add their newsletter, videos or podcast** (or, for someone with two or more
-   sources already, **+ Add a source**).
+1. Open their page.
+2. Under their settings, press **+ Add their newsletter, videos or podcast**
+   (or, for someone with two or more sources already, **+ Add a source**).
 3. Choose someone you already follow, or paste the address of their blog,
    channel or newsletter.
 
@@ -89,14 +90,15 @@ Press **Undo**.
 
 nine turtles never joins anyone by itself, and never asks: only you do.
 
-## A source's own settings
+## Their sources
 
-In Edit, press › beside a source. There you can pause it for a while, and,
-for a YouTube channel, choose whether Shorts and live streams show. With one
-source, these settings are in Edit itself.
+For someone with two or more sources, their settings end with **Sources**,
+each by its name and what it is. A YouTube channel has **Include Shorts**
+and **Include live streams** under it (for a channel on its own, they're
+in its settings).
 
-To split a source off again, press **Take out of Alpha** at the foot. It
-becomes a person or publication of its own, with **Undo**.
+To split a source off again, press **Take out** on its row. It becomes a
+person or publication of its own, with **Undo**.
 
 ## Make a folder one person
 

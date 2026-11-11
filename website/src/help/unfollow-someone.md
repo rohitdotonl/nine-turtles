@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-10
+updated: 2026-11-11
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -17,9 +17,8 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 
 1. Choose them in the sidebar, and open their page: press their name at
    the top of their list, or press <kbd>I</kbd>.
-2. Press **Edit**.
-3. Press **Unsubscribe from …** at the foot.
-4. If you starred, highlighted or wrote notes on any of their articles, or
+2. Press **Unsubscribe from …** at the foot of the page.
+3. If you starred, highlighted or wrote notes on any of their articles, or
    wrote a note on them, nine turtles asks what to do with it: **Keep them**,
    or, set apart below a line, a red button that names exactly what would
    go, such as **Remove the 2 starred articles too**.
@@ -38,7 +37,7 @@ name until it lifts first.
 - Let go on **Unsubscribe** and they're gone, with "Unsubscribed from …"
   and **Undo** at the bottom of the sidebar. If you starred, highlighted or
   noted anything of theirs, nine turtles asks first, right there, whether
-  to keep it, just as Edit does.
+  to keep it, just as their page does.
 - Let go on **Pause** for a noisy week: their new articles arrive already
   read until you resume them. "Paused …" comes with **Undo** too.
 
@@ -51,8 +50,8 @@ included. Adding them again with **+ Add** does the same. After 30 days
 they're gone for good.
 
 If they have several sources (a blog and a channel, say), Unsubscribe leaves
-them all. To let go of one source only, press › beside it in Edit, then
-**Take out of …**, and unsubscribe from that one.
+them all. To let go of one source only, press **Take out** on its row
+under **Sources** on their page, and unsubscribe from that one.
 
 ## Unfollow many at once
 

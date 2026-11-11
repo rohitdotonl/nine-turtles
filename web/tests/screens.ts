@@ -183,19 +183,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    name: "edit-feed",
-    path: "/all",
-    signedIn: true,
-    library: true,
-    open: async (page) => {
-      const id = await follow(page, shelf("garden-letters"));
-      await page.goto(new URL(`/people/${id}/edit`, page.url()).href);
-      await appReady(page);
-      await expect(page.getByRole("heading", { level: 2, name: /^Edit / })).toBeVisible();
-    },
-  },
-  {
-    // Their page: Write to under their name (point 9).
+    // Their page: Write to under their name (point 9), and their settings at its foot (one page, no Edit mode).
     name: "who-page",
     path: "/all",
     signedIn: true,

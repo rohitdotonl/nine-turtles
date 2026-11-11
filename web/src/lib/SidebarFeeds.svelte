@@ -327,7 +327,7 @@
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
 {#snippet feedRow(feed: Feed, from: number | null)}
   {@const place: Route = { kind: "feed", id: feed.id }}
-  {@const here = !phone && (route.kind === "feed" || route.kind === "about" || route.kind === "edit-feed" || route.kind === "edit-source") && (feed.places ?? [feed.id]).includes(route.id)}
+  {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
     <a
       href={pathFor(place)}

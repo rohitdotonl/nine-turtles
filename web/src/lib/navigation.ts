@@ -17,11 +17,11 @@ export function isOver(place: Route): boolean {
 }
 
 /**
- * A person's or publication's page, its Edit, or one source's settings (decision 0163): on a computer
+ * A person's or publication's page (decision 0163), its settings on it too: on a computer
  * in the reading area, beside their list; on a phone, a screen of its own in the list's place.
  */
-export function isWho(place: Route): place is Extract<Route, { kind: "about" | "edit-feed" | "edit-source" }> {
-  return place.kind === "about" || place.kind === "edit-feed" || place.kind === "edit-source";
+export function isWho(place: Route): place is Extract<Route, { kind: "about" }> {
+  return place.kind === "about";
 }
 
 /** With Unread off there's no Unread view: its address (and "/") leads to All. */
@@ -62,7 +62,7 @@ export type Move = {
 export function moveTo(here: Here, next: Route): Move {
   const { route, under, phone } = here;
   const same = pathFor(route) === pathFor(next);
-  // A person's page, Edit and source settings sit beside their list, which stays, as does its article.
+  // A person's page (at its settings too) sits beside their list, which stays, as does its article.
   const whoUnder = (place: Route) => (isWho(place) ? pathFor({ kind: "feed", id: place.id }) : pathFor(place));
   const besideList = !phone && (isWho(next) || isWho(route)) && whoUnder(next) === whoUnder(route);
   const keepsArticle = same || besideList || (!phone && ((isOver(next) && !isOver(route)) || (isOver(route) && pathFor(next) === pathFor(under))));

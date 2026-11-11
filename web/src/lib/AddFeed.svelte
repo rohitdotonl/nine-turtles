@@ -21,7 +21,7 @@
   the question's own heading), what was found (their site, and their newest
   title in the reading serif), and two tiles side by side, A person and A
   publication, each with its icon, nine turtles' guess chosen; then "You can
-  change this later in Edit." and Done.
+  change this later on their page." and Done.
 
   A shared page's address opens "Follow this person?" instead
   (FollowPerson.svelte, decision 0138). A YouTube video's address asks
@@ -134,7 +134,7 @@
   onDestroy(() => {
     closed = true;
     asked = "";
-    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which Edit can change.
+    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their page can change.
     if (asking && !answering) onAdded(asking, note);
   });
 
@@ -330,7 +330,7 @@
     busy = false;
     asking = undefined;
     asked = "";
-    // The guess stands if the answer couldn't be kept; Edit can change it later.
+    // The guess stands if the answer couldn't be kept; their page can change it later.
     onAdded(refusal ? feed : { ...feed, kind: who, ...(title ? { title } : {}) }, note);
   }
 
@@ -523,7 +523,7 @@
             <span id="feed-who-publication" class="text-meta text-ink-2">Anything you only read or watch, and won't write back to.</span>
           </label>
         </div>
-        <span class="field-help mt-0">You can change this later in Edit.</span>
+        <span class="field-help mt-0">You can change this later on their page.</span>
         {#if !framed}
           <!-- In the welcome, Done under the question, at its right, as in a sheet. -->
           <button type="submit" aria-disabled={busy} class="btn-primary self-end">Done</button>

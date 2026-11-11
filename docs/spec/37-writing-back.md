@@ -23,8 +23,8 @@ V1, item 2). Its look gets a refinement round.*
 - **Not for publications** (decision 0192, the owner's choice): a
   publication is something you only read or watch, so its articles end with
   no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page
-  has no Write to, and its Edit has no Email address. Making it **A person**
-  in Edit brings all of them back, with any address kept from before.
+  has no Write to, and so no address on its page. Making it **A person**
+  on its page brings them back, with any address kept from before.
 - **Write to, on their page** (the owner's core path, point 9): the same
   solid button with the paper plane, **Write to Tomas Berg**, sits under
   their name on their page (section 36), with the address under it. It
@@ -119,10 +119,10 @@ V1, item 2). Its look gets a refinement round.*
   counted, so a later press tries again; one that answered with an error
   or asked nine turtles to slow down is counted, and never asked again.
 - **Their page** (section 36) shows it under **Write to …**, once nine
-  turtles knows it. Edit (on their page) has an **Email address**
-  field under the name ("Write back opens your own email app with this
-  address."): change it and press Done to write somewhere else; empty it to go
-  back to what their feed gives, if anything.
+  turtles knows it, with **Change** beside it (decision 0254): the same box
+  as Write back's opens in place, filled with it ("Correct it, or paste a new
+  one."), with Save and Not now; change it and press Save to write somewhere
+  else; empty it to go back to what their feed gives, if anything.
 - Each reader's addresses are theirs alone. The address a feed gives is the
   same for everyone who follows it, as its name is.
 
@@ -138,7 +138,7 @@ V1, item 2). Its look gets a refinement round.*
    app opens straight away.
 3. Open their page (press their name at the top of their list): **Write to
    …** with the address under it; pressing it opens your email app with no
-   subject. Press Edit: the field has it; change it and press Done; the page
+   subject. Press Change: the box has it; change it and press Save; the page
    shows the new one.
 4. Press **Find it on their site** in that box: their website opens in a
    new tab, and the box is still there to paste the address into.
