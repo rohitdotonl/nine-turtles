@@ -8,6 +8,7 @@ import "./reading-column.css";
 import "./scripts.css";
 import "./pressed.css";
 import "./print.css";
+import "./opening.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";
@@ -21,6 +22,8 @@ if (!target) throw new Error("nine turtles: the #app element is missing from ind
 // text size, before anything is drawn.
 apply(load());
 followSystemText();
+// "Opening your reading…" (index.html, decision 0260) gives way to nine turtles itself.
+target.replaceChildren();
 mount(App, { target });
 
 // Keeps the browser's offer to install nine turtles for Settings › Install the app on any device.

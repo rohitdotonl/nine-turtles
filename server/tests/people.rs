@@ -283,7 +283,7 @@ async fn adding_another_place_to_a_person_and_separating_it_again() {
     // With no name given, the person takes the first place's.
     assert_eq!(
         reader.people().await,
-        [("Alpha's blog".to_owned(), vec![blog, letters])]
+        [("Alpha".to_owned(), vec![blog, letters])]
     );
     // Edit person on either place names the person and files all their places.
     let (_, made) = reader
@@ -410,9 +410,10 @@ async fn a_person_whose_feed_names_one_author_is_called_by_that_name() {
     let listed = reader.feed(tomas).await;
     assert_eq!(listed["title"], "Tomas Berg");
     assert_eq!(listed["site_title"], "Notes from Tomas");
-    // A blog that signs nothing keeps its title; so does one with several writers.
+    // A blog that signs nothing keeps its title, tidied ("Alpha's blog" is Alpha's, decision 0260);
+    // so does one with several writers.
     let blog = reader.follow("alpha.xml").await;
-    assert_eq!(reader.feed(blog).await["title"], "Alpha's blog");
+    assert_eq!(reader.feed(blog).await["title"], "Alpha");
     let gazette = reader.follow("gazette.xml").await;
     assert_eq!(reader.feed(gazette).await["title"], "The Gazette");
     // A name the reader gives stays, the next time the sidebar loads too.

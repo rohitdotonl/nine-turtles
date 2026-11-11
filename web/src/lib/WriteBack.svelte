@@ -2,9 +2,10 @@
   Write back (SPEC section 37, decision 0147): at the end of every article of
   someone the reader follows, under its closing rule, one outlined button
   with a paper plane, as Mark all as read ends a list (`quiet`, decision
-  0242), "Write back to Tomas Berg" (their full name, the one in the sidebar;
-  the owner's core path, points 6 and 7), with the address it writes to under
-  it: the way on, quieter than the writing it follows. It opens
+  0242), "Write back", with "to Tomas Berg, tomas@example.com" (their full
+  name, the one in the sidebar, the owner's core path, points 6 and 7; and the
+  address it writes to) in a quiet line under it, so a long name never swells
+  the button (decision 0260): the way on, quieter than the writing it follows. It opens
   the reader's own email app with the address and "Re: the title" filled in;
   nine turtles never sends or reads that email.
 
@@ -322,6 +323,16 @@
   }
 </script>
 
+<!--
+  At an article's end the button stays one short "Write back", whatever the name's length, with who
+  it goes to in the quiet line under it (decision 0260); screen readers hear the whole "Write back to
+  {name}" as the button's name, so the line under it is theirs only to see. On their page, under
+  their name, it says "Write to {name}".
+-->
+{#snippet label()}
+  {#if article}<span>Write back<span class="sr-only"> to <bdi>{name}</bdi></span></span>{:else}<span>{verb} <bdi>{name}</bdi></span>{/if}
+{/snippet}
+
 {#if place}
   <div bind:this={root} class={["write-back", !article && "on-page"]} lang="en">
     {#if changing}
@@ -361,9 +372,9 @@
         onEscape={() => void notNow()}
       />
     {:else if address}
-      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>
+      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" />{@render label()}</a>
       {#if article}
-        <p class="to">{address}</p>
+        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>, </span>{address}</p>
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
@@ -374,7 +385,8 @@
         {#if opening}{#if !returned}Opening {where}…<br />{/if}{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}{question}<span class="ways">{#each others as other (other)}<TextButton onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</TextButton>{/each}<TextButton onclick={() => void copyAddress(true)}>Copy their address</TextButton></span>{/if}{/if}
       </p>
     {:else}
-      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></button>
+      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" />{@render label()}</button>
+      {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
     {/if}
   </div>
 {/if}
@@ -432,5 +444,10 @@
     color: var(--muted);
     font-size: var(--text-meta);
     overflow-wrap: anywhere;
+  }
+  /* At an article's end, centred under the button as the button is, a long name wrapping evenly. */
+  .write-back:not(.on-page) .to {
+    text-align: center;
+    text-wrap: balance;
   }
 </style>
