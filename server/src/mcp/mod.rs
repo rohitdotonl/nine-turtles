@@ -108,11 +108,13 @@ fn server_info(base: &str) -> Value {
         "name": "nine-turtles",
         "title": "nine turtles",
         "version": VERSION,
-        "description": "A calm reader for writing on the open web.",
+        // The settled headline and the app icon, as the installed app shows
+        // them (docs/BRAND.md): never the tab icon's single turtle.
+        "description": "Read people. Write back.",
         "websiteUrl": "https://nineturtles.app",
         "icons": [
-            { "src": format!("{base}/icons/icon.svg"), "mimeType": "image/svg+xml", "sizes": ["any"] },
             { "src": format!("{base}/icons/icon-192.png"), "mimeType": "image/png", "sizes": ["192x192"] },
+            { "src": format!("{base}/icons/icon-512.png"), "mimeType": "image/png", "sizes": ["512x512"] },
         ],
     })
 }

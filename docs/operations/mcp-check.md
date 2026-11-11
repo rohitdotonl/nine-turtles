@@ -24,9 +24,10 @@ check does nothing. No "all good" issues, no messages.
 ## Steps
 
 1. **Has the standard changed?** List the specification's versions from its
-   repository: `https://api.github.com/repos/modelcontextprotocol/modelcontextprotocol/contents/docs/specification`
-   (each folder is a version, named by its date; ignore `draft`), and read the
-   newest one's changelog at
+   repository's site map,
+   `https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/docs/docs.json`
+   (every `specification/<date>/changelog` it names is a version; ignore
+   `draft`), and read the newest one's changelog at
    `https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/docs/specification/<version>/changelog.mdx`.
    Compare with `MODERN` and `LEGACY` in `server/src/mcp/protocol.rs`. A
    version newer than the newest there **always** gets at least an issue

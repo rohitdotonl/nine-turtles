@@ -29,7 +29,7 @@ pub fn supported() -> Vec<&'static str> {
 
 const VERSION_KEY: &str = "io.modelcontextprotocol/protocolVersion";
 const CAPABILITIES_KEY: &str = "io.modelcontextprotocol/clientCapabilities";
-pub const SERVER_INFO_KEY: &str = "io.modelcontextprotocol/serverInfo";
+const SERVER_INFO_KEY: &str = "io.modelcontextprotocol/serverInfo";
 
 /// The JSON-RPC error codes the 2026-07-28 version adds.
 const HEADER_MISMATCH: i64 = -32020;

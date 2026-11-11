@@ -1401,6 +1401,21 @@ async fn an_assistant_speaking_the_stateless_version_works_without_opening() {
     .await;
     assert_eq!(answer["result"]["protocolVersion"], "2025-11-25");
     assert!(answer["result"].get("resultType").is_none());
+    // As every assistant connected today sends its later messages.
+    let listed: Value = Client::new()
+        .post(format!("{base}/mcp"))
+        .bearer_auth(&access)
+        .header("content-type", "application/json")
+        .header("mcp-protocol-version", "2025-11-25")
+        .body(json!({ "jsonrpc": "2.0", "id": 5, "method": "tools/list" }).to_string())
+        .send()
+        .await
+        .unwrap()
+        .then_read()
+        .await;
+    assert!(listed["result"]["tools"].as_array().unwrap().len() > 10);
+    assert!(listed["result"].get("resultType").is_none());
+    assert!(listed["result"].get("ttlMs").is_none());
 }
 
 #[tokio::test]

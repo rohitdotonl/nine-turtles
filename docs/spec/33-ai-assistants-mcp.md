@@ -8,8 +8,9 @@ nine turtles runs no AI itself. A reader can connect their own assistant (Claude
 
 **Connecting**
 - In the assistant, the reader adds nine turtles as a connector (an "MCP server") with the address shown in Settings › Connected assistants: `https://app.nineturtles.app/mcp`.
-- The assistant opens nine turtles' **"Connect … to nine turtles?"** page (signing in first if needed). It names the assistant (as the assistant calls itself, shown as plain text), lists what it will be able to do and what it won't, says feeds it unsubscribes from are kept for 30 days, that it can be disconnected any time in Settings, and which website the reader goes back to. **Connect** and **Cancel**; either goes back to the assistant. A link that isn't valid (an unknown assistant, or a return address it didn't register) says so and goes nowhere.
+- The assistant opens nine turtles' **"Connect … to nine turtles?"** page (signing in first if needed). It names the assistant (as the assistant calls itself, shown as plain text), lists what it will be able to do and what it won't, says feeds it unsubscribes from are kept for 30 days, that it can be disconnected any time in Settings, and which website the reader goes back to. **Connect** and **Cancel**; either goes back to the assistant. A link that isn't valid (an unknown assistant, a return address it didn't register, or one asking for access to another server) says so and goes nowhere.
 - Approving is the opt-in: there's no switch. Each connection is one reader's and acts only for them.
+- In the assistant's own list of connectors, nine turtles shows with its app icon, "Read people. Write back." and a link to nineturtles.app, when the assistant shows such things.
 - An assistant that can't show that page uses an **assistant key** instead: **Make an assistant key** in Settings (with an optional name) shows a key starting `nt_` once, with Copy; the assistant sends it as a bearer token. nine turtles keeps only a scrambled copy.
 
 **What an assistant can do** (its "tools")
