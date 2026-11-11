@@ -44,9 +44,13 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(pane(page)).toContainText("Their site couldn't be checked for an address.");
   await expect(field).toHaveValue("");
   // Their site, to find the address on, opens in a new tab.
-  const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
+  const site = pane(page).getByRole("link", { name: "look on their site (opens in a new tab)" });
   await expect(site).toHaveAttribute("href", /^https?:\/\//);
   await expect(site).toHaveAttribute("target", "_blank");
+
+  // The box's one solid button is Write back, though the button that opened it is outlined (decision 0257).
+  await expect(pane(page).locator("form").getByRole("button", { name: "Write back", exact: true })).toHaveClass(/btn-primary/);
+  await expect(pane(page)).toContainText("It sends from your own email, and nine turtles keeps the address for next time.");
 
   // Something that isn't an address is refused, in words, keeping what was typed.
   await field.fill("ivy at home");
@@ -79,7 +83,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(words.getByRole("menuitem", { name: "Write back about this" })).toBeVisible();
   await words.getByRole("menuitem", { name: /Highlight/ }).click();
   await page.getByRole("menu", { name: "Highlight" }).getByRole("menuitem", { name: "Done" }).click();
-  await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20.*&body=%3E%20made-up%20summary%0A%0A$/);
+  await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20.*&body=%E2%80%9Cmade-up%20summary%E2%80%9D%0A%0A$/);
   await expect(pane(page)).toContainText("Your email starts with the words you highlighted.");
   // A highlight pressed offers it too.
   await pane(page).locator("mark.highlight").click();
@@ -120,7 +124,7 @@ test("Write back fills in the address it finds on their site, for the reader to 
   await expect(pane(page)).toContainText("Found on their site. Check it, then press Write back.");
   await expect(field).toHaveValue(`${name}@${name}.example`);
   // The address is there, so the button to go and find it isn't.
-  const site = pane(page).getByRole("link", { name: "Find it on their site (opens in a new tab)" });
+  const site = pane(page).getByRole("link", { name: "look on their site (opens in a new tab)" });
   await expect(site).toHaveCount(0);
   // Changed, the box is as before.
   await field.fill("someone@else.example");
@@ -204,7 +208,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   // The paper plane at the top, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229).
   await plane.click();
   const note = pane(page).locator(".away");
-  await expect(note).toContainText("Opening your email app… Nothing opened?");
+  await expect(note).toContainText("Opening your email app… Nothing opened, or the wrong app?");
   await note.getByRole("button", { name: "Copy their address" }).click();
   await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await note.getByRole("button", { name: "Close the note" }).click();
@@ -213,7 +217,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   // By keyboard: W says it at the foot; Copy their address is pressed with Enter, and the keyboard goes back to the article.
   await page.locator(".item-row").first().focus();
   await page.keyboard.press("w");
-  await expect(note).toContainText("Opening your email app… Nothing opened?");
+  await expect(note).toContainText("Opening your email app… Nothing opened, or the wrong app?");
   await note.getByRole("button", { name: "Copy their address" }).focus();
   await page.keyboard.press("Enter");
   await expect(note).toContainText(/Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
@@ -223,4 +227,52 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await expect(note).toContainText("Opening your email app…");
   await page.locator(".item-row").nth(1).click();
   await expect(note.getByText(/Opening your email app/)).toHaveCount(0);
+});
+
+test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a new tab from then on, on this device", async ({ page }) => {
+  const name = `wbgmail${test.info().workerIndex}x${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.context().route("https://mail.google.com/**", (route) => route.fulfill({ body: "A made-up Gmail" }));
+  await page.context().route("https://outlook.live.com/**", (route) => route.fulfill({ body: "A made-up Outlook" }));
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "gm@gm.example" } })).ok()).toBe(true);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  const link = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
+  await expect(link).toHaveAttribute("href", /^mailto:gm@gm\.example\?subject=/);
+
+  // Pressed: the line under it offers the other places, on a computer.
+  await link.click();
+  const line = pane(page).locator(".write-back .opening");
+  await expect(line).toContainText("Opening your email app…");
+  await expect(line).toContainText("Nothing opened, or the wrong app?");
+  const gmail = page.context().waitForEvent("page");
+  await line.getByRole("button", { name: "Write in Gmail" }).click();
+  // The same email, now in Gmail, at once.
+  const draft = await gmail;
+  expect(draft.url()).toMatch(/^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=gm%40gm\.example&su=Re%3A%20/);
+  await draft.close();
+  await expect(line).toContainText("Opening Gmail in a new tab…");
+  await expect(line.getByRole("button", { name: "Write in your email app" })).toBeVisible();
+
+  // Kept on this device: another article's Write back is a Gmail draft, in a new tab.
+  await page.locator(".item-row").nth(1).click();
+  await expect(link).toHaveAttribute("href", /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=gm%40gm\.example&su=Re%3A%20/);
+  await expect(link).toHaveAttribute("target", "_blank");
+  await page.reload();
+  await appReady(page);
+  await expect(link).toHaveAttribute("href", /^https:\/\/mail\.google\.com\//);
+
+  // And back: Write in your email app is the mailto: link again.
+  const again = page.context().waitForEvent("page");
+  await link.click();
+  await (await again).close();
+  await pane(page).locator(".write-back .opening").getByRole("button", { name: "Write in your email app" }).click();
+  await expect(link).toHaveAttribute("href", /^mailto:gm@gm\.example/);
+  await expect(link).not.toHaveAttribute("target", "_blank");
 });

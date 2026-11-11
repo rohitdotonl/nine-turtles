@@ -17,10 +17,13 @@
   source does, and nine turtles looks on their site once for it (decision
   0168: their home page and one contact or about page, by the server, never
   twice for the same writer). What it finds fills in the field for the reader
-  to check; else "Find it on their site" (their website, in a new tab), one
+  to check; else "look on their site" (their website, in a new tab, a link in its line), one
   field to paste it in, Write back and Not now. The address is kept for the person (their page
   shows it, Change beside it changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
+
+  Where it opens is this device's choice (decision 0257): the email app (`mailto:`), or, once
+  "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
   The paper plane, its key (`w`), a row's menu and the menu beside chosen words do the same
   (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
@@ -38,7 +41,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import type { ListNote } from "./listNote";
   import type { Article } from "./shapes";
-  import { aboutLine, addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
+  import { aboutLine, addressFor, composeLink, keepAddress, keepMailPlace, lookOnTheirSite, looksLikeAddress, MAIL_NAMES, mailPlace, quotedBody, siteOf, writesBack, type MailPlace } from "./writeBack";
 
   let {
     article,
@@ -104,6 +107,46 @@
     return () => document.removeEventListener("visibilitychange", back);
   });
 
+  /** Where this device writes email (decision 0257): its email app, or Gmail or Outlook.com in a new tab. */
+  let writesIn: MailPlace = $state(mailPlace());
+  /** What the last email started with, to start it again in another place. */
+  let lastQuotes: string[] = [];
+  /** On a computer, every other place; on a touch screen, whose email app always answers, only the way back to it. */
+  const computer = typeof matchMedia === "function" && matchMedia("(pointer: fine)").matches;
+  let others = $derived((["app", "gmail", "outlook"] as const).filter((other) => other !== writesIn && (computer || other === "app")));
+  let where = $derived(writesIn === "app" ? "your email app" : `${MAIL_NAMES[writesIn]} in a new tab`);
+  let question = $derived(writesIn === "app" ? "Nothing opened, or the wrong app?" : "Wrong place?");
+
+  /** Opens the new email where this device writes, and says so under the button. */
+  function send(to: string, quotes: string[]) {
+    lastQuotes = quotes;
+    const link = composeLink(writesIn, to, subject, quotes);
+    if (writesIn === "app") window.location.href = link;
+    else window.open(link, "_blank", "noopener,noreferrer");
+    copied = "";
+    copyFailed = false;
+    opening = true;
+  }
+
+  /** Write in another place: kept on this device, and the same email opened there at once. */
+  function writeIn(other: MailPlace) {
+    keepMailPlace(other);
+    writesIn = other;
+    if (address) send(address, lastQuotes);
+    if (away) away = awayNote();
+  }
+
+  /** The line's words and buttons, as the note at the reading area's foot says them. */
+  function awayNote(): ListNote {
+    return {
+      words: `Opening ${where}… ${question}`,
+      also: others.map((other) => ({ word: `Write in ${MAIL_NAMES[other]}`, press: () => writeIn(other) })),
+      retry: () => void copyAddress(),
+      retryWord: "Copy their address",
+      close: () => (away = undefined),
+    };
+  }
+
   /** Copy their address, saying how it went here, or in the note at the reading area's foot when that's where it was pressed. */
   async function copyAddress() {
     const done = await navigator.clipboard.writeText(address ?? "").then(
@@ -145,10 +188,10 @@
     chosen = about;
     if (address) {
       // Off screen, the line under the button would answer where nobody sees it: the reading area's foot says it too. Screen readers hear it from the line, which is always in the page.
-      away = shown() ? undefined : { words: "Opening your email app… Nothing opened?", retry: () => void copyAddress(), retryWord: "Copy their address", close: () => (away = undefined) };
-      window.location.href = writeBackLink(address, subject, quoted);
+      const offScreen = !shown();
+      send(address, quoted);
+      away = offScreen ? awayNote() : undefined;
       chosen = undefined;
-      opening = true;
       return;
     }
     asking = true;
@@ -229,9 +272,8 @@
       return;
     }
     // The email app opens while the press still counts as the reader's own; the address is kept meanwhile.
-    window.location.href = writeBackLink(typed.trim().replace(/^mailto:/i, ""), subject, quoted);
+    send(typed.trim().replace(/^mailto:/i, ""), quoted);
     chosen = undefined;
-    opening = true;
     busy = true;
     const problem = await keepAddress(place.id, typed);
     if (problem) {
@@ -278,10 +320,10 @@
         {showingFound}
         saved
         submit={article ? "Write back" : "Write"}
-        {quiet}
+        quiet={quiet && !article}
         {busy}
         {message}
-        foot="It sends from your own email."
+        foot="It sends from your own email, and nine turtles keeps the address for next time."
         bind:typed
         bind:field
         onsubmit={write}
@@ -289,7 +331,7 @@
         onEscape={() => void notNow()}
       />
     {:else if address}
-      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>
+      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => ((lastQuotes = quoted), (copied = ""), (copyFailed = false), (opening = true))}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>
       {#if article}
         <p class="to">{address}</p>
       {:else}
@@ -298,7 +340,7 @@
       {/if}
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
       <p class={["opening", !opening && "sr-only"]} aria-live="polite">
-        {#if opening}Opening your email app…<br />{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}Nothing opened? <TextButton onclick={copyAddress}>Copy their address</TextButton>{/if}{/if}
+        {#if opening}Opening {where}…<br />{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}{question}<span class="ways">{#each others as other (other)}<TextButton onclick={() => writeIn(other)}>Write in {MAIL_NAMES[other]}</TextButton>{/each}<TextButton onclick={copyAddress}>Copy their address</TextButton></span>{/if}{/if}
       </p>
     {:else}
       <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></button>
@@ -339,6 +381,16 @@
   }
   .on-page .opening {
     text-align: start;
+  }
+  /* The ways on, side by side on a line of their own, wrapping on a phone. */
+  .ways {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 1.25rem;
+  }
+  .on-page .ways {
+    justify-content: flex-start;
   }
   .change {
     margin-left: 0.5rem;
