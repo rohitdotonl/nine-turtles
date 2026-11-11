@@ -22,7 +22,9 @@
   shows it, Change beside it changes it), so it's asked for once. The email app
   opens at once, while the address is being kept.
 
-  The More menu's "Write back" and its key (`w`) do the same (`start`).
+  The paper plane, its key (`w`), a row's menu and the menu beside chosen words do the same
+  (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
+  area's foot instead, where the reader is (`away`, drawn by the article's AwayNote; decision 0229).
 
   A publication has none of this (decision 0192): nothing shows, and `start` does nothing.
 -->
@@ -34,8 +36,9 @@
   import TextButton from "./TextButton.svelte";
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
+  import type { ListNote } from "./listNote";
   import type { Article } from "./shapes";
-  import { addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
+  import { aboutLine, addressFor, keepAddress, lookOnTheirSite, looksLikeAddress, quotedBody, siteOf, writeBackLink, writesBack } from "./writeBack";
 
   let {
     article,
@@ -43,6 +46,8 @@
     library,
     quotes = () => [],
     quiet = false,
+    within,
+    away = $bindable(),
   }: {
     /** The article it writes back about; none on their page, where it writes to them. */
     article?: Article;
@@ -53,6 +58,10 @@
     quotes?: () => string[];
     /** Beside another main action (a card's Find new address): an everyday bordered button, not the solid one. */
     quiet?: boolean;
+    /** The article's scroller, to tell whether this is on screen. */
+    within?: HTMLElement;
+    /** Started while this is off screen (the paper plane, `w`): what to say at the reading area's foot instead (decision 0229). */
+    away?: ListNote;
   } = $props();
 
   let source = $derived(library.feeds?.find((feed) => feed.id === (article?.feedId ?? feedId)));
@@ -63,7 +72,7 @@
   let site = $derived(siteOf(place, article?.link));
   /** On their page: "Write to", an empty subject, under their name on the page's left edge. */
   let verb = $derived(article ? "Write back to" : "Write to");
-  let subject = $derived(article?.title ?? "");
+  let subject = $derived(article ? aboutLine(article) : "");
   /** What the email starts with: the words of Write back about this, else every highlight. */
   let chosen: string[] | undefined = $state();
   let quoted = $derived(article ? (chosen ?? quotes()) : []);
@@ -90,19 +99,29 @@
   let copyFailed = $state(false);
   // Back from the email app: the page was hidden while it opened, so the line has done its job.
   $effect(() => {
-    const back = () => document.visibilityState === "visible" && (opening = false);
+    const back = () => document.visibilityState === "visible" && ((opening = false), (away = undefined));
     document.addEventListener("visibilitychange", back);
     return () => document.removeEventListener("visibilitychange", back);
   });
 
+  /** Copy their address, saying how it went here, or in the note at the reading area's foot when that's where it was pressed. */
   async function copyAddress() {
-    try {
-      await navigator.clipboard.writeText(address ?? "");
-      copied = "Copied.";
-    } catch {
-      copyFailed = true;
-      copied = "The address couldn't be copied. Select it above and copy it yourself.";
-    }
+    const done = await navigator.clipboard.writeText(address ?? "").then(
+      () => true,
+      () => false,
+    );
+    copyFailed = !done;
+    copied = done ? "Copied." : `The address couldn't be copied. It's ${address}: select it and copy it yourself.`;
+    if (away) away = { words: copied, refusal: copyFailed, close: () => (away = undefined) };
+  }
+
+  /** Whether all of this, and so the line under the button, is on screen in the article's scroller. */
+  let root: HTMLDivElement | undefined = $state();
+  function shown(): boolean {
+    if (!root || !within) return true;
+    const it = root.getBoundingClientRect();
+    const view = within.getBoundingClientRect();
+    return it.top >= view.top && it.bottom + 64 <= view.bottom;
   }
 
   // Another article starts with the button, not a half-typed address.
@@ -115,6 +134,7 @@
     message = "";
     chosen = undefined;
     opening = false;
+    away = undefined;
     copied = "";
     copyFailed = false;
   });
@@ -124,6 +144,8 @@
     if (!place) return;
     chosen = about;
     if (address) {
+      // Off screen, the line under the button would answer where nobody sees it: the reading area's foot says it too. Screen readers hear it from the line, which is always in the page.
+      away = shown() ? undefined : { words: "Opening your email app… Nothing opened?", retry: () => void copyAddress(), retryWord: "Copy their address", close: () => (away = undefined) };
       window.location.href = writeBackLink(address, subject, quoted);
       chosen = undefined;
       opening = true;
@@ -229,7 +251,7 @@
 </script>
 
 {#if place}
-  <div class={["write-back", !article && "on-page"]} lang="en">
+  <div bind:this={root} class={["write-back", !article && "on-page"]} lang="en">
     {#if changing}
       <AddressBox
         title={`${name}'s email address`}
@@ -264,6 +286,7 @@
         bind:field
         onsubmit={write}
         onNotNow={() => void notNow()}
+        onEscape={() => void notNow()}
       />
     {:else if address}
       <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={writeBackLink(address, subject, quoted)} onclick={() => (opening = true)}><Icon name="send" /><span>{verb} <bdi>{name}</bdi></span></a>

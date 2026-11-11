@@ -90,13 +90,15 @@ test("highlights and a note stay with the article, and Notes and search find the
  * Signed in, on a new blog's newest article, with a new highlight's save
  * answering late (or refused), as on a busy server. `answered` says whether
  * the save has answered yet; `saved` is its answer. Refused, saves after it
- * are refused too until the test says otherwise (`refuse`).
+ * are refused too until the test says otherwise (`refuse`). `first` runs on
+ * the article before the highlight is made.
  */
-async function slowSaves(page: Page, name: string, refuse = false) {
+async function slowSaves(page: Page, name: string, refuse = false, first?: () => Promise<void>) {
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   await openNewest(page, `${name}-${test.info().workerIndex}-${Date.now()}`);
+  await first?.();
   const save = { refuse, answered: false };
   await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
     if (route.request().method() !== "POST") return route.continue();
@@ -122,6 +124,180 @@ async function reopen(page: Page) {
   await appReady(page);
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
 }
+
+/** A note written on words chosen in the article, left unsaved with Not now. */
+async function leaveNoteOnWords(page: Page, words: string, note: string) {
+  await choose(page, words);
+  await page.getByRole("menu", { name: "Chosen words" }).getByRole("menuitem", { name: "Add a note…" }).click();
+  await page.getByRole("textbox", { name: "A note on these words" }).fill(note);
+  await page.getByRole("button", { name: "Not now" }).click();
+}
+
+const highlightSave = (page: Page) => page.waitForResponse((answer) => /\/api\/articles\/\d+\/highlights$/.test(answer.url()) && answer.request().method() === "POST");
+
+/**
+ * Signed in, on a new blog's newest article, "for article" highlighted with
+ * h: the server saves it, but its answer never reaches the page, as when the
+ * page is reloaded that instant. It waits on the device to be sent again.
+ */
+async function answerLost(page: Page, name: string) {
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  await openNewest(page, `${name}-${test.info().workerIndex}-${Date.now()}`);
+  let lost = false;
+  await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+    if (route.request().method() !== "POST" || lost) return route.continue();
+    lost = true;
+    expect((await route.fetch()).status()).toBe(201);
+    await route.abort("internetdisconnected");
+  });
+  await choose(page, "for article");
+  await page.keyboard.press("h");
+  await expect(page.getByText("You're offline.", { exact: false })).toBeVisible();
+  await page.keyboard.press("Escape");
+}
+
+/** The browser says it's online again: the app asks the server, and sends what's waiting. */
+async function backOnline(page: Page) {
+  await page.evaluate(() => dispatchEvent(new Event("online")));
+}
+
+test.describe("a highlight sent twice is saved once (decision 0255)", () => {
+  test.skip(({ isMobile }) => isMobile, "the keys are the computer's; the phone does the same");
+
+  test("its answer lost as the page reloads, it's sent again after and kept once", async ({ page }) => {
+    await answerLost(page, "twice");
+    // Kept on the device, it's sent again once the page is back, and the server knows it.
+    const again = highlightSave(page);
+    await reopen(page);
+    expect((await again).status()).toBe(201);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(page.getByText("You're offline.", { exact: false })).toHaveCount(0);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(article(page).getByRole("list", { name: "Your highlights" }).getByRole("listitem")).toHaveCount(1);
+  });
+
+  test("words with a note kept on them, highlighted with h: Save puts the note on that highlight", async ({ page }) => {
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    await openNewest(page, `kept-then-h-${test.info().workerIndex}-${Date.now()}`);
+    await leaveNoteOnWords(page, "for article", "Kept on the words");
+    await reopen(page);
+    await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Kept on the words");
+    const made = highlightSave(page);
+    await choose(page, "for article");
+    await page.keyboard.press("h");
+    expect((await made).status()).toBe(201);
+    await page.keyboard.press("Escape");
+    // The kept box is now the highlight's: Save notes it, and highlights nothing again.
+    const noted = onServer(page, "note");
+    await article(page).getByRole("button", { name: "Save" }).click();
+    expect((await noted).ok()).toBe(true);
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await expect(ends.getByText("Kept on the words")).toBeVisible();
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(ends.getByText("Kept on the words")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveCount(0);
+  });
+  test("its answer lost, a note written on it while it waits is saved once it's sent again", async ({ page }) => {
+    await answerLost(page, "twice-note");
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+    await page.getByRole("textbox", { name: "A note on these words" }).fill("Written while waiting");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(ends.getByText("Written while waiting")).toBeVisible();
+    const noted = onServer(page, "note");
+    await backOnline(page);
+    expect((await noted).ok()).toBe(true);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(ends.getByText("Written while waiting")).toBeVisible();
+  });
+
+  test("its answer lost, removed while it waits, it's removed on the server too", async ({ page }) => {
+    await answerLost(page, "twice-remove");
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await ends.getByRole("button", { name: "Remove highlight “for article”" }).click();
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+    const removed = onServer(page, "remove");
+    await backOnline(page);
+    expect((await removed).ok()).toBe(true);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(0);
+  });
+
+  test("a kept note's Save pressed while h is still saving its words puts the note on that highlight", async ({ page }) => {
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    await openNewest(page, `kept-then-slow-h-${test.info().workerIndex}-${Date.now()}`);
+    await leaveNoteOnWords(page, "for article", "Saved while it saves");
+    await reopen(page);
+    await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await new Promise((done) => setTimeout(done, 2500));
+      await route.continue();
+    });
+    let saves = 0;
+    page.on("request", (request) => {
+      if (/\/api\/articles\/\d+\/highlights$/.test(request.url()) && request.method() === "POST") saves += 1;
+    });
+    await choose(page, "for article");
+    await page.keyboard.press("h");
+    await page.keyboard.press("Escape");
+    const noted = onServer(page, "note");
+    await article(page).getByRole("button", { name: "Save" }).click();
+    expect((await noted).ok()).toBe(true);
+    expect(saves).toBe(1);
+    await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveCount(0);
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(ends.getByText("Saved while it saves")).toBeVisible();
+  });
+
+  test("a kept note's Save refused, on words h is still saving, keeps its words for later", async ({ page }) => {
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    await appReady(page);
+    await signIn(page);
+    await openNewest(page, `kept-refused-${test.info().workerIndex}-${Date.now()}`);
+    await leaveNoteOnWords(page, "for article", "Not to be lost");
+    await reopen(page);
+    await page.route(/\/api\/articles\/\d+\/highlights$/, async (route) => {
+      if (route.request().method() !== "POST") return route.continue();
+      await new Promise((done) => setTimeout(done, 2500));
+      await route.continue();
+    });
+    await page.route(/\/api\/highlights\/\d+$/, (route) => route.fulfill({ status: 500, body: "" }));
+    const made = highlightSave(page);
+    await choose(page, "for article");
+    await page.keyboard.press("h");
+    await page.keyboard.press("Escape");
+    await article(page).getByRole("button", { name: "Save" }).click();
+    expect((await made).status()).toBe(201);
+    await expect(page.getByText("The note couldn't be saved, so your words are still here.")).toBeVisible();
+    await page.getByRole("button", { name: "Not now" }).click();
+    await page.unroute(/\/api\/highlights\/\d+$/);
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Not to be lost");
+  });
+
+  test("its answer lost, a note left unsaved on it is back after a reload", async ({ page }) => {
+    await answerLost(page, "twice-left");
+    const ends = article(page).getByRole("list", { name: "Your highlights" });
+    await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+    await page.getByRole("textbox", { name: "A note on these words" }).fill("Left while waiting");
+    await page.getByRole("button", { name: "Not now" }).click();
+    await reopen(page);
+    await expect(article(page).locator("mark.highlight")).toHaveCount(1);
+    await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Left while waiting");
+  });
+});
 
 test.describe("a highlight still being saved", () => {
   test.skip(({ isMobile }) => isMobile, "the keys are the computer's; the phone uses the same menu");
@@ -210,6 +386,19 @@ test.describe("a highlight still being saved", () => {
     await reopen(page);
     await expect(article(page).locator("mark.highlight")).toHaveCount(1);
     await expect(ends.getByText("Kept for later")).toBeVisible();
+  });
+
+  test("refused, a note left unsaved on it comes back beside one already kept on other words", async ({ page }) => {
+    const { ends, saved } = await slowSaves(page, "slow-refused-two", true, () => leaveNoteOnWords(page, "made-up summary", "On other words"));
+    await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
+    await page.getByRole("textbox", { name: "A note on these words" }).fill("Kept for later");
+    await saved;
+    await page.getByRole("button", { name: "Not now" }).click();
+    await page.unroute(/\/api\/articles\/\d+\/highlights$/);
+    await reopen(page);
+    const boxes = page.getByRole("textbox", { name: "A note on these words" });
+    await expect(boxes).toHaveCount(2);
+    expect((await boxes.evaluateAll((all) => all.map((box) => (box as HTMLTextAreaElement).value))).sort()).toEqual(["Kept for later", "On other words"]);
   });
 });
 

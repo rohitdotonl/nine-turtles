@@ -168,3 +168,59 @@ test("A publication has no Write back and no Write to; A person brings them back
   await who().getByRole("radio", { name: "A person" }).check();
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 });
+
+test("Write back answers where it was pressed, names a post with no title, and Escape puts its box away", async ({ page }) => {
+  const name = `wbnote${test.info().workerIndex}x${Date.now()}`;
+  // Short enough that a note's end, and the line under its Write back, is below the screen.
+  await page.setViewportSize({ width: 1280, height: 420 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/untitled/${name}/feed.xml`);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  const plane = pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true });
+
+  // With no address known, the paper plane opens the box; Escape puts it away, as Not now does, and the keyboard goes back to Write back.
+  await plane.click();
+  const field = pane(page).getByRole("textbox", { name: "Their email address" });
+  await expect(field).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(field).toHaveCount(0);
+  await expect(pane(page).getByRole("button", { name: `Write back to Notes ${name}` })).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/`));
+
+  // A note has no title: the email is about its opening words, so the writer knows which post.
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "notes@notes.example" } })).ok()).toBe(true);
+  await page.reload();
+  await appReady(page);
+  await expect(pane(page).getByRole("link", { name: `Write back to Notes ${name}` })).toHaveAttribute(
+    "href",
+    "mailto:notes@notes.example?subject=Re%3A%20Walked%20to%20the%20river%20before%20breakfast%20and%20watched%20the%20herons%E2%80%A6",
+  );
+
+  // The paper plane at the top, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229).
+  await plane.click();
+  const note = pane(page).locator(".away");
+  await expect(note).toContainText("Opening your email app… Nothing opened?");
+  await note.getByRole("button", { name: "Copy their address" }).click();
+  await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
+  await note.getByRole("button", { name: "Close the note" }).click();
+  await expect(note.getByText(/Opening your email app|Copied/)).toHaveCount(0);
+
+  // By keyboard: W says it at the foot; Copy their address is pressed with Enter, and the keyboard goes back to the article.
+  await page.locator(".item-row").first().focus();
+  await page.keyboard.press("w");
+  await expect(note).toContainText("Opening your email app… Nothing opened?");
+  await note.getByRole("button", { name: "Copy their address" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(note).toContainText(/Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
+  await expect(pane(page).getByRole("heading", { level: 2 })).toBeFocused();
+  // It goes with the article.
+  await page.keyboard.press("w");
+  await expect(note).toContainText("Opening your email app…");
+  await page.locator(".item-row").nth(1).click();
+  await expect(note.getByText(/Opening your email app/)).toHaveCount(0);
+});

@@ -51,7 +51,7 @@
     field?: HTMLInputElement;
     onsubmit: (event: SubmitEvent) => void;
     onNotNow: () => void;
-    /** Escape in the box: as Not now (Change on their page), so it never leaves the page as well. */
+    /** Escape in the box: as Not now (Write back's box, and Change on their page), so it never leaves the page as well. */
     onEscape?: () => void;
   } = $props();
 
