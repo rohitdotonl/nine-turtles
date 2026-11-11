@@ -579,9 +579,11 @@
           <div class="flex flex-col gap-2">
             <label for="feed-into" class="text-meta text-ink-2">Folder</label>
             <select id="feed-into" bind:value={into} onchange={() => into === NEW && void tick().then(() => newField?.focus())} class="field">
+              <!-- New folder… near the top, as "New Playlist" leads Apple Music's list: found without scrolling past every folder. -->
               <option value="">No folder</option>
-              {#each folders as folder (folder.id)}<option value={String(folder.id)}>{folder.name}</option>{/each}
               <option value={NEW}>New folder…</option>
+              {#if folders.length > 0}<hr />{/if}
+              {#each folders as folder (folder.id)}<option value={String(folder.id)}>{folder.name}</option>{/each}
             </select>
             {#if into === NEW}
               <label for="feed-into-new" class="sr-only">The new folder's name</label>

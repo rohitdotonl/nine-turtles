@@ -14,9 +14,10 @@ manage, not something to read. A folder comes into being with someone in
 it: while adding them (here), from their page's Folders, or from Move
 to… (section 15). The choice sits in the question that already files
 them ("… is…" A person or A publication): **Folder**, a native list of
-No folder, each folder in the reader's order, and New folder… (which
-shows a field for its name; Done with no name says "Name the new folder
-first."). It starts on the folder the sheet opened over, else No folder,
+No folder, New folder…, a dividing line, then each folder in the
+reader's order (New folder… near the top, as "New Playlist" leads Apple
+Music's list, at Rohit's suggestion). New folder… shows a field for its
+name; Done with no name says "Name the new folder first." It starts on the folder the sheet opened over, else No folder,
 so nothing is filed unless the reader was already there. Closing the
 sheet keeps what it showed, as it keeps the guess of person or
 publication. Once followed, their folders open in the sidebar, so the
