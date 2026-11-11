@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-11
+updated: 2026-11-12
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -25,7 +25,10 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 4. nine turtles asks what they are: "Maya Chen is…", with their site
    and newest title. Choose **A person** (someone you might write back to)
    or **A publication** (anything you only read or watch, such as a
-   magazine, with no Write back). Its guess is already chosen. Press **Done**.
+   magazine, with no Write back). Its choice is already chosen, with a line
+   saying why. When their feed doesn't tell, neither is chosen: choose one,
+   or press **Done** and they wait with Publications until you say, on their
+   page or at the end of one of their articles. Press **Done**.
 
 Closed Add before pressing it? The address you typed is still there next
 time. **Cancel** clears it.
