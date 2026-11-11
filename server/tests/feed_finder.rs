@@ -198,7 +198,7 @@ async fn problems_are_answered_in_words_the_website_knows() {
     visited.lock().unwrap().clear();
 
     let (status, _, body) = find(&base, &format!("{site}/gone/")).await;
-    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(body["error"], "not-found");
     // A failure is remembered for a while too: asking again doesn't visit.
     let (_, _, again) = find(&base, &format!("{site}/gone/")).await;
