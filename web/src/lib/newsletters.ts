@@ -25,6 +25,16 @@ function text(body: unknown, key: string): string | null {
   return typeof value === "string" ? value : null;
 }
 
+/** Whether nine turtles takes newsletters here, asked once per visit (+ Add's line, decision 0261). */
+let takes: Promise<boolean> | undefined;
+export function newslettersOn(): Promise<boolean> {
+  takes ??= newslettersStatus().then(
+    (status) => status.on,
+    () => ((takes = undefined), false),
+  );
+  return takes;
+}
+
 /** Whether newsletters are on here, and the reader's address (made the first time). */
 export async function newslettersStatus(): Promise<NewslettersStatus> {
   const response = await api("/api/newsletters", { cache: "no-store" });

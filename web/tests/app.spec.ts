@@ -469,8 +469,11 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
   expect(cancel!.x + cancel!.width).toBeLessThanOrEqual(add!.x);
   expect(add!.y).toBeGreaterThan(field!.y + field!.height);
   expect(Math.abs(card!.x + card!.width - 24 - (add!.x + add!.width))).toBeLessThan(2);
-  // 20px of room above the row and 12px between its buttons; Cancel has no edge, so only Add has weight.
-  expect(Math.round(add!.y - (field!.y + field!.height))).toBe(20);
+  // 20px of room above the row (under the newsletter line, the field's last neighbour, decision 0261) and 12px
+  // between its buttons; Cancel has no edge, so only Add has weight.
+  const above = (await sheet.locator(".newsletter-line").boundingBox())!;
+  expect(above.y).toBeGreaterThan(field!.y + field!.height);
+  expect(Math.round(add!.y - (above.y + above.height))).toBe(20);
   expect(Math.round(add!.x - (cancel!.x + cancel!.width))).toBe(12);
   await expect(sheet.getByRole("button", { name: "Cancel" })).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
   // The page stays in view behind it (here, with no feeds yet, the welcome, which keeps its shape), and nothing behind it answers the keyboard.
