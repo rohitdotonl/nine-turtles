@@ -111,7 +111,7 @@ put it back.
 
 On a computer, an article's buttons (View original, Aa, Star and the rest)
 sit above its title and scroll away with it, so the whole pane is the
-writing. Their keys work all the way down, and at the end of the article
+writing. Most have a key that works all the way down, and at the end of the article
 **Star** and **View original** are there again.
 
 On a phone, tap the words of an article once to put its top and bottom bars

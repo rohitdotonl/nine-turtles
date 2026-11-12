@@ -138,6 +138,8 @@
   let copied = $state("");
   /** On a computer, what was just done floats at the pane's foot, as the list's note does, since the top bar scrolls away (decision 0263). */
   const said: ListNote | undefined = $derived(!phone && copied ? { words: copied, close: () => (copied = "") } : undefined);
+  // A list note that arrives puts the older line away, so the newest (an Undo) shows.
+  $effect(() => void (listNote && (copied = "")));
   /** A name set apart (Unicode's first-strong isolate), so a right-to-left one keeps the print credit's commas in order. */
   const apart = (name: string) => `${String.fromCodePoint(0x2068)}${name}${String.fromCodePoint(0x2069)}`;
   let scroller: HTMLDivElement | undefined = $state();
@@ -226,6 +228,8 @@
 
   function scrolled() {
     if (phone && scroller) bars.scrolled(scroller);
+    // On a computer, the Aa panel goes once its button has scrolled away with the bar (decision 0263).
+    if (panelOpen && !phone && scroller && aaButton && aaButton.getBoundingClientRect().bottom < scroller.getBoundingClientRect().top) closePanel(false);
     if (!moved || !scroller || !text) return;
     latest = { id: article.id, place: placeIn(scroller, text) };
     clearTimeout(writing);

@@ -660,7 +660,8 @@ test.describe("on a wide window", () => {
     expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
   });
 
-  test("the top bar is solid in the page's color and scrolls away with the title; Star and View original wait at the end", async ({ page }) => {
+  test("the top bar is solid in the page's color and scrolls away with the title; Star and View original wait at the end", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await page.keyboard.press("j");
     const bar = article(page).locator(".reading-bar");
@@ -687,10 +688,28 @@ test.describe("on a wide window", () => {
     const end = article(page).locator(".end-tools");
     await expect(end.getByRole("button", { name: "Star" })).toBeInViewport();
     await expect(end.getByRole("link", { name: "View original" })).toHaveAttribute("target", "_blank");
-    await end.getByRole("button", { name: "Star" }).click();
+    // From the keyboard alone: Tab reaches the end's Star, and Enter or Space presses it.
+    const endStar = end.getByRole("button", { name: "Star" });
+    await tabTo(page, endStar);
+    await page.keyboard.press("Enter");
     await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
-    await end.getByRole("button", { name: "Star" }).click();
+    await page.keyboard.press(" ");
     await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+    // What was just done floats at the pane's foot, wherever the bar is, with its ×.
+    await article(page).locator(".article-title").focus();
+    await page.keyboard.press("c");
+    const said = article(page).locator(".away .toast");
+    await expect(said).toContainText("Link copied.");
+    expect((await said.boundingBox())!.y).toBeGreaterThan(scrollerBox.y + scrollerBox.height - 120);
+    // A note that comes later (here the star's Undo, in full-screen reading) puts the older line away, so the newest shows.
+    await page.keyboard.press("f");
+    await page.keyboard.press("s");
+    await expect(said).toContainText("Starred.");
+    await said.getByRole("button", { name: "Undo" }).click();
+    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+    await said.getByRole("button", { name: "Close the note" }).click();
+    await expect(said).toHaveClass(/sr-only/);
+    await page.keyboard.press("f");
     // The scrollbar's track is see-through, so its gutter is the page's own color in every theme.
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
