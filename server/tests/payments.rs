@@ -531,7 +531,7 @@ async fn deleting_waits_if_dodo_cant_be_reached_but_not_if_the_plan_is_already_o
     let (base, state, _) = start_with_payments().await;
     let next = nine_turtles::now() + 30 * DAY;
     // The made-up Dodo answers 500 for sub_broken and 404 for sub_gone.
-    for (id, answer) in [("sub_broken", 502), ("sub_gone", 204)] {
+    for (id, answer) in [("sub_broken", 422), ("sub_gone", 204)] {
         let (person, cookie) = reader(&state).await;
         let event = about(
             id,
@@ -561,7 +561,7 @@ async fn deleting_waits_if_dodo_cant_be_reached_but_not_if_the_plan_is_already_o
             .fetch_one(&state.db)
             .await
             .unwrap();
-        assert_eq!(left, i64::from(answer == 502), "{id}");
+        assert_eq!(left, i64::from(answer == 422), "{id}");
     }
 }
 

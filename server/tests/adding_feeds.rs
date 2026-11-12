@@ -289,12 +289,12 @@ async fn problems_get_a_plain_reason_not_an_error_code() {
     for (address, status, reason) in [
         (
             format!("{site}/gone.xml"),
-            StatusCode::BAD_GATEWAY,
+            StatusCode::UNPROCESSABLE_ENTITY,
             "not-found",
         ),
         (
             format!("{site}/huge.xml"),
-            StatusCode::BAD_GATEWAY,
+            StatusCode::UNPROCESSABLE_ENTITY,
             "too-big",
         ),
         (
@@ -304,7 +304,7 @@ async fn problems_get_a_plain_reason_not_an_error_code() {
         ),
         (
             "http://127.0.0.1:1/".to_owned(),
-            StatusCode::BAD_GATEWAY,
+            StatusCode::UNPROCESSABLE_ENTITY,
             "unreachable",
         ),
     ] {

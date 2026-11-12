@@ -197,7 +197,7 @@ fn fetch_refusal(error: &FetchError) -> Response {
         FetchError::Blocked => "blocked",
         _ => "unreachable",
     };
-    refused(StatusCode::BAD_GATEWAY, word)
+    refused(StatusCode::UNPROCESSABLE_ENTITY, word)
 }
 
 /// Find new address: the feeds the site's home page names, other than the

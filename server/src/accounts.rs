@@ -769,7 +769,7 @@ async fn delete_me(
         log::problem(&format!(
             "Dodo Payments: couldn't cancel a subscription before deleting its account: {detail}"
         ));
-        return refused(StatusCode::BAD_GATEWAY, "plan");
+        return refused(StatusCode::UNPROCESSABLE_ENTITY, "plan");
     }
     match people::delete(&state.db, person).await {
         Ok(()) => {
