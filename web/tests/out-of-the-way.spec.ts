@@ -75,7 +75,7 @@ test("on a computer, the text is only text: a tap leaves the top bar where it is
   test.skip(isMobile, "the computer's layout only");
   await openLetter(page);
   await article(page).getByText("Three things, mostly").click();
-  await expect(article(page).getByRole("button", { name: "Star" })).toBeVisible();
+  await expect(article(page).getByRole("button", { name: "Star" }).first()).toBeVisible();
 });
 
 test("the list's search waits behind its magnifier, on a computer too", async ({ page, isMobile }) => {
