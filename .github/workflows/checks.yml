@@ -167,9 +167,12 @@ jobs:
           NINE_TURTLES_SHARD: ${{ matrix.shard }}/6
         run: scripts/check.sh browser
 
-      # A failed test's log names the step it stopped at, except when it ran
-      # out of time between steps. What its page showed then (Playwright's
-      # error-context.md) is printed here, so the log alone says where it was.
+      # A failed test's log names the step it stopped at, except when the test
+      # ran out of its 30 seconds between steps. What its page showed then
+      # (Playwright's error-context.md, whole, from "# Test info" on: the
+      # lines above it are Playwright's note to an AI, not the project's) is
+      # printed here, so the log alone says where it was. A part cancelled at
+      # the job's own time limit prints nothing.
       - name: Show what each failed test's page showed
         if: failure()
         working-directory: web
@@ -177,7 +180,7 @@ jobs:
           for file in test-results/*/error-context.md; do
             [ -f "$file" ] || continue
             echo "::group::$file"
-            head -n 200 "$file"
+            sed -n '/^# Test info/,$p' "$file"
             echo
             echo "::endgroup::"
           done
