@@ -840,7 +840,8 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
     await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }), 5);
     await page.keyboard.press("Enter");
   }
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  // Its articles name no writer, so it could be either: kept with Publications (decision 0263).
+  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   expect(await followed(page)).toContain(name);
 });
 

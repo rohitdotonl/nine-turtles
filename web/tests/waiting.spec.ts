@@ -103,7 +103,8 @@ test("following someone says so, with Undo", async ({ page }) => {
   await appReady(page);
   await signIn(page);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  // Its articles name no writer, so it could be either: kept with Publications (decision 0263).
+  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   await expect(
     page.getByText(`You're following Blog ${name}.`, { exact: true }),
   ).toBeVisible();
@@ -113,7 +114,7 @@ test("following someone says so, with Undo", async ({ page }) => {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page).not.toHaveURL(/\/people\/[0-9]+$/);
+  await expect(page).not.toHaveURL(/\/publications\/[0-9]+$/);
   const feeds = await (
     await page.request.get(new URL("/api/feeds", FEEDS_APP).href)
   ).text();
