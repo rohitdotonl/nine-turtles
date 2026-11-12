@@ -74,8 +74,8 @@
   }
 </script>
 
-<section aria-labelledby="ask-feed-head" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
-  <h3 id="ask-feed-head" class="label">Ask them for a feed</h3>
+<!-- The line above already says to write to them, so no heading or second sentence says it again. -->
+<section aria-label="Ask them for a feed" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
   {#if asking}
     <!-- Add stays the sheet's one solid button: Write here is an everyday one. -->
     <AddressBox
@@ -94,7 +94,6 @@
       onNotNow={() => void notNow()}
     />
   {:else}
-    <p class="text-ink-2">Many sites can add one in minutes, once someone asks.</p>
     <button type="button" class="btn self-start" bind:this={opener} onclick={() => void start()}><Icon name="send" />Write to {name}</button>
   {/if}
 </section>

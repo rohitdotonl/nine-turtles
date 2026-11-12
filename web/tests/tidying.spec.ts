@@ -47,6 +47,8 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   await expect(sheet.getByRole("radio", { checked: true })).toHaveCount(0);
   await sheet.getByRole("button", { name: "Move" }).click();
   await expect(sheet.getByRole("status")).toHaveText("Choose where they go first.");
+  // New folder… under No folder, before the folders (decision 0261).
+  await expect(sheet.getByRole("radio").nth(1)).toHaveAccessibleName("New folder…");
   await sheet.getByRole("radio", { name: "New folder" }).check();
   await sheet.getByRole("textbox", { name: "New folder's name" }).fill(folder);
   await sheet.getByRole("button", { name: "Move" }).click();

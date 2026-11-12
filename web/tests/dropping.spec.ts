@@ -171,7 +171,8 @@ test("a link dropped on a folder opens Follow, and once followed they're in that
   // Nothing is followed until Follow is pressed.
   await expect(row(page, `Blog ${blog}`)).toHaveCount(0);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
-  await sidebar(page).getByRole("button", { name: `What's in ${folder}` }).click();
+  // The folder they went in opens by itself, so the reader sees where they went (decision 0261).
+  await expect(sidebar(page).getByRole("button", { name: `What's in ${folder}` })).toHaveAttribute("aria-expanded", "true");
   await expect(sidebar(page).locator("[data-folder-item]").filter({ hasText: folder }).getByRole("link", { name: /^Blog .*dropped-link/ })).toBeVisible();
 });
 

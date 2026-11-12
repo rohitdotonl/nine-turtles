@@ -69,16 +69,10 @@
             <span class="min-w-0 break-words">No folder</span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
-          {#each folders as folder (folder.id)}
-            <label class="inset-row check-row">
-              <input type="radio" name="destination" value={String(folder.id)} bind:group={destination} />
-              <span class="min-w-0 break-words">{folder.name}</span>
-              <span aria-hidden="true" class="radio-mark shrink-0"></span>
-            </label>
-          {/each}
+          <!-- New folder… under No folder, before the folders, as in + Add (decision 0261): found without scrolling past them. -->
           <label class="inset-row check-row">
             <input type="radio" name="destination" value="new" bind:group={destination} />
-            <span class="min-w-0 break-words">New folder</span>
+            <span class="min-w-0 break-words">New folder…</span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
           {#if destination === "new"}
@@ -88,6 +82,13 @@
               <input dir="auto" bind:value={newFolder} type="text" autocomplete="off" placeholder="Name" class="inset-input" autofocus />
             </label>
           {/if}
+          {#each folders as folder (folder.id)}
+            <label class="inset-row check-row">
+              <input type="radio" name="destination" value={String(folder.id)} bind:group={destination} />
+              <span class="min-w-0 break-words">{folder.name}</span>
+              <span aria-hidden="true" class="radio-mark shrink-0"></span>
+            </label>
+          {/each}
         </div>
         <span class="field-help mt-0">{help}</span>
       </fieldset>

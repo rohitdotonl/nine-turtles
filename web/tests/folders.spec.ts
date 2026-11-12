@@ -96,12 +96,14 @@ test("a feed put in two folders appears under both", async ({ page }) => {
   await page.getByLabel("New folder").fill(first);
   await page.getByLabel("New folder").press("Enter");
   await expect(page.getByRole("checkbox", { name: first })).toBeChecked();
-  // The folders are a checklist whose last row is "New folder…", one grouped list (decision 0042).
+  // The folders are a checklist whose first row is "New folder…" (decision 0261), one grouped list (decision 0042).
   // Each folder's mark is a tick box (a rounded square, not a ring, since several can be ticked):
   // filled with a check when the feed is in it, empty when it isn't, and each row is 44px (decision 0045).
   const newFolder = page.getByLabel("New folder");
   await expect(newFolder).toHaveAttribute("placeholder", "New folder…");
   expect(await newFolder.evaluate((element) => element.closest(".inset-group")?.querySelectorAll(".check-row").length)).toBeGreaterThanOrEqual(1);
+  // New folder… comes before every folder, found without scrolling past them (decision 0261).
+  expect(await newFolder.evaluate((element) => !!(element.closest("form")!.compareDocumentPosition(element.closest(".inset-group")!.querySelector(".check-row")!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   const mark = page.locator(".check-row").filter({ hasText: first }).locator(".check-mark");
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
   await expect(mark).toHaveCSS("background-color", ink);
@@ -583,4 +585,76 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
   await appReady(page);
   await expect(sheet.getByRole("switch", { name: "Pause for a while" })).not.toBeChecked();
+});
+
+test("+ Add over a folder files them there, and New folder… makes one with them in it (decision 0261)", async ({ page }) => {
+  const [first, filed, made] = [unique("into"), unique("filed"), unique("made")];
+  const folder = unique("Zz-into");
+  const fresh = unique("Zz-fresh");
+  const ids = await openBlogs(page, [first]);
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.reload();
+  await appReady(page);
+  const inFolders = async (title: string) => {
+    const body = (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()) as { feeds: { title: string; folders: number[] }[]; folders: { id: number; name: string }[] };
+    const ids = body.feeds.find((feed) => feed.title === title)?.folders ?? [];
+    return body.folders.filter((each) => ids.includes(each.id)).map((each) => each.name);
+  };
+
+  // Over the folder, "Folder" starts on it.
+  await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
+  await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${filed}/`);
+  await page.keyboard.press("Enter");
+  const into = page.getByLabel("Folder", { exact: true });
+  await expect(into.locator("option:checked")).toHaveText(folder);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${filed}`, exact: true })).toBeVisible();
+  expect(await inFolders(`Blog ${filed}`)).toEqual([folder]);
+  // The folder opened in the sidebar, so the reader sees where they went.
+  await expect(sidebar(page).getByRole("link", { name: `Blog ${filed}` })).toBeVisible();
+
+  // New folder…: a name is asked for first, then the folder is made with them in it.
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
+  await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${made}/`);
+  await page.keyboard.press("Enter");
+  // With only the keyboard: New folder… sits right under No folder, and choosing it leaves the keyboard on the list
+  // (arrow keys choose as they move on some systems); Tab reaches the name.
+  await expect(into.locator("option").nth(1)).toHaveText("New folder…");
+  await into.focus();
+  await into.selectOption({ label: "New folder…" });
+  await expect(into).toBeFocused();
+  const name = page.getByLabel("The new folder's name");
+  await page.keyboard.press("Tab");
+  await expect(name).toBeFocused();
+  await page.getByRole("button", { name: "Done" }).click();
+  // Said under the field it's about, which is marked, and the keyboard goes back to it.
+  await expect(page.locator("#feed-into-problem")).toHaveText("Name the new folder first.");
+  await expect(name).toHaveAttribute("aria-invalid", "true");
+  await expect(name).toBeFocused();
+  await name.fill(fresh);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: `Blog ${made}`, exact: true })).toBeVisible();
+  expect(await inFolders(`Blog ${made}`)).toEqual([fresh]);
+  await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${fresh}`) })).toBeVisible();
+});
+
+test("closing + Add while it asks keeps the folder it showed (decision 0261)", async ({ page }) => {
+  const [first, kept] = [unique("first"), unique("kept")];
+  const folder = unique("Zz-kept");
+  const ids = await openBlogs(page, [first]);
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.reload();
+  await appReady(page);
+  await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+  await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
+  await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${kept}/`);
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("Folder", { exact: true }).locator("option:checked")).toHaveText(folder);
+  await page.keyboard.press("Escape");
+  await expect.poll(async () => {
+    const body = (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()) as { feeds: { title: string; folders: number[] }[]; folders: { id: number; name: string }[] };
+    const into = body.feeds.find((feed) => feed.title === `Blog ${kept}`)?.folders ?? [];
+    return body.folders.filter((each) => into.includes(each.id)).map((each) => each.name);
+  }).toEqual([folder]);
 });
