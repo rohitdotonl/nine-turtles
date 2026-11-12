@@ -728,6 +728,7 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await page.keyboard.press("Enter");
   // A person or a publication: neither chosen (its articles name no writer, decision 0263); Tab
   // reaches the first, an arrow key changes the answer, and Done opens it.
+  await expect(page.getByRole("group", { name: /is…$/ })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await page.keyboard.press("ArrowDown");
