@@ -268,3 +268,33 @@ async fn a_site_that_asks_to_slow_down_isnt_asked_again_or_called_feedless() {
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{body}");
     assert_eq!(*visits.lock().unwrap(), ["/about/", "/about/feed"]);
 }
+
+#[tokio::test]
+async fn a_blogs_comments_feed_isnt_offered_beside_its_posts() {
+    // Decision 0261: a WordPress blog names both; nobody follows a blog for its comments.
+    let links = [
+        link("Mara Lind » Feed", "/feed/"),
+        link("Mara Lind » Comments Feed", "/comments/feed/"),
+    ]
+    .concat();
+    let (base, visits) = site(&[
+        ("/", HTML, page(&links)),
+        ("/feed/", RSS, feed("Mara Lind", POSTS)),
+    ])
+    .await;
+    let reader = Reader::new().await;
+    let (status, body) = reader.add(&base).await;
+    assert_eq!(status, StatusCode::CREATED, "{body}");
+    assert_eq!(*visits.lock().unwrap(), ["/", "/feed/"]);
+}
+
+#[tokio::test]
+async fn a_usual_address_too_big_to_read_is_said_as_that_not_as_no_feed() {
+    // Decision 0261: over the size limit, the feed is there; "no feed" would send the reader to ask for one.
+    let huge = "x".repeat(11 * 1024 * 1024);
+    let (base, _) = site(&[("/", HTML, page("")), ("/atom.xml", ATOM, huge)]).await;
+    let reader = Reader::new().await;
+    let (status, body) = reader.add(&base).await;
+    assert_ne!(status, StatusCode::CREATED, "{body}");
+    assert_eq!(body["error"], "too-big", "{body}");
+}

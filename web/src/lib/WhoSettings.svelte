@@ -7,7 +7,7 @@
   (saved on Enter or on leaving the field; Escape puts it back), This is
   (for one source on its own), Folders (the folders they're in, opening in
   place to the tick list Add and Edit folder use, with New folder… as its
-  last row), Pause for a while (every source of theirs at once), and Hide
+  first row), Pause for a while (every source of theirs at once), and Hide
   articles about… ›. Under the group, the sources' own settings (TheirPlaces,
   the `sources` snippet), then, apart, Unsubscribe in oxblood words, which
   asks first whether what was kept stays (KeepOrRemove) and has Undo on the
@@ -255,6 +255,13 @@
     </button>
     {#if showFolders}
       <div id="{id}-folders" role="group" aria-label="Folders" class="contents">
+        <!-- New folder… first, before the folders, as in + Add (decision 0261): found without scrolling past them. -->
+        <form class="inset-row nested new-folder" onsubmit={makeFolder}>
+          <label class="sr-only" for="{id}-new">New folder</label>
+          <input id="{id}-new" bind:value={newFolder} onkeydown={(event) => event.key === "Escape" && newFolder && (event.stopPropagation(), (newFolder = ""))} type="text" autocomplete="off" enterkeyhint="done" placeholder="New folder…" class="inset-input" aria-describedby="{id}-new-help" />
+          <!-- Kept (decision 0241): a placeholder disappears once you type, so this is the field's visible name then (first floor). -->
+          <span id="{id}-new-help" class="setting-hint">Type a name and press Enter to make a folder.</span>
+        </form>
         {#each folders as folder (folder.id)}
           <label class="inset-row check-row nested">
             <input type="checkbox" checked={chosen.includes(folder.id)} onchange={(event) => void toggleFolder(folder.id, event.currentTarget.checked)} />
@@ -262,12 +269,6 @@
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>
         {/each}
-        <form class="inset-row nested new-folder" onsubmit={makeFolder}>
-          <label class="sr-only" for="{id}-new">New folder</label>
-          <input id="{id}-new" bind:value={newFolder} onkeydown={(event) => event.key === "Escape" && newFolder && (event.stopPropagation(), (newFolder = ""))} type="text" autocomplete="off" enterkeyhint="done" placeholder="New folder…" class="inset-input" aria-describedby="{id}-new-help" />
-          <!-- Kept (decision 0241): a placeholder disappears once you type, so this is the field's visible name then (first floor). -->
-          <span id="{id}-new-help" class="setting-hint">Type a name and press Enter to make a folder.</span>
-        </form>
       </div>
     {/if}
 

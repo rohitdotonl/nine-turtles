@@ -286,7 +286,7 @@ export function undoRefused(refusal: Refusal, what: "feed" | "folder"): string {
 export const PLAN_ENDED = "Your free trial or plan has ended. Choose a plan in Settings to add feeds again.";
 
 /** Problems that aren't the address's fault (the site, the connection, nine turtles, the reader's plan): Add leaves the field unmarked. */
-export const NOT_THE_ADDRESS: Problem[] = ["unreachable", "blocked", "trouble", "too-many", "plan-ended", "offline"];
+export const NOT_THE_ADDRESS: Problem[] = ["unreachable", "blocked", "too-big", "trouble", "too-many", "plan-ended", "offline"];
 
 /** A site whose guard against bots turns nine turtles away (decision 0258): only the site can let it in. */
 export const BLOCKED_ADDING = "The site's guard against bots turns nine turtles away. You could write to them and ask them to let it in.";
@@ -305,7 +305,7 @@ export function explain(reason: Problem): string {
     case "not-found":
       return "Nothing was found at that address.";
     case "too-big":
-      return "That file is too big to be a feed.";
+      return "Their feed is too big for nine turtles to read.";
     case "no-feed":
       return "nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.";
     case "too-many":

@@ -3,7 +3,7 @@ title: Put people in folders
 description: Group the people you follow into folders, such as Friends or Cooking, by dragging or many at once, and put the folders in your own order.
 groupId: keeping-things-tidy
 order: 1
-spec: 5 and 15
+spec: 3, 5 and 15
 updated: 2026-11-11
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
@@ -13,6 +13,14 @@ related: [one-person-several-places, unfollow-someone, hide-topics]
   Someone can be in more than one. In the sidebar, the people in a folder are
   set a step in under it; everyone in no folder lines up with the folders.
 </p>
+
+## Choose their folder as you follow them
+
+When you add someone with **+ Add**, nine turtles asks what they are, and
+under it, their **Folder**. Choose one, or **New folder…** to make one with
+them in it, and press **Done**. If you pressed + Add while you were in a
+folder, it starts on that folder. The folder opens in the sidebar, so you see
+where they went.
 
 ## Drag someone into a folder
 
@@ -55,14 +63,14 @@ readers too.
 3. Tick the folders they belong in; each one counts at once. To make a new
    one, type its name in **New folder…** and press <kbd>Enter</kbd>.
 
-There's no "new folder" button in the sidebar: a folder is made when you put
-someone in it.
+There's no "new folder" button: a folder is made when you put someone in it,
+as you follow them, from their page, or with **Move to…**.
 
 ## Move many at once
 
 1. Open **Settings › Everyone you follow** and press **Choose…**.
 2. Tick everyone you'd like to move.
-3. Press **Move to…**, choose a folder (or **New folder**, or **No folder**),
+3. Press **Move to…**, choose a folder (or **No folder**, or **New folder…** at the top),
    and press **Move**.
 
 Moving takes them out of the folders they were in. **Undo** puts them back.

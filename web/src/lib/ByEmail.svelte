@@ -7,11 +7,12 @@
 <script lang="ts">
   import { copyAddress, newslettersStatus } from "./newsletters";
 
-  let { site }: { site: string } = $props();
+  /** The site that had no feed, to sign up on; none when opened from + Add's own line (decision 0261). */
+  let { site }: { site?: string } = $props();
 
   let address = $state("");
   let message = $state("");
-  let href = $derived(/^https?:\/\//i.test(site.trim()) ? site.trim() : `https://${site.trim()}`);
+  let href = $derived(site === undefined ? undefined : /^https?:\/\//i.test(site.trim()) ? site.trim() : `https://${site.trim()}`);
 
   $effect(() => {
     newslettersStatus()
@@ -25,14 +26,14 @@
 </script>
 
 {#if address}
-  <section aria-labelledby="by-email-head" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
-    <h3 id="by-email-head" class="label">If it's a newsletter</h3>
+  <section aria-label="If it's a newsletter" class="mt-2 mb-4 flex flex-col gap-3 self-stretch text-left">
+    {#if href}<h3 class="label">If it's a newsletter</h3>{/if}
     <p class="text-ink-2">Sign up with your own nine turtles address, and each issue arrives here instead of your inbox.</p>
     <div class="flex gap-2">
       <input readonly value={address} translate="no" aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="field min-w-0 flex-1 text-ink" />
       <button type="button" onclick={copy} class="btn">Copy<span class="sr-only"> address</span></button>
     </div>
     <p role="status" class={["text-meta text-ink-2", !message && "sr-only"]}>{message}</p>
-    <a {href} target="_blank" rel="noopener" class="text-link self-start">Open their site to sign up<span class="sr-only"> (opens in a new tab)</span></a>
+    {#if href}<a {href} target="_blank" rel="noopener" class="text-link self-start">Open their site to sign up<span class="sr-only"> (opens in a new tab)</span></a>{/if}
   </section>
 {/if}

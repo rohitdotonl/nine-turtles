@@ -194,6 +194,9 @@ export class LoadedLibrary {
    */
   followed(feed: Feed, back: (notice: Notice) => void, note?: string): Notice {
     const name = this.shownAs(feed)?.title ?? feed.title;
+    // Filed as they were followed (decision 0261): their folders open, so the reader sees where they went.
+    const filed = this.feeds?.find((each) => each.id === feed.id)?.folders ?? [];
+    if (filed.length > 0) this.setOpen([...new Set([...this.openFolders, ...filed])]);
     return {
       message: [`You're following ${name}.`, note].filter(Boolean).join(" "),
       undo: async () => {

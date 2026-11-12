@@ -16,7 +16,8 @@ related: [hide-topics, unfollow-someone, write-back]
 
 ## Get your address
 
-1. Open **Settings › Newsletters**.
+1. Open **Settings › Newsletters**. (Or press **+ Add**, then **Use your
+   nine turtles address** under the field.)
 2. Press **Copy** beside **Your address**. It looks like
    <code>turtle-7k2xab3c@in.nineturtles.app</code>.
 3. Paste it into a newsletter's sign-up form, as you would your own email.
