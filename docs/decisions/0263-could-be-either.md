@@ -59,6 +59,13 @@ together ("Low-tech Magazine" at lowtechmagazine.com) isn't a person's: the
 title must read as a name, two or three capitalised words, none of them a
 publication's word (The, Magazine, News, Journal…).
 
+A name said as theirs must read as a name, and not a magazine's: "Harper's
+Magazine", "Men's Health", "Reader's Digest" and "The World's Best…" aren't
+someone's own site. And a person's name that is also their blog's title
+("Julia Evans" signing "Julia Evans") is still theirs, when it reads as a
+name of two or three words; a role such as "admin" beside one name doesn't
+count against it (the second-agent review, 13 November 2026).
+
 **Exceptions.** The question at an article's end and Add's unchosen tiles
 are written in DESIGN.md's Exceptions log (principle 3, asks only as a last
 resort), and the import line widens decision 0249's entry.

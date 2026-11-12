@@ -106,6 +106,22 @@ test("the end of their article asks once; Yes puts Write back in its place, with
   await expect(page.getByRole("group", { name: `Is ${blog.name} someone you might write back to?` })).toBeVisible();
 });
 
+test("with only the keyboard: No, a publication at an article's end keeps the keyboard's place, on the article's title", async ({ page }) => {
+  const blog = await openBlog(page, "no");
+  await page.goto(new URL(`/publications/${blog.id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("region", { name: blog.name }).getByRole("listitem").first().click();
+  const asked = page.getByRole("group", { name: `Is ${blog.name} someone you might write back to?` });
+  await asked.getByRole("button", { name: "No, a publication" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(asked).toHaveCount(0);
+  await expect(page.locator(".article-title")).toBeFocused();
+  await expect(page.getByRole("status").filter({ hasText: `${blog.name} is a publication now.` })).toBeVisible();
+  const listed = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
+  const feed = listed.feeds.find((each: { id: number }) => each.id === blog.id);
+  expect([feed.kind, feed.why, feed.open]).toEqual(["publication", "reader", false]);
+});
+
 test("an import's closing line says how it was sorted; Look them over opens Everyone you follow and ends it", async ({ page, isMobile }) => {
   test.skip(isMobile, "the phone shows the same list");
   await page.goto(new URL("/unread", FEEDS_APP).href);

@@ -5,7 +5,8 @@
   to?" with Yes, a person and No, a publication. Asked once: it stays quietly
   at the end of their articles until answered, then never again. Yes puts
   Write back in its place, with the keyboard on it; No settles them as a
-  publication. Either has Undo in the reading area's note. Never a pop-up,
+  publication, and the keyboard goes back to the article's title. Either
+  has Undo in the reading area's note. Never a pop-up,
   never in the toolbar, never on paper.
 -->
 <script lang="ts">
@@ -47,14 +48,17 @@
       words: `${called} is ${person ? "a person" : "a publication"} now.`,
       undo: async () => {
         away = undefined;
-        await settle([{ feed: place.id, kind: "publication", why: was }]);
+        const failed = await settle([{ feed: place.id, kind: "publication", why: was }]);
         await library.loadFeeds();
+        if (failed) away = { words: "That couldn't be undone. Change it on their page.", refusal: true, close: () => (away = undefined) };
       },
       close: () => (away = undefined),
     };
-    // Write back takes the question's place, with the keyboard on it.
+    // Write back takes the question's place, with the keyboard on it; with no Write back, the
+    // keyboard's place goes back to the article's title, never lost with the question.
     await tick();
-    if (person) around?.querySelector<HTMLElement>(".write-back :is(a, button)")?.focus();
+    const next = person ? around?.querySelector<HTMLElement>(".write-back :is(a, button)") : undefined;
+    (next ?? around?.closest("article")?.querySelector<HTMLElement>(".article-title"))?.focus({ preventScroll: !next });
   }
 </script>
 

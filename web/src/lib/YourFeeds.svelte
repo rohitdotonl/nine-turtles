@@ -28,7 +28,7 @@
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import SettleList from "./SettleList.svelte";
-  import { settle } from "./sorting";
+  import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
   import { pathFor } from "./router";
   import {
@@ -86,6 +86,8 @@
   let listed = $derived(feeds ?? []);
   /** Ticked as a person in the list to settle: they stay in it, ticked, until the page is left. */
   let settledHere: number[] = $state([]);
+  /** Why each one ticked here was open, so unticking opens it again even after the rows reload. */
+  const openBecause = new Map<number, Why>();
   /** Who could be either, and who was ticked here; hidden while Choose is on (one kind of tick at a time). */
   let settling = $derived(editing ? [] : listed.filter((feed) => feed.open || settledHere.includes(feed.id)));
   /** Who's in each group: who could be either only in the list to settle, except while choosing. */
@@ -211,7 +213,9 @@
     if (busy) return false;
     endUndo();
     busy = true;
-    const why = await settle([person ? { feed: row.id, kind: "person" } : { feed: row.id, kind: "publication", why: row.why ?? undefined }]);
+    if (row.open && row.why) openBecause.set(row.id, row.why);
+    const was = openBecause.get(row.id) ?? "unsure-no-names";
+    const why = await settle([person ? { feed: row.id, kind: "person" } : { feed: row.id, kind: "publication", why: was }]);
     busy = false;
     if (why) {
       [message, undo, refusal] = [refused(why, "feed"), undefined, true];

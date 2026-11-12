@@ -11,12 +11,13 @@
 //! 1. A YouTube channel or playlist: could be either (a vlogger's channel and
 //!    a company's sign their videos alike).
 //! 2. Several names sign its articles: a publication.
-//! 3. One name signs them, a person's name, not the feed's or the site's own:
-//!    a person.
+//! 3. One name signs them, a person's name (a role such as "admin" beside it
+//!    doesn't count), not the feed's or the site's own unless that reads as a
+//!    person's ("Julia Evans", never "The Verge"): a person.
 //! 4. No such name, and the site is someone's own (a place of theirs on a
-//!    site many people share, a title saying it's theirs, "Jim's Notes", or
-//!    an address that is the title's words run together, janedoe.com): a
-//!    person.
+//!    site many people share, a title saying it's theirs, "Jim's Notes" but
+//!    never "Harper's Magazine", or an address that is a name-like title run
+//!    together, janedoe.com): a person.
 //! 5. No such name, and the site's own name is a word of its title (NASA at
 //!    apod.nasa.gov): a publication.
 //! 6. A folder it came in says which ("Friends", "News"): that.
@@ -129,10 +130,21 @@ pub fn kind_from(clues: &Clues) -> (&'static str, &'static str) {
     if names.len() > 1 {
         return ("publication", "several-names");
     }
-    let named = one_author(clues.authors).is_some_and(|name| {
-        let name = squashed(&name);
-        name != squashed(clues.feed_title)
-            && host.as_deref().and_then(site_name) != Some(name.as_str())
+    // A role ("admin") beside a name doesn't count against it.
+    let signed: Vec<String> = clues
+        .authors
+        .iter()
+        .filter(|name| !NOT_NAMES.contains(&name.trim().to_lowercase().as_str()))
+        .cloned()
+        .collect();
+    let named = one_author(&signed).is_some_and(|name| {
+        let squashed_name = squashed(&name);
+        let own = squashed_name == squashed(clues.feed_title)
+            || host.as_deref().and_then(site_name) == Some(squashed_name.as_str());
+        // The feed's or the site's own name, unless it reads as a person's:
+        // "Julia Evans" signing Julia Evans's blog is hers, "The Verge" isn't.
+        let words: Vec<&str> = name.split_whitespace().collect();
+        !own || (words.len() > 1 && reads_as_a_name(&words))
     });
     if named {
         return ("person", "one-name");
@@ -161,10 +173,9 @@ pub fn kind_from(clues: &Clues) -> (&'static str, &'static str) {
     }
 }
 
-/// Words of a publication's name, never of a person's: an address made of a
-/// title with one of these run together is the publication's.
-const PUBLICATION_WORDS: &[&str] = &[
-    "the",
+/// Words of a magazine's or a paper's name: after someone's name, they make
+/// it the publication's ("Harper's Magazine"), never the person's.
+const MAGAZINE_WORDS: &[&str] = &[
     "magazine",
     "news",
     "journal",
@@ -181,14 +192,104 @@ const PUBLICATION_WORDS: &[&str] = &[
     "tribune",
     "herald",
     "quarterly",
-    "studio",
-    "labs",
+    "health",
+    "life",
+];
+
+/// Words that are never part of someone's name: a publication's ("The",
+/// "Notes", "Studio") or an everyday word a title is often made of ("Men's
+/// Health", "Reader's Digest", "Bleeping Computer").
+const NOT_NAME_WORDS: &[&str] = &[
+    "the",
+    "a",
+    "an",
+    "of",
+    "and",
     "blog",
     "notes",
     "letters",
     "podcast",
     "show",
+    "studio",
+    "labs",
+    "men",
+    "women",
+    "man",
+    "woman",
+    "reader",
+    "readers",
+    "today",
+    "world",
+    "nature",
+    "children",
+    "kids",
+    "people",
+    "everyone",
+    "everybody",
+    "nobody",
+    "god",
+    "earth",
+    "america",
+    "nation",
+    "city",
+    "year",
+    "week",
+    "day",
+    "writer",
+    "writers",
+    "editor",
+    "editors",
+    "mother",
+    "father",
+    "mom",
+    "dad",
+    "baby",
+    "cook",
+    "chef",
+    "nerd",
+    "geek",
+    "programmer",
+    "developer",
+    "hacker",
+    "maker",
+    "design",
+    "designer",
+    "science",
+    "computer",
+    "computing",
+    "tech",
+    "technology",
+    "games",
+    "game",
+    "sports",
+    "guide",
+    "wire",
+    "insider",
+    "central",
+    "hub",
+    "online",
+    "network",
+    "radio",
+    "tv",
+    "living",
+    "home",
+    "kitchen",
+    "garden",
+    "world's",
 ];
+
+/// One to three capitalised words that could be someone's name: none of them
+/// a magazine's word or an everyday one ("Jim Nielsen", never "The Verge",
+/// "Low-tech Magazine" or "Bleeping Computer").
+fn reads_as_a_name(words: &[&str]) -> bool {
+    (1..=3).contains(&words.len())
+        && words.iter().all(|word| {
+            let lower = word.to_lowercase();
+            word.starts_with(char::is_uppercase)
+                && !MAGAZINE_WORDS.contains(&lower.as_str())
+                && !NOT_NAME_WORDS.contains(&lower.as_str())
+        })
+}
 
 /// Letters and digits only, lower case: "Jane Doe" and "janedoe" alike.
 fn squashed(text: &str) -> String {
@@ -213,7 +314,7 @@ fn site_name(host: &str) -> Option<&str> {
 /// (a Substack, a Bluesky account), a title that says it's someone's
 /// ("Jim Nielsen's Blog"), or an address made of the title's words run
 /// together (janedoe.com for "Jane Doe").
-fn is_own_site(host: &str, title: &str) -> bool {
+fn is_own_site<'a>(host: &str, title: &'a str) -> bool {
     let shared = PERSONAL_SITES
         .iter()
         .any(|shared| host == *shared || host.ends_with(&format!(".{shared}")));
@@ -221,30 +322,30 @@ fn is_own_site(host: &str, title: &str) -> bool {
         .split(|letter: char| !letter.is_alphanumeric() && letter != '\'' && letter != '\u{2019}')
         .filter(|word| !word.is_empty())
         .collect();
-    // A capitalised word ending in 's, after nothing or other capitalised
-    // words: "Jim Nielsen's", never "the world's".
-    let theirs = words.iter().position(|word| {
+    // Someone's name said as theirs, first in the title: "Jim Nielsen's
+    // Writing", never "The World's Best", "Men's Health" or "Harper's Magazine".
+    let possessive = |word: &'a str| {
         word.strip_suffix("'s")
             .or_else(|| word.strip_suffix("\u{2019}s"))
-            .is_some_and(|name| name.starts_with(char::is_uppercase))
-    });
-    let theirs = theirs.is_some_and(|at| {
-        words[..at]
-            .iter()
-            .all(|word| word.starts_with(char::is_uppercase))
-    });
+    };
+    let theirs = words
+        .iter()
+        .position(|word| possessive(word).is_some())
+        .is_some_and(|at| {
+            let mut name: Vec<&str> = words[..at].to_vec();
+            name.extend(possessive(words[at]));
+            reads_as_a_name(&name)
+                && !words[at + 1..]
+                    .iter()
+                    .any(|word| MAGAZINE_WORDS.contains(&word.to_lowercase().as_str()))
+        });
     let name = site_name(host).unwrap_or_default();
     let lower = title.to_lowercase();
     let named_theirs = !name.is_empty()
         && (lower.contains(&format!("{name}'s")) || lower.contains(&format!("{name}\u{2019}s")));
-    // Only when the title reads as a name, two or three capitalised words
-    // that aren't a publication's own ("The Verge", "Low-tech Magazine").
-    let as_a_name = (2..=3).contains(&words.len())
-        && words.iter().all(|word| {
-            word.starts_with(char::is_uppercase)
-                && !PUBLICATION_WORDS.contains(&word.to_lowercase().as_str())
-        });
-    let run_together = as_a_name && squashed(name) == squashed(title);
+    // Only when the title reads as a name of two or three words.
+    let run_together =
+        words.len() > 1 && reads_as_a_name(&words) && squashed(name) == squashed(title);
     shared || theirs || named_theirs || run_together
 }
 
@@ -325,6 +426,30 @@ fn names_the_site(host: &str, title: &str) -> bool {
         .map(str::to_lowercase)
         .collect();
     words.len() > 1 && words.iter().any(|word| word == name)
+}
+
+/// Settles one of reader `person`'s places as `kind`, for `why`: what the
+/// reader chose (`None`, kept as "reader"), or the reason Undo puts back.
+/// Only a place on its own and still followed: one joined to others is a
+/// person whatever it says.
+pub async fn settle(
+    connection: &mut SqliteConnection,
+    person: i64,
+    feed: i64,
+    kind: Kind,
+    why: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        "UPDATE subscriptions SET kind = ?, kind_why = COALESCE(?, 'reader')
+         WHERE person_id = ? AND feed_id = ? AND writer_id IS NULL AND unsubscribed_at IS NULL",
+    )
+    .bind(kind.name())
+    .bind(why)
+    .bind(person)
+    .bind(feed)
+    .execute(connection)
+    .await
+    .map(|_| ())
 }
 
 /// Sorts, and keeps, each of the reader's places that has no kind or no
@@ -508,10 +633,10 @@ mod tests {
             sort(&["Jane", "Kai"], url, None, "Example", &[]),
             ("publication", "several-names")
         );
-        // A role beside a name isn't a second name.
+        // A role beside a name isn't a second name, nor counts against it.
         assert_eq!(
-            sort(&["Jane Doe", "admin"], url, None, "Example", &[]).1,
-            "unsure-no-names"
+            sort(&["Jane Doe", "admin"], url, None, "Example", &[]),
+            ("person", "one-name")
         );
     }
 
@@ -553,6 +678,17 @@ mod tests {
             sort(&["Example"], url, None, "Notes", &[]).1,
             "unsure-no-names"
         );
+        // Their own name as their blog's title is still theirs.
+        assert_eq!(
+            sort(
+                &["Julia Evans"],
+                "https://jvns.ca/atom.xml",
+                None,
+                "Julia Evans",
+                &[]
+            ),
+            ("person", "one-name")
+        );
     }
 
     #[test]
@@ -581,8 +717,22 @@ mod tests {
                 "Jane Doe",
                 &[]
             ),
-            ("person", "own-site")
+            ("person", "one-name")
         );
+        // A name said as a magazine's, or an everyday word's, is no one's.
+        for (url, title) in [
+            ("https://harpers.org/feed/", "Harper's Magazine"),
+            ("https://www.menshealth.com/rss/", "Men's Health"),
+            ("https://www.rd.com/feed/", "Reader's Digest"),
+            ("https://example.com/feed", "Today's Picks"),
+            ("https://example.com/feed", "The World's Best Notes"),
+            (
+                "https://www.bleepingcomputer.com/feed/",
+                "Bleeping Computer",
+            ),
+        ] {
+            assert_ne!(sort(none, url, None, title, &[]).1, "own-site", "{title}");
+        }
         // A magazine at its own name run together is the magazine's.
         assert_eq!(
             sort(

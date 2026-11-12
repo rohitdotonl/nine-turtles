@@ -198,20 +198,20 @@ async fn edit_feed(
         .fetch_one(&mut *transaction)
         .await?;
         sqlx::query(
-            "UPDATE subscriptions SET shorts = COALESCE(?3, shorts),
-                 live_streams = COALESCE(?4, live_streams),
-                 kind = COALESCE(?1, kind),
-                 kind_why = CASE WHEN ?1 IS NULL THEN kind_why ELSE COALESCE(?2, 'reader') END
-             WHERE person_id = ?5 AND feed_id = ?6",
+            "UPDATE subscriptions SET shorts = COALESCE(?, shorts),
+                 live_streams = COALESCE(?, live_streams)
+             WHERE person_id = ? AND feed_id = ?",
         )
-        .bind(form.kind.map(crate::writers::kind::Kind::name))
-        .bind(form.why.as_deref())
         .bind(form.shorts)
         .bind(form.live_streams)
         .bind(person)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
+        if let Some(kind) = form.kind {
+            crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
+                .await?;
+        }
         // Switched on: that kind's videos stored since the reader followed
         // the channel join its list, as read, so nothing piles up in
         // Unread (an entry they already had, or one the clean-up removed

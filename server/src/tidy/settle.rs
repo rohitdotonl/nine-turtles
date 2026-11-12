@@ -48,16 +48,13 @@ pub async fn settle(
     let settled = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         for place in &form.feeds {
-            sqlx::query(
-                "UPDATE subscriptions SET kind = ?, kind_why = COALESCE(?, 'reader')
-                 WHERE person_id = ? AND feed_id = ? AND writer_id IS NULL
-                     AND unsubscribed_at IS NULL",
+            crate::writers::kind::settle(
+                &mut transaction,
+                person,
+                place.feed,
+                place.kind,
+                place.why.as_deref(),
             )
-            .bind(place.kind.name())
-            .bind(place.why.as_deref())
-            .bind(person)
-            .bind(place.feed)
-            .execute(&mut *transaction)
             .await?;
         }
         transaction.commit().await

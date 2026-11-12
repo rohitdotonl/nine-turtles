@@ -13,7 +13,12 @@ export const ASK_WHILE_CHECKING_MS = 5_000;
  * themselves: there's nothing yet to move under the reader.
  */
 export function bringsIn(checking: number, source: Source): boolean {
-  return checking > 0 && "view" in source && (source.view === "unread" || source.view === "all");
+  return checking > 0 && showsArrivals(source);
+}
+
+/** Unread and All articles: the lists that say how an import is arriving, and how it was sorted (decision 0263). */
+export function showsArrivals(source: Source): boolean {
+  return "view" in source && (source.view === "unread" || source.view === "all");
 }
 
 /**

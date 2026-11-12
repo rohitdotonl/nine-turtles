@@ -68,7 +68,7 @@
   import type { EmptyWords } from "./listWording";
   import ListArriving from "./ListArriving.svelte";
   import type { SortedLine } from "./sorting";
-  import { askingEvery, bringsIn } from "./asking";
+  import { askingEvery, bringsIn, showsArrivals } from "./asking";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
@@ -673,7 +673,7 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
 {/if}
 
-{#if (bringingIn || (sorted && bringsIn(1, source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
+{#if (bringingIn || (sorted && showsArrivals(source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
 
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
   <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
