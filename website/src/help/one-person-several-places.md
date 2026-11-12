@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-11
+updated: 2026-11-12
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -19,9 +19,13 @@ related: [put-people-in-folders, write-back, unfollow-someone]
 Everyone you follow is either a **person** (someone you might write back
 to) or a **publication** (anything you only read or watch, such as a
 magazine). The sidebar lists them under **People** and **Publications**.
-nine turtles makes a guess when you follow them, and asks you to finish
-"Maya Chen is…" with its guess already chosen. Got it wrong? Change
-**This is** in their settings (below).
+nine turtles sorts them from their feed when you follow them: one name on
+every article is a person, several names a publication. When the feed
+doesn't say who writes it, they **could be either**: they wait with
+Publications until you say, in **Settings › Everyone you follow**, on their
+page, or at the end of one of their articles ("Is Maya Chen someone you
+might write back to?"). Got it wrong? Change **This is** in their settings
+(below); the line under it says why they're filed as they are.
 
 ## Their page
 
@@ -51,7 +55,9 @@ Save. Each one changes the moment you touch it, as in Settings. Press
   "Saved." shows under it. <kbd>Esc</kbd> while typing puts the old one
   back.
 - **This is**: a person or a publication (while they have one source; a
-  publication has no Write to or Write back).
+  publication has no Write to or Write back), with why under it ("nine
+  turtles chose this: one name signs every article.", or "Your choice."). For
+  someone who could be either, neither is chosen until you choose.
 - **Folders**: shows the folders they're in; press it to tick or untick
   any, or type a name under them to make a new folder (it opens in the
   sidebar).

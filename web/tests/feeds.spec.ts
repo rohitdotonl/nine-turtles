@@ -340,15 +340,21 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await page.keyboard.type(`${FEED_SITE}/blog/${name}/`);
   await page.keyboard.press("Enter");
 
-  // Followed: then one question, with nine turtles' guess chosen and the keyboard on it (decision 0163).
+  // Followed: then one question (decision 0163). Its articles name no writer, so nine turtles
+  // couldn't tell: neither is chosen, the keyboard is on the question, and the line says so (decision 0264).
   // The field goes; the sheet's title finishes the sentence (the owner's core path, point 1).
   const asked = page.getByRole("group", { name: `Blog ${name} is…` });
   await expect(asked).toBeVisible();
   await expect(page.getByRole("heading", { name: `Blog ${name} is…` })).toBeVisible();
   await expect(field(page)).toHaveCount(0);
-  await expect(page.getByText("You can change this later on their page.")).toBeVisible();
-  await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeChecked();
+  await expect(page.getByText(/^nine turtles couldn't tell from their feed\..* You can change this later on their page\.$/)).toBeVisible();
+  await expect(asked.getByRole("radio", { checked: true })).toHaveCount(0);
+  await expect(asked).toBeFocused();
+  // Tab reaches A person, and Space chooses it.
+  await page.keyboard.press("Tab");
   await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(asked.getByRole("radio", { name: "A person", exact: true })).toBeChecked();
   await expect(page.getByRole("button", { name: "Done" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Cancel" })).toHaveCount(0);
   // Its list opens only once Done is pressed.
@@ -737,7 +743,10 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await expect(page.getByRole("checkbox", { name: /^Comments/ })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }));
   await page.keyboard.press("Enter");
-  // A person or a publication: an arrow key changes the answer, and Done opens it.
+  // A person or a publication: neither chosen (its articles name no writer, decision 0264); Tab
+  // reaches the first, an arrow key changes the answer, and Done opens it.
+  await expect(page.getByRole("group", { name: /is…$/ })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("radio", { name: "A publication", exact: true })).toBeChecked();
@@ -849,7 +858,8 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
     await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }), 5);
     await page.keyboard.press("Enter");
   }
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  // Its articles name no writer, so it could be either: kept with Publications (decision 0264).
+  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   expect(await followed(page)).toContain(name);
 });
 

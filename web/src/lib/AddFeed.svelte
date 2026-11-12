@@ -46,6 +46,7 @@
   import { runningInstalled } from "./installing.svelte";
   import { join } from "./people";
   import type { WhoKind } from "./shapes";
+  import { addedLine } from "./sorting";
   import { question } from "./youtube";
   import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
@@ -132,7 +133,8 @@
   let latest: string | undefined = $state();
   /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
   let noFeed = $state("");
-  let who: WhoKind = $state("person");
+  /** The tile chosen: nine turtles' guess to begin with, or none when it couldn't tell (decision 0264). */
+  let who: WhoKind | undefined = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
   /** Folder: which folder they go in, by number as text; "" for none, NEW for a folder named in `newName`. */
   // svelte-ignore state_referenced_locally
@@ -294,9 +296,10 @@
     asking = feed;
     asked = feed.title;
     latest = newest;
-    who = feed.kind ?? "person";
+    who = feed.open ? undefined : (feed.kind ?? "person");
     await tick();
-    whoGroup?.querySelector<HTMLInputElement>("input:checked")?.focus();
+    // With neither chosen, the question itself: a tile with the keyboard on it would look chosen.
+    (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
   }
 
   /**
@@ -370,13 +373,19 @@
     // Always kept, so a later guess never overrides what they answered. A publication goes by
     // its own title, not the one author's name nine turtles gave the person it guessed.
     const title = who === "publication" && feed.siteTitle && feed.siteTitle !== feed.title ? feed.siteTitle : undefined;
-    const refusal = await editFeed(feed.id, { kind: who, ...(title ? { title } : {}), ...filing() });
+    // Neither chosen: left open, kept with Publications until they say (decision 0264). The tile nine
+    // turtles chose, kept as it was: its reason stays, as the reader didn't change it.
+    const kept = who !== undefined && !feed.open && who === feed.kind && feed.why ? { why: feed.why } : {};
+    const changes = { ...(who ? { kind: who, ...kept } : {}), ...(title ? { title } : {}), ...filing() };
+    const refusal = Object.keys(changes).length > 0 ? await editFeed(feed.id, changes) : undefined;
     busy = false;
     asking = undefined;
     asked = "";
     // The guess stands if the answer couldn't be kept; their page can change it later, and the note says so.
-    const unsaved = refusal && (filing() ? "What they are and their folder couldn't be saved; their page can change both." : "What they are couldn't be saved; their page can change it.");
-    onAdded(refusal ? feed : { ...feed, kind: who, ...(title ? { title } : {}) }, [note, unsaved].filter(Boolean).join(" ") || undefined);
+    const unsaved =
+      refusal &&
+      (!who ? "Their folder couldn't be saved; their page can change it." : filing() ? "What they are and their folder couldn't be saved; their page can change both." : "What they are couldn't be saved; their page can change it.");
+    onAdded(refusal || !who ? feed : { ...feed, kind: who, open: false, ...(title ? { title } : {}) }, [note, unsaved].filter(Boolean).join(" ") || undefined);
   }
 
   function submit(event: SubmitEvent) {
@@ -552,7 +561,7 @@
         shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
       <div class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
-        <fieldset bind:this={whoGroup} class="flex flex-col gap-4">
+        <fieldset bind:this={whoGroup} tabindex="-1" class="flex flex-col gap-4 outline-none">
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
@@ -600,7 +609,7 @@
             {/if}
           </div>
         {/if}
-        <span class="field-help mt-0">You can change this later on their page.</span>
+        <span class="field-help mt-0">{addedLine(asking.why)}</span>
         {#if !framed}
           <!-- In the welcome, Done under the question, at its right, as in a sheet. -->
           <button type="submit" aria-disabled={busy} class="btn-primary self-end">Done</button>

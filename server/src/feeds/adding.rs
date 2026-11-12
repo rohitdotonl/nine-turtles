@@ -371,8 +371,8 @@ async fn follow(
     // Person or publication, what kind of source, and a person's own name:
     // guessed now, for Add's choice (decision 0163).
     crate::writers::kind::fill(&mut transaction, person, Some(feed_id)).await?;
-    let (kind, place, title): (String, String, String) = sqlx::query_as(
-        "SELECT kind, place, title FROM subscriptions WHERE person_id = ? AND feed_id = ?",
+    let (kind, why, place, title): (String, Option<String>, String, String) = sqlx::query_as(
+        "SELECT kind, kind_why, place, title FROM subscriptions WHERE person_id = ? AND feed_id = ?",
     )
     .bind(person)
     .bind(feed_id)
@@ -408,6 +408,8 @@ async fn follow(
         person: None,
         place,
         kind,
+        open: why.as_deref().is_some_and(|why| why.starts_with("unsure-")),
+        why,
         sorts_videos: youtube::addresses::channel_of_feed(&fetched.lasting_url).is_some(),
         shorts: false,
         live_streams: false,

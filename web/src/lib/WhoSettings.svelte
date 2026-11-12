@@ -24,6 +24,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { placesOf } from "./people";
   import type { Feed, WhoKind } from "./shapes";
+  import { whyLine } from "./sorting";
 
   let {
     feed,
@@ -65,6 +66,9 @@
     if (!editing) title = name;
   });
   let who: WhoKind = $derived(feed.kind ?? "person");
+  /** nine turtles couldn't tell: neither is chosen, so one press settles it either way (decision 0264). */
+  let open = $derived(feed.open === true);
+  let why = $derived(whyLine(feed.why));
   let saved: number[] = $derived([...new Set(places.flatMap((place) => place.folders))]);
   /** The folders as last ticked, while their saving is on its way; then what's saved again. */
   let ticked: number[] | undefined = $state();
@@ -143,7 +147,7 @@
   }
 
   async function chooseWho(next: WhoKind) {
-    if (next === who) return;
+    if (next === who && !open) return;
     await save({ kind: next });
   }
 
@@ -233,10 +237,11 @@
       <!-- Someone or something (decision 0163): a choice of two, as Settings draws one. -->
       <div class="inset-row setting has-control">
         <span id="{id}-who" class="setting-name">This is</span>
-        <div role="radiogroup" aria-labelledby="{id}-who" class="choices setting-control" style="--columns: 2; --phone-columns: 2">
-          <label class="choice"><input type="radio" name="{id}-who" value="person" checked={who === "person"} onchange={() => void chooseWho("person")} /><Icon name="person" />A person</label>
-          <label class="choice"><input type="radio" name="{id}-who" value="publication" checked={who === "publication"} onchange={() => void chooseWho("publication")} /><Icon name="newspaper" />A publication</label>
+        <div role="radiogroup" aria-labelledby="{id}-who" aria-describedby={why ? `${id}-who-why` : undefined} class="choices setting-control" style="--columns: 2; --phone-columns: 2">
+          <label class="choice"><input type="radio" name="{id}-who" value="person" checked={!open && who === "person"} onchange={() => void chooseWho("person")} /><Icon name="person" />A person</label>
+          <label class="choice"><input type="radio" name="{id}-who" value="publication" checked={!open && who === "publication"} onchange={() => void chooseWho("publication")} /><Icon name="newspaper" />A publication</label>
         </div>
+        {#if why}<span id="{id}-who-why" class="setting-hint">{why}</span>{/if}
       </div>
     {/if}
 

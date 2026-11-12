@@ -3,8 +3,8 @@ title: Bring your feeds from Feedly, Inoreader or another reader
 description: Move everything you follow, and your folders, from another feed reader in one file, and bring your starred articles too.
 groupId: getting-started
 order: 3
-spec: 13 and 16
-updated: 2026-11-10
+spec: 13, 16 and 36
+updated: 2026-11-12
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -27,6 +27,15 @@ watch them come: Unread says "Bringing in your list: 40 feeds still to
 check." and fills in by itself as each feed is read, and in the sidebar
 each one still waiting says **checking…** after its name. Once you open an
 article, new ones wait for you to press **r** (or Show), as usual.
+
+When the last one is checked, the line says how they were sorted: "Your
+list is in: 18 people and 4 publications. 8 could be either." Some feeds
+don't say who writes them, so nine turtles can't tell a person from a
+publication; those are kept with Publications until you say. Press **Look
+them over** to see them listed first in **Settings › Everyone you follow**:
+tick the people, anyone you might write back to, then press **The rest are
+publications**. A folder in your file called Friends or News, say, helps
+nine turtles sort what's in it.
 
 Chose the wrong file? Press **Undo the import** on the line under it: exactly
 what that import added goes again, and everything you followed before stays.

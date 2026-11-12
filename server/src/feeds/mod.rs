@@ -78,6 +78,12 @@ struct FeedRow {
     /// "person" or "publication" (decision 0163): always a person for a
     /// place joined to others.
     kind: String,
+    /// Why it's filed so (`writers::kind::WHYS`, decision 0264), none for a
+    /// place joined to others or sorted before nine turtles said why.
+    why: Option<String>,
+    /// nine turtles couldn't tell: it could be either, and is kept with the
+    /// publications until the reader settles it.
+    open: bool,
     /// When the reader followed it, which orders a person's places.
     added_at: i64,
     /// A YouTube channel's feed, whose Shorts and live streams are sorted
@@ -117,14 +123,22 @@ pub const FEEDS: &str =
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END) AS place,
         CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
              ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
+        CASE WHEN subscriptions.writer_id IS NULL THEN subscriptions.kind_why END AS why,
+        (subscriptions.writer_id IS NULL AND subscriptions.kind_why LIKE 'unsure-%') AS open,
         (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
              AND entries.feed_id = subscriptions.feed_id AND entries.read = 0) AS unread
      FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
      WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
      ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";
 
-/// The sidebar's feeds, folders and people.
-type Sidebar = (Vec<FeedRow>, Vec<Folder>, Vec<Writer>);
+/// The sidebar's feeds, folders and people, and the counts for the line
+/// that ends an import, while it shows (decision 0264).
+type Sidebar = (
+    Vec<FeedRow>,
+    Vec<Folder>,
+    Vec<Writer>,
+    Option<crate::subscriptions::note::Sorted>,
+);
 
 /// Every followed feed, alphabetically, with its unread count and folders,
 /// every folder, alphabetically (SPEC section 5), and the people places
@@ -158,6 +172,7 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
             .bind(person)
             .fetch_all(&mut *transaction)
             .await?;
+        let import_note = crate::subscriptions::note::sorted(&mut transaction, person).await?;
         transaction.commit().await?;
         let mut by_feed = std::collections::HashMap::<i64, Vec<i64>>::new();
         for (feed, folder) in memberships {
@@ -166,13 +181,14 @@ async fn list_feeds(SignedIn(person): SignedIn, State(state): State<AppState>) -
         for feed in &mut feeds {
             feed.folders = by_feed.remove(&feed.id).unwrap_or_default();
         }
-        Ok((feeds, folders, people))
+        Ok((feeds, folders, people, import_note))
     }
     .await;
     match listed {
-        Ok((feeds, folders, people)) => {
-            Json(json!({ "feeds": feeds, "folders": folders, "people": people })).into_response()
-        }
+        Ok((feeds, folders, people, import_note)) => Json(json!({
+            "feeds": feeds, "folders": folders, "people": people, "import_note": import_note,
+        }))
+        .into_response(),
         Err(error) => database_problem("listing feeds", &error),
     }
 }

@@ -136,5 +136,7 @@ pub async fn take_away(
     .bind(list(&added.folders))
     .execute(&mut *transaction)
     .await?;
+    // Nothing is left to say how it was sorted.
+    super::note::forget(&mut transaction, person).await?;
     transaction.commit().await
 }

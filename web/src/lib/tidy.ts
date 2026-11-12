@@ -8,6 +8,7 @@ import { api } from "./updates.svelte";
 import { isRecord, sendChange } from "./http";
 import { dayOrToday } from "./times";
 import { readKept, type Kept } from "./recentlyUnsubscribed";
+import { toWhy, type Why } from "./sorting";
 
 /** One row: a person with every place they were joined from, or a place on its own. */
 export type Tended = {
@@ -21,6 +22,13 @@ export type Tended = {
   lastTitle: string | null;
   /** Listed under People or Publications, as in the sidebar (decision 0163). */
   kind: "person" | "publication";
+  /** nine turtles couldn't tell: it could be either, listed to settle (decision 0264); never a person joined from places. */
+  open: boolean;
+  /** Why it's filed so, which Undo puts back. */
+  why: Why | null;
+  /** Where it publishes: its website (else its feed's address), and whether that's a YouTube channel. */
+  site: string;
+  video: boolean;
   addedAt: number;
   /** The folders any of its places are in, by number. */
   folders: number[];
@@ -46,6 +54,10 @@ export async function listTended(): Promise<{ feeds: Tended[]; folders: Folder[]
         lastPosted: typeof feed.last_posted === "number" ? feed.last_posted : null,
         lastTitle: typeof feed.last_title === "string" && feed.last_title.trim() !== "" ? feed.last_title.trim() : null,
         kind: feed.kind === "publication" ? "publication" : "person",
+        open: feed.open === true,
+        why: toWhy(feed.why),
+        site: String(feed.site ?? ""),
+        video: feed.video === true,
         addedAt: Number(feed.added_at ?? 0),
         folders: Array.isArray(feed.folders) ? feed.folders.map(Number) : [],
         person: typeof feed.person === "number" ? feed.person : null,
@@ -83,6 +95,10 @@ export function foldPeople(places: Place[]): Tended[] {
       lastPosted: newest.lastPosted,
       lastTitle: newest.lastTitle,
       kind: "person",
+      open: false,
+      why: null,
+      site: first.site,
+      video: first.video,
       addedAt: first.addedAt,
       folders: [...new Set(theirs.flatMap((each) => each.folders))],
       places: theirs.map((each) => ({ id: each.id, folders: each.folders })),
@@ -118,6 +134,29 @@ export function rowLine(feed: Tended, folders: string[], now: Date = new Date())
     else line = when === "today" ? "Last wrote today" : `Last wrote on ${when}`;
   }
   return folders.length > 0 ? `${line} · ${folders.join(", ")}` : line;
+}
+
+/**
+ * A row's second line in the list to settle: where they publish ("YouTube
+ * channel", or the website without "www."), then their newest title and
+ * day: "dynomight.net · “Scattered thoughts”, 26 Oct".
+ */
+export function settleLine(feed: Tended, now: Date = new Date()): string {
+  let where = "YouTube channel";
+  if (!feed.video) {
+    try {
+      where = new URL(feed.site).hostname.replace(/^www\./, "");
+    } catch {
+      where = feed.site;
+    }
+  }
+  if (feed.lastPosted === null || !feed.lastTitle) return where;
+  return `${where} · “${feed.lastTitle}”, ${dayOrToday(feed.lastPosted, now)}`;
+}
+
+/** "6 are publications now." */
+export function settledMessage(titles: string[]): string {
+  return titles.length === 1 ? `${titles[0]} is a publication now.` : `${titles.length} are publications now.`;
 }
 
 /** The folders' names, A to Z as the sidebar lists them. */
