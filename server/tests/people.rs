@@ -350,8 +350,22 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     assert_eq!(added["feed"]["kind"], "publication", "{added}");
     assert_eq!(added["feed"]["place"], "blog");
     let gazette = added["feed"]["id"].as_i64().unwrap();
+    assert_eq!(added["feed"]["why"], "several-names");
+    // No name signs Alpha's, and "Alpha" at alpha.example could be someone's
+    // first name or a company's: it could be either, kept as a publication
+    // until the reader says (decision 0264).
     let blog = reader.follow("alpha.xml").await;
-    assert_eq!(reader.feed(blog).await["kind"], "person");
+    let alpha = reader.feed(blog).await;
+    assert_eq!(alpha["kind"], "publication");
+    assert_eq!(alpha["why"], "unsure-no-names");
+    assert_eq!(alpha["open"], true);
+    // One name signs all of Tomas's: a person.
+    let tomas = reader.follow("tomas.xml").await;
+    let tomas_now = reader.feed(tomas).await;
+    assert_eq!(
+        (&tomas_now["kind"], &tomas_now["why"]),
+        (&json!("person"), &json!("one-name"))
+    );
     // A publication's articles name their writers in its list (the core path, point 4); a person's don't.
     let listed = reader.get(&format!("/api/articles?feed={gazette}")).await;
     assert!(
@@ -361,7 +375,7 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
             .starts_with("Writer "),
         "{listed}"
     );
-    let listed = reader.get(&format!("/api/articles?feed={blog}")).await;
+    let listed = reader.get(&format!("/api/articles?feed={tomas}")).await;
     assert!(listed["articles"][0].get("writer").is_none(), "{listed}");
     // The reader changes their mind without touching its name or folders. What kind of source it
     // is stays what nine turtles read from the feed: a correction is no longer taken (decision 0183).
@@ -374,6 +388,7 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     assert_eq!(status, StatusCode::NO_CONTENT);
     let changed = reader.feed(gazette).await;
     assert_eq!(changed["kind"], "person");
+    assert_eq!(changed["why"], "reader");
     assert_eq!(changed["place"], "blog");
     assert_eq!(changed["title"], "The Gazette");
     // A place joined to someone is always a person's; taken out, it's guessed afresh.
@@ -781,4 +796,116 @@ async fn the_sidebar_waits_for_a_feed_check_saving_at_the_same_moment() {
     let answer = asked.await.unwrap().unwrap();
     assert_eq!(answer.status(), StatusCode::OK);
     assert_eq!(reader.feed(tomas).await["kind"], "person");
+}
+
+#[tokio::test]
+async fn an_import_says_how_it_was_sorted_and_who_could_be_either() {
+    let (reader, state) = Reader::new().await;
+    let file = format!(
+        r#"<?xml version="1.0"?><opml version="2.0"><body>
+        <outline type="rss" text="The Gazette" xmlUrl="{0}/gazette.xml"/>
+        <outline type="rss" text="Notes from Tomas" xmlUrl="{0}/tomas.xml"/>
+        <outline type="rss" text="Alpha" xmlUrl="{0}/alpha.xml"/>
+        <outline text="Friends"><outline type="rss" text="Alpha too" xmlUrl="{0}/alpha.xml?friend"/></outline>
+        </body></opml>"#,
+        reader.publisher
+    );
+    let response = Client::new()
+        .post(format!("{}/api/opml", reader.base))
+        .header("cookie", &reader.cookie)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "text/x-opml")
+        .body(file)
+        .send()
+        .await
+        .unwrap();
+    assert!(response.status().is_success(), "{}", response.status());
+    // Nothing to say while any still waits for its first check.
+    sqlx::query("UPDATE feeds SET fetched_at = NULL, failures = 0")
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(reader.get("/api/feeds").await["import_note"], Value::Null);
+    let feeds: Vec<i64> = sqlx::query_scalar("SELECT id FROM feeds ORDER BY id")
+        .fetch_all(&state.db)
+        .await
+        .unwrap();
+    for feed in &feeds {
+        nine_turtles::checking::check(&state, *feed, nine_turtles::now())
+            .await
+            .unwrap();
+    }
+    // The Gazette has several writers, Tomas signs his, the Alpha filed under
+    // Friends is a person by its folder, and the other Alpha could be either.
+    assert_eq!(
+        reader.get("/api/feeds").await["import_note"],
+        json!({ "people": 2, "publications": 1, "open": 1 })
+    );
+    let alpha = feeds[2];
+    let listed = reader.feed(alpha).await;
+    assert_eq!(
+        (&listed["kind"], &listed["open"]),
+        (&json!("publication"), &json!(true))
+    );
+    assert_eq!(reader.feed(feeds[3]).await["why"], "folder");
+    let tidy = reader.get("/api/tidy/feeds").await;
+    let row = tidy["feeds"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["id"].as_i64() == Some(alpha))
+        .unwrap()
+        .clone();
+    assert_eq!(row["open"], true);
+    // Where it publishes: its website, or with none in the file, its feed's address.
+    assert!(
+        row["site"].as_str().unwrap().ends_with("/alpha.xml"),
+        "{row}"
+    );
+
+    // A tick settles it as a person; Undo puts back what it was, open again.
+    let (status, _) = reader
+        .post(
+            "/api/tidy/settle",
+            json!({ "feeds": [{ "feed": alpha, "kind": "person" }] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let settled = reader.feed(alpha).await;
+    assert_eq!(
+        (&settled["kind"], &settled["why"], &settled["open"]),
+        (&json!("person"), &json!("reader"), &json!(false))
+    );
+    assert_eq!(
+        reader.get("/api/feeds").await["import_note"],
+        json!({ "people": 3, "publications": 1, "open": 0 })
+    );
+    reader
+        .post(
+            "/api/tidy/settle",
+            json!({ "feeds": [{ "feed": alpha, "kind": "publication", "why": "unsure-no-names" }] }),
+        )
+        .await;
+    assert_eq!(reader.feed(alpha).await["open"], true);
+    // A reason nine turtles doesn't know is refused, and changes nothing.
+    let (status, _) = reader
+        .post(
+            "/api/tidy/settle",
+            json!({ "feeds": [{ "feed": alpha, "kind": "person", "why": "guess" }] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{alpha}"),
+            json!({ "kind": "person", "why": "guess" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(reader.feed(alpha).await["open"], true);
+
+    // Closed, the line is gone for good.
+    let (status, _) = reader.post("/api/opml/note/close", json!({})).await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(reader.get("/api/feeds").await["import_note"], Value::Null);
 }

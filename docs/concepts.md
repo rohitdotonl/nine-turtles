@@ -106,6 +106,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Newsletters as feeds
 - People and places (a person's blog, channel and newsletter as one)
 - People and publications (someone you might write back to, and the guess between them)
+- Could be either (a feed that doesn't say who writes it, kept with the publications until the reader settles it)
 - A person's own name (from a feed that signs every article with one author)
 - Write back (a `mailto:` link that opens the reader's own email app)
 - The weekly email (the one email a reader chooses; its stop link)

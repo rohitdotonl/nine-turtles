@@ -498,7 +498,7 @@ async fn separate_place(
         // The address typed for the person was theirs, not this place's
         // (decision 0147); Undo brings it back.
         sqlx::query(
-            "UPDATE subscriptions SET writer_id = NULL, kind = NULL, write_to = NULL
+            "UPDATE subscriptions SET writer_id = NULL, kind = NULL, kind_why = NULL, write_to = NULL
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)

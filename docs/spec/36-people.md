@@ -3,7 +3,8 @@
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
 Decision 0146 made people; decision 0163 (agreed with the owner on 3
 November 2026) added publications and one page for both; decision 0254 made
-that one page hold their settings too, with no Edit mode.
+that one page hold their settings too, with no Edit mode; decision 0264
+added "could be either" and says why.
 PLAN.md → V1, item 1.*
 
 **What it does**
@@ -20,30 +21,55 @@ PLAN.md → V1, item 1.*
   channel is never called a publication. A person with several sources has
   one row, with their name, and a dot when any source has something unread,
   in every folder any of their sources is in.
-- **Which is which.** A source joined to others is always a person. For a
-  source on its own, nine turtles guesses once, from the feed alone (it never
-  fetches a page to find out):
-  - a YouTube channel or playlist: a publication, never guessed (decision
-    0213);
-  - one author name on its articles: a person; several names: a publication;
-  - no names: a place of someone's own on a site many people share (a
-    Substack, Medium, a Bluesky account and the like): a
-    person;
-  - a site whose own name is a whole word of the feed's title (NASA at
-    apod.nasa.gov, "NASA Picture of the Day"): a publication, unless the title
-    says it's someone's ("Alpha's blog") or the site's address is a name run
-    together (janedoe.com, "Jane Doe");
-  - still unclear: a person.
+- **Which is which** (decision 0264). A source joined to others is always
+  a person. For a source on its own, nine turtles sorts it once, from the
+  feed alone (it never fetches a page to find out), by the first of these
+  that fits, and keeps why:
+  1. a YouTube channel or playlist: **could be either** (a vlogger's channel
+     and a company's sign their videos alike);
+  2. several names sign its articles: a publication;
+  3. one name signs them, a person's name (not a role such as "admin", nor
+     the feed's or the site's own name): a person;
+  4. no such name, and the site is someone's own: a place of theirs on a
+     site many people share (a Substack, Medium, a Bluesky account and the
+     like), a title that says it's someone's ("Jeff Kaufman's Writing"), or
+     an address that is a name-like title run together (janedoe.com, "Jane
+     Doe"): a person;
+  5. no such name, and the site's own name is a whole word of its title
+     (NASA at apod.nasa.gov, "NASA Picture of the Day"): a publication;
+  6. a folder it came in (from an imported list) says which, by a whole
+     word of its name: Friends, Family, People, Personal or Writers for a
+     person; News, Newspapers, Magazines, Publications, Companies, Media or
+     Press for a publication;
+  7. anything else: **could be either**.
+
+  **Could be either** acts as a publication everywhere (under
+  Publications, no Write back) until the reader settles it: by a tick on
+  Everyone you follow (section 15), on their page, in Add's question, or at
+  the end of one of their articles (section 7). Their page says why under
+  **This is**: "nine turtles chose this: one name signs every article." (or
+  "the site is someone's own", "several names sign its articles", "it
+  writes under its site's own name"), "nine turtles chose this from the name
+  of the folder it came in.", "nine turtles couldn't tell: no name signs
+  their articles. Kept as a publication until you choose.", "nine turtles
+  can't tell a person's channel from a company's. Kept as a publication
+  until you choose.", or "Your choice."; while it could be either, neither
+  option is chosen, so one press settles it. Someone followed before this
+  change keeps the setting they had, with no line.
 
   When adding through **+ Add** (section 3), the reader is asked to finish
   "Tomas Berg is…" with one of two tiles (**A person**, "Someone you might
   write back to."; **A publication**, "Anything you only read or watch, and
-  won't write back to."), with the guess already chosen. They can change it later in
-  their page's settings (for one source only, and not for the last source left of someone
-  joined, who stays a person). Feeds followed before this change get their
-  guess the next time the sidebar loads; an imported feed gets it once
-  nine turtles has checked it for the first time, so the guess sees its
-  writers.
+  won't write back to."), with nine turtles' choice already chosen and the
+  line under them saying why ("nine turtles chose this: one name signs
+  every article. You can change this later on their page."). When it
+  couldn't tell, neither is chosen, and the line says "nine turtles couldn't
+  tell from their feed. Left as it is, they're kept with Publications. You
+  can change this later on their page."; Done leaves them so. They can
+  change it later on their page (for one source only, and not for the last
+  source left of someone joined, who stays a person). An imported feed is
+  sorted once nine turtles has checked it for the first time, so the rules
+  see its writers.
 - **A feed's own name, tidied** (decision 0260). Many feeds wrap their
   name in words that only say it's a feed: nine turtles takes them off
   once, as the feed arrives, so "Blog – Pete's Site » Latest Posts" is
@@ -58,7 +84,7 @@ PLAN.md → V1, item 1.*
   "&amp;#8217;") shows them as themselves ("Tom & Jerry", "’"), for
   articles arriving from now on.
 - **Called by their name** (owner's plan, step 2). When a source on its
-  own is first guessed a person and every one of its articles is signed by
+  own is first sorted a person by its one name and every one of its articles is signed by
   the same one author (in any capitalisation), the person is called by that
   name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
   from Tomas"). A role or placeholder ("admin", "editor", "staff" and the
@@ -69,9 +95,9 @@ PLAN.md → V1, item 1.*
   from another app), once, when it first guesses them; people followed
   before this change are renamed the same way, once, at their feed's next
   check. An Atom feed that names its author once, for all its entries, signs
-  each of them, so it counts as one author for the person-or-publication
-  guess too (an organisation named as a feed's only author is guessed a
-  person, and their page fixes it). Only "No, a publication" in the question after
+  each of them, so it counts as one author for sorting too (an
+  organisation named as a feed's only author is sorted a person, unless the
+  name is the feed's or the site's own, and their page fixes it). Only "No, a publication" in the question after
   adding gives back the feed's title; changing **This is** on their page later
   keeps whatever name it has.
 - **Their list:** choosing the row lists everything they made, newest first
@@ -193,7 +219,8 @@ PLAN.md → V1, item 1.*
 
 **How to check it**
 1. Follow a blog by one person and a site with several writers: the blog is
-   under **People**, the site under **Publications**. A blog that signs every
+   under **People**, the site under **Publications**, and each one's page says
+   why under This is. A blog that signs every
    article with one author's name is called by that name, and its page shows
    the blog's title under it; Write back at an article's end says "Write
    back to" and their full name, as in the sidebar.
@@ -221,3 +248,7 @@ PLAN.md → V1, item 1.*
 10. Highlight words in an article of someone's, then open their page: under
    Write to and your note, **Your highlights** shows those words, "From" the
    article's title, and there is no Lately. Press the title: the article opens.
+11. Import a list with a blog whose articles name no one, at an address
+   that isn't a name: it's under Publications, and its page says "nine
+   turtles couldn't tell…" with neither option chosen. Choose A person: it
+   moves under People, and the line says "Your choice.".

@@ -3,8 +3,8 @@ title: Write back to a writer
 description: Reply to someone you read by email, from the end of their article, in your own email app.
 groupId: reading
 order: 10
-spec: 37
-updated: 2026-11-11
+spec: 7, 36 and 37
+updated: 2026-11-13
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -15,7 +15,10 @@ related: [one-person-several-places, share-an-article, newsletters]
 
 Write back is for people. A publication, such as a magazine, has no Write
 back button; if you'd like to write to one, open its page and, in its
-settings, choose **This is: A person**.
+settings, choose **This is: A person**. When nine turtles couldn't tell
+whether someone is a person or a publication, the end of their articles
+asks once instead: "Is … someone you might write back to?" Press **Yes, a
+person**, and Write back takes its place.
 
 ## Write back
 

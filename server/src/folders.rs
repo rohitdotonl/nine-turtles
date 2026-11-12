@@ -139,6 +139,10 @@ struct EditFeed {
     /// Person or publication (decision 0163). What kind of source a place
     /// is, nine turtles reads from the feed alone (decision 0183).
     kind: Option<crate::writers::kind::Kind>,
+    /// Why, with `kind` (decision 0264): left out, the reader chose it
+    /// ("reader"); given, Undo is putting back the reason it had, one of
+    /// `writers::kind::WHYS`, so one the reader hadn't settled is open again.
+    why: Option<String>,
 }
 
 /// How many of the articles a feed brought while it was paused go back to
@@ -170,6 +174,13 @@ async fn edit_feed(
             None => return problem(StatusCode::BAD_REQUEST, "no-name"),
         },
     };
+    if form
+        .why
+        .as_deref()
+        .is_some_and(|why| !crate::writers::kind::WHYS.contains(&why))
+    {
+        return problem(StatusCode::BAD_REQUEST, "why");
+    }
     let saved: Result<Option<()>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         if !follows(&mut transaction, person, id).await? {
@@ -188,17 +199,19 @@ async fn edit_feed(
         .await?;
         sqlx::query(
             "UPDATE subscriptions SET shorts = COALESCE(?, shorts),
-                 live_streams = COALESCE(?, live_streams),
-                 kind = COALESCE(?, kind)
+                 live_streams = COALESCE(?, live_streams)
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(form.shorts)
         .bind(form.live_streams)
-        .bind(form.kind.map(crate::writers::kind::Kind::name))
         .bind(person)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
+        if let Some(kind) = form.kind {
+            crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
+                .await?;
+        }
         // Switched on: that kind's videos stored since the reader followed
         // the channel join its list, as read, so nothing piles up in
         // Unread (an entry they already had, or one the clean-up removed

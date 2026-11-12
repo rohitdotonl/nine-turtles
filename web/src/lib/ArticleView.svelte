@@ -665,7 +665,7 @@
           />
         {/key}
         {#if !phone}<EndTools starred={article.starred} {onStar} original={(full.content || !full.summary) && article.link ? article.link : undefined} />{/if}
-        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242). -->
+        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, the question in its place (WriteBack, decision 0264). -->
         <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} {library} quotes={() => marks?.quotes() ?? []} quiet />
       {/if}
       <!-- Only on paper (print.css, decision 0236): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
