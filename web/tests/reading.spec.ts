@@ -292,7 +292,7 @@ test.describe("on a wide window", () => {
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     expect(order).toEqual(["View original", "Reading appearance", "Star", "Write back", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
-    await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("title", "Star (S)");
+    await expect(article(page).getByRole("button", { name: "Star" }).first()).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
     // More holds Copy link, Mark unread, Add a note, Hide articles about… and Full-screen reading (decision 0241), their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
@@ -581,7 +581,7 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("button", { name: "Show older articles" })).toHaveCount(0);
     // The note (here, Undo for a star) sits at the foot of the list pane, even under a short list.
     await page.keyboard.press("s");
-    const note = page.locator(".toast");
+    const note = page.locator(".toast:not(.sr-only)");
     await expect(note).toBeVisible();
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
@@ -660,12 +660,12 @@ test.describe("on a wide window", () => {
     expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
   });
 
-  test("the top bar is solid in the page's color, with a line under it only once the text has scrolled", async ({ page }) => {
+  test("the top bar is solid in the page's color and scrolls away with the title; Star and View original wait at the end", async ({ page }) => {
     await openRoom(page);
     await page.keyboard.press("j");
     const bar = article(page).locator(".reading-bar");
     const scroller = article(page).locator(".reading-scroller");
-    // Solid, never see-through or blurred, so no text shows through it (decision 0040).
+    // Solid, never see-through or blurred (decision 0040).
     const [barColor, paperColor, blur] = await Promise.all([
       bar.evaluate((element) => getComputedStyle(element).backgroundColor),
       article(page).evaluate((element) => getComputedStyle(element).backgroundColor),
@@ -674,15 +674,23 @@ test.describe("on a wide window", () => {
     expect(barColor).toBe(paperColor);
     expect(barColor).not.toMatch(/0\.\d+\)$/);
     expect(blur).toBe("none");
-    // The text scrolls below the bar, not under it; the bar spans the whole pane, scrollbar included.
-    const [barBox, scrollerBox, paneBox] = [(await bar.boundingBox())!, (await scroller.boundingBox())!, (await article(page).boundingBox())!];
-    expect(scrollerBox.y).toBeGreaterThanOrEqual(barBox.y + barBox.height - 1);
-    expect(Math.abs(barBox.x + barBox.width - (paneBox.x + paneBox.width))).toBeLessThan(1);
-    // The hairline between them shows only once the text has scrolled.
-    await expect(scroller).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    // The bar is the article's first line, its edges the pane's (bar the scrollbar), and it scrolls away with the title (decision 0263).
+    const [barBox, scrollerBox] = [(await bar.boundingBox())!, (await scroller.boundingBox())!];
+    expect(Math.abs(barBox.x - scrollerBox.x)).toBeLessThan(1);
+    expect(Math.abs(barBox.y - scrollerBox.y)).toBeLessThan(1);
     await scroller.evaluate((element) => element.scrollBy(0, 120));
-    await expect(scroller).toHaveAttribute("data-scrolled", "");
-    await expect(scroller).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+    expect((await bar.boundingBox())!.y).toBeLessThan(scrollerBox.y - 100);
+    // No hairline at the window's top: nothing stays above the text for it to part from.
+    await expect(scroller).toHaveCSS("border-top-width", "0px");
+    // At the end, Star and View original wait under the closing rule, Star the same toggle as the bar's.
+    await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+    const end = article(page).locator(".end-tools");
+    await expect(end.getByRole("button", { name: "Star" })).toBeInViewport();
+    await expect(end.getByRole("link", { name: "View original" })).toHaveAttribute("target", "_blank");
+    await end.getByRole("button", { name: "Star" }).click();
+    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await end.getByRole("button", { name: "Star" }).click();
+    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
     // The scrollbar's track is see-through, so its gutter is the page's own color in every theme.
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
@@ -801,11 +809,16 @@ test.describe("on a wide window", () => {
     expect(await link.evaluate((element) => element.getClientRects().length)).toBe(1);
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
-    // It comes after the short closing line; only Write back follows it, the article's last word (SPEC section 37).
+    // It comes after the short closing line; then Star alone, since the note is already the way to the original (decision 0263),
+    // and Write back, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
-    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
+    const tools = article(page).locator(".end-tools");
+    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("end-tools"))).toBe(true);
+    await expect(tools.getByRole("button", { name: "Star" })).toBeVisible();
+    await expect(tools.getByRole("link")).toHaveCount(0);
+    expect(await tools.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
     // Then only the credit line that shows on paper alone (decision 0236).
-    expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
+    expect(await tools.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
     await expect(article(page).locator(".print-credit")).toBeHidden();
   });
 
@@ -1201,7 +1214,8 @@ test.describe("your place in an article (decision 0060)", () => {
     expect(await top(page)).toBe(0);
 
     await scroller(page).hover();
-    await page.mouse.wheel(0, 300);
+    // Past the top bar, which scrolls with the text (decision 0263), into the middle of a paragraph.
+    await page.mouse.wheel(0, 356);
     await expect.poll(() => top(page)).toBeGreaterThan(250);
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
@@ -1251,7 +1265,8 @@ test.describe("your place in an article (decision 0060)", () => {
     // test nothing (a busy computer can take longer than any fixed wait).
     const kept = page.waitForResponse((answer) => answer.url().endsWith("/api/resume") && answer.request().method() === "PUT");
     await scroller(page).hover();
-    await page.mouse.wheel(0, 300);
+    // Past the top bar, which scrolls with the text (decision 0263), into the middle of a paragraph.
+    await page.mouse.wheel(0, 356);
     await expect.poll(() => top(page)).toBeGreaterThan(250);
     await kept;
     const stopped = await top(page);

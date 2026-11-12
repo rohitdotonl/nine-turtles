@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-10
+updated: 2026-11-13
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -108,6 +108,11 @@ in an article's **More** menu: the sidebar and the list hide together, and
 one button brings them back. You can also
 drag the edge between two parts to make one wider; double-click the edge to
 put it back.
+
+On a computer, an article's buttons (View original, Aa, Star and the rest)
+sit above its title and scroll away with it, so the whole pane is the
+writing. Their keys work all the way down, and at the end of the article
+**Star** and **View original** are there again.
 
 On a phone, tap the words of an article once to put its top and bottom bars
 away, so only the writing shows. Tap again, or read to the end, and they're

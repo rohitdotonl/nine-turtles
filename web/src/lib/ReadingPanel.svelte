@@ -126,6 +126,11 @@
       {/each}
     </div>
   </fieldset>
+
+  {#if phone}
+    <!-- The one place a phone tells of the tap that puts both bars away (decision 0263): beside how reading looks, never a pop-up. -->
+    <p class="text-meta text-muted" lang="en">Tap the text to hide the bars. Tap again to bring them back.</p>
+  {/if}
 </div>
 
 <style>

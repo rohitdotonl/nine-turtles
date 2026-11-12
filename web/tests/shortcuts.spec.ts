@@ -71,9 +71,10 @@ test.describe("on a wide window", () => {
     await expect.poll(() => scrolled(page)).toBeLessThan(before);
 
     // A button takes Space as its own press: Aa opens its panel, and the article stays put.
-    const still = await scrolled(page);
+    // (Aa is the article's first line, so reaching it brings the article's top back into view, decision 0263.)
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
     await aa.focus();
+    const still = await scrolled(page);
     await page.keyboard.press(" ");
     await expect(aa).toHaveAttribute("aria-expanded", "true");
     expect(await scrolled(page)).toBe(still);
