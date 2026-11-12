@@ -265,7 +265,7 @@ async fn a_site_that_asks_to_slow_down_isnt_asked_again_or_called_feedless() {
     .await;
     let reader = Reader::new().await;
     let (status, body) = reader.add(&format!("{base}/about/")).await;
-    assert_eq!(status, StatusCode::BAD_GATEWAY, "{body}");
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY, "{body}");
     assert_eq!(*visits.lock().unwrap(), ["/about/", "/about/feed"]);
 }
 

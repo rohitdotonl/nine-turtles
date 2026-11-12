@@ -365,7 +365,7 @@ struct Checkout {
 /// Dodo couldn't be reached, or said no: logged, and a calm answer.
 fn dodo_problem(doing: &str, detail: &str) -> Response {
     log::problem(&format!("Dodo Payments: couldn't {doing}: {detail}"));
-    refused(StatusCode::BAD_GATEWAY, "payments-unreachable")
+    refused(StatusCode::UNPROCESSABLE_ENTITY, "payments-unreachable")
 }
 
 /// A Dodo checkout page for the plan chosen. A reader still in their trial

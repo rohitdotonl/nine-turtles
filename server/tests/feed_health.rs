@@ -237,7 +237,7 @@ async fn a_sites_guard_against_bots_is_named_as_such() {
     let (status, answer) = reader
         .post(&format!("/api/health/{old}/find"), json!({}))
         .await;
-    assert_eq!(status, StatusCode::BAD_GATEWAY);
+    assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert_eq!(answer["error"], "blocked");
     // And so does adding a feed behind it.
     let (status, answer) = reader
@@ -248,7 +248,7 @@ async fn a_sites_guard_against_bots_is_named_as_such() {
         .await;
     assert_eq!(
         (status, answer["error"].as_str()),
-        (StatusCode::BAD_GATEWAY, Some("blocked"))
+        (StatusCode::UNPROCESSABLE_ENTITY, Some("blocked"))
     );
 }
 
