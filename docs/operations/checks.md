@@ -136,3 +136,8 @@ in through the sign-in page with a made-up password (`web/playwright.config.ts`)
 Fix the cause, never the check. Never skip, disable or weaken a check to get
 green; changing what a check enforces needs the owner's approval, like any
 other rule.
+
+A browser test that fails on GitHub names the step it stopped at. If it ran
+out of time with no step named, the step after the tests, "Show what each
+failed test's page showed", prints what the page looked like then: start
+there.
