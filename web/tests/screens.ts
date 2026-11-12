@@ -112,7 +112,9 @@ export const SCREENS: Screen[] = [
     open: async (page) => {
       await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/maya-${Date.now()}-${Math.floor(Math.random() * 1e6)}/`);
       await page.keyboard.press("Enter");
-      await expect(page.getByRole("radio", { name: "A person", exact: true })).toBeFocused();
+      // Its articles name no writer: neither is chosen, and the line under them says so (decision 0263).
+      await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+      await expect(page.getByText(/^nine turtles couldn't tell from their feed\./)).toBeVisible();
     },
   },
   {
@@ -196,6 +198,37 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // Their page for someone who could be either: neither chosen, and why (decision 0263).
+    name: "who-page-could-be-either",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const id = await follow(page, shelf("garden-letters"));
+      await feedsShown(page, "**/api/feeds", couldBeEither(id));
+      await page.goto(new URL(`/publications/${id}/about`, page.url()).href);
+      await appReady(page);
+      const hint = page.getByText(/^nine turtles couldn't tell: no name signs their articles\./);
+      await hint.scrollIntoViewIfNeeded();
+      await expect(hint).toBeVisible();
+    },
+  },
+  {
+    // The question at the end of an article by someone who could be either (decision 0263).
+    name: "article-could-be-either",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await feedsShown(page, "**/api/feeds", couldBeEither(/^Reading Room$/));
+      await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
+      await page.keyboard.press("Enter");
+      const asked = page.getByRole("group", { name: "Is Reading Room someone you might write back to?" });
+      await asked.scrollIntoViewIfNeeded();
+      await expect(asked).toBeVisible();
+    },
+  },
+  {
     name: "search",
     path: "/all",
     signedIn: true,
@@ -258,6 +291,32 @@ export const SCREENS: Screen[] = [
     },
   },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
+  {
+    // Who could be either, listed to settle (decision 0263), answered here so nothing shared changes.
+    name: "your-feeds-could-be-either",
+    path: "/settings/feeds",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await feedsShown(page, "**/api/tidy/feeds", couldBeEither(/^(Hal Brennan|Maren Holt)$/));
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 3, name: /could be either$/ })).toBeVisible();
+    },
+  },
+  {
+    // An import's closing line in Unread (decision 0263).
+    name: "unread-list-is-in",
+    path: "/unread",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await feedsShown(page, "**/api/feeds", (body) => (body.import_note = { people: 18, publications: 4, open: 8 }));
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByText("Your list is in: 18 people and 4 publications. 8 could be either.")).toBeVisible();
+    },
+  },
   {
     // Everyone you follow scrolled to Recently unsubscribed (decision 0240): one the reader
     // left today and one an assistant left, answered here so nothing is really unsubscribed.
@@ -501,11 +560,39 @@ function background(theme: Theme): string {
  * Follows a feed through nine turtles' own API, with the page's sign-in, so a
  * screen can start with feeds. Following one twice is fine.
  */
-export async function follow(page: Page, address: string): Promise<number> {
+export async function follow(page: Page, address: string, { asIs = false } = {}): Promise<number> {
   const response = await page.request.post(new URL("/api/feeds", page.url()).href, { data: { address } });
   expect([201, 409]).toContain(response.status());
   const body = await response.json();
-  return Number(body.feed?.id ?? body.feed_id);
+  const id = Number(body.feed?.id ?? body.feed_id);
+  // The made-up blogs name no writer, so they could be either (decision 0263). As the reader
+  // would in Add, they're settled as a person, unless the test is about could be either.
+  if (!asIs && body.feed?.open) {
+    const settled = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, { data: { kind: "person" } });
+    expect(settled.status()).toBe(204);
+  }
+  return id;
+}
+
+/** Shows the feeds as the server sends them, changed: a place made to look as if it could be either, say, so nothing shared is changed. */
+export async function feedsShown(page: Page, path: "**/api/feeds" | "**/api/tidy/feeds", change: (body: Record<string, unknown> & { feeds: Record<string, unknown>[] }) => void): Promise<void> {
+  await page.route(path, async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const response = await route.fetch();
+    const body = await response.json();
+    change(body);
+    await route.fulfill({ response, json: body });
+  });
+}
+
+/** Makes the places called `title` (or numbered `title`) look as if nine turtles couldn't tell what they are (decision 0263). */
+export function couldBeEither(title: RegExp | number) {
+  return (body: { feeds: Record<string, unknown>[] }) => {
+    for (const feed of body.feeds) {
+      if (typeof title === "number" ? feed.id !== title : !title.test(String(feed.title))) continue;
+      Object.assign(feed, { kind: "publication", why: "unsure-no-names", open: true, person: null });
+    }
+  };
 }
 
 /** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */
