@@ -4,7 +4,8 @@
   title, who wrote it and when, its words and pictures, and at its end a
   credit line with the original's address, so the paper says where it came
   from (the second floor). Nothing of the app's own is printed: no sidebar,
-  list, toolbar, buttons or players, and no Write back. Black on white in
+  list, toolbar, buttons or players, and no Write back or the Star and View
+  original that end it on screen (decision 0263). Black on white in
   every theme. With no article open, the page prints as it looks.
 */
 
@@ -81,6 +82,7 @@
      play on paper. The writer's name, a highlight's words at the end and a
      note's times are the article's own, so they print as plain text. */
   .article .write-back,
+  .article .end-tools,
   .article button:not(.writer-link, .quote > button, .time),
   .article iframe,
   .article audio,

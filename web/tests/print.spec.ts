@@ -28,6 +28,8 @@ test("Print prints the open article alone, with where it came from", async ({ pa
   await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
   await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeHidden();
   await expect(page.getByRole("link", { name: /^Write back/ })).toBeHidden();
+  // Nor the View original links, at the top or at the end (decision 0263).
+  for (const link of await page.getByRole("link", { name: /^View original/ }).all()) await expect(link).toBeHidden();
   for (const button of await page.getByRole("button").all()) {
     // Only the writer's name and the pictures that open larger (role "button"), which are the article's own.
     if (await button.isVisible()) expect(await button.getAttribute("class")).toMatch(/writer-link|openable/);

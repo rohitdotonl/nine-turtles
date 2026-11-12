@@ -901,8 +901,8 @@
     On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
     Everywhere else it sits on the sidebar it controls, at the right end of its top line across from
     the wordmark; with the sidebar hidden it waits at the start of the next area's top line. It's one
-    button that moves, so the keyboard stays on it. Each area's top line (the wordmark, the list's
-    title, the article's tools) never scrolls, so nothing passes under it.
+    button that moves, so the keyboard stays on it. The sidebar's and the list's top lines never scroll;
+    the article's tools scroll away with its title (decision 0263), and this button stays, in the 64px margin beside the text.
   -->
   <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
     <button

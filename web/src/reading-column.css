@@ -7,7 +7,7 @@
   article's bar.
 */
 :root {
-  --reading-top: calc(var(--bar-h) + 1px + 0.75rem);
+  --reading-top: calc(var(--bar-h) + 0.75rem);
 }
 .article,
 .reading-column {

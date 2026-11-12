@@ -103,16 +103,16 @@
 </script>
 
 <section aria-label="About {name}" class="who-page flex min-w-0 flex-1 flex-col bg-paper">
+  <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
+  <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
-    <!-- The reading area's own bar, as an article's: on its right, where the article's tools end, the way back to their list. -->
-    <div class="reading-bar pane-bar relative z-10 justify-end pr-2">
+    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
+    <div class="reading-bar pane-bar relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
       <button type="button" class="btn-quiet btn-icon" aria-label="Close" title="Close (Esc)" onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
     </div>
   {/if}
-  <!-- Its hairline under the bar once the page has scrolled, as an article's (decision 0040). -->
-  <div use:edge bind:this={scroller} class={["scroller relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "px-5 pb-12" : "scroll-gutter px-5 pt-3 pb-16 md:px-16"]}>
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
-  <div class={phone ? "contents" : "reading-column"}>
+  <div class={phone ? "contents" : "reading-column pt-3"}>
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->

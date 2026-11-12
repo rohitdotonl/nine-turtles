@@ -413,7 +413,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("s");
     await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Starred/);
     await expect(row(page, blog, MIDDLE).locator("svg")).toBeVisible();
-    await expect(article(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await expect(article(page).getByRole("button", { name: "Star" }).first()).toHaveAttribute("aria-pressed", "true");
     await expect(line(page)).toHaveText("Starred.");
 
     await page.keyboard.press("g");
@@ -424,7 +424,7 @@ test.describe("on a wide window", () => {
 
     // Unstar it with the Star button: it leaves Starred.
     await row(page, blog, MIDDLE).click();
-    const star = article(page).getByRole("button", { name: "Star" });
+    const star = article(page).getByRole("button", { name: "Star" }).first();
     // The star changes at once; reload only once the server has it saved.
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/starred") && response.ok());
     await star.click();
@@ -602,7 +602,7 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);
   await row(page, blog, NEWEST).click();
-  await article(page).getByRole("button", { name: "Star" }).click();
+  await article(page).getByRole("button", { name: "Star" }).first().click();
   await article(page).getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Mark unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}`, exact: true }).click();
