@@ -1,5 +1,5 @@
 <!--
-  The question at an article's end (SPEC section 7, decision 0263), the last
+  The question at an article's end (SPEC section 7, decision 0264), the last
   resort of "could be either": for someone nine turtles couldn't sort, where
   Write back would stand for a person, "Is Jane someone you might write back
   to?" with Yes, a person and No, a publication. Asked once: it stays quietly

@@ -66,7 +66,7 @@
     if (!editing) title = name;
   });
   let who: WhoKind = $derived(feed.kind ?? "person");
-  /** nine turtles couldn't tell: neither is chosen, so one press settles it either way (decision 0263). */
+  /** nine turtles couldn't tell: neither is chosen, so one press settles it either way (decision 0264). */
   let open = $derived(feed.open === true);
   let why = $derived(whyLine(feed.why));
   let saved: number[] = $derived([...new Set(places.flatMap((place) => place.folders))]);

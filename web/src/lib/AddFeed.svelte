@@ -133,7 +133,7 @@
   let latest: string | undefined = $state();
   /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
   let noFeed = $state("");
-  /** The tile chosen: nine turtles' guess to begin with, or none when it couldn't tell (decision 0263). */
+  /** The tile chosen: nine turtles' guess to begin with, or none when it couldn't tell (decision 0264). */
   let who: WhoKind | undefined = $state("person");
   let whoGroup: HTMLElement | undefined = $state();
   /** Folder: which folder they go in, by number as text; "" for none, NEW for a folder named in `newName`. */
@@ -373,7 +373,7 @@
     // Always kept, so a later guess never overrides what they answered. A publication goes by
     // its own title, not the one author's name nine turtles gave the person it guessed.
     const title = who === "publication" && feed.siteTitle && feed.siteTitle !== feed.title ? feed.siteTitle : undefined;
-    // Neither chosen: left open, kept with Publications until they say (decision 0263). The tile nine
+    // Neither chosen: left open, kept with Publications until they say (decision 0264). The tile nine
     // turtles chose, kept as it was: its reason stays, as the reader didn't change it.
     const kept = who !== undefined && !feed.open && who === feed.kind && feed.why ? { why: feed.why } : {};
     const changes = { ...(who ? { kind: who, ...kept } : {}), ...(title ? { title } : {}), ...filing() };

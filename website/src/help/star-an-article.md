@@ -4,7 +4,7 @@ description: Star the articles you want to keep or come back to. Starred article
 groupId: reading
 order: 3
 spec: 6 and 9
-updated: 2026-11-10
+updated: 2026-11-13
 related: [search-everything, download-everything, mark-read-or-unread]
 ---
 
@@ -15,8 +15,8 @@ related: [search-everything, download-everything, mark-read-or-unread]
 
 ## Star an article
 
-Open the article and press **Star** in the bar across its top (on a phone,
-the bar at the bottom), or press <kbd>S</kbd>. The star fills in. Press it
+Open the article and press **Star** in the bar at its top or under its
+last words (on a phone, the bar at the bottom), or press <kbd>S</kbd>. The star fills in. Press it
 again to take the star off. In a list, you can also right-click an article
 (on a phone, press and hold it) and choose **Star**. On a computer, you
 can also drag an article from the list onto **Starred** in the sidebar.

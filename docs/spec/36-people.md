@@ -3,7 +3,7 @@
 *Part of the spec ([index](../SPEC.md)). `docs/DESIGN.md` takes precedence.
 Decision 0146 made people; decision 0163 (agreed with the owner on 3
 November 2026) added publications and one page for both; decision 0254 made
-that one page hold their settings too, with no Edit mode; decision 0263
+that one page hold their settings too, with no Edit mode; decision 0264
 added "could be either" and says why.
 PLAN.md → V1, item 1.*
 
@@ -21,7 +21,7 @@ PLAN.md → V1, item 1.*
   channel is never called a publication. A person with several sources has
   one row, with their name, and a dot when any source has something unread,
   in every folder any of their sources is in.
-- **Which is which** (decision 0263). A source joined to others is always
+- **Which is which** (decision 0264). A source joined to others is always
   a person. For a source on its own, nine turtles sorts it once, from the
   feed alone (it never fetches a page to find out), by the first of these
   that fits, and keeps why:

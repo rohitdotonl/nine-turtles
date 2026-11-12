@@ -4,7 +4,8 @@
   was just done is said where the reader is, with its Undo or Try again and
   a × (SPEC section 8), in the same build as the note at the list's foot. Write back's
   "Opening your email app…", started while its own line is off screen, is said here too
-  (SPEC section 37). It
+  (SPEC section 37), and on a computer the article's own lines ("Link copied.",
+  "Highlighted.") since its top bar scrolls away (decision 0263). It
   floats at the reading area's foot, above a phone's toolbar, and appears at
   once, never sliding. Empty, it stays for screen readers, which hear each
   message as it arrives (the list's own note is hidden with the list).

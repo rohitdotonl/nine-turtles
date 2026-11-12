@@ -16,7 +16,7 @@ export function bringsIn(checking: number, source: Source): boolean {
   return checking > 0 && showsArrivals(source);
 }
 
-/** Unread and All articles: the lists that say how an import is arriving, and how it was sorted (decision 0263). */
+/** Unread and All articles: the lists that say how an import is arriving, and how it was sorted (decision 0264). */
 export function showsArrivals(source: Source): boolean {
   return "view" in source && (source.view === "unread" || source.view === "all");
 }

@@ -3,17 +3,15 @@
   feed gives it, cleaned by nine turtles and restyled in the reader's font and
   size. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
-  to screen readers, together at the right as Apple Books keeps its reading
-  toolbar (decision 0050): View original, Aa (the reading panel), Star,
+  to screen readers, together at the right (decision 0050), and on a computer it scrolls
+  away with the title, Star and View original waiting again at the end (decision 0263): View original, Aa (the reading panel), Star,
   Write back (a paper plane, for a person only, decision 0214) and More (…).
   More holds Copy link (Share on phones), Mark unread, Add a note and Hide
   (SPEC sections 7, 8, 9, 21, 33 and 37); on a phone it opens upwards, Copy
   link or Share nearest the button (decision 0243). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
-  0214), as their name at the top of the list does. The
-  bar is solid, in the page's own color, above the scrolling text, with a
-  hairline under it only once the text has scrolled (decision 0040). The
-  source is always credited and linked. A feed that gives only a summary
+  0214), as their name at the top of the list does. What was just done ("Link copied.")
+  floats at the pane's foot on a computer, as the list's note does. The source is always credited and linked. A feed that gives only a summary
   shows the summary, then a small centred note under the closing rule that
   links the whole article on the publisher's site; nine turtles never fetches
   the rest. A YouTube video plays above its text in YouTube's own player,
@@ -37,13 +35,13 @@
   import TextButton from "./TextButton.svelte";
   import LateLine from "./LateLine.svelte";
   import AwayNote from "./AwayNote.svelte";
+  import EndTools from "./EndTools.svelte";
   import type { ListNote } from "./listNote";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
   import YouTubePlayer from "./YouTubePlayer.svelte";
   import EpisodePlayer from "./EpisodePlayer.svelte";
   import WriteBack from "./WriteBack.svelte";
-  import SettleAsk from "./SettleAsk.svelte";
   import { writesBack } from "./writeBack";
   import ArticleMarks from "./ArticleMarks.svelte";
   import FootnoteCard from "./FootnoteCard.svelte";
@@ -138,6 +136,10 @@
   let arrivals = $state(0);
   let problem = $state(false);
   let copied = $state("");
+  /** On a computer, what was just done floats at the pane's foot, as the list's note does, since the top bar scrolls away (decision 0263). */
+  const said: ListNote | undefined = $derived(!phone && copied ? { words: copied, close: () => (copied = "") } : undefined);
+  // A list note that arrives puts the older line away, so the newest (an Undo) shows.
+  $effect(() => void (listNote && (copied = "")));
   /** A name set apart (Unicode's first-strong isolate), so a right-to-left one keeps the print credit's commas in order. */
   const apart = (name: string) => `${String.fromCodePoint(0x2068)}${name}${String.fromCodePoint(0x2069)}`;
   let scroller: HTMLDivElement | undefined = $state();
@@ -226,6 +228,8 @@
 
   function scrolled() {
     if (phone && scroller) bars.scrolled(scroller);
+    // On a computer, the Aa panel goes once its button has scrolled away with the bar (decision 0263).
+    if (panelOpen && !phone && scroller && aaButton && aaButton.getBoundingClientRect().bottom < scroller.getBoundingClientRect().top) closePanel(false);
     if (!moved || !scroller || !text) return;
     latest = { id: article.id, place: placeIn(scroller, text) };
     clearTimeout(writing);
@@ -501,11 +505,8 @@
   <!-- The open arrow the notes inside the text draw beside their links (missing.ts). -->
   <span bind:this={arrow} hidden><Icon name="open" /></span>
   <!--
-    The top bar is solid, in the page's own color, across the whole pane
-    (scrollbar included), so its icons are anchored to the pane's edges
-    rather than the text column, and no text shows through it. The text
-    scrolls below it; a faint line shows between them only once the text
-    has scrolled (the scroller's own top edge, as in the list).
+    A phone's top bar is solid, in the page's own color, across the whole pane, and no text shows through it;
+    a faint line shows under it only once the text has scrolled (the scroller's own top edge, as in the list).
   -->
   {#if phone}
     <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
@@ -519,29 +520,6 @@
         <span class="ml-auto">{@render original()}</span>
       {/if}
     </div>
-  {:else}
-    <!--
-      Quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
-      publisher, then the reader's own tools. The left holds only the pane buttons, like Apple Books' reading toolbar (decision 0050).
-    -->
-    <div class={["reading-bar pane-bar relative z-10 gap-2 pr-2", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
-      {#if !article.link}
-        <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
-      {/if}
-      <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-meta empty:sr-only">{copied}</p>
-      <div class="ml-auto flex items-center gap-1">
-        {#if article.link}
-          {@render original()}
-        {/if}
-        {@render aa("btn-quiet btn-icon")}
-        <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-        <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
-          {@render starIcon()}
-        </button>
-        {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
-        <MoreMenu id="article-menu" label="More actions" groups={more} />
-      </div>
-    </div>
   {/if}
 
   <div
@@ -550,7 +528,31 @@
     onscroll={scrolled}
     style:padding-top={bars.away ? `${bars.room.above}px` : undefined}
     style:padding-bottom={bars.away ? `${bars.room.below}px` : undefined}
-    class={["reading-scroller scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", listNote || writeBackNote ? "pb-24" : "pb-8" /* room under the article's end for the floating note (decision 0229) */]}>
+    class={["reading-scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", phone && "scroller", listNote || writeBackNote || said ? "pb-24" : "pb-8" /* room under the article's end for the floating note (decision 0229) */]}>
+    {#if !phone}
+      <!--
+        On a computer the bar is the article's first line and scrolls away with its title (decision 0263):
+        quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
+        publisher, then the reader's own tools. Its edges are the pane's, not the text column's (decision 0050).
+      -->
+      <div class={["reading-bar pane-bar relative z-10 -mx-5 gap-2 pr-2 md:-mx-16", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
+        {#if !article.link}
+          <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
+        {/if}
+        <div class="ml-auto flex items-center gap-1">
+          {#if article.link}
+            {@render original()}
+          {/if}
+          {@render aa("btn-quiet btn-icon")}
+          <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
+          <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+            {@render starIcon()}
+          </button>
+          {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
+          <MoreMenu id="article-menu" label="More actions" groups={more} />
+        </div>
+      </div>
+    {/if}
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
@@ -662,8 +664,8 @@
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
         {/key}
-        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, first the question (decision 0263). -->
-        <SettleAsk {article} {library} bind:away={writeBackNote} />
+        {#if !phone}<EndTools starred={article.starred} {onStar} original={(full.content || !full.summary) && article.link ? article.link : undefined} />{/if}
+        <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, the question in its place (WriteBack, decision 0264). -->
         <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} {library} quotes={() => marks?.quotes() ?? []} quiet />
       {/if}
       <!-- Only on paper (print.css, decision 0236): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
@@ -672,7 +674,7 @@
   </div>
 
   <!-- Write back's own note comes first while it's there: it answers the press just made (SPEC section 37). -->
-  {#if listNote !== false || writeBackNote}<AwayNote note={writeBackNote ?? (listNote || undefined)} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
+  {#if listNote !== false || writeBackNote || !phone}<AwayNote note={writeBackNote ?? said ?? (listNote || undefined)} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
   {#if phone && beforeToolbar}
     {@render beforeToolbar()}
   {/if}
@@ -716,15 +718,11 @@
 </section>
 
 <style>
-  /* A footnote or heading the keyboard moves to stops a little below the top bar. */
+  /* A footnote or heading the keyboard moves to stops a little below the window's top. */
   .reading-scroller {
     scroll-padding-top: 1rem;
   }
-  /*
-    The top bar (decision 0040): solid, in the page's own color, never
-    see-through or blurred. Its hairline is the scroller's top edge
-    (app.css → .scroller), shown only once the text has scrolled.
-  */
+  /* The top bar (decision 0040): solid, in the page's own color, never see-through or blurred. On a phone its hairline is the scroller's top edge (app.css → .scroller). */
   .reading-bar {
     background-color: var(--paper);
   }

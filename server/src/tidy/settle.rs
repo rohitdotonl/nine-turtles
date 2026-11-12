@@ -1,4 +1,4 @@
-//! Settling who could be either (SPEC section 15, decision 0263): on
+//! Settling who could be either (SPEC section 15, decision 0264): on
 //! Everyone you follow, each tick makes one a person at once, and "The rest
 //! are publications" settles every one left; Undo puts back what each was,
 //! so one the reader hadn't settled is open again.

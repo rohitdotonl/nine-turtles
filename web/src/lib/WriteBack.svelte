@@ -30,7 +30,9 @@
   (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
   area's foot instead, where the reader is (`away`, drawn by the article's AwayNote; decision 0229).
 
-  A publication has none of this (decision 0192): nothing shows, and `start` does nothing.
+  A publication has none of this (decision 0192): nothing shows, and `start` does nothing. For
+  someone nine turtles couldn't sort, at an article's end, the question stands in its place
+  instead (SettleAsk, decision 0264).
 -->
 <script lang="ts">
   import { tip } from "./keyboard";
@@ -38,6 +40,7 @@
   import AddressBox from "./AddressBox.svelte";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
+  import SettleAsk from "./SettleAsk.svelte";
   import { plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import type { ListNote } from "./listNote";
@@ -389,6 +392,8 @@
       {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
     {/if}
   </div>
+{:else if article && source?.open}
+  <SettleAsk {article} {library} bind:away />
 {/if}
 
 <style>

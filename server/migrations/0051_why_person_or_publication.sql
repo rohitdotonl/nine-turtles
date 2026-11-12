@@ -1,5 +1,5 @@
 -- Why each place a reader follows is filed as a person or a publication
--- (decision 0263): the reason nine turtles chose ("one-name", "own-site",
+-- (decision 0264): the reason nine turtles chose ("one-name", "own-site",
 -- "several-names", "site-name", "folder"), that it couldn't tell
 -- ("unsure-no-names", "unsure-channel": the place could be either, and is
 -- kept with the publications until the reader settles it), or "reader" when

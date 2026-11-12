@@ -22,7 +22,7 @@ export type Tended = {
   lastTitle: string | null;
   /** Listed under People or Publications, as in the sidebar (decision 0163). */
   kind: "person" | "publication";
-  /** nine turtles couldn't tell: it could be either, listed to settle (decision 0263); never a person joined from places. */
+  /** nine turtles couldn't tell: it could be either, listed to settle (decision 0264); never a person joined from places. */
   open: boolean;
   /** Why it's filed so, which Undo puts back. */
   why: Why | null;

@@ -341,7 +341,7 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await page.keyboard.press("Enter");
 
   // Followed: then one question (decision 0163). Its articles name no writer, so nine turtles
-  // couldn't tell: neither is chosen, the keyboard is on the question, and the line says so (decision 0263).
+  // couldn't tell: neither is chosen, the keyboard is on the question, and the line says so (decision 0264).
   // The field goes; the sheet's title finishes the sentence (the owner's core path, point 1).
   const asked = page.getByRole("group", { name: `Blog ${name} is…` });
   await expect(asked).toBeVisible();
@@ -743,7 +743,7 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await expect(page.getByRole("checkbox", { name: /^Comments/ })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }));
   await page.keyboard.press("Enter");
-  // A person or a publication: neither chosen (its articles name no writer, decision 0263); Tab
+  // A person or a publication: neither chosen (its articles name no writer, decision 0264); Tab
   // reaches the first, an arrow key changes the answer, and Done opens it.
   await expect(page.getByRole("group", { name: /is…$/ })).toBeFocused();
   await page.keyboard.press("Tab");
@@ -858,7 +858,7 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
     await tabTo(page, page.getByRole("button", { name: "Follow", exact: true }), 5);
     await page.keyboard.press("Enter");
   }
-  // Its articles name no writer, so it could be either: kept with Publications (decision 0263).
+  // Its articles name no writer, so it could be either: kept with Publications (decision 0264).
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   expect(await followed(page)).toContain(name);
 });

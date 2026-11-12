@@ -1,7 +1,7 @@
 <!--
   Everyone you follow (SPEC section 15, decision 0186), opened from
   Settings. Who isn't working comes first (NotWorking.svelte), then who
-  could be either, to settle with a tick (SettleList.svelte, decision 0263).
+  could be either, to settle with a tick (SettleList.svelte, decision 0264).
   Then everyone, A to Z, People and Publications apart as in the sidebar, each
   row saying the title of their newest piece and when it came, or "Quiet
   since …" after six months, and their folders. A row opens their page.

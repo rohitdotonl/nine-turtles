@@ -35,7 +35,7 @@ export class LoadedLibrary {
   people: Person[] = $state([]);
   /** The sidebar's rows, A to Z: one per person, a person's places as one (`people.ts` → `rowsOf`). */
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
-  /** How the reader's last import was sorted, once it's all checked, until they close the line (decision 0263). */
+  /** How the reader's last import was sorted, once it's all checked, until they close the line (decision 0264). */
   sorted: Sorted | undefined = $state();
   /** Ends the import's closing line for good: closed, or the list to settle opened. */
   closeSorted() {
@@ -341,7 +341,7 @@ export class LoadedLibrary {
     return {
       message: `${row.title} is now a ${kind}.`,
       undo: async () => {
-        // What it was, and why: one nine turtles couldn't tell is open again (decision 0263).
+        // What it was, and why: one nine turtles couldn't tell is open again (decision 0264).
         const problem = await editFeed(row.id, { kind: was, why });
         await this.loadFeeds();
         return problem ? undoRefused(problem, "feed") : undefined;

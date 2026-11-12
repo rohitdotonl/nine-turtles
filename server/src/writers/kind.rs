@@ -1,4 +1,4 @@
-//! Person or publication (SPEC section 36, decisions 0163 and 0263): everything
+//! Person or publication (SPEC section 36, decisions 0163 and 0264): everything
 //! a reader follows is someone or something. A place joined to others is
 //! always a person's; for a place on its own nine turtles sorts it once, from
 //! the feed alone (never fetching a page), and says why, and the reader can
@@ -72,7 +72,7 @@ const PERSONAL_SITES: &[&str] = &[
     "patreon.com",
 ];
 
-/// Why a place is filed as it is (`subscriptions.kind_why`, decision 0263):
+/// Why a place is filed as it is (`subscriptions.kind_why`, decision 0264):
 /// one of the reasons below when nine turtles chose, `reader` when the reader
 /// did. Null for a place sorted before nine turtles said why. A place whose
 /// reason starts `unsure-` is open: it could be either, and is kept with the

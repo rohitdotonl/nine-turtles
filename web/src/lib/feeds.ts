@@ -233,7 +233,7 @@ export type FeedChanges = Partial<VideoSettings> & {
   newFolder?: string;
   paused?: boolean;
   kind?: WhoKind;
-  /** With `kind`: the reason Undo puts back; left out, the reader chose it (decision 0263). */
+  /** With `kind`: the reason Undo puts back; left out, the reader chose it (decision 0264). */
   why?: Why;
 };
 

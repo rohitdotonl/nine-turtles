@@ -1,4 +1,4 @@
-# 0263: Could be either
+# 0264: Could be either
 
 **In one line:** nine turtles sorts each followed place into a person or a publication by seven rules, keeps why (`subscriptions.kind_why`, structure change 51), and when the feed can't tell, files it as "could be either", kept with the publications until the reader settles it on Everyone you follow, their page, Add, or once at the end of their articles.
 

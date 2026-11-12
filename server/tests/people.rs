@@ -353,7 +353,7 @@ async fn each_place_is_a_person_or_a_publication_and_the_reader_can_change_it() 
     assert_eq!(added["feed"]["why"], "several-names");
     // No name signs Alpha's, and "Alpha" at alpha.example could be someone's
     // first name or a company's: it could be either, kept as a publication
-    // until the reader says (decision 0263).
+    // until the reader says (decision 0264).
     let blog = reader.follow("alpha.xml").await;
     let alpha = reader.feed(blog).await;
     assert_eq!(alpha["kind"], "publication");

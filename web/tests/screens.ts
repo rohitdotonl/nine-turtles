@@ -112,7 +112,7 @@ export const SCREENS: Screen[] = [
     open: async (page) => {
       await page.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/maya-${Date.now()}-${Math.floor(Math.random() * 1e6)}/`);
       await page.keyboard.press("Enter");
-      // Its articles name no writer: neither is chosen, and the line under them says so (decision 0263).
+      // Its articles name no writer: neither is chosen, and the line under them says so (decision 0264).
       await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
       await expect(page.getByText(/^nine turtles couldn't tell from their feed\./)).toBeVisible();
     },
@@ -198,7 +198,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Their page for someone who could be either: neither chosen, and why (decision 0263).
+    // Their page for someone who could be either: neither chosen, and why (decision 0264).
     name: "who-page-could-be-either",
     path: "/all",
     signedIn: true,
@@ -214,7 +214,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // The question at the end of an article by someone who could be either (decision 0263).
+    // The question at the end of an article by someone who could be either (decision 0264).
     name: "article-could-be-either",
     path: "/all",
     signedIn: true,
@@ -292,7 +292,7 @@ export const SCREENS: Screen[] = [
   },
   { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
   {
-    // Who could be either, listed to settle (decision 0263), answered here so nothing shared changes.
+    // Who could be either, listed to settle (decision 0264), answered here so nothing shared changes.
     name: "your-feeds-could-be-either",
     path: "/settings/feeds",
     signedIn: true,
@@ -305,7 +305,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // An import's closing line in Unread (decision 0263).
+    // An import's closing line in Unread (decision 0264).
     name: "unread-list-is-in",
     path: "/unread",
     signedIn: true,
@@ -565,7 +565,7 @@ export async function follow(page: Page, address: string, { asIs = false } = {})
   expect([201, 409]).toContain(response.status());
   const body = await response.json();
   const id = Number(body.feed?.id ?? body.feed_id);
-  // The made-up blogs name no writer, so they could be either (decision 0263). As the reader
+  // The made-up blogs name no writer, so they could be either (decision 0264). As the reader
   // would in Add, they're settled as a person, unless the test is about could be either.
   if (!asIs && body.feed?.open) {
     const settled = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, { data: { kind: "person" } });
@@ -585,7 +585,7 @@ export async function feedsShown(page: Page, path: "**/api/feeds" | "**/api/tidy
   });
 }
 
-/** Makes the places called `title` (or numbered `title`) look as if nine turtles couldn't tell what they are (decision 0263). */
+/** Makes the places called `title` (or numbered `title`) look as if nine turtles couldn't tell what they are (decision 0264). */
 export function couldBeEither(title: RegExp | number) {
   return (body: { feeds: Record<string, unknown>[] }) => {
     for (const feed of body.feeds) {

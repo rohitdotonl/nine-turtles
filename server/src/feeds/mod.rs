@@ -78,7 +78,7 @@ struct FeedRow {
     /// "person" or "publication" (decision 0163): always a person for a
     /// place joined to others.
     kind: String,
-    /// Why it's filed so (`writers::kind::WHYS`, decision 0263), none for a
+    /// Why it's filed so (`writers::kind::WHYS`, decision 0264), none for a
     /// place joined to others or sorted before nine turtles said why.
     why: Option<String>,
     /// nine turtles couldn't tell: it could be either, and is kept with the
@@ -132,7 +132,7 @@ pub const FEEDS: &str =
      ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";
 
 /// The sidebar's feeds, folders and people, and the counts for the line
-/// that ends an import, while it shows (decision 0263).
+/// that ends an import, while it shows (decision 0264).
 type Sidebar = (
     Vec<FeedRow>,
     Vec<Folder>,

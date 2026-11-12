@@ -1,4 +1,4 @@
-//! The line that ends an import (SPEC section 16, decision 0263): once every
+//! The line that ends an import (SPEC section 16, decision 0264): once every
 //! feed a file brought has had its first check, Unread and All articles say
 //! how it was sorted, "Your list is in: 18 people and 4 publications. 8
 //! could be either.", until the reader closes it, looks them over or undoes

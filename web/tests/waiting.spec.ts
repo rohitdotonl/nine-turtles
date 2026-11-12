@@ -103,7 +103,7 @@ test("following someone says so, with Undo", async ({ page }) => {
   await appReady(page);
   await signIn(page);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
-  // Its articles name no writer, so it could be either: kept with Publications (decision 0263).
+  // Its articles name no writer, so it could be either: kept with Publications (decision 0264).
   await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
   await expect(
     page.getByText(`You're following Blog ${name}.`, { exact: true }),

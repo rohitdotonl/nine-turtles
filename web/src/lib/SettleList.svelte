@@ -1,5 +1,5 @@
 <!--
-  Who could be either (SPEC section 15, decision 0263), on Everyone you
+  Who could be either (SPEC section 15, decision 0264), on Everyone you
   follow: the places nine turtles couldn't sort, kept with the publications
   until the reader says. Each tick counts at once, making them a person;
   unticked, they're open again. A ticked row stays where it is until the page

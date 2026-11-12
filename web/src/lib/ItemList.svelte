@@ -129,7 +129,7 @@
     checking?: number;
     /** While the list fills in, at each ask: the sidebar's feeds load again. */
     onChecking?: () => void;
-    /** Once all of it is checked, how the import was sorted (decision 0263). */
+    /** Once all of it is checked, how the import was sorted (decision 0264). */
     sorted?: SortedLine;
   } = $props();
 

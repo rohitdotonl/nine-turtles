@@ -243,7 +243,7 @@ pub async fn follow_all(
             adding: summary.added,
         });
     }
-    // Once they're all checked, a line says how they were sorted (decision 0263).
+    // Once they're all checked, a line says how they were sorted (decision 0264).
     note::keep(&mut transaction, person, &added.feeds).await?;
     transaction.commit().await?;
     Ok(Imported::Done(summary, added))

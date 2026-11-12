@@ -33,7 +33,7 @@ export type Feed = {
   place?: PlaceKind;
   /** Someone or something (decision 0163): a place joined to others is always a person's. */
   kind?: WhoKind;
-  /** Why it's filed so (decision 0263); none for one joined to others or sorted before nine turtles said why. */
+  /** Why it's filed so (decision 0264); none for one joined to others or sorted before nine turtles said why. */
   why?: Why | null;
   /** nine turtles couldn't tell: it could be either, kept with the publications until the reader settles it. */
   open?: boolean;

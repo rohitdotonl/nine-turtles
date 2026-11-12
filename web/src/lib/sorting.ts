@@ -1,4 +1,4 @@
-// Person or publication, and why (SPEC section 36, decision 0263): nine
+// Person or publication, and why (SPEC section 36, decision 0264): nine
 // turtles sorts each place it can from the feed alone and says why; where it
 // can't tell, the place could be either, kept with the publications until
 // the reader settles it, on Everyone you follow, their page, or at the end
@@ -67,7 +67,7 @@ export async function settle(feeds: Settling[]): Promise<"gone" | "trouble" | un
   return (await sendChange("/api/tidy/settle", { feeds }, [])).refusal;
 }
 
-/** The import's closing line's counts (decision 0263). */
+/** The import's closing line's counts (decision 0264). */
 export type Sorted = { people: number; publications: number; open: number };
 
 export function toSorted(value: unknown): Sorted | undefined {

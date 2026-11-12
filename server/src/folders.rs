@@ -139,7 +139,7 @@ struct EditFeed {
     /// Person or publication (decision 0163). What kind of source a place
     /// is, nine turtles reads from the feed alone (decision 0183).
     kind: Option<crate::writers::kind::Kind>,
-    /// Why, with `kind` (decision 0263): left out, the reader chose it
+    /// Why, with `kind` (decision 0264): left out, the reader chose it
     /// ("reader"); given, Undo is putting back the reason it had, one of
     /// `writers::kind::WHYS`, so one the reader hadn't settled is open again.
     why: Option<String>,

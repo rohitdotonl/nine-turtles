@@ -52,7 +52,7 @@ struct Listed {
     last_title: Option<String>,
     /// "person" or "publication" (decision 0163).
     kind: String,
-    /// nine turtles couldn't tell (decision 0263): it could be either, kept
+    /// nine turtles couldn't tell (decision 0264): it could be either, kept
     /// with the publications until the reader settles it.
     open: bool,
     /// Why it's filed so (`writers::kind::WHYS`), for Undo to put back.

@@ -160,7 +160,7 @@ async fn each_feed_says_what_it_last_posted_and_when() {
     assert!(listed["feeds"][0]["added_at"].as_i64().unwrap() > 1_767_268_800);
     // Its newest article's title, and whether it's a person or a publication:
     // with no name on its articles, it could be either, kept as a publication
-    // until the reader says (decision 0263).
+    // until the reader says (decision 0264).
     let busy_row = listed["feeds"]
         .as_array()
         .unwrap()

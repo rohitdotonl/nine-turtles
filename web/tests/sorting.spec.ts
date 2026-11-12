@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, feedsShown, follow, signIn } from "./screens";
 
-// Decision 0263 (SPEC sections 3, 7, 15, 16 and 36): a feed that doesn't say
+// Decision 0264 (SPEC sections 3, 7, 15, 16 and 36): a feed that doesn't say
 // who writes it could be either, kept with Publications until the reader
 // settles it. The made-up blogs name no writer, so each one followed here
 // "as is" could be either. Each run follows blogs of its own.

@@ -3,7 +3,7 @@
   Unread and All articles say how many are left, in words that change in
   place, never a bar or a spinner: a quiet line above the rows, or, while
   nothing has come yet, in place of "Nothing unread.". Once every one is
-  checked, the line says how they were sorted (decision 0263): "Your list is
+  checked, the line says how they were sorted (decision 0264): "Your list is
   in: 18 people and 4 publications. 8 could be either." with Look them over
   (Everyone you follow) and a ×, either ending it for good, as Undo the
   import does.
