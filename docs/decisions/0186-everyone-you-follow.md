@@ -1,6 +1,6 @@
 # 0186: Everyone you follow, one page
 
-**In one line:** Everyone you follow: Your feeds and Feed health become one page, who isn't working first (no Retry, no address shown), then People and Publications A to Z with their newest title and day, "Quiet since …" instead of the Show filter, a row opening their page, and Edit renamed Choose…
+**In one line:** Everyone you follow: Your feeds and Feed health become one page, who isn't working first (no Retry, no address shown), then People and Publications A to Z with their newest title and day, "Quiet since …" instead of the Show filter, a row opening their page, and Edit renamed Choose… (a row of its own in the sidebar, not in Settings, since 0266)
 
 *6 November 2026.*
 

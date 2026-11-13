@@ -7,6 +7,8 @@ describe("addresses", () => {
     expect(parse("/starred/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/all")).toEqual({ kind: "view", view: "all" });
     expect(parse("/settings")).toEqual({ kind: "settings" });
+    // Everyone you follow has its own address (decision 0266); its old ones under Settings still open it.
+    expect(parse("/following")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/feed-health")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/feeds")).toEqual({ kind: "your-feeds" });
     expect(parse("/settings/hidden")).toEqual({ kind: "muted" });
@@ -28,6 +30,7 @@ describe("addresses", () => {
     expect(parse("/people/12")).toEqual({ kind: "feed", id: 12 });
     expect(parse("/publications/7/")).toEqual({ kind: "feed", id: 7 });
     expect(parse("/people/12/about")).toEqual({ kind: "about", id: 12 });
+    expect(parse("/people/12/settings")).toEqual({ kind: "about", id: 12, settings: true });
     expect(parse("/publications/7/edit")).toEqual({ kind: "about", id: 7, settings: true });
     expect(parse("/people/12/sources/34")).toEqual({ kind: "about", id: 12, settings: true });
     expect(parse("/folders/4/edit/")).toEqual({ kind: "edit-folder", id: 4 });
@@ -48,7 +51,7 @@ describe("addresses", () => {
   });
 
   it("knows its own places, so any other address is a wrong turn", () => {
-    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/settings/feeds", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/notes"])
+    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/following", "/settings/feeds", "/people/12/settings", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/notes"])
       expect(knownPath(path), path).toBe(true);
     // Recently read, saved searches and collections are gone (decision 0174): their old addresses too.
     for (const path of ["/nowhere", "/feeds/0", "/feeds/abc", "/feeds/12/more", "/recent", "/searches/7", "/searches/new", "/collections/3", "/blog", "/settings/nothing", "/settings/toString", "/settings/readers/none"])
@@ -63,7 +66,7 @@ describe("addresses", () => {
     // An open article names the tab (decision 0231).
     expect(titleFor({ kind: "feed", id: 3 }, "Reading Room", "The pleasure of a slow letter")).toBe("The pleasure of a slow letter · nine turtles");
     expect(titleFor({ kind: "feed", id: 3 }, "Reading Room", "")).toBe("Reading Room · nine turtles");
-    expect(pathFor({ kind: "your-feeds" })).toBe("/settings/feeds");
+    expect(pathFor({ kind: "your-feeds" })).toBe("/following");
     expect(titleFor({ kind: "your-feeds" })).toBe("Everyone you follow · nine turtles");
     expect(pathFor({ kind: "muted" })).toBe("/settings/hidden");
     expect(titleFor({ kind: "muted" })).toBe("Hidden articles · nine turtles");
@@ -73,10 +76,10 @@ describe("addresses", () => {
     expect(titleFor({ kind: "readers" })).toBe("All readers · nine turtles");
     expect(pathFor({ kind: "feed", id: 3 })).toBe("/people/3");
     expect(pathFor({ kind: "about", id: 3 })).toBe("/people/3/about");
-    // Their settings are on their page: the old Edit and source addresses open it there, under its own address.
+    // Their settings are a page of their own (decision 0267): the old Edit and source addresses open it, under its own address.
     expect(parse("/people/3/edit")).toEqual({ kind: "about", id: 3, settings: true });
     expect(parse("/people/3/sources/9")).toEqual({ kind: "about", id: 3, settings: true });
-    expect(pathFor({ kind: "about", id: 3, settings: true })).toBe("/people/3/about");
+    expect(pathFor({ kind: "about", id: 3, settings: true })).toBe("/people/3/settings");
     expect(titleFor({ kind: "about", id: 3 }, "Alpha")).toBe("Alpha · nine turtles");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
     expect(titleFor({ kind: "add-feed" })).toBe("Add a person or publication · nine turtles");
@@ -110,8 +113,9 @@ describe("Settings' pages", () => {
   it("go back to the page that opened them, and to the row that did", () => {
     expect(parentOf({ kind: "settings", page: "hiding" })).toEqual({ kind: "settings" });
     expect(rowFor({ kind: "settings", page: "hiding" })).toBe("hiding");
-    expect(parentOf({ kind: "your-feeds" })).toEqual({ kind: "settings" });
-    expect(rowFor({ kind: "your-feeds" })).toBe("feeds");
+    // Their settings go back to their page, and to its Settings row (decision 0267).
+    expect(parentOf({ kind: "about", id: 3, settings: true })).toEqual({ kind: "about", id: 3 });
+    expect(rowFor({ kind: "about", id: 3, settings: true })).toBe("their-settings");
     expect(parentOf({ kind: "muted" })).toEqual({ kind: "settings", page: "hiding" });
     expect(rowFor({ kind: "muted" })).toBe("muted");
     expect(parentOf({ kind: "readers" })).toEqual({ kind: "settings", page: "readers" });
@@ -124,6 +128,12 @@ describe("Settings' pages", () => {
     expect(inSettings({ kind: "settings" })).toBe(true);
     expect(inSettings({ kind: "muted" })).toBe(true);
     expect(inSettings({ kind: "add-feed" })).toBe(false);
+    // Places of their own, not Settings': Everyone you follow (decision 0266), their page, and their settings (decision 0267).
+    expect(parentOf({ kind: "your-feeds" })).toBeUndefined();
+    expect(rowFor({ kind: "your-feeds" })).toBeUndefined();
+    expect(inSettings({ kind: "your-feeds" })).toBe(false);
+    expect(parentOf({ kind: "about", id: 3 })).toBeUndefined();
+    expect(inSettings({ kind: "about", id: 3, settings: true })).toBe(false);
   });
 });
 

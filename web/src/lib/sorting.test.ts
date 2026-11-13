@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { addedLine, isOpen, sortedLine, toSorted, toWhy, whyLine } from "./sorting";
 
 describe("person or publication, and why", () => {
-  it("says why on their page, and nothing for one sorted before", () => {
+  it("says why in their settings, and nothing for one sorted before", () => {
     expect(whyLine("one-name")).toBe("nine turtles chose this: one name signs every article.");
     expect(whyLine("own-site")).toBe("nine turtles chose this: the site is someone's own.");
     expect(whyLine("several-names")).toBe("nine turtles chose this: several names sign its articles.");
@@ -15,9 +15,9 @@ describe("person or publication, and why", () => {
   });
 
   it("says in Add why a tile is chosen, or that none is", () => {
-    expect(addedLine("one-name")).toBe("nine turtles chose this: one name signs every article. You can change this later on their page.");
+    expect(addedLine("one-name")).toBe("nine turtles chose this: one name signs every article. You can change this later in their settings.");
     expect(addedLine("unsure-channel")).toBe(
-      "nine turtles couldn't tell from their feed. Left as it is, they're kept with Publications. You can change this later on their page.",
+      "nine turtles couldn't tell from their feed. Left as it is, they're kept with Publications. You can change this later in their settings.",
     );
   });
 

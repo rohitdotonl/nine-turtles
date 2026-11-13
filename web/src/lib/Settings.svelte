@@ -12,7 +12,7 @@
   font in the Aa panel above an article. Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
-  Your library (Everyone you follow, a page of its own, then Your data); More
+  Your library (Your data; Everyone you follow is a row in the sidebar now, decision 0266); More
   (Install the app on any device, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
@@ -77,7 +77,6 @@
     onBack,
     backTo = "Settings",
     onImported,
-    onYourFeeds,
     onMuted,
     onReaders,
     people,
@@ -114,8 +113,6 @@
     backTo?: string;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
-    /** Opens Everyone you follow. */
-    onYourFeeds: (event: MouseEvent) => void;
     /** Opens the Hidden articles page. */
     onMuted: (event: MouseEvent) => void;
     /** Opens the owner's All readers page. */
@@ -365,7 +362,6 @@
       <section aria-labelledby="library-heading">
         <h3 id="library-heading" class="settings-head label">Your library</h3>
         <div class="inset-group">
-          {@render pageRow("feeds", "/settings/feeds", "Everyone you follow", "feed", onYourFeeds)}
           {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
         </div>
       </section>

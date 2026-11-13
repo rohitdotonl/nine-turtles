@@ -60,6 +60,14 @@ describe("where the keyboard lands", () => {
     expect(landing({ kind: "about", id: 7, settings: true }, { ...computer, phone: true })).toBe("who");
   });
 
+  it("lands back on their page's Settings row after their settings (decision 0267)", () => {
+    stubPage();
+    page.rows["their-settings"] = new Spot("row");
+    expect(landing({ kind: "about", id: 7 }, { ...computer, returnRow: "their-settings" })).toBe("row");
+    // Their settings themselves start at their title, whatever row was left.
+    expect(landing({ kind: "about", id: 7, settings: true }, { ...computer, returnRow: "their-settings" })).toBe("who");
+  });
+
   it("lands on New to feeds' heading: the sheet's on a computer, the page's on a phone", () => {
     expect(landing({ kind: "new-to-feeds" })).toBe("sheet");
     expect(landing({ kind: "new-to-feeds" }, { ...computer, phone: true })).toBe("list");

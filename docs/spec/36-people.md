@@ -45,8 +45,8 @@ PLAN.md → V1, item 1.*
 
   **Could be either** acts as a publication everywhere (under
   Publications, no Write back) until the reader settles it: by a tick on
-  Everyone you follow (section 15), on their page, in Add's question, or at
-  the end of one of their articles (section 7). Their page says why under
+  Everyone you follow (section 15), in their settings, in Add's question, or at
+  the end of one of their articles (section 7). Their settings say why under
   **This is**: "nine turtles chose this: one name signs every article." (or
   "the site is someone's own", "several names sign its articles", "it
   writes under its site's own name"), "nine turtles chose this from the name
@@ -62,11 +62,11 @@ PLAN.md → V1, item 1.*
   write back to."; **A publication**, "Anything you only read or watch, and
   won't write back to."), with nine turtles' choice already chosen and the
   line under them saying why ("nine turtles chose this: one name signs
-  every article. You can change this later on their page."). When it
+  every article. You can change this later in their settings."). When it
   couldn't tell, neither is chosen, and the line says "nine turtles couldn't
   tell from their feed. Left as it is, they're kept with Publications. You
-  can change this later on their page."; Done leaves them so. They can
-  change it later on their page (for one source only, and not for the last
+  can change this later in their settings."; Done leaves them so. They can
+  change it later in their settings (for one source only, and not for the last
   source left of someone joined, who stays a person). An imported feed is
   sorted once nine turtles has checked it for the first time, so the rules
   see its writers.
@@ -97,8 +97,8 @@ PLAN.md → V1, item 1.*
   check. An Atom feed that names its author once, for all its entries, signs
   each of them, so it counts as one author for sorting too (an
   organisation named as a feed's only author is sorted a person, unless the
-  name is the feed's or the site's own, and their page fixes it). Only "No, a publication" in the question after
-  adding gives back the feed's title; changing **This is** on their page later
+  name is the feed's or the site's own, and their settings fix it). Only "No, a publication" in the question after
+  adding gives back the feed's title; changing **This is** in their settings later
   keeps whatever name it has.
 - **Their list:** choosing the row lists everything they made, newest first
   (or as the reader sorts), one list across all their sources (`/people/12`
@@ -110,8 +110,9 @@ PLAN.md → V1, item 1.*
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.
 - **Their page,** the same for a person and a publication (but a
-  publication has no Write to, decision 0192), one page with no Edit mode
-  (decision 0254) (`/people/12/about`): opened by pressing their name at
+  publication has no Write to, decision 0192), with no Edit mode
+  (decision 0254) (`/people/12/about`): a page about them, with their
+  settings on a page of its own, one press away (decision 0267). Opened by pressing their name at
   the top of their list ("Alpha ›"), by their name under an article's title
   (underlined, faintly), by **Info about Alpha** in the list's More menu or
   a row's own menu, or by the `i` key (in any list, for the chosen
@@ -129,10 +130,12 @@ PLAN.md → V1, item 1.*
   - while a source is paused, the line saying so with Resume (section 15,
     decision 0239); while one isn't working, the line naming it with Find
     new address (section 15);
-  - for a person, **Write to Tomas Berg**, the solid ink button with the
-    paper plane, with the address under it once nine turtles knows it
+  - for a person, **Write to Tomas Berg**, an outlined button with the
+    paper plane (their name leads the page, decision 0267), with the address under it once nine turtles knows it
     (section 37), and **Change** beside the address, which opens the same
     box as Write back's, filled with it, to correct it (Save, Not now);
+  - one card, a grouped list's tone and corners, holding what's yours of
+    them, a hairline between the two (decision 0267):
   - **Your note** (section 42), "Add a note…" while there's none;
   - **Your highlights**, the words you highlighted in their writing (the
     newest article first, at most 20; Notes has them all), each as at an
@@ -143,8 +146,15 @@ PLAN.md → V1, item 1.*
     quiet line says "Your highlights from their writing couldn't be loaded.
     Open the page again to try once more." (decision 0211). There is no
     Lately: their list already shows their newest (decision 0215);
-  - **Settings**, each changing the moment it's touched, with no Save,
-    Cancel or Done (decision 0254):
+  - last, one row built as Settings' own rows are: the cog, **Settings**
+    and ›, which opens their settings.
+- **Their settings** (`/people/12/settings`, decision 0267): a page of its
+  own, where their page was, titled **Settings** with **‹ Tomas Berg**
+  above the title. That and Escape go back to their page, with the
+  keyboard on its Settings row; on a computer the **×** stays at the
+  bar's right end and goes back to their list. The keyboard starts on
+  the title, and Tab goes to Name. Each setting changes the moment it's
+  touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on
       leaving the field, with "Saved." under it; Escape while typing puts it
       back. An empty name isn't kept ("Give them a name."); a name that
@@ -162,7 +172,7 @@ PLAN.md → V1, item 1.*
       live streams** (section 38);
     - **Hide articles about… ›**, which opens Settings › Hiding with the
       field set to them ("Only from …", section 27); its back button then
-      reads "‹ Alpha" and leads back to their page;
+      reads "‹ Alpha" and leads back to their settings;
   - for someone with two or more sources, **Sources**: each by its name
     over its kind (Blog, Video, Newsletter, Podcast, read from the feed and
     no longer the reader's to correct, decision 0183), with **Take out** at
@@ -174,8 +184,8 @@ PLAN.md → V1, item 1.*
     source of theirs at once, with Undo.
 
   The old addresses for Edit (`/people/12/edit`) and a source's settings
-  (`/people/12/sources/34`) open their page with the keyboard on Name, and
-  the address bar is tidied to `…/about`; so does `e` in their list.
+  (`/people/12/sources/34`) open their settings, and the address bar is
+  tidied to `…/settings`; so does `e` in their list.
 - **+ Add a source** opens in place: choose someone already followed, or
   paste the address of their blog, channel or newsletter (followed as + Add
   would). If the address offers several feeds, the choices show first. If
@@ -206,7 +216,7 @@ PLAN.md → V1, item 1.*
   the person's list with "Alpha is one person now · Undo", which makes the
   folder again with everything in it, and its rules.
 - **Addresses:** `/people/12` and `/publications/7` for a list, `…/about`
-  for the page (`…/edit` and `/people/12/sources/34` open it too). Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
+  for the page and `…/settings` for their settings (`…/edit` and `/people/12/sources/34` open the settings too). Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
   the address bar is tidied to the new one. An address for someone the
   reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
@@ -219,20 +229,24 @@ PLAN.md → V1, item 1.*
 
 **How to check it**
 1. Follow a blog by one person and a site with several writers: the blog is
-   under **People**, the site under **Publications**, and each one's page says
+   under **People**, the site under **Publications**, and each one's settings say
    why under This is. A blog that signs every
    article with one author's name is called by that name, and its page shows
    the blog's title under it; Write back at an article's end says "Write
    back to" and their full name, as in the sidebar.
 2. Press a person's name at the top of their list: their page opens beside
-   the list (on a phone, as its own screen), with **Write to …** under
-   their name and their sources, and no muted line.
-3. On their page, under Settings, choose **This is: A publication**: the
-   row moves under Publications at once, and Write to goes.
-4. On their page, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:
+   the list (on a phone, as its own screen), with **Write to …** (outlined) under
+   their name and their sources, one card with Your note and Your
+   highlights, then one row, **Settings ›**, and no muted line. Press that
+   row: their settings open in its place, titled Settings, with
+   **‹ their name** above. Press it, or Escape: their page again, with the
+   keyboard on the Settings row.
+3. In their settings, choose **This is: A publication**: the
+   row moves under Publications at once, and on their page Write to has gone.
+4. In their settings, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:
    it asks which folders, all ticked. Join: one row, both lists in one, each
    row labelled by kind. Undo: two rows again.
-5. On that person's page, press **Take out** on a source's row under
+5. In that person's settings, press **Take out** on a source's row under
    Sources: two rows again. Undo joins them back.
 6. Press **Unsubscribe from …** on a person with two sources: the row goes.
    Undo: it's back with both.

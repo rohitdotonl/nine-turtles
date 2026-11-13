@@ -4,7 +4,7 @@ description: Group the people you follow into folders, such as Friends or Cookin
 groupId: keeping-things-tidy
 order: 1
 spec: 3, 5 and 15
-updated: 2026-11-11
+updated: 2026-11-14
 related: [one-person-several-places, unfollow-someone, hide-topics]
 ---
 
@@ -55,20 +55,21 @@ top** or **Move to the bottom**; press a person's to choose their folder.
 Press **Done** when you've finished. This works with the keyboard and screen
 readers too.
 
-## Put one person in a folder from their page
+## Put one person in a folder from their settings
 
-1. Choose the person in the sidebar, and press their name at the top of
-   their list to open their page.
-2. In their settings at the foot of the page, press **Folders**.
+1. Choose the person in the sidebar, press their name at the top of
+   their list to open their page, then **Settings** at its foot. Or press
+   <kbd>E</kbd> in their list.
+2. Press **Folders**.
 3. Tick the folders they belong in; each one counts at once. To make a new
    one, type its name in **New folder…** and press <kbd>Enter</kbd>.
 
 There's no "new folder" button: a folder is made when you put someone in it,
-as you follow them, from their page, or with **Move to…**.
+as you follow them, from their settings, or with **Move to…**.
 
 ## Move many at once
 
-1. Open **Settings › Everyone you follow** and press **Choose…**.
+1. Open **Everyone you follow**, in the sidebar under All articles (on a phone, on Home), and press **Choose…**.
 2. Tick everyone you'd like to move.
 3. Press **Move to…**, choose a folder (or **No folder**, or **New folder…** at the top),
    and press **Move**.
@@ -89,7 +90,7 @@ Deleting a folder never unfollows anyone: they simply leave the folder.
 
 - Folders start closed in the sidebar. Press a folder's arrow to show the
   people in it; each device remembers which you opened. A folder you just
-  made or chose on their page opens, so you can see them in it.
+  made or chose in their settings opens, so you can see them in it.
 - Unsubscribing from the last person in a folder, or moving them out of it
   in the sidebar, removes the folder too; **Undo** brings it back, and so
   does **Bring back** under Recently unsubscribed, for 30 days.

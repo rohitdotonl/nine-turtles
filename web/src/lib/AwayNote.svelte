@@ -11,6 +11,7 @@
   message as it arrives (the list's own note is hidden with the list).
 -->
 <script lang="ts">
+  import { tick } from "svelte";
   import NoteLine from "./NoteLine.svelte";
   import type { ListNote } from "./listNote";
 
@@ -18,11 +19,20 @@
 
   /** Each button's press, then the keyboard's place back in the article, as the button it was on goes. */
   const then = (press: (() => void) | undefined) => press && (() => (press(), onGone()));
+
+  let box: HTMLDivElement | undefined = $state();
+  /** A press that opens more of the note (Write back's "Didn't open?"): the keyboard stays in the note, on the first of what it opened. */
+  async function more(press: () => void) {
+    press();
+    await tick();
+    box?.querySelector("button")?.focus();
+  }
+  const opening = (press: (() => void) | undefined) => press && (() => void more(press));
 </script>
 
-<div class="away" lang="en">
+<div bind:this={box} class="away" lang="en">
   <div class={["toast pointer-events-auto flex max-w-full items-center text-meta", note ? "min-h-11 border px-4" : "sr-only"]}>
-    <NoteLine announce message={note?.words ?? ""} refusal={note?.refusal} also={note?.also?.map((way) => ({ word: way.word, press: then(way.press) ?? way.press }))} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
+    <NoteLine announce message={note?.words ?? ""} refusal={note?.refusal} also={note?.also?.map((way) => ({ word: way.word, press: then(way.press) ?? way.press }))} onUndo={then(note?.undo)} onRetry={(note?.retryOpens ? opening : then)(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
   </div>
 </div>
 

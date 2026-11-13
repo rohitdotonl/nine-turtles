@@ -50,7 +50,7 @@
         away = undefined;
         const failed = await settle([{ feed: place.id, kind: "publication", why: was }]);
         await library.loadFeeds();
-        if (failed) away = { words: "That couldn't be undone. Change it on their page.", refusal: true, close: () => (away = undefined) };
+        if (failed) away = { words: "That couldn't be undone. Change it in their settings.", refusal: true, close: () => (away = undefined) };
       },
       close: () => (away = undefined),
     };

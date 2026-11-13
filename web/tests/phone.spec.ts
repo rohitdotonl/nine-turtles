@@ -345,7 +345,34 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeHidden();
   });
 
-  test("their page is a screen of its own, with ‹ back to their list, and its settings at its foot", async ({ page }) => {
+  test("Everyone you follow is a row on the feeds screen and a screen of its own, with ‹ Home back (decision 0266)", async ({ page }) => {
+    await openHome(page);
+    // Built as the lists' rows are, under All articles: its sign, its name and the chevron every row here ends in, 44px to touch.
+    const row = sidebar(page).getByRole("link", { name: "Everyone you follow", exact: true });
+    await expect(row.locator("svg")).toHaveCount(2);
+    const [rowBox, allBox] = [(await row.boundingBox())!, (await sidebar(page).getByRole("link", { name: "All articles", exact: true }).boundingBox())!];
+    expect(rowBox.height).toBeGreaterThanOrEqual(44);
+    expect(rowBox.y).toBeGreaterThan(allBox.y);
+    expect(rowBox.x).toBe(allBox.x);
+    await row.click();
+    await expect(page).toHaveURL(/\/following$/);
+    await expect(sidebar(page)).toBeHidden();
+    await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeVisible();
+    // One way back, to the feeds screen; nothing leads to Settings, and there's no X.
+    await expect(page.getByRole("button", { name: /^(Back to Settings|Close)$/ })).toHaveCount(0);
+    const back = page.getByRole("button", { name: "Back to Home" });
+    expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await back.click();
+    await expect(sidebar(page)).toBeVisible();
+    // A step back, so the phone's own Back doesn't reopen it; Escape does what ‹ Home does.
+    await row.click();
+    await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(sidebar(page)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeHidden();
+  });
+
+  test("their page is a screen of its own, with ‹ back to their list, and its settings a screen one press on", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
@@ -358,17 +385,29 @@ test.describe("on a phone", () => {
     await expect(back).toBeVisible();
     expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
-    // Its settings are on the same page, at its foot: no Edit, X or Done, and nothing runs off the side.
+    // Its settings are one row on (decision 0267), a screen of their own: no Edit, X or Done, and nothing runs off the side.
     await expect(page.getByRole("button", { name: /^(Edit Reading Room|Done|Cancel)$/ })).toHaveCount(0);
+    await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveCount(0);
+    const settingsRow = page.getByRole("region", { name: "About Reading Room" }).getByRole("link", { name: "Settings", exact: true });
+    expect((await settingsRow.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await settingsRow.click();
+    await expect(page).toHaveURL(/\/settings$/);
+    const settings = page.getByRole("region", { name: "Settings for Reading Room" });
+    await expect(settings.getByRole("heading", { level: 2, name: "Settings", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).scrollIntoViewIfNeeded();
-    await expect(page.getByRole("region", { name: "Settings" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    // A new name is kept as the field is left.
+    // A new name is kept as the field is left, and the way back to their page takes it.
     await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room, renamed");
     await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
-    await expect(page.getByRole("heading", { level: 2, name: "Reading Room, renamed", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Back to Reading Room, renamed", exact: true })).toBeVisible();
     await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room");
     await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
+    // ‹ their name goes back to their page, a step back, so the phone's own Back doesn't reopen their settings.
+    const toThem = page.getByRole("button", { name: "Back to Reading Room", exact: true });
+    await expect(toThem).toBeVisible();
+    expect((await toThem.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await toThem.click();
+    await expect(page).toHaveURL(/\/about$/);
     await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();
 
     await back.click();
@@ -457,7 +496,7 @@ test.describe("on a phone", () => {
     expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
 
-  test("an old source-settings address opens their page, with each source and its Take out on the phone's screen", async ({ page }) => {
+  test("an old source-settings address opens their settings, with each source and its Take out on the phone's screen", async ({ page }) => {
     await openHome(page);
     const stamp = Date.now();
     const first = await follow(page, `${FEED_SITE}/blog/src-a-${stamp}/`);
@@ -466,7 +505,7 @@ test.describe("on a phone", () => {
     expect(joined.ok()).toBe(true);
     await page.goto(new URL(`/people/${first}/sources/${second}`, FEEDS_APP).href);
     await appReady(page);
-    await expect(page).toHaveURL(new RegExp(`/people/${first}/about$`));
+    await expect(page).toHaveURL(new RegExp(`/people/${first}/settings$`));
     const sources = page.getByRole("region", { name: "Sources" });
     await expect(sources.getByRole("button", { name: /^Take out / })).toHaveCount(2);
     for (const each of await sources.getByRole("button", { name: /^Take out / }).all()) {
@@ -481,7 +520,7 @@ test.describe("on a phone", () => {
     const name = `foldered-${Date.now()}`;
     const folder = `Shelf ${Date.now()}`;
     const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-    await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+    await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
     await appReady(page);
     await page.getByRole("button", { name: /^Folders/ }).click();
     await page.getByLabel("New folder").fill(folder);

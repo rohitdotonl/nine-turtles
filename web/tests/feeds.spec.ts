@@ -347,7 +347,7 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await expect(asked).toBeVisible();
   await expect(page.getByRole("heading", { name: `Blog ${name} is…` })).toBeVisible();
   await expect(field(page)).toHaveCount(0);
-  await expect(page.getByText(/^nine turtles couldn't tell from their feed\..* You can change this later on their page\.$/)).toBeVisible();
+  await expect(page.getByText(/^nine turtles couldn't tell from their feed\..* You can change this later in their settings\.$/)).toBeVisible();
   await expect(asked.getByRole("radio", { checked: true })).toHaveCount(0);
   await expect(asked).toBeFocused();
   // Tab reaches A person, and Space chooses it.

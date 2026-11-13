@@ -3,9 +3,9 @@ import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
 // SPEC section 36 (people and publications), "How to check it", done by a
-// browser: the one page opened by the name at the top of the list (its
-// settings on it, each changing as it's touched; the old Edit addresses open
-// it), person or publication, "+ Add a source" with its folder question, Take
+// browser: the page opened by the name at the top of the list (its settings
+// one row away on a page of their own, each changing as it's touched; the old
+// Edit addresses open them), person or publication, "+ Add a source" with its folder question, Take
 // out on a source's row, Unsubscribe from a person, each Undo, and the
 // keyboard's way through them. Each test uses blogs of its own,
 // since every test shares the one nine turtles that has feeds.
@@ -81,9 +81,18 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   // The list stays beside it.
   await expect(page.locator(".item-row")).toHaveCount(3);
 
-  // No Edit mode: their settings are on the same page.
+  // No Edit mode: their settings are one row away, on a page of their own (decision 0267), the list still beside it.
+  // Escape there turns back to their page, with the keyboard on that row; Escape again, to their list.
   await expect(about.getByRole("button", { name: `Edit Blog ${ana}` })).toHaveCount(0);
-  await expect(about.getByRole("region", { name: "Settings" })).toBeVisible();
+  const row = about.getByRole("link", { name: "Settings", exact: true });
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page.getByRole("region", { name: `Settings for Blog ${ana}`, exact: true }).getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+  await expect(page.locator(".item-row")).toHaveCount(3);
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(row).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
 
@@ -113,8 +122,10 @@ test("This is: A publication moves someone under Publications, at its own addres
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("radio", { name: "A publication" }).check();
-  await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/publications/${id}/settings$`));
   // Their page no longer says what they are (the core path); the address and the sidebar do.
+  await page.getByRole("button", { name: `Back to Blog ${ben}` }).click();
+  await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
   await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication ·");
   const publications = sidebar(page).getByRole("heading", {
     name: "Publications",

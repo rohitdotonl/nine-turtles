@@ -22,7 +22,7 @@ async function openBlog(page: Page, word: string): Promise<{ id: number; name: s
 
 test("Everyone you follow lists who could be either; a tick makes them a person at once, and The rest are publications settles the others", async ({ page, isMobile }) => {
   const blog = await openBlog(page, "either");
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   const group = yours(page).getByRole("group", { name: /could be either$/ });
   await expect(group).toHaveAccessibleDescription(/^Their feeds don't say who writes them\./);
@@ -61,9 +61,9 @@ test("Everyone you follow lists who could be either; a tick makes them a person 
   await expect(yours(page).getByRole("group", { name: /could be either$/ }).getByRole("checkbox", { name: blog.name })).not.toBeChecked();
 });
 
-test("their page says why, and with neither chosen one press settles it", async ({ page }) => {
+test("their settings say why, and with neither chosen one press settles it", async ({ page }) => {
   const blog = await openBlog(page, "page");
-  await page.goto(new URL(`/publications/${blog.id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/publications/${blog.id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const choice = page.getByRole("radiogroup", { name: "This is" });
   await expect(choice).toHaveAccessibleDescription(/^nine turtles couldn't tell: no name signs their articles\./);
@@ -139,8 +139,9 @@ test("an import's closing line says how it was sorted; Look them over opens Ever
   const list = page.getByRole("region", { name: "Unread" });
   await expect(list.getByRole("status").filter({ hasText: "Your list is in: 1 person. 3 could be either." })).toBeVisible();
   await list.getByRole("button", { name: "Look them over" }).click();
-  await expect(page).toHaveURL(/\/settings\/feeds$/);
-  expect(closed).toBe(true);
+  await expect(page).toHaveURL(/\/following$/);
+  // The note is ended as the page opens: asked of the server at the same moment, so waited for.
+  await expect.poll(() => closed).toBe(true);
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByText(/^Your list is in:/)).toHaveCount(0);

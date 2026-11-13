@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-12
+updated: 2026-11-14
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -22,8 +22,8 @@ magazine). The sidebar lists them under **People** and **Publications**.
 nine turtles sorts them from their feed when you follow them: one name on
 every article is a person, several names a publication. When the feed
 doesn't say who writes it, they **could be either**: they wait with
-Publications until you say, in **Settings › Everyone you follow**, on their
-page, or at the end of one of their articles ("Is Maya Chen someone you
+Publications until you say, in **Everyone you follow**, in their
+settings, or at the end of one of their articles ("Is Maya Chen someone you
 might write back to?"). Got it wrong? Change **This is** in their settings
 (below); the line under it says why they're filed as they are.
 
@@ -41,15 +41,18 @@ place a link to its own website. Under a person's name is **Write to Maya
 Chen**, which opens your own email app to write to them, with their address
 under it once nine turtles knows it, and **Change** beside the address to
 correct it (see <a href="/help/write-back/">Write back to a writer</a>).
-Then what's yours of them: your note, and the words you highlighted in
-their writing. On a computer, the **×** at the top right (or
-<kbd>Esc</kbd>) takes you back to their list.
+Then, in one card, what's yours of them: your note, and the words you
+highlighted in their writing. Last comes one row, **Settings**. On a
+computer, the **×** at the top right (or <kbd>Esc</kbd>) takes you back to
+their list.
 
 ## Their settings
 
-Their settings are at the foot of the same page: there's no Edit and no
-Save. Each one changes the moment you touch it, as in Settings. Press
-<kbd>E</kbd> in their list to go straight to them.
+Press **Settings** at the foot of their page, or <kbd>E</kbd> in their
+list. Their settings open as a page of their own, with **‹** and their
+name above the title; press it (or <kbd>Esc</kbd>) to go back to their
+page. There's no Edit and no Save: each setting changes the moment you
+touch it, as in Settings.
 
 - **Name**: type a new one and press <kbd>Enter</kbd>, or just move on;
   "Saved." shows under it. <kbd>Esc</kbd> while typing puts the old one
@@ -66,7 +69,7 @@ Save. Each one changes the moment you touch it, as in Settings. Press
   Their new articles arrive already read.", with **Resume** to undo it in
   one press.
 - **Hide articles about…**: opens Hiding with them chosen; its back button
-  brings you back to their page.
+  brings you back to their settings.
 - At the foot, **Unsubscribe from Alpha**. If they were the last one in a
   folder, the folder goes too; **Undo** brings both back.
 
@@ -78,8 +81,8 @@ joined, as one person.
 
 To join sources you already follow:
 
-1. Open their page.
-2. Under their settings, press **+ Add their newsletter, videos or podcast**
+1. Open their page and press **Settings**.
+2. Under the settings, press **+ Add their newsletter, videos or podcast**
    (or, for someone with two or more sources already, **+ Add a source**).
 3. Choose someone you already follow, or paste the address of their blog,
    channel or newsletter.

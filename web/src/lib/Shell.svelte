@@ -158,7 +158,7 @@
   const headings: Headings = $state({});
   /** "Hide articles about…" on an article or a person's page: Settings › Hiding opens with the field set to them ("Only from …"). */
   let ruleForFeed: number | undefined = $state();
-  /** Everyone you follow, Hidden articles or Readers was opened from Settings, so closing it is a step back in history. */
+  /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -217,7 +217,7 @@
     const place = isWho(route) ? route : under;
     return place.kind === "feed" || isWho(place) ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
   });
-  /** A person's or publication's page, Edit or source settings is showing (decision 0163): the reading area's, or on a phone the list's place. */
+  /** A person's or publication's page, or their settings, is showing (decisions 0163, 0267): the reading area's, or on a phone the list's place. */
   let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
   // Their addresses say person or publication (decision 0163); an old /feeds/ address is tidied to its new one.
   $effect(() => {
@@ -605,7 +605,7 @@
   async function feedMoved(before: number, after: number, heading: () => HTMLHeadingElement | undefined) {
     if (after !== before) movedFeed = { from: before, to: after };
     await library.loadFeeds(() => {
-      if (after !== before) go(isWho(route) ? { kind: "about", id: library.rowOf(after) } : { kind: "feed", id: after });
+      if (after !== before) go(isWho(route) ? { ...route, id: library.rowOf(after) } : { kind: "feed", id: after });
     });
     await tick();
     heading()?.focus();
@@ -628,8 +628,8 @@
   $effect(() => void ((route.kind === "settings" && route.page === "hiding") || (hidingFrom = undefined)));
 
   /**
-   * Close a page opened from Settings (Everyone you follow, Hidden articles, All readers, and
-   * Settings' own pages, decision 0120), or Escape there: back to the page it was opened from, a
+   * Close a page opened from Settings (Hidden articles, All readers, and
+   * Settings' own pages, decision 0120) or a person's settings (decision 0267), or Escape there: back to the page it was opened from, a
    * step back in history when it came from there.
    */
   function closeSettingsPage() {
@@ -1013,7 +1013,6 @@
           {onSignedOut}
           onClose={closePage}
           onImported={loadFeeds}
-          onYourFeeds={(event) => follow(event, { kind: "your-feeds" })}
           onMuted={(event) => follow(event, { kind: "muted" })}
           onReaders={(event) => follow(event, { kind: "readers" })}
           people={library.rows ?? []}
@@ -1024,7 +1023,7 @@
       {:else if route.kind === "your-feeds"}
         <YourFeeds
           bind:heading={headings.yourFeeds}
-          onClose={closeSettingsPage}
+          onBack={phone ? () => steps.back("home") : undefined}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds} {library}
           besideToggle={!phone && !panes.sidebar}
@@ -1235,11 +1234,11 @@
   {/if}
 {/snippet}
 
-<!-- A person's or publication's page, their settings on it (decisions 0163, 0254): beside their list, or on a phone in its place. -->
+<!-- A person's or publication's page, or their settings one press from it (decisions 0163, 0267): beside their list, or on a phone in its place. -->
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
     {/key}
   {/if}
 {/snippet}

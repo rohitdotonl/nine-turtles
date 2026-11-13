@@ -1,23 +1,25 @@
 <!--
-  A person's or publication's page (SPEC section 36): one page, the same for
-  both, with no Edit mode. On a computer it opens in the reading area, beside
-  their list, where an article would; on a phone, as a screen of its own,
-  with "‹" back to their list. Opened by their name at the top of the list,
-  "Info about …" in the list's More menu, or the i key; `e` (and the old
-  Edit addresses) open it with the keyboard on their Name.
+  A person's or publication's page (SPEC section 36), the same for both, with
+  no Edit mode: a page about them, and their settings on a page of its own,
+  one press away (decision 0267). On a computer both open in the reading
+  area, beside their list, where an article would; on a phone, as a screen of
+  its own, with "‹" back. Opened by their name at the top of the list, "Info
+  about …" in the list's More menu, or the i key; `e` (and the old Edit
+  addresses) open their settings.
 
-  It reads as a book's title page, then its pages, then its colophon. First
-  who they are: their name, the one large thing on the screen, set as an
-  article's title is; under it, where they publish, each place a link to the
-  publisher's own site; a paused or failing source's line; and Write to, the
-  page's one solid button, with the address under it (Change beside it).
-  Then what's yours of them, where the eye rests: your note and the words
-  you highlighted, in the reading serif. Then, quieter, apart, their
-  settings as Settings' rows (WhoSettings, TheirPlaces), each changing as
-  it's touched. No picture and no color.
+  Their page is who they are, then what's yours of them. First their name,
+  the one large thing on the screen, set as an article's title is; under it,
+  where they publish, each place a link to the publisher's own site; a paused
+  or failing source's line; and Write to, with the address under it (Change
+  beside it). Then one card holding your note and the words you highlighted.
+  Last, one row, Settings ›. No picture and no color.
+
+  Their settings (`route.settings`) are Settings' rows (WhoSettings,
+  TheirPlaces), each changing as it's touched, under the title "Settings"
+  with "‹ their name" above it: it and Escape go back to their page, with
+  the keyboard on the row that opened it, as one of Settings' own pages does.
 -->
 <script lang="ts">
-  import { tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PausedLine from "./PausedLine.svelte";
@@ -31,7 +33,7 @@
   import type { Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { placeShownAs, placesOf } from "./people";
-  import type { Route } from "./router";
+  import { pathFor, type Route } from "./router";
   import type { Article, Feed } from "./shapes";
 
   let {
@@ -41,6 +43,8 @@
     phone = false,
     heading = $bindable(),
     go,
+    follow,
+    onBack,
     onUnsubscribe,
     onHide,
     onMoved,
@@ -55,6 +59,10 @@
     phone?: boolean;
     heading?: HTMLHeadingElement;
     go: (next: Route, notice?: Notice) => void;
+    /** A link pressed: goes there, unless the press was meant for a new tab. */
+    follow: (event: MouseEvent, next: Route) => void;
+    /** Their settings' way back to their page (Escape does the same). */
+    onBack: () => void;
     /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** "Hide articles about…": Settings › Hiding, with the field set to them ("Only from …"). */
@@ -86,23 +94,17 @@
   }
   const joined = (done: Notice, lead: number) => go({ kind: "feed", id: lead }, done);
 
-  // `e` and the old Edit addresses: the same page, with the keyboard on their Name.
-  let nameField: HTMLInputElement | undefined = $state();
+  /** Their settings, a page of its own (decision 0267). */
+  let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
+  // Each of the two pages starts at its top.
   let scroller: HTMLDivElement | undefined = $state();
   $effect(() => {
-    if (!route.settings) return;
-    void tick().then(() => {
-      if (!nameField || !scroller) return;
-      // Only the page's own scroll moves (scrollIntoView would nudge the whole window too), the field at its middle.
-      const field = nameField.getBoundingClientRect();
-      const area = scroller.getBoundingClientRect();
-      scroller.scrollTop += field.top - area.top - (area.height - field.height) / 2;
-      nameField.focus({ preventScroll: true });
-    });
+    void route.settings;
+    if (scroller) scroller.scrollTop = 0;
   });
 </script>
 
-<section aria-label="About {name}" class="who-page flex min-w-0 flex-1 flex-col bg-paper">
+<section aria-label={route.settings ? `Settings for ${name}` : `About ${name}`} class="who-page flex min-w-0 flex-1 flex-col bg-paper">
   <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
@@ -114,6 +116,16 @@
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : "reading-column pt-3"}>
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
+    {#if route.settings}
+      <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
+      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
+      <h2 bind:this={heading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
+      <div class="mt-4">
+        <WhoSettings {feed} {library} {onSaved} {onFolders} {onHide} {onUnsubscribe}>
+          {#snippet sources(save)}<TheirPlaces {feed} {library} onPeople={joined} {save} />{/snippet}
+        </WhoSettings>
+      </div>
+    {:else}
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
       <div class="top-back"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" />{name}</button></div>
@@ -133,18 +145,21 @@
       {#if person}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
     </header>
 
-    <!-- What's yours of them: where the eye rests. -->
-    <div class="mt-12 flex flex-col gap-10">
+    <!-- What's yours of them, held together in one card: where the eye rests. -->
+    <div class="yours">
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
-      {#if onOpen}<TheirReading feed={feed.id} {onOpen} />{/if}
+      {#if onOpen}<div class="theirs"><TheirReading feed={feed.id} {onOpen} /></div>{/if}
     </div>
 
-    <!-- Their settings: quieter, at the foot, apart. -->
-    <div class="mt-16">
-      <WhoSettings {feed} {library} bind:nameField {onSaved} {onFolders} {onHide} {onUnsubscribe}>
-        {#snippet sources(save)}<TheirPlaces {feed} {library} onPeople={joined} {save} />{/snippet}
-      </WhoSettings>
+    <!-- Their settings: one row that opens a page of its own, built as Settings' rows are (decisions 0120, 0267). -->
+    <div class="inset-group mt-4">
+      <a href={pathFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" aria-describedby="who-opens-page" class="inset-row inset-action setting">
+        <span class="setting-label"><span class="setting-icon" aria-hidden="true"><Icon name="settings" /></span><span class="setting-words"><span class="setting-name">Settings</span></span></span>
+        <span class="row-glyph flex items-center"><Icon name="chevron-right" /></span>
+      </a>
     </div>
+    <span id="who-opens-page" hidden>Opens its own page.</span>
+    {/if}
   </div>
   </div>
   </div>
@@ -209,6 +224,29 @@
   }
   .who-places .dot {
     padding-inline: 0.5rem;
+  }
+  /*
+    What's yours of them (decision 0267): your note and your highlights in
+    one card, a grouped list's tone and corners with 16px inside, a hairline
+    between the two, so the page reads as two things: them, and yours.
+  */
+  .yours {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding: 1rem;
+    border-radius: var(--radius-hold);
+    background-color: var(--group, var(--list));
+  }
+  .theirs {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  /* The box a note is written in has a frame of its own elsewhere (NoteBox); here the card already holds it, so it has none: never a box in a box. */
+  .yours :global(form.note-form) {
+    padding: 0;
+    border: 0;
   }
   @media (width < 48rem) {
     .who-name {

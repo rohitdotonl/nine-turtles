@@ -48,7 +48,7 @@ export function whyLine(why: Why | null | undefined): string | undefined {
   return `nine turtles chose this: ${REASONS[why]}.`;
 }
 
-const LATER = "You can change this later on their page.";
+const LATER = "You can change this later in their settings.";
 
 /** Add's help under "{name} is…": why the tile is chosen, or that none is. */
 export function addedLine(why: Why | null | undefined): string {

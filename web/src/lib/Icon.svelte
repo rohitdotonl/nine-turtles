@@ -146,7 +146,7 @@
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
   {:else if name === "feed"}
-    <!-- Settings › Everyone you follow: a feed's waves. -->
+    <!-- Everyone you follow, in the sidebar: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />
     <path d="M4.5 4.75a10.75 10.75 0 0 1 10.75 10.75" />
     <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />

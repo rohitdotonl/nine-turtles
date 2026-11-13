@@ -28,9 +28,11 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   // One line width for everyone (decision 0187).
   await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
-  const expected = ["feeds", "data", "install", "hiding", "newsletters", "assistants", "readers"];
+  const expected = ["data", "install", "hiding", "newsletters", "assistants", "readers"];
   const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
   expect(shown).toEqual(expected);
+  // No Everyone you follow row: it has a row of its own in the sidebar (decision 0266).
+  await expect(page.locator('section[aria-labelledby="settings-heading"]').getByRole("link", { name: "Everyone you follow" })).toHaveCount(0);
   // No Sign-up row: sign-up is always open (decision 0115).
   await expect(page.getByText("Sign-up", { exact: true })).toHaveCount(0);
   // Screen readers hear that each row opens a page.
@@ -117,11 +119,13 @@ test("a row opens its own page at its own address; ‹ Settings, Escape and Back
   await page.goto("/settings/font");
   await expect(page).toHaveURL(/\/settings$/);
 
-  // Everyone you follow keeps its X; it and Escape go back to its row too.
-  await page.getByRole("link", { name: "Everyone you follow", exact: true }).click();
-  await expect(page).toHaveURL(/\/settings\/feeds$/);
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("link", { name: "Everyone you follow", exact: true })).toBeFocused();
+  // Everyone you follow left Settings for the sidebar (decision 0266): its old address opens it at its new one, with no ‹ Settings.
+  await page.goto("/settings/feeds");
+  await expect(page).toHaveURL(/\/following$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to Settings" })).toHaveCount(0);
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeVisible();
 
   if (testInfo.project.name === "phone") {
     // On a phone, a control sits under its name, across the row.

@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-13
+updated: 2026-11-14
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -40,13 +40,15 @@ person**, and Write back takes its place.
 
 On a computer, your email may live in a browser tab rather than an email
 app. Then pressing Write back opens nothing, or an app you don't use. Under
-the button, press **Write in Gmail** (or **Write in Outlook.com**): the same
-email opens as a new draft there, in a new tab. nine turtles remembers this
-on that computer, so from then on Write back goes straight to Gmail. To go
-back, press **Write in your email app** under the button after writing back.
+the button, beside "Opening your email app…", press **Didn't open?**, then
+**Write in Gmail** (or **Write in Outlook.com**): the same email opens as a
+new draft there, in a new tab. nine turtles remembers this on that
+computer, so from then on Write back goes straight to Gmail. To go back,
+press **Use your email app** under the button.
 
-If neither works for you, press **Copy their address** and paste it into a
-new email.
+If neither works for you, press **Didn't open?**, then **Copy their
+address**, and paste it into a new email. On a phone, Copy their address is
+already there under the button.
 
 ## Write back about a line
 

@@ -9,7 +9,7 @@ export type Route =
   | { kind: "view"; view: View }
   | { kind: "feed"; id: number }
   | { kind: "folder"; id: number }
-  /** Their page; `settings`: with the keyboard on their settings (the `e` key, and the old Edit addresses). */
+  /** Their page; `settings`: their settings, a page of its own one press from it (the `e` key and the old Edit addresses too; decision 0267). */
   | { kind: "about"; id: number; settings?: boolean }
   | { kind: "edit-folder"; id: number }
   | { kind: "add-feed" }
@@ -94,8 +94,9 @@ export function isList(place: Route): boolean {
 export function parse(path: string): Route {
   const name = articleIn(path).list.replace(/^\/+|\/+$/g, "");
   if (name === "settings") return { kind: "settings" };
-  // The old Feed health page is part of Everyone you follow now (decision 0186).
-  if (name === "settings/feeds" || name === "settings/feed-health") return { kind: "your-feeds" };
+  // Everyone you follow has a row of its own in the sidebar (decision 0266); its old address under Settings still opens it,
+  // and so does the old Feed health page's, which is part of it (decision 0186).
+  if (name === "following" || name === "settings/feeds" || name === "settings/feed-health") return { kind: "your-feeds" };
   // The old addresses (decision 0173) still open their pages.
   if (name === "settings/hidden" || name === "settings/muted") return { kind: "muted" };
   if (name === "settings/rules") return { kind: "settings", page: "hiding" };
@@ -106,12 +107,12 @@ export function parse(path: string): Route {
   if (page) return { kind: "settings", page };
   if (name === "add" || name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
-  // A person or publication (decision 0163): their list and their page. The old /feeds/ addresses still open, and so do the
-  // old Edit and source-settings addresses, which open their page at its settings (one page, no Edit mode).
-  const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/sources\/([1-9][0-9]{0,15}))?$/);
+  // A person or publication (decision 0163): their list, their page and their settings (decision 0267). The old /feeds/
+  // addresses still open, and so do the old Edit and source-settings addresses, which open their settings (no Edit mode).
+  const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/settings|\/sources\/([1-9][0-9]{0,15}))?$/);
   if (who) {
     const id = Number(who[2]);
-    if (who[4] || who[3] === "/edit") return { kind: "about", id, settings: true };
+    if (who[4] || who[3] === "/edit" || who[3] === "/settings") return { kind: "about", id, settings: true };
     return who[3] === "/about" ? { kind: "about", id } : { kind: "feed", id };
   }
   const folder = name.match(/^folders\/([1-9][0-9]{0,15})(\/edit)?$/);
@@ -136,7 +137,7 @@ export function pathFor(route: Route): string {
     case "settings":
       return route.page ? `/settings/${route.page}` : "/settings";
     case "your-feeds":
-      return "/settings/feeds";
+      return "/following";
     case "muted":
       return "/settings/hidden";
     case "readers":
@@ -148,7 +149,7 @@ export function pathFor(route: Route): string {
     case "feed":
       return whoPath(route.id);
     case "about":
-      return `${whoPath(route.id)}/about`;
+      return `${whoPath(route.id)}/${route.settings ? "settings" : "about"}`;
     case "folder":
       return `/folders/${route.id}`;
     case "edit-folder":
@@ -194,12 +195,14 @@ export function titleFor(route: Route, placeName?: string, articleTitle?: string
 }
 
 /**
- * The page a Settings page goes back to (decision 0120): Settings itself for its own pages and
- * Everyone you follow; Hiding for Hidden articles; Readers for All readers. Nothing elsewhere.
+ * The page a Settings page goes back to (decision 0120): Settings itself for its own pages;
+ * Hiding for Hidden articles; Readers for All readers; their page for a person's or publication's
+ * settings (decision 0267). Nothing elsewhere: Everyone you follow is a place of its own, a row
+ * in the sidebar (decision 0266).
  */
 export function parentOf(route: Route): Route | undefined {
   if (route.kind === "settings") return route.page ? { kind: "settings" } : undefined;
-  if (route.kind === "your-feeds") return { kind: "settings" };
+  if (route.kind === "about") return route.settings ? { kind: "about", id: route.id } : undefined;
   if (route.kind === "muted") return { kind: "settings", page: "hiding" };
   if (route.kind === "readers") return { kind: "settings", page: "readers" };
   return undefined;
@@ -208,13 +211,13 @@ export function parentOf(route: Route): Route | undefined {
 /** The row on its parent page that opens a place (its `data-settings-row`), so the keyboard goes back to it. */
 export function rowFor(route: Route): string | undefined {
   if (route.kind === "settings") return route.page;
-  if (route.kind === "your-feeds") return "feeds";
+  if (route.kind === "about") return route.settings ? "their-settings" : undefined;
   if (route.kind === "muted") return "muted";
   if (route.kind === "readers") return "all-readers";
   return undefined;
 }
 
-/** Settings, or a page opened from it: the sidebar's Settings button shows where you are. */
+/** Settings, or a page opened from it: the sidebar's Settings button shows where you are. A person's own settings aren't: their row does. */
 export function inSettings(route: Route): boolean {
-  return route.kind === "settings" || parentOf(route) !== undefined;
+  return route.kind === "settings" || route.kind === "muted" || route.kind === "readers";
 }

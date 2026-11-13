@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-11
+updated: 2026-11-14
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -50,9 +50,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | Key | What it does |
 |---|---|
 | <kbd>/</kbd> | Search |
-| <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar, every row from Unread down, top to bottom: a closed folder's people are passed over |
+| <kbd>Shift</kbd> <kbd>J</kbd> / <kbd>Shift</kbd> <kbd>K</kbd> | Next / previous in the sidebar, every list from Unread down, top to bottom: a closed folder's people are passed over, and so is Everyone you follow |
 | <kbd>←</kbd> / <kbd>→</kbd> | Move between the sidebar, the list and the article |
-| <kbd>E</kbd> | Settings for this person or publication (on their page), or Edit this folder |
+| <kbd>E</kbd> | Settings for this person or publication (a page of their own; <kbd>Esc</kbd> goes to their page), or Edit this folder |
 | <kbd>O</kbd> | Open or close this folder |
 | <kbd>I</kbd> | Info about this person or publication: their page (in any other list, the chosen article's writer's) |
 | <kbd>F</kbd> | Full-screen reading: hide the sidebar and the list |

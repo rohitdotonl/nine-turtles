@@ -1,8 +1,9 @@
 <!--
-  A person's or publication's settings, on their own page (SPEC section 36):
+  A person's or publication's settings, a page of its own one press from
+  their page (SPEC section 36, decision 0267), under the title "Settings":
   no Edit mode, no Cancel or Done. Each setting changes the moment it's
   touched, as Settings' own do (principle 8, instant and still), and the
-  page itself shows it: the name at the top, their row in the sidebar, the
+  screen itself shows it: their row in the sidebar, the list's title, the
   switch. Built as Settings' rows (an inset group), top to bottom: Name
   (saved on Enter or on leaving the field; Escape puts it back), This is
   (for one source on its own), Folders (the folders they're in, opening in
@@ -29,7 +30,6 @@
   let {
     feed,
     library,
-    nameField = $bindable(),
     onSaved,
     onFolders,
     onHide,
@@ -38,8 +38,6 @@
   }: {
     feed: Feed;
     library: LoadedLibrary;
-    /** The Name field: `e` and the old Edit address bring the keyboard here. */
-    nameField?: HTMLInputElement;
     /** Something was saved: their list refreshes (an unpaused source's newest come back). */
     onSaved: () => void;
     /** A folder just made or chosen: the sidebar opens it to show them there. */
@@ -52,6 +50,7 @@
   } = $props();
 
   const id = $props.id();
+  let nameField: HTMLInputElement | undefined = $state();
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let one = $derived(places.length === 1);
   // A last source still joined to someone is theirs: always a person, so no choice to offer.
@@ -211,8 +210,8 @@
   }
 </script>
 
-<section class="flex flex-col gap-2" aria-labelledby="{id}-heading" lang="en">
-  <h3 id="{id}-heading" class="label">Settings</h3>
+<!-- The page's title, "Settings", names these rows, so the group has no label of its own (decision 0120). -->
+<div class="flex flex-col gap-2" lang="en">
   <div class="inset-group">
     <label class="inset-row setting has-control">
       <span class="setting-words">
@@ -309,7 +308,7 @@
     {/if}
     <span id="{id}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
   </div>
-</section>
+</div>
 
 <style>
   /* The two choices share the control evenly, as Settings' own do (decision 0120). */

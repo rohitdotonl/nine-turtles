@@ -161,15 +161,21 @@ test.describe("on a wide window", () => {
     await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).not.toBeFocused();
     await expect(sidebar(page).locator("a[href]:focus")).toHaveCount(1);
 
-    // e opens their settings: in their list, their page with the keyboard on Name; in the folder's, Edit folder (the owner's core path, point 16).
+    // e opens their settings: in their list, a page of their own with the keyboard on its title and Name one Tab on
+    // (decision 0267); in the folder's, Edit folder (the owner's core path, point 16).
     await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
     await appReady(page);
     // Once the list knows whose it is: a key pressed before the feeds arrive has no one to edit yet.
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
     await page.keyboard.press("e");
-    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
+    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/settings$`));
+    await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+    await page.keyboard.press("Tab");
     await expect(page.getByRole("textbox", { name: "Name" })).toBeFocused();
+    // Escape steps back to their page, the keyboard on the row that leads here.
     await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
+    await expect(page.getByRole("region", { name: `About Blog ${blog}` }).getByRole("link", { name: "Settings", exact: true })).toBeFocused();
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
     await page.keyboard.press("e");
