@@ -108,7 +108,7 @@
         <p class="min-w-0">
           Your address<br /><span class="value text-muted" translate="no">{address}</span>
         </p>
-        <button type="button" class="btn btn-small" onclick={copy}>Copy<span class="sr-only"> address</span></button>
+        <button type="button" class="btn btn-small" onclick={copy}>Copy<span class="sr-only">{" "}address</span></button>
       </div>
       {#each labels as label (label.label)}
         <div class="inset-row">

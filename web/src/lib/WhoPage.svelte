@@ -123,7 +123,7 @@
     <header class={["flex flex-col", phone ? "pt-2" : ""]}>
       <h2 bind:this={heading} tabindex="-1" class="who-name">{name}</h2>
       <p class="who-places">
-        {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only"> (opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}
+        {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only">{" "}(opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}
       </p>
       <div class="mt-6 flex flex-col gap-3 empty:hidden">
         {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}

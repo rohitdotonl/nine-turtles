@@ -570,7 +570,7 @@
             }}><bdi>{article.feedTitle}</bdi></a
           ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
         {:else if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only"> (opens in a new tab)</span></a>
+          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
         {:else}
           <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
         {/if}
@@ -633,7 +633,7 @@
           -->
           <p class="article-note" lang="en">
             <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="gap-[0.25em]"
-                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only"> (opens in a new tab)</span></a
+                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a
               >{/if}
           </p>
         {:else if video || episode}

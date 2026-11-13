@@ -49,7 +49,8 @@
 </script>
 
 {#if message || announce}
-  <span class={["flex w-full items-center gap-x-2", refusal ? "text-danger" : "text-ink", !message && "sr-only"]}>
+  <!-- Empty, it stays for screen readers but takes no room: "w-full" beside "sr-only" would win and push the page sideways. -->
+  <span class={["flex items-center gap-x-2", refusal ? "text-danger" : "text-ink", message ? "w-full" : "sr-only"]}>
     <span role={announce ? "status" : undefined} class="flex min-w-0 flex-1 items-start gap-2 py-2"
       >{#if message && refusal}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Dated text={message} /></span
     >

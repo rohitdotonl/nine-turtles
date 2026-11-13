@@ -44,7 +44,7 @@
 <div class="flex flex-col items-center gap-1 text-center">
   {#if inbox}
     <a href={inbox.url} target="_blank" rel="noopener noreferrer" class="text-link mb-2"
-      >Open {inbox.name}<span class="sr-only"> (opens in a new tab)</span></a
+      >Open {inbox.name}<span class="sr-only">{" "}(opens in a new tab)</span></a
     >
   {/if}
   <p class="text-meta text-muted">Didn't get it? Look in your spam folder.</p>

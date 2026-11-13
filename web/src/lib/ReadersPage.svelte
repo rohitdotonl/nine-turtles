@@ -122,7 +122,7 @@
             {#each overview.readers as reader (reader.id)}
               <li class="inset-row text-row">
                 <span class="flex min-w-0 flex-col">
-                  <span class="value">{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted"> (you)</span>{/if}</span>
+                  <span class="value">{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted">{" "}(you)</span>{/if}</span>
                   <span class="text-meta text-muted"
                     ><Dated text={`Joined ${date(reader.createdAt)} · ${plural(reader.feeds, "feed", "feeds")}`} /></span
                   >

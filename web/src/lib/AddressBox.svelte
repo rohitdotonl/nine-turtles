@@ -76,7 +76,7 @@
       {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if say && !lead}{say}{:else}{lead}
         Paste it here{#if site}, or
           <!-- Left out once an address is filled in: it would only add a choice. -->
-          <a class="text-link" href={site} target="_blank" rel="noopener noreferrer">look on their site<span class="sr-only"> (opens in a new tab)</span></a>{/if}.{/if}
+          <a class="text-link" href={site} target="_blank" rel="noopener noreferrer">look on their site<span class="sr-only">{" "}(opens in a new tab)</span></a>{/if}.{/if}
     </p>
   </div>
   <div class="flex flex-col gap-2">

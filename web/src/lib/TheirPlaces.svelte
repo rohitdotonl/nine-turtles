@@ -72,7 +72,7 @@
             <span class="setting-name break-words">{placeShownAs(place)}</span>
             <span class="setting-hint">{PLACE_NAMES[place.place ?? "blog"]}</span>
           </span>
-          <button type="button" class="text-link shrink-0" aria-disabled={busy} title="It becomes a person or publication of its own. You can undo it straight afterwards." onclick={() => void takeOut(place)}>Take out<span class="sr-only"> {placeShownAs(place)} of {name}</span></button>
+          <button type="button" class="text-link shrink-0" aria-disabled={busy} title="It becomes a person or publication of its own. You can undo it straight afterwards." onclick={() => void takeOut(place)}>Take out<span class="sr-only">{" "}{placeShownAs(place)} of {name}</span></button>
         </div>
         {#if place.sortsVideos}
           <!-- A YouTube channel (decision 0144): its two switches under its row. -->

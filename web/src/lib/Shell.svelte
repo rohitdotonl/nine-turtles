@@ -904,7 +904,7 @@
     button that moves, so the keyboard stays on it. The sidebar's and the list's top lines never scroll;
     the article's tools scroll away with its title (decision 0263), and this button stays, in the 64px margin beside the text.
   -->
-  <div class={["fixed top-1.5 z-10", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
+  <div class={["fixed top-1.5 z-20", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}

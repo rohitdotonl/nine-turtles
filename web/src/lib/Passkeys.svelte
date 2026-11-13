@@ -226,7 +226,7 @@
             />
             <span class="flex shrink-0 items-center gap-2">
               <button type="button" class="btn btn-small" onclick={() => stopRename(passkey.id)}>Cancel</button>
-              <button type="submit" class="btn btn-small" aria-disabled={busy}>Save<span class="sr-only"> name</span></button>
+              <button type="submit" class="btn btn-small" aria-disabled={busy}>Save<span class="sr-only">{" "}name</span></button>
             </span>
           </form>
         {:else}
@@ -236,7 +236,7 @@
             </p>
             <span class="flex shrink-0 items-center gap-2">
               <button id={`rename-passkey-${passkey.id}`} type="button" class="btn btn-small" onclick={() => startRename(passkey)}
-                >Rename<span class="sr-only"> {passkeyName(passkey)}</span></button
+                >Rename<span class="sr-only">{" "}{passkeyName(passkey)}</span></button
               >
               <!-- Red words: this removes something. What it removes is in its tooltip and its name, and Undo follows. -->
               <button
@@ -244,7 +244,7 @@
                 class="btn btn-small text-danger"
                 title="Removes this passkey from nine turtles. Your password still works."
                 aria-disabled={busy}
-                onclick={() => remove(passkey)}>Remove<span class="sr-only"> {passkeyName(passkey)}</span></button
+                onclick={() => remove(passkey)}>Remove<span class="sr-only">{" "}{passkeyName(passkey)}</span></button
               >
             </span>
           </div>
@@ -272,8 +272,8 @@
             class="inset-input"
           />
           <span class="flex shrink-0 items-center gap-2">
-            <button type="button" class="btn btn-small" onclick={stopAdding}>Cancel<span class="sr-only"> adding a passkey</span></button>
-            <button type="submit" aria-disabled={busy} class="btn btn-small">Continue<span class="sr-only"> adding a passkey</span></button>
+            <button type="button" class="btn btn-small" onclick={stopAdding}>Cancel<span class="sr-only">{" "}adding a passkey</span></button>
+            <button type="submit" aria-disabled={busy} class="btn btn-small">Continue<span class="sr-only">{" "}adding a passkey</span></button>
           </span>
         </form>
       {:else}

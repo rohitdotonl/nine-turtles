@@ -157,7 +157,7 @@
         Server address<br /><span class="value text-muted" translate="no">{address}</span>
       </p>
       <button type="button" class="btn btn-small" onclick={() => copy(address, "Server address")}
-        >Copy<span class="sr-only"> server address</span></button
+        >Copy<span class="sr-only">{" "}server address</span></button
       >
     </div>
     {#if key}
@@ -166,7 +166,7 @@
           Assistant key<br /><span class="value text-muted" translate="no">{key}</span>
         </p>
         <button bind:this={copyKey} type="button" class="btn btn-small" onclick={() => copy(key, "Assistant key")}
-          >Copy<span class="sr-only"> assistant key</span></button
+          >Copy<span class="sr-only">{" "}assistant key</span></button
         >
       </div>
     {/if}
@@ -184,7 +184,7 @@
           aria-disabled={busy}
           title="Ends this connection; your feeds and articles stay as they are"
           onclick={() => end(assistant, index)}
-          class="btn-danger text-meta">Disconnect<span class="sr-only"> {name}</span></button
+          class="btn-danger text-meta">Disconnect<span class="sr-only">{" "}{name}</span></button
         >
       </div>
     {:else}

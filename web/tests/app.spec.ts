@@ -639,6 +639,19 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   await expect(label).toBeChecked();
 });
 
+test("Everyone you follow never scrolls sideways on a laptop", async ({ page }) => {
+  // An empty note line, kept for screen readers, once stretched the full width beyond the page's edge.
+  await page.setViewportSize({ width: 1336, height: 735 });
+  await openApp(page, "/settings/feeds");
+  await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
+  const sideways = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("*")]
+      .filter((element) => ["auto", "scroll"].includes(getComputedStyle(element).overflowX) && element.scrollWidth > element.clientWidth + 1)
+      .map((element) => element.className),
+  );
+  expect(sideways).toEqual([]);
+});
+
 test("Settings is one centred column of grouped lists; its rows that act or open a page are rows of their own", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page, "/settings");
