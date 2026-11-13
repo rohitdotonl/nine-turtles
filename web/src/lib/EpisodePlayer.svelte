@@ -117,7 +117,7 @@
     </button>
     <!-- How long it is, until it starts: then the times under the slider say it, so the length steps aside. -->
     <span class="episode-length">
-      {#if episode.seconds && !mine}{length(episode.seconds)}<span class="sr-only"> long</span>{/if}
+      {#if episode.seconds && !mine}{length(episode.seconds)}<span class="sr-only">{" "}long</span>{/if}
     </span>
     <button
       type="button"

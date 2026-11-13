@@ -20,7 +20,7 @@
   >
   {#if original}
     <a href={original} target="_blank" rel="noopener noreferrer" title={tip("View original", "open-original")} class="btn-quiet btn-small"
-      ><Icon name="open" />View original<span class="sr-only"> (opens in a new tab)</span></a
+      ><Icon name="open" />View original<span class="sr-only">{" "}(opens in a new tab)</span></a
     >
   {/if}
 </div>

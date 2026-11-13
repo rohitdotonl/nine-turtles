@@ -67,7 +67,7 @@
     "Shift+A" is two caps, as it's two keys. In the Go to group the heading already says
     "G, then…", so only the second press is printed; screen readers still hear both.
   -->
-  {#each key.split(" then ") as press, step (step)}{#if step === 0 && key.includes(" then ")}<span class="sr-only">{keyCap(press)} then </span>{:else}{#each keyCap(press).split(" ") as cap, index (index)}{#if index > 0}{" "}{/if}<kbd class="key">{cap}</kbd>{/each}{/if}{/each}
+  {#each key.split(" then ") as press, step (step)}{#if step === 0 && key.includes(" then ")}<span class="sr-only">{keyCap(press)} then{" "}</span>{:else}{#each keyCap(press).split(" ") as cap, index (index)}{#if index > 0}{" "}{/if}<kbd class="key">{cap}</kbd>{/each}{/if}{/each}
 {/snippet}
 
 <dialog
@@ -120,7 +120,7 @@
           </div>
         {/each}
       </div>
-      <p class="mt-4 text-right"><a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> with keys (on the nine turtles website, opens in a new tab)</span></a></p>
+      <p class="mt-4 text-right"><a href={helpPage("every-keyboard-key")} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only">{" "}with keys (on the nine turtles website, opens in a new tab)</span></a></p>
     </div>
   </div>
 </dialog>

@@ -96,6 +96,11 @@ test.describe("on a wide window", () => {
     await page.getByRole("menuitem", { name: /^Full-screen reading/ }).click();
     await expect(list).toBeHidden();
     await expect(nav).toBeHidden();
+    // At the article's top, the one button lies above the article's own bar, so a mouse can see and press it.
+    const both = page.getByRole("button", { name: "Sidebar and article list" });
+    await expect
+      .poll(() => both.evaluate((button) => { const box = button.getBoundingClientRect(); return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)); }))
+      .toBe(true);
     // From the keyboard: Enter opens the menu and the item, and both come back.
     await more.focus();
     await page.keyboard.press("Enter");

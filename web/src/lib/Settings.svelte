@@ -387,7 +387,7 @@
 
       {#if owner}
         <section aria-labelledby="yours-heading">
-          <h3 id="yours-heading" class="settings-head label">Your nine turtles<span class="sr-only">, </span><span class="only-you">Only you</span></h3>
+          <h3 id="yours-heading" class="settings-head label">Your nine turtles<span class="sr-only">,{" "}</span><span class="only-you">Only you</span></h3>
           <div class="inset-group">
             {@render pageRow("readers", "/settings/readers", SETTINGS_PAGES.readers, "people", open("readers"))}
           </div>
@@ -418,7 +418,7 @@
             </div>
             {#if emailSending && email}
               <button bind:this={changeButton} type="button" onclick={() => (task = "email")} class="btn btn-small shrink-0"
-                >Change…<span class="sr-only"> email</span></button
+                >Change…<span class="sr-only">{" "}email</span></button
               >
             {/if}
           </div>
@@ -429,7 +429,7 @@
               <div class="setting-words"><p class="setting-name">Password</p></div>
             </div>
             <button bind:this={passwordButton} type="button" onclick={() => (task = "password")} class="btn btn-small shrink-0"
-              >Change…<span class="sr-only"> password</span></button
+              >Change…<span class="sr-only">{" "}password</span></button
             >
           </div>
           {#if emailSending && email}<WeeklyEmail onProblem={(text) => (message = text)} />{/if}
@@ -468,7 +468,7 @@
         </div>
         <p class="inset-foot">{owner ? "It says" : "Each one says"} exactly what goes before anything is removed.</p>
       </section>
-      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only"> (on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
+      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">

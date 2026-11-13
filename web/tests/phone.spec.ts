@@ -709,7 +709,8 @@ test("a tab left open across an update is told to reload, switches on the next m
     route.fulfill({ status: 400, headers: { "x-nine-turtles-version": "a-newer-version" }, body: "" }),
   );
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
-  await page.getByRole("region", { name: "Article", exact: true }).getByRole("button", { name: "Star" }).click();
+  // The top bar's Star; the article's end has one too once its words arrive (decision 0263).
+  await page.getByRole("region", { name: "Article", exact: true }).getByRole("button", { name: "Star" }).first().click();
   await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 

@@ -344,7 +344,7 @@
         editing ? "pr-12" : "pr-3",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title))}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">, </span>checking…</span>{/if}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
     >
     {@render personHandle(feed)}
   </li>

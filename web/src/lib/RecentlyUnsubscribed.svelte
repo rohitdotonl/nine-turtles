@@ -23,7 +23,7 @@
             {name}<br /><span class="text-meta text-muted"><Dated text={keptLine(row)} /></span>
           </p>
           <button type="button" data-kept={row.ids.join()} aria-disabled={busy} onclick={() => onBringBack(row)} class="btn btn-small"
-            >Bring back<span class="sr-only"> {name}</span></button
+            >Bring back<span class="sr-only">{" "}{name}</span></button
           >
         </li>
       {/each}

@@ -333,7 +333,7 @@
   their name, it says "Write to {name}".
 -->
 {#snippet label()}
-  {#if article}<span>Write back<span class="sr-only"> to <bdi>{name}</bdi></span></span>{:else}<span>{verb} <bdi>{name}</bdi></span>{/if}
+  {#if article}<span>Write back<span class="sr-only">{" "}to <bdi>{name}</bdi></span></span>{:else}<span>{verb} <bdi>{name}</bdi></span>{/if}
 {/snippet}
 
 {#if place}
@@ -377,7 +377,7 @@
     {:else if address}
       <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" />{@render label()}</a>
       {#if article}
-        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>, </span>{address}</p>
+        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>

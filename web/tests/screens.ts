@@ -578,7 +578,9 @@ export async function follow(page: Page, address: string, { asIs = false } = {})
 export async function feedsShown(page: Page, path: "**/api/feeds" | "**/api/tidy/feeds", change: (body: Record<string, unknown> & { feeds: Record<string, unknown>[] }) => void): Promise<void> {
   await page.route(path, async (route) => {
     if (route.request().method() !== "GET") return route.continue();
-    const response = await route.fetch();
+    // A request still on its way when the test ends is let go, not failed: its test is over (or the next one would be blamed).
+    const response = await route.fetch().catch(() => undefined);
+    if (!response) return route.abort().catch(() => undefined);
     const body = await response.json();
     change(body);
     await route.fulfill({ response, json: body });

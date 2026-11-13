@@ -44,7 +44,7 @@
         {/if}
       </button>
       <button type="button" class="now-playing-title" title="Open the episode" onclick={() => onOpen(current.article)}>
-        <span class="block truncate text-meta text-ink"><span class="sr-only">Open the episode: </span>{current.article.title || "Untitled"}</span>
+        <span class="block truncate text-meta text-ink"><span class="sr-only">Open the episode:{" "}</span>{current.article.title || "Untitled"}</span>
         <span class="block truncate text-meta text-muted">{player.said || current.article.feedTitle}</span>
       </button>
       <button type="button" class="btn-quiet btn-icon" aria-label="Close the player" title="Close the player" onclick={close}><Icon name="close" size="alone" /></button>

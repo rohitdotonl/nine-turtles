@@ -21,7 +21,7 @@
 </script>
 
 <div class="away" lang="en">
-  <div class={["toast pointer-events-auto flex min-h-11 max-w-full items-center border px-4 text-meta", !note && "sr-only"]}>
+  <div class={["toast pointer-events-auto flex max-w-full items-center text-meta", note ? "min-h-11 border px-4" : "sr-only"]}>
     <NoteLine announce message={note?.words ?? ""} refusal={note?.refusal} also={note?.also?.map((way) => ({ word: way.word, press: then(way.press) ?? way.press }))} onUndo={then(note?.undo)} onRetry={then(note?.retry)} retryWord={note?.retryWord} onClose={() => then(note?.close)?.()} />
   </div>
 </div>
