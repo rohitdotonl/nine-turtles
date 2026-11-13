@@ -760,8 +760,8 @@
 <div class={["toast-band sticky bottom-0 z-10 mt-auto flex justify-center", !!(saying || updates.stranded || updates.otherReader || newWaiting) && "toast-band-shown"]}>
   <div
     class={[
-      "toast pointer-events-auto flex min-h-11 max-w-full flex-wrap items-center gap-x-3 border px-4 text-meta text-ink-2",
-      !(saying || updates.stranded || updates.otherReader || newWaiting) && "sr-only",
+      "toast pointer-events-auto flex max-w-full flex-wrap items-center gap-x-3 text-meta text-ink-2",
+      saying || updates.stranded || updates.otherReader || newWaiting ? "min-h-11 border px-4" : "sr-only",
     ]}
   >
     <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->

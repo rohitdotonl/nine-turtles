@@ -83,7 +83,7 @@
   <label class={["font-semibold text-ink", small ? "text-meta" : "text-base"]} for={id}>{label}</label>
   {#if kept}
     <p id="{id}-kept" class="kept text-meta text-ink-2">
-      <span><strong class="font-semibold text-ink">Not saved yet.</strong>{#if kept === "left"} Kept from when you left this {on}.{/if}</span>
+      <span><strong class="font-semibold text-ink">Not saved yet.</strong>{#if kept === "left"}{" "}Kept from when you left this {on}.{/if}</span>
       {#if onDiscard}<button type="button" class="text-link discard" onclick={onDiscard}>Discard</button>{/if}
     </p>
   {/if}

@@ -103,7 +103,7 @@
             {/each}
           </ul>
           <p class="inset-foot">
-            {#if count > rows.length}The newest {rows.length} are shown. {/if}Hidden articles count as read and wait in no list. Unhide
+            {#if count > rows.length}The newest {rows.length} are shown.{" "}{/if}Hidden articles count as read and wait in no list. Unhide
             one to bring it back, unread. Search finds them all.
           </p>
         </section>
