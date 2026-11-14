@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { headsOf, placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
   return { id, title, siteUrl: null, unread: 0, folders: [], person: null, place: "blog", addedAt: id, ...more };
@@ -84,5 +84,35 @@ describe("a publication's writer in a list", () => {
     expect(writerOf(article(3, { feedTitle: "Garden Letters", writer: "Lena Fischer" }))).toBe("Lena Fischer");
     expect(writerOf(article(3, { feedTitle: "Lena Fischer", writer: "lena fischer" }))).toBeUndefined();
     expect(writerOf(article(3))).toBeUndefined();
+  });
+});
+
+describe("Unread, by person (decision 0271)", () => {
+  const by = (id: number, whose: number, feedTitle: string, publication = false) => article(id, { id, whose, feedTitle, publication });
+
+  it("names each person once, above their first article, and says where publications begin", () => {
+    const listed = [by(1, -7, "Alpha"), by(2, -7, "Alpha"), by(3, 4, "Beta (beta@example.com)"), by(4, 5, "Garden Letters", true), by(5, 5, "Garden Letters", true), by(6, 6, "Open Field", true)];
+    expect(headsOf(listed)).toEqual([
+      { name: "Alpha", publications: false },
+      undefined,
+      { name: "Beta", publications: false },
+      { name: "Garden Letters", publications: true },
+      undefined,
+      { name: "Open Field", publications: false },
+    ]);
+  });
+
+  it("starts with Publications when there are no people", () => {
+    expect(headsOf([by(1, 5, "Garden Letters", true)])).toEqual([{ name: "Garden Letters", publications: true }]);
+  });
+
+  it("doesn't name again a person carried on from the page before", () => {
+    const pageOne = [by(1, -7, "Alpha"), by(2, -7, "Alpha")];
+    const pageTwo = [by(3, -7, "Alpha"), by(4, 4, "Beta")];
+    expect(headsOf([...pageOne, ...pageTwo]).map((head) => head?.name)).toEqual(["Alpha", undefined, undefined, "Beta"]);
+  });
+
+  it("names nobody in a list that isn't by person", () => {
+    expect(headsOf([article(1), article(2)])).toEqual([undefined, undefined]);
   });
 });

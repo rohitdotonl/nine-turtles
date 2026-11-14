@@ -12,11 +12,24 @@ const article = (page: Page) =>
   page.getByRole("region", { name: "Article", exact: true });
 const SLOW_LETTER = /The pleasure of a slow letter/;
 
-/** Holds every request matching `url` until the returned function is called. */
-async function hold(page: Page, url: string | RegExp): Promise<() => void> {
+/**
+ * Holds every request matching `url` until the returned function is called.
+ * Then it goes on its way, or, given `standIn`, is answered with that page
+ * instead, so the test never leaves this computer.
+ */
+async function hold(
+  page: Page,
+  url: string | RegExp,
+  standIn?: string,
+): Promise<() => void> {
   let release = () => {};
   const held = new Promise<void>((resolve) => (release = resolve));
-  await page.route(url, async (route) => (await held, route.continue()));
+  await page.route(url, async (route) => {
+    await held;
+    return standIn === undefined
+      ? route.continue()
+      : route.fulfill({ contentType: "text/html", body: standIn });
+  });
   return release;
 }
 
@@ -48,7 +61,9 @@ test("a slow list and a slow article say they're loading", async ({
 });
 
 test("a video that takes a while to start says so", async ({ page }) => {
-  const release = await hold(page, /youtube/);
+  // A stand-in for YouTube's player: the real one's page can take longer to
+  // finish loading than this test waits.
+  const release = await hold(page, /youtube/, "<p>YouTube's player</p>");
   await signedIn(page);
   const id = await follow(page, `${FEED_SITE}/videos/`);
   await page.goto(new URL(`/people/${id}`, page.url()).href);

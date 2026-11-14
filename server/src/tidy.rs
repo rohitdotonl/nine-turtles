@@ -75,11 +75,12 @@ struct Listed {
 /// followed it and its newest article's date and title, both found from the
 /// `articles_newest_by_feed` index. A title the reader hid (a rule or their
 /// own Hide) isn't shown. Takes the reader.
-const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
+const LISTED: &str = concat!(
+    "SELECT subscriptions.feed_id AS id, subscriptions.title,
         subscriptions.added_at, subscriptions.writer_id AS person,
-        (SELECT name FROM writers WHERE writers.id = subscriptions.writer_id) AS person_name,
-        CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
-             ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
+        (SELECT name FROM writers WHERE writers.id = subscriptions.writer_id) AS person_name, ",
+    crate::feeds::kind!(),
+    " AS kind,
         (subscriptions.writer_id IS NULL AND subscriptions.kind_why LIKE 'unsure-%') AS open,
         CASE WHEN subscriptions.writer_id IS NULL THEN subscriptions.kind_why END AS why,
         (SELECT COALESCE(site_url, url) FROM feeds WHERE feeds.id = subscriptions.feed_id) AS site,
@@ -93,7 +94,8 @@ const LISTED: &str = "SELECT subscriptions.feed_id AS id, subscriptions.title,
             FROM articles AS newest WHERE newest.feed_id = subscriptions.feed_id
             ORDER BY newest.sort_at DESC, newest.id DESC LIMIT 1) AS last_title
      FROM subscriptions WHERE person_id = ? AND unsubscribed_at IS NULL
-     ORDER BY title COLLATE NOCASE, feed_id";
+     ORDER BY title COLLATE NOCASE, feed_id"
+);
 
 /// A feed the reader unsubscribed from (or an assistant did) that's still
 /// kept, so Bring back can follow it again (decision 0240).
