@@ -46,6 +46,21 @@ test.describe("on a wide window", () => {
     await expect(sheet(page).getByRole("button", { name: /Change keys/ })).toHaveCount(0);
   });
 
+  test("a key pressed the instant Escape closes the list of keys still counts", async ({ page }) => {
+    // The list says it has closed a moment after it has; `j` pressed in that moment used to be lost.
+    await signedIn(page);
+    await openBlog(page);
+    await row(page, 2).click();
+    const title = article(page).getByRole("heading", { level: 2 });
+    await expect(title).toHaveText(/\(2\)/);
+    await page.keyboard.press("?");
+    await expect(sheet(page)).toBeVisible();
+    // Sent together, so nothing waits between them: Escape closes the list, then j goes on to the next article.
+    await Promise.all([page.keyboard.press("Escape"), page.keyboard.press("j")]);
+    await expect(sheet(page)).toBeHidden();
+    await expect(title).toHaveText(/\(1\)/);
+  });
+
   test("Home and End choose the first and last article; Shift+J and Shift+K move down the sidebar, folders included; g then , goes to Settings", async ({ page }) => {
     await signedIn(page);
     // Two of this test's own, so the sidebar has a next person whatever else it holds.

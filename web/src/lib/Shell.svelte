@@ -406,9 +406,9 @@
 
     const readKey = createKeyReader();
     const pressed = (event: KeyboardEvent) => {
-      // A sheet keeps the keyboard to itself; its Escape is the dialog's own
-      // (Settings' own sheets are asked of the page).
-      if (event.defaultPrevented || cheatSheetOpen || sheetShown || document.querySelector("dialog:modal")) return;
+      // A sheet keeps the keyboard to itself; its Escape is the dialog's own (Settings' own sheets are asked of the page).
+      // The shortcuts sheet is asked of the page too: it says it has closed a moment after it has, and a key pressed then counts.
+      if (event.defaultPrevented || sheetShown || document.querySelector("dialog:modal")) return;
       const action = readKey(event, event.timeStamp);
       if (!action) return;
       const scene = keyScene();
