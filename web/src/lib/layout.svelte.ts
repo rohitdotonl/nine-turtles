@@ -5,6 +5,7 @@
 // `ScreenLayout` (below) holds the signed-in screen's arrangement.
 
 import { deviceText, setDeviceText } from "./device";
+import { oneThing } from "./oneThing.svelte";
 import type { Carried } from "./updates.svelte";
 
 export type Width = "wide" | "medium" | "narrow";
@@ -28,9 +29,15 @@ export type Panes = { sidebar: boolean; list: boolean; article: boolean };
  * when the sidebar is shown. Narrow (phones, Milestone 13): one at a time, and
  * the sidebar is the home screen; an opened article (`reading`) takes the
  * list's place. Settings fills the list and article areas.
+ *
+ * One thing at a time (`oneThing`, the owner's trial, decision 0269): on a
+ * computer too, the list alone beside the sidebar (as the reader has it, shown
+ * on a medium window too, with no article to make way for), then what opened
+ * (`reading`) alone in the whole window.
  */
-export function panesFor(width: Width, sidebar: SidebarChoice, reading = false, listHidden = false): Panes {
-  const sidebarShown = sidebar === "auto" ? width !== "medium" : sidebar === "shown";
+export function panesFor(width: Width, sidebar: SidebarChoice, reading = false, listHidden = false, oneThing = false): Panes {
+  const sidebarShown = sidebar === "auto" ? width !== "medium" || oneThing : sidebar === "shown";
+  if (oneThing && width !== "narrow") return reading ? { sidebar: false, list: false, article: true } : { sidebar: sidebarShown, list: true, article: false };
   switch (width) {
     case "wide":
       return { sidebar: sidebarShown, list: !listHidden, article: true };
@@ -99,22 +106,31 @@ export class ScreenLayout {
   windowWidth: number = $state(0);
 
   #reading: () => boolean = () => false;
+  /** The trial's own: a person's page or their settings showing (whoever reads), and whether this reader is the owner. */
+  #trial = { aside: () => false, owner: () => false };
 
+  /** On a computer, the owner's trial "Read one thing at a time" is on (decision 0269). */
+  readonly trial: boolean = $derived(this.#trial.owner() && oneThing.on && this.width !== "narrow");
   /** Which areas show now. */
-  readonly panes: Panes = $derived(panesFor(this.width, this.sidebarChoice, this.#reading(), this.listHidden));
+  readonly panes: Panes = $derived(panesFor(this.width, this.sidebarChoice, this.#reading() || (this.trial && this.#trial.aside()), this.listHidden, this.trial));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   readonly phone: boolean = $derived(this.width === "narrow");
+  /** One thing at a time, a phone or the trial: an opened article is a step of its own, back to its list. */
+  readonly stepwise: boolean = $derived(this.phone || this.trial);
 
   /**
    * `reading` says whether a phone shows an opened article in the list's
    * place; it must read Svelte state (`$state`), or `panes` won't follow it.
    * On a phone-narrow window the sidebar is the home screen, but an address
-   * that names a place opens that place (`openingHome` false).
+   * that names a place opens that place (`openingHome` false). `trial`: for
+   * the owner's trial (decision 0269), whether a person's page shows, and
+   * whether this reader is the owner, the only one it's for.
    */
-  constructor(width: Width, windowWidth: number, reading: () => boolean, openingHome: boolean) {
+  constructor(width: Width, windowWidth: number, reading: () => boolean, openingHome: boolean, trial?: { aside: () => boolean; owner: () => boolean }) {
     this.width = width;
     this.windowWidth = windowWidth;
     this.#reading = reading;
+    if (trial) this.#trial = trial;
     if (width === "narrow" && !openingHome) this.sidebarChoice = "hidden";
   }
 
@@ -162,9 +178,9 @@ export class ScreenLayout {
     return hiding;
   }
 
-  /** Choosing an article shows it, so on a medium window the sidebar makes way. */
+  /** Choosing an article shows it, so on a medium window the sidebar makes way (one thing at a time, it shows alone). */
   makeWayForArticle() {
-    if (this.width === "medium" && this.panes.sidebar) this.sidebarChoice = "hidden";
+    if (this.width === "medium" && this.panes.sidebar && !this.trial) this.sidebarChoice = "hidden";
   }
 
   /** The reader has gone somewhere since the screen opened (every move passes through `showHome`). */

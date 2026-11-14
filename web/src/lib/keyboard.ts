@@ -374,9 +374,9 @@ function needsUnread(each: Shortcut): boolean {
   return each.bindings.some(({ does }) => NEEDS_UNREAD.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
 }
 
-/** The shortcuts the cheat sheet lists: those that work in this reading mode. */
-export function shortcutsFor(unreadOff: boolean): Shortcut[] {
-  return SHORTCUTS.filter((each) => !(unreadOff && needsUnread(each)));
+/** The shortcuts the cheat sheet lists: those that work in this reading mode (one thing at a time, the owner's trial, has no full-screen reading: decision 0269). */
+export function shortcutsFor(unreadOff: boolean, oneThing = false): Shortcut[] {
+  return SHORTCUTS.filter((each) => !(unreadOff && needsUnread(each)) && !(oneThing && each.bindings.some(({ does }) => does.kind === "toggle-both")));
 }
 
 /**

@@ -363,3 +363,13 @@ describe("the cheat sheet with Unread off", () => {
     expect(off.length).toBe(on.length - unreadOnly.length);
   });
 });
+
+describe("the cheat sheet, one thing at a time (decision 0269)", () => {
+  it("leaves out full-screen reading, which has nothing left to do", () => {
+    const on = shortcutsFor(false).map((each) => each.action);
+    const trial = shortcutsFor(false, true).map((each) => each.action);
+    expect(on).toContain("Full-screen reading");
+    expect(trial).not.toContain("Full-screen reading");
+    expect(trial.length).toBe(on.length - 1);
+  });
+});

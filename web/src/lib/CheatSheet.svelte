@@ -11,10 +11,13 @@
   let {
     open = $bindable(),
     unreadOff = false,
+    oneThing = false,
   }: {
     open: boolean;
     /** Unread off: Go to Unread and Mark all as read aren't listed. */
     unreadOff?: boolean;
+    /** One thing at a time (the owner's trial, decision 0269): full-screen reading isn't listed. */
+    oneThing?: boolean;
   } = $props();
 
   let dialog: HTMLDialogElement | undefined = $state();
@@ -37,7 +40,7 @@
     ["Getting around", "Tidying up"],
   ];
 
-  const shown = $derived(shortcutsFor(unreadOff));
+  const shown = $derived(shortcutsFor(unreadOff, oneThing));
 
   $effect(() => {
     if (open && !dialog?.open) {

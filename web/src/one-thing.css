@@ -1,0 +1,10 @@
+/*
+  One thing at a time, the owner's trial (decision 0269; the switch is
+  lib/oneThing.svelte.ts, which panes show is lib/layout.svelte.ts): the list
+  alone in the rest of the window keeps its rows to a centred column of a
+  readable width (42rem with its edges), its title and search on the same
+  edges, and its scroll bar at the window's edge.
+*/
+.list-pane.one-thing > :is(.pane-bar, .scroller) {
+  padding-inline: calc(var(--list-start) + max(0px, (100% - 42rem) / 2)) calc(var(--list-end) + max(0px, (100% - 42rem) / 2));
+}
