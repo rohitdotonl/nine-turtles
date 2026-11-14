@@ -58,13 +58,11 @@
   import { markRead, markStarred, signedOut } from "./saving";
   import { prefetch } from "./articles";
   import { nothingNewSince } from "./times";
-  import RowText from "./RowText.svelte";
+  import ItemRow from "./ItemRow.svelte";
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu } from "./rowMenu";
-  import { longPress } from "./longPress";
   import type { MenuGroup } from "./MoreMenu.svelte";
-  import { opensElsewhere } from "./articleLinks";
-  import { carriesArticle, listenForStarring } from "./articleDrag";
+  import { listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
   import ListArriving from "./ListArriving.svelte";
   import type { SortedLine } from "./sorting";
@@ -648,18 +646,6 @@
     if (giveBack && index !== undefined) rows[index]?.focus();
   }
 
-  function arrows(event: KeyboardEvent, index: number) {
-    if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) {
-      event.preventDefault();
-      openMenu(index);
-      return;
-    }
-    // The arrow keys work like j and k while the keyboard is in the list.
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-    event.preventDefault();
-    if (move(event.key === "ArrowDown" ? 1 : -1)) focusSelected();
-  }
-
   load(null);
 </script>
 
@@ -682,35 +668,15 @@
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
       <li>
-        <!-- Only one row is a Tab stop (the selected one, or the first); the others are reached with j, k or the arrows. -->
-        <button
-          type="button"
-          bind:this={rows[index]}
-          tabindex={current || (selectedIndex === -1 && index === 0) ? 0 : -1}
-          aria-current={current ? "true" : undefined}
-          data-held={menuAt?.index === index ? "" : undefined /* held in the pointer's tone while its own menu is open, so it's clear which article the menu acts on (decision 0214) */}
-          data-space-reads
-          onclick={(event) => {
-            select(index);
-            // A click made with Enter has no mouse position.
-            onChoose(event.detail === 0);
-          }}
-          onkeydown={(event) => arrows(event, index)}
-          oncontextmenu={(event) => {
-            event.preventDefault();
-            // A press has a place; the keyboard's (where the browser sends it) is the row's.
-            openMenu(index, event.clientX || undefined, event.clientY || undefined);
-          }}
-          use:longPress={(x, y) => openMenu(index, x, y)}
-          use:opensElsewhere={() => addressOf(article)}
-          use:carriesArticle={() => article}
-          class="item-row place block cursor-pointer pr-4 text-left"
-        >
-          <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
-          {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
-          <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
-          <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
-        </button>
+        <ItemRow
+          bind:row={rows[index]}
+          {article} {current} {bold} {unreadOff} {oneFeed} {addressOf}
+          tabbable={current || (selectedIndex === -1 && index === 0)}
+          held={menuAt?.index === index}
+          onOpen={(byKeyboard) => (select(index), onChoose(byKeyboard))}
+          onMenu={(x, y) => openMenu(index, x, y)}
+          onStep={(step) => move(step) && focusSelected()}
+        />
       </li>
     {/each}
   </ul>
