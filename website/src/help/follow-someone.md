@@ -46,7 +46,8 @@ Their page (press their name at the top of their list) keeps what's
 between you: **Write to** them, your own note on them and **Your
 highlights**, the words you highlighted in their writing, each with the
 article it's from. Press a title to read it. Their newest pieces are in
-their list, right beside the page.
+their list, right beside the page: choose one there and it opens in the
+page's place.
 
 They appear in your sidebar under **People** or **Publications**. Their
 five newest articles wait in **Unread**; anything older is on their page,

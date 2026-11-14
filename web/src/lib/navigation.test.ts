@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isList } from "./router";
-import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
+import { homeFor, isOver, isWho, listForArticle, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
 
 const unread: Route = { kind: "view", view: "unread" };
@@ -45,6 +45,14 @@ describe("places", () => {
     // On a phone a sheet is a screen of its own, with nothing under it.
     expect(underSheet(addFeed, feed, true)).toBe(addFeed);
     expect(underSheet(settings, feed, false)).toBe(settings);
+  });
+
+  it("gives an article chosen beside their page their list, only where the list is beside it", () => {
+    expect(listForArticle(about, false)).toEqual(feed);
+    expect(listForArticle(theirSettings, false)).toEqual(feed);
+    // A phone, or one thing at a time: their page has the screen to itself.
+    expect(listForArticle(about, true)).toBeUndefined();
+    expect(listForArticle(feed, false) ?? listForArticle(unread, false) ?? listForArticle(settings, false)).toBeUndefined();
   });
 });
 

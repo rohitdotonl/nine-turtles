@@ -391,3 +391,55 @@ test("on a phone, a very long name in ‹ their name shortens inside the top lin
   await expect(page).toHaveURL(/\/settings\/hiding$/);
   await fits(page.getByRole("button", { name: `Back to Blog ${name}`, exact: true }));
 });
+
+test("an article chosen while their page or their settings shows beside the list takes the page's place", async ({ page, isMobile }) => {
+  test.skip(isMobile, "on a phone their page takes the list's place: there's no list beside it to choose from");
+  const name = `their-choose-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  const rows = page.locator(".item-row");
+  const who = about(page, `Blog ${name}`);
+  const title = pane(page).locator("h2.article-title");
+
+  // Their page opened from an open article, and closed, brings that article back, as before.
+  await rows.nth(0).click();
+  const first = (await title.innerText()).trim();
+  await page.keyboard.press("i");
+  await expect(who).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(title).toHaveText(first);
+
+  // A click on another row: the article shows in the page's place, under their list's address, and the keyboard stays on the row.
+  await page.keyboard.press("i");
+  await expect(who).toBeVisible();
+  await rows.nth(1).click();
+  await expect(who).toHaveCount(0);
+  await expect(title).not.toHaveText(first);
+  const second = (await title.innerText()).trim();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/articles/\\d+$`));
+  await expect(rows.nth(1)).toBeFocused();
+  // Back goes to their page, as after its Close.
+  await page.goBack();
+  await expect(who).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+
+  // By keyboard: j moves to the next article and shows it, the keyboard on its row.
+  await page.keyboard.press("j");
+  await expect(who).toHaveCount(0);
+  await expect(title).not.toHaveText(second);
+  await expect(rows.nth(2)).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/articles/\\d+$`));
+
+  // From their settings, Enter (the keyboard on their title, not a control) opens the chosen article, the keyboard on its title.
+  await page.keyboard.press("e");
+  await expect(settingsFor(page, `Blog ${name}`).getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(settingsFor(page, `Blog ${name}`)).toHaveCount(0);
+  await expect(title).toBeFocused();
+  await expect(page).toHaveURL(new RegExp(`/people/${id}/articles/\\d+$`));
+});
