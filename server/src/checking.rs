@@ -438,7 +438,7 @@ async fn failed(
     now: i64,
 ) -> Result<(), sqlx::Error> {
     let failures = feed.failures + 1;
-    let mut next = failed_wait(feed, failures, random_fraction());
+    let mut next = failed_wait(feed, failures, &failure, random_fraction());
     if let Failure::Fetch(FetchError::SlowDown(Some(asked))) = failure {
         next = next.max(asked.min(LONGEST_SLOW_DOWN));
     }
@@ -512,13 +512,19 @@ pub fn backoff(every: i64, failures: i64) -> i64 {
 }
 
 /// How long a feed that failed `failures` times in a row waits: its backoff,
-/// except that a YouTube feed with a follower around is asked again within
-/// 3 to 6 hours, by `fraction` (decision 0273).
-fn failed_wait(feed: &Due, failures: i64, fraction: f64) -> i64 {
+/// except that a YouTube feed with a follower around that YouTube answered
+/// "not found", a 5xx or nothing is asked again within 3 to 6 hours, by
+/// `fraction` (decision 0273). Being asked to slow down always gets the
+/// whole backoff.
+fn failed_wait(feed: &Due, failures: i64, failure: &Failure, fraction: f64) -> i64 {
     let wait = backoff(feed.check_every.max(feed.check_at_most), failures);
+    let refused = matches!(
+        failure,
+        Failure::Fetch(FetchError::Status(404 | 500..=599) | FetchError::Unreachable)
+    );
     let youtube =
         Url::parse(&feed.url).is_ok_and(|url| crate::youtube::addresses::asks_again(&url));
-    if youtube && feed.check_at_most == 0 {
+    if refused && youtube && !feed.away {
         wait.min(youtube_retry(fraction))
     } else {
         wait
@@ -660,8 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn waits_are_nudged_by_up_to_a_tenth_and_stay_within_limits() {
-        assert_eq!(nudged(10 * HOUR, 1.0), 11 * HOUR);
+    fn a_youtube_feed_youtube_refuses_is_asked_again_within_hours() {
         // A failing YouTube feed is asked again 3 to 6 hours later, never a whole day (decision 0273).
         assert_eq!(youtube_retry(-1.0), 3 * HOUR);
         assert_eq!(youtube_retry(0.0), 4 * HOUR + 30 * MINUTE);
@@ -675,18 +680,59 @@ mod tests {
             failures: 0,
             away: check_at_most > 0,
         };
+        let not_found = || Failure::Fetch(FetchError::Status(404));
         let channel =
             "https://www.youtube.com/feeds/videos.xml?channel_id=UCabcdefghijklmnopqrstuv";
         // Its first failures wait as any feed's do; then never longer than 3 to 6 hours.
-        assert_eq!(failed_wait(&due(channel, 0), 1, 1.0), 2 * HOUR);
-        assert_eq!(failed_wait(&due(channel, 0), 9, -1.0), 3 * HOUR);
-        assert_eq!(failed_wait(&due(channel, 0), 9, 1.0), 6 * HOUR);
+        assert_eq!(
+            failed_wait(&due(channel, 0), 1, &not_found(), 1.0),
+            2 * HOUR
+        );
+        assert_eq!(
+            failed_wait(&due(channel, 0), 9, &not_found(), -1.0),
+            3 * HOUR
+        );
+        assert_eq!(
+            failed_wait(&due(channel, 0), 9, &not_found(), 1.0),
+            6 * HOUR
+        );
         // Another site's feed, and a YouTube feed whose followers are all away, keep a day.
         assert_eq!(
-            failed_wait(&due("https://blog.example/feed", 0), 9, 1.0),
+            failed_wait(&due("https://blog.example/feed", 0), 9, &not_found(), 1.0),
             DAY
         );
-        assert_eq!(failed_wait(&due(channel, DAY), 9, 1.0), DAY);
+        assert_eq!(failed_wait(&due(channel, DAY), 9, &not_found(), 1.0), DAY);
+        // Asked to slow down, or turned away by a guard: the whole backoff, as for any site.
+        for failure in [
+            Failure::Fetch(FetchError::SlowDown(None)),
+            Failure::Fetch(FetchError::Blocked),
+            Failure::Fetch(FetchError::Status(403)),
+        ] {
+            assert_eq!(failed_wait(&due(channel, 0), 9, &failure, 1.0), DAY);
+        }
+        assert_eq!(
+            failed_wait(
+                &due(channel, 0),
+                9,
+                &Failure::Fetch(FetchError::Status(503)),
+                -1.0
+            ),
+            3 * HOUR
+        );
+        assert_eq!(
+            failed_wait(
+                &due(channel, 0),
+                9,
+                &Failure::Fetch(FetchError::Unreachable),
+                -1.0
+            ),
+            3 * HOUR
+        );
+    }
+
+    #[test]
+    fn waits_are_nudged_by_up_to_a_tenth_and_stay_within_limits() {
+        assert_eq!(nudged(10 * HOUR, 1.0), 11 * HOUR);
         assert_eq!(nudged(10 * HOUR, -1.0), 9 * HOUR);
         assert_eq!(nudged(10 * HOUR, 0.0), 10 * HOUR);
         assert_eq!(nudged(SHORTEST_WAIT, -1.0), SHORTEST_WAIT);

@@ -16,9 +16,13 @@ day after day. The four quick asks of decision 0159 come a second apart,
 so they fall inside the same spell too.
 
 **Decision.** In `checking::failed_wait`, a feed `youtube::addresses::asks_again`
-covers waits as usual after its first failures, but never longer than
-3 to 6 hours, chosen at random each time, so its asks move around the
-day. It's four to eight checks a day for a stuck feed, still polite. A
+covers that YouTube answered 404, a 5xx or nothing waits as usual after
+its first failures, but never longer than 3 to 6 hours, chosen at random
+each time, so its asks move around the day. That's four to eight checks a
+day for a stuck feed, each up to four requests a second apart (decision
+0159): 16 to 32 requests a day, against up to 4 before. Still polite for
+YouTube, and only while it refuses. Being asked to slow down (429), a
+guard, or any other answer gets the whole backoff, as for any site. A
 feed whose followers are all away keeps its daily wait. Nothing else
 changes: other sites back off to a day as before, and "dead" is judged as
 before.
