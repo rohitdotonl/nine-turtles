@@ -221,7 +221,6 @@
 
   /** Unread, by person (decision 0271): each name once, above their first article, and "Publications" where they begin. */
   let heads = $derived(headsOf(articles));
-
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
   async function load(after: string | null) {
@@ -234,8 +233,9 @@
     loadingMore = after !== null;
     try {
       const page = await listArticles(source, order, after);
-      // Unread by person can bring back someone already passed, with articles already listed (decision 0271): each is listed once.
-      articles = after === null ? page.articles : [...articles, ...page.articles.filter((article) => !articles.some((listed) => listed.id === article.id))];
+      // Each article once: Unread by person can bring back someone already passed, with articles already listed (decision 0271).
+      const listed = new Set(after === null ? [] : articles.map((article) => article.id));
+      articles = [...(after === null ? [] : articles), ...page.articles.filter((article) => !listed.has(article.id))];
       loadedMore = after !== null;
       next = page.next;
       if (after === null) {
@@ -675,9 +675,9 @@
       {@const current = index === selectedIndex}
       {@const head = heads[index]}
       <li>
-        <!-- A real heading, so a screen reader can go name to name; it can't be pressed, as a row's name can't be today. -->
+        <!-- Real headings, so a screen reader goes name to name: a person's name and "Publications" under the list's title, a publication's under "Publications". None can be pressed, as a row's name can't be today. -->
         {#if head?.publications}<h3 class="label list-label">Publications</h3>{/if}
-        {#if head}<h3 class="list-name"><bdi>{head.name}</bdi></h3>{/if}
+        {#if head}<svelte:element this={article.publication ? "h4" : "h3"} class="list-name"><bdi>{head.name}</bdi></svelte:element>{/if}
         <ItemRow
           bind:row={rows[index]}
           {article} {current} {bold} {unreadOff} {addressOf}

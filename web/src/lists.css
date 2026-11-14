@@ -84,10 +84,14 @@
 /*
   Unread, by person (SPEC section 6, decision 0271): each name once, a
   heading in the reading serif (20px, semibold, full ink) on the row titles'
-  edge, 24px above it; under it their titles, each with its day at the
-  row's right end beside the title's first line, 12px above and below, so
-  a person with one article takes two lines. Where publications begin, the
-  one label, "Publications", 40px above, 8px over the first one's name.
+  edge, 24px above it; under it their titles, 12px above and below, so a
+  person with one article takes two lines. Each row's small line (the day,
+  and a publication's writer, an episode's length, "Half read", the star)
+  sits at its right end beside the title's first line while the title
+  keeps at least 12rem and three fifths of the row; otherwise it goes
+  under the title, 8px down, as in every other list: on a narrow phone, at
+  large text, in a narrow list. Where publications begin, the one label,
+  "Publications", 40px above, 8px over the first one's name.
 */
 .by-person .list-name,
 .by-person .list-label {
@@ -109,15 +113,19 @@
 }
 .by-person .item-row {
   --row-top: 0.75rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
+  gap: 0.5rem 1rem;
   padding-bottom: 0.75rem;
 }
+.by-person .item-row > .title {
+  flex: 1 1 max(12rem, 60%);
+  min-width: 0;
+}
 .by-person .row-meta {
-  justify-self: end;
-  max-width: 11rem;
+  flex: 0 1 auto;
+  max-width: 100%;
   margin-top: 0;
 }
 

@@ -27,19 +27,25 @@ one press away; a person with one article takes two lines, with three four.
    their oldest, when the reader sorts oldest first), their titles in the
    reader's order under them; then publications the same way. Ties go by
    number, so the order never shuffles.
-4. **The look:** the name is a real heading (`h3`, under the list's `h2`)
-   in the reading serif at 20px, semibold, on the titles' edge, 24px above
-   it, so a screen reader goes name to name. It can't be pressed: a row's
-   name couldn't be either. Under it each title is a row as before (the
-   unread dot, a semibold unread title, the selection pill, the menu, a drag,
-   Command-click), 12px above and below, with its meta line beside the
-   title's first line at the right end instead of under it: the day, and
-   whatever the row said after it (an episode's headphones, "Half read",
-   the star), and a publication's writer before the day. The source's name
-   is still said to screen readers, as in one person's own list.
+4. **The look:** the name is a real heading in the reading serif at 20px,
+   semibold, on the titles' edge, 24px above it, so a screen reader goes
+   name to name: a person's name and "Publications" are `h3`, under the
+   list's `h2`, and a publication's name is `h4`, under "Publications" (the
+   look is the same). It can't be pressed: a row's name couldn't be either.
+   Under it each title is a row as before (the unread dot, a semibold unread
+   title, the selection pill, the menu, a drag, Command-click), 12px above
+   and below. Its small line (the day; a publication's writer before it; an
+   episode's length, "Half read" and the star after it) sits at the row's
+   right end beside the title's first line while the title keeps at least
+   12rem and three fifths of the row; otherwise it goes under the title, as
+   in every other list (a long writer's name, a narrow phone, large text, a
+   narrow list), so the title always keeps a readable width. The source's
+   name is still said to screen readers, as in one person's own list.
    "Publications" is the one label, 40px above, 8px over the first name.
    Unread titles stay semibold: the pictures showed them regular, but the
    weight is how unread shows without color (DESIGN.md, decision 0037).
+   Which it should be is the owner's open question
+   (`docs/planning/questions.md`).
 5. **Pages stay 50.** A page that ends inside someone's articles carries on
    with them on the next, without their name again. Each page of the list
    counts only the articles there when it first loaded (`LATEST`), and
@@ -47,7 +53,12 @@ one press away; a person with one article takes two lines, with three four.
    so an article read on screen, or one arriving, never moves a person
    under the reader. Someone whose place changed because the reader read
    their newest can come back further down with articles already listed;
-   the screen lists each article once.
+   the screen lists each article once. One gap is accepted: if someone not yet
+   listed moves earlier while the reader scrolls (a newer article of theirs is
+   marked unread again, by Undo or on another device, before the next page
+   loads), they can be passed over until the list loads again. Nothing
+   is lost: their articles stay unread, and the next load (`r`, or coming
+   back to Unread) lists everyone whole.
 6. **Keys and marks as before.** j and k go title to title in the order
    shown, across names; Tab, Enter, Mark all as read, Undo and "New
    articles · press r" are unchanged, and a read article stays where it is
@@ -64,7 +75,9 @@ entries alone, each person's from their places', then only the people
 needed to fill the page have their articles read and sorted, so a reader
 with a year unread waits no longer than one who keeps up (tests/speed.rs,
 under 100 ms either way). Its page position is
-`time:id:publication:time:person:latest`; other lists keep `time:id`. The
+`time:id:publication:time:person:latest`; other lists keep `time:id`. A position of the wrong kind
+is refused (400), so an Unread tab left open across the change loads
+more only once it reloads. The
 screen draws the names from `whose` and `publication` on each article
 (`people.ts` → `headsOf`). No database structure change.
 
