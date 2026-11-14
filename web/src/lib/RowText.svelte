@@ -36,7 +36,7 @@
   let opening = $derived(untitledOpening(article));
 </script>
 
-  <!-- Unread: full ink, semibold. Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
+  <!-- Unread: full ink, semibold (regular under a name in Unread, where the name carries the weight: lists.css .by-person). Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
   <!-- In the reading serif; with a mouse, clearly larger (19px) than the interface text, so the title leads its row (app.css .item-row). -->
   <!-- An untitled post shows its opening once instead (SPEC section 6, decision 0196): the same serif, never semibold so it doesn't pose as a title, two lines and then "…". -->
   <span class={["title font-serif text-(length:--row-title-size) leading-(--row-title-line)", opening === undefined ? "block" : "line-clamp-2", unreadOff ? "text-ink" : !article.read ? [opening === undefined && "font-semibold", "text-ink"] : current ? "text-ink" : "text-ink-2"]}

@@ -9,14 +9,6 @@ October 2026; it is in the repository's history.*
 
 ## Still open
 
-- **Unread titles under a name in Unread: semibold or regular?** (14 November
-  2026, decision 0271). In Unread by person, each title under a name is
-  semibold while unread, as built and as the written rule in DESIGN.md's
-  Exceptions log says (the unread dot and a semibold title). The picture you
-  approved showed them regular. The names are semibold either way, and the
-  dot still marks what's unread without color alone. Keep semibold, or make
-  titles under a name regular? Not yet answered.
-
 - **Read one thing at a time on a computer?** (14 November 2026, decision
   0269). A trial switch in Settings (yours only, on the device you switch it
   on) shows the list alone, then the article alone in the whole window, with

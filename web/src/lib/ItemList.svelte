@@ -3,8 +3,8 @@
   source and time in quiet small text below. No images, no site icons.
   Unread names each person once, their titles under them, people first,
   then "Publications" (decision 0271, `people.ts` → `headsOf`).
-  Unread titles are full strength and semibold, read ones muted and regular,
-  starred ones carry a small star: each state shows without color too. With
+  Unread titles are full strength and semibold (regular under a name), read
+  ones muted and regular, starred ones a small star: each shows without color. With
   Unread off (SPEC section 10) every title looks the same, read or not.
 
   It shows 50; when you reach the bottom, the next 50 load below by

@@ -71,6 +71,23 @@ test("each person is named once, as a heading over their titles, people before p
   await expect(list(page).locator("h3 a, h3 button")).toHaveCount(0);
 });
 
+test("the name carries the weight: an unread title under it is regular, still with its dot and still said to be unread", async ({ page }) => {
+  await openUnread(page);
+  await expect(names(page).first()).toHaveCSS("font-weight", "600");
+  const first = rows(page).first();
+  await expect(first.locator(".title")).toHaveCSS("font-weight", "400");
+  await expect(first.locator(".title")).toHaveCSS("color", await names(page).first().evaluate((name) => getComputedStyle(name).color));
+  await expect(first.locator(".unread-dot")).toHaveCount(1);
+  await expect(first).toHaveAccessibleName(/, unread/);
+  // Everywhere else an unread title stays semibold: in All articles, by time, with no names.
+  await page.unrouteAll({ behavior: "ignoreErrors" });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await expect(list(page).locator(".item-list h3")).toHaveCount(0);
+  const unread = rows(page).filter({ has: page.locator(".unread-dot") }).first();
+  await expect(unread.locator(".title")).toHaveCSS("font-weight", "600");
+});
+
 test("a read article stays under its name, greyed, until the list loads again", async ({ page, isMobile }) => {
   test.skip(isMobile, "on a phone the article takes the screen; the same list is checked above");
   await openUnread(page);

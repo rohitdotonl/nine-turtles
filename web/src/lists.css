@@ -85,7 +85,8 @@
   Unread, by person (SPEC section 6, decision 0271): each name once, a
   heading in the reading serif (20px, semibold, full ink) on the row titles'
   edge, 24px above it; under it their titles, 12px above and below, so a
-  person with one article takes two lines. Each row's small line (the day,
+  person with one article takes two lines. The name carries the weight, so
+  an unread title under it is regular, in full ink; the dot still marks it. Each row's small line (the day,
   and a publication's writer, an episode's length, "Half read", the star)
   sits at its right end beside the title's first line while the title
   keeps at least 12rem and three fifths of the row; otherwise it goes
@@ -122,6 +123,7 @@
 .by-person .item-row > .title {
   flex: 1 1 max(12rem, 60%);
   min-width: 0;
+  font-weight: 400;
 }
 .by-person .row-meta {
   flex: 0 1 auto;

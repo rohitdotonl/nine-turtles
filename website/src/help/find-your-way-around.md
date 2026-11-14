@@ -51,7 +51,8 @@ Older articles load as you reach the bottom, and every list ends with
 
 **Unread** is arranged by person instead: each person's name once, with
 what's new from them under it, and each article's day beside its title
-(under it, when the title needs the room).
+(under it, when the title needs the room). The name is in bolder type, so
+the titles under it are plain, each new one with its dot.
 The people who posted most recently come first; publications follow, under
 **Publications**. Someone with a blog and a podcast is one name. Sorted
 oldest first, the people who have waited longest come first. <kbd>J</kbd>

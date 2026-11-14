@@ -86,7 +86,7 @@
   use:carriesArticle={() => article}
   class="item-row place block cursor-pointer pr-4 text-left"
 >
-  <!-- Unread: an accent dot in the gutter beside the title, and a semibold title, so it shows without color. -->
+  <!-- Unread: an accent dot in the gutter beside the title, and a semibold title (regular under a name in Unread, lists.css), so it shows without color. -->
   {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
   <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
   <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
