@@ -1,7 +1,7 @@
 <!--
   Write back (SPEC section 37, decision 0147): at the end of every article of
   someone the reader follows, under its closing rule, one outlined button
-  with a paper plane, as Mark all as read ends a list (`quiet`, decision
+  (`.btn`) with a paper plane, as Mark all as read ends a list (decision
   0242), "Write back", with "to Tomas Berg, tomas@example.com" (their full
   name, the one in the sidebar, the owner's core path, points 6 and 7; and the
   address it writes to) in a quiet line under it, so a long name never swells
@@ -411,7 +411,7 @@
             {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>
           {:else if computer}
             <!-- One line when the press worked: the other ways wait behind the question (decision 0265). -->
-            <button type="button" class="text-link more" aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>
+            <button type="button" class={["text-link more", !returned && "after-words"]} aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>
             {#if asked}{@render ways()}{/if}
           {:else}
             {#if !returned}<br />{/if}{question}{@render ways()}
@@ -470,10 +470,12 @@
   .on-page .ways {
     justify-content: flex-start;
   }
-  /* The two quiet words on the line, as Change is beside the address. */
+  /* The two quiet words on the line, as Change is beside the address: a small gap from "Opening…" while it's there, none once they stand alone. */
   .more {
-    margin-left: 0.5rem;
     color: var(--ink-2);
+  }
+  .more.after-words {
+    margin-left: 0.5rem;
   }
   .change {
     margin-left: 0.5rem;

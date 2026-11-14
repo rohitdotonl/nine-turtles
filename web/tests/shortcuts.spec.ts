@@ -175,7 +175,7 @@ test.describe("on a wide window", () => {
     // Escape steps back to their page, the keyboard on the row that leads here.
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
-    await expect(page.getByRole("region", { name: `About Blog ${blog}` }).getByRole("link", { name: "Settings", exact: true })).toBeFocused();
+    await expect(page.getByRole("region", { name: `About Blog ${blog}` }).getByRole("link", { name: `Settings for Blog ${blog}`, exact: true })).toBeFocused();
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
     await page.keyboard.press("e");

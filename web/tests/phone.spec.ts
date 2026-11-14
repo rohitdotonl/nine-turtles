@@ -388,7 +388,7 @@ test.describe("on a phone", () => {
     // Its settings are one row on (decision 0267), a screen of their own: no Edit, X or Done, and nothing runs off the side.
     await expect(page.getByRole("button", { name: /^(Edit Reading Room|Done|Cancel)$/ })).toHaveCount(0);
     await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveCount(0);
-    const settingsRow = page.getByRole("region", { name: "About Reading Room" }).getByRole("link", { name: "Settings", exact: true });
+    const settingsRow = page.getByRole("region", { name: "About Reading Room" }).getByRole("link", { name: "Settings for Reading Room", exact: true });
     expect((await settingsRow.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await settingsRow.click();
     await expect(page).toHaveURL(/\/settings$/);

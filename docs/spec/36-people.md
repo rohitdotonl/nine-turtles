@@ -147,12 +147,17 @@ PLAN.md → V1, item 1.*
     Open the page again to try once more." (decision 0211). There is no
     Lately: their list already shows their newest (decision 0215);
   - last, one row built as Settings' own rows are: the cog, **Settings**
-    and ›, which opens their settings.
+    and ›, which opens their settings. Screen readers and voice control
+    know it as "Settings for Tomas Berg", so it isn't taken for the app's
+    own Settings.
 - **Their settings** (`/people/12/settings`, decision 0267): a page of its
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
-  above the title. That and Escape go back to their page, with the
-  keyboard on its Settings row; on a computer the **×** stays at the
-  bar's right end and goes back to their list. The keyboard starts on
+  above the title (a very long name there ends in "…"); the browser's tab
+  says "Settings for Tomas Berg". That and Escape go back to their page as
+  it was left, with nothing loading again, the keyboard on its Settings
+  row, in view; on a computer the **×** stays at
+  the bar's right end, titled just "Close" (Escape belongs to ‹ there), and
+  goes back to their list. The keyboard starts on
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on
@@ -239,8 +244,9 @@ PLAN.md → V1, item 1.*
    their name and their sources, one card with Your note and Your
    highlights, then one row, **Settings ›**, and no muted line. Press that
    row: their settings open in its place, titled Settings, with
-   **‹ their name** above. Press it, or Escape: their page again, with the
-   keyboard on the Settings row.
+   **‹ their name** above; the tab says "Settings for" their name. Press
+   it, or Escape: their page again, as it was, with the keyboard on the
+   Settings row and the row in view.
 3. In their settings, choose **This is: A publication**: the
    row moves under Publications at once, and on their page Write to has gone.
 4. In their settings, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:

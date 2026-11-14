@@ -22,6 +22,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import PageRow from "./PageRow.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
@@ -96,11 +97,22 @@
 
   /** Their settings, a page of its own (decision 0267). */
   let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
-  // Each of the two pages starts at its top.
+
+  /*
+    Their page stays drawn, hidden, while their settings show, so going back finds it as it was:
+    Your highlights already loaded, nothing arriving above the Settings row a moment later to push
+    it off the screen. Their settings open at their top; going back doesn't scroll, so the row the
+    keyboard returns to is scrolled into view as it lands, and nothing moves after.
+  */
   let scroller: HTMLDivElement | undefined = $state();
   $effect(() => {
-    void route.settings;
-    if (scroller) scroller.scrollTop = 0;
+    if (route.settings && scroller) scroller.scrollTop = 0;
+  });
+  // The heading the keyboard lands on is the one showing.
+  let nameHeading: HTMLHeadingElement | undefined = $state();
+  let settingsHeading: HTMLHeadingElement | undefined = $state();
+  $effect.pre(() => {
+    heading = route.settings ? settingsHeading : nameHeading;
   });
 </script>
 
@@ -110,7 +122,7 @@
   {#if !phone}
     <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
     <div class="reading-bar pane-bar relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
-      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title="Close (Esc)" onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
+      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
     </div>
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
@@ -119,21 +131,23 @@
     {#if route.settings}
       <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
       <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
-      <h2 bind:this={heading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
+      <h2 bind:this={settingsHeading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
       <div class="mt-4">
         <WhoSettings {feed} {library} {onSaved} {onFolders} {onHide} {onUnsubscribe}>
           {#snippet sources(save)}<TheirPlaces {feed} {library} onPeople={joined} {save} />{/snippet}
         </WhoSettings>
       </div>
-    {:else}
+    {/if}
+    <!-- Their page: hidden, not gone, while their settings show. -->
+    <div class={route.settings ? "hidden" : "contents"}>
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
-      <div class="top-back"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" />{name}</button></div>
+      <div class="top-back"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
     {/if}
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->
     <header class={["flex flex-col", phone ? "pt-2" : ""]}>
-      <h2 bind:this={heading} tabindex="-1" class="who-name">{name}</h2>
+      <h2 bind:this={nameHeading} tabindex="-1" class="who-name">{name}</h2>
       <p class="who-places">
         {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only">{" "}(opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}
       </p>
@@ -151,15 +165,11 @@
       {#if onOpen}<div class="theirs"><TheirReading feed={feed.id} {onOpen} /></div>{/if}
     </div>
 
-    <!-- Their settings: one row that opens a page of its own, built as Settings' rows are (decisions 0120, 0267). -->
+    <!-- Their settings: one row that opens a page of its own, as Settings' rows do (decisions 0120, 0267), named for them so it isn't taken for the app's own Settings. -->
     <div class="inset-group mt-4">
-      <a href={pathFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" aria-describedby="who-opens-page" class="inset-row inset-action setting">
-        <span class="setting-label"><span class="setting-icon" aria-hidden="true"><Icon name="settings" /></span><span class="setting-words"><span class="setting-name">Settings</span></span></span>
-        <span class="row-glyph flex items-center"><Icon name="chevron-right" /></span>
-      </a>
+      <PageRow key="their-settings" href={pathFor(theirSettings)} label="Settings" icon="settings" onclick={(event) => follow(event, theirSettings)} named="Settings for {name}" />
     </div>
-    <span id="who-opens-page" hidden>Opens its own page.</span>
-    {/if}
+    </div>
   </div>
   </div>
   </div>

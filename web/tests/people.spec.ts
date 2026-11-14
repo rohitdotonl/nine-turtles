@@ -84,7 +84,7 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   // No Edit mode: their settings are one row away, on a page of their own (decision 0267), the list still beside it.
   // Escape there turns back to their page, with the keyboard on that row; Escape again, to their list.
   await expect(about.getByRole("button", { name: `Edit Blog ${ana}` })).toHaveCount(0);
-  const row = about.getByRole("link", { name: "Settings", exact: true });
+  const row = about.getByRole("link", { name: `Settings for Blog ${ana}`, exact: true });
   await row.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));

@@ -81,6 +81,8 @@ describe("addresses", () => {
     expect(parse("/people/3/sources/9")).toEqual({ kind: "about", id: 3, settings: true });
     expect(pathFor({ kind: "about", id: 3, settings: true })).toBe("/people/3/settings");
     expect(titleFor({ kind: "about", id: 3 }, "Alpha")).toBe("Alpha · nine turtles");
+    // Their settings name whose they are: the page's heading says only "Settings" (decision 0267).
+    expect(titleFor({ kind: "about", id: 3, settings: true }, "Alpha")).toBe("Settings for Alpha · nine turtles");
     expect(titleFor({ kind: "feed", id: 3 }, "Quiet Notes")).toBe("Quiet Notes · nine turtles");
     expect(titleFor({ kind: "add-feed" })).toBe("Add a person or publication · nine turtles");
     expect(pathFor({ kind: "add-feed" })).toBe("/add");

@@ -26,7 +26,7 @@ const settingsOf = (page: Page, name: string) => page.getByRole("region", { name
 async function editWho(page: Page, name: string) {
   await more(page).click();
   await page.getByRole("menuitem", { name: `Info about ${name}` }).click();
-  await whoPage(page, name).getByRole("link", { name: "Settings", exact: true }).click();
+  await whoPage(page, name).getByRole("link", { name: `Settings for ${name}`, exact: true }).click();
   await settingsOf(page, name).getByRole("button", { name: /^Folders/ }).click();
   await expect(page.getByLabel("New folder")).toBeVisible();
 }
@@ -39,7 +39,7 @@ async function editWhoByKeys(page: Page, name: string) {
   await expect(page.getByRole("menuitem", { name: `Info about ${name}` })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(whoPage(page, name).getByRole("heading", { level: 2, name })).toBeFocused();
-  await tabTo(page, whoPage(page, name).getByRole("link", { name: "Settings", exact: true }));
+  await tabTo(page, whoPage(page, name).getByRole("link", { name: `Settings for ${name}`, exact: true }));
   await page.keyboard.press("Enter");
   await expect(settingsOf(page, name).getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
   await tabTo(page, settingsOf(page, name).getByRole("button", { name: /^Folders/ }));
@@ -564,9 +564,9 @@ test("with only the keyboard: pausing someone in their settings is remembered, w
   await expect(page.getByText(/Paused today\./)).toHaveCount(0);
   await tabTo(page, pause);
   await page.keyboard.press("Space");
-  // The switch is on, and their list beside it says so, with Resume (decision 0239).
+  // The switch is on, and their list beside it says so, with Resume (decision 0239). (Their page, hidden while their settings show, says it too.)
   await expect(pause).toBeChecked();
-  await expect(page.getByText("Paused today. Their new articles arrive already read.")).toHaveCount(1);
+  await expect(page.getByText("Paused today. Their new articles arrive already read.").filter({ visible: true })).toHaveCount(1);
   // Escape, back on their page: it says so there too, under their name.
   await page.keyboard.press("Escape");
   await expect(theirs.getByText("Paused today. Their new articles arrive already read.")).toBeVisible();

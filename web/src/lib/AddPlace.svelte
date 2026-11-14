@@ -32,7 +32,7 @@
     library: LoadedLibrary;
     /** Someone with one source: a line saying why, and a link rather than a button. */
     invite?: boolean;
-    /** On their page, under their settings: "+ Add a source" as a quiet link too, never a bordered button. */
+    /** In their settings (a page of its own, decision 0267): "+ Add a source" as a quiet link too, never a bordered button. */
     quiet?: boolean;
     /** Joined: the line with Undo, and the place the person's row now opens. */
     onJoined: (done: Notice, lead: number) => void;

@@ -58,3 +58,19 @@
   gap: 0.25rem;
   padding-inline: 0.25rem 0.5rem;
 }
+/*
+  A very long name in "‹ their name" (their page and their settings, Hiding
+  opened from them): the button is never wider than the top line, and the
+  name shortens there with an ellipsis, on one line. Its accessible name is
+  still the whole name.
+*/
+.top-back,
+.top-back .nav-back {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.top-back bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

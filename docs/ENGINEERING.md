@@ -60,7 +60,7 @@ Where the web app's code lives, one job per file in `web/src/lib/`:
   - the search the screen holds (the field, the results, the phone's Search field, what "Save search" saves): `searching.svelte.ts` (`search.ts` still reads and words a search);
   - which rows the article list's More (…) menu has and what each does: `listMenu.ts`; what the list says when it has nothing to show (a place you don't have, a list that couldn't load, an empty list): `listWording.ts`; what its heading says (the place's own name, "Folder not found", or "Results in …"): `listHeading.ts` (the tab's title and the phone's Back button use the same name); its title line (the name, with Search on a phone and the More menu beside it) is drawn by `ListHead.svelte`;
   - where the first visit's welcome shows (instead of the list, taking the list's room beside the reading area, alone on a phone) and when "New to feeds?" gives way to home: `firstVisit.ts`; the welcome itself is drawn by `Welcome.svelte`;
-  - the sidebar's fixed lists (Unread, Starred, Notes and All articles): `SidebarViews.svelte`; its foot (+ Add, Keys, Settings): `SidebarFoot.svelte`; a person's or publication's page, its Edit and a source's settings: `WhoPage.svelte`, `WhoEdit.svelte` and `SourcePage.svelte` (a source's own rows, shared by Edit for one source and the source's page, in `SourceFields.svelte`).
+  - the sidebar's fixed lists (Unread, Starred, Notes and All articles) and the Everyone you follow row under them: `SidebarViews.svelte`; its foot (+ Add, Keys, Settings): `SidebarFoot.svelte`; a person's or publication's page and their settings, a page of its own one row on (decision 0267): `WhoPage.svelte`, which draws both; their settings' rows: `WhoSettings.svelte`, and their sources' own rows (+ Add a source, Take out, a channel's Shorts): `TheirPlaces.svelte`; a row that opens a page of its own, shared by Settings and their page: `PageRow.svelte`.
 - **Drawn once:** the folder edit sheet is one `editor` snippet in Shell, used for both the sheet and the phone's page; + Add and "New to feeds?" are one `task` snippet. A change to them is made once.
 
 ### 3. No vendor lock-in
@@ -87,7 +87,7 @@ The engineering side of "slow app, fast interface." Speed is a requirement with 
 
 ### 5. Fail small, fail visibly
 
-One broken feed never affects others. One failed step never crashes the app. If nine turtles stops answering, GitHub emails the owner within about 15 minutes (the health check). When something fails, the owner can see it in the daily check or in the logs (and at the top of Settings › Everyone you follow), in plain words; the reader is never shown a technical error.
+One broken feed never affects others. One failed step never crashes the app. If nine turtles stops answering, GitHub emails the owner within about 15 minutes (the health check). When something fails, the owner can see it in the daily check or in the logs (and at the top of Everyone you follow (a row in the sidebar, under All articles; on a phone, on Home)), in plain words; the reader is never shown a technical error.
 
 **Test:** What's the smallest thing this failure can take down?
 

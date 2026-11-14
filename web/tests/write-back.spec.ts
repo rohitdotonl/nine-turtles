@@ -269,10 +269,13 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   const more = line.getByRole("button", { name: "Didn't open?" });
   await expect(more).toHaveAttribute("aria-expanded", "false");
   await expect(line.getByRole("button")).toHaveText(["Didn't open?"]);
+  // A small gap from the words before it, and none once it stands alone.
+  await expect(more).toHaveCSS("margin-left", "8px");
   // Back from the email app (the page was hidden while it opened): "Opening…" goes, the question stays, for an app that opened wrong.
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(line).not.toContainText("Opening your email app…");
   await expect(more).toBeVisible();
+  await expect(more).toHaveCSS("margin-left", "0px");
   // By keyboard: Enter on Didn't open? shows the other places and keeps the keyboard on it; Enter again puts them away.
   await more.focus();
   await page.keyboard.press("Enter");

@@ -44,10 +44,10 @@
 <div class={["pane-bar pr-5 md:pr-10", besideToggle ? "pl-16" : "pl-5 md:pl-10"]}>
   {#if onBack}
     <!-- One top for every screen below home (DESIGN.md → "The system"): Back in the top line's own height, the title on the line under it. -->
-    <div class={["mx-auto flex w-full flex-col items-start pb-2", column]}>
+    <div class={["mx-auto flex w-full min-w-0 flex-col items-start pb-2", column]}>
       <div class="top-back">
         <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
-          ><Icon name="back" size="alone" />{backTo}</button
+          ><Icon name="back" size="alone" /><bdi>{backTo}</bdi></button
         >
       </div>
       <h2 {id} tabindex="-1" bind:this={heading} class="top-title min-w-0 font-display text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>

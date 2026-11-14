@@ -188,10 +188,13 @@ export function nameFor(route: Route, placeName?: string): string {
 
 /**
  * The browser tab's title, which screen readers also announce: the open
- * article's title while one is open (decision 0231), else the place's name.
+ * article's title while one is open (decision 0231), else the place's name;
+ * on someone's settings, whose they are ("Settings for Mira Chen"), as that
+ * page's heading says only "Settings".
  */
 export function titleFor(route: Route, placeName?: string, articleTitle?: string): string {
-  return `${articleTitle || nameFor(route, placeName)} · nine turtles`;
+  const whose = route.kind === "about" && route.settings ? "Settings for " : "";
+  return `${articleTitle || whose + nameFor(route, placeName)} · nine turtles`;
 }
 
 /**
