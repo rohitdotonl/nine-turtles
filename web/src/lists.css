@@ -82,6 +82,56 @@
 }
 
 /*
+  Unread, by person (SPEC section 6, decision 0271): each name once, a
+  heading in the reading serif (20px, semibold, full ink) on the row titles'
+  edge, 24px above it; under it their titles, 12px above and below, so a
+  person with one article takes two lines. The name carries the weight, so
+  an unread title under it is regular, in full ink; the dot still marks it. Each row's small line (the day,
+  and a publication's writer, an episode's length, "Half read", the star)
+  sits at its right end beside the title's first line while the title
+  keeps at least 12rem and three fifths of the row; otherwise it goes
+  under the title, 8px down, as in every other list: on a narrow phone, at
+  large text, in a narrow list. Where publications begin, the one label,
+  "Publications", 40px above, 8px over the first one's name.
+*/
+.by-person .list-name,
+.by-person .list-label {
+  padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem);
+}
+.by-person .list-name {
+  padding-top: 1.5rem;
+  font-family: var(--font-serif);
+  font-size: var(--text-large);
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--ink);
+}
+.by-person .list-label {
+  padding-top: 2.5rem;
+}
+.by-person .list-label + .list-name {
+  padding-top: 0.5rem;
+}
+.by-person .item-row {
+  --row-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.75rem;
+}
+.by-person .item-row > .title {
+  flex: 1 1 max(12rem, 60%);
+  min-width: 0;
+  font-weight: 400;
+}
+.by-person .row-meta {
+  flex: 0 1 auto;
+  max-width: 100%;
+  margin-top: 0;
+}
+
+/*
   A row whose own menu is open (SPEC section 6, decision 0214) keeps the
   pointer's faint tone, so a touch screen shows which article the menu acts
   on, as a mouse's hover already does; never the selection pill, which means

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 use nine_turtles::{
     checking::DUE,
-    feeds::{FEEDS, LATEST, List, Order, list_sql, new_sql, page},
+    feeds::{Cursor, FEEDS, LATEST, List, Order, by_person_sql, list_sql, new_sql, page},
     marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
     starred::{self, AT_ONCE, PAGE},
@@ -122,6 +122,41 @@ async fn big_library() -> SqlitePool {
     db
 }
 
+/// Whether two pages of Unread list each person once, together, in order
+/// (`in_order` holds for each two articles side by side under one person,
+/// and for each person's first article and the next person's), carrying on
+/// from one page to the next, with no article twice.
+fn by_person(
+    first: &[nine_turtles::feeds::ArticleRow],
+    then: &[nine_turtles::feeds::ArticleRow],
+    in_order: impl Fn(&[&nine_turtles::feeds::ArticleRow]) -> bool,
+) -> bool {
+    let all: Vec<_> = first.iter().chain(then).collect();
+    let mut people: Vec<&nine_turtles::feeds::ArticleRow> = Vec::new();
+    for pair in all.windows(2) {
+        if pair[0].whose == pair[1].whose {
+            if !in_order(pair) {
+                return false;
+            }
+        } else {
+            people.push(pair[1]);
+        }
+    }
+    let mut seen: Vec<_> = all.iter().map(|article| article.id).collect();
+    seen.sort_unstable();
+    seen.dedup();
+    let firsts: Vec<_> = std::iter::once(all[0])
+        .chain(people.iter().copied())
+        .collect();
+    let mut whose: Vec<_> = firsts.iter().map(|article| article.whose).collect();
+    whose.sort_unstable();
+    whose.dedup();
+    seen.len() == all.len()
+        && whose.len() == firsts.len()
+        && all.iter().all(|article| article.whose.is_some())
+        && firsts.windows(2).all(&in_order)
+}
+
 /// How the database plans to answer, as its own words.
 async fn plan(db: &SqlitePool, sql: &str, binds: &[i64]) -> String {
     let explain = format!("EXPLAIN QUERY PLAN {sql}");
@@ -164,7 +199,6 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     // entries, never a full read of every entry or a sort done on the spot.
     for (list, index) in [
         (List::All, "entries_newest"),
-        (List::Unread, "entries_unread"),
         (List::Starred, "entries_starred"),
         (List::Feed(250), "entries_newest_by_feed"),
         (List::Folder(1), "entries_newest"),
@@ -177,7 +211,7 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
                 _ => vec![READER],
             };
             binds.extend([i64::MAX, i64::MAX, 51]);
-            let plan = plan(&db, list_sql(list, order), &binds).await;
+            let plan = plan(&db, list_sql(list, order).unwrap(), &binds).await;
             assert!(
                 plan.contains(&format!("INDEX {index} ")),
                 "{list:?} {order:?}: {plan}"
@@ -215,7 +249,7 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         "deep page",
         List::All,
         Order::Newest,
-        Some((NOW - YEAR / 2, i64::MAX)),
+        Some(Cursor::at(NOW - YEAR / 2, i64::MAX)),
     )
     .await;
     assert_eq!(deep.len(), 50);
@@ -232,22 +266,32 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         "small folder, deep",
         List::Folder(2),
         Order::Newest,
-        Some((NOW - YEAR / 2, i64::MAX)),
+        Some(Cursor::at(NOW - YEAR / 2, i64::MAX)),
     )
     .await;
     assert_eq!(small_deep.len(), 50);
-    let (unread, _) = time("unread", List::Unread, Order::Newest, None).await;
+    // Unread lists each person's articles together, people by their newest
+    // unread (decision 0271), and the next page carries on from the person
+    // the first ended in.
+    let (unread, next) = time("unread", List::Unread, Order::Newest, None).await;
     assert_eq!(unread.len(), 50);
     assert!(unread.iter().all(|article| !article.read));
+    let (unread_more, _) = time("unread, next page", List::Unread, Order::Newest, next).await;
+    assert_eq!(unread_more.len(), 50);
+    assert!(by_person(&unread, &unread_more, |pair| pair[0].at >= pair[1].at));
     let (starred, _) = time("starred", List::Starred, Order::Newest, None).await;
     assert_eq!(starred.len(), 50);
     assert!(starred.iter().all(|article| article.starred));
-    let (oldest_unread, _) = time("oldest unread", List::Unread, Order::Oldest, None).await;
-    assert!(
-        oldest_unread
-            .windows(2)
-            .all(|pair| pair[0].at <= pair[1].at)
-    );
+    let (oldest_unread, next) = time("oldest unread", List::Unread, Order::Oldest, None).await;
+    let (oldest_more, _) = time(
+        "oldest unread, next page",
+        List::Unread,
+        Order::Oldest,
+        next,
+    )
+    .await;
+    assert!(by_person(&oldest_unread, &oldest_more, |pair| pair[0].at
+        <= pair[1].at));
     // Every one of the owner's lists shows their own names for the feeds,
     // never the second reader's.
     assert!(
@@ -309,6 +353,30 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             .unwrap();
         timings.push((what, started.elapsed()));
         assert_eq!(rows.len(), 500);
+    }
+    // Unread by person for a reader who has read nothing at all: every one
+    // of the year's 100,000 articles is placed, in both orders.
+    for (what, order) in [
+        ("unread, nothing read", Order::Newest),
+        ("oldest unread, nothing read", Order::Oldest),
+    ] {
+        let started = Instant::now();
+        let (rows, next) = page(&db, READER, List::Unread, order, None).await.unwrap();
+        timings.push((what, started.elapsed()));
+        assert_eq!(rows.len(), 50);
+        let started = Instant::now();
+        page(&db, READER, List::Unread, order, next).await.unwrap();
+        timings.push((what, started.elapsed()));
+    }
+    // It reads only the reader's unread entries, through an index.
+    for order in [Order::Newest, Order::Oldest] {
+        let plan = plan(
+            &db,
+            by_person_sql(order),
+            &[READER, i64::MAX, -1, 0, 0, 0, 0, 51],
+        )
+        .await;
+        assert!(!plan.contains("SCAN entries"), "{order:?}: {plan}");
     }
     let theirs = sqlx::query(FEEDS).bind(OTHER).fetch_all(&db).await.unwrap();
     assert_eq!(theirs.len(), 10);

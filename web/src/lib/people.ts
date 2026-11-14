@@ -110,6 +110,24 @@ export function writerOf(article: Article): string | undefined {
   return writer && writer.toLowerCase() !== plainSourceName(article.feedTitle).toLowerCase() ? writer : undefined;
 }
 
+/** What Unread, by person, says above an article that starts someone's run: their name, and "Publications" before the first publication's. */
+export type ListHead = { name: string; publications: boolean };
+
+/**
+ * Unread, by person (SPEC section 6, decision 0271): above each article
+ * that starts someone's run, their name, as a row names them today; above
+ * the first publication's, "Publications" too. Nothing above an article
+ * that carries on its person (from the page before, too), nor in a list
+ * that isn't by person.
+ */
+export function headsOf(articles: Article[]): (ListHead | undefined)[] {
+  return articles.map((article, index) => {
+    const before = articles[index - 1];
+    if (article.whose === undefined || before?.whose === article.whose) return undefined;
+    return { name: sourceOf(article, false), publications: article.publication === true && before?.publication !== true };
+  });
+}
+
 /** The labels in the list of a person with several places: what each article's place is. */
 export function placeLabels(places: Feed[]): OneSource {
   if (places.length < 2) return true;

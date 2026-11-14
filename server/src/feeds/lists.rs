@@ -11,7 +11,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::stored_link;
+use super::{
+    by_person::{self, Place},
+    stored_link,
+};
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
@@ -83,7 +86,7 @@ pub(super) struct ArticlesQuery {
     view: View,
     #[serde(default)]
     order: Order,
-    /// Where the previous page ended, as `time:id`, for "Show older items"
+    /// Where the previous page ended (`Cursor`), for "Show older items"
     /// (or "Show newer items" when the list is oldest first).
     after: Option<String>,
 }
@@ -133,6 +136,17 @@ pub struct ArticleRow {
         skip_serializing_if = "Option::is_none"
     )]
     pub untitled_body: Option<String>,
+    /// Only in Unread, listed by person (`by_person`): who it's listed
+    /// under, whether they're a publication, and the time that placed them.
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub whose: Option<i64>,
+    #[sqlx(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub publication: Option<bool>,
+    #[sqlx(default)]
+    #[serde(skip)]
+    pub group_at: Option<i64>,
 }
 
 /// An untitled article's text, for the list to show its opening instead of
@@ -228,12 +242,13 @@ pub(super) async fn list_articles(
     State(state): State<AppState>,
     Query(query): Query<ArticlesQuery>,
 ) -> Response {
-    let after = match query.after.as_deref().map(parse_cursor) {
-        None => None,
-        Some(Some(cursor)) => Some(cursor),
-        Some(None) => return StatusCode::BAD_REQUEST.into_response(),
-    };
     let list = List::from_query(query.feed, query.folder, query.view);
+    let after = match query.after.as_deref().map(Cursor::parse) {
+        None => None,
+        // Unread's pages carry on from a person; every other list's from a time.
+        Some(Some(cursor)) if cursor.place.is_some() == (list == List::Unread) => Some(cursor),
+        Some(_) => return StatusCode::BAD_REQUEST.into_response(),
+    };
     // Asked before the list, so an article arriving in between is reported
     // as new rather than missed.
     let listed = async {
@@ -245,7 +260,7 @@ pub(super) async fn list_articles(
     .await;
     match listed {
         Ok((latest, (articles, next))) => {
-            let next = next.map(|(at, id)| format!("{at}:{id}"));
+            let next = next.map(|cursor| cursor.to_string());
             Json(json!({ "articles": articles, "next": next, "latest": latest })).into_response()
         }
         Err(error) => database_problem("listing articles", &error),
@@ -334,9 +349,63 @@ pub(super) async fn new_articles(
     }
 }
 
-fn parse_cursor(text: &str) -> Option<(i64, i64)> {
-    let (at, id) = text.split_once(':')?;
-    Some((at.parse().ok()?, id.parse().ok()?))
+/// Where a page ended: its last article's time and number, and in Unread,
+/// the person it ended in (`by_person::Place`). Sent to the screen as
+/// `time:id`, or in Unread `time:id:publication:time:person:latest`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cursor {
+    pub at: i64,
+    pub id: i64,
+    pub place: Option<Place>,
+}
+
+impl Cursor {
+    /// After the article at `at` numbered `id`, in a list ordered by time.
+    pub const fn at(at: i64, id: i64) -> Self {
+        Self {
+            at,
+            id,
+            place: None,
+        }
+    }
+
+    fn parse(text: &str) -> Option<Self> {
+        let numbers: Vec<i64> = text
+            .split(':')
+            .map(|part| part.parse().ok())
+            .collect::<Option<_>>()?;
+        match numbers[..] {
+            [at, id] => Some(Self::at(at, id)),
+            [at, id, publication @ (0 | 1), group_at, whose, latest] => Some(Self {
+                at,
+                id,
+                place: Some(Place {
+                    publication: publication == 1,
+                    group_at,
+                    whose,
+                    latest,
+                }),
+            }),
+            _ => None,
+        }
+    }
+}
+
+impl std::fmt::Display for Cursor {
+    fn fmt(&self, out: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(out, "{}:{}", self.at, self.id)?;
+        if let Some(place) = self.place {
+            let publication = i64::from(place.publication);
+            let Place {
+                group_at,
+                whose,
+                latest,
+                ..
+            } = place;
+            write!(out, ":{publication}:{group_at}:{whose}:{latest}")?;
+        }
+        Ok(())
+    }
 }
 
 /// The item-list questions, one per list and order, each matching one index
@@ -406,12 +475,13 @@ macro_rules! notes_query {
     };
 }
 
-/// The question for a list in an order. Every question takes the reader
-/// first; a feed's or folder's then its ID, and a folder's the reader again
-/// (it must be theirs); every question then takes the cursor (time, id) and
-/// the limit.
-pub const fn list_sql(list: List, order: Order) -> &'static str {
-    match (list, order) {
+/// The question for a list in an order, none for Unread, which is listed
+/// by person (`by_person`). Every question takes the reader first; a feed's
+/// or folder's then its ID, and a folder's the reader again (it must be
+/// theirs); every question then takes the cursor (time, id) and the limit.
+pub const fn list_sql(list: List, order: Order) -> Option<&'static str> {
+    Some(match (list, order) {
+        (List::Unread, _) => return None,
         (List::All, Order::Newest) => list_query!(
             "entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL AND",
             "<",
@@ -419,16 +489,6 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
         ),
         (List::All, Order::Oldest) => list_query!(
             "entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL AND",
-            ">",
-            "ASC"
-        ),
-        (List::Unread, Order::Newest) => list_query!(
-            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL AND",
-            "<",
-            "DESC"
-        ),
-        (List::Unread, Order::Oldest) => list_query!(
-            "entries.read = 0 AND subscriptions.unsubscribed_at IS NULL AND",
             ">",
             "ASC"
         ),
@@ -470,25 +530,40 @@ pub const fn list_sql(list: List, order: Order) -> &'static str {
         ),
         (List::Notes, Order::Newest) => notes_query!("<", "DESC"),
         (List::Notes, Order::Oldest) => notes_query!(">", "ASC"),
-    }
+    })
 }
 
 /// One page of reader `person`'s list, starting after `after` (from the
-/// start when absent), using the list's index. One extra row is asked for,
-/// to know whether another page exists.
+/// start when absent), using the list's index; Unread's by person
+/// (`by_person`). One extra row is asked for, to know whether another page
+/// exists.
 pub async fn page(
     db: &sqlx::SqlitePool,
     person: i64,
     list: List,
     order: Order,
-    after: Option<(i64, i64)>,
-) -> Result<(Vec<ArticleRow>, Option<(i64, i64)>), sqlx::Error> {
-    let start = match order {
-        Order::Newest => (i64::MAX, i64::MAX),
-        Order::Oldest => (i64::MIN, i64::MIN),
+    after: Option<Cursor>,
+) -> Result<(Vec<ArticleRow>, Option<Cursor>), sqlx::Error> {
+    let Some(sql) = list_sql(list, order) else {
+        let after = after.and_then(|cursor| Some((cursor.at, cursor.id, cursor.place?)));
+        let (rows, next) = by_person::unread_by_person(db, person, order, after).await?;
+        let next = next.map(|(at, id, place)| Cursor {
+            at,
+            id,
+            place: Some(place),
+        });
+        return Ok((rows, next));
     };
-    let (after_at, after_id) = after.unwrap_or(start);
-    let mut query = sqlx::query_as(list_sql(list, order)).bind(person);
+    let start = match order {
+        Order::Newest => Cursor::at(i64::MAX, i64::MAX),
+        Order::Oldest => Cursor::at(i64::MIN, i64::MIN),
+    };
+    let Cursor {
+        at: after_at,
+        id: after_id,
+        ..
+    } = after.unwrap_or(start);
+    let mut query = sqlx::query_as(sql).bind(person);
     if let List::Feed(id) | List::Folder(id) | List::Writer(id) = list {
         query = query.bind(id);
     }
@@ -503,7 +578,7 @@ pub async fn page(
         .await?;
     let next = if rows.len() > usize::try_from(PAGE_SIZE).unwrap_or(usize::MAX) {
         rows.pop();
-        rows.last().map(|last| (last.at, last.id))
+        rows.last().map(|last| Cursor::at(last.at, last.id))
     } else {
         None
     };
@@ -516,8 +591,25 @@ mod tests {
 
     #[test]
     fn page_positions_are_read_strictly() {
-        assert_eq!(parse_cursor("1700000000:42"), Some((1_700_000_000, 42)));
-        assert_eq!(parse_cursor("1700000000"), None);
-        assert_eq!(parse_cursor("a:b"), None);
+        assert_eq!(
+            Cursor::parse("1700000000:42"),
+            Some(Cursor::at(1_700_000_000, 42))
+        );
+        assert_eq!(Cursor::parse("1700000000"), None);
+        assert_eq!(Cursor::parse("a:b"), None);
+        assert_eq!(Cursor::parse("1:2:3:4:5:6"), None);
+        assert_eq!(Cursor::parse("1:2:0:4:5"), None);
+        // Unread's carries the person it ended in, and reads back as written.
+        let unread = Cursor::parse("1700000000:42:1:1700000500:-7:900").unwrap();
+        assert_eq!(
+            unread.place,
+            Some(Place {
+                publication: true,
+                group_at: 1_700_000_500,
+                whose: -7,
+                latest: 900,
+            })
+        );
+        assert_eq!(unread.to_string(), "1700000000:42:1:1700000500:-7:900");
     }
 }

@@ -104,8 +104,9 @@ PLAN.md → V1, item 1.*
   (or as the reader sorts), one list across all their sources (`/people/12`
   or `/publications/7`). With two or more sources, each row says which source
   it came from in place of their name: **Blog**, **Video**, **Newsletter**,
-  or **Podcast**. Everywhere else (Unread, All articles, Starred, search, Notes,
-  the article's own line) an article is credited by their name. Mark
+  or **Podcast**. Everywhere else (All articles, Starred, search, Notes,
+  the article's own line) an article is credited by their name; in Unread
+  their name heads their articles once (section 6, decision 0271). Mark
   all as read, "new articles", search in their list and reading offline all
   cover every source. Beside a list, the reading area shows the quiet line
   ("Time to read something beautiful."), as it does for every list.

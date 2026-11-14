@@ -2,19 +2,22 @@
 //! (SPEC sections 3, 5, 6 and 7). Marking articles read or starred is in
 //! `marks`; folders, editing feeds and unsubscribing in `folders`.
 //!
-//! Five parts: `adding` (the Add field), `store` (feeds, subscriptions,
+//! Six parts: `adding` (the Add field), `store` (feeds, subscriptions,
 //! articles and entries in the database), `lists` (the item list),
-//! `articles` (reading them) and, here, the routes and the sidebar's list of
-//! feeds. Everything is used as `feeds::…`, whichever part it lives in.
+//! `by_person` (Unread, by person), `articles` (reading them) and, here,
+//! the routes and the sidebar's list of feeds. Everything is used as
+//! `feeds::…`, whichever part it lives in.
 
 mod adding;
 mod articles;
+mod by_person;
 mod language;
 mod lists;
 mod store;
 
 pub use adding::*;
 pub use articles::*;
+pub use by_person::*;
 pub use lists::*;
 pub use store::*;
 
@@ -42,6 +45,19 @@ pub fn routes() -> Router<AppState> {
         .route("/api/articles/several", get(read_several))
         .route("/api/articles/{id}", get(read_article))
 }
+
+/// Whether a reader's place is a person's or a publication's, as the
+/// sidebar files it: always a person once joined to others, a person until
+/// it's sorted, and one nine turtles couldn't sort is a publication until
+/// the reader says (decision 0264). The sidebar, Everyone you follow and
+/// Unread's order (`by_person`) all read it from here.
+macro_rules! kind {
+    () => {
+        "CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
+             ELSE COALESCE(subscriptions.kind, 'person') END"
+    };
+}
+pub(crate) use kind;
 
 #[derive(Serialize, sqlx::FromRow)]
 struct FeedRow {
@@ -109,7 +125,7 @@ struct FeedRow {
 /// Each feed a reader follows, with their name for it, their settings and
 /// their unread count, counted from the `entries_unread_by_feed` index alone
 /// (tests/speed.rs checks this). Takes the reader.
-pub const FEEDS: &str =
+pub const FEEDS: &str = concat!(
     "SELECT feeds.id, subscriptions.title, feeds.title AS site_title, feeds.site_url,
         subscriptions.paused_at,
         CASE WHEN feeds.failures >= 2 THEN feeds.failing_since END AS failing_since,
@@ -121,15 +137,17 @@ pub const FEEDS: &str =
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,
         COALESCE(subscriptions.place, CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END) AS place,
-        CASE WHEN subscriptions.writer_id IS NOT NULL THEN 'person'
-             ELSE COALESCE(subscriptions.kind, 'person') END AS kind,
+        ",
+    kind!(),
+    " AS kind,
         CASE WHEN subscriptions.writer_id IS NULL THEN subscriptions.kind_why END AS why,
         (subscriptions.writer_id IS NULL AND subscriptions.kind_why LIKE 'unsure-%') AS open,
         (SELECT COUNT(*) FROM entries WHERE entries.person_id = subscriptions.person_id
              AND entries.feed_id = subscriptions.feed_id AND entries.read = 0) AS unread
      FROM subscriptions JOIN feeds ON feeds.id = subscriptions.feed_id
      WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
-     ORDER BY subscriptions.title COLLATE NOCASE, feeds.id";
+     ORDER BY subscriptions.title COLLATE NOCASE, feeds.id"
+);
 
 /// The sidebar's feeds, folders and people, and the counts for the line
 /// that ends an import, while it shows (decision 0264).

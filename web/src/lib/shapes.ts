@@ -101,6 +101,9 @@ export type Article = {
   writer?: string;
   /** An untitled article's first words, as plain text, which a list shows instead of a title (SPEC section 6). */
   opening?: string;
+  /** Only in Unread, listed by person (decision 0271): who it's listed under, and whether they're a publication. */
+  whose?: number;
+  publication?: boolean;
 };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
@@ -176,6 +179,7 @@ export function toArticle(article: Record<string, unknown>): Article {
     ...(typeof article.writer === "string" && article.writer.trim() ? { writer: article.writer.trim() } : {}),
     ...(typeof article.opening === "string" && article.opening.trim() ? { opening: article.opening.trim() } : {}),
     ...excerptOf(article),
+    ...(typeof article.whose === "number" ? { whose: article.whose, publication: article.publication === true } : {}),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
       : {}),
