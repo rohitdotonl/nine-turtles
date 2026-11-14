@@ -68,7 +68,7 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isOver, isWho, listForArticle, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -497,8 +497,8 @@
     settleBack(() => placeFocus(route), wordmark, () => sidebar?.querySelector(".scroller"), was.sidebarScroll);
   }
 
-  /** Goes to a place, and moves the keyboard's place to its heading. A list arrived at with a `withNotice` shows it in its line, with Undo. */
-  function go(next: Route, withNotice?: Notice) {
+  /** Goes to a place, and moves the keyboard's place to its heading (unless `focus` is false). A list arrived at with a `withNotice` shows it in its line, with Undo. */
+  function go(next: Route, withNotice?: Notice, focus = true) {
     const move = moveTo({ route, under, phone }, next);
     // A newer nine turtles is live: going somewhere else redraws the screen
     // anyway, so arrive there in the new version (decision 0085).
@@ -527,13 +527,10 @@
     layout.showHome(false);
     if (move.closing && move.sameScreen && sheetOpener.giveBack()) return;
     if (move.closing) sheetOpener.forget();
-    queueMicrotask(() => placeFocus(next)?.focus());
+    if (focus) queueMicrotask(() => placeFocus(next)?.focus());
   }
 
-  /** Opens a feed's list. */
-  function openFeed(id: number) {
-    go({ kind: "feed", id });
-  }
+  const openFeed = (id: number) => go({ kind: "feed", id }); // Opens a feed's list.
 
   async function added(feed: Feed, note?: string) {
     const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
@@ -694,7 +691,7 @@
   function move(to: ArticleMove, step: 1 | -1) {
     const focus = moveArticle(itemList, to, step, { ...panes, reading, inArticle: inArticle() });
     if (!focus) return;
-    layout.makeWayForArticle();
+    makeWay();
     if (focus === "row") itemList?.focusSelected();
     else queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
@@ -713,7 +710,7 @@
       steps.openArticle();
       reading = true;
     }
-    layout.makeWayForArticle();
+    makeWay();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
@@ -728,8 +725,11 @@
 
   function chose(byKeyboard: boolean) {
     if (layout.stepwise || byKeyboard) open();
-    else layout.makeWayForArticle();
+    else makeWay();
   }
+
+  /** Room for a chosen article; beside their page, it takes the page's place, back on their list (`listForArticle`), the keyboard left where the choosing puts it. */
+  const makeWay = () => { const list = listForArticle(route, layout.stepwise); if (list) go(list, undefined, false); layout.makeWayForArticle(); };
 
   /**
    * Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list

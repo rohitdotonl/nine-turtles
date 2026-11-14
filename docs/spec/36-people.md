@@ -119,8 +119,15 @@ PLAN.md → V1, item 1.*
   article's writer; decision 0214). On a computer it opens in the reading
   area beside their list, where an article would, in the article's own
   column (decision 0219), under the article's bar with an **×** at its
-  right end (and Escape) back to their list; on a phone it's a screen of its
-  own, with ‹ back to their list. Top to bottom:
+  right end (and Escape) back to their list. Choosing an article in that
+  list while their page or their settings shows (a click, `j` or `k`,
+  Enter, or Write back in a row's menu) closes it as the × does: the article
+  takes its place, and everything else is as choosing an article with no
+  page open (the keyboard stays on a clicked row, Enter puts it on the
+  article's title; the address names the article; it counts as read), and
+  Back brings their page back. On a phone it's a screen of its own, with ‹
+  back to their list, and one thing at a time (decision 0269) it shows
+  alone; either way there's no list beside it to choose from. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas
