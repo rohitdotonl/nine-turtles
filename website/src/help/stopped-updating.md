@@ -59,7 +59,8 @@ worked since 12 Oct.", with a button to find its new address.
 - YouTube sometimes stops sending a channel's videos to nine turtles, even
   though the channel is still there. Then it says "YouTube isn't sending
   these videos to nine turtles at the moment." nine turtles keeps
-  asking, and the videos arrive once YouTube sends them again.
+  asking, a few times a day at different times, and the videos arrive
+  once YouTube sends them again.
 - Quiet isn't broken: some people write once a year. In **Everyone you
   follow**, someone with nothing new for six months says
   "Quiet since" and the date.
