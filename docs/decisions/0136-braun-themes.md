@@ -4,7 +4,7 @@
 
 *Partly replaced by [0145](0145-four-themes.md) (2 November 2026): Brushed, Anodised and Heather retired; Fountain pen and Signal remain, and the 3 : 1 rule for their accent still holds.*
 
-*1 November 2026.*
+*1 November 2026. The download budget it raised to 200 KB is 250 KB since [0270](0270-download-budget-250-kb.md) (14 November 2026).*
 
 **Decision.** Five new themes join Original and Plain, each with a day and
 a night version: Brushed, Anodised, Fountain pen, Heather and Signal. The

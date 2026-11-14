@@ -9,6 +9,14 @@ October 2026; it is in the repository's history.*
 
 ## Still open
 
+- **Read one thing at a time on a computer?** (14 November 2026, decision
+  0269). A trial switch in Settings (yours only, on the device you switch it
+  on) shows the list alone, then the article alone in the whole window, with
+  "‹ Unread" or Escape to go back, as a phone reads. Live with it, then
+  choose: keep three panes (the switch goes), or make one thing at a time
+  the way nine turtles reads on a computer (it changes DESIGN.md's "What's
+  fixed" and replaces full-screen reading, `f`).
+
 - **Finishing the website's privacy policy and terms** (25 October 2026).
   They're on nineturtles.app as drafts, marked "to be decided" where they
   wait on: the prices, the email service for sign-in and receipts,

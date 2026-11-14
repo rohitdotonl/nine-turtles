@@ -1,6 +1,6 @@
 # 0118: Fixes from a design review
 
-**In one line:** Fixes from a design review: a segmented control's chosen side at 3 : 1 (an edge by day, a strong fill by night, checked automatically), no ring on any title, the keyboard starting on the list's title, Skip to articles, Recently read's `opened` time for day headings (no structure change), and the list beside the article at least 280px
+**In one line:** Fixes from a design review: a segmented control's chosen side at 3 : 1 (an edge by day, a strong fill by night, checked automatically), no ring on any title, the keyboard starting on the list's title, Skip to articles, Recently read's `opened` time for day headings (no structure change), and the list beside the article at least 280px (Not working's cards and their filled Find new address are calm rows of plain words since 0268)
 
 *27 October 2026.*
 

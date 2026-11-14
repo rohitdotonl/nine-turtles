@@ -2,16 +2,20 @@
   Who isn't working, at the top of Everyone you follow (SPEC section 15,
   decision 0186), worst first: "Not working" (a week of "not found", or
   three weeks of failing), then "Having trouble". The group's name says
-  which, in words, so no status color is needed. Each is a card: their name,
-  one sentence on what went wrong, then Find new address and Unsubscribe
-  under a rule. nine turtles keeps checking by itself, so there's no Retry.
-  Nothing moves on its own: a feed that works again after Find new address
-  stays where it is, saying so, until the page is opened again. With nothing
-  to list, it shows nothing.
+  which, in words, so no status color is needed. Each group is one grouped
+  list, and each of its rows is calm (decision 0268): the person or
+  publication icon, their name, one sentence on what went wrong, then what
+  can be done as plain underlined words: Find new address, Write to them (a
+  person who may not know) and Unsubscribe. nine turtles keeps checking by
+  itself, so there's no Retry. Nothing moves on its own: a feed that works
+  again after Find new address stays where it is, saying so and offering
+  nothing more, until the page is opened again. With nothing to list, it
+  shows nothing.
 -->
 <script lang="ts">
   import Dated from "./Dated.svelte";
   import { onMount, tick } from "svelte";
+  import Icon from "./Icon.svelte";
   import NewAddress from "./NewAddress.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import { plainSourceName, refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
@@ -27,7 +31,7 @@
   }: {
     /** A feed was unsubscribed from, brought back or moved: the sidebar and the list below reload. */
     onFeedsChanged: () => void;
-    /** For Write to on a person's card (decision 0212): they may not know their feed stopped. */
+    /** For Write to on a person's row (decision 0212): they may not know their feed stopped. */
     library: LoadedLibrary;
   } = $props();
 
@@ -94,10 +98,11 @@
     row.finder?.find();
   }
 
+  /** Moved: once it works again its row offers nothing more, so the keyboard rests on its name. */
   async function moved(row: Row, feed: Sick) {
     row.feed = feed;
     onFeedsChanged();
-    await focusIn(row, "find");
+    await focusIn(row, feed.state === "working" ? "name" : "find");
   }
 
   async function leave(row: Row) {
@@ -137,49 +142,54 @@
     {#if group.rows.length > 0}
       <section aria-labelledby={`health-${group.id}`}>
         <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
-        <ul class="cards">
+        <ul class="inset-group">
           {#each group.rows as row (row.key)}
-            <li id={`health-feed-${row.feed.id}`} class="card">
-              <h4 class="card-name">{row.feed.title}</h4>
-              {#if !row.unsubscribed}
-                <p class="what text-ink-2">
-                  <span class="font-semibold"><Dated text={`${headline(row.feed)}.`} /></span>
-                  {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
-                  {#if row.feed.state === "dead" && aPerson(row.feed)}{plainName(row.feed)} may not know.{/if}
-                </p>
-              {/if}
-              <p role="status" class={["status text-ink", !row.message && "sr-only"]}>{row.message}</p>
-              {#if row.unsubscribed}
-                <div class="actions">
-                  <button type="button" class="btn btn-small" data-focus="undo" aria-label={`Undo unsubscribing from ${row.feed.title}`} aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
-                </div>
-              {:else}
-                <NewAddress
-                  bind:this={row.finder}
-                  bind:open={row.choosing}
-                  bind:busy={row.busy}
-                  feed={row.feed}
-                  onMoved={(feed) => moved(row, feed)}
-                  onClosed={() => focusIn(row, "find")}
-                />
-                <div class="actions" hidden={row.choosing}>
-                  <button type="button" class="btn-primary" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
-                  <button
-                    type="button"
-                    class="btn-danger"
-                    title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
-                    aria-label={`Unsubscribe from ${row.feed.title}`}
-                    aria-describedby="health-unsubscribe-help"
-                    data-focus="unsubscribe"
-                    aria-disabled={row.busy}
-                    onclick={() => !row.busy && leave(row)}>Unsubscribe</button
-                  >
-                </div>
-                {#if row.feed.state === "dead" && !row.choosing && aPerson(row.feed)}
-                  <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). -->
-                  <div class="write-to"><WriteBack feedId={row.feed.id} {library} quiet /></div>
+            {@const person = aPerson(row.feed)}
+            <li id={`health-feed-${row.feed.id}`} class={["inset-row sick", row.choosing && "asking"]}>
+              <!-- Who it is, at a glance: the two icons Add asks with. One that could still be either is kept with publications, so it shows theirs. -->
+              <span class="kind text-muted" title={person ? "A person" : "A publication"}><Icon name={person ? "person" : "newspaper"} /></span>
+              <div class="about">
+                <h4 class="sick-name font-semibold" tabindex="-1" data-focus="name"><span class="sr-only">{person ? "Person" : "Publication"}:{" "}</span>{row.feed.title}</h4>
+                {#if !row.unsubscribed}
+                  <p class="what mt-1 text-ink-2">
+                    <Dated text={`${headline(row.feed)}.`} />
+                    {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
+                    {#if row.feed.state === "dead" && person}{plainName(row.feed)} may not know.{/if}
+                  </p>
                 {/if}
-              {/if}
+                <p role="status" class={["status", !row.message && "sr-only"]}>{row.message}</p>
+                {#if row.unsubscribed}
+                  <div class="actions flex flex-wrap items-center">
+                    <button type="button" class="text-link text-ui" data-focus="undo" aria-label={`Undo unsubscribing from ${row.feed.title}`} aria-disabled={row.busy} onclick={() => !row.busy && undo(row)}>Undo</button>
+                  </div>
+                {:else}
+                  <NewAddress
+                    bind:this={row.finder}
+                    bind:open={row.choosing}
+                    bind:busy={row.busy}
+                    feed={row.feed}
+                    onMoved={(feed) => moved(row, feed)}
+                    onClosed={() => focusIn(row, "find")}
+                  />
+                  {#if row.feed.state !== "working"}
+                    <div class="actions flex flex-wrap items-center" hidden={row.choosing}>
+                      <button type="button" class="text-link text-ui" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
+                      <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). -->
+                      {#if row.feed.state === "dead" && person}<WriteBack feedId={row.feed.id} {library} quiet />{/if}
+                      <button
+                        type="button"
+                        class="text-link text-ui text-danger"
+                        title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
+                        aria-label={`Unsubscribe from ${row.feed.title}`}
+                        aria-describedby="health-unsubscribe-help"
+                        data-focus="unsubscribe"
+                        aria-disabled={row.busy}
+                        onclick={() => !row.busy && leave(row)}>Unsubscribe</button
+                      >
+                    </div>
+                  {/if}
+                {/if}
+              </div>
             </li>
           {/each}
         </ul>
@@ -195,76 +205,57 @@
 
 <style>
   /*
-    Each is a card a tone off the page (12px corners, 16px by 18px inside,
-    12px apart): their name, one sentence on what went wrong, then the
-    actions under a hairline. On a narrow card Find new address fills its
-    row and Unsubscribe takes a line of its own.
+    Each group is one grouped list (12px corners, a tone off the page), and
+    each row (a grouped list's row, so parted by its hairline, inset from the
+    left) has 16px inside: the icon, then their name, the sentence and the
+    row's plain links, all on the name's left edge.
   */
-  .cards {
+  .sick {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0 0.5rem;
+    align-items: start;
+    padding: 1rem 1rem 0.25rem;
+  }
+  /* Find new address's question or choice ends the row with buttons of their own: the row's full 16px under them. */
+  .sick.asking {
+    padding-bottom: 1rem;
+  }
+  /* The icon sits on the name's line, in the muted grey: the name leads. */
+  .kind {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    align-items: center;
+    height: calc(var(--text-base) * 1.35);
   }
-  .card {
-    container: card / inline-size;
+  .about {
     min-width: 0;
-    padding: 1rem;
-    border-radius: var(--radius-hold);
-    background-color: var(--group, var(--list));
-    color: var(--ink);
-    font-size: var(--text-ui);
   }
-  /* On the card's tone, a new address's choices sit on the page's own color, so they stand apart from it. */
-  .card :global(.new-address .choices) {
+  /* On the row's tone, a new address's choices sit on the page's own color, so they stand apart from it. */
+  .sick :global(.new-address .feeds-named) {
     --group: var(--paper);
   }
-  .card-name {
+  /* What Find new address found sits 8px under the sentence; a row that says what happened and offers nothing more (working again) keeps the 16px under its words. */
+  .about > :global(.new-address.showing) {
+    margin-top: 0.5rem;
+  }
+  .about > :global(.new-address.showing:last-child) {
+    padding-bottom: 0.75rem;
+  }
+  .sick-name {
     font-size: var(--text-base);
-    font-weight: 600;
     line-height: 1.35;
     overflow-wrap: anywhere;
+    outline: none;
   }
   .what {
-    margin-top: 0.25rem;
     line-height: 1.5;
   }
   .status:not(.sr-only) {
-    margin-top: 0.75rem;
+    margin-top: 0.5rem;
     line-height: 1.5;
   }
+  /* What can be done, as plain underlined words side by side (Unsubscribe in the destructive red), each 44px tall to press; on a narrow row they wrap. */
   .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--line);
-  }
-  .write-to {
-    margin-top: 0.5rem;
-  }
-  .actions[hidden] {
-    display: none;
-  }
-  /* Unsubscribe, in the destructive red words, at the right end. */
-  .actions > .btn-danger {
-    margin-right: -0.5rem;
-    margin-left: auto;
-  }
-  @container card (width < 24rem) {
-    .actions > .btn-primary {
-      flex: 1 1 0;
-      min-width: 0;
-      padding-inline: 0.5rem;
-      line-height: 1.25;
-      text-align: center;
-      white-space: normal;
-    }
-    .actions > .btn-danger {
-      justify-content: center;
-      width: 100%;
-      margin: 0;
-    }
+    column-gap: 1.5rem;
   }
 </style>

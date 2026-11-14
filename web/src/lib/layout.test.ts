@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LIST_MIN, panesFor, ScreenLayout, widthFor } from "./layout.svelte";
+import { setOneThing } from "./oneThing.svelte";
 
 describe("layout", () => {
   it("steps from three panes to two to one as the window narrows", () => {
@@ -145,5 +146,52 @@ describe("the screen's layout", () => {
     const layout = new ScreenLayout("wide", 1400, () => false, true);
     expect(layout.sidebarPx).toBe(256);
     expect(layout.listPx).toBeUndefined();
+  });
+});
+
+// Decision 0269: the owner's trial, "Read one thing at a time".
+describe("reading one thing at a time", () => {
+  afterEach(() => {
+    setOneThing(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("on a computer, shows the list alone and then the article alone", () => {
+    expect(panesFor("wide", "auto", false, false, true)).toEqual({ sidebar: true, list: true, article: false });
+    expect(panesFor("wide", "auto", true, false, true)).toEqual({ sidebar: false, list: false, article: true });
+    // A medium window keeps the sidebar beside the list too, unless the reader hid it.
+    expect(panesFor("medium", "auto", false, false, true)).toEqual({ sidebar: true, list: true, article: false });
+    expect(panesFor("medium", "hidden", false, false, true)).toEqual({ sidebar: false, list: true, article: false });
+    // A phone already reads this way: nothing changes there.
+    expect(panesFor("narrow", "hidden", true, false, true)).toEqual(panesFor("narrow", "hidden", true));
+  });
+
+  it("is the owner's alone, and only when switched on, on this device", () => {
+    vi.stubGlobal("localStorage", storage());
+    let reading = false;
+    const trial = (owner: boolean) => new ScreenLayout("wide", 1400, () => reading, false, { aside: () => false, owner: () => owner });
+    expect(trial(true).panes).toEqual({ sidebar: true, list: true, article: true });
+    setOneThing(true);
+    expect(localStorage.getItem("nine-turtles.one-thing-at-a-time")).toBe("on");
+    const owner = trial(true);
+    expect(owner.trial).toBe(true);
+    expect(owner.stepwise).toBe(true);
+    expect(owner.panes).toEqual({ sidebar: true, list: true, article: false });
+    reading = true;
+    expect(owner.panes).toEqual({ sidebar: false, list: false, article: true });
+    expect(trial(false).trial).toBe(false);
+    expect(trial(false).panes).toEqual({ sidebar: true, list: true, article: true });
+    setOneThing(false);
+    expect(localStorage.getItem("nine-turtles.one-thing-at-a-time")).toBeNull();
+    expect(owner.trial).toBe(false);
+  });
+
+  it("fills the window with a person's page too, and leaves a phone as it is", () => {
+    setOneThing(true);
+    const page = new ScreenLayout("wide", 1400, () => false, false, { aside: () => true, owner: () => true });
+    expect(page.panes).toEqual({ sidebar: false, list: false, article: true });
+    const phone = new ScreenLayout("narrow", 400, () => false, false, { aside: () => false, owner: () => true });
+    expect(phone.trial).toBe(false);
+    expect(phone.stepwise).toBe(true);
   });
 });

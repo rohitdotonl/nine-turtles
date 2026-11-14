@@ -54,6 +54,7 @@
   import type { Preferences } from "./preferences";
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
+  import { oneThing, setOneThing } from "./oneThing.svelte";
   import { connection } from "./connection.svelte";
   import { SETTINGS_NEED_CONNECTION, sendWaiting } from "./offline";
   import { newslettersStatus } from "./newsletters";
@@ -375,6 +376,20 @@
           <h3 id="yours-heading" class="settings-head label">Your nine turtles<span class="sr-only">,{" "}</span><span class="only-you">Only you</span></h3>
           <div class="inset-group">
             <PageRow key="readers" href="/settings/readers" label={SETTINGS_PAGES.readers} icon="people" onclick={open("readers")} />
+            <!-- The owner's trial (decision 0269), on this device only: on a computer, one thing at a time, as a phone reads. -->
+            <div class="inset-row setting">
+              <div class="setting-label">
+                <!-- No drawing of its own: a new icon is a brand decision (BRAND.md → Icons), not a trial's. Its words keep the rows' edge. -->
+                <span class="setting-icon invisible" aria-hidden="true"><Icon name="sidebar" /></span>
+                <div class="setting-words">
+                  <p class="setting-name" aria-hidden="true">Read one thing at a time</p>
+                  <p id="one-thing-hint" class="setting-hint">A trial, on this device. On a computer, the list alone, then the article alone. Phones already read this way.</p>
+                </div>
+              </div>
+              <label class="switch-target -my-2 -mr-2">
+                <input type="checkbox" role="switch" class="switch" aria-label="Read one thing at a time" aria-describedby="one-thing-hint" checked={oneThing.on} onchange={(event) => setOneThing(event.currentTarget.checked)} />
+              </label>
+            </div>
           </div>
         </section>
       {/if}

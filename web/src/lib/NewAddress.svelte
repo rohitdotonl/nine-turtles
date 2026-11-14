@@ -97,7 +97,7 @@
       >
     </div>
   {:else if choices.length > 1}
-    <div role="radiogroup" aria-label={`Feeds on ${feed.title}'s site`} class="choices inset-group">
+    <div role="radiogroup" aria-label={`Feeds on ${feed.title}'s site`} class="feeds-named inset-group">
       {#each choices as choice (choice.url)}
         <label class="inset-row check-row flex-nowrap">
           <input type="radio" name={`${id}-address`} value={choice.url} bind:group={chosen} />
@@ -136,8 +136,8 @@
     align-items: center;
     margin-top: 0.25rem;
   }
-  /* The feeds the site names: grouped rows a tone off the page (on Not working's card, the page's own color, NotWorking.svelte). */
-  .choices {
+  /* The feeds the site names: grouped rows a tone off the page (on a Not working row, the page's own color, NotWorking.svelte). Not `.choices`, the segmented control's class in app.css, which would make it one. */
+  .feeds-named {
     margin-top: 0.25rem;
   }
 </style>

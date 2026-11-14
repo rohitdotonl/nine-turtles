@@ -149,7 +149,7 @@
   let searchBar: SearchBar | undefined = $state();
 
   /** The window's width step, which areas show, the sidebar and list toggles and their dragged widths (layout.svelte.ts). */
-  const layout = new ScreenLayout(currentWidth(), innerWidth, () => reading, firstStep.screen === "home");
+  const layout = new ScreenLayout(currentWidth(), innerWidth, () => reading, firstStep.screen === "home", { aside: (): boolean => whoShown, owner: () => owner });
   let panes = $derived(layout.panes);
   let phone = $derived(layout.phone);
 
@@ -400,7 +400,7 @@
       }
       if (move.closing && sheetOpener.giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
-      if (!phone) openAddressed(articleIn(location.pathname).article); // On a phone the article is a step of its own.
+      if (!layout.stepwise) openAddressed(articleIn(location.pathname).article); // One thing at a time (a phone), the article is a step of its own.
     };
     addEventListener("popstate", back);
 
@@ -467,7 +467,7 @@
 
   /** Shows a screen the browser's history went back (or forward) to. */
   function arrive(screen: Screen) {
-    reading = phone && screen === "article" && selected !== undefined;
+    reading = layout.stepwise && screen === "article" && selected !== undefined;
     layout.showHome(screen === "home");
     if (phone && screen === "home") void library.catchUp(); // The feeds screen's dots catch up as you arrive on it (SPEC section 13).
     queueMicrotask(() => {
@@ -663,7 +663,7 @@
 
   /** Full-screen reading (`f`, the article's More menu, decision 0241): hide the sidebar and the list together; again, both come back. */
   function toggleBoth() {
-    if (phone || !isList(route)) return;
+    if (layout.stepwise || !isList(route)) return;
     const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
     if (layout.toggleBoth() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : sidebarToggle)?.focus());
   }
@@ -708,8 +708,8 @@
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
-    if (phone && !reading) {
-      // On a phone the article is a screen of its own, one step on.
+    if (layout.stepwise && !reading) {
+      // On a phone (or one thing at a time) the article is a screen of its own, one step on.
       steps.openArticle();
       reading = true;
     }
@@ -727,7 +727,7 @@
   }
 
   function chose(byKeyboard: boolean) {
-    if (phone || byKeyboard) open();
+    if (layout.stepwise || byKeyboard) open();
     else layout.makeWayForArticle();
   }
 
@@ -740,7 +740,7 @@
       if (!here && !(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
       selected = article;
     }
-    if (phone && !reading) {
+    if (layout.stepwise && !reading) {
       if (!here || stepOf(history.state)?.screen !== "article") steps.openArticle(); // A reloaded article is its step already.
       reading = true;
     }
@@ -904,7 +904,7 @@
     button that moves, so the keyboard stays on it. The sidebar's and the list's top lines never scroll;
     the article's tools scroll away with its title (decision 0263), and this button stays, in the 64px margin beside the text.
   -->
-  <div class={["fixed top-1.5 z-20", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", phone && "hidden"]}>
+  <div class={["fixed top-1.5 z-20", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", (phone || (layout.trial && panes.article)) && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
@@ -1066,7 +1066,7 @@
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
             "list-pane relative @container flex-col bg-paper",
-            phone && "phone",
+            phone && "phone", layout.trial && "one-thing",
             // 352px by default below 1280px, so on a window about 1024px wide feed names and titles have room (SPEC section 4).
             panes.article ? "w-[22rem] shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
             panes.list && !welcomeWide && "flex",
@@ -1166,19 +1166,18 @@
             <ArticleView
               bind:this={articleView}
               article={selected} {library} listNote={panes.list ? false : listNote}
-              toggles={phone || panes.list || panes.sidebar ? 0 : 1}
+              toggles={layout.stepwise || panes.list || panes.sidebar ? 0 : 1}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onHide={hideFrom}
-              fullScreen={phone ? undefined : { on: bothHidden, toggle: toggleBoth }}
+              fullScreen={layout.stepwise ? undefined : { on: bothHidden, toggle: toggleBoth }}
               onWriter={(id) => go({ kind: "about", id })}
               beforeToolbar={nowPlayingAboveToolbar}
+              back={layout.stepwise ? { name: nameFor(route, placeName), onBack: backToList } : undefined}
               phone={phone
                 ? {
-                    back: nameFor(route, placeName),
-                    onBack: backToList,
                     onPrevious: () => move("move", -1),
                     onNext: () => move("move", 1),
                     hasPrevious: itemList?.canMove(-1) ?? false,
@@ -1209,7 +1208,7 @@
   <NowPlaying onOpen={openFromOutside} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {unreadOff} />
+<CheatSheet bind:open={cheatSheetOpen} {unreadOff} oneThing={layout.trial} />
 
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->

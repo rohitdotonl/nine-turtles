@@ -34,6 +34,10 @@
   (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
   area's foot instead, where the reader is (`away`, drawn by the article's AwayNote; decision 0229).
 
+  In a row under Not working (Everyone you follow, decision 0268; `quiet`), Write to is one of the
+  row's plain links, with no paper plane and no address under it (their page shows it); what
+  follows a press, the line or the box, takes a line of its own straight after it.
+
   A publication has none of this (decision 0192): nothing shows, and `start` does nothing. For
   someone nine turtles couldn't sort, at an article's end, the question stands in its place
   instead (SettleAsk, decision 0264).
@@ -67,7 +71,7 @@
     library: LoadedLibrary;
     /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
     quotes?: () => string[];
-    /** Beside another main action (a card's Find new address): the address box's own button is bordered too, not the solid one. */
+    /** In a row of plain links (who isn't working, decision 0268): Write to is a plain link among them, what follows it takes a line of its own straight after it, and the address box's own button is bordered, not the solid one. */
     quiet?: boolean;
     /** The article's scroller, to tell whether this is on screen. */
     within?: HTMLElement;
@@ -348,7 +352,7 @@
 {/snippet}
 
 {#if place}
-  <div bind:this={root} class={["write-back", !article && "on-page"]} lang="en">
+  <div bind:this={root} class={["write-back", !article && "on-page", quiet && "in-row"]} lang="en">
     {#if changing}
       <AddressBox
         title={`${name}'s email address`}
@@ -386,10 +390,10 @@
         onEscape={() => void notNow()}
       />
     {:else if address}
-      <a class="btn" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" />{@render label()}</a>
+      <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
       {#if article}
         <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
-      {:else}
+      {:else if !quiet}
         <!-- On their page the address is theirs to correct, where it's shown. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
       {/if}
@@ -419,7 +423,7 @@
         {/if}
       </p>
     {:else}
-      <button type="button" class="btn" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" />{@render label()}</button>
+      <button type="button" class={quiet ? "text-link text-ui" : "btn"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</button>
       {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
     {/if}
   </div>
@@ -443,6 +447,23 @@
   .write-back.on-page {
     align-items: flex-start;
     margin-top: 0;
+  }
+  /*
+    In a row of plain links (who isn't working, decision 0268): Write to is one of the row's own
+    links, at their size, and whatever follows a press (the line, the box) takes a line of its own
+    straight after it, before the links that follow, so the eye and the keyboard meet them in the
+    same order.
+  */
+  .write-back.in-row {
+    display: contents;
+    font-size: inherit;
+  }
+  .in-row > :global(:not(.text-link)) {
+    flex-basis: 100%;
+  }
+  /* Its 44px "Didn't open?" already holds it apart from the links around it. */
+  .in-row > .opening-line:not(.sr-only) {
+    margin: 0;
   }
   /* A long name wraps rather than running off a phone. */
   .write-back > .btn {

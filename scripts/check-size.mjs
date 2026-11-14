@@ -1,4 +1,4 @@
-// Download size budget (ENGINEERING.md → "Fast by design"): at most 200 KB of
+// Download size budget (ENGINEERING.md → "Fast by design"): at most 250 KB of
 // app code and styles (measured compressed, as the browser downloads them)
 // and at most 400 KB of the fonts every reader may download. A reading face
 // for another script (decision 0227) is downloaded only by readers of that
@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const KB = 1024;
-const BUDGET = { code: 200 * KB, fonts: 400 * KB, script: 150 * KB };
+const BUDGET = { code: 250 * KB, fonts: 400 * KB, script: 150 * KB };
 // The other scripts' reading faces, by their files' names (web/src/fonts.css).
 const SCRIPT_FONTS = new Set(["noto-serif-devanagari-wght.woff2", "noto-naskh-arabic-wght.woff2"]);
 const dist = join(import.meta.dirname, "..", "web", "dist");

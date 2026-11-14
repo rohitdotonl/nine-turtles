@@ -16,7 +16,8 @@ related: [unfollow-someone, follow-someone, one-person-several-places]
 ## Look at Everyone you follow
 
 Open **Everyone you follow**, in the sidebar under All articles (on a phone, on Home). Anything that isn't working is at
-the top, **Not working** first, then **Having trouble**. Each one says when
+the top, **Not working** first, then **Having trouble**, one row each, with
+a small drawing of a person or a newspaper page before the name. Each one says when
 something last came through and why, for example: "Nothing has come
 through since 1 Nov. The site says the feed isn't there any more. It
 may have moved."
@@ -25,15 +26,16 @@ If everything's working, the page starts straight with everyone you follow.
 
 ## Fix it
 
-Each one has two buttons:
+Under each, underlined words say what you can do:
 
 - **Find new address**: nine turtles looks once at the website for a feed
   under a new address. If it finds one, press **Use it**. Their name,
   folders, articles and stars all stay.
-- **Unsubscribe**: let it go. **Undo** brings it back.
-
-For a person whose feed has stopped, there's also **Write to** them: they
-may not know their feed broke, and a short email is often all it takes.
+- **Write to** them, for a person whose feed has stopped: they may not
+  know their feed broke, and a short email is often all it takes. It opens
+  your own email app, or first asks for their address if nine turtles
+  doesn't know it yet.
+- **Unsubscribe**, in red: let it go. **Undo** brings it back.
 
 There's no need to try again yourself: nine turtles keeps checking, and
 picks up anything new as soon as the site is back.
