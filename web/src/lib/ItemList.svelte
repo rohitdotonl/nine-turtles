@@ -1,6 +1,8 @@
 <!--
   The item list (SPEC sections 6, 8 and 9): each article's title, with its
   source and time in quiet small text below. No images, no site icons.
+  Unread names each person once, their titles under them, people first,
+  then "Publications" (decision 0271, `people.ts` → `headsOf`).
   Unread titles are full strength and semibold, read ones muted and regular,
   starred ones carry a small star: each state shows without color too. With
   Unread off (SPEC section 10) every title looks the same, read or not.
@@ -48,7 +50,7 @@
   import type { Article, Source } from "./shapes";
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
-  import type { OneSource } from "./people";
+  import { headsOf, type OneSource } from "./people";
   import { CHOOSE_FIRST, NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
   import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
@@ -217,6 +219,9 @@
     first = articles[0];
   });
 
+  /** Unread, by person (decision 0271): each name once, above their first article, and "Publications" where they begin. */
+  let heads = $derived(headsOf(articles));
+
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
   async function load(after: string | null) {
@@ -229,7 +234,8 @@
     loadingMore = after !== null;
     try {
       const page = await listArticles(source, order, after);
-      articles = after === null ? page.articles : [...articles, ...page.articles];
+      // Unread by person can bring back someone already passed, with articles already listed (decision 0271): each is listed once.
+      articles = after === null ? page.articles : [...articles, ...page.articles.filter((article) => !articles.some((listed) => listed.id === article.id))];
       loadedMore = after !== null;
       next = page.next;
       if (after === null) {
@@ -664,13 +670,18 @@
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
   <div class="list-empty"><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
-  <ul class="item-list">
+  <ul class={["item-list", heads.some(Boolean) && "by-person"]}>
     {#each articles as article, index (article.id)}
       {@const current = index === selectedIndex}
+      {@const head = heads[index]}
       <li>
+        <!-- A real heading, so a screen reader can go name to name; it can't be pressed, as a row's name can't be today. -->
+        {#if head?.publications}<h3 class="label list-label">Publications</h3>{/if}
+        {#if head}<h3 class="list-name"><bdi>{head.name}</bdi></h3>{/if}
         <ItemRow
           bind:row={rows[index]}
-          {article} {current} {bold} {unreadOff} {oneFeed} {addressOf}
+          {article} {current} {bold} {unreadOff} {addressOf}
+          oneFeed={article.whose === undefined ? oneFeed : true}
           tabbable={current || (selectedIndex === -1 && index === 0)}
           held={menuAt?.index === index}
           onOpen={(byKeyboard) => (select(index), onChoose(byKeyboard))}

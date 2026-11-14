@@ -1,0 +1,3 @@
+## 14 November 2026: Unread, by person
+
+- **Unread shows each person once.** Their name heads what's new from them, with each title's day beside it, instead of a small grey name under every title. Someone with three new articles takes four lines, not six. People come first, the most recent at the top; publications follow under **Publications**. Every title is still one press away, j and k go title to title, and everything else (marking, Undo, the row's menu) works as before. Only Unread changes: All articles, Starred, Notes, folders, a person's own list and search stay in order of time (decision 0271).

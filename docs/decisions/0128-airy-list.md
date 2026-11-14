@@ -4,6 +4,8 @@
 
 *28 October 2026.*
 
+*Since 14 November 2026, Unread names each person once with their titles under it, each title's day beside it on the right, 12px above and below: decision 0271.*
+
 **Decision.** The owner looked at twenty versions of the article list,
 compared four of them in the real app, and chose version 7, "airy". What the
 list looks like is in `docs/SPEC.md` section 6 and `docs/DESIGN.md` Part 2;

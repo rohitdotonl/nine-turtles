@@ -49,6 +49,14 @@ it, headphones mean a podcast episode, and a small screen means a video.
 Older articles load as you reach the bottom, and every list ends with
 "That's everything."
 
+**Unread** is arranged by person instead: each person's name once, with
+what's new from them under it, and each article's day beside its title.
+The people who posted most recently come first; publications follow, under
+**Publications**. Someone with a blog and a podcast is one name. Sorted
+oldest first, the people who have waited longest come first. <kbd>J</kbd>
+and <kbd>K</kbd> still go from article to article, past the names, and with
+a screen reader you can jump from name to name by heading.
+
 The list's **More** menu (the three dots) holds what you can do to the whole
 list: mark it all as read, refresh it, or sort it oldest first. In a
 person's or publication's list it also has **Info about …**, their page, which

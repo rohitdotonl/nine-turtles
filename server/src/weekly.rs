@@ -391,7 +391,6 @@ async fn new_since(
     from: i64,
 ) -> Result<Vec<letter::Person>, sqlx::Error> {
     type Row = (
-        Option<i64>,
         i64,
         String,
         String,
@@ -399,9 +398,10 @@ async fn new_since(
         Option<String>,
         Option<String>,
     );
-    let rows: Vec<Row> = sqlx::query_as(
-        "SELECT subscriptions.writer_id, subscriptions.feed_id,
-                COALESCE(writers.name, subscriptions.title),
+    let rows: Vec<Row> = sqlx::query_as(concat!(
+        "SELECT ",
+        crate::feeds::whose!(),
+        ", COALESCE(writers.name, subscriptions.title),
                 articles.title, articles.link, articles.summary, articles.content
          FROM entries
          JOIN articles ON articles.id = entries.article_id
@@ -411,16 +411,16 @@ async fn new_since(
          WHERE entries.person_id = ? AND entries.read = 0 AND entries.muted = 0
              AND subscriptions.unsubscribed_at IS NULL AND articles.received_at > ?
          ORDER BY articles.sort_at DESC, articles.id DESC
-         LIMIT 2000",
-    )
+         LIMIT 2000"
+    ))
     .bind(person)
     .bind(from)
     .fetch_all(db)
     .await?;
-    let mut people: Vec<((Option<i64>, i64), letter::Person)> = Vec::new();
-    for (writer, feed, name, title, link, summary, content) in rows {
-        // A person with several places is one; a place on its own is its own.
-        let key = (writer, if writer.is_some() { 0 } else { feed });
+    let mut people: Vec<(i64, letter::Person)> = Vec::new();
+    for (key, name, title, link, summary, content) in rows {
+        // A person with several places is one; a place on its own is its own
+        // (`feeds::whose!`, as Unread lists them).
         let index = match people.iter().position(|(each, _)| *each == key) {
             Some(index) => index,
             None => {
