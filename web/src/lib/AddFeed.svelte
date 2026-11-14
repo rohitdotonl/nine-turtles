@@ -21,7 +21,7 @@
   the question's own heading), what was found (their site, and their newest
   title in the reading serif), and two tiles side by side, A person and A
   publication, each with its icon, nine turtles' guess chosen; then "You can
-  change this later on their page." and Done.
+  change this later in their settings." and Done.
 
   A shared page's address opens "Follow this person?" instead
   (FollowPerson.svelte, decision 0138). A YouTube video's address asks
@@ -156,7 +156,7 @@
   onDestroy(() => {
     closed = true;
     asked = "";
-    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their page can change,
+    // Followed but not yet answered: it joins the sidebar with nine turtles' guess, which their settings can change,
     // in the folder Folder showed, as closing keeps what the question showed.
     const feed = asking;
     if (feed && !answering) {
@@ -381,10 +381,10 @@
     busy = false;
     asking = undefined;
     asked = "";
-    // The guess stands if the answer couldn't be kept; their page can change it later, and the note says so.
+    // The guess stands if the answer couldn't be kept; their settings can change it later, and the note says so.
     const unsaved =
       refusal &&
-      (!who ? "Their folder couldn't be saved; their page can change it." : filing() ? "What they are and their folder couldn't be saved; their page can change both." : "What they are couldn't be saved; their page can change it.");
+      (!who ? "Their folder couldn't be saved; their settings can change it." : filing() ? "What they are and their folder couldn't be saved; their settings can change both." : "What they are couldn't be saved; their settings can change it.");
     onAdded(refusal || !who ? feed : { ...feed, kind: who, open: false, ...(title ? { title } : {}) }, [note, unsaved].filter(Boolean).join(" ") || undefined);
   }
 

@@ -4,9 +4,11 @@
   as the list's, on the same line as the sidebar's wordmark, and an X that
   closes it (Escape does too), in the top line shared by every pane (decision 0043). It never scrolls. Like the page under it, it's
   a column centred in the pane. A page opened from Settings (decision 0120)
-  (Everyone you follow, Hidden articles and All readers too, decision 0231) has
+  (Hidden articles and All readers too, decision 0231) has
   "‹ Settings" (or the page it came from) on a line of its own above its
-  title instead of an X, and on a phone Settings itself has "‹ Home".
+  title instead of an X, and on a phone Settings itself and Everyone you
+  follow have "‹ Home". On a computer Everyone you follow has neither: it's
+  a place in the sidebar, as a list is (decision 0266).
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
@@ -42,10 +44,10 @@
 <div class={["pane-bar pr-5 md:pr-10", besideToggle ? "pl-16" : "pl-5 md:pl-10"]}>
   {#if onBack}
     <!-- One top for every screen below home (DESIGN.md → "The system"): Back in the top line's own height, the title on the line under it. -->
-    <div class={["mx-auto flex w-full flex-col items-start pb-2", column]}>
+    <div class={["mx-auto flex w-full min-w-0 flex-col items-start pb-2", column]}>
       <div class="top-back">
         <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
-          ><Icon name="back" size="alone" />{backTo}</button
+          ><Icon name="back" size="alone" /><bdi>{backTo}</bdi></button
         >
       </div>
       <h2 {id} tabindex="-1" bind:this={heading} class="top-title min-w-0 font-display text-heading font-semibold tracking-[-0.01em] break-words"><bdi>{title}</bdi></h2>

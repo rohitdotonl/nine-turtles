@@ -4,7 +4,7 @@ description: A list of words keeps articles about them out of your lists, from e
 groupId: keeping-things-tidy
 order: 4
 spec: 27
-updated: 2026-11-09
+updated: 2026-11-14
 related: [put-people-in-folders, search-everything, newsletters]
 ---
 
@@ -30,7 +30,7 @@ under the list says how many. **Undo** puts them back.
 ## Hide one person's articles about something
 
 In an article, open **More** (…) and choose **Hide articles about…**. Or
-open someone's page and press **Hide articles about…** at its foot.
+open someone's page, press **Settings** at its foot, then **Hide articles about…**.
 Settings › Hiding opens with "Only from" that person. Type the word and
 press **Add**. Press **Everyone instead** to hide it from everyone.
 

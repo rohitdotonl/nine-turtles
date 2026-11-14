@@ -1,7 +1,7 @@
 <!--
   Write back (SPEC section 37, decision 0147): at the end of every article of
   someone the reader follows, under its closing rule, one outlined button
-  with a paper plane, as Mark all as read ends a list (`quiet`, decision
+  (`.btn`) with a paper plane, as Mark all as read ends a list (decision
   0242), "Write back", with "to Tomas Berg, tomas@example.com" (their full
   name, the one in the sidebar, the owner's core path, points 6 and 7; and the
   address it writes to) in a quiet line under it, so a long name never swells
@@ -9,9 +9,9 @@
   the reader's own email app with the address and "Re: the title" filled in;
   nine turtles never sends or reads that email.
 
-  On their page (no article), the same button, solid there, says "Write to
+  On their page (no article), the same outlined button says "Write to
   Tomas Berg", under their name, and opens the email app with the address only and an
-  empty subject (point 9).
+  empty subject (point 9). Outlined there too (decision 0267): their name leads that page.
 
   When nine turtles doesn't know their address (neither their feed nor its
   articles' text gives one), the button opens a small box in place, as Add a
@@ -25,6 +25,10 @@
 
   Where it opens is this device's choice (decision 0259): the email app (`mailto:`), or, once
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
+
+  Once pressed, one line under it says "Opening your email app…". On a computer the other ways
+  to write (Gmail, Outlook.com, copying the address) wait behind two words on that line, "Didn't
+  open?", so a press that worked leaves one line and no more (decision 0265).
 
   The paper plane, its key (`w`), a row's menu and the menu beside chosen words do the same
   (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
@@ -63,7 +67,7 @@
     library: LoadedLibrary;
     /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
     quotes?: () => string[];
-    /** Beside another main action (a card's Find new address): an everyday bordered button, not the solid one. */
+    /** Beside another main action (a card's Find new address): the address box's own button is bordered too, not the solid one. */
     quiet?: boolean;
     /** The article's scroller, to tell whether this is on screen. */
     within?: HTMLElement;
@@ -99,9 +103,11 @@
   let message = $state("");
   let field: HTMLInputElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
-  /** The email app was asked to open (decision 0229): a line under the address says so, with Copy their address in case nothing opened.
+  /** The email app was asked to open (decision 0229): a line under the address says so, with the ways on in case nothing opened.
    * A polite live line, not a second "status": the toolbar's line is the pane's one status. */
   let opening = $state(false);
+  /** On a computer, "Didn't open?" was pressed: the other ways to write are shown (decision 0265). */
+  let asked = $state(false);
   /** Back from the email app (the page was hidden while it opened): "Opening…" has done its job, but the ways on stay, for an app that opened wrong (decision 0259). */
   let returned = $state(false);
   let copied = $state("");
@@ -120,7 +126,8 @@
   const computer = typeof matchMedia === "function" && matchMedia("(pointer: fine)").matches;
   let others = $derived((["app", "gmail", "outlook"] as const).filter((other) => other !== writesIn && (computer || other === "app")));
   let where = $derived(writesIn === "app" ? "your email app" : `${MAIL_NAMES[writesIn]} in a new tab`);
-  let question = $derived(writesIn !== "app" ? "Wrong place?" : others.length ? "Nothing opened, or the wrong app?" : "Nothing opened?");
+  /** What the line asks: on a computer, the two words that open the other ways; on a touch screen, plain words over its one way. */
+  let question = $derived(writesIn !== "app" ? "Wrong place?" : computer ? "Didn't open?" : "Nothing opened?");
 
   /** The email is opening: the line under the button says so, afresh. */
   function pressed(quotes: string[]) {
@@ -128,6 +135,7 @@
     copied = "";
     copyFailed = false;
     returned = false;
+    asked = false;
     opening = true;
   }
 
@@ -150,14 +158,16 @@
     written?.focus();
   }
 
-  /** The line's words and buttons, as the note at the reading area's foot says them. */
+  /** The line's words and buttons, as the note at the reading area's foot says them: on a computer, the other ways wait behind the question there too. */
   function awayNote(): ListNote {
+    const close = () => (away = undefined);
+    if (computer && !asked) return { words: `Opening ${where}…`, retry: () => ((asked = true), (away = awayNote())), retryWord: question, retryOpens: true, close };
     return {
-      words: `Opening ${where}… ${question}`,
+      words: computer ? question : `Opening ${where}… ${question}`,
       also: others.map((other) => ({ word: `Write in ${MAIL_NAMES[other]}`, press: () => void writeIn(other) })),
       retry: () => void copyAddress(),
       retryWord: "Copy their address",
-      close: () => (away = undefined),
+      close,
     };
   }
 
@@ -205,6 +215,7 @@
     chosen = undefined;
     opening = false;
     returned = false;
+    asked = false;
     away = undefined;
     copied = "";
     copyFailed = false;
@@ -364,7 +375,7 @@
         {showingFound}
         saved
         submit={article ? "Write back" : "Write"}
-        quiet={quiet && !article}
+        {quiet}
         {busy}
         {message}
         foot="It sends from your own email, and nine turtles keeps the address for next time."
@@ -375,7 +386,7 @@
         onEscape={() => void notNow()}
       />
     {:else if address}
-      <a class={quiet ? "btn" : "btn-primary"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" />{@render label()}</a>
+      <a class="btn" bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}><Icon name="send" />{@render label()}</a>
       {#if article}
         <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
       {:else}
@@ -384,11 +395,31 @@
       {/if}
       {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
-      <p class={["opening", !opening && "sr-only"]} aria-live="polite">
-        {#if opening}{#if !returned}Opening {where}…<br />{/if}{#if copied}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{:else}{question}<span class="ways">{#each others as other (other)}<TextButton onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</TextButton>{/each}<TextButton onclick={() => void copyAddress(true)}>Copy their address</TextButton></span>{/if}{/if}
+      {#snippet ways()}
+        <span class="ways"
+          >{#each others as other (other)}<button type="button" class="text-link" onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</button>{/each}<button
+            type="button"
+            class="text-link"
+            onclick={() => void copyAddress(true)}>Copy their address</button
+          ></span
+        >
+      {/snippet}
+      <p class={["opening-line", !opening && "sr-only"]} aria-live="polite">
+        {#if opening}
+          {#if !returned}Opening {where}…{" "}{/if}
+          {#if copied}
+            {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>
+          {:else if computer}
+            <!-- One line when the press worked: the other ways wait behind the question (decision 0265). -->
+            <button type="button" class={["text-link more", !returned && "after-words"]} aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>
+            {#if asked}{@render ways()}{/if}
+          {:else}
+            {#if !returned}<br />{/if}{question}{@render ways()}
+          {/if}
+        {/if}
       </p>
     {:else}
-      <button type="button" class={quiet ? "btn" : "btn-primary"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" />{@render label()}</button>
+      <button type="button" class="btn" bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}><Icon name="send" />{@render label()}</button>
       {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
     {/if}
   </div>
@@ -414,20 +445,19 @@
     margin-top: 0;
   }
   /* A long name wraps rather than running off a phone. */
-  .write-back > .btn-primary,
   .write-back > .btn {
     max-width: 100%;
     white-space: normal;
     text-align: center;
   }
-  /* Once pressed: the email app is opening, and the way out if it didn't (decision 0229). */
-  .opening {
+  /* Once pressed: the email app is opening, and the way out if it didn't (decision 0229). Not ".opening": that's the app's own first line (opening.css), whose serif and 64px of room would land here too. */
+  .opening-line {
     margin-top: 0.25rem;
     color: var(--ink-2);
     font-size: var(--text-meta);
     text-align: center;
   }
-  .on-page .opening {
+  .on-page .opening-line {
     text-align: start;
   }
   /* The ways on, side by side on a line of their own, wrapping on a phone. */
@@ -439,6 +469,13 @@
   }
   .on-page .ways {
     justify-content: flex-start;
+  }
+  /* The two quiet words on the line, as Change is beside the address: a small gap from "Opening…" while it's there, none once they stand alone. */
+  .more {
+    color: var(--ink-2);
+  }
+  .more.after-words {
+    margin-left: 0.5rem;
   }
   .change {
     margin-left: 0.5rem;

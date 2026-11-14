@@ -26,15 +26,16 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   // Nothing known yet: their page has no address.
   await expect(whoPage(page, `Blog ${name}`).getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(whoPage(page, `Blog ${name}`)).not.toContainText("Email");
-  // "Write to", the solid button under their name, opens the same box as Write back (the owner's core path, point 9).
-  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Write to Blog ${name}` })).toHaveClass(/btn-primary/);
+  // "Write to", the outlined button under their name (decision 0267), opens the same box as Write back (the owner's core path, point 9).
+  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Write to Blog ${name}` })).toHaveClass(/\bbtn\b/);
+  await expect(whoPage(page, `Blog ${name}`).locator(".btn-primary")).toHaveCount(0);
   await expect(whoPage(page, `Blog ${name}`)).not.toContainText("A person ·");
   await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   await page.locator(".item-row").first().click();
   const start = pane(page).getByRole("button", { name: `Write back to Blog ${name}` });
-  // Outlined at an article's end (decision 0242); solid on their page, above.
+  // Outlined at an article's end too (decision 0242).
   await expect(start).not.toHaveClass(/btn-primary/);
   await start.focus();
   await page.keyboard.press("Enter");
@@ -146,8 +147,12 @@ test("A publication has no Write back and no Write to; A person brings them back
   await appReady(page);
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 
-  // Made a publication: Write to and its address go as soon as it's chosen (decision 0192).
-  await who().getByRole("radio", { name: "A publication" }).check();
+  // Made a publication, in their settings: Write to and its address go from their page as soon as it's chosen (decision 0192).
+  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("radio", { name: "A publication" }).check();
+  await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
+  await expect(who().getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   await expect(who().getByText(`Write to Blog ${name}`)).toHaveCount(0);
   await expect(who()).not.toContainText("pub@pub.example");
 
@@ -167,9 +172,10 @@ test("A publication has no Write back and no Write to; A person brings them back
   await page.keyboard.press("Escape");
 
   // A person again: Write to comes back, with the address kept through its spell as a publication.
-  await page.goto(new URL(`/publications/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/publications/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
-  await who().getByRole("radio", { name: "A person" }).check();
+  await page.getByRole("radio", { name: "A person" }).check();
+  await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 });
 
@@ -205,20 +211,29 @@ test("Write back answers where it was pressed, names a post with no title, and E
     "mailto:notes@notes.example?subject=Re%3A%20Walked%20to%20the%20river%20before%20breakfast%20and%20watched%20the%20herons%E2%80%A6",
   );
 
-  // The paper plane at the top, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229).
+  // The paper plane at the top, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229), in one line (decision 0265).
   await plane.click();
   const note = pane(page).locator(".away");
-  await expect(note).toContainText("Opening your email app… Nothing opened, or the wrong app?");
-  await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeVisible();
+  await expect(note).toContainText("Opening your email app…");
+  await expect(note.getByRole("button", { name: "Write in Gmail" })).toHaveCount(0);
+  // "Didn't open?" opens the other ways in the note, and the keyboard goes to the first of them.
+  await note.getByRole("button", { name: "Didn't open?" }).click();
+  await expect(note).toContainText("Didn't open?");
+  await expect(note).not.toContainText("Opening your email app…");
+  await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeFocused();
+  await expect(note.getByRole("button", { name: "Write in Outlook.com" })).toBeVisible();
   await note.getByRole("button", { name: "Copy their address" }).click();
   await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await note.getByRole("button", { name: "Close the note" }).click();
   await expect(note.getByText(/Opening your email app|Copied/)).toHaveCount(0);
 
-  // By keyboard: W says it at the foot; Copy their address is pressed with Enter, and the keyboard goes back to the article.
+  // By keyboard: W says it at the foot, collapsed again; Didn't open? and Copy their address are pressed with Enter, and the keyboard goes back to the article.
   await page.locator(".item-row").first().focus();
   await page.keyboard.press("w");
-  await expect(note).toContainText("Opening your email app… Nothing opened, or the wrong app?");
+  await expect(note).toContainText("Opening your email app…");
+  await note.getByRole("button", { name: "Didn't open?" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeFocused();
   await note.getByRole("button", { name: "Copy their address" }).focus();
   await page.keyboard.press("Enter");
   await expect(note).toContainText(/Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
@@ -247,16 +262,30 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   const link = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
   await expect(link).toHaveAttribute("href", /^mailto:gm@gm\.example\?subject=/);
 
-  // Pressed: the line under it offers the other places, on a computer.
+  // Pressed: one line under it, on a computer; the other places wait behind "Didn't open?" (decision 0265).
   await link.click();
-  const line = pane(page).locator(".write-back .opening");
+  const line = pane(page).locator(".write-back .opening-line");
   await expect(line).toContainText("Opening your email app…");
-  await expect(line).toContainText("Nothing opened, or the wrong app?");
-  // Back from the email app (the page was hidden while it opened): "Opening…" goes, the ways on stay, for an app that opened wrong.
+  const more = line.getByRole("button", { name: "Didn't open?" });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await expect(line.getByRole("button")).toHaveText(["Didn't open?"]);
+  // A small gap from the words before it, and none once it stands alone.
+  await expect(more).toHaveCSS("margin-left", "8px");
+  // Back from the email app (the page was hidden while it opened): "Opening…" goes, the question stays, for an app that opened wrong.
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
   await expect(line).not.toContainText("Opening your email app…");
-  await expect(line).toContainText("Nothing opened, or the wrong app?");
-  // By keyboard: Enter on Write in Gmail, and the keyboard goes back to Write back as the button goes.
+  await expect(more).toBeVisible();
+  await expect(more).toHaveCSS("margin-left", "0px");
+  // By keyboard: Enter on Didn't open? shows the other places and keeps the keyboard on it; Enter again puts them away.
+  await more.focus();
+  await page.keyboard.press("Enter");
+  await expect(more).toHaveAttribute("aria-expanded", "true");
+  await expect(more).toBeFocused();
+  await expect(line.getByRole("button")).toHaveText(["Didn't open?", "Write in Gmail", "Write in Outlook.com", "Copy their address"]);
+  await page.keyboard.press("Enter");
+  await expect(line.getByRole("button")).toHaveText(["Didn't open?"]);
+  await page.keyboard.press("Enter");
+  // Enter on Write in Gmail, and the keyboard goes back to Write back as the button goes.
   const gmail = page.context().waitForEvent("page");
   await line.getByRole("button", { name: "Write in Gmail" }).focus();
   await page.keyboard.press("Enter");
@@ -266,6 +295,9 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await draft.close();
   await expect(line).toContainText("Opening Gmail in a new tab…");
   await expect(link).toBeFocused();
+  // A new press, a new line: the ways wait again, behind "Wrong place?" now.
+  await expect(line.getByRole("button")).toHaveText(["Wrong place?"]);
+  await line.getByRole("button", { name: "Wrong place?" }).click();
   await expect(line.getByRole("button", { name: "Write in your email app" })).toBeVisible();
   // Always said under the address while Gmail is chosen, so the choice is never stuck.
   await expect(pane(page)).toContainText("Opens Gmail in a new tab.");
@@ -305,7 +337,7 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   await appReady(page);
   await page.locator(".item-row").first().click();
   await pane(page).getByRole("link", { name: `Write back to Blog ${name}` }).click();
-  const line = pane(page).locator(".write-back .opening");
+  const line = pane(page).locator(".write-back .opening-line");
   await expect(line).toContainText("Nothing opened?");
   await expect(line).not.toContainText("the wrong app");
   await expect(line.getByRole("button")).toHaveText(["Copy their address"]);

@@ -1,6 +1,6 @@
 # 0259: Write back writes where your email is
 
-**In one line:** Under Write back once pressed, Write in Gmail or Write in Outlook.com opens the same email as a draft there in a new tab and is kept on that device; the address box's way to their site is a link in its line, and its Write back the one solid button; quotes go in curly quotes, not "> "
+**In one line:** Under Write back once pressed, Write in Gmail or Write in Outlook.com opens the same email as a draft there in a new tab and is kept on that device (both wait behind "Didn't open?" since 0265); the address box's way to their site is a link in its line, and its Write back the one solid button; quotes go in curly quotes, not "> "
 
 *11 November 2026.*
 

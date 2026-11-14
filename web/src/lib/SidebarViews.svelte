@@ -4,6 +4,10 @@
   everyone (decision 0187). With Unread off there's no Unread, and All is
   home.
 
+  Under them, one more row built the same way: Everyone you follow (SPEC
+  section 15), the page that looks after the people themselves, one press
+  from home instead of inside Settings (decision 0266).
+
   Notes shows from the first day, empty or not, so its empty list can say
   how to fill it (decision 0222).
 
@@ -22,7 +26,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import { sidebarViews, VIEW_NAMES, pathFor, type Route } from "./router";
+  import { nameFor, sidebarViews, VIEW_NAMES, pathFor, type Route } from "./router";
 
   let {
     route,
@@ -46,6 +50,8 @@
   const ICONS = { unread: "dot", starred: "star", notes: "note", all: "layers" } as const;
 
   let views = $derived(sidebarViews(unreadOff));
+  const everyone: Route = { kind: "your-feeds" };
+  let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
 <ul>
@@ -70,6 +76,16 @@
       {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}
     </li>
   {/each}
+  <li>
+    <a
+      href={pathFor(everyone)}
+      aria-current={onEveryone ? "page" : undefined}
+      onclick={(event) => follow(event, everyone)}
+      class={["place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-ui", onEveryone ? "font-semibold text-ink" : "text-ink-2"]}
+      ><span class={onEveryone ? "text-ink" : "text-muted"}><Icon name="feed" /></span><span class="min-w-0 flex-1">{nameFor(everyone)}</span
+      >{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}</a
+    >
+  </li>
 </ul>
 
 <style>

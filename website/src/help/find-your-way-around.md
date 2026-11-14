@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the reading pane, and how new
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-13
+updated: 2026-11-14
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -26,6 +26,8 @@ From the top:
   <kbd>Enter</kbd>) looks for the same words in every article instead.
   <kbd>Esc</kbd> empties it.
 - **Unread**, **Starred**, **Notes** and **All articles**.
+- **Everyone you follow**: one page with everyone on it, for looking after
+  them. Who isn't working comes first, then everyone A to Z.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, **Keys** and **Settings**.

@@ -180,7 +180,8 @@
       <div class="flex w-full flex-col gap-3">
         {#if forName}
           <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span>Only from {forName}</span>
+            <!-- A very long name wraps here, so the page is never wider than the screen. -->
+            <span class="min-w-0 break-words">Only from {forName}</span>
             <button type="button" class="btn btn-small" onclick={() => (forFeed = undefined)}>Everyone instead</button>
           </p>
         {/if}

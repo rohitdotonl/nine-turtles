@@ -10,7 +10,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const field = (page: Page) => page.getByRole("textbox", { name: /^Hide articles (from .+ )?about$/ });
 
-test("Hide articles about… from someone's page hides what matches at once, and Hidden articles brings it back", async ({ page }) => {
+test("Hide articles about… from someone's settings hides what matches at once, and Hidden articles brings it back", async ({ page }) => {
   const name = `rules-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
@@ -18,8 +18,8 @@ test("Hide articles about… from someone's page hides what matches at once, and
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
 
-  // Their page › Hide articles about…: Settings › Hiding, the field set to them and waiting.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  // Their settings › Hide articles about…: Settings › Hiding, the field set to them and waiting.
+  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
@@ -133,7 +133,7 @@ test("a word hides an article as it arrives; a week says so, and Remove has Undo
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
 
@@ -223,7 +223,7 @@ test("with the keyboard alone: a word added, then undone, keeps the keyboard's p
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
 

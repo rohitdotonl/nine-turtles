@@ -10,6 +10,8 @@ export type ListNote = {
   retry?: () => void;
   /** "Try again", or "Sign in" when being signed out is why (decision 0230). */
   retryWord?: string;
+  /** That button opens more of the note instead of putting it away (Write back's "Didn't open?"): the keyboard stays in the note. */
+  retryOpens?: boolean;
   /** Something failed: oxblood, with the alert icon (BRAND.md → "Messages"). */
   refusal?: boolean;
   /** Other ways on, before Try again: Write back's "Write in Gmail" (SPEC section 37). */

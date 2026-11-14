@@ -4,7 +4,7 @@ description: Follow a YouTube channel and watch its new videos in nine turtles, 
 groupId: reading
 order: 9
 spec: 38
-updated: 2026-11-11
+updated: 2026-11-14
 related: [follow-someone, listen-to-podcasts, one-person-several-places]
 ---
 
@@ -44,7 +44,7 @@ player remembers whether you like captions.
 ## Good to know
 
 - Shorts and live streams are left out. To include them for a channel,
-  open the channel's page and, in its settings at the foot (under
+  open the channel's page and press **Settings**; there (under
   **Sources**, if it's one of several), turn on **Include Shorts** or
   **Include live streams**.
 - Nothing plays by itself, and when a video ends the player closes. YouTube's

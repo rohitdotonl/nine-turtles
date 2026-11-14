@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-11
+updated: 2026-11-14
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -15,7 +15,7 @@ related: [unfollow-someone, follow-someone, one-person-several-places]
 
 ## Look at Everyone you follow
 
-Open **Settings › Everyone you follow**. Anything that isn't working is at
+Open **Everyone you follow**, in the sidebar under All articles (on a phone, on Home). Anything that isn't working is at
 the top, **Not working** first, then **Having trouble**. Each one says when
 something last came through and why, for example: "Nothing has come
 through since 1 Nov. The site says the feed isn't there any more. It
@@ -54,6 +54,6 @@ worked since 12 Oct.", with a button to find its new address.
   turn nine turtles away too. Then it says "The site's guard against bots
   turns nine turtles away." Only the site can let it in: if it's a person,
   **Write to** them and say so. nine turtles never sneaks past a guard.
-- Quiet isn't broken: some people write once a year. In **Settings ›
-  Everyone you follow**, someone with nothing new for six months says
+- Quiet isn't broken: some people write once a year. In **Everyone you
+  follow**, someone with nothing new for six months says
   "Quiet since" and the date.

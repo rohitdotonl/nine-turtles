@@ -1,6 +1,8 @@
 <!--
-  Everyone you follow (SPEC section 15, decision 0186), opened from
-  Settings. Who isn't working comes first (NotWorking.svelte), then who
+  Everyone you follow (SPEC section 15, decision 0186), opened from its
+  row in the sidebar, under All articles (decision 0266): a place of its
+  own, so on a computer it has no way back to draw (its row shows where
+  you are) and on a phone "‹ Home". Who isn't working comes first (NotWorking.svelte), then who
   could be either, to settle with a tick (SettleList.svelte, decision 0264).
   Then everyone, A to Z, People and Publications apart as in the sidebar, each
   row saying the title of their newest piece and when it came, or "Quiet
@@ -49,14 +51,15 @@
 
   let {
     heading = $bindable(),
-    onClose,
+    onBack,
     onOpenPerson,
     onFeedsChanged,
     besideToggle = false,
     library,
   }: {
     heading?: HTMLHeadingElement;
-    onClose: () => void;
+    /** On a phone: back to Home. A computer shows the sidebar, where its row says where you are. */
+    onBack?: () => void;
     /** A row was chosen, out of Choose: their page opens. */
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
@@ -293,7 +296,7 @@
 </script>
 
 <section aria-labelledby="your-feeds-heading" class="flex flex-1 flex-col bg-paper">
-  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading onBack={onClose} backTo="Settings" {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} {library} />

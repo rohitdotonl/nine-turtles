@@ -122,6 +122,7 @@ test("a button that waits says what it's doing", async ({ page }) => {
 test("Write back says the email app is opening, and offers the address if nothing opened", async ({
   page,
   context,
+  isMobile,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto(new URL("/all", FEEDS_APP).href);
@@ -140,6 +141,9 @@ test("Write back says the email app is opening, and offers the address if nothin
   await expect(
     article(page).getByText("Opening your email app…"),
   ).toBeVisible();
+  // On a computer the other ways wait behind two words on that line (decision 0265); a phone shows its one way at once.
+  if (!isMobile)
+    await article(page).getByRole("button", { name: "Didn't open?" }).click();
   await article(page)
     .getByRole("button", { name: "Copy their address" })
     .click();

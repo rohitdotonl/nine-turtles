@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-13
+updated: 2026-11-14
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -27,7 +27,7 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
    or **A publication** (anything you only read or watch, such as a
    magazine, with no Write back). Its choice is already chosen, with a line
    saying why. When their feed doesn't tell, neither is chosen: choose one,
-   or leave it and they wait with Publications until you say, on their page
+   or leave it and they wait with Publications until you say, in their settings
    or at the end of one of their articles. Under it, choose their
    **Folder**, or **New folder…** to make one with them in it. If you
    pressed + Add while in a folder, it starts on that folder. Press
@@ -40,7 +40,7 @@ When a blog signs every article with one writer's name, nine turtles calls
 them by that name, with the blog's title under it on their page. Otherwise
 it uses the blog's own name, without the words around it that only say it's
 a feed: "Blog – Pete's Site » Latest Posts" becomes "Pete's Site". Want a
-different name? Change it in **Name**, at the foot of their page; yours always stays.
+different name? Change it in **Name**, in their settings (**Settings**, at the foot of their page); yours always stays.
 
 Their page (press their name at the top of their list) keeps what's
 between you: **Write to** them, your own note on them and **Your
@@ -62,7 +62,7 @@ blog and its podcast. A feed that only repeats another in a different format
 isn't listed.
 
 Already follow their blog, and now want their channel too? Add it from
-their page instead, with **+ Add their newsletter, videos or podcast** under their settings: see
+their page instead: press **Settings** at its foot, then **+ Add their newsletter, videos or podcast**. See
 <a href="/help/one-person-several-places/">See everything one person makes
 in one place</a>.
 

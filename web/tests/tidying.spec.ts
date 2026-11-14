@@ -23,12 +23,12 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   const [first, second] = await twoBlogs(page);
   const folder = `Later ${Date.now()}`;
 
-  // Settings › Everyone you follow.
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  // Everyone you follow: a row of its own in the sidebar, under the lists (decision 0266).
+  await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
-  await page.getByRole("link", { name: "Everyone you follow" }).click();
+  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Everyone you follow" }).click();
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings\/feeds$/);
+  await expect(page).toHaveURL(/\/following$/);
   // Each row says the title of their newest piece and when it came, never "Quiet" for a fresh blog.
   await expect(yours(page).getByRole("link", { name: new RegExp(`^${first}\\s*“[^”]+”, (today|\\d+ \\w+)`) })).toBeVisible();
   // People and Publications apart, as in the sidebar, under headings that count them.
@@ -95,7 +95,7 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
 test("with the keyboard alone: Choose, tick, Move to… and Escape closes only the sheet", async ({ page, isMobile }) => {
   test.skip(isMobile, "keyboard use is tested on the wide layout");
   const [first] = await twoBlogs(page);
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   await tabTo(page, page.getByRole("button", { name: "Choose…" }));
   await page.keyboard.press("Enter");
@@ -116,13 +116,14 @@ test("with the keyboard alone: Choose, tick, Move to… and Escape closes only t
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   await expect(page.getByRole("button", { name: "Move to…" })).toBeFocused();
-  // Escape on the page goes back to Settings.
+  // Escape on the page leaves it where it is: a place of its own beside the sidebar, not one of Settings' pages (decision 0266).
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
+  await expect(page).toHaveURL(/\/following$/);
 });
 
 test("when everyone you follow couldn't load, Try again loads them, keeping the keyboard's place", async ({ page }) => {
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
   let failing = true;
@@ -141,7 +142,7 @@ test("when everyone you follow couldn't load, Try again loads them, keeping the 
 
 test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and one already gone (decision 0240)", async ({ page }) => {
   const [first, second] = await twoBlogs(page);
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
 
   // Unsubscribe from the first, then do something else: it waits, kept, at the end.

@@ -161,7 +161,7 @@ anywhere or counted.
    shows; turn it on, and the line goes.
 6. On a person's page, Add a note…, then type a word of it in the sidebar's
    find field: the person is found.
-7. Their page › Unsubscribe: it asks what to do with what you
+7. Their page › Settings › Unsubscribe: it asks what to do with what you
    saved. Choose Keep them: Notes still lists the article.
 8. Settings › Your data › Download everything: notes-and-highlights.md has
    all of it, and the article's own page shows its highlights and notes.

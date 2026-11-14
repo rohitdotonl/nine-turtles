@@ -19,15 +19,19 @@ async function openEdit(page: Page, name: "Edit folder") {
   await page.getByRole("menuitem", { name }).click();
 }
 
-/** Their page, from the list's More (Info about …), with Folders opened among their settings (decision 0254). */
+/** Their settings, a page of its own one row on from their page (decision 0267). */
+const settingsOf = (page: Page, name: string) => page.getByRole("region", { name: `Settings for ${name}`, exact: true });
+
+/** Their settings, from the list's More (Info about …) and the Settings row on their page, with Folders opened (decisions 0254, 0267). */
 async function editWho(page: Page, name: string) {
   await more(page).click();
   await page.getByRole("menuitem", { name: `Info about ${name}` }).click();
-  await whoPage(page, name).getByRole("button", { name: /^Folders/ }).click();
+  await whoPage(page, name).getByRole("link", { name: `Settings for ${name}`, exact: true }).click();
+  await settingsOf(page, name).getByRole("button", { name: /^Folders/ }).click();
   await expect(page.getByLabel("New folder")).toBeVisible();
 }
 
-/** The same with only the keyboard: More, its last item (Info about …), then Tab to Folders and Enter. */
+/** The same with only the keyboard: More, its last item (Info about …), Tab to the Settings row and Enter, then Tab to Folders and Enter. */
 async function editWhoByKeys(page: Page, name: string) {
   await tabTo(page, more(page));
   await page.keyboard.press("Enter");
@@ -35,7 +39,10 @@ async function editWhoByKeys(page: Page, name: string) {
   await expect(page.getByRole("menuitem", { name: `Info about ${name}` })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(whoPage(page, name).getByRole("heading", { level: 2, name })).toBeFocused();
-  await tabTo(page, whoPage(page, name).getByRole("button", { name: /^Folders/ }));
+  await tabTo(page, whoPage(page, name).getByRole("link", { name: `Settings for ${name}`, exact: true }));
+  await page.keyboard.press("Enter");
+  await expect(settingsOf(page, name).getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+  await tabTo(page, settingsOf(page, name).getByRole("button", { name: /^Folders/ }));
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("New folder")).toBeVisible();
 }
@@ -88,8 +95,8 @@ test("a feed put in two folders appears under both", async ({ page }) => {
   await openBlogs(page, [blog]);
 
   await editWho(page, `Blog ${blog}`);
-  // Their page, with their settings at its foot beside their list: no Edit mode, and nothing waits for a Done.
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
+  // Their settings, a page of their own beside their list: no Edit mode, and nothing waits for a Done.
+  await expect(page).toHaveURL(/\/people\/[0-9]+\/settings$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".item-row")).toHaveCount(3);
   await expect(page.getByRole("button", { name: /^(Done|Cancel)$/ })).toHaveCount(0);
@@ -236,8 +243,8 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(sidebar(page).getByRole("link", { name: `Blog ${blog}`, exact: true }).and(page.locator(`[data-unread="2"]`))).toBeVisible();
 
   await editWho(page, `Blog ${blog}`);
-  // At the foot of their page, under their settings, in red words that say what it does, a full row to press.
-  const edit = whoPage(page, `Blog ${blog}`);
+  // At the foot of their settings, in red words that say what it does, a full row to press.
+  const edit = settingsOf(page, `Blog ${blog}`);
   const leave = edit.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
   await expect(leave).toHaveText(`Unsubscribe from Blog ${blog}`);
   const [red, ink] = await Promise.all([leave.evaluate((e) => getComputedStyle(e).color), edit.evaluate((e) => getComputedStyle(e).color)]);
@@ -405,8 +412,8 @@ test("with only the keyboard: their settings, a new folder, opening it, Edit fol
   await tabTo(page, page.getByLabel("New folder"));
   await page.keyboard.type(folder);
   await page.keyboard.press("Enter");
-  // Enter makes it and puts them in it, at once, on their page.
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
+  // Enter makes it and puts them in it, at once, in their settings.
+  await expect(page).toHaveURL(/\/people\/[0-9]+\/settings$/);
   await expect(page.getByRole("checkbox", { name: folder })).toBeChecked();
 
   // The folder just made opens (the core path); its button closes and opens it, by Enter.
@@ -419,7 +426,7 @@ test("with only the keyboard: their settings, a new folder, opening it, Edit fol
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-  // Untick the folder on their page: Space on the checkbox, and it counts at once.
+  // Untick the folder in their settings: Space on the checkbox, and it counts at once.
   await tabTo(page, page.getByRole("checkbox", { name: folder }));
   await page.keyboard.press("Space");
   await expect(page.getByRole("checkbox", { name: folder })).not.toBeChecked();
@@ -522,7 +529,7 @@ test("their settings are only Name, This is, Folders, Pause and Hide articles ab
   const blog = unique("fewer");
   await openBlogs(page, [blog]);
   await editWhoByKeys(page, `Blog ${blog}`);
-  const sheet = whoPage(page, `Blog ${blog}`);
+  const sheet = settingsOf(page, `Blog ${blog}`);
   // The four settings that went (the owner's core path, point 11, decision 0183).
   await expect(sheet.getByRole("combobox", { name: "Kind of source" })).toHaveCount(0);
   await expect(sheet.getByRole("radio", { name: "Automatic" })).toHaveCount(0);
@@ -546,24 +553,31 @@ test("their settings are only Name, This is, Folders, Pause and Hide articles ab
   expect([...tops].sort((one, other) => one - other)).toEqual(tops);
 });
 
-test("with only the keyboard: pausing someone on their page is remembered, with since when", async ({ page }) => {
+test("with only the keyboard: pausing someone in their settings is remembered, with since when", async ({ page }) => {
   const blog = unique("pause");
   const [paused] = await openBlogs(page, [blog]);
   await editWhoByKeys(page, `Blog ${blog}`);
-  const sheet = whoPage(page, `Blog ${blog}`);
+  const sheet = settingsOf(page, `Blog ${blog}`);
+  const theirs = whoPage(page, `Blog ${blog}`);
   const pause = sheet.getByRole("switch", { name: "Pause for a while" });
   await expect(pause).not.toBeChecked();
-  await expect(sheet.getByText(/Paused today\./)).toHaveCount(0);
+  await expect(page.getByText(/Paused today\./)).toHaveCount(0);
   await tabTo(page, pause);
   await page.keyboard.press("Space");
-  // It says so on their page and above their list, with Resume (decision 0239).
-  await expect(page.getByText("Paused today. Their new articles arrive already read.")).toHaveCount(2);
+  // The switch is on, and their list beside it says so, with Resume (decision 0239). (Their page, hidden while their settings show, says it too.)
+  await expect(pause).toBeChecked();
+  await expect(page.getByText("Paused today. Their new articles arrive already read.").filter({ visible: true })).toHaveCount(1);
+  // Escape, back on their page: it says so there too, under their name.
+  await page.keyboard.press("Escape");
+  await expect(theirs.getByText("Paused today. Their new articles arrive already read.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(2);
 
   await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
   await appReady(page);
   await expect(pause).toBeChecked();
-  await expect(sheet.getByText(/Paused today\./)).toBeVisible();
+  await page.goto(new URL(`/people/${paused}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await expect(theirs.getByText(/Paused today\./)).toBeVisible();
 });
 
 test("Resume above a paused list unticks Pause for a while", async ({ page }) => {
@@ -571,10 +585,10 @@ test("Resume above a paused list unticks Pause for a while", async ({ page }) =>
   const [paused] = await openBlogs(page, [blog]);
   await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
   await appReady(page);
-  const sheet = whoPage(page, `Blog ${blog}`);
+  const sheet = settingsOf(page, `Blog ${blog}`);
   await sheet.getByRole("switch", { name: "Pause for a while" }).check();
-  // Saved as it's switched: their page says so.
-  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(2);
+  // Saved as it's switched: their list, beside their settings, says so.
+  await expect(page.getByRole("button", { name: "Resume", exact: true })).toHaveCount(1);
   await page.goto(new URL(`/people/${paused}`, FEEDS_APP).href);
   await appReady(page);
   // With only the keyboard: Tab to Resume, Enter, and the keyboard lands on what happened.

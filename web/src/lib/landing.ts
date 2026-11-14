@@ -15,7 +15,7 @@ export interface Headings {
   yourFeeds?: HTMLHeadingElement;
   muted?: HTMLHeadingElement;
   readers?: HTMLHeadingElement;
-  /** A person's or publication's page, Edit or source settings (decision 0163). */
+  /** A person's or publication's page, or their settings (decisions 0163, 0267). */
   who?: HTMLHeadingElement;
   add?: HTMLInputElement;
 }
@@ -41,7 +41,8 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
   if (place.kind === "muted") return headings.muted;
   if (place.kind === "readers") return headings.readers;
   if (place.kind === "add-feed") return headings.add;
-  if (place.kind === "about") return headings.who;
+  // Back from their settings: to the Settings row on their page, if it's there (decision 0267).
+  if (place.kind === "about") return (!place.settings && scene.returnRow && settingsRow(scene.returnRow)) || headings.who;
   if (place.kind === "new-to-feeds") return scene.phone ? headings.list : headings.sheet;
   if (scene.sheetShown) return headings.sheet;
   if (scene.welcome) return headings.welcome;

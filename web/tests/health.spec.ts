@@ -7,7 +7,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // keeps it. The test nine turtles checks every feed every two seconds, so a
 // moved feed fails twice within moments. Each run follows a blog of its own.
 
-test("a moved feed is listed in plain words, and Find new address moves it", async ({ page }) => {
+test("a moved feed is listed in plain words, and Find new address moves it", async ({ page, isMobile }) => {
   const name = `moving-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
@@ -16,12 +16,12 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await follow(page, `${FEED_SITE}/blog/${name}/`);
   expect((await page.request.get(`${FEED_SITE}/move/${name}`)).ok()).toBe(true);
 
-  // Settings › Everyone you follow.
-  await page.goto(new URL("/settings", FEEDS_APP).href);
+  // Everyone you follow: a row of its own in the sidebar, under the lists (decision 0266).
+  await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
-  await page.getByRole("link", { name: "Everyone you follow" }).click();
+  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Everyone you follow" }).click();
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings\/feeds$/);
+  await expect(page).toHaveURL(/\/following$/);
 
   const feed = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
   await expect(async () => {
@@ -71,9 +71,16 @@ test("a moved feed is listed in plain words, and Find new address moves it", asy
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
 
-  // ‹ Settings goes back to Settings (decision 0231).
-  await page.getByRole("button", { name: "Back to Settings" }).click();
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  // A place of its own, not one of Settings' pages (decision 0266): no ‹ Settings. On a phone, ‹ Home goes back to the
+  // feeds screen (decision 0231); on a computer the sidebar is beside it, so there's no way back to press.
+  await expect(page.getByRole("button", { name: "Back to Settings" })).toHaveCount(0);
+  if (isMobile) {
+    await page.getByRole("button", { name: "Back to Home" }).click();
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Everyone you follow" })).toBeVisible();
+  } else {
+    await expect(page.getByRole("button", { name: "Back to Home" })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Everyone you follow" })).toHaveAttribute("aria-current", "page");
+  }
 });
 
 test("a failing feed says so above its list, and Find its new address moves it with one question", async ({ page }) => {
@@ -122,7 +129,7 @@ test("a failing feed says so above its list, and Find its new address moves it w
   expect(await failingSince()).toBeNull();
 });
 
-test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, Escape", async ({ page }) => {
+test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, Escape", async ({ page, isMobile }) => {
   const name = `moving-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   // The old Feed health address opens Everyone you follow.
@@ -163,10 +170,14 @@ test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, 
   await page.keyboard.press("Enter");
   await expect(feed.getByRole("button", { name: `Find new address for ${title}` })).toBeFocused();
 
-  // Escape goes back to Settings.
+  // Escape: on a phone, back to the feeds screen, as on every phone screen; on a computer the page is a place of
+  // its own beside the sidebar (decision 0266), so it stays.
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
-  await expect(page).toHaveURL(/\/settings$/);
+  if (isMobile) await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+  else {
+    await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
+    await expect(page).toHaveURL(/\/following$/);
+  }
 });
 
 /** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until Everyone you follow would list it. */
@@ -208,7 +219,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
   // A feed whose site names nothing new: one plain sentence, on their page too.
   const none = `moving-gone-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const gone = await failing(page, none, "break");
-  await page.goto(new URL(`/people/${gone}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${gone}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: /^The site doesn't name another feed/ })).toBeVisible();
@@ -219,15 +230,17 @@ test("when the site names several feeds, the list's line offers a choice; when i
 test("their page moves a failing feed at once, says so, and keeps what was typed", async ({ page }) => {
   const name = `moving-edit-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, name, "move");
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
-  const nameField = page.getByRole("textbox", { name: "Name" });
-  await nameField.fill(`Renamed ${name}`);
+  // A note half written on their page.
+  await page.getByRole("button", { name: "Add a note…" }).click();
+  const note = page.getByRole("textbox", { name: `A note on Blog ${name}` });
+  await note.fill("Moved house in the spring");
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await page.getByRole("button", { name: "Use it" }).click();
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
   await expect(page.getByText(/This feed hasn't worked since/)).toHaveCount(0);
-  await expect(nameField).toHaveValue(`Renamed ${name}`);
+  await expect(note).toHaveValue("Moved house in the spring");
   const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
   const feed = library.feeds.find((each: { id: number }) => each.id === id);
   expect(feed.failing_since ?? null).toBeNull();
@@ -264,7 +277,7 @@ test("moving a dead feed in Everyone you follow keeps its place and its confirma
     for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   const dead = page.getByRole("region", { name: "Not working" });
   const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
@@ -290,7 +303,7 @@ test("a person whose feed stopped may not know: their Not working card offers Wr
     for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   const dead = page.getByRole("region", { name: "Not working" });
   const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
@@ -325,7 +338,7 @@ test("a publication whose feed stopped gets no Write to", async ({ page }) => {
     for (const feed of real.feeds) if (feed.id === id) feed.kind = "publication";
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/settings/feeds", FEEDS_APP).href);
+  await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
   const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
   await expect(feed).toBeVisible();

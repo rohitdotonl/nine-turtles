@@ -70,12 +70,13 @@ test("its button hides and shows the sidebar; its button sits on the sidebar, th
 });
 
 
-test("the sidebar lists Unread, Starred, Notes (from the first day, decision 0222) and All articles, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Starred, Notes (from the first day, decision 0222) and All articles, then Everyone you follow, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   // Starred: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
   await openApp(page, "/starred");
   const links = sidebar(page).getByRole("list").getByRole("link");
-  await expect(links).toHaveText(["Unread", "Starred", "Notes", "All articles"]);
+  // Under the lists, built as they are: Everyone you follow, the page that looks after the people themselves (decision 0266).
+  await expect(links).toHaveText(["Unread", "Starred", "Notes", "All articles", "Everyone you follow"]);
 
   const here = sidebar(page).getByRole("link", { name: "Starred" });
   await expect(here).toHaveAttribute("aria-current", "page");
@@ -642,7 +643,7 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
 test("Everyone you follow never scrolls sideways on a laptop", async ({ page }) => {
   // An empty note line, kept for screen readers, once stretched the full width beyond the page's edge.
   await page.setViewportSize({ width: 1336, height: 735 });
-  await openApp(page, "/settings/feeds");
+  await openApp(page, "/following");
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   const sideways = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>("*")]
@@ -666,7 +667,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   }
   const ink = await page.locator("body").evaluate((body) => getComputedStyle(body).color);
   // Rows that open a page are full-width rows, at least 44px tall, in the text color, ending in ›, never the accent (decision 0042).
-  for (const row of [page.getByRole("link", { name: "Everyone you follow" }), page.getByRole("link", { name: "Your data" })]) {
+  for (const row of [page.getByRole("link", { name: "Your data" }), page.getByRole("link", { name: "Hiding", exact: true })]) {
     const box = (await row.boundingBox())!;
     expect(Math.round(box.width)).toBe(boxes[0]![1]);
     expect(box.height).toBeGreaterThanOrEqual(44);

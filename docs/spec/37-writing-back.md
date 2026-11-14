@@ -26,10 +26,12 @@ V1, item 2). Its look gets a refinement round.*
   publication is something you only read or watch, so its articles end with
   no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page
   has no Write to, and so no address on its page. Making it **A person**
-  on its page brings them back, with any address kept from before.
+  in its settings brings them back, with any address kept from before.
 - **Write to, on their page** (the owner's core path, point 9): the same
-  solid button with the paper plane, **Write to Tomas Berg**, sits under
-  their name on their page (section 36), with the address under it. It
+  outlined button with the paper plane, **Write to Tomas Berg**, sits under
+  their name on their page (section 36), with the address under it
+  (outlined there too since decision 0267, so their name leads the page;
+  solid ink before). It
   opens your email app with the address only and an empty subject. When no
   address is known, it opens the same box as Write back (below), whose
   button then says **Write**.
@@ -47,35 +49,39 @@ V1, item 2). Its look gets a refinement round.*
   tell which post it's about. nine turtles never sends that email and never sees
   it, or your inbox; it only makes the `mailto:` link your device opens. The
   body is left empty for you, unless you highlighted words in the article.
-  Once pressed, a line under the address says "Opening your email app…",
-  and under it "Nothing opened, or the wrong app?" with **Write in Gmail**,
-  **Write in Outlook.com** and **Copy their address** (underlined words, as
-  the list's note's buttons, apart by a middle dot); Copy their address
-  copies it and says "Copied.": on a computer with no email app set up, the
-  press otherwise does nothing you can see (decision 0229). Pressing one of
-  them puts the keyboard back on Write back, as the button pressed goes.
+  Once pressed, one line under the address says "Opening your email app…"
+  (decision 0229), and, on a computer, ends in two quiet underlined words,
+  **Didn't open?** (decision 0265). A press that worked leaves that one
+  line and nothing more. Pressing Didn't open? shows the other ways on a
+  line under it, as plain underlined links: **Write in Gmail**, **Write in
+  Outlook.com** and **Copy their address**; pressing it again puts them
+  away, the keyboard stays on it, and screen readers hear whether it's open.
+  Copy their address copies it and says "Copied.": on a computer with no
+  email app set up, the press otherwise does nothing you can see. Pressing
+  one of the ways puts the keyboard back on Write back, as the button pressed goes.
 - **Write in Gmail or Outlook.com** (decision 0259): on a computer whose
   email lives in the browser, pressing Write in Gmail opens the same email
   (address, subject, quotes) as a new Gmail draft in a new tab, at once, and
   keeps the choice on this device only (a phone and a computer often
   differ): from then on Write back (and Write to) opens a Gmail draft in a
   new tab instead of the email app, and the line says "Opening Gmail in a
-  new tab…" and "Wrong place?" with **Write in your email app**, **Write in
+  new tab…" and **Wrong place?**, which opens **Write in your email app**, **Write in
   Outlook.com** and **Copy their address**. Outlook.com works the same way.
   While Gmail or Outlook.com is chosen, a line under the address always says
   so, "Opens Gmail in a new tab.", with **Use your email app**, which goes
   back without writing: the choice is never stuck. On a touch screen, whose
-  email app always answers, the line asks only "Nothing opened?" with Copy
+  email app always answers, nothing is folded away: under "Opening your
+  email app…" the line asks "Nothing opened?" with its one way, Copy
   their address (and Write in your email app, if Gmail or Outlook.com was
   chosen there). Started later than the press (a row's menu, while the
   article's text loads), a new tab may be blocked by the browser, so then
   nothing opens and the keyboard goes to Write back for one more press. nine turtles still never sends or sees the email: it
-  only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question and its ways on stay, for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
+  only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question stays (with its ways, if they were open), for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
   Pressed away from the article's end (the paper plane, `w`, a row's menu,
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's
   foot, as the list's note is shown there (section 8), "Opening your email
-  app… Nothing opened, or the wrong app?" with the line's buttons and a ×; after a copy,
+  app…" with **Didn't open?** and a ×; pressed, the note says "Didn't open?" with the three ways, and the keyboard goes to the first of them (on a touch screen, "Opening your email app… Nothing opened?" with Copy their address); after a copy,
   "Copied." (or, failing, the same words as the line's, in oxblood). It goes as
   the line does, or with its ×. A copy that fails, here or there, says "The
   address couldn't be copied. It's …: select it and copy it yourself.", with
@@ -203,7 +209,8 @@ V1, item 2). Its look gets a refinement round.*
    about this**; press it, and the email starts with those words only. (It
    counts as pressing Write back: with no address known, it opens the same
    box and the same one look on their site, decision 0168.)
-10. On a computer, press Write back, then **Write in Gmail** under it: a new
+10. On a computer, press Write back: one line, "Opening your email app…
+   Didn't open?". Press **Didn't open?**, then **Write in Gmail** under it: a new
    Gmail draft opens in a new tab with the address, "Re: " and the title.
    Open another article and press Write back: Gmail again, straight away.
    Press **Write in your email app** under it to go back.

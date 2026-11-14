@@ -17,8 +17,8 @@ export function isOver(place: Route): boolean {
 }
 
 /**
- * A person's or publication's page (decision 0163), its settings on it too: on a computer
- * in the reading area, beside their list; on a phone, a screen of its own in the list's place.
+ * A person's or publication's page (decision 0163), or their settings, a page of its own one row
+ * on from it (decision 0267): on a computer in the reading area, beside their list; on a phone, a screen of its own in the list's place.
  */
 export function isWho(place: Route): place is Extract<Route, { kind: "about" }> {
   return place.kind === "about";

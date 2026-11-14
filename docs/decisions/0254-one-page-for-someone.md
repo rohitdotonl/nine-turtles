@@ -1,6 +1,6 @@
 # 0254: One page for someone
 
-**In one line:** A person's or publication's page is one page with no Edit mode: their name set large as an article's title, where they publish as links, Write to, your note and highlights, then their settings as Settings' rows that change as they're touched (Folders opening in place, Sources with Take out); `/edit` and `/sources/N` open it, `e` lands on Name, an X closes it on a computer, and their name under an article is underlined
+**In one line:** A person's or publication's page is one page with no Edit mode: their name set large as an article's title, where they publish as links, Write to, your note and highlights, then their settings as Settings' rows that change as they're touched (Folders opening in place, Sources with Take out); `/edit` and `/sources/N` open it, `e` lands on Name, an X closes it on a computer, and their name under an article is underlined (since 0267 their settings are a page of their own, one press from their page, and `e` lands on its title)
 
 *11 November 2026.*
 

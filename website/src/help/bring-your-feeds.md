@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 13, 16 and 36
-updated: 2026-11-12
+updated: 2026-11-14
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -32,7 +32,7 @@ When the last one is checked, the line says how they were sorted: "Your
 list is in: 18 people and 4 publications. 8 could be either." Some feeds
 don't say who writes them, so nine turtles can't tell a person from a
 publication; those are kept with Publications until you say. Press **Look
-them over** to see them listed first in **Settings › Everyone you follow**:
+them over** to see them listed first in **Everyone you follow**:
 tick the people, anyone you might write back to, then press **The rest are
 publications**. A folder in your file called Friends or News, say, helps
 nine turtles sort what's in it.

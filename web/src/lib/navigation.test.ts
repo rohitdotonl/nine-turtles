@@ -11,6 +11,7 @@ const theirSettings: Route = { kind: "about", id: 7, settings: true };
 const about: Route = { kind: "about", id: 7 };
 const settings: Route = { kind: "settings" };
 const following: Route = { kind: "your-feeds" };
+const hiding: Route = { kind: "settings", page: "hiding" };
 
 /** On a computer, at `route`, over `lastPlace` if it's a sheet. */
 function here(route: Route, lastPlace: Route = unread, phone = false): Here {
@@ -78,15 +79,25 @@ describe("moveTo", () => {
   });
 
   it("going back from a page opened from Settings names the row that opened it", () => {
-    expect(moveTo(here(following), settings).returnRow).toBe("feeds");
-    expect(moveTo(here(following), unread).returnRow).toBeUndefined();
-    expect(moveTo(here(settings), following).returnRow).toBeUndefined();
+    expect(moveTo(here(hiding), settings).returnRow).toBe("hiding");
+    expect(moveTo(here(hiding), unread).returnRow).toBeUndefined();
+    expect(moveTo(here(settings), hiding).returnRow).toBeUndefined();
+  });
+
+  it("going back from their settings to their page names its Settings row (decision 0267)", () => {
+    expect(moveTo(here(theirSettings, feed), about).returnRow).toBe("their-settings");
+    expect(moveTo(here(theirSettings, feed), feed).returnRow).toBeUndefined();
+    expect(moveTo(here(about, feed), theirSettings).returnRow).toBeUndefined();
   });
 
   it("knows a page opened from where you are", () => {
-    expect(opensFromHere(settings, following)).toBe(true);
-    expect(opensFromHere(unread, following)).toBe(false);
+    expect(opensFromHere(settings, hiding)).toBe(true);
+    expect(opensFromHere(unread, hiding)).toBe(false);
     expect(opensFromHere(settings, unread)).toBe(false);
+    expect(opensFromHere(about, theirSettings)).toBe(true);
+    expect(opensFromHere(feed, theirSettings)).toBe(false);
+    // Everyone you follow is a place of its own, a row in the sidebar (decision 0266): no page opens it.
+    expect(opensFromHere(settings, following)).toBe(false);
   });
 });
 

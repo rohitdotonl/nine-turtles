@@ -1,6 +1,6 @@
 <!--
-  Their sources' own settings, on their page under Settings (SPEC section
-  36): for someone with two or more, a group of Settings' rows, each source by what it is (Blog, Video, Newsletter,
+  Their sources' own settings, in their settings, a page of its own one row on from their page
+  (SPEC section 36, decision 0267): for someone with two or more, a group of Settings' rows, each source by what it is (Blog, Video, Newsletter,
   Podcast) and its name, with Take out at its end for someone with two or
   more (it becomes someone of its own, with Undo on the next screen) and a
   channel's Include Shorts and Include live streams under it, which change

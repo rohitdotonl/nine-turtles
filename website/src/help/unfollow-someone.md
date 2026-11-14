@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-11
+updated: 2026-11-14
 related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 ---
 
@@ -15,9 +15,10 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
 
 ## Unfollow
 
-1. Choose them in the sidebar, and open their page: press their name at
-   the top of their list, or press <kbd>I</kbd>.
-2. Press **Unsubscribe from …** at the foot of the page.
+1. Choose them in the sidebar, and open their settings: press their name
+   at the top of their list, then **Settings** at the foot of their page.
+   Or press <kbd>E</kbd> in their list.
+2. Press **Unsubscribe from …** at the foot of their settings.
 3. If you starred, highlighted or wrote notes on any of their articles, or
    wrote a note on them, nine turtles asks what to do with it: **Keep them**,
    or, set apart below a line, a red button that names exactly what would
@@ -37,25 +38,25 @@ name until it lifts first.
 - Let go on **Unsubscribe** and they're gone, with "Unsubscribed from …"
   and **Undo** at the bottom of the sidebar. If you starred, highlighted or
   noted anything of theirs, nine turtles asks first, right there, whether
-  to keep it, just as their page does.
+  to keep it, just as their settings do.
 - Let go on **Pause** for a noisy week: their new articles arrive already
   read until you resume them. "Paused …" comes with **Undo** too.
 
 ## Changed your mind later?
 
 For 30 days, they wait under **Recently unsubscribed**, at the end of
-**Settings › Everyone you follow**, with the day they'll go. Press **Bring
+**Everyone you follow** (in the sidebar under All articles (on a phone, on Home)), with the day they'll go. Press **Bring
 back** and they're back exactly as they were, folders and what you'd read
 included. Adding them again with **+ Add** does the same. After 30 days
 they're gone for good.
 
 If they have several sources (a blog and a channel, say), Unsubscribe leaves
 them all. To let go of one source only, press **Take out** on its row
-under **Sources** on their page, and unsubscribe from that one.
+under **Sources** in their settings, and unsubscribe from that one.
 
 ## Unfollow many at once
 
-Open **Settings › Everyone you follow**, press **Choose…**, tick everyone
+Open **Everyone you follow**, press **Choose…**, tick everyone
 you'd like to let go, and press **Unsubscribe**, alone at the left of the bar at the bottom. One **Undo** brings them
 all back.
 
@@ -68,6 +69,6 @@ all back.
 - For a newsletter, nine turtles also asks the sender to stop, once the 30
   days are over. See
   <a href="/help/newsletters/">Read your newsletters here</a>.
-- **Settings › Everyone you follow** also shows who's been quiet: after six
+- **Everyone you follow** also shows who's been quiet: after six
   months with nothing new, it says "Quiet since" and the date, if you'd like
   to tidy up.

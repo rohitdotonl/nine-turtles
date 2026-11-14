@@ -185,7 +185,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Their page: Write to under their name (point 9), and their settings at its foot (one page, no Edit mode).
+    // Their page: Write to under their name (point 9), one card with what's yours of them, and the row that opens their settings (decision 0267).
     name: "who-page",
     path: "/all",
     signedIn: true,
@@ -198,15 +198,28 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Their page for someone who could be either: neither chosen, and why (decision 0264).
-    name: "who-page-could-be-either",
+    // Their settings, a page of their own one row on from their page (decision 0267).
+    name: "who-settings",
+    path: "/all",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      const id = await follow(page, shelf("garden-letters"));
+      await page.goto(new URL(`/people/${id}/settings`, page.url()).href);
+      await appReady(page);
+      await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
+    },
+  },
+  {
+    // Their settings for someone who could be either: neither chosen, and why (decision 0264).
+    name: "who-settings-could-be-either",
     path: "/all",
     signedIn: true,
     library: true,
     open: async (page) => {
       const id = await follow(page, shelf("garden-letters"));
       await feedsShown(page, "**/api/feeds", couldBeEither(id));
-      await page.goto(new URL(`/publications/${id}/about`, page.url()).href);
+      await page.goto(new URL(`/publications/${id}/settings`, page.url()).href);
       await appReady(page);
       const hint = page.getByText(/^nine turtles couldn't tell: no name signs their articles\./);
       await hint.scrollIntoViewIfNeeded();
@@ -290,11 +303,11 @@ export const SCREENS: Screen[] = [
       await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
     },
   },
-  { name: "your-feeds", path: "/settings/feeds", signedIn: true, library: true },
+  { name: "your-feeds", path: "/following", signedIn: true, library: true },
   {
     // Who could be either, listed to settle (decision 0264), answered here so nothing shared changes.
     name: "your-feeds-could-be-either",
-    path: "/settings/feeds",
+    path: "/following",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -321,7 +334,7 @@ export const SCREENS: Screen[] = [
     // Everyone you follow scrolled to Recently unsubscribed (decision 0240): one the reader
     // left today and one an assistant left, answered here so nothing is really unsubscribed.
     name: "your-feeds-recently-unsubscribed",
-    path: "/settings/feeds",
+    path: "/following",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -344,7 +357,7 @@ export const SCREENS: Screen[] = [
   },
   {
     name: "your-feeds-editing",
-    path: "/settings/feeds",
+    path: "/following",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -357,7 +370,7 @@ export const SCREENS: Screen[] = [
     // Everyone you follow with two broken feeds at the top, one of each kind,
     // as the server would describe them, so the library the screenshots follow stays healthy.
     name: "your-feeds-not-working",
-    path: "/settings/feeds",
+    path: "/following",
     signedIn: true,
     library: true,
     open: async (page) => {
@@ -581,9 +594,10 @@ export async function feedsShown(page: Page, path: "**/api/feeds" | "**/api/tidy
     // A request still on its way when the test ends is let go, not failed: its test is over (or the next one would be blamed).
     const response = await route.fetch().catch(() => undefined);
     if (!response) return route.abort().catch(() => undefined);
-    const body = await response.json();
+    const body = await response.json().catch(() => undefined);
+    if (!body) return route.abort().catch(() => undefined);
     change(body);
-    await route.fulfill({ response, json: body });
+    await route.fulfill({ response, json: body }).catch(() => undefined);
   });
 }
 

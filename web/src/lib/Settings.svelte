@@ -12,7 +12,7 @@
   font in the Aa panel above an article. Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
-  Your library (Everyone you follow, a page of its own, then Your data); More
+  Your library (Your data; Everyone you follow is a row in the sidebar now, decision 0266); More
   (Install the app on any device, Rules,
   Newsletters while nine turtles takes them, Connected assistants, Passkeys where they work); Your nine turtles (Readers, the
   owner only); and Account
@@ -35,6 +35,7 @@
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
+  import PageRow from "./PageRow.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import NoteLine from "./NoteLine.svelte";
   import { UNDONE, UNDO_FAILED } from "./messages";
@@ -77,7 +78,6 @@
     onBack,
     backTo = "Settings",
     onImported,
-    onYourFeeds,
     onMuted,
     onReaders,
     people,
@@ -114,8 +114,6 @@
     backTo?: string;
     /** Feeds were imported: the sidebar loads them. */
     onImported: () => void;
-    /** Opens Everyone you follow. */
-    onYourFeeds: (event: MouseEvent) => void;
     /** Opens the Hidden articles page. */
     onMuted: (event: MouseEvent) => void;
     /** Opens the owner's All readers page. */
@@ -243,22 +241,10 @@
 </script>
 
 
-<!-- What a screen reader hears after each row's name that opens a page of its own. -->
-<span id="opens-page" hidden>Opens its own page.</span>
-
 {#snippet icon(name: IconName)}
   <span class="setting-icon" aria-hidden="true"><Icon {name} /></span>
 {/snippet}
 
-<!-- A row that opens a page of its own (decision 0120): its icon, its name, perhaps what it's set to, then ›. -->
-{#snippet pageRow(key: string, href: string, label: string, name: IconName, onclick: (event: MouseEvent) => void, value?: string, extra?: string)}
-  <a {href} {onclick} data-settings-row={key} aria-describedby="opens-page" class={["inset-row inset-action setting", extra]}>
-    <span class="setting-label">{@render icon(name)}<span class="setting-words"><span class="setting-name">{label}</span></span></span>
-    <span class="row-glyph flex items-center gap-2"
-      >{#if value}<span class="setting-value">{value}</span>{/if}<Icon name="chevron-right" /></span
-    >
-  </a>
-{/snippet}
 
 
 {#if task === "email"}
@@ -290,7 +276,7 @@
 {/if}
 {#if !(task && phone)}
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
-<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex flex-1 flex-col bg-paper">
+<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex min-w-0 flex-1 flex-col bg-paper">
   {#if page}
     <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} {besideToggle} column="max-w-[35rem]" />
   {:else if phone}
@@ -365,22 +351,21 @@
       <section aria-labelledby="library-heading">
         <h3 id="library-heading" class="settings-head label">Your library</h3>
         <div class="inset-group">
-          {@render pageRow("feeds", "/settings/feeds", "Everyone you follow", "feed", onYourFeeds)}
-          {@render pageRow("data", "/settings/data", SETTINGS_PAGES.data, "archive-box", open("data"))}
+          <PageRow key="data" href="/settings/data" label={SETTINGS_PAGES.data} icon="archive-box" onclick={open("data")} />
         </div>
       </section>
 
       <section aria-labelledby="more-heading">
         <h3 id="more-heading" class="settings-head label">More</h3>
         <div class="inset-group">
-          {@render pageRow("install", "/settings/install", SETTINGS_PAGES.install, "phone-download", open("install"))}
-          {@render pageRow("hiding", "/settings/hiding", SETTINGS_PAGES.hiding, "eye-off", open("hiding"))}
+          <PageRow key="install" href="/settings/install" label={SETTINGS_PAGES.install} icon="phone-download" onclick={open("install")} />
+          <PageRow key="hiding" href="/settings/hiding" label={SETTINGS_PAGES.hiding} icon="eye-off" onclick={open("hiding")} />
           {#if newslettersOn}
-            {@render pageRow("newsletters", "/settings/newsletters", SETTINGS_PAGES.newsletters, "newsletter", open("newsletters"))}
+            <PageRow key="newsletters" href="/settings/newsletters" label={SETTINGS_PAGES.newsletters} icon="newsletter" onclick={open("newsletters")} />
           {/if}
-          {@render pageRow("assistants", "/settings/assistants", SETTINGS_PAGES.assistants, "robot", open("assistants"))}
+          <PageRow key="assistants" href="/settings/assistants" label={SETTINGS_PAGES.assistants} icon="robot" onclick={open("assistants")} />
           {#if passkeysShown}
-            {@render pageRow("passkeys", "/settings/passkeys", SETTINGS_PAGES.passkeys, "key", open("passkeys"))}
+            <PageRow key="passkeys" href="/settings/passkeys" label={SETTINGS_PAGES.passkeys} icon="key" onclick={open("passkeys")} />
           {/if}
         </div>
       </section>
@@ -389,7 +374,7 @@
         <section aria-labelledby="yours-heading">
           <h3 id="yours-heading" class="settings-head label">Your nine turtles<span class="sr-only">,{" "}</span><span class="only-you">Only you</span></h3>
           <div class="inset-group">
-            {@render pageRow("readers", "/settings/readers", SETTINGS_PAGES.readers, "people", open("readers"))}
+            <PageRow key="readers" href="/settings/readers" label={SETTINGS_PAGES.readers} icon="people" onclick={open("readers")} />
           </div>
         </section>
       {/if}
@@ -405,7 +390,7 @@
             </div>
           {/if}
           {#if planNow}
-            {@render pageRow("plan", "/settings/plan", SETTINGS_PAGES.plan, "card", open("plan"), planNow)}
+            <PageRow key="plan" href="/settings/plan" label={SETTINGS_PAGES.plan} icon="card" onclick={open("plan")} value={planNow} />
           {/if}
           <!-- The email this reader signs in with; changing it sends a link to the new one (decision 0088). -->
           <div class="inset-row setting">
@@ -573,10 +558,6 @@
       forced-color-adjust: none;
       outline: 1px solid CanvasText;
     }
-  }
-  /* What a row that opens a page is set to (the plan), before its ›. */
-  .setting-value {
-    font-size: var(--text-meta);
   }
   /* Delete data… and Delete account…: red words, saying what they remove. */
   .danger-name {

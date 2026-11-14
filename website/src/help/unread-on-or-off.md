@@ -4,7 +4,7 @@ description: Keep an Unread list to work through, or switch it off and let every
 groupId: reading
 order: 1
 spec: 10
-updated: 2026-11-11
+updated: 2026-11-14
 related: [mark-read-or-unread, find-your-way-around]
 ---
 
@@ -38,4 +38,4 @@ It applies on all your devices.
   whole list as read is left out: there's nothing to clear.
 - The switch is for everything at once. To see less from one busy person,
   [hide the topics](/help/hide-topics/) you don't want, or pause them in
-  their settings, on their page.
+  their settings (**Settings**, at the foot of their page).

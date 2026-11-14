@@ -38,5 +38,25 @@ test("the sidebar shows every list, Notes always (decision 0222), and Show in th
   await appReady(page);
   await expect(page).toHaveURL(/\/settings$/);
   const nav = sidebar(page);
-  for (const name of ["Unread", "Starred", "Notes", "All articles"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  for (const name of ["Unread", "Starred", "Notes", "All articles", "Everyone you follow"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+
+  // Everyone you follow, under the lists (decision 0266): pressed, it opens at its own address with the keyboard on its
+  // title, its row marked as your place and Settings' button no longer; no way back to press, as the sidebar is beside it.
+  const everyone = nav.getByRole("link", { name: "Everyone you follow", exact: true });
+  const settings = nav.getByRole("link", { name: "Settings", exact: true });
+  await expect(settings).toHaveAttribute("aria-current", "page");
+  await expect(everyone).not.toHaveAttribute("aria-current", "page");
+  await everyone.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/following$/);
+  await expect(page).toHaveTitle("Everyone you follow · nine turtles");
+  await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeFocused();
+  await expect(everyone).toHaveAttribute("aria-current", "page");
+  await expect(settings).not.toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("button", { name: /^(Back to |Close)/ })).toHaveCount(0);
+  // The row is built as the lists' rows are: the same height, the same left edge.
+  const [row, list] = await Promise.all([everyone.boundingBox(), nav.getByRole("link", { name: "All articles", exact: true }).boundingBox()]);
+  expect(row!.height).toBe(list!.height);
+  expect(row!.x).toBe(list!.x);
+  expect(row!.y).toBeGreaterThan(list!.y);
 });
