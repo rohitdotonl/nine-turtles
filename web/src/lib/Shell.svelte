@@ -729,7 +729,7 @@
   }
 
   /** Room for a chosen article; beside their page, it takes the page's place, back on their list (`listForArticle`), the keyboard left where the choosing puts it. */
-  const makeWay = (list = listForArticle(route, layout.stepwise)) => (list && go(list, undefined, false), layout.makeWayForArticle());
+  const makeWay = () => { const list = listForArticle(route, layout.stepwise); if (list) go(list, undefined, false); layout.makeWayForArticle(); };
 
   /**
    * Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list

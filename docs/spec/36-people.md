@@ -127,7 +127,7 @@ PLAN.md → V1, item 1.*
   article's title; the address names the article; it counts as read), and
   Back brings their page back. On a phone it's a screen of its own, with ‹
   back to their list, and one thing at a time (decision 0269) it shows
-  alone, so neither has a list beside it. Top to bottom:
+  alone; either way there's no list beside it to choose from. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas

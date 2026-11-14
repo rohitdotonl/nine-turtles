@@ -442,4 +442,21 @@ test("an article chosen while their page or their settings shows beside the list
   await expect(settingsFor(page, `Blog ${name}`)).toHaveCount(0);
   await expect(title).toBeFocused();
   await expect(page).toHaveURL(new RegExp(`/people/${id}/articles/\\d+$`));
+
+  // k, from their page again: the article before shows in the page's place, the keyboard on its row.
+  await page.keyboard.press("i");
+  await expect(who).toBeVisible();
+  await page.keyboard.press("k");
+  await expect(who).toHaveCount(0);
+  await expect(title).toHaveText(second);
+  await expect(rows.nth(1)).toBeFocused();
+
+  // Write back in a row's menu, from their page: the article shows, and writing back starts (their address isn't known yet, so its box opens).
+  await page.keyboard.press("i");
+  await expect(who).toBeVisible();
+  await rows.nth(0).click({ button: "right" });
+  await page.getByRole("menu", { name: /^Actions for / }).getByRole("menuitem", { name: "Write back" }).click();
+  await expect(who).toHaveCount(0);
+  await expect(title).toHaveText(first);
+  await expect(pane(page).getByRole("textbox", { name: "Their email address" })).toBeFocused();
 });
