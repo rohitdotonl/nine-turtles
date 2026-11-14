@@ -12,7 +12,7 @@
 - If a publisher says "slow down" (HTTP 429, or 503 with a time), it waits as long as asked, up to a week (so a mistaken answer can't silence a feed for good).
 - Each fetch has a time limit and a size limit.
 - If a feed has moved permanently, nine turtles updates its stored address.
-- A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
+- A failing feed is retried less and less often (twice as long after each failure, up to once a day) and never affects other feeds. A YouTube feed YouTube answers "not found", a server error or nothing is the exception: it's asked again within 3 to 6 hours, at a random time, so it doesn't keep landing in the same spell of YouTube refusing (decision 0273). A feed that keeps failing still looks normal in the sidebar; it simply shows nothing new.
 - It never visits article pages.
 - **Feeds nobody opens are checked once a day** (decision 0090): a reader is *away* once nine turtles hasn't seen them for 30 days (no device of theirs opened it). A feed whose every follower is away is checked at most once a day. When one of them comes back (opens nine turtles or signs in), their feeds that are working are checked again straight away, a few at a time as always, unless a feed was checked in the last hour.
 - **Every feed is checked on its own rhythm** (decision 0183): Edit's "Check for new articles: Automatic · Daily" went in the owner's core path (point 11), with what readers had chosen.
