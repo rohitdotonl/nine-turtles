@@ -3,7 +3,7 @@
   untitled post's opening; a search result's text around the first searched
   word; and the one-line meta under them, with who it's from, when, its kind,
   your place in it, Hidden and the star. The row itself, a button that opens
-  the article, is `ItemList.svelte`'s.
+  the article, is `ItemRow.svelte`'s.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";

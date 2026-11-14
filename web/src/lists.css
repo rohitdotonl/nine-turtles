@@ -41,7 +41,7 @@
   margin-bottom: 6rem;
 }
 
-/* An article's row in the list (ItemList.svelte). */
+/* An article's row in the list (ItemRow.svelte). */
 /*
   The source, time and star on one line (decision 0048): the source shrinks
   and ends in "…"; the time and the star keep their room. Figures are

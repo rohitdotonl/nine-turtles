@@ -1,7 +1,7 @@
 // Moving between the wide window's panes by the arrow keys (SPEC section 19,
 // the owner's core path, point 17): ← and → go from the sidebar to the list
 // to the article, and ↑ and ↓ go along the sidebar's rows. The list's own
-// ↑ and ↓ are the list's (`ItemList.svelte`), and in the article they scroll
+// ↑ and ↓ are the list's (`ItemRow.svelte`), and in the article they scroll
 // it, as the browser does. This file only finds where the keyboard's place
 // goes; `keyboard.ts` decides when an arrow is nine turtles' to act on.
 
