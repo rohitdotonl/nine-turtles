@@ -448,3 +448,31 @@ test("a publication whose feed stopped gets no Write to", async ({ page }) => {
   await expect(feed).not.toContainText("may not know");
   await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
 });
+
+test("a YouTube channel YouTube won't send says so, with no Write to (decision 0272)", async ({ page }) => {
+  const name = `youtube-refused-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  // This page alone sees it as a person's YouTube channel that YouTube has refused for a week.
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.title === title) Object.assign(feed, { state: "dead", problem: "not-found", youtube: true });
+    await route.fulfill({ json: real });
+  });
+  await page.route("**/api/feeds", async (route) => {
+    if (route.request().method() !== "GET") return route.continue();
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (feed.id === id) Object.assign(feed, { kind: "person", open: false });
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
+  const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
+  await expect(feed).toBeVisible();
+  await expect(feed).toContainText("YouTube isn't sending these videos to nine turtles at the moment.");
+  await expect(feed).not.toContainText("It may have moved");
+  // They can't change what YouTube does, so nothing suggests writing to them.
+  await expect(feed).not.toContainText("may not know");
+  await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+  await expect(feed.getByRole("button", { name: `Unsubscribe from ${title}` })).toBeVisible();
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brokenSince, found, headline, reason, refusalMessage, type Sick } from "./health";
+import { brokenSince, found, headline, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -13,6 +13,7 @@ const sick = (change: Partial<Sick>): Sick => ({
   missingSince: null,
   fetchedAt: NOW - 3 * DAY,
   state: "trouble",
+  youtube: false,
   ...change,
 });
 
@@ -42,16 +43,16 @@ describe("the words for who isn't working", () => {
   });
 
   it("says YouTube isn't sending, instead of that a YouTube feed may have moved (decision 0272)", () => {
-    const channel = "https://www.youtube.com/feeds/videos.xml?channel_id=UCI9w0pAIlXrQuSYA79x0F3w";
-    const uploads = "https://www.youtube.com/feeds/videos.xml?playlist_id=UUI9w0pAIlXrQuSYA79x0F3w";
-    for (const url of [channel, uploads])
-      for (const problem of ["not-found", "unreachable", "answered-500"])
-        expect(reason(problem, url)).toMatch(/^YouTube isn't sending this channel's videos to nine turtles at the moment\./);
+    for (const problem of ["not-found", "unreachable", "answered-500"]) {
+      expect(reason(problem, true)).toMatch(/^YouTube isn't sending these videos to nine turtles at the moment\./);
+      expect(youTubeRefusing(sick({ youtube: true, problem }))).toBe(true);
+    }
     // Its other problems, and other sites, keep their own words.
-    expect(reason("blocked", channel)).toMatch(/guard against bots/);
-    expect(reason("answered-403", channel)).toBe("The site refuses to share this feed.");
-    expect(reason("not-found", "https://blog.example/feed")).toMatch(/It may have moved\./);
-    expect(reason("not-found", "https://www.youtube.com.example/feeds/videos.xml?channel_id=x")).toMatch(/It may have moved\./);
+    expect(reason("blocked", true)).toMatch(/guard against bots/);
+    expect(reason("answered-403", true)).toBe("The site refuses to share this feed.");
+    expect(youTubeRefusing(sick({ youtube: true, problem: "blocked" }))).toBe(false);
+    expect(reason("not-found", false)).toMatch(/It may have moved\./);
+    expect(youTubeRefusing(sick({ problem: "not-found" }))).toBe(false);
   });
 
   it("says plainly why an action didn't work", () => {
