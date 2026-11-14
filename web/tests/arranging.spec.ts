@@ -36,7 +36,13 @@ async function blogsInFolders(page: Page, folders: string[]): Promise<string[]> 
   }
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
+  await foldersDrawn(page, folders);
   return blogs;
+}
+
+/** The sidebar is there before its folders are drawn: wait for them, or reading their names can come up empty. */
+async function foldersDrawn(page: Page, folders: string[]) {
+  for (const folder of folders) await expect(folderRow(page, folder)).toHaveCount(1);
 }
 
 /** Presses on `from`, moves a few steps to `to`, and lets go: a mouse's drag. */
@@ -73,6 +79,7 @@ test("a folder dragged above another stays there, after a reload too, and Undo p
   await expect(page).toHaveURL(/\/unread$/);
   await page.reload();
   await appReady(page);
+  await foldersDrawn(page, [first, second]);
   let after = await folderNames(page);
   expect(after.indexOf(second)).toBe(after.indexOf(first) - 1);
 
