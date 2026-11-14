@@ -65,7 +65,7 @@
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
     besideToggle?: boolean;
-    /** Who's who, for Write to on a person's Not working card (decision 0212). */
+    /** Who's who, for Write to on a person's Not working row (decision 0212). */
     library: LoadedLibrary;
   } = $props();
 
