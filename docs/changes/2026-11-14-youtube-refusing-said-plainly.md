@@ -1,0 +1,3 @@
+## 14 November 2026: Saying plainly when YouTube won't send a channel
+
+- **Honest words for a stuck YouTube channel.** YouTube has been turning nine turtles away for some channels, though the channels are still there. Everyone you follow used to say "The site says the feed isn't there any more. It may have moved.", which sent you looking for an address that doesn't exist. Now it says "YouTube isn't sending this channel's videos to nine turtles at the moment. nine turtles keeps asking; if the channel was taken down, nothing more will come." Nothing else changed: nine turtles keeps asking, and the videos arrive once YouTube sends them again (decision 0272).

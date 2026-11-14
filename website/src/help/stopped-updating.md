@@ -56,6 +56,10 @@ worked since 12 Oct.", with a button to find its new address.
   turn nine turtles away too. Then it says "The site's guard against bots
   turns nine turtles away." Only the site can let it in: if it's a person,
   **Write to** them and say so. nine turtles never sneaks past a guard.
+- YouTube sometimes stops sending a channel's videos to nine turtles, even
+  though the channel is still there. Then it says "YouTube isn't sending
+  this channel's videos to nine turtles at the moment." nine turtles keeps
+  asking, and the videos arrive once YouTube sends them again.
 - Quiet isn't broken: some people write once a year. In **Everyone you
   follow**, someone with nothing new for six months says
   "Quiet since" and the date.

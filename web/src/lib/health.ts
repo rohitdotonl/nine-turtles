@@ -111,8 +111,24 @@ export function headline(feed: Sick, now: Date = new Date()): string {
   return from === null ? "Nothing has come through lately" : `Nothing has come through ${since(from, now)}`;
 }
 
-/** What went wrong, and what it may mean, in plain words. */
-export function reason(problem: string | null): string {
+/** A feed YouTube itself publishes: a channel's or a playlist's (decision 0272). */
+export function fromYouTube(url: string): boolean {
+  return /^https:\/\/www\.youtube\.com\/feeds\/videos\.xml\?/.test(url);
+}
+
+/** What YouTube refusing a feed looks like: no feed, no answer, or a problem of its own. */
+function youTubeRefuses(problem: string | null): boolean {
+  return problem === "not-found" || problem === "unreachable" || Number(problem?.match(/^answered-(\d{3})$/)?.[1]) >= 500;
+}
+
+/**
+ * What went wrong, and what it may mean, in plain words. For a YouTube feed
+ * that YouTube won't send, it says so plainly instead of "it may have moved"
+ * (decision 0272): YouTube turns away some servers' asks for a while.
+ */
+export function reason(problem: string | null, url = ""): string {
+  if (fromYouTube(url) && youTubeRefuses(problem))
+    return "YouTube isn't sending this channel's videos to nine turtles at the moment. nine turtles keeps asking; if the channel was taken down, nothing more will come.";
   switch (problem) {
     case "not-found":
       return "The site says the feed isn't there any more. It may have moved.";

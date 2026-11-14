@@ -41,6 +41,19 @@ describe("the words for who isn't working", () => {
     expect(refusalMessage({ error: "blocked" }, "find")).toMatch(/guard against bots/);
   });
 
+  it("says YouTube isn't sending, instead of that a YouTube feed may have moved (decision 0272)", () => {
+    const channel = "https://www.youtube.com/feeds/videos.xml?channel_id=UCI9w0pAIlXrQuSYA79x0F3w";
+    const uploads = "https://www.youtube.com/feeds/videos.xml?playlist_id=UUI9w0pAIlXrQuSYA79x0F3w";
+    for (const url of [channel, uploads])
+      for (const problem of ["not-found", "unreachable", "answered-500"])
+        expect(reason(problem, url)).toMatch(/^YouTube isn't sending this channel's videos to nine turtles at the moment\./);
+    // Its other problems, and other sites, keep their own words.
+    expect(reason("blocked", channel)).toMatch(/guard against bots/);
+    expect(reason("answered-403", channel)).toBe("The site refuses to share this feed.");
+    expect(reason("not-found", "https://blog.example/feed")).toMatch(/It may have moved\./);
+    expect(reason("not-found", "https://www.youtube.com.example/feeds/videos.xml?channel_id=x")).toMatch(/It may have moved\./);
+  });
+
   it("says plainly why an action didn't work", () => {
     expect(refusalMessage({ error: "no-feed" }, "find")).toMatch(/doesn't name another feed/);
     expect(refusalMessage({ error: "no-feed" }, "move")).toBe("That address isn't a feed.");

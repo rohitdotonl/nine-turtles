@@ -153,7 +153,7 @@
                 {#if !row.unsubscribed}
                   <p class="what mt-1 text-ink-2">
                     <Dated text={`${headline(row.feed)}.`} />
-                    {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
+                    {#if row.feed.state !== "working"}{reason(row.feed.problem, row.feed.url)}{/if}
                     {#if row.feed.state === "dead" && person}{plainName(row.feed)} may not know.{/if}
                   </p>
                 {/if}
