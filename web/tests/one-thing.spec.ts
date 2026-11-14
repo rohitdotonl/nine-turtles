@@ -41,17 +41,6 @@ const rows = (page: Page) => page.locator("#list-pane .item-row");
 
 test("one thing at a time: the list alone, then the article alone, and back to the same row", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone already reads one thing at a time: the phone's own test is below.");
-  // TEMPORARY, to find why this fails on main: what the page asked the server for, and what was on screen.
-  const asked: string[] = [];
-  const began = Date.now();
-  page.on("request", (request) => {
-    const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/")) asked.push(`${Date.now() - began}ms ${request.method()} ${url.pathname}${url.search}`);
-  });
-  page.on("response", (response) => {
-    const url = new URL(response.url());
-    if (url.pathname.startsWith("/api/")) asked.push(`${Date.now() - began}ms   ${response.status()} ${url.pathname}${url.search}`);
-  });
   await switchOn(page);
   const blog = await openBlog(page, `one-thing-${test.info().workerIndex}-${Date.now()}`);
   const list = page.locator("#list-pane");
@@ -97,26 +86,8 @@ test("one thing at a time: the list alone, then the article alone, and back to t
 
   // j and k move to the next and previous article while reading.
   await titleOf(page).focus();
-  asked.push(`${Date.now() - began}ms --- j pressed`);
   await page.keyboard.press("j");
-  try {
-    await expect(titleOf(page)).not.toHaveText(opened, { timeout: 2000 });
-  } catch (failure) {
-    const seen = await page.evaluate(() => {
-      const active = document.activeElement;
-      const pane = document.querySelector<HTMLElement>("#list-pane");
-      return {
-        active: active ? `${active.tagName}.${active.className} "${active.textContent?.trim().slice(0, 60)}"` : "none",
-        rows: [...document.querySelectorAll("#list-pane .item-row")].map((row) => `${row.getAttribute("aria-current") ?? ""} ${row.textContent?.trim().slice(0, 70)}`),
-        pane: pane ? `children ${pane.childElementCount}, display ${getComputedStyle(pane).display}, words "${pane.textContent?.trim().slice(0, 300)}"` : "no list pane",
-        dialogs: [...document.querySelectorAll("dialog[open], [role=dialog], [role=menu]")].map((each) => `${each.tagName} ${each.getAttribute("aria-label") ?? ""} ${each.textContent?.trim().slice(0, 80)}`),
-      };
-    });
-    console.log(`DIAG url ${page.url()}\nDIAG seen ${JSON.stringify(seen, null, 1)}`);
-    console.log(`DIAG requests\n${asked.join("\n")}`);
-    console.log(`DIAG page\n${(await page.locator("body").ariaSnapshot()).slice(0, 5000)}`);
-    throw failure;
-  }
+  await expect(titleOf(page)).not.toHaveText(opened);
   await page.keyboard.press("k");
   await expect(titleOf(page)).toHaveText(opened);
 

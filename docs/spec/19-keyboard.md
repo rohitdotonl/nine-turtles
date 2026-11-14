@@ -63,7 +63,7 @@
 **How to check it**
 1. Unplug the mouse (or don't touch it). Using only Tab, Enter and Escape, add a feed, read an article, star it and search. You can always see where the focus is. Reload: the keyboard is on the list's title; click the browser's address bar and press Tab: "Skip to articles" shows, and Enter on it lands on an article.
 2. Try each vim key from the table.
-3. Press `?` at 1280 × 800: two columns, nothing scrolls, nothing wraps, no field to type in, and no search filters. Escape closes it.
+3. Press `?` at 1280 × 800: two columns, nothing scrolls, nothing wraps, no field to type in, and no search filters. Escape closes it. With an article open, press Escape and `j` one straight after the other: the list of keys closes and the next article opens.
 4. Press `Shift+H`, `[`, `]`, `\`, `Shift+E`, `Shift+N` and `g` then `f` in a list: nothing happens (decision 0180).
 5. Open a long article and press Space a few times: it moves down a screen each time and stops at the end, staying on the same article. `Shift+Space` moves it back up. With the keyboard on the article's More button, Space opens its menu instead.
 6. Press `j` to choose an article, then `Enter`: the keyboard's place moves into the article.
