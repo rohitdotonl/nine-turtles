@@ -24,7 +24,8 @@ test("Everyone you follow lists who could be either; a tick makes them a person 
   const blog = await openBlog(page, "either");
   await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
-  const group = yours(page).getByRole("group", { name: /could be either$/ });
+  // The group is named "3 could be either", and "Could be either" once none is left open (as when this blog is the only one, ticked).
+  const group = yours(page).getByRole("group", { name: /could be either$/i });
   await expect(group).toHaveAccessibleDescription(/^Their feeds don't say who writes them\./);
   const tick = group.getByRole("checkbox", { name: blog.name });
   await expect(tick).not.toBeChecked();
@@ -58,7 +59,7 @@ test("Everyone you follow lists who could be either; a tick makes them a person 
   await expect(yours(page).getByRole("link", { name: new RegExp(`^${blog.name}`) })).toBeVisible();
   await expect(yours(page).getByRole("button", { name: "Undo" })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(yours(page).getByRole("group", { name: /could be either$/ }).getByRole("checkbox", { name: blog.name })).not.toBeChecked();
+  await expect(group.getByRole("checkbox", { name: blog.name })).not.toBeChecked();
 });
 
 test("their settings say why, and with neither chosen one press settles it", async ({ page }) => {
