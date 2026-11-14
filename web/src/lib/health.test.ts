@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brokenSince, found, headline, reason, refusalMessage, type Sick } from "./health";
+import { brokenSince, found, headline, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -13,6 +13,7 @@ const sick = (change: Partial<Sick>): Sick => ({
   missingSince: null,
   fetchedAt: NOW - 3 * DAY,
   state: "trouble",
+  youtube: false,
   ...change,
 });
 
@@ -39,6 +40,19 @@ describe("the words for who isn't working", () => {
     // A guard against bots is named as such, and the reader learns only the site can fix it (decision 0258).
     expect(reason("blocked")).toMatch(/guard against bots .* Only the site can let it in\./);
     expect(refusalMessage({ error: "blocked" }, "find")).toMatch(/guard against bots/);
+  });
+
+  it("says YouTube isn't sending, instead of that a YouTube feed may have moved (decision 0272)", () => {
+    for (const problem of ["not-found", "unreachable", "answered-500"]) {
+      expect(reason(problem, true)).toMatch(/^YouTube isn't sending these videos to nine turtles at the moment\./);
+      expect(youTubeRefusing(sick({ youtube: true, problem }))).toBe(true);
+    }
+    // Its other problems, and other sites, keep their own words.
+    expect(reason("blocked", true)).toMatch(/guard against bots/);
+    expect(reason("answered-403", true)).toBe("The site refuses to share this feed.");
+    expect(youTubeRefusing(sick({ youtube: true, problem: "blocked" }))).toBe(false);
+    expect(reason("not-found", false)).toMatch(/It may have moved\./);
+    expect(youTubeRefusing(sick({ problem: "not-found" }))).toBe(false);
   });
 
   it("says plainly why an action didn't work", () => {

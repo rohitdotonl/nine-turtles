@@ -20,7 +20,7 @@
   import LoadFailed from "./LoadFailed.svelte";
   import { plainSourceName, refused, resubscribe, undoRefused, unsubscribe } from "./feeds";
   import { UNDONE } from "./messages";
-  import { headline, listSick, reason, type Sick } from "./health";
+  import { headline, listSick, reason, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import WriteBack from "./WriteBack.svelte";
   import { writesBack } from "./writeBack";
@@ -153,8 +153,8 @@
                 {#if !row.unsubscribed}
                   <p class="what mt-1 text-ink-2">
                     <Dated text={`${headline(row.feed)}.`} />
-                    {#if row.feed.state !== "working"}{reason(row.feed.problem)}{/if}
-                    {#if row.feed.state === "dead" && person}{plainName(row.feed)} may not know.{/if}
+                    {#if row.feed.state !== "working"}{reason(row.feed.problem, row.feed.youtube)}{/if}
+                    {#if row.feed.state === "dead" && person && !youTubeRefusing(row.feed)}{plainName(row.feed)} may not know.{/if}
                   </p>
                 {/if}
                 <p role="status" class={["status", !row.message && "sr-only"]}>{row.message}</p>
@@ -174,8 +174,9 @@
                   {#if row.feed.state !== "working"}
                     <div class="actions flex flex-wrap items-center" hidden={row.choosing}>
                       <button type="button" class="text-link text-ui" data-focus="find" aria-disabled={row.busy} aria-label={`Find new address for ${row.feed.title}`} onclick={() => !row.busy && find(row)}>Find new address</button>
-                      <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). -->
-                      {#if row.feed.state === "dead" && person}<WriteBack feedId={row.feed.id} {library} quiet />{/if}
+                      <!-- They may not know their feed stopped: Write to them, as on their page (decision 0212). Not when it's
+                           YouTube turning nine turtles away, which they can't fix (decision 0272). -->
+                      {#if row.feed.state === "dead" && person && !youTubeRefusing(row.feed)}<WriteBack feedId={row.feed.id} {library} quiet />{/if}
                       <button
                         type="button"
                         class="text-link text-ui text-danger"

@@ -21,6 +21,8 @@ export type Sick = {
   /** When it last worked, if ever. */
   fetchedAt: number | null;
   state: Condition;
+  /** A feed YouTube itself publishes, as the server judges it (decision 0272). */
+  youtube: boolean;
 };
 
 /** Why an action on the page didn't work. */
@@ -95,6 +97,7 @@ function toSick(feed: Record<string, unknown>): Sick {
     missingSince: number(feed.missing_since),
     fetchedAt: number(feed.fetched_at),
     state,
+    youtube: feed.youtube === true,
   };
 }
 
@@ -111,8 +114,23 @@ export function headline(feed: Sick, now: Date = new Date()): string {
   return from === null ? "Nothing has come through lately" : `Nothing has come through ${since(from, now)}`;
 }
 
-/** What went wrong, and what it may mean, in plain words. */
-export function reason(problem: string | null): string {
+/**
+ * A YouTube feed YouTube won't send (decision 0272): not found, no answer, or
+ * a problem of YouTube's own. The server says which feeds are YouTube's.
+ */
+export function youTubeRefusing(feed: Pick<Sick, "youtube" | "problem">): boolean {
+  const { problem } = feed;
+  return feed.youtube && (problem === "not-found" || problem === "unreachable" || Number(problem?.match(/^answered-(\d{3})$/)?.[1]) >= 500);
+}
+
+/**
+ * What went wrong, and what it may mean, in plain words. For a YouTube feed
+ * that YouTube won't send, it says so plainly instead of "it may have moved"
+ * (decision 0272): YouTube turns away some servers' asks for a while.
+ */
+export function reason(problem: string | null, youtube = false): string {
+  if (youTubeRefusing({ youtube, problem }))
+    return "YouTube isn't sending these videos to nine turtles at the moment. nine turtles keeps asking; if they were taken down, nothing more will come.";
   switch (problem) {
     case "not-found":
       return "The site says the feed isn't there any more. It may have moved.";

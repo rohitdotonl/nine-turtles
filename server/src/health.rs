@@ -82,6 +82,10 @@ pub struct Entry {
     pub failures: i64,
     #[sqlx(skip)]
     pub state: Option<Condition>,
+    /// A feed YouTube itself publishes (a channel's or a playlist's), so the
+    /// page can say plainly when YouTube won't send it (decision 0272).
+    #[sqlx(skip)]
+    pub youtube: bool,
 }
 
 impl Entry {
@@ -92,6 +96,8 @@ impl Entry {
             self.missing_since,
             now,
         ));
+        self.youtube =
+            Url::parse(&self.url).is_ok_and(|url| crate::youtube::addresses::is_feed(&url));
         self
     }
 }

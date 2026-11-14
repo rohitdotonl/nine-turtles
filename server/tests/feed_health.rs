@@ -253,6 +253,45 @@ async fn a_sites_guard_against_bots_is_named_as_such() {
 }
 
 #[tokio::test]
+async fn a_youtube_feed_is_marked_as_youtubes_so_the_page_can_say_so() {
+    // Decision 0272: the page words a refused YouTube feed plainly, by the checker's own rule.
+    let reader = Reader::new().await;
+    let blog = reader.follow("/old.xml").await;
+    let channel = reader.follow("/other.xml").await;
+    // Both have failed twice with "not found"; the channel's address is YouTube's,
+    // written without "www.", as the checker reads it too.
+    for (id, url) in [
+        (blog, format!("{}/old.xml", reader.site)),
+        (
+            channel,
+            "https://youtube.com/feeds/videos.xml?channel_id=UCabcdefghijklmnopqrstuv".to_owned(),
+        ),
+    ] {
+        sqlx::query(
+            "UPDATE feeds SET url = ?, failures = 2, problem = 'not-found', failing_since = ? WHERE id = ?",
+        )
+        .bind(url)
+        .bind(nine_turtles::now())
+        .bind(id)
+        .execute(&reader.state.db)
+        .await
+        .unwrap();
+    }
+    let health = reader.get("/api/health").await;
+    let youtube = |id: i64| {
+        health["feeds"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|feed| feed["id"].as_i64() == Some(id))
+            .unwrap()["youtube"]
+            .clone()
+    };
+    assert_eq!(youtube(channel), true);
+    assert_eq!(youtube(blog), false);
+}
+
+#[tokio::test]
 async fn broken_feeds_are_listed_worst_first_and_leave_once_they_work() {
     let reader = Reader::new().await;
     let old = reader.follow("/old.xml").await;
