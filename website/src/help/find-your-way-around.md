@@ -137,12 +137,10 @@ you let go, a small card says where you'll land; slide back to change your
 mind.
 
 - **Swipe right**, from anywhere on the screen: go back, as the back button
-  at the top left does. From an article to its list; from a list, swipe on
-  its title or from the screen's edge.
+  at the top left does. From an article to its list, from a list to Home.
 - **Swipe left** in an article: the next article.
-- **Swipe a row** in a list: right marks it read, left stars it. **Undo**
-  puts it back.
-- A quick flick counts too, even a short one.
+- **Swipe a row left** in a list: a little way marks it read, all the way
+  stars it. **Undo** puts it back.
 - **Keep pulling past the end** of an article: the next one. **Past its
   top**: the previous one.
 - **Swipe down** on the Aa sheet or an opened picture to close it.

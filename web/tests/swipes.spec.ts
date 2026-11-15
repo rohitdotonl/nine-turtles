@@ -23,12 +23,12 @@ class Finger {
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
     return new Finger(page, cdp, { x, y });
   }
-  /** Moves in `steps` steps, `pause` milliseconds apart: slowly enough, and it's a drag rather than a flick. */
-  async move(dx: number, dy = 0, pause = 40, steps = 6) {
+  /** Moves in six steps, `pause` milliseconds apart: slowly enough, and it's a drag rather than a flick. */
+  async move(dx: number, dy = 0, pause = 40) {
     const from = this.at;
-    for (let step = 1; step <= steps; step++) {
+    for (let step = 1; step <= 6; step++) {
       await this.page.waitForTimeout(pause);
-      this.at = { x: from.x + (dx * step) / steps, y: from.y + (dy * step) / steps };
+      this.at = { x: from.x + (dx * step) / 6, y: from.y + (dy * step) / 6 };
       await this.cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [this.at] });
     }
   }
@@ -42,7 +42,7 @@ class Finger {
 async function swipe(page: Page, element: ReturnType<Page["locator"]>, dx: number, startX?: number, pause?: number) {
   const box = (await element.boundingBox())!;
   const finger = await Finger.down(page, startX ?? box.x + box.width / 2, box.y + box.height / 2);
-  await finger.move(dx, 0, pause, pause === 0 ? 2 : 6);
+  await finger.move(dx, 0, pause);
   await finger.up();
 }
 
@@ -60,20 +60,20 @@ async function openBlog(page: Page): Promise<void> {
 const card = (page: Page) => page.locator(".swipe-card");
 const home = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 
-test("a row swiped right is marked read, with Undo; swiped left, starred; nothing opens", async ({ page }) => {
+test("a row swiped left a little is marked read, with Undo; all the way, starred; nothing opens", async ({ page }) => {
   await openBlog(page);
   const first = rows(page).nth(0);
   await expect(first.locator(".unread-dot")).toBeVisible();
 
   // Part of the way, the room it opens names what letting go does; the row follows the finger.
   const box = (await first.boundingBox())!;
-  const finger = await Finger.down(page, box.x + 60, box.y + box.height / 2);
-  await finger.move(60);
+  const finger = await Finger.down(page, box.x + box.width - 60, box.y + box.height / 2);
+  await finger.move(-60);
   await expect(page.locator(".row-swipe")).toHaveText("Read");
   await expect(page.locator(".row-swipe")).not.toHaveAttribute("data-armed");
-  await finger.move(80);
+  await finger.move(-80);
   await expect(page.locator(".row-swipe")).toHaveAttribute("data-armed", "");
-  expect(await first.evaluate((row) => row.style.transform)).toBe("translateX(140px)");
+  expect(await first.evaluate((row) => row.style.transform)).toBe("translateX(-140px)");
   await finger.up();
   // Back at once, with nothing left beside it, and the article isn't opened.
   await expect(page.locator(".row-swipe")).toHaveCount(0);
@@ -81,23 +81,23 @@ test("a row swiped right is marked read, with Undo; swiped left, starred; nothin
   await expect(first.locator(".unread-dot")).toHaveCount(0);
   await expect(note(page)).toHaveText(/Marked as read/);
   await expect(pane(page)).toHaveCount(0);
-  // The card for going back never showed: on a row, right is the row's.
-  await expect(card(page)).toHaveCount(0);
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(first.locator(".unread-dot")).toBeVisible();
 
+  // All the way: the word changes to Star, and letting go stars it (and leaves it unread).
   const second = rows(page).nth(1);
   const at = (await second.boundingBox())!;
-  const left = await Finger.down(page, at.x + at.width - 40, at.y + at.height / 2);
-  await left.move(-160);
+  const far = await Finger.down(page, at.x + at.width - 30, at.y + at.height / 2);
+  await far.move(-300);
   await expect(page.locator(".row-swipe")).toHaveText("Star");
-  await left.up();
+  await far.up();
   await expect(second.locator(".row-star")).toBeVisible();
+  await expect(second.locator(".unread-dot")).toBeVisible();
   await expect(note(page)).toHaveText(/Starred/);
   await expect(pane(page)).toHaveCount(0);
 });
 
-test("a short swipe, or an up-and-down stroke, changes nothing; a flick counts; a list goes back home from above its rows", async ({ page }) => {
+test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a list goes back home", async ({ page }) => {
   await openBlog(page);
   const first = rows(page).nth(0);
   await swipe(page, first, -50);
@@ -111,14 +111,12 @@ test("a short swipe, or an up-and-down stroke, changes nothing; a flick counts; 
   await expect(page.locator(".row-swipe")).toHaveCount(0);
   await expect(home(page)).toBeHidden();
 
-  // A quick flick counts, however short, as on every phone.
-  await swipe(page, first, 50, undefined, 0);
+  // A quick flick counts, however short, as on every phone: the first of a row's swipes.
+  await swipe(page, first, -50, undefined, 0);
   await expect(first.locator(".unread-dot")).toHaveCount(0);
 
-  // Far enough right on the list's title, the card says where it goes; letting go goes there, as ‹ Home does.
-  const title = page.getByRole("heading", { level: 2 }).first();
-  const top = (await title.boundingBox())!;
-  const back = await Finger.down(page, top.x + 40, top.y + top.height / 2);
+  // Far enough right, from the middle of a row, the card says where it goes; letting go goes there, as ‹ Home does.
+  const back = await Finger.down(page, box.x + 60, box.y + box.height / 2);
   await back.move(160);
   await expect(card(page)).toHaveText("‹ Home");
   await back.up();
