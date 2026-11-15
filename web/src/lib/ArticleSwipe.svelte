@@ -1,12 +1,12 @@
 <!--
-  An article's own pulls on a phone (SPEC section 20, decisions 0274, 0276), as the
-  toolbar's Previous and Next: pulled on up past its end, the next article
-  opens, rising from below; pulled on down past its top, the previous one,
-  coming down from above (`swipeMotion.ts`). Sideways is only for going back
-  (`SwipeBack.svelte`), so each way means one thing. Nothing moves during the
-  pull but what the phone itself stretches; once the finger is far enough, a
-  quiet card names the article letting go opens and who wrote it, or says
-  there's none, and moving back takes it away (decision 0276).
+  An article's own pulls on a phone (SPEC section 20, decisions 0274 and
+  0276), as the toolbar's Previous and Next: pulled on up past its end, the
+  next article opens, rising from below; pulled on down past its top, the
+  previous one, coming down from above (`swipeMotion.ts`). Sideways is only
+  for going back (`SwipeBack.svelte`), so each way means one thing. Nothing
+  moves during the pull but what the phone itself stretches; once the
+  finger is far enough, a quiet card names the article letting go opens and
+  who wrote it, or says there's none, and moving back takes it away.
 -->
 <script lang="ts">
   import type { Article } from "./shapes";

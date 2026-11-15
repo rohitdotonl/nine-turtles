@@ -226,6 +226,24 @@ test("in an article, a pull past its end opens the next one and past its top the
   await expect(rows(page).first()).toBeVisible();
 });
 
+test("a pull's card names who wrote the article, when its feed names a writer", async ({ page }) => {
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/shelf/field-notes/sw-${test.info().workerIndex}-${Date.now()}/feed.xml`);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await rows(page).nth(0).click();
+  const text = pane(page).locator(".reading-scroller");
+  const box = (await text.boundingBox())!;
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  const up = await Finger.down(page, box.x + box.width / 2, box.y + box.height - 60);
+  await up.move(0, -200);
+  await expect(card(page).locator(".swipe-card-by")).toHaveText("Maren Holt");
+  await up.move(0, 200);
+  await up.up();
+});
+
 test("the Aa sheet closes when swiped down; Settings goes back home when swiped right", async ({ page }) => {
   await openBlog(page);
   await rows(page).nth(0).click();

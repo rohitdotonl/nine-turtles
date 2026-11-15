@@ -1,11 +1,12 @@
 // The one place nine turtles moves by itself (DESIGN.md → Exceptions log,
-// decision 0274): when a finger lets go of a swipe, the screen it was
-// dragging finishes the stroke. Gone far enough, it slides the rest of the
-// way off; not far enough, it springs back. An article opened by a pull past
-// its end or top comes in the way it was pulled. While the finger is down, everything follows it exactly, as the
-// reader moves it. A phone set to reduce motion gets no glide: everything
-// lands at once, as every other part of the app does. `scripts/check-motion.mjs`
-// allows motion in this file and nowhere else.
+// decisions 0274 and 0276): when a finger lets go of a swipe, the screen it
+// was dragging finishes the stroke. Gone far enough, it slides the rest of
+// the way off; not far enough, it springs back. An article opened by a pull
+// past its end or top comes in the way it was pulled. While the finger is
+// down, everything follows it exactly, as the reader moves it. A phone set
+// to reduce motion gets no glide: everything lands at once, as every other
+// part of the app does. `scripts/check-motion.mjs` allows motion in this
+// file and nowhere else.
 
 /** How long letting go takes to finish: about a third of a second, quick enough not to wait for. */
 export const SETTLE_MS = 320;
