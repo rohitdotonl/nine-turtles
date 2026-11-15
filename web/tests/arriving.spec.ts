@@ -87,6 +87,9 @@ test("once an article is opened, new ones wait for r as usual, even while a list
   await appReady(page);
   const list = page.getByRole("region", { name: "Unread" });
   await list.getByRole("listitem").first().getByRole("button").first().click();
+  await expect(page.getByRole("region", { name: "Article", exact: true })).toBeVisible();
+  // Back in the list (the article had the window to itself, decision 0275), the note says what waits.
+  await page.keyboard.press("Escape");
   // The sidebar stays still while you read: its feeds aren't loaded again.
   let sidebarLoads = 0;
   page.on("request", (request) => {

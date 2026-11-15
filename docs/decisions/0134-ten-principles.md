@@ -4,6 +4,8 @@
 
 *1 November 2026.*
 
+*Amended by [0275](0275-one-thing-at-a-time.md): the three areas stay (sidebar, list, page), but a computer shows them one thing at a time, the list, then the page, as a phone does.*
+
 **Decision.** After checking every chapter of his design field guide and
 Rams' ten principles (updated form), the owner said yes to:
 

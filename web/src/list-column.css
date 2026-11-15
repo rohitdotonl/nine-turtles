@@ -1,0 +1,34 @@
+/* The article list's edges and its column on a computer. Moved out of app.css, which had reached its size limit. */
+
+/*
+  The list's edges (decision 0043): its title, search field, row titles and
+  closing caption start --list-start into the pane and end --list-end before
+  its far edge; the pill sits --pill-inset in. On a phone every screen keeps
+  one 20px margin, but a list keeps a gutter for its unread dot, as Books and
+  Mail do on iOS (decision 0054): its title, search field and row titles start
+  28px in, the pill 6px in, and the dot 10px from the screen's edge (4px into
+  the pill), so the keyboard's ring, 2px inside the pill, still passes 2px
+  clear of it (decision 0049).
+*/
+.list-pane {
+  --list-start: 2rem;
+  --list-end: 1.5rem;
+  --pill-inset: 0.5rem;
+  --dot-left: 8px;
+}
+.list-pane.phone {
+  --list-start: 1.75rem;
+  --list-end: 1.25rem;
+  --pill-inset: 0.375rem;
+  --dot-left: 4px;
+}
+
+/*
+  On a computer the list is alone beside the sidebar, one thing at a time
+  (decision 0275; which areas show is lib/layout.svelte.ts): its title,
+  search and rows keep to a centred column of a readable width (42rem with
+  its edges), and its scroll bar stays at the window's edge.
+*/
+.list-pane:not(.phone) > :is(.pane-bar, .scroller) {
+  padding-inline: calc(var(--list-start) + max(0px, (100% - 42rem) / 2)) calc(var(--list-end) + max(0px, (100% - 42rem) / 2));
+}

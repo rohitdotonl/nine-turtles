@@ -14,6 +14,17 @@ const article = (page: Page) => page.getByRole("region", { name: "Article", exac
 const NEWEST = "On keeping a commonplace book (3)";
 const MIDDLE = "Walking the long way home (2)";
 
+/** Signs a new reader up in this browser, so what's kept on the device is only this test's (the owner's unread can pass the 200 kept). */
+async function signUpHere(page: Page, email: string): Promise<void> {
+  const joined = await page.request.post(new URL("/api/sign-up", FEEDS_APP).href, {
+    headers: { "sec-fetch-site": "same-origin" },
+    data: { email, password: "a long enough password" },
+  });
+  expect(joined.status()).toBe(204);
+  await page.reload();
+  await appReady(page);
+}
+
 /** The articles kept on this device, by number. Never makes the database if it isn't there. */
 function keptIds(page: Page): Promise<number[]> {
   return page.evaluate(
@@ -68,11 +79,13 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await row(NEWEST).click();
   await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();
   // Shown: read, and nothing says it couldn't be saved. The star comes off the next one.
+  await page.keyboard.press("Escape");
   await expect(row(NEWEST)).not.toHaveAccessibleName(/, unread/);
   await row(MIDDLE).click();
   await page.keyboard.press("s");
   await page.waitForTimeout(500);
   await expect(page.getByText(/couldn't be/)).toHaveCount(0);
+  await page.keyboard.press("Escape");
 
   // What needs a connection says so.
   await page.getByRole("button", { name: /^More/ }).first().click();
@@ -106,7 +119,7 @@ test("another reader signing in on this device never gets the last reader's copi
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
-  await signIn(page);
+  await signUpHere(page, `first-${name}@example.com`);
   const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
   const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
@@ -153,7 +166,7 @@ test("a tab the last reader left open never saves its waiting marks as the next 
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
-  await signIn(page);
+  await signUpHere(page, `first-${name}@example.com`);
   const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
   const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
@@ -183,7 +196,8 @@ test("a tab the last reader left open never saves its waiting marks as the next 
   const refused = page.waitForResponse((response) => response.headers()["x-nine-turtles-other-reader"] === "1");
   await context.setOffline(false);
   await refused;
-  await expect(page.getByText("Someone else signed in on this browser. Reload to continue.")).toBeVisible();
+  // Said where the reader is: at the open article's foot (decision 0275).
+  await expect(article(page).getByText("Someone else signed in on this browser. Reload to continue.")).toBeVisible();
   const theirs = await (await other.get(`/api/articles/${newest}`)).json();
   expect(theirs.article.starred).toBe(false);
   // Reload opens nine turtles as the new reader.

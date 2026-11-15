@@ -41,7 +41,7 @@ describe("switching an open tab to the new version", () => {
 });
 
 describe("what a switch carries to the new version", () => {
-  const carried = { keyboard: true, sidebar: "hidden", listHidden: true, lastPlace: "/feeds/3", sidebarScroll: 120 };
+  const carried = { keyboard: true, sidebar: "hidden", lastPlace: "/feeds/3", sidebarScroll: 120 };
 
   it("reads back a note it wrote", () => {
     expect(readCarried(JSON.parse(JSON.stringify(carried)))).toEqual(carried);

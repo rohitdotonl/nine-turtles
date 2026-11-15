@@ -228,7 +228,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await expect(note.getByText(/Opening your email app|Copied/)).toHaveCount(0);
 
   // By keyboard: W says it at the foot, collapsed again; Didn't open? and Copy their address are pressed with Enter, and the keyboard goes back to the article.
-  await page.locator(".item-row").first().focus();
+  await pane(page).getByRole("heading", { level: 2 }).focus();
   await page.keyboard.press("w");
   await expect(note).toContainText("Opening your email app…");
   await note.getByRole("button", { name: "Didn't open?" }).focus();
@@ -241,7 +241,9 @@ test("Write back answers where it was pressed, names a post with no title, and E
   // It goes with the article.
   await page.keyboard.press("w");
   await expect(note).toContainText("Opening your email app…");
-  await page.locator(".item-row").nth(1).click();
+  // j, to the next article (the list is away while one is open, decision 0275).
+  await pane(page).getByRole("heading", { level: 2 }).focus();
+  await page.keyboard.press("j");
   await expect(note.getByText(/Opening your email app/)).toHaveCount(0);
 });
 
@@ -303,6 +305,7 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await expect(pane(page)).toContainText("Opens Gmail in a new tab.");
 
   // Kept on this device: another article's Write back is a Gmail draft, in a new tab.
+  await pane(page).getByRole("button", { name: /^Back to / }).click();
   await page.locator(".item-row").nth(1).click();
   await expect(link).toHaveAttribute("href", /^https:\/\/mail\.google\.com\/mail\/\?view=cm&fs=1&to=gm%40gm\.example&su=Re%3A%20/);
   await expect(link).toHaveAttribute("target", "_blank");

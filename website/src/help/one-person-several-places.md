@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-14
+updated: 2026-11-15
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -33,8 +33,8 @@ Choose them in the sidebar, then press their name at the top of their list
 ("Alpha ›") or their name under one of their articles' titles, or choose
 **More › Info about Alpha**, or press <kbd>I</kbd> (in any list, it opens the
 page of whoever wrote the chosen article). On a
-computer their page opens beside the list; on a phone, as a screen of its
-own.
+computer their page fills the window, with **×** back to their list; on a
+phone, it's a screen of its own.
 
 Their page starts with their name and, under it, where they publish, each
 place a link to its own website. Under a person's name is **Write to Maya

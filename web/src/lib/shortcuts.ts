@@ -43,7 +43,6 @@ export type KeyScene = {
 /** What the screen does when a shortcut applies. */
 export type KeyHands = {
   openCheatSheet(): void;
-  toggleBoth(): void;
   go(place: Route): void;
   escape(): void;
   startSearch(): void;
@@ -98,9 +97,6 @@ export function carryOut(action: Action, scene: KeyScene, hands: KeyHands) {
   switch (action.kind) {
     case "cheat-sheet":
       hands.openCheatSheet();
-      break;
-    case "toggle-both":
-      hands.toggleBoth();
       break;
     case "go":
       // g u does nothing with Unread off: there's no Unread view.

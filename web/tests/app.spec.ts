@@ -12,23 +12,23 @@ async function openApp(page: Page, path = "/unread") {
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
-// The reading area: an article, "Time to read something beautiful.", or the welcome on a nine turtles with no feeds.
+// The reading area: an article, or the welcome on a nine turtles with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|Hello\. Who would you like to read\?)$/ });
 const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
-test("a wide window shows three areas, a medium one two, a phone-narrow one one", async ({ page }) => {
+test("a wide or medium window shows the sidebar and the list, one thing at a time; a phone-narrow one one area", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Starred: with no feeds yet, Unread and All show one welcome in place of the list and the
-  // reading area together (decision 0048); Starred keeps its own list.
+  // Starred: with no feeds yet, Unread and All show one welcome in place of the list
+  // (decision 0048); Starred keeps its own list. Nothing is open, so there's no reading area (decision 0275).
   await openApp(page, "/starred");
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
-  await expect(readingArea(page)).toBeVisible();
+  await expect(readingArea(page)).toBeHidden();
 
   await page.setViewportSize({ width: 1000, height: 800 });
-  await expect(sidebar(page)).toBeHidden();
+  await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
-  await expect(readingArea(page)).toBeVisible();
+  await expect(readingArea(page)).toBeHidden();
 
   await page.setViewportSize({ width: 400, height: 800 });
   await expect(sidebar(page)).toBeVisible();
@@ -502,9 +502,12 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
 
 test("the chrome never advertises shortcuts: no hint under the list, with the sidebar shown or hidden; ? still opens them", async ({ page, isMobile }) => {
   test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
-  // Medium: the sidebar starts hidden. Wide: it shows, with its keyboard icon at its foot (decision 0041).
+  // Medium: the sidebar shows (decision 0275); hidden, still no hint. Wide: it shows, with its keyboard icon at its foot (decision 0041).
   await page.setViewportSize({ width: 1000, height: 800 });
   await openApp(page);
+  await expect(sidebar(page)).toBeVisible();
+  await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
+  await toggle(page).click();
   await expect(sidebar(page)).toBeHidden();
   await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
   await page.setViewportSize({ width: 1440, height: 800 });
@@ -515,12 +518,13 @@ test("the chrome never advertises shortcuts: no hint under the list, with the si
   await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
 });
 
-test("on a computer a 1px line parts the sidebar, the list and the reading pane (decision 0054)", async ({ page, isMobile }) => {
+test("on a computer a 1px line parts the sidebar and the list (decision 0054)", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone shows one pane at a time, with no line.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   await expect(page.locator("#sidebar")).toHaveCSS("border-right-width", "1px");
-  await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "1px");
+  // The list has the rest of the window, with nothing beside it to part from (decision 0275).
+  await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "0px");
 });
 
 test("the sidebar ends with Add, then Keys (icon and word) and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
@@ -755,10 +759,10 @@ test("a tab left open across an update opens the new version at the next place i
   await expect.poll(samePage).toBe(false);
   await expect(page.getByRole("heading", { name: "Starred", level: 2 })).toBeFocused();
 
-  // The screen stays as the reader arranged it: the hidden list stays hidden,
+  // The screen stays as the reader arranged it: the hidden sidebar stays hidden,
   // and closing Settings goes back to the list they came from.
-  await page.keyboard.press("f");
-  await expect(list(page)).toBeHidden();
+  await toggle(page).click();
+  await expect(sidebar(page)).toBeHidden();
   samePage = await markPage(page);
   await newerVersionLive(page);
   await page.keyboard.press("g");
@@ -767,9 +771,9 @@ test("a tab left open across an update opens the new version at the next place i
   await expect.poll(samePage).toBe(false);
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(page).toHaveURL(/\/starred$/);
-  await expect(list(page)).toBeHidden();
-  await page.getByRole("button", { name: "Sidebar and article list" }).click();
-  await expect(list(page)).toBeVisible();
+  await expect(sidebar(page)).toBeHidden();
+  await toggle(page).click();
+  await expect(sidebar(page)).toBeVisible();
 
   // Back switches too: the address has already changed, so that's the page that loads.
   samePage = await markPage(page);

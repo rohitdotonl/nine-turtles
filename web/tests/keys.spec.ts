@@ -118,7 +118,8 @@ test.describe("on a wide window", () => {
     expect(await taken()).toBe(false);
     await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
     await expect(article(page).locator(".article-title")).toHaveText("The pleasure of a slow letter");
-    await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toHaveAttribute("aria-current", "true");
+    // Its row, out of sight while the article has the window (decision 0275), is still the chosen one.
+    await expect(page.locator("#list-pane .item-row", { hasText: "The pleasure of a slow letter" })).toHaveAttribute("aria-current", "true");
     await page.keyboard.press("Home");
     expect(await taken()).toBe(false);
     await expect.poll(() => scroller.evaluate((element) => element.scrollTop)).toBe(0);

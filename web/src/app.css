@@ -271,7 +271,7 @@ body {
   pane; inside it a 24px gutter holds the unread dot, so every title starts
   32px in, lined up with the list's title, the search field and the caption
   at the end, dot or not. On a phone, titles start 28px in and the pill sits
-  6px in (.list-pane, decisions 0043, 0054).
+  6px in (.list-pane in list-column.css, decisions 0043, 0054).
 */
 .item-row {
   --place-tint: var(--color-tint-list);
@@ -1242,19 +1242,6 @@ textarea {
   }
 }
 
-/* Hints that name a key (", or press j" in the empty reading area) are only for screens with a keyboard. */
-@media (hover: none) and (pointer: coarse) {
-  .keyboard-hint {
-    display: none;
-  }
-}
-/* What a touch screen says instead of a key hint. */
-@media not ((hover: none) and (pointer: coarse)) {
-  .touch-only {
-    display: none;
-  }
-}
-
 /* Radio buttons and checkboxes in the text color, never the browser's blue. */
 input {
   accent-color: var(--ink);
@@ -1495,26 +1482,14 @@ input {
 }
 
 /*
-  The empty reading area's one quiet line (decision 0053): the serif, a little
-  larger than the list, in muted grey, which keeps 4.5 : 1 on the page in every
-  theme. Never the accent, and no picture.
+  The quiet line at the top of the list, "You were reading …" (decisions 0053,
+  0175): the serif, a little larger than the list, in muted grey, which keeps
+  4.5 : 1 on the page in every theme. Never the accent, and no picture.
 */
 .reading-empty {
   font-family: var(--font-serif);
   font-size: var(--text-large);
   line-height: 2rem;
-  color: var(--muted);
-  text-align: center;
-}
-
-/*
-  The one-time tip under it (decision 0062): small interface type in the
-  same muted grey, 12px below, with the keys as key caps. Never the accent.
-  It hangs below the line, so the line stays in the pane's middle.
-*/
-.shortcut-tip {
-  margin-top: 0.75rem;
-  font-size: var(--text-meta);
   color: var(--muted);
   text-align: center;
 }
@@ -1550,36 +1525,11 @@ dialog.dimmed::backdrop {
   background: var(--scrim, rgb(0 0 0 / 0.18));
 }
 
-
 /*
-  The list's edges (decision 0043): its title, search field, row titles and
-  closing caption start --list-start into the pane and end --list-end before
-  its far edge; the pill sits --pill-inset in. On a phone every screen keeps
-  one 20px margin, but a list keeps a gutter for its unread dot, as Books and
-  Mail do on iOS (decision 0054): its title, search field and row titles start
-  28px in, the pill 6px in, and the dot 10px from the screen's edge (4px into
-  the pill), so the keyboard's ring, 2px inside the pill, still passes 2px
-  clear of it (decision 0049).
-*/
-.list-pane {
-  --list-start: 2rem;
-  --list-end: 1.5rem;
-  --pill-inset: 0.5rem;
-  --dot-left: 8px;
-}
-.list-pane.phone {
-  --list-start: 1.75rem;
-  --list-end: 1.25rem;
-  --pill-inset: 0.375rem;
-  --dot-left: 4px;
-}
-
-/*
-  Where two panes meet on a computer (decision 0054): one 1px line in the
-  same faint tone of the text color as the list's hairlines, on the sidebar's
-  right edge and on the list's when the reading pane is beside it, as Apple
-  Books divides its Mac sidebar from its content. A border, not a shadow, so
-  nothing in the pane (the note's band at the list's foot) can paint over it.
+  Where the sidebar meets the list on a computer (decision 0054): one 1px
+  line in the same faint tone of the text color as the list's hairlines, as
+  Apple Books divides its Mac sidebar from its content. A border, not a
+  shadow, so nothing in the pane can paint over it.
 */
 .pane-edge {
   border-right: 1px solid var(--line);

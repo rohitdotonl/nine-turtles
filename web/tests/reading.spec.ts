@@ -8,6 +8,11 @@ import { appReady, follow, nothingToPickUp, openReadingRoom, signIn, tabTo } fro
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const title = (page: Page, name: string) => article(page).getByRole("heading", { level: 2, name });
 const row = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(name) });
+/** Back to the list from an open article, which has the window to itself (decision 0275). */
+async function toList(page: Page): Promise<void> {
+  const back = page.getByRole("region", { name: "Article", exact: true }).getByRole("button", { name: /^Back to / });
+  if (await back.isVisible()) await back.click();
+}
 
 async function openRoom(page: Page, width = 1280, { read = false } = {}) {
   await page.setViewportSize({ width, height: 800 });
@@ -15,6 +20,12 @@ async function openRoom(page: Page, width = 1280, { read = false } = {}) {
   await appReady(page);
   await signIn(page);
   await openReadingRoom(page, { read });
+}
+
+/** j chooses the first article in the list, and Enter opens it, alone in the window (decision 0275). */
+async function openFirst(page: Page) {
+  await page.keyboard.press("j");
+  await page.keyboard.press("Enter");
 }
 
 async function visits(page: Page, path: string): Promise<number> {
@@ -31,7 +42,7 @@ test.describe("on a wide window", () => {
     await openRoom(page, 1280, { read: true });
     let failing = true;
     await page.route(/\/api\/articles\/[0-9]+$/, (route) => (failing ? route.fulfill({ status: 500 }) : route.fallback()));
-    await page.keyboard.press("j");
+    await openFirst(page);
     const articleProblem = article(page).getByRole("status").filter({ hasText: "This article couldn't be loaded." });
     await expect(articleProblem).toBeVisible();
     failing = false;
@@ -41,7 +52,8 @@ test.describe("on a wide window", () => {
     await expect(articleProblem).toHaveCount(0);
     await expect(article(page).locator("h2.article-title")).toBeFocused();
 
-    // The list itself: Try again asks for it again from the top, the keyboard waiting on the list's heading.
+    // The list itself, back in it: Try again asks for it again from the top, the keyboard waiting on the list's heading.
+    await page.keyboard.press("Escape");
     let listFailing = true;
     await page.route(/\/api\/(items|articles)\?/, (route) => (listFailing ? route.fulfill({ status: 500 }) : route.fallback()));
     await page.keyboard.press("r");
@@ -68,7 +80,7 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
   });
 
-  test("one layout button: the sidebar's hides the sidebar; f hides the sidebar and list, and the one button brings both back", async ({ page }) => {
+  test("one layout button: the sidebar's hides and shows the sidebar; f does nothing (decision 0275)", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
     const nav = page.getByRole("navigation", { name: "Sidebar" });
@@ -81,31 +93,8 @@ test.describe("on a wide window", () => {
     await sidebarButton.click();
     await expect(nav).toBeVisible();
 
+    // Full-screen reading is gone: an article has the window anyway.
     await page.keyboard.press("f");
-    await expect(list).toBeHidden();
-    await expect(nav).toBeHidden();
-    await page.getByRole("button", { name: "Sidebar and article list" }).click();
-    await expect(list).toBeVisible();
-    await expect(nav).toBeVisible();
-
-    // Full-screen reading is never only a key: an article's More menu has it, with the key named.
-    await page.keyboard.press("j");
-    const more = article(page).getByRole("button", { name: "More actions" });
-    await more.click();
-    await expect(page.getByRole("menuitem", { name: /^Full-screen reading/ })).toContainText("F");
-    await page.getByRole("menuitem", { name: /^Full-screen reading/ }).click();
-    await expect(list).toBeHidden();
-    await expect(nav).toBeHidden();
-    // At the article's top, the one button lies above the article's own bar, so a mouse can see and press it.
-    const both = page.getByRole("button", { name: "Sidebar and article list" });
-    await expect
-      .poll(() => both.evaluate((button) => { const box = button.getBoundingClientRect(); return button.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)); }))
-      .toBe(true);
-    // From the keyboard: Enter opens the menu and the item, and both come back.
-    await more.focus();
-    await page.keyboard.press("Enter");
-    await page.getByRole("menuitem", { name: /^Leave full-screen reading/ }).focus();
-    await page.keyboard.press("Enter");
     await expect(list).toBeVisible();
     await expect(nav).toBeVisible();
   });
@@ -136,63 +125,33 @@ test.describe("on a wide window", () => {
     await expect(page.locator("#list-pane .item-row").first()).toBeFocused();
   });
 
-  test("on a window about 1024px wide the list keeps room for feed names and titles, even dragged narrower", async ({ page }) => {
+  test("on a window about 1024px wide the list has room for feed names and titles, and no width to drag", async ({ page }) => {
     await openRoom(page, 1024);
     const list = page.locator("#list-pane");
     await expect(list).toBeVisible();
-    await expect(page.getByRole("region", { name: "Article", exact: true })).toBeVisible();
+    // Nothing open: no reading area beside it (decision 0275).
+    await expect(page.getByRole("region", { name: "Article", exact: true })).toHaveCount(0);
     expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(336);
     // Its titles get at least 280px of the row.
     expect((await list.locator(".item-row .title").first().boundingBox())!.width).toBeGreaterThanOrEqual(280);
-    // Narrowed with the keyboard as far as it goes, it stops at 280px.
-    const edge = page.getByRole("separator", { name: "Resize the article list" });
-    await edge.focus();
-    for (let step = 0; step < 20; step++) await page.keyboard.press("ArrowLeft");
-    expect(Math.round((await list.boundingBox())!.width)).toBe(280);
-    await edge.dblclick();
-    await page.evaluate(() => localStorage.removeItem("nine-turtles.list-width"));
+    await expect(page.getByRole("separator", { name: "Resize the article list" })).toHaveCount(0);
   });
 
   test("j shows an article cleaned and restyled, and j and k move through the list", async ({ page }) => {
     await openRoom(page, 1280, { read: true });
     const room = page.url();
-    // Beside a person's list, the same quiet line as everywhere (their page opens by their name, SPEC section 36), with the first-time tip under it.
-    await expect(article(page).locator(".reading-empty")).toBeVisible();
-    await expect(article(page).locator(".shortcut-tip")).toHaveText("Press J to read. Press W to write back.");
-    // One quiet line in the middle of the paper (decision 0053): serif, muted grey, never the accent;
-    // screen readers also hear, since the list has articles to open, how to open one. The same in
-    // every list, unread first or not (decision 0220).
-    const empty = article(page).locator(".reading-empty");
-    await expect(empty).toHaveText("Time to read something beautiful.");
-    await expect(empty).toBeVisible();
-    await expect(empty).toHaveCSS("font-family", /Literata/);
-    const [color, muted] = await empty.evaluate((element) => {
-      const probe = document.createElement("div");
-      probe.style.color = "var(--muted)";
-      document.body.append(probe);
-      const value = getComputedStyle(probe).color;
-      probe.remove();
-      return [getComputedStyle(element).color, value];
-    });
-    expect(color).toBe(muted);
-    const [line, pane] = await Promise.all([empty.boundingBox(), article(page).boundingBox()]);
-    expect(Math.abs(line!.x + line!.width / 2 - (pane!.x + pane!.width / 2))).toBeLessThan(4);
-    // At the optical middle, a little above half way (decision 0142).
-    expect(line!.y + line!.height / 2).toBeLessThan(pane!.y + pane!.height / 2 - 20);
-    // The first time, a quiet tip under it names the two keys worth knowing first (decision 0062),
-    // small, in the same muted grey, its keys as key caps.
-    const tip = article(page).locator(".shortcut-tip");
-    await expect(tip).toBeVisible();
-    await expect(tip).toHaveText("Press J to read. Press W to write back.");
-    await expect(tip.locator("kbd")).toHaveText(["J", "W"]);
-    expect(await tip.evaluate((element) => getComputedStyle(element).color)).toBe(muted);
+    // Nothing open: no empty reading area beside the list, so no quiet line and no tip (decision 0275).
+    await expect(article(page)).toHaveCount(0);
+    await expect(page.getByText("Time to read something beautiful.")).toHaveCount(0);
 
     await page.goto(room);
     await appReady(page);
     await expect(row(page, "The pleasure of a slow letter")).toBeVisible();
+    // j chooses the first article in the list; Enter opens it, alone in the window.
     await page.keyboard.press("j");
     await expect(row(page, "The pleasure of a slow letter")).toHaveAttribute("aria-current", "true");
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
+    await page.keyboard.press("Enter");
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
 
     // The title comes first, then the byline under it; the article ends with a short line.
@@ -244,20 +203,22 @@ test.describe("on a wide window", () => {
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible({ timeout: 100 });
   });
 
-  test("a screen reader finds the three panes as named regions, and headings to jump between", async ({ page }) => {
+  test("a screen reader finds the sidebar, the list and the article as named regions, and headings to jump between", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
-    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
-
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
     await expect(page.getByRole("region", { name: "Reading Room" })).toBeVisible();
-    await expect(article(page)).toBeVisible();
-    // One page title, then a heading for the list and one for the article.
+    // One page title, then a heading for the list.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
     await expect(page.getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
-    // The selected row says it's the current one.
+    // j chooses a row: it says it's the current one.
+    await page.keyboard.press("j");
     await expect(page.locator('[aria-current="true"]')).toHaveCount(1);
+    // Opened, the article is a named region of its own, with its heading; the page title is still there for screen readers.
+    await page.keyboard.press("Enter");
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await expect(article(page)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
   });
 
   test("Enter opens the article to read; Escape goes back to the list", async ({ page }) => {
@@ -274,9 +235,10 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
     await expect(row(page, "Only the first page")).toBeFocused();
 
-    // The arrow keys work like j and k in the list.
+    // The arrow keys work like j and k in the list; Enter opens the one chosen.
     await page.keyboard.press("ArrowDown");
     await expect(row(page, "A third, shorter note")).toBeFocused();
+    await page.keyboard.press("Enter");
     await expect(title(page, "A third, shorter note")).toBeVisible();
   });
 
@@ -289,22 +251,22 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
-    // The actions are quiet icons, each named in its tooltip with its key; the way to the publisher comes first,
-    // then Aa, Star, Write back (a person's, decision 0214) and More (decision 0038).
+    // After the way back to the list (decision 0275), the actions are quiet icons, each named in its tooltip with its key;
+    // the way to the publisher comes first, then Aa, Star, Write back (a person's, decision 0214) and More (decision 0038).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["View original", "Reading appearance", "Star", "Write back", "More actions"]);
+    expect(order).toEqual(["Back to Reading Room", "View original", "Reading appearance", "Star", "Write back", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Star" }).first()).toHaveAttribute("title", "Star (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note, Hide articles about… and Full-screen reading (decision 0241), their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/, /Full-screen reading/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -321,7 +283,7 @@ test.describe("on a wide window", () => {
   test("Copy link copies the publisher's address, not nine turtles'", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     await article(page).getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Copy link" }).click();
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
@@ -330,7 +292,7 @@ test.describe("on a wide window", () => {
 
   test("the Aa panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
     await expect(aa).toHaveAttribute("aria-haspopup", "dialog");
     await expect(aa).toHaveAttribute("aria-expanded", "false");
@@ -434,7 +396,9 @@ test.describe("on a wide window", () => {
     await expect(panel).toBeVisible();
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
-    await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
+    // To Settings by its keys: the sidebar is away while the article is open (decision 0275).
+    await page.keyboard.press("g");
+    await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
     await expect(page.getByText("Text size and font are in Aa, above any article.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
@@ -442,7 +406,7 @@ test.describe("on a wide window", () => {
 
   test("a footnote opens where you are, and the article's typewriter marks are set properly", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const text = article(page).locator("#article-text");
     // A footnote's number opens its note in a card just under the line (decision 0247); the notes stay at the end too.
     const one = text.locator("sup").getByRole("link", { name: "1", exact: true });
@@ -495,7 +459,7 @@ test.describe("on a wide window", () => {
 
   test("a highlight kept with straight quotes is still found in the curled text", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const id = new URL(page.url()).pathname.split("/").pop();
     const made = await page.request.post(new URL(`/api/articles/${id}/highlights`, FEEDS_APP).href, {
       data: { quote: `"Don't rush it -- the words` },
@@ -549,18 +513,19 @@ test.describe("on a wide window", () => {
     await expect(selected).toHaveCSS("outline-width", "2px");
     // The selection is a pill (decision 0037): filled, 8px corners, 8px in
     // from the list's edge, grey with no bar (decision 0057). The outline is
-    // drawn inside its edge.
+    // drawn inside its edge. The list's edge is its centred 42rem column's (decision 0275).
     await expect(selected).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(selected).toHaveCSS("border-top-left-radius", "8px");
     expect(await selected.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
-    const inset = await selected.evaluate(
-      (element) => element.getBoundingClientRect().left - element.closest(".scroller")!.getBoundingClientRect().left,
-    );
+    const paneX = await selected.evaluate((element) => {
+      const pane = element.closest("section")!.getBoundingClientRect();
+      return pane.left + Math.max(0, (pane.width - 42 * 16) / 2);
+    });
+    const inset = (await selected.boundingBox())!.x - paneX;
     expect(Math.abs(inset - 8)).toBeLessThan(1);
-    // Every title starts 32px into the pane, lined up with the list's title
+    // Every title starts 32px into the column, lined up with the list's title
     // and the search field, dot or no dot (decision 0041).
     const titleX = (await selected.locator(".title").boundingBox())!.x;
-    const paneX = await selected.evaluate((element) => element.closest("section")!.getBoundingClientRect().left);
     expect(Math.abs(titleX - paneX - 32)).toBeLessThan(1);
     expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - titleX)).toBeLessThan(1);
     expect(Math.abs((await page.locator(".search-box").boundingBox())!.x - titleX)).toBeLessThan(1);
@@ -590,7 +555,7 @@ test.describe("on a wide window", () => {
     await expect(note).toBeVisible();
     const [noteBox, paneBox] = [(await note.boundingBox())!, (await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().toJSON()))];
     expect(paneBox.bottom - (noteBox.y + noteBox.height)).toBeLessThan(48);
-    // It sits in a band of the pane's own color (the page, decision 0221) across the pane, which the rows end above, so it
+    // It sits in a band of the pane's own color (the page, decision 0221) across the list's column, which the rows end above, so it
     // never lies over the rows you're acting on (decision 0048).
     const band = note.locator("xpath=..");
     const [bandFill, paneFill] = await Promise.all([
@@ -599,7 +564,7 @@ test.describe("on a wide window", () => {
     ]);
     expect(bandFill).toBe(paneFill);
     const bandBox = (await band.boundingBox())!;
-    expect(bandBox.width).toBeGreaterThan(paneBox.width - 16);
+    expect(bandBox.width).toBeGreaterThan(Math.min(paneBox.width, 42 * 16) - 16);
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
     // readers, but no ring: a title can't be pressed (decision 0047). The
@@ -616,7 +581,7 @@ test.describe("on a wide window", () => {
 
   test("on a wide window the article sits in the middle, and its actions sit together at the pane's right edge",async ({ page }) => {
     await openRoom(page, 2560);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const text = (await article(page).locator("article").boundingBox())!;
     // Centred in its scrolling area (the space left beside any scrollbar):
     // as much room on its left as on its right, within a pixel or two.
@@ -641,22 +606,24 @@ test.describe("on a wide window", () => {
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
   });
 
-  test("the three panes share one top line, and a toolbar's focus ring stays clear of the window's top", async ({ page }) => {
+  test("every pane shares one top line, and a toolbar's focus ring stays clear of the window's top", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
-    // One band for every pane's top line (decision 0043): the sidebar's, the list's and the article's end at the same height.
-    const bottoms = await page.locator("#sidebar .pane-bar, .list-pane > .pane-bar, .reading-bar").evaluateAll((bars) =>
-      bars.map((bar) => Math.round(bar.getBoundingClientRect().bottom)),
-    );
-    expect(bottoms).toHaveLength(3);
+    // One band for every pane's top line (decision 0043): the sidebar's and the list's end at the same height,
+    // and the article's, alone in the window once open (decision 0275), at that height too.
+    const bottomsOf = (selector: string) =>
+      page.locator(selector).evaluateAll((bars) => bars.map((bar) => Math.round(bar.getBoundingClientRect().bottom)));
+    const bottoms = await bottomsOf("#sidebar .pane-bar, .list-pane > .pane-bar");
+    expect(bottoms).toHaveLength(2);
     expect(new Set(bottoms).size).toBe(1);
-    // Their controls sit on one line: the sidebar button, the list's More and the article's Aa.
+    // Their controls sit on one line: the sidebar button, the list's More, then the article's Aa.
     const middle = async (selector: string) => {
       const box = (await page.locator(selector).first().boundingBox())!;
       return box.y + box.height / 2;
     };
     const line = await middle("button[aria-label='Sidebar']");
     expect(Math.abs((await middle(".list-pane > .pane-bar button")) - line)).toBeLessThan(1);
+    await openFirst(page);
+    expect(await bottomsOf(".reading-bar")).toEqual([bottoms[0]]);
     expect(Math.abs((await middle(".reading-bar button[aria-label='Reading appearance']")) - line)).toBeLessThan(1);
     // A toolbar button's ring is drawn inside its own edge, so it never touches the window's top.
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
@@ -668,7 +635,7 @@ test.describe("on a wide window", () => {
   test("the top bar is solid in the page's color and scrolls away with the title; Star and View original wait at the end", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const bar = article(page).locator(".reading-bar");
     const scroller = article(page).locator(".reading-scroller");
     // Solid, never see-through or blurred (decision 0040).
@@ -706,22 +673,20 @@ test.describe("on a wide window", () => {
     const said = article(page).locator(".away .toast");
     await expect(said).toContainText("Link copied.");
     expect((await said.boundingBox())!.y).toBeGreaterThan(scrollerBox.y + scrollerBox.height - 120);
-    // A note that comes later (here the star's Undo, in full-screen reading) puts the older line away, so the newest shows.
-    await page.keyboard.press("f");
+    // A note that comes later (here the star's Undo) puts the older line away, so the newest shows.
     await page.keyboard.press("s");
     await expect(said).toContainText("Starred.");
     await said.getByRole("button", { name: "Undo" }).click();
     await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
     await said.getByRole("button", { name: "Close the note" }).click();
     await expect(said).toHaveClass(/sr-only/);
-    await page.keyboard.press("f");
     // The scrollbar's track is see-through, so its gutter is the page's own color in every theme.
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
 
   test("the title is about 38px in the display cut, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const heading = article(page).locator(".article-title");
     await expect(heading).toHaveCSS("font-size", "38px");
     // Regular weight, in Literata's display cut, as a book sets a chapter's title (decision 0246).
@@ -753,7 +718,7 @@ test.describe("on a wide window", () => {
 
   test("an article's parts are set as a book sets them: real bold italics, plain zeros in dates, spacing that follows the size (decision 0246)", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     // Bold inside italics is drawn from its own font files, never slanted by the browser.
     const boldItalic = (family: string) =>
       page.evaluate((name) => [...document.fonts].some((font) => font.family.replaceAll('"', "") === name && font.style === "italic" && font.weight === "600"), family);
@@ -795,7 +760,7 @@ test.describe("on a wide window", () => {
   test("on a 1280px window the text keeps at least 56px of paper on each side", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     // A list's words start on the paragraphs' left edge, its numbers hanging in the margin (decision 0218).
     const [paragraph, item] = await Promise.all([
       article(page).locator(".article-text > p").first().boundingBox(),
@@ -911,22 +876,20 @@ test.describe("on a wide window", () => {
   });
 
   test("a picture is looked at again when the window changes size; one that no longer opens larger gives the keyboard to the title on closing (decision 0107)", async ({ page }) => {
-    await openRoom(page);
+    // Alone in the window (decision 0275), the article has room for the field's 560px in any computer's window,
+    // and a computer's window narrowed to a phone's shows the phone's home screen: so this starts at a phone's width.
+    await openRoom(page, 390);
     await row(page, "A third, shorter note").click();
-    // The field fits the column of a wide window, so it stays as it was.
     const field = article(page).locator('img[alt="A wide field"]');
     await expect.poll(() => field.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-    await expect(field).not.toHaveAttribute("role", "button");
-
-    // In a narrower window it's shown smaller, so it opens larger.
-    await page.setViewportSize({ width: 900, height: 800 });
+    // In the phone's narrow column it's shown smaller, so it opens larger.
     await expect(field).toHaveAttribute("role", "button");
     await expect(field).toHaveAttribute("tabindex", "0");
     await field.click();
     const sheet = page.getByRole("dialog", { name: "Picture: A wide field" });
     await expect(sheet).toBeVisible();
 
-    // Wide again while it's open: it no longer opens larger, so closing puts the keyboard on the title.
+    // Wide while it's open: the field fits the column, so it no longer opens larger, and closing puts the keyboard on the title.
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(field).not.toHaveAttribute("role", "button");
     await page.keyboard.press("Escape");
@@ -937,8 +900,10 @@ test.describe("on a wide window", () => {
   test("in high-contrast mode, only the selected article is marked", async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });
     await openRoom(page);
-    await page.keyboard.press("j");
-    await page.keyboard.press("Enter");
+    // Opened and back in the list (decision 0275), its row still the chosen one; the keyboard elsewhere.
+    await openFirst(page);
+    await page.keyboard.press("Escape");
+    await page.locator("#list-heading").focus();
     const style = (name: string) =>
       row(page, name).evaluate((element) => {
         const css = getComputedStyle(element);
@@ -989,7 +954,8 @@ test.describe("on a wide window", () => {
     for (let i = 0; i < 40; i++) await page.keyboard.press("j");
     expect(await fillsWindow()).toEqual(still);
 
-    // And over the article, too.
+    // And over the article, too, opened alone in the window.
+    await page.keyboard.press("Enter");
     await article(page).hover();
     for (let i = 0; i < 15; i++) await page.mouse.wheel(0, 400);
     expect(await fillsWindow()).toEqual(still);
@@ -997,7 +963,7 @@ test.describe("on a wide window", () => {
 
   test("+ and - change the text size while reading, and the Aa panel shows it", async ({ page }) => {
     await openRoom(page);
-    await page.keyboard.press("j");
+    await openFirst(page);
     const text = article(page).locator("article");
     const size = () => text.evaluate((element) => getComputedStyle(element).fontSize);
     await expect.poll(size).toBe("20px");
@@ -1071,6 +1037,7 @@ test.describe("on a wide window", () => {
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
 
     // A video with no description is just the video, never "no text in its feed".
+    await toList(page);
     await row(page, "Rain on a tin roof").click();
     const rain = article(page).getByRole("button", { name: "Play video: Rain on a tin roof" });
     await expect(rain).toBeVisible();
@@ -1084,6 +1051,7 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator("iframe")).toBeFocused();
 
     // Back to the first video: it picks up where the player said it stopped, and closes when it ends.
+    await toList(page);
     await row(page, "A river at dawn").click();
     const resume = article(page).getByRole("button", { name: "Resume from 4:00: A river at dawn, for an hour" });
     await expect(resume).toContainText("Resume from 4:00");
@@ -1136,6 +1104,7 @@ test.describe("on a wide window", () => {
     await page.goto(new URL(`/people/${id}`, page.url()).href);
 
     // The first video plays at YouTube's own 1×, which isn't taken as a choice; choosing 1.5× in its menu is kept.
+    await toList(page);
     await row(page, "A river at dawn").click();
     await article(page).getByRole("button", { name: /^(Play video|Resume from [\d:]+): A river at dawn, for an hour$/ }).press("Enter");
     const first = (await player())!;
@@ -1146,6 +1115,7 @@ test.describe("on a wide window", () => {
     await expect.poll(kept).toBe("1.5");
 
     // (The test before may have left a place in either video.) The next video, played from the keyboard, is given 1.5×, and its starting 1× doesn't undo the choice.
+    await toList(page);
     await row(page, "Rain on a tin roof").click();
     await article(page).getByRole("button", { name: /^(Play video|Resume from [\d:]+): Rain on a tin roof$/ }).press(" ");
     const next = (await player())!;
@@ -1203,25 +1173,6 @@ test("on a phone, a tap opens a big picture larger, inside the screen, and the X
   await expect(picture).toBeFocused();
 });
 
-test("the shortcut tip shows only until an article is first opened, then never again on this device (decision 0062)", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the tip names keys, so it's for screens with a keyboard");
-  await openRoom(page, 1280, { read: true });
-  const room = page.url();
-  const tip = article(page).locator(".shortcut-tip");
-  await expect(tip).toBeVisible();
-  // Opened with a click, not a key: the tip has done its job either way.
-  await row(page, "Only the first page").click();
-  await expect(title(page, "Only the first page")).toBeVisible();
-  // Back to the same list, whose articles are read, so the quiet line shows.
-  await page.goto(room);
-  await appReady(page);
-  await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
-  await expect(tip).toHaveCount(0);
-  await expect(article(page)).toContainText("Choose one from the list, or press J.");
-  await expect(article(page).locator(".sr-only", { hasText: "Choose one from the list" })).toHaveCSS("position", "absolute");
-  await expect(article(page).locator("kbd")).toHaveCount(0);
-});
-
 test.describe("your place in an article (decision 0060)", () => {
   test.skip(({ isMobile }) => isMobile, "the same reading area on a phone; the computer's is enough");
 
@@ -1244,7 +1195,8 @@ test.describe("your place in an article (decision 0060)", () => {
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
     const stopped = await top(page);
-    // Its row says how far, in words, while the place is kept (decision 0224).
+    // Back in the list, its row says how far, in words, while the place is kept (decision 0224).
+    await page.keyboard.press("Escape");
     const far = /^·\s(Just begun|A third read|Half read|Two-thirds read|Nearly finished)$/;
     await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveText(far);
     await expect(row(page, "Only the first page").locator(".row-place")).toHaveCount(0);
@@ -1252,6 +1204,7 @@ test.describe("your place in an article (decision 0060)", () => {
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
     expect(await top(page)).toBe(0);
+    await page.keyboard.press("Escape");
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
     await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
@@ -1259,6 +1212,9 @@ test.describe("your place in an article (decision 0060)", () => {
 
     await page.reload();
     await appReady(page);
+    // The reload opens the article named in the address, alone (decision 0275): back to the list.
+    await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveText(far);
     await row(page, "The pleasure of a slow letter").click();
     await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
@@ -1269,14 +1225,17 @@ test.describe("your place in an article (decision 0060)", () => {
     await page.mouse.wheel(0, 5000);
     await expect.poll(() => scroller(page).evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop)).toBeLessThan(2);
     await page.waitForTimeout(600);
+    await page.keyboard.press("Escape");
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
+    await page.keyboard.press("Escape");
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
     await expect(article(page).locator("table")).toBeAttached();
     await page.waitForTimeout(200);
     expect(await top(page)).toBe(0);
     // Finished, its row no longer says how far.
+    await page.keyboard.press("Escape");
     await expect(row(page, "The pleasure of a slow letter").locator(".row-place")).toHaveCount(0);
   });
 
@@ -1299,7 +1258,8 @@ test.describe("your place in an article (decision 0060)", () => {
 
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
-    const line = article(page).locator(".reading-empty");
+    // Nothing open: the line sits at the top of the list (decision 0275).
+    const line = page.locator("#list-pane .reading-empty");
     await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
     // The title is the way in, from the keyboard too.
     const title_ = line.getByRole("button", { name: "The pleasure of a slow letter" });
@@ -1309,21 +1269,21 @@ test.describe("your place in an article (decision 0060)", () => {
     await expect.poll(() => top(page)).toBeGreaterThan(stopped - 8);
     expect(await top(page)).toBeLessThan(stopped + 8);
 
-    // Opening something else lets it go: next time, the usual line.
+    // Opening something else lets it go: next time, no line.
+    await page.keyboard.press("Escape");
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
     await page.waitForTimeout(300);
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
-    // The usual empty reading area: the quiet line (decision 0220).
-    await expect(article(page).getByText("Time to read something beautiful.")).toBeVisible();
-    await expect(article(page)).not.toContainText("You were reading");
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
   });
 });
 
 // Decision 0220: every list opens the same quiet way, its first article unread or not: no begun
-// first article, no Start reading; on a computer the reading area keeps its quiet line.
-test("an unread first article waits in the list as every other does, in Unread too", async ({ page, isMobile }) => {
+// first article, no Start reading, and nothing opens by itself.
+test("an unread first article waits in the list as every other does, in Unread too", async ({ page }) => {
   await nothingToPickUp(page);
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
@@ -1341,6 +1301,6 @@ test("an unread first article waits in the list as every other does, in Unread t
     expect(sizes[0]).toBe(sizes[1]);
     await expect(page.getByText(/^(Newest|Oldest) unread$/)).toHaveCount(0);
     await expect(page.getByText("Start reading", { exact: true })).toHaveCount(0);
-    if (!isMobile) await expect(article(page).locator(".reading-empty")).toHaveText("Time to read something beautiful.");
+    await expect(article(page)).toHaveCount(0);
   }
 });
