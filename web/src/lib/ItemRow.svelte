@@ -4,9 +4,9 @@
   (`RowText.svelte`). A right-click, a long press, or the Menu key (or
   Shift+F10) opens its own menu; the arrow keys work like j and k; a drag
   carries the article (decision 0250); Command-click or a middle click opens
-  it in a new tab (decision 0233); on a touch screen, swiped left a little
-  way it's marked read, and all the way it's starred, as its menu does
-  (decision 0274). Which row is chosen, and what each of
+  it in a new tab (decision 0233); on a touch screen, swiped right it's
+  marked read or unread and swiped left it's starred, as its menu does and
+  as in Mail (decision 0274). Which row is chosen, and what each of
   these does to the list, is `ItemList.svelte`'s.
 -->
 <script lang="ts">
@@ -54,26 +54,25 @@
     onMenu: (x?: number, y?: number) => void;
     /** An arrow key: the next (1) or previous (-1) article. */
     onStep: (step: 1 | -1) => void;
-    /** What a swipe left does on a touch screen, a little way first, then all the way. */
-    swipes: [RowSwipe, ...RowSwipe[]];
+    /** What a swipe right and a swipe left do on a touch screen (with Unread off, right is the screen's back). */
+    swipes: { right?: RowSwipe; left: RowSwipe };
   } = $props();
 
-  /** How far the row follows a finger to the left (0 at rest), and what letting go there does: the first of `swipes` past a third of the way (`reach`), the last past 60%. */
+  /** How far the row follows a finger sideways (0 at rest; right is positive), what that side does, and whether letting go now does it (a third of the way, `reach`). */
   let pulled = $state(0);
-  const chosen = (dx: number) => {
-    const width = row?.clientWidth ?? innerWidth;
-    if (-dx >= width * 0.6) return swipes.at(-1);
-    return -dx >= reach(width) ? swipes[0] : undefined;
-  };
-  const armed = $derived(chosen(pulled));
-  const hands = {
-    side: -1 as const,
+  const pulling = $derived(pulled > 0 ? swipes.right : pulled < 0 ? swipes.left : undefined);
+  const far = (dx: number) => row !== undefined && Math.abs(dx) >= reach(row.clientWidth);
+  const armed = $derived(far(pulled));
+  /** One for each side, so a stroke right with nothing to do there (Unread off) is left to the screen's back. */
+  const hands = (side: 1 | -1) => ({
+    side,
+    allowed: () => (side === 1 ? swipes.right : swipes.left) !== undefined,
     moved: (dx: number) => (pulled = dx),
     ended: (dx: number) => {
       pulled = 0;
-      chosen(dx)?.run();
+      if (far(dx)) (side === 1 ? swipes.right : swipes.left)?.run();
     },
-  };
+  });
 
   function keys(event: KeyboardEvent) {
     if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) {
@@ -109,7 +108,8 @@
   use:longPress={(x, y) => onMenu(x, y)}
   use:opensElsewhere={() => addressOf(article)}
   use:carriesArticle={() => article}
-  use:swipe={hands}
+  use:swipe={hands(1)}
+  use:swipe={hands(-1)}
   style:transform={pulled ? `translateX(${pulled}px)` : undefined}
   class="item-row place block cursor-pointer pr-4 text-left"
 >
@@ -118,10 +118,9 @@
   <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
   <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
 </button>
-{#if pulled && row}
-  {@const shown = armed ?? swipes[0]}
+{#if pulling && row}
   <!-- In the room the row opens: the word and icon of what letting go does, in the ink once it's far enough. Seen only; the menu and keys say the same in words. -->
-  <span aria-hidden="true" class="row-swipe" data-armed={armed ? "" : undefined} style:top="{row.offsetTop}px" style:height="{row.offsetHeight}px" style:--pulled="{-pulled}px">
-    <Icon name={shown.icon} filled={armed !== undefined && shown.icon === "star"} />{shown.word}
+  <span aria-hidden="true" class="row-swipe" data-side={pulled > 0 ? "right" : "left"} data-armed={armed ? "" : undefined} style:top="{row.offsetTop}px" style:height="{row.offsetHeight}px" style:--pulled="{Math.abs(pulled)}px">
+    <Icon name={pulling.icon} filled={armed && pulling.icon === "star"} />{pulling.word}
   </span>
 {/if}

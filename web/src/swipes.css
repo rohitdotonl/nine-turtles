@@ -1,19 +1,17 @@
 /*
   Swipes on a touch screen (SPEC section 20, decision 0274). A list's row
-  follows a finger to the left; the room it opens on the right shows what
-  letting go does, in the pointer's faint tone: the icon and word in the
-  second ink, then in the ink (and the star filled) once the finger is far
-  enough. Nothing slides: when the finger lifts, the row is back at once.
+  follows a finger sideways; the room it opens shows what letting go does,
+  in the pointer's faint tone: the icon and word in the second ink, then in
+  the ink (and the star filled) once the finger is far enough. Nothing
+  slides: when the finger lifts, the row is back at once.
 */
 .item-list > li {
   position: relative;
 }
 .row-swipe {
   position: absolute;
-  right: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.5rem;
   overflow: hidden;
   white-space: nowrap;
@@ -22,6 +20,13 @@
   background-color: var(--fill);
   color: var(--muted);
   font-size: var(--text-ui);
+}
+.row-swipe[data-side="right"] {
+  left: 0;
+}
+.row-swipe[data-side="left"] {
+  right: 0;
+  justify-content: flex-end;
 }
 .row-swipe[data-armed] {
   color: var(--ink);
