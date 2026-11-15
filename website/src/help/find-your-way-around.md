@@ -144,6 +144,7 @@ mind.
 - **Keep pulling past the end** of an article: the next one. **Past its
   top**: the previous one.
 - **Swipe down** on the Aa sheet or an opened picture to close it.
+- A quick flick counts too, even a short one.
 
 ## Good to know
 

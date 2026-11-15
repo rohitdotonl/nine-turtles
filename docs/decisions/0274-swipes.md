@@ -1,8 +1,8 @@
 # 0274: Swipes on a touch screen
 
-**In one line:** Swipe right goes back from anywhere, swipe left goes on (next article, or a row's Read and Star), pulls past an article's ends move through the list, and a sheet closes when swiped down
+**In one line:** Swipe right goes back from anywhere, swipe left goes on (next article, or a row's Read and Star), pulls past an article's ends move through the list, a sheet closes when swiped down, and a quick flick counts
 
-*15 November 2026. Asked for by the owner ("I want to implement swipes on mobile… going back is an important part of the app… don't make cookie-cutter suggestions… what about up and down?"). Replaces SPEC section 20's "No custom swipes on list items".*
+*15 November 2026. Asked for by the owner ("I want to implement swipes on mobile… going back is an important part of the app… don't make cookie-cutter suggestions… what about up and down?"), who chose "Keep one rule: right is back" over rows as in Mail. Replaces SPEC section 20's "No custom swipes on list items".*
 
 **One rule for the sideways ones.** Right is back, left is on, on every
 screen, so there's one thing to learn. Back is the move made most, and its
@@ -19,6 +19,19 @@ toolbar's ↑ and ↓. Previous has no sideways swipe, since right is back.
 A sheet (Aa, an opened picture) closes when swiped down, as sheets do.
 Pull-to-refresh on lists was left out on purpose: it's the slot machine's
 pull, against "nothing pulls", and new articles arrive by themselves.
+
+**Rows: one rule, not Mail's habit.** Mail, Gmail and Outlook use a row's
+swipe right for Read. The owner weighed that against one rule and chose one
+rule: right is back everywhere, rows too, so a row's marks are both on the
+left (a little way Read, all the way Star).
+
+**Pace.** The big apps slide the screen with the finger and finish with a
+spring of about a third of a second. nine turtles has no animation, so it
+works as a phone does with Reduce Motion on: the change is instant. What
+carries over without motion: the row follows the finger (the reader moving
+it), a quick flick counts however short (faster than 600px a second, at
+least 20px), and a card says where letting go goes, as Android's predictive
+back previews the screen behind.
 
 **Within the floors.** Every swipe is a shortcut for a button that stays
 (DESIGN.md's checklist: gestures only as shortcuts). Nothing slides: a row
