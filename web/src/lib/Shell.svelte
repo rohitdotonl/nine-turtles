@@ -1088,7 +1088,7 @@
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to Home, the feeds screen, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
-              <button type="button" onclick={() => steps.back("home")} aria-label="Back to Home" class="btn-quiet nav-back"
+              <button type="button" onclick={() => steps.back("home")} aria-label="Back to Home" data-behind="sidebar" class="btn-quiet nav-back"
                 ><Icon name="back" size="alone" />Home</button
               >
             </div>

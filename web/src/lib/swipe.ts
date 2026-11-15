@@ -4,8 +4,8 @@
 // a shortcut for a button that's already there. Only a finger counts, never
 // a mouse or a pen; a stroke more up and down than sideways is a scroll, and
 // one at the screen's right edge is the phone's own. While the finger moves,
-// what follows it is the reader moving it; once it lifts, everything is back
-// at once, with nothing sliding (DESIGN.md → "No motion").
+// what follows it is the reader moving it; once it lifts, the stroke finishes
+// with a short glide (`swipeMotion.ts`, DESIGN.md → Exceptions log).
 
 import { HOLD_MS } from "./sidebarDrag";
 
@@ -25,9 +25,9 @@ export type SwipeHands = {
    * it none, and Android's own takes the edge before the page hears of it).
    */
   fromEdge?: boolean;
-  /** The finger's distance sideways from where it started; 0 when it lifts or gives up. */
+  /** The finger's distance sideways from where it started, while it's down. */
   moved(dx: number): void;
-  /** The stroke ended with the finger lifted this far sideways. */
+  /** The stroke ended with the finger lifted this far sideways (0 when the browser took it away). */
   ended(dx: number): void;
   /** Whether a stroke may start on this press. */
   allowed?(event: PointerEvent): boolean;
@@ -71,7 +71,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
   node.style.touchAction = "pan-y pinch-zoom";
 
   const giveUp = () => {
-    if (sideways) hands.moved(0);
+    if (sideways) hands.ended(0);
     if (sideways && start) taken.delete(start.id);
     start = undefined;
     sideways = false;
@@ -115,11 +115,11 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     const speed = first && event.timeStamp > first.at ? (event.clientX - first.x) / (event.timeStamp - first.at) : 0;
     const gone = Math.max(0, hands.side * dx);
     hands.ended(hands.side * (hands.side * speed >= FLICK && gone >= 2 * DECIDE ? Math.max(gone, reach(node.clientWidth || innerWidth)) : gone));
-    // The press that ends a swipe doesn't also open what it started on (after what the swipe pressed itself).
+    // The press that ends a swipe doesn't also open what it started on (what the swipe presses itself, once it's glided, is let through).
     swallowClick = true;
   };
   const click = (event: MouseEvent) => {
-    if (!swallowClick) return;
+    if (!swallowClick || !event.isTrusted) return;
     swallowClick = false;
     event.preventDefault();
     event.stopImmediatePropagation();

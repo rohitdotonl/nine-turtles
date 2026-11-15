@@ -2,14 +2,19 @@
   Swiped right, any screen goes back (SPEC section 20, decision 0274): a
   finger moving right from anywhere on it (not only the edge) presses the
   screen's own back button, so it goes exactly where that button says.
-  Once the finger is far enough, a quiet card at the left says where
-  ("‹ Reading Room"); moving back takes it away. A screen with no back
+  The screen follows the finger, over the one it goes back to (where the
+  back button names it with `data-behind`), and when the finger lets go it
+  slides the rest of the way off, or springs back if it wasn't far enough
+  (`swipeMotion.ts`). Going back to a screen that isn't there behind it, a
+  quiet card at the left says where ("‹ Settings") once the finger is far
+  enough; moving back takes it away. A screen with no back
   button (Home) takes no swipe. In an app on the home screen, a stroke from
   the left edge counts too, since iOS gives such an app no back gesture of
   its own.
 -->
 <script lang="ts">
   import { leftAlone, reach, swipe } from "./swipe";
+  import { follow, settle, type Panes } from "./swipeMotion";
 
   /** Where the back button the stroke started under goes, once the finger is far enough. */
   let going: string | undefined = $state();
@@ -23,19 +28,35 @@
     return undefined;
   }
 
+  /** The screen a back button is on, and the one it goes back to, if that's a pane of its own. */
+  function panesOf(button: HTMLButtonElement): Panes {
+    const screen = button.closest<HTMLElement>("section, nav") ?? document.body;
+    const behind = button.dataset.behind ? (document.getElementById(button.dataset.behind) ?? undefined) : undefined;
+    return { screen, behind: behind === screen ? undefined : behind };
+  }
+
   $effect(() => {
     let button: HTMLButtonElement | undefined;
+    let panes: Panes | undefined;
     const action = swipe(document.body, {
       side: 1,
       fromEdge: true,
       allowed: (event) => {
         button = leftAlone(event.target, document.body) ? undefined : backFor(event.target);
+        panes = button && panesOf(button);
         return button !== undefined;
       },
-      moved: (dx) => (going = dx >= reach(innerWidth) ? button?.textContent?.trim() : undefined),
+      moved: (dx) => {
+        if (!panes) return;
+        follow(panes, dx);
+        going = !panes.behind && dx >= reach(innerWidth) ? button?.textContent?.trim() : undefined;
+      },
       ended: (dx) => {
         going = undefined;
-        if (dx >= reach(innerWidth)) button?.click();
+        const pressed = button;
+        if (!panes || !pressed) return;
+        const far = dx >= reach(innerWidth);
+        settle(panes, far ? innerWidth : 0, () => far && pressed.click());
       },
     });
     return () => action.destroy();

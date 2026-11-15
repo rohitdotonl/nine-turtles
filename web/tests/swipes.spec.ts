@@ -58,6 +58,8 @@ async function openBlog(page: Page): Promise<void> {
 }
 
 const card = (page: Page) => page.locator(".swipe-card");
+/** Once a stroke's glide is over, nothing is left moved. */
+const settled = (screen: ReturnType<Page["locator"]>) => expect.poll(() => screen.evaluate((node: HTMLElement) => node.style.transform)).toBe("");
 const home = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
 
 test("a row swiped left a little is marked read, with Undo; all the way, starred; nothing opens", async ({ page }) => {
@@ -75,9 +77,10 @@ test("a row swiped left a little is marked read, with Undo; all the way, starred
   await expect(page.locator(".row-swipe")).toHaveAttribute("data-armed", "");
   expect(await first.evaluate((row) => row.style.transform)).toBe("translateX(-140px)");
   await finger.up();
-  // Back at once, with nothing left beside it, and the article isn't opened.
+  // It springs back, with nothing left beside it, and the article isn't opened.
+  expect(await first.evaluate((row) => row.style.transition)).toContain("320ms");
   await expect(page.locator(".row-swipe")).toHaveCount(0);
-  expect(await first.evaluate((row) => row.style.transform)).toBe("");
+  await settled(first);
   await expect(first.locator(".unread-dot")).toHaveCount(0);
   await expect(note(page)).toHaveText(/Marked as read/);
   await expect(pane(page)).toHaveCount(0);
@@ -95,6 +98,13 @@ test("a row swiped left a little is marked read, with Undo; all the way, starred
   await expect(second.locator(".unread-dot")).toBeVisible();
   await expect(note(page)).toHaveText(/Starred/);
   await expect(pane(page)).toHaveCount(0);
+
+  // A phone set to reduce motion: no glide, it's back at once.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const third = rows(page).nth(2);
+  await swipe(page, third, -140, (await third.boundingBox())!.width - 30);
+  expect(await third.evaluate((row) => row.style.transition)).toBe("");
+  await expect(page.locator(".row-swipe")).toHaveCount(0);
 });
 
 test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a list goes back home", async ({ page }) => {
@@ -115,13 +125,16 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await swipe(page, first, -50, undefined, 0);
   await expect(first.locator(".unread-dot")).toHaveCount(0);
 
-  // Far enough right, from the middle of a row, the card says where it goes; letting go goes there, as ‹ Home does.
+  // Swiped right from the middle of a row, the list follows the finger with Home behind it; letting go goes there, as ‹ Home does.
+  const list = page.locator("#list-pane");
   const back = await Finger.down(page, box.x + 60, box.y + box.height / 2);
   await back.move(160);
-  await expect(card(page)).toHaveText("‹ Home");
-  await back.up();
+  await expect.poll(() => list.evaluate((node) => node.style.transform)).toBe("translateX(160px)");
   await expect(home(page)).toBeVisible();
   await expect(card(page)).toHaveCount(0);
+  await back.up();
+  await expect(list).toBeHidden();
+  await expect(home(page)).toBeVisible();
   // Home has no back: a swipe there does nothing.
   await swipe(page, home(page), 200, 60);
   await expect(home(page)).toBeVisible();
@@ -137,15 +150,17 @@ test("in an article, a swipe left opens the next one, a pull past either end the
   const box = (await text.boundingBox())!;
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 
-  // Far enough left, a card at the side names the next article; moving back takes it away.
+  // Far enough left, the article follows the finger and a card at the side names the next one; moving back takes it away.
   const finger = await Finger.down(page, middle.x + 100, middle.y);
   await finger.move(-150);
+  await expect.poll(() => pane(page).evaluate((node) => node.style.transform)).toBe("translateX(-150px)");
   await expect(card(page)).toHaveText(`Next${titles[1]}`);
   await finger.move(120);
   await expect(card(page)).toHaveCount(0);
   await finger.move(-120);
   await finger.up();
   await expect(heading(titles[1])).toBeVisible();
+  await settled(pane(page));
 
   // Pulled down past its top: the previous one, named first.
   const down = await Finger.down(page, middle.x, box.y + 80);
@@ -153,6 +168,7 @@ test("in an article, a swipe left opens the next one, a pull past either end the
   await expect(card(page)).toHaveText(`Previous${titles[0]}`);
   await down.up();
   await expect(heading(titles[0])).toBeVisible();
+  await settled(pane(page));
   // Nothing before the first: the card says so, and letting go stays.
   const none = await Finger.down(page, middle.x, box.y + 80);
   await none.move(0, 200);
@@ -167,6 +183,7 @@ test("in an article, a swipe left opens the next one, a pull past either end the
   await expect(card(page)).toHaveText(`Next${titles[1]}`);
   await up.up();
   await expect(heading(titles[1])).toBeVisible();
+  await settled(pane(page));
 
   // Swiped right: back to the list, as its back button says.
   await swipe(page, text, 160, middle.x - 100);

@@ -132,9 +132,11 @@ back.
 
 ## Swipes on a phone
 
-Every swipe is a shortcut for a button that's already on the screen. Before
-you let go, a small card says where you'll land; slide back to change your
-mind.
+Every swipe is a shortcut for a button that's already on the screen. The
+screen follows your finger, with where you're going showing under it or
+named on a small card; slide back to change your mind. Let go and it
+finishes the move. If your phone is set to reduce motion, it changes at
+once instead.
 
 - **Swipe right**, from anywhere on the screen: go back, as the back button
   at the top left does. From an article to its list, from a list to Home.

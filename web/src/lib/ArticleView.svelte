@@ -509,7 +509,7 @@
     <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
     <!-- Put away (decision 0242), it's still there for screen readers and Tab, which brings it back. -->
     <div bind:this={topBar} onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "reading-bar pane-bar nav-bar relative z-10 gap-2"}>
-      <button type="button" onclick={back?.onBack} aria-label="Back to {back?.name}" title="Back to {back?.name}" class="btn-quiet nav-back min-w-0 shrink"
+      <button type="button" onclick={back?.onBack} aria-label="Back to {back?.name}" title="Back to {back?.name}" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink"
         ><Icon name="back" size="alone" /><span class="truncate">{back?.name}</span></button
       >
       <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-meta empty:sr-only">{copied}</p>
@@ -533,7 +533,7 @@
         publisher, then the reader's own tools. Its edges are the pane's, not the text column's (decision 0050).
       -->
       <div class={["reading-bar pane-bar relative z-10 -mx-5 gap-2 pr-2 md:-mx-16", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
-        {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" class="btn-quiet nav-back min-w-0 shrink text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
+        {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
         {/if}

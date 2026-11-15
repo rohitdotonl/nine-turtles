@@ -3,13 +3,17 @@
   the toolbar's Previous and Next: swiped left, or pulled on up past its
   end, the next article opens; pulled on down past its top, the previous
   one. (Swiped right, it goes back to its list, as every screen does:
-  `SwipeBack.svelte`.) Nothing moves but what the phone itself stretches;
-  once the finger is far enough, a quiet card names the article letting go
-  opens, or says there's none, and moving back takes it away.
+  `SwipeBack.svelte`.) Swiped left, the article follows the finger, slides
+  off when it lets go far enough and the next one slides in from the right,
+  or springs back (`swipeMotion.ts`); a pull moves only what the phone
+  itself stretches, and the next or previous one slides in. Once the finger
+  is far enough, a quiet card names the article letting go opens, or says
+  there's none, and moving back takes it away.
 -->
 <script lang="ts">
   import type { Article } from "./shapes";
   import { leftAlone, reach, swipe } from "./swipe";
+  import { follow, settle, slideIn } from "./swipeMotion";
 
   let {
     area,
@@ -30,6 +34,12 @@
   let going: "left" | "below" | "above" | undefined = $state();
   const onward = $derived(going === "above" ? previous : next);
 
+  /** A Svelte action: the card is drawn by the page, not inside the article that moves. */
+  function toBody(node: HTMLElement) {
+    document.body.append(node);
+    return { destroy: () => node.remove() };
+  }
+
   function arrive(way: typeof going) {
     if (way === "above" && previous) onPrevious();
     else if (way && way !== "above" && next) onNext();
@@ -39,12 +49,22 @@
     if (!area) return;
     const within = area;
     const far = () => reach(within.clientWidth);
+    /** The whole article, toolbar and all: what a sideways stroke drags. */
+    const screen = { screen: within.closest("section") ?? within };
     const action = swipe(within, {
       side: -1,
-      moved: (dx) => (going = -dx >= far() ? "left" : undefined),
+      moved: (dx) => {
+        follow(screen, dx);
+        going = -dx >= far() ? "left" : undefined;
+      },
       ended: (dx) => {
         going = undefined;
-        if (-dx >= far()) arrive("left");
+        const on = -dx >= far() && next !== undefined;
+        settle(screen, on ? -innerWidth : 0, () => {
+          if (!on) return;
+          arrive("left");
+          slideIn(screen.screen);
+        });
       },
       allowed: (event) => !leftAlone(event.target, within),
     });
@@ -70,7 +90,9 @@
       below = above = undefined;
       if (!way) return;
       going = undefined;
+      const there = way === "above" ? previous : next;
       arrive(way);
+      if (there) slideIn(screen.screen, way === "above" ? -1 : 1);
     };
     const cancel = () => {
       below = above = undefined;
@@ -91,7 +113,8 @@
 </script>
 
 {#if going}
-  <div aria-hidden="true" class="swipe-card" data-side={going === "left" ? "next" : going}>
+  <!-- Kept by the page itself, so it stays put while the article under it follows the finger. -->
+  <div use:toBody aria-hidden="true" class="swipe-card" data-side={going === "left" ? "next" : going}>
     {#if onward}
       <strong>{going === "above" ? "Previous" : "Next"}</strong>{onward.title || "Untitled"}
     {:else}

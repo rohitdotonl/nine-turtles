@@ -3,7 +3,7 @@
   follows a finger to the left; the room it opens on the right shows what
   letting go does, in the pointer's faint tone: the icon and word in the
   second ink, then in the ink (and the star filled) once the finger is far
-  enough. Nothing slides: when the finger lifts, the row is back at once.
+  enough. When the finger lifts, the row springs back (`swipeMotion.ts`).
 */
 .item-list > li {
   position: relative;
@@ -35,9 +35,10 @@
 
 /*
   Once a swipe is far enough, a quiet card at the side says where letting go
-  takes you: back ("‹ Reading Room", at the left) or on ("Next ›" and the
-  next article's title, at the right), or that there's no next one. It's
-  only seen; the back button and Next say the same in words.
+  takes you, where the screen under the one being dragged doesn't: back
+  within one place ("‹ Settings", at the left) or on ("Next" and the next
+  article's title, at the right), or that there's no next one. It's only
+  seen; the back button and Next say the same in words.
 */
 .swipe-card {
   position: fixed;

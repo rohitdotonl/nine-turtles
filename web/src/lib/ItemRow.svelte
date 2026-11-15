@@ -5,8 +5,8 @@
   Shift+F10) opens its own menu; the arrow keys work like j and k; a drag
   carries the article (decision 0250); Command-click or a middle click opens
   it in a new tab (decision 0233); on a touch screen, swiped left a little
-  way it's marked read, and all the way it's starred, as its menu does
-  (decision 0274). Which row is chosen, and what each of
+  way it's marked read, and all the way it's starred, as its menu does,
+  and springs back when the finger lets go (decision 0274). Which row is chosen, and what each of
   these does to the list, is `ItemList.svelte`'s.
 -->
 <script lang="ts">
@@ -19,6 +19,7 @@
   import Icon from "./Icon.svelte";
   import type { RowSwipe } from "./rowMenu";
   import { reach, swipe } from "./swipe";
+  import { springBack } from "./swipeMotion";
 
   let {
     article,
@@ -66,12 +67,19 @@
     return -dx >= reach(width) ? swipes[0] : undefined;
   };
   const armed = $derived(chosen(pulled));
+  /** The room beside the row, and what it says while it closes once the finger has let go. */
+  let room: HTMLElement | undefined = $state();
+  let closing: { shown: RowSwipe; armed: boolean } | undefined = $state();
   const hands = {
     side: -1 as const,
     moved: (dx: number) => (pulled = dx),
     ended: (dx: number) => {
-      pulled = 0;
-      chosen(dx)?.run();
+      const done = chosen(dx);
+      if (row && pulled) {
+        closing = { shown: done ?? swipes[0], armed: done !== undefined };
+        springBack(row, room, () => (pulled = 0), () => (closing = undefined));
+      } else pulled = 0;
+      done?.run();
     },
   };
 
@@ -118,10 +126,11 @@
   <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
   <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
 </button>
-{#if pulled && row}
-  {@const shown = armed ?? swipes[0]}
+{#if (pulled || closing) && row}
+  {@const shown = closing?.shown ?? armed ?? swipes[0]}
+  {@const ready = closing ? closing.armed : armed !== undefined}
   <!-- In the room the row opens: the word and icon of what letting go does, in the ink once it's far enough. Seen only; the menu and keys say the same in words. -->
-  <span aria-hidden="true" class="row-swipe" data-armed={armed ? "" : undefined} style:top="{row.offsetTop}px" style:height="{row.offsetHeight}px" style:--pulled="{-pulled}px">
-    <Icon name={shown.icon} filled={armed !== undefined && shown.icon === "star"} />{shown.word}
+  <span bind:this={room} aria-hidden="true" class="row-swipe" data-armed={ready ? "" : undefined} style:top="{row.offsetTop}px" style:height="{row.offsetHeight}px" style:--pulled="{-pulled}px">
+    <Icon name={shown.icon} filled={ready && shown.icon === "star"} />{shown.word}
   </span>
 {/if}
