@@ -146,6 +146,27 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
 });
 
+test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone has no j.");
+  await signedIn(page);
+  const blog = await openBlog(page, `one-thing-unread-${test.info().workerIndex}-${Date.now()}`);
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+  await page.locator("#list-heading").focus();
+  await page.keyboard.press("j");
+  await expect(rows(page).first()).toBeFocused();
+  // i: their page has the window; its × goes back to their list.
+  await page.keyboard.press("i");
+  await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
+  await expect(page.locator("#list-pane")).toBeHidden();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("#list-pane")).toBeVisible();
+  // The chosen row was never opened, so it's still unread, here and on the server.
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+  await page.reload();
+  await appReady(page);
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+});
+
 test("on a medium window: the sidebar stays beside the list, and the article still has the window", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone's own test is below.");
   await page.setViewportSize({ width: 1000, height: 800 });

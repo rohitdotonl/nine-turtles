@@ -1491,7 +1491,6 @@ input {
   font-size: var(--text-large);
   line-height: 2rem;
   color: var(--muted);
-  text-align: center;
 }
 
 /* The note at the bottom of the list floats, so it alone has a shadow, on the lifted surface (decision 0052). */

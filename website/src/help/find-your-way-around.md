@@ -76,7 +76,7 @@ as you would a link.
 
 ## Reading
 
-Choose an article and it opens on the right. Across its top are **Open
+Choose an article and it opens, with the whole window to itself. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
 under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back

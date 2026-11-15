@@ -36,7 +36,10 @@ reading …" (decision 0175) sits at the top of the list instead, as on a
 phone, and the first visit's welcome takes the list's place. The sidebar keeps
 its button and its width handle. Nothing about the layout is stored on the
 server; only the sidebar's width (and, across an update's reload, whether
-it was hidden) stays on the device.
+it was hidden) stays on the device. The old device keys (the list's width,
+the key tip's "seen", the trial's switch) are left in browsers that have
+them, on purpose: nothing reads them, they hold no personal data, and
+clearing them would be code kept only for that.
 
 **DESIGN.md.** "What's fixed" now says: still three areas (sidebar, list,
 page), seen two places one at a time on a computer, the list, then the

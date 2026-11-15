@@ -297,10 +297,10 @@
     });
   });
 
-  // An article counts as read once the reading area shows it (SPEC section 8); only a newly shown one, so `m` on it keeps it unread until you move away and back.
+  // An article counts as read once it's open (SPEC section 8), never while their page has the window; only a newly shown one, so `m` on it keeps it unread until you move away and back.
   let lastShown: number | undefined;
   $effect(() => {
-    const showing = panes.article ? selected : undefined;
+    const showing = reading && !whoShown ? selected : undefined;
     const id = showing?.id;
     untrack(() => {
       if (id === lastShown) return;
@@ -1061,7 +1061,7 @@
               -->
               <div class={phone ? "mt-24 ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined}
-              {#if !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
+              {#if !searching.shown}<PickUp class="pt-1 pb-3" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106); a paused one, with Resume (decision 0239). -->
                 <FailingLine class="pt-1 pb-2" feed={currentFeed} label="Find its new address" onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)} />
