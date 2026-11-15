@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the article you read, one thi
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-15
+updated: 2026-11-16
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -144,11 +144,10 @@ once instead.
 
 - **Swipe right**, from anywhere on the screen: go back, as the back button
   at the top left does. From an article to its list, from a list to Home.
-- **Swipe left** in an article: the next article.
 - **Swipe a row left** in a list: a little way marks it read, all the way
   stars it. **Undo** puts it back.
-- **Keep pulling past the end** of an article: the next one. **Past its
-  top**: the previous one.
+- **Keep pulling up past the end** of an article: the next one rises from
+  below. **Pull down past its top**: the previous one comes down from above.
 - **Swipe down** on the Aa sheet or an opened picture to close it.
 - A quick flick counts too, even a short one.
 

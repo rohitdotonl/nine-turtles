@@ -2,6 +2,8 @@
 
 **In one line:** Swipe right goes back from anywhere, swipe left goes on (next article, or a row's Read and Star), pulls past an article's ends move through the list, a sheet closes when swiped down, a quick flick counts, and letting go finishes with a short glide (the one motion in nine turtles)
 
+> **Partly replaced by [0276](0276-article-pulls-only.md):** in an article, a swipe left no longer opens the next one; next and previous are pulls only, each sliding in the way it was pulled.
+
 *15 November 2026. Asked for by the owner ("I want to implement swipes on mobile… going back is an important part of the app… don't make cookie-cutter suggestions… what about up and down?"), who chose "Keep one rule: right is back" over rows as in Mail, and then, having tried both side by side, the slide-and-spring version over the instant one ("Implement swipes with motion"), knowing it breaks "no animations or transitions, ever". Replaces SPEC section 20's "No custom swipes on list items".*
 
 **One rule for the sideways ones.** Right is back, left is on, on every
