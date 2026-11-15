@@ -14,6 +14,9 @@ const button = (title: string) => new RegExp(title.replace(/[()]/g, "\\$&"));
 const NEWEST = "On keeping a commonplace book (3)";
 const OLDER = "Walking the long way home (2)";
 
+/** Back from the open article to its list, by the "‹ list name" at its top (decision 0275). */
+const backToList = (page: Page) => article(page).getByRole("button", { name: /^Back to / }).click();
+
 async function openNewest(page: Page, blog: string): Promise<number> {
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
@@ -33,9 +36,11 @@ test("a half-written note waits for the reader's return, and Discard has Undo", 
   await page.keyboard.press("n");
   await page.keyboard.type("Ask about the hedgerow survey");
 
-  // The most ordinary slip: another article in the list.
+  // The most ordinary slip: back to the list, and another article.
+  await backToList(page);
   await page.getByRole("button", { name: button(OLDER) }).first().click();
   await expect(article(page).getByRole("heading", { name: OLDER })).toBeVisible();
+  await backToList(page);
   await page.getByRole("button", { name: button(NEWEST) }).first().click();
   const box = page.getByRole("textbox", { name: "A note on this article" });
   await expect(box).toHaveValue("Ask about the hedgerow survey");
@@ -53,9 +58,10 @@ test("a half-written note waits for the reader's return, and Discard has Undo", 
   await page.getByRole("button", { name: "Save" }).click();
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
   await expect(box).toHaveCount(0);
+  // A reload opens the article its address names, alone.
   await page.reload();
   await appReady(page);
-  await page.getByRole("button", { name: button(NEWEST) }).first().click();
+  await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
   await expect(box).toHaveCount(0);
 });
@@ -100,7 +106,9 @@ test("a note on highlighted words survives Escape, and waits at the article's en
   await page.keyboard.press("Escape");
 
   // Coming back to the article, its box is open at the end, under the highlight.
+  await backToList(page);
   await page.getByRole("button", { name: button(OLDER) }).first().click();
+  await backToList(page);
   await page.getByRole("button", { name: button(NEWEST) }).first().click();
   await expect(ends.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Compare with the spring list, and the autumn one");
   await ends.getByRole("button", { name: "Save" }).click();

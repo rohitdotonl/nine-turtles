@@ -108,8 +108,7 @@ PLAN.md → V1, item 1.*
   the article's own line) an article is credited by their name; in Unread
   their name heads their articles once (section 6, decision 0271). Mark
   all as read, "new articles", search in their list and reading offline all
-  cover every source. Beside a list, the reading area shows the quiet line
-  ("Time to read something beautiful."), as it does for every list.
+  cover every source.
 - **Their page,** the same for a person and a publication (but a
   publication has no Write to, decision 0192), with no Edit mode
   (decision 0254) (`/people/12/about`): a page about them, with their
@@ -118,17 +117,11 @@ PLAN.md → V1, item 1.*
   (underlined, faintly), by **Info about Alpha** in the list's More menu or
   a row's own menu, or by the `i` key (in any list, for the chosen
   article's writer; decision 0214). On a computer it opens in the reading
-  area beside their list, where an article would, in the article's own
-  column (decision 0219), under the article's bar with an **×** at its
-  right end (and Escape) back to their list. Choosing an article in that
-  list while their page or their settings shows (a click, `j` or `k`,
-  Enter, or Write back in a row's menu) closes it as the × does: the article
-  takes its place, and everything else is as choosing an article with no
-  page open (the keyboard stays on a clicked row, Enter puts it on the
-  article's title; the address names the article; it counts as read), and
-  Back brings their page back. On a phone it's a screen of its own, with ‹
-  back to their list, and one thing at a time (decision 0269) it shows
-  alone; either way there's no list beside it to choose from. Top to bottom:
+  area, alone in the whole window as an article is (section 4, decision
+  0275), in the article's own column (decision 0219), under the article's
+  bar with an **×** at its right end (and Escape) back to their list. On a
+  phone it's a screen of its own, with ‹ back to their list. Either way
+  there's no list beside it to choose from. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas
@@ -247,8 +240,8 @@ PLAN.md → V1, item 1.*
    article with one author's name is called by that name, and its page shows
    the blog's title under it; Write back at an article's end says "Write
    back to" and their full name, as in the sidebar.
-2. Press a person's name at the top of their list: their page opens beside
-   the list (on a phone, as its own screen), with **Write to …** (outlined) under
+2. Press a person's name at the top of their list: their page opens alone
+   in the window (on a phone, as its own screen), with **Write to …** (outlined) under
    their name and their sources, one card with Your note and Your
    highlights, then one row, **Settings ›**, and no muted line. Press that
    row: their settings open in its place, titled Settings, with

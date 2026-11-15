@@ -5,7 +5,6 @@
 // `ScreenLayout` (below) holds the signed-in screen's arrangement.
 
 import { deviceText, setDeviceText } from "./device";
-import { oneThing } from "./oneThing.svelte";
 import type { Carried } from "./updates.svelte";
 
 export type Width = "wide" | "medium" | "narrow";
@@ -25,29 +24,17 @@ export function widthFor(windowWidthRem: number): Width {
 export type Panes = { sidebar: boolean; list: boolean; article: boolean };
 
 /**
- * Wide: all three. Medium: two, the list and article, or the sidebar and list
- * when the sidebar is shown. Narrow (phones, Milestone 13): one at a time, and
- * the sidebar is the home screen; an opened article (`reading`) takes the
- * list's place. Settings fills the list and article areas.
- *
- * One thing at a time (`oneThing`, the owner's trial, decision 0269): on a
- * computer too, the list alone beside the sidebar (as the reader has it, shown
- * on a medium window too, with no article to make way for), then what opened
- * (`reading`) alone in the whole window.
+ * One thing at a time (decision 0275). On a computer (wide and medium
+ * windows): the list alone beside the sidebar, as the reader has it, then
+ * what opened (`reading`: an article, or a person's page) alone in the whole
+ * window. On a phone-narrow window (Milestone 13): one area at a time, and
+ * the sidebar is the home screen; an opened article takes the list's place.
+ * Settings fills the list's area.
  */
-export function panesFor(width: Width, sidebar: SidebarChoice, reading = false, listHidden = false, oneThing = false): Panes {
-  const sidebarShown = sidebar === "auto" ? width !== "medium" || oneThing : sidebar === "shown";
-  if (oneThing && width !== "narrow") return reading ? { sidebar: false, list: false, article: true } : { sidebar: sidebarShown, list: true, article: false };
-  switch (width) {
-    case "wide":
-      return { sidebar: sidebarShown, list: !listHidden, article: true };
-    case "medium":
-      // With the list hidden, the article takes its place (beside the sidebar, if it shows).
-      if (listHidden) return { sidebar: sidebarShown, list: false, article: true };
-      return { sidebar: sidebarShown, list: true, article: !sidebarShown };
-    case "narrow":
-      return { sidebar: sidebarShown, list: !sidebarShown && !reading, article: !sidebarShown && reading };
-  }
+export function panesFor(width: Width, sidebar: SidebarChoice, reading = false): Panes {
+  const sidebarShown = sidebar !== "hidden";
+  if (width === "narrow") return { sidebar: sidebarShown, list: !sidebarShown && !reading, article: !sidebarShown && reading };
+  return reading ? { sidebar: false, list: false, article: true } : { sidebar: sidebarShown, list: true, article: false };
 }
 
 /** The window's width step now, from the same rem breakpoints as `widthFor`. */
@@ -66,29 +53,14 @@ export function watchWidth(changed: (next: Width) => void): () => void {
 }
 
 const SIDEBAR_WIDTH_KEY = "nine-turtles.sidebar-width";
-const LIST_WIDTH_KEY = "nine-turtles.list-width";
 /** The sidebar's usual width, in pixels, until the reader drags it. */
 const SIDEBAR_USUAL = 256;
-/** The list is never narrower than this beside the article, so feed names and titles aren't squeezed (SPEC section 4). */
-export const LIST_MIN = 280;
-/** The widest the list can be dragged, and the room it always leaves the article. */
-const LIST_MAX = 640;
-const ARTICLE_MIN = 400;
-
-function storedWidth(key: string): number | undefined {
-  const value = Number(deviceText(key));
-  return value > 0 ? value : undefined;
-}
-
-function storeWidth(key: string, value: number | undefined) {
-  setDeviceText(key, value === undefined ? null : String(value));
-}
 
 /**
  * The signed-in screen's arrangement: the window's width step, which areas
- * show, the reader's sidebar and list toggles, and the widths they dragged
- * the sidebar and list to (kept on this device). It only decides; where the
- * keyboard goes when an area hides is Shell.svelte's.
+ * show, the reader's sidebar toggle, and the width they dragged the sidebar
+ * to (kept on this device). It only decides; where the keyboard goes when an
+ * area hides is Shell.svelte's.
  *
  * One is made for each signed-in screen (Shell.svelte).
  */
@@ -97,40 +69,28 @@ export class ScreenLayout {
   width: Width = $state("wide");
   /** The reader's last use of the sidebar toggle; on a phone, whether the feeds (the home screen) show. */
   sidebarChoice: SidebarChoice = $state("auto");
-  /** On a computer, the reader hid the article list, with the sidebar, for full-screen reading (`f`, decision 0241). */
-  listHidden = $state(false);
-  /** Widths the reader dragged the sidebar and the list to, on this device; undefined is the usual width. */
-  sidebarWidth: number | undefined = $state(storedWidth(SIDEBAR_WIDTH_KEY));
-  listWidth: number | undefined = $state(storedWidth(LIST_WIDTH_KEY));
-  /** The window's width in pixels, so the list never leaves the article less than 400px. */
-  windowWidth: number = $state(0);
+  /** The width the reader dragged the sidebar to, on this device; undefined is the usual width. */
+  sidebarWidth: number | undefined = $state(storedWidth());
 
   #reading: () => boolean = () => false;
-  /** The trial's own: a person's page or their settings showing (whoever reads), and whether this reader is the owner. */
-  #trial = { aside: () => false, owner: () => false };
+  #aside: () => boolean = () => false;
 
-  /** On a computer, the owner's trial "Read one thing at a time" is on (decision 0269). */
-  readonly trial: boolean = $derived(this.#trial.owner() && oneThing.on && this.width !== "narrow");
-  /** Which areas show now. */
-  readonly panes: Panes = $derived(panesFor(this.width, this.sidebarChoice, this.#reading() || (this.trial && this.#trial.aside()), this.listHidden, this.trial));
+  /** Which areas show now: on a computer a person's page, or their settings, fills the window as an article does. */
+  readonly panes: Panes = $derived(panesFor(this.width, this.sidebarChoice, this.#reading() || (this.width !== "narrow" && this.#aside())));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   readonly phone: boolean = $derived(this.width === "narrow");
-  /** One thing at a time, a phone or the trial: an opened article is a step of its own, back to its list. */
-  readonly stepwise: boolean = $derived(this.phone || this.trial);
 
   /**
-   * `reading` says whether a phone shows an opened article in the list's
-   * place; it must read Svelte state (`$state`), or `panes` won't follow it.
-   * On a phone-narrow window the sidebar is the home screen, but an address
-   * that names a place opens that place (`openingHome` false). `trial`: for
-   * the owner's trial (decision 0269), whether a person's page shows, and
-   * whether this reader is the owner, the only one it's for.
+   * `reading` says whether an opened article shows, alone; `aside` whether a
+   * person's page or their settings show. Both must read Svelte state
+   * (`$state`), or `panes` won't follow them. On a phone-narrow window the
+   * sidebar is the home screen, but an address that names a place opens that
+   * place (`openingHome` false).
    */
-  constructor(width: Width, windowWidth: number, reading: () => boolean, openingHome: boolean, trial?: { aside: () => boolean; owner: () => boolean }) {
+  constructor(width: Width, reading: () => boolean, openingHome: boolean, aside?: () => boolean) {
     this.width = width;
-    this.windowWidth = windowWidth;
     this.#reading = reading;
-    if (trial) this.#trial = trial;
+    if (aside) this.#aside = aside;
     if (width === "narrow" && !openingHome) this.sidebarChoice = "hidden";
   }
 
@@ -145,22 +105,8 @@ export class ScreenLayout {
     return this.sidebarWidth ?? SIDEBAR_USUAL;
   }
 
-  /** The list's dragged width in pixels, never below `LIST_MIN`; undefined while it has its usual width. */
-  get listPx(): number | undefined {
-    return this.listWidth ? Math.max(LIST_MIN, this.listWidth) : undefined;
-  }
-
-  /** The widest the list can be dragged now, leaving the article at least 400px. */
-  get listMax(): number {
-    return Math.max(LIST_MIN, Math.min(LIST_MAX, this.windowWidth - (this.panes.sidebar ? this.sidebarPx : 0) - ARTICLE_MIN));
-  }
-
   storeSidebarWidth() {
-    storeWidth(SIDEBAR_WIDTH_KEY, this.sidebarWidth);
-  }
-
-  storeListWidth() {
-    storeWidth(LIST_WIDTH_KEY, this.listWidth);
+    setDeviceText(SIDEBAR_WIDTH_KEY, this.sidebarWidth === undefined ? null : String(this.sidebarWidth));
   }
 
   /** On a computer, hides the sidebar or shows it again; answers whether it hid. */
@@ -168,19 +114,6 @@ export class ScreenLayout {
     const hiding = this.panes.sidebar;
     this.sidebarChoice = hiding ? "hidden" : "shown";
     return hiding;
-  }
-
-  /** Full-screen reading (`f`, or the article's More menu): hides the sidebar and the list together, for just the article, or brings both back; answers whether they hid. */
-  toggleBoth(): boolean {
-    const hiding = this.panes.sidebar || this.panes.list;
-    this.sidebarChoice = hiding ? "hidden" : "shown";
-    this.listHidden = hiding;
-    return hiding;
-  }
-
-  /** Choosing an article shows it, so on a medium window the sidebar makes way (one thing at a time, it shows alone). */
-  makeWayForArticle() {
-    if (this.width === "medium" && this.panes.sidebar && !this.trial) this.sidebarChoice = "hidden";
   }
 
   /** The reader has gone somewhere since the screen opened (every move passes through `showHome`). */
@@ -192,16 +125,18 @@ export class ScreenLayout {
     if (this.phone) this.sidebarChoice = home ? "shown" : "hidden";
   }
 
-  /** What the reader hid, for the new version to open the same way (decision 0085). */
-  carried(): Pick<Carried, "sidebar" | "listHidden"> {
-    return { sidebar: this.sidebarChoice, listHidden: this.listHidden };
+  /** Whether the reader hid the sidebar, for the new version to open the same way (decision 0085). */
+  carried(): Pick<Carried, "sidebar"> {
+    return { sidebar: this.sidebarChoice };
   }
 
   /** Puts back what the page before a version switch carried; a phone starts as it always does. */
-  putBack(was: Pick<Carried, "sidebar" | "listHidden">) {
-    if (this.phone) return;
-    this.sidebarChoice = was.sidebar;
-    // The list hides only with the sidebar now (decision 0241), so a list hidden on its own comes back.
-    this.listHidden = was.listHidden && was.sidebar === "hidden";
+  putBack(was: Pick<Carried, "sidebar">) {
+    if (!this.phone) this.sidebarChoice = was.sidebar;
   }
+}
+
+function storedWidth(): number | undefined {
+  const value = Number(deviceText(SIDEBAR_WIDTH_KEY));
+  return value > 0 ? value : undefined;
 }

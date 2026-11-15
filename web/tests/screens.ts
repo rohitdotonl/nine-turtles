@@ -618,7 +618,8 @@ export async function openReadingRoom(page: Page, { unread = false, read = false
   if (read) await unmark(page, id, [["read", true]]);
   await page.goto(new URL(`/people/${id}`, page.url()).href);
   await appReady(page);
-  await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeVisible();
+  // Its row (the line "You were reading …" at the list's top can name it too, decision 0175).
+  await expect(page.locator("#list-pane .item-row", { hasText: "The pleasure of a slow letter" })).toBeVisible();
 }
 
 /**

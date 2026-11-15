@@ -3,7 +3,7 @@ import { moveArticle, nextInSidebar, type ArticleMove, type MoveScene, type Movi
 import type { Route } from "./router";
 import type { Feed } from "./shapes";
 
-/** A computer's three panes, the keyboard in the list. */
+/** The list and an article both counted as on screen (each test takes away what its case lacks), the keyboard in the list. */
 function scene(changes: Partial<MoveScene> = {}): MoveScene {
   return { list: true, article: true, reading: false, inArticle: false, ...changes };
 }

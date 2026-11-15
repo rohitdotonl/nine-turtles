@@ -49,6 +49,8 @@ test("highlights and a note stay with the article, and Notes and search find the
   await choose(page, "for article");
   await page.keyboard.press("h");
   await expect(article(page).locator("mark.highlight")).toHaveCount(2);
+  // Its small menu shows once it's saved; Escape puts it away (another Escape would go back to the list, decision 0275).
+  await expect(page.getByRole("menu", { name: "Highlight" })).toBeVisible();
   await page.keyboard.press("Escape");
   // Its Copy and Remove are at the end too; Remove puts the keyboard on Undo, which brings it back.
   await expect(ends.getByRole("button", { name: "Copy “for article”" })).toBeVisible();
@@ -69,11 +71,12 @@ test("highlights and a note stay with the article, and Notes and search find the
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
 
   // Both are kept: after a reload they're there, and Notes is in the sidebar.
+  // A reload opens the article its address names, alone; back in its list, the sidebar shows.
   await page.reload();
   await appReady(page);
-  await page.getByRole("button", { name: new RegExp(NEWEST.replace(/[()]/g, "\\$&")) }).first().click();
   await expect(article(page).locator("mark.highlight")).toHaveCount(2);
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
+  await page.keyboard.press("Escape");
   const notes = sidebar(page).getByRole("link", { name: "Notes", exact: true });
   await expect(notes).toBeVisible();
   await notes.click();
@@ -109,7 +112,6 @@ async function slowSaves(page: Page, name: string, refuse = false, first?: () =>
   const saved = page.waitForResponse((answer) => /\/highlights$/.test(answer.url()) && answer.request().method() === "POST");
   await choose(page, "for article");
   await page.keyboard.press("h");
-  await page.keyboard.press("Escape");
   return { ends: article(page).getByRole("list", { name: "Your highlights" }), save, saved };
 }
 
@@ -248,7 +250,6 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     });
     await choose(page, "for article");
     await page.keyboard.press("h");
-    await page.keyboard.press("Escape");
     const noted = onServer(page, "note");
     await article(page).getByRole("button", { name: "Save" }).click();
     expect((await noted).ok()).toBe(true);
@@ -276,7 +277,6 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     const made = highlightSave(page);
     await choose(page, "for article");
     await page.keyboard.press("h");
-    await page.keyboard.press("Escape");
     await article(page).getByRole("button", { name: "Save" }).click();
     expect((await made).status()).toBe(201);
     await expect(page.getByText("The note couldn't be saved, so your words are still here.")).toBeVisible();

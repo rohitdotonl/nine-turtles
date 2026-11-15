@@ -127,6 +127,9 @@ test("This is: A publication moves someone under Publications, at its own addres
   await page.getByRole("button", { name: `Back to Blog ${ben}` }).click();
   await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
   await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication ·");
+  // Their page has the window (decision 0275): Escape goes back to their list, beside the sidebar.
+  await page.locator("body").focus();
+  await page.keyboard.press("Escape");
   const publications = sidebar(page).getByRole("heading", {
     name: "Publications",
   });

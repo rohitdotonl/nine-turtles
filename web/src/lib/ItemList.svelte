@@ -86,7 +86,6 @@
     results = false,
     oneFeed = false,
     unreadOff = false,
-    first = $bindable(),
     rowActions = () => [],
     addressOf = () => "",
     note = $bindable(),
@@ -115,8 +114,6 @@
     oneFeed?: OneSource;
     /** Unread off (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     unreadOff?: boolean;
-    /** The first article listed, for the empty reading area. */
-    first?: Article;
     /** A row's menu, after its star and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
     rowActions?: (article: Article) => MenuGroup[];
     /** An article's own address (decision 0233), for Command-click and a middle click on its row. */
@@ -179,7 +176,11 @@
   let saying = $derived(!closed && !!(line || undoLast));
   /** The article the note was said on: the reading area shows it only there, or while a failure waits (decision 0229). */
   let noteFor: number | undefined = $state();
-  $effect(() => void (note = saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
+  /** A newer nine turtles (or another reader) put away in the reading area by its ×: the list's own note still says it. */
+  let reloadPut = $state(false);
+  const reload = $derived(!reloadPut && (updates.stranded || updates.otherReader));
+  // While the list is off screen, a newer nine turtles is said where the reader is first: nothing else works until a reload.
+  $effect(() => void (note = reload ? { words: updates.otherReader ? OTHER_READER_MESSAGE : STRANDED_MESSAGE, retry: () => location.reload(), retryWord: "Reload", close: () => (reloadPut = true) } : saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
   /** The last Mark all as read, made here or carried from the list before (decision 0238). */
   let marking: MarkedAll | undefined = lastMarkAll();
   if (marking) {
@@ -215,9 +216,6 @@
     }
   });
 
-  $effect(() => {
-    first = articles[0];
-  });
 
   /** Unread, by person (decision 0271): each name once, above their first article, and "Publications" where they begin. */
   let heads = $derived(headsOf(articles));

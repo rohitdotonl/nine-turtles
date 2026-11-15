@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { isFirstVisit, newToFeedsGivesWay, welcomeFor, type WelcomeScene } from "./firstVisit";
 
-/** A first visit on Unread, on a computer with a reading area beside the list. */
+/** A first visit on Unread, on a computer. */
 function scene(changes: Partial<WelcomeScene> = {}): WelcomeScene {
-  return { firstVisit: true, under: { kind: "view", view: "unread" }, article: true, phone: false, missing: false, ...changes };
+  return { firstVisit: true, under: { kind: "view", view: "unread" }, phone: false, missing: false, ...changes };
 }
 
 describe("isFirstVisit", () => {
@@ -24,13 +24,13 @@ describe("welcomeFor", () => {
     expect(welcomeFor(scene({ under: { kind: "view", view: "all" } })).shown).toBe(true);
   });
 
-  it("takes the list's room with a reading area beside it", () => {
+  it("takes the list's room on a computer", () => {
     expect(welcomeFor(scene())).toEqual({ shown: true, wide: true, alone: false });
-    expect(welcomeFor(scene({ article: false })).wide).toBe(false);
+    expect(welcomeFor(scene({ missing: true })).wide).toBe(false);
   });
 
   it("is the phone screen's one heading", () => {
-    expect(welcomeFor(scene({ phone: true, article: false }))).toEqual({ shown: true, wide: false, alone: true });
+    expect(welcomeFor(scene({ phone: true }))).toEqual({ shown: true, wide: false, alone: true });
   });
 
   it("gives way to the not-found line, but still counts as shown", () => {

@@ -39,6 +39,8 @@ test.describe("on a computer", () => {
     await expect(page).toHaveURL(new RegExp(`${list}/articles/[0-9]+$`));
     const opened = path(page);
 
+    // Back to the list (the article has the window to itself, decision 0275), then the next one.
+    await page.keyboard.press("Escape");
     await row(page, name, MIDDLE).click();
     await expect(page).toHaveURL(new RegExp(`${list}/articles/[0-9]+$`));
     expect(path(page)).not.toBe(opened);
@@ -46,9 +48,11 @@ test.describe("on a computer", () => {
     await page.goto(new URL(opened, FEEDS_APP).href);
     await appReady(page);
     await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
-    await expect(row(page, name, NEWEST)).toHaveAttribute("aria-current", "true");
     await expect(page).toHaveURL(new RegExp(`${opened}$`));
     await expect(page).toHaveTitle(`${NEWEST} · nine turtles`);
+    // Back in its list, its row is the one marked as open.
+    await page.keyboard.press("Escape");
+    await expect(row(page, name, NEWEST)).toHaveAttribute("aria-current", "true");
   });
 
   test("Ctrl-click or a middle click opens the article in a new tab; the row's menu offers it too", async ({ page, context }) => {
@@ -79,7 +83,9 @@ test.describe("on a computer", () => {
     await row(page, name, NEWEST).click();
     await expect(page).toHaveURL(new RegExp(`${list}/articles/[0-9]+$`));
     const opened = path(page);
-    await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Starred", exact: true }).click();
+    // To Starred from the open article (the sidebar is away while it's open, decision 0275).
+    await page.keyboard.press("g");
+    await page.keyboard.press("s");
     await expect(page).toHaveURL(/\/starred$/);
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`${opened}$`));

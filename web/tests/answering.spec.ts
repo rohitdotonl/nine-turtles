@@ -49,8 +49,7 @@ test("a mark made while the list is out of sight is said in the article, with Un
   await expect(
     article(page).getByRole("heading", { level: 2, name: NEWEST }),
   ).toBeVisible();
-  // On a computer, full-screen reading (f) hides the list; on a phone the article is a screen of its own.
-  if (!phone()) await page.keyboard.press("f");
+  // The article is alone, on a computer as on a phone (decision 0275): the list, and its note, are out of sight.
   await article(page)
     .getByRole("button", { name: "Star", exact: true })
     .first()
@@ -90,13 +89,15 @@ test("a key with nothing to do says why", async ({ page }) => {
   await expect(
     page.getByText("Nothing to undo.", { exact: true }),
   ).toBeVisible();
+  // j chooses the first article, Enter opens it alone; k there has nowhere to go.
   await page.keyboard.press("j");
+  await page.keyboard.press("Enter");
   await expect(
     article(page).getByRole("heading", { level: 2, name: NEWEST }),
   ).toBeVisible();
   await page.keyboard.press("k");
   await expect(
-    page.getByText("That's the first article here.", { exact: true }),
+    article(page).getByText("That's the first article here.", { exact: true }),
   ).toBeVisible();
 });
 

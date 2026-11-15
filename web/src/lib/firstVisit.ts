@@ -15,8 +15,6 @@ export type WelcomeScene = {
   firstVisit: boolean;
   /** The place the list shows (under any sheet). */
   under: Route;
-  /** A reading area shows beside the list. */
-  article: boolean;
   phone: boolean;
   /** The address names a feed or folder the reader doesn't have. */
   missing: boolean;
@@ -27,8 +25,8 @@ export type Welcome = {
   /** The welcome shows instead of the list. */
   shown: boolean;
   /**
-   * With a reading area beside the list, the welcome takes the list's room too: one empty state,
-   * not an empty column beside it, as Apple Books shows (decision 0048).
+   * On a computer the welcome takes the list's room, centred beside the sidebar: one empty state,
+   * not an empty list above it (decisions 0048, 0275).
    */
   wide: boolean;
   /** On a phone, the welcome is the screen's one visible heading; the list's title is only for screen readers. */
@@ -41,7 +39,7 @@ export function welcomeFor(scene: WelcomeScene): Welcome {
   const shown = scene.firstVisit && !starred;
   return {
     shown,
-    wide: shown && scene.article && !scene.missing,
+    wide: shown && !scene.phone && !scene.missing,
     alone: shown && scene.phone && !scene.missing,
   };
 }

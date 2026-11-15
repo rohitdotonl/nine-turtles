@@ -43,12 +43,12 @@ function newBlog(prefix = "blog"): string {
   return `${prefix}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
 }
 
-test("a fresh nine turtles shows the welcome in the reading area: the paste field, and importing OPML", async ({ page }) => {
+test("a fresh nine turtles shows the welcome beside the sidebar: the paste field, and importing OPML", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/unread");
   await appReady(page);
   await signIn(page);
-  // The welcome is in the reading area, centred, and owns the screen (decision 0041): the list
+  // The welcome has the room beside the sidebar, centred, and owns the screen (decision 0041): the list
   // beside it says nothing, and the sidebar has no find field while there's nothing to find.
   const reading = page.getByRole("region", { name: "Hello. Who would you like to read?" });
   await expect(reading.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();

@@ -74,41 +74,35 @@
     preferences = $bindable(),
     phone,
     back,
-    toggles = 0,
     onStar,
     onMarkUnread,
     onHide,
     onWriter,
-    fullScreen,
     beforeToolbar,
     library,
-    listNote = false,
+    listNote,
   }: {
     /** The article chosen in the list; its title, source and time show at once. */
     article: Article;
     heading?: HTMLHeadingElement;
     /** The reader's own controls, which the Aa panel changes (Page is in Settings › Look and feel too). */
     preferences: Preferences;
-    /** The list to go back to, by its name: on a phone's top bar, and one thing at a time on a computer (decision 0269), at the start of the article's bar. */
+    /** The list to go back to, by its name: on a phone's top bar, and on a computer at the start of the article's bar (decision 0275). */
     back?: { name: string; onBack: () => void };
     /** On a phone-narrow window: moving to the previous or next article. */
     phone?: { onPrevious: () => void; onNext: () => void; previous?: Article; next?: Article };
-    /** How many pane buttons sit at the start of the top bar (on a computer), to keep clear of. */
-    toggles?: number;
     onStar: () => void;
     onMarkUnread: () => void;
     /** "Hide articles about…": Settings › Hiding, with a new rule for whoever wrote it (SPEC section 27). */
     onHide: (feed: number) => void;
     /** The writer's name under the title: the page about them (their row's place, `library.rowOf`). */
     onWriter: (row: number) => void;
-    /** On a computer, full-screen reading (`f`): whether it's on, and how to switch it (decision 0241). */
-    fullScreen?: { on: boolean; toggle: () => void };
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
     library: LoadedLibrary;
-    /** The list's note, while the list isn't on screen (decision 0229); undefined while the list shows it. */
-    listNote?: ListNote | false;
+    /** The list's note, drawn here as the list isn't on screen while an article is (decision 0229). */
+    listNote?: ListNote;
   } = $props();
 
   /** Write back, at the article's end; the paper plane and `w` start it too. */
@@ -197,8 +191,6 @@
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
-        // The sidebar and list hide only together now, so full-screen reading has a visible way in, not only its key (decision 0241).
-        ...(fullScreen && !phone ? [{ label: fullScreen.on ? "Leave full-screen reading" : "Full-screen reading", shortcut: keyFor("toggle-both"), onSelect: fullScreen.toggle }] : []),
       ],
     },
   ]);
@@ -532,7 +524,7 @@
         quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
         publisher, then the reader's own tools. Its edges are the pane's, not the text column's (decision 0050).
       -->
-      <div class={["reading-bar pane-bar relative z-10 -mx-5 gap-2 pr-2 md:-mx-16", toggles === 2 ? "pl-[6.5rem]" : toggles === 1 ? "pl-14" : "pl-2"]}>
+      <div class="reading-bar pane-bar relative z-10 -mx-5 gap-2 px-2 md:-mx-16">
         {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
@@ -672,7 +664,7 @@
   </div>
 
   <!-- Write back's own note comes first while it's there: it answers the press just made (SPEC section 37). -->
-  {#if listNote !== false || writeBackNote || !phone}<AwayNote note={writeBackNote ?? said ?? (listNote || undefined)} onGone={() => heading?.focus({ preventScroll: true })} />{/if}
+  <AwayNote note={writeBackNote ?? said ?? listNote} onGone={() => heading?.focus({ preventScroll: true })} />
   {#if phone && beforeToolbar}
     {@render beforeToolbar()}
   {/if}

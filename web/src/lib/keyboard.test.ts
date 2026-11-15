@@ -28,10 +28,10 @@ const press = (key: string, extra: Partial<KeyPress> = {}): KeyPress => ({
 });
 
 describe("keyboard shortcuts", () => {
-  it("opens the cheat sheet with ?, hides both panes with f and closes with Escape", () => {
+  it("opens the cheat sheet with ? and closes with Escape; f (full-screen reading until decision 0275) does nothing", () => {
     const read = createKeyReader();
     expect(read(press("?"), 0)).toEqual({ kind: "cheat-sheet" });
-    expect(read(press("f"), 0)).toEqual({ kind: "toggle-both" });
+    expect(read(press("f"), 0)).toBeUndefined();
     expect(read(press("Escape"), 0)).toEqual({ kind: "escape" });
   });
 
@@ -143,7 +143,7 @@ describe("keyboard shortcuts", () => {
   });
 
   it("lists every shortcut in SPEC.md in the cheat sheet", () => {
-    expect(SHORTCUTS).toHaveLength(29);
+    expect(SHORTCUTS).toHaveLength(28);
     expect(SHORTCUTS.map((shortcut) => shortcut.keys[0])).toEqual([
       "j",
       "w",
@@ -167,7 +167,6 @@ describe("keyboard shortcuts", () => {
       "e",
       "o",
       "i",
-      "f",
       "a",
       "Shift+A",
       "m",
@@ -361,15 +360,5 @@ describe("the cheat sheet with Unread off", () => {
     }
     expect(off).toContain("Mark unread");
     expect(off.length).toBe(on.length - unreadOnly.length);
-  });
-});
-
-describe("the cheat sheet, one thing at a time (decision 0269)", () => {
-  it("leaves out full-screen reading, which has nothing left to do", () => {
-    const on = shortcutsFor(false).map((each) => each.action);
-    const trial = shortcutsFor(false, true).map((each) => each.action);
-    expect(on).toContain("Full-screen reading");
-    expect(trial).not.toContain("Full-screen reading");
-    expect(trial.length).toBe(on.length - 1);
   });
 });

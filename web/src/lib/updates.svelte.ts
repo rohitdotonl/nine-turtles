@@ -110,13 +110,12 @@ export function switchesOnMove(ready: boolean, marksUnsaved: boolean, undoOnOffe
 /**
  * What the screen looked like, carried to the page that loads next so the
  * switch leaves it as the reader arranged it: whether the keyboard was in
- * use, the panes they hid, the list Settings goes back to, and how far the
+ * use, whether they hid the sidebar, the list Settings goes back to, and how far the
  * sidebar was scrolled.
  */
 export type Carried = {
   keyboard: boolean;
   sidebar: "auto" | "hidden" | "shown";
-  listHidden: boolean;
   lastPlace: string;
   sidebarScroll: number;
 };
@@ -177,11 +176,11 @@ export function settleBack(heading: () => HTMLElement | undefined, opening: HTML
 /** Only a note this code wrote counts; anything else is ignored. */
 export function readCarried(value: unknown): Carried | undefined {
   if (typeof value !== "object" || value === null) return undefined;
-  const { keyboard, sidebar, listHidden, lastPlace, sidebarScroll } = value as Record<string, unknown>;
-  if (typeof keyboard !== "boolean" || typeof listHidden !== "boolean") return undefined;
+  const { keyboard, sidebar, lastPlace, sidebarScroll } = value as Record<string, unknown>;
+  if (typeof keyboard !== "boolean") return undefined;
   if (sidebar !== "auto" && sidebar !== "hidden" && sidebar !== "shown") return undefined;
   if (typeof lastPlace !== "string" || typeof sidebarScroll !== "number" || !Number.isFinite(sidebarScroll)) return undefined;
-  return { keyboard, sidebar, listHidden, lastPlace, sidebarScroll };
+  return { keyboard, sidebar, lastPlace, sidebarScroll };
 }
 
 /** Asks which version is live: on coming back into view, and every few minutes in view. Returns a stop function. */

@@ -106,8 +106,8 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await expect(field(page)).toHaveCount(0);
   await page.keyboard.press("/");
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
-  // The folder, with the article still open in it (decision 0233).
-  await expect(page).toHaveURL(new RegExp(`/folders/${folderId}/articles/[0-9]+$`));
+  // The folder, at its own address: j only chose a result, and an article opens alone (decision 0275).
+  await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
 });
 
 test("Mark all as read marks only the results, and u undoes it", async ({ page }) => {
@@ -197,19 +197,20 @@ test("each result shows its text around the match under the title, and × clears
   await expect(clear).toHaveCount(0);
 });
 
-test("with nothing found, the reading area doesn't offer j", async ({ page }) => {
+test("with nothing found, nothing offers j", async ({ page }) => {
   await nothingToPickUp(page);
   const blog = unique("nothing");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
+  // Nothing open: the list has the window beside the sidebar, with no reading area (decision 0275).
   const reading = page.getByRole("region", { name: "Article", exact: true });
-  await expect(reading).toContainText("Time to read something beautiful.");
+  await expect(reading).toHaveCount(0);
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");
   await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toBeVisible();
-  await expect(reading).toContainText("Time to read something beautiful.");
-  await expect(reading).not.toContainText(/press j/i);
+  await expect(reading).toHaveCount(0);
+  await expect(page.locator("main")).not.toContainText(/press j/i);
 });
 
 test("a search from Starred finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {

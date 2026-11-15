@@ -101,14 +101,16 @@ test.describe("on a wide window", () => {
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
-    // Shown in the reading area: read, greyed, and the count drops by one.
+    // Opened (j chooses it, Enter opens it alone in the window): read. The browser tab names it (decision 0231).
     await page.keyboard.press("j");
-    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
-    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
-    // The browser tab names the open article (decision 0231).
+    await page.keyboard.press("Enter");
     await expect(page).toHaveTitle(`${NEWEST} · nine turtles`);
     // A screen reader hears it, though the line above the list stays quiet.
     await expect(page.locator('[aria-live="polite"]', { hasText: "Marked as read." })).toBeAttached();
+    // Back in the list: greyed, and the count dropped by one.
+    await page.keyboard.press("Escape");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
+    await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     const title = row(page, blog, NEWEST).locator("span:not([aria-hidden])").first();
     await expect(title).toHaveCSS("font-weight", "400");
     await expect(row(page, blog, MIDDLE).locator("span:not([aria-hidden])").first()).toHaveCSS("font-weight", "600");
@@ -160,12 +162,14 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
 
     // Mark unread in the article's More menu does the same as m.
+    await page.keyboard.press("Enter");
     await article(page).getByRole("button", { name: "More actions" }).click();
     // The one that marks it unread: u's "read" may still be answering.
     const savedUnread = page.waitForResponse(
       (response) => response.url().endsWith("/api/articles/read") && response.ok() && response.request().postDataJSON()?.read === false,
     );
     await page.getByRole("menuitem", { name: "Mark unread" }).click();
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
     // It's saved: once the server has it, loading the list again shows the same.
@@ -319,18 +323,23 @@ test.describe("on a wide window", () => {
       return which === 0 ? route.fulfill({ status: 500 }) : route.fallback();
     });
     const blog = await openBlog(page);
+    // Opened (j, then Enter), the newest is marked read; back in the list, Shift+A marks the rest.
     await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
     await expect.poll(() => saves).toBe(1);
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Shift+A");
     await expect(line(page)).toHaveText(`Marked 2 articles as read in Blog ${blog}.`);
     // Opening another article puts the note away; then the first save fails.
     await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
     await expect(page.getByRole("button", { name: "Close the note" })).toHaveCount(0);
     releases[0]?.();
     await expect(line(page)).toHaveText("The article couldn't be marked as read. It's still unread.");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     // The note itself is back on screen, not only heard: its × shows again.
     await expect(page.getByRole("button", { name: "Close the note" })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     releases[1]?.();
   });
@@ -393,6 +402,9 @@ test.describe("on a wide window", () => {
     await expect(page).toHaveURL(/\/unread$/);
     await reach(page, row(page, blog, MIDDLE));
     await row(page, blog, MIDDLE).click();
+    await expect(article(page)).toBeVisible();
+    // Back in Unread (the article had the window to itself, decision 0275), it's still there, read.
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, unread/);
     await expect(row(page, blog, MIDDLE)).toBeVisible();
 
@@ -413,8 +425,10 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("s");
     await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Starred/);
     await expect(row(page, blog, MIDDLE).locator("svg")).toBeVisible();
-    await expect(article(page).getByRole("button", { name: "Star" }).first()).toHaveAttribute("aria-pressed", "true");
     await expect(line(page)).toHaveText("Starred.");
+    // Opened, its Star is pressed.
+    await page.keyboard.press("Enter");
+    await expect(article(page).getByRole("button", { name: "Star", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
 
     await page.keyboard.press("g");
     await page.keyboard.press("s");
@@ -424,11 +438,12 @@ test.describe("on a wide window", () => {
 
     // Unstar it with the Star button: it leaves Starred.
     await row(page, blog, MIDDLE).click();
-    const star = article(page).getByRole("button", { name: "Star" }).first();
+    const star = article(page).getByRole("button", { name: "Star", exact: true }).first();
     // The star changes at once; reload only once the server has it saved.
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/starred") && response.ok());
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "false");
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, Starred/);
     await saved;
     await page.reload();
@@ -458,9 +473,12 @@ test.describe("when saving fails", () => {
     // Opening the article can take a moment on a busy computer; the failed save comes after it.
     const refused = page.waitForResponse((response) => response.url().endsWith("/api/articles/read"));
     await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
     await refused;
     await expect(line(page)).toHaveText("The article couldn't be marked as read. It's still unread.");
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+    // Back in the list (the article had the window to itself, decision 0275): still unread.
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
 
@@ -470,14 +488,17 @@ test.describe("when saving fails", () => {
       if (response.url().endsWith("/api/articles/read") && response.ok()) saved++;
     });
     failing = false;
+    await page.keyboard.press("Enter");
     await page.keyboard.press("j");
     await page.keyboard.press("k");
+    await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `1`);
     await expect(page.getByText("The article couldn't be marked as read. It's still unread.")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
-    // Both saves (j and k) must reach the server before saving fails again.
-    await expect.poll(() => saved).toBe(2);
+    // The saves (Enter, j and k) must reach the server before saving fails again.
+    await expect.poll(() => saved).toBeGreaterThanOrEqual(2);
     failing = true;
     await page.keyboard.press("m");
     await expect(line(page)).toHaveText("The article couldn't be marked as unread.");
@@ -523,8 +544,10 @@ test.describe("when saving fails", () => {
     });
     const blog = await openBlog(page);
     await page.keyboard.press("j");
-    // The article is marked read once the reading area shows it: that's the first save.
+    await page.keyboard.press("Enter");
+    // The article is marked read once the reading area shows it: that's the first save. Then back to the list.
     await expect.poll(() => saves).toBe(1);
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Shift+A");
     await expect(line(page)).toHaveText(`Marked 2 articles as read in Blog ${blog}.`);
 
@@ -549,7 +572,9 @@ test.describe("when saving fails", () => {
     const blog = await openBlog(page);
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/read") && response.ok());
     await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
     await saved;
+    await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `2`);
     await expect(page.getByText("couldn't be marked as read")).toHaveCount(0);
@@ -576,6 +601,7 @@ test("a newer version waits until a mark is saved before switching", async ({ pa
   });
   const blog = await openBlog(page);
   await page.keyboard.press("j");
+  await page.keyboard.press("Enter");
   // The article is marked read once the reading area shows it.
   await expect.poll(() => asked).toBe(true);
   // A newer version goes live and the tab notices.
@@ -584,7 +610,8 @@ test("a newer version waits until a mark is saved before switching", async ({ pa
   await page.waitForResponse((response) => response.url().endsWith("/api/session"));
   await page.evaluate(() => Object.assign(window, { stillHere: true }));
 
-  // The mark is still on its way: going somewhere stays in this page, so it isn't lost.
+  // The mark is still on its way: going somewhere (back to the list, then Starred) stays in this page, so it isn't lost.
+  await page.keyboard.press("Escape");
   await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
   await expect(page).toHaveURL(/\/starred$/);
   expect(await page.evaluate(() => "stillHere" in window)).toBe(true);
@@ -602,7 +629,7 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);
   await row(page, blog, NEWEST).click();
-  await article(page).getByRole("button", { name: "Star" }).first().click();
+  await article(page).getByRole("button", { name: "Star", exact: true }).first().click();
   await article(page).getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Mark unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}`, exact: true }).click();
@@ -672,7 +699,8 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await expect(page.getByText(/Marked \d+ items? as read/)).toHaveCount(0);
   await page.keyboard.press("g");
   await page.keyboard.press("u");
-  await expect(page).toHaveURL(/\/people\/\d+\/articles\/\d+$/);
+  // Still their list, at its own address (the article was left, decision 0275).
+  await expect(page).toHaveURL(/\/people\/\d+$/);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);

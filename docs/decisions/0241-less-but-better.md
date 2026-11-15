@@ -4,6 +4,8 @@
 
 *10 November 2026.*
 
+*Partly replaced by [0275](0275-one-thing-at-a-time.md): full-screen reading (`f` and its menu item) is gone, as an article now has the whole window on a computer anyway.*
+
 Rohit's "Implement all suggestions, including one in small notes" (10
 November 2026), for the critique through the principle "Less, but better"
 (`critique-24/principle-05-less-but-better.html`, in the project's files).

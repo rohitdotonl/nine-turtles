@@ -16,7 +16,6 @@ export const onMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(
 
 export type Action =
   | { kind: "cheat-sheet" }
-  | { kind: "toggle-both" }
   | { kind: "escape" }
   | { kind: "add-feed" }
   | { kind: "search" }
@@ -165,7 +164,6 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Their settings", [["edit", "e", { kind: "edit" }]]),
   shortcut("Getting around", "Open / close this folder", [["toggle-folder", "o", { kind: "toggle-folder" }]]),
   shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
-  shortcut("Getting around", "Full-screen reading", [["toggle-both", "f", { kind: "toggle-both" }]]),
   shortcut("Getting around", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Tidying up", "Mark all as read", [["mark-all-read", "Shift+A", { kind: "mark-all-read" }]]),
   shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
@@ -374,9 +372,9 @@ function needsUnread(each: Shortcut): boolean {
   return each.bindings.some(({ does }) => NEEDS_UNREAD.includes(does.kind) || (does.kind === "go" && does.view === "unread"));
 }
 
-/** The shortcuts the cheat sheet lists: those that work in this reading mode (one thing at a time, the owner's trial, has no full-screen reading: decision 0269). */
-export function shortcutsFor(unreadOff: boolean, oneThing = false): Shortcut[] {
-  return SHORTCUTS.filter((each) => !(unreadOff && needsUnread(each)) && !(oneThing && each.bindings.some(({ does }) => does.kind === "toggle-both")));
+/** The shortcuts the cheat sheet lists: those that work with Unread on or off. */
+export function shortcutsFor(unreadOff: boolean): Shortcut[] {
+  return SHORTCUTS.filter((each) => !(unreadOff && needsUnread(each)));
 }
 
 /**

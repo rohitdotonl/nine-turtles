@@ -1,6 +1,6 @@
 <!--
   The list's note in the reading area (decision 0229): while the list isn't
-  on screen (an article on a phone, or the list hidden on a computer), what
+  on screen (an open article has the window, decision 0275), what
   was just done is said where the reader is, with its Undo or Try again and
   a × (SPEC section 8), in the same build as the note at the list's foot. Write back's
   "Opening your email app…", started while its own line is off screen, is said here too

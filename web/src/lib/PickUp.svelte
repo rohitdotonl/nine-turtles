@@ -1,17 +1,16 @@
 <!--
   Pick up where you left off (SPEC section 7, decision 0175): one quiet line offering the article you
   last left part of the way through, "You were reading {title}, by {writer}.", the title a link in
-  the text color (never the accent). In the empty reading area it takes the place of "Time to read
-  something beautiful."; with no reading area (a phone), it sits at the top of the list. It goes
+  the text color (never the accent). It sits at the top of the list while nothing is open (decision 0275). It goes
   once an article opens. Pressing the title opens the article where you stopped; small to the eye,
   it's 44px tall to touch (an invisible box behind it), as Forgot? is.
 -->
 <script lang="ts">
-  import { onMount, type Snippet } from "svelte";
+  import { onMount } from "svelte";
   import { askWhereYouLeftOff, pickUp, pickUpWords } from "./resume.svelte";
   import type { Article } from "./shapes";
 
-  let { onOpen, otherwise, class: classes = "" }: { onOpen: (article: Article) => void; otherwise?: Snippet; class?: string } = $props();
+  let { onOpen, class: classes = "" }: { onOpen: (article: Article) => void; class?: string } = $props();
 
   onMount(askWhereYouLeftOff);
 </script>
@@ -26,6 +25,4 @@
       onclick={() => onOpen(offer.article)}>{offer.article.title || "Untitled"}</button
     >{words.after}
   </p>
-{:else if pickUp.asked}
-  {@render otherwise?.()}
 {/if}

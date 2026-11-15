@@ -42,15 +42,6 @@ export function underSheet(route: Route, lastPlace: Route, phone: boolean): Rout
   return lastPlace;
 }
 
-/**
- * An article chosen in the list while their page or their settings shows beside it (SPEC section 36): the article takes
- * the page's place, so the screen goes back to the list under it, as the page's Close does. Nowhere one thing at a time
- * (`stepwise`: a phone, or the owner's trial), where their page has the screen to itself and no list sits beside it.
- */
-export function listForArticle(route: Route, stepwise: boolean): Route | undefined {
-  return !stepwise && isWho(route) ? { kind: "feed", id: route.id } : undefined;
-}
-
 /** Where you are now: the place, what's under it if it's a sheet, and whether the window is a phone's. */
 export type Here = { route: Route; under: Route; phone: boolean };
 
@@ -71,7 +62,7 @@ export type Move = {
 export function moveTo(here: Here, next: Route): Move {
   const { route, under, phone } = here;
   const same = pathFor(route) === pathFor(next);
-  // A person's page (at its settings too) sits beside their list, which stays, as does its article.
+  // A person's page (at its settings too) is a step over their list, which stays underneath, as does its article.
   const whoUnder = (place: Route) => (isWho(place) ? pathFor({ kind: "feed", id: place.id }) : pathFor(place));
   const besideList = !phone && (isWho(next) || isWho(route)) && whoUnder(next) === whoUnder(route);
   const keepsArticle = same || besideList || (!phone && ((isOver(next) && !isOver(route)) || (isOver(route) && pathFor(next) === pathFor(under))));

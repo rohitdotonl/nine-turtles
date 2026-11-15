@@ -1,29 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, signIn } from "./screens";
 
-// Decision 0269, SPEC sections 4 and 18: "Read one thing at a time", the
-// owner's trial. Off, nothing changes (every other spec runs with it off). On,
-// on a computer: the list alone, then the article alone in the whole window,
-// with the list's name at its top left and Escape going back. It's kept in
-// this browser only, so each test here starts with it off. They run on the
-// nine turtles that reads the made-up publisher, so each can follow a blog of its own.
+// Decision 0275, SPEC section 4: one thing at a time, the way nine turtles
+// reads on a computer, for every reader. Nothing open: the sidebar and the
+// list alone, its rows in a centred column; then the article alone in the
+// whole window, with the list's name at its top left, and Escape, that name
+// or the browser's Back going back. A phone already read this way. They run
+// on the nine turtles that reads the made-up publisher, so each can follow a
+// blog of its own.
 
 const at = (path: string) => new URL(path, FEEDS_APP).href;
 
-const SWITCH = "Read one thing at a time";
-
-/** Signs in on Settings and switches the trial on from the keyboard, as the owner. */
-async function switchOn(page: Page): Promise<void> {
-  await page.goto(at("/settings"));
+/** Signs in, as the owner, if this browser isn't yet. */
+async function signedIn(page: Page): Promise<void> {
+  await page.goto(at("/"));
   await appReady(page);
   if (await page.getByLabel("Password", { exact: true }).isVisible()) await signIn(page);
-  const trial = page.getByRole("switch", { name: SWITCH });
-  await expect(trial).not.toBeChecked();
-  await expect(trial).toHaveAccessibleDescription(/^A trial, on this device\./);
-  await tabTo(page, trial);
-  await page.keyboard.press("Space");
-  await expect(trial).toBeChecked();
 }
 
 /** Follows a blog of this test's own (three articles) and opens its list. */
@@ -39,9 +32,9 @@ const article = (page: Page) => page.getByRole("region", { name: "Article" });
 const titleOf = (page: Page) => article(page).getByRole("heading", { level: 2 });
 const rows = (page: Page) => page.locator("#list-pane .item-row");
 
-test("one thing at a time: the list alone, then the article alone, and back to the same row", async ({ page, isMobile }) => {
-  test.skip(isMobile, "A phone already reads one thing at a time: the phone's own test is below.");
-  await switchOn(page);
+test("on a computer: the list alone, then the article alone, and back to the same row", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone's own test is below.");
+  await signedIn(page);
   const blog = await openBlog(page, `one-thing-${test.info().workerIndex}-${Date.now()}`);
   const list = page.locator("#list-pane");
   const sidebar = page.locator("#sidebar");
@@ -68,24 +61,27 @@ test("one thing at a time: the list alone, then the article alone, and back to t
   expect(backBox!.height).toBeGreaterThanOrEqual(44);
   expect(backBox!.x).toBeLessThan(40);
   expect(articleBox!.width).toBeGreaterThan(viewport!.width - 2);
-  // No sidebar button over it, and full-screen reading has nothing left to do: it isn't offered.
+  // No sidebar button over it, and full-screen reading is gone: not in More, not in the cheat sheet, and f does nothing.
   await expect(page.getByRole("button", { name: /^Sidebar/ })).toBeHidden();
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(page.getByRole("menuitem", { name: /Full-screen reading/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
-  // Nor does the keyboard's cheat sheet list it.
   await page.keyboard.press("?");
   const sheet = page.getByRole("dialog", { name: "Keyboard shortcuts" });
   await expect(sheet.getByText("Open article", { exact: true })).toBeVisible();
   await expect(sheet.getByText("Full-screen reading")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
-  const opened =(await titleOf(page).textContent())?.trim() ?? "";
+  const opened = (await titleOf(page).textContent())?.trim() ?? "";
   expect(opened).not.toBe("");
   expect(secondRow).toContain(opened);
+  await titleOf(page).focus();
+  await page.keyboard.press("f");
+  await expect(article(page)).toBeVisible();
+  await expect(sidebar).toBeHidden();
+  await expect(list).toBeHidden();
 
   // j and k move to the next and previous article while reading.
-  await titleOf(page).focus();
   await page.keyboard.press("j");
   await expect(titleOf(page)).not.toHaveText(opened);
   await page.keyboard.press("k");
@@ -98,7 +94,7 @@ test("one thing at a time: the list alone, then the article alone, and back to t
   await expect(article(page)).toHaveCount(0);
   await expect(rows(page).nth(1)).toBeFocused();
 
-  // Enter opens it again; the back link goes back the same way.
+  // Enter opens it again; the back button goes back the same way.
   await page.keyboard.press("Enter");
   await expect(article(page)).toBeVisible();
   await back.click();
@@ -144,23 +140,52 @@ test("one thing at a time: the list alone, then the article alone, and back to t
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   await expect(list).toBeHidden();
 
-  // Switched off, the three panes are back as before: the reading area beside the list.
+  // Nothing to switch: Settings has no switch for it.
   await page.goto(at("/settings"));
-  await appReady(page);
-  await page.getByRole("switch", { name: SWITCH }).click();
-  await expect(page.getByRole("switch", { name: SWITCH })).not.toBeChecked();
-  await page.goto(at(`/people/${blog.id}`));
-  await appReady(page);
-  await rows(page).first().click();
-  await expect(article(page)).toBeVisible();
-  await expect(list).toBeVisible();
-  await expect(sidebar).toBeVisible();
-  await expect(page.getByRole("button", { name: `Back to ${blog.title}`, exact: true })).toHaveCount(0);
+  await expect(page.getByText(/^Version /)).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
 });
 
-test("on a phone the trial changes nothing: the article is its own screen, as always", async ({ page, isMobile }) => {
-  test.skip(!isMobile, "The trial is for a computer.");
-  await switchOn(page);
+test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone has no j.");
+  await signedIn(page);
+  const blog = await openBlog(page, `one-thing-unread-${test.info().workerIndex}-${Date.now()}`);
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+  await page.locator("#list-heading").focus();
+  await page.keyboard.press("j");
+  await expect(rows(page).first()).toBeFocused();
+  // i: their page has the window; its × goes back to their list.
+  await page.keyboard.press("i");
+  await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
+  await expect(page.locator("#list-pane")).toBeHidden();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("#list-pane")).toBeVisible();
+  // The chosen row was never opened, so it's still unread, here and on the server.
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+  await page.reload();
+  await appReady(page);
+  await expect(rows(page).first()).toHaveAccessibleName(/, unread/);
+});
+
+test("on a medium window: the sidebar stays beside the list, and the article still has the window", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone's own test is below.");
+  await page.setViewportSize({ width: 1000, height: 800 });
+  await signedIn(page);
+  const blog = await openBlog(page, `one-thing-medium-${test.info().workerIndex}-${Date.now()}`);
+  await expect(page.locator("#sidebar")).toBeVisible();
+  await expect(page.locator("#list-pane")).toBeVisible();
+  await rows(page).first().click();
+  await expect(article(page)).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await expect(page.locator("#list-pane")).toBeHidden();
+  await page.getByRole("button", { name: `Back to ${blog.title}`, exact: true }).click();
+  await expect(page.locator("#sidebar")).toBeVisible();
+  await expect(rows(page).first()).toBeFocused();
+});
+
+test("on a phone the article is its own screen, as always", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "The computer's own tests are above.");
+  await signedIn(page);
   const blog = await openBlog(page, `one-thing-phone-${test.info().workerIndex}-${Date.now()}`);
   await rows(page).first().click();
   await expect(article(page)).toBeVisible();
@@ -169,7 +194,8 @@ test("on a phone the trial changes nothing: the article is its own screen, as al
   await expect(page.getByRole("group", { name: "Article actions" })).toBeVisible();
 });
 
-test("the switch is the owner's alone: another reader's Settings don't have it", async ({ browser }, testInfo) => {
+test("every reader reads this way, not only the owner", async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name.startsWith("phone"), "A phone already did, for everyone.");
   const stranger = await browser.newContext();
   const page = await stranger.newPage();
   await page.goto(at("/sign-up"));
@@ -178,17 +204,11 @@ test("the switch is the owner's alone: another reader's Settings don't have it",
   await page.getByLabel("Password", { exact: true }).fill("slow mornings, long reads");
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
-  await page.goto(at("/settings"));
-  await expect(page.getByText(/^Version /)).toBeVisible();
-  await expect(page.getByRole("switch", { name: SWITCH })).toHaveCount(0);
-  // Even with it kept on in this browser, nothing changes for them: an article opens beside the list.
-  await page.evaluate(() => localStorage.setItem("nine-turtles.one-thing-at-a-time", "on"));
-  if (!testInfo.project.name.startsWith("phone")) {
-    await openBlog(page, `one-thing-stranger-${testInfo.workerIndex}-${Date.now()}`);
-    await rows(page).first().click();
-    await expect(article(page)).toBeVisible();
-    await expect(page.locator("#list-pane")).toBeVisible();
-    await expect(page.locator("#sidebar")).toBeVisible();
-  }
+  const blog = await openBlog(page, `one-thing-stranger-${testInfo.workerIndex}-${Date.now()}`);
+  await rows(page).first().click();
+  await expect(article(page)).toBeVisible();
+  await expect(page.locator("#list-pane")).toBeHidden();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await expect(page.getByRole("button", { name: `Back to ${blog.title}`, exact: true })).toBeVisible();
   await stranger.close();
 });

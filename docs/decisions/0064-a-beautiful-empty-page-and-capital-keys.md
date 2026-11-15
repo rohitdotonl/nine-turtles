@@ -4,6 +4,8 @@
 
 *25 October 2026. The owner chose the line and asked for the keys to match.*
 
+*Partly replaced by [0275](0275-one-thing-at-a-time.md): with no empty reading area any more, "Time to read something beautiful." is gone; the capital keys and Keys stay.*
+
 **Why.** "No article open" was accurate but cold: the empty reading area is
 the first thing seen each time, and it should invite deep reading, not
 report a state. And tooltips printed keys as small letters ("Star (s)")

@@ -64,12 +64,6 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Shift+Space");
     await expect.poll(() => scrolled(page)).toBeLessThan(end - screen / 2);
 
-    // With the keyboard on the article's row in the list, Space still reads on.
-    const before = await scrolled(page);
-    await page.getByRole("button", { name: /The pleasure of a slow letter/ }).focus();
-    await page.keyboard.press("Shift+Space");
-    await expect.poll(() => scrolled(page)).toBeLessThan(before);
-
     // A button takes Space as its own press: Aa opens its panel, and the article stays put.
     // (Aa is the article's first line, so reaching it brings the article's top back into view, decision 0263.)
     const aa = article(page).getByRole("button", { name: "Reading appearance" });
@@ -85,6 +79,7 @@ test.describe("on a wide window", () => {
     await signedIn(page);
     await openReadingRoom(page);
     await page.keyboard.press("j");
+    await page.keyboard.press("Enter");
     await page.keyboard.press("c");
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
@@ -101,8 +96,9 @@ test.describe("on a wide window", () => {
     await expect(rows).toHaveCount(50);
     // Following brought only the newest five in unread (decision 0194).
     await rows.nth(2).click();
-    await expect(count).toHaveAttribute("data-unread", `4`);
     await page.keyboard.press("Shift+O");
+    // Back in the list (the article had the window, decision 0275): only the one opened is read.
+    await page.keyboard.press("Escape");
     await expect(rows.nth(3)).toHaveAccessibleName(/, unread/);
     await expect(count).toHaveAttribute("data-unread", `4`);
 
@@ -110,7 +106,6 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("menuitem", { name: "Mark all as read" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: /above as read|below as read|Catch me up/ })).toHaveCount(0);
   });
-
 
   test("o opens and closes the folder you're in, or your feed's; e opens its settings", async ({ page }) => {
     await signedIn(page);
@@ -176,14 +171,16 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
     await expect(page.getByRole("region", { name: `About Blog ${blog}` }).getByRole("link", { name: `Settings for Blog ${blog}`, exact: true })).toBeFocused();
+    // Their page has the window (decision 0275): Escape goes back to their list, beside the sidebar.
+    await page.keyboard.press("Escape");
     await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeFocused();
     await page.keyboard.press("e");
     await expect(page.getByRole("heading", { level: 2, name: "Edit folder" })).toBeFocused();
   });
 
-  test("← and → move between the sidebar, the list and the article; ↑ and ↓ along the sidebar; a field keeps its arrows", async ({ page }) => {
-    // The owner's core path, point 17.
+  test("← and → move between the sidebar and the list; ↑ and ↓ along the sidebar; in an article and a field they're its own", async ({ page }) => {
+    // The owner's core path, point 17. An open article has the window to itself (decision 0275).
     await signedIn(page);
     await openBlog(page);
     const rows = page.locator("#list-pane li button[data-space-reads]");
@@ -191,25 +188,8 @@ test.describe("on a wide window", () => {
     const title = page.getByRole("region", { name: "Article", exact: true }).locator(".article-title");
     await page.keyboard.press("Enter");
     await expect(title).toBeFocused();
-    // ← goes to the chosen article in the list, then to your row in the sidebar.
+    // In the open article, ← and → have nowhere to go: the keyboard stays on the title, the article open.
     await page.keyboard.press("ArrowLeft");
-    await expect(rows.first()).toBeFocused();
-    await page.keyboard.press("ArrowLeft");
-    const here = sidebar(page).locator("a[aria-current]");
-    await expect(here).toBeFocused();
-    // At the left end nothing happens.
-    await page.keyboard.press("ArrowLeft");
-    await expect(here).toBeFocused();
-    // ↑ and ↓ go along the sidebar's rows.
-    const name = await here.getAttribute("href");
-    await page.keyboard.press("ArrowUp");
-    await expect(sidebar(page).locator("a[href]:focus")).not.toHaveAttribute("href", name ?? "");
-    await page.keyboard.press("ArrowDown");
-    await expect(here).toBeFocused();
-    // → goes back to the list and to the article.
-    await page.keyboard.press("ArrowRight");
-    await expect(rows.first()).toBeFocused();
-    await page.keyboard.press("ArrowRight");
     await expect(title).toBeFocused();
     // Something in the article wider than the page (a code block, a table) keeps ← and → to scroll it sideways.
     const wide = await title.evaluate((heading) => {
@@ -229,6 +209,28 @@ test.describe("on a wide window", () => {
     await title.focus();
     await page.keyboard.press("ArrowRight");
     await expect(title).toBeFocused();
+
+    // Back in the list, the keyboard on its row: ← goes to your row in the sidebar.
+    await page.keyboard.press("Escape");
+    await expect(rows.first()).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    const here = sidebar(page).locator("a[aria-current]");
+    await expect(here).toBeFocused();
+    // At the left end nothing happens.
+    await page.keyboard.press("ArrowLeft");
+    await expect(here).toBeFocused();
+    // ↑ and ↓ go along the sidebar's rows.
+    const name = await here.getAttribute("href");
+    await page.keyboard.press("ArrowUp");
+    await expect(sidebar(page).locator("a[href]:focus")).not.toHaveAttribute("href", name ?? "");
+    await page.keyboard.press("ArrowDown");
+    await expect(here).toBeFocused();
+    // → goes back to the list's chosen row; at the list nothing opens.
+    await page.keyboard.press("ArrowRight");
+    await expect(rows.first()).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await expect(rows.first()).toBeFocused();
+    await expect(page.getByRole("region", { name: "Article", exact: true })).toHaveCount(0);
     // In a field (the sidebar's), the arrows are the field's.
     const field = sidebar(page).getByRole("searchbox", { name: "Find a person or folder" });
     await field.fill("words");

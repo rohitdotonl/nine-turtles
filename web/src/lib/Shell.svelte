@@ -2,7 +2,7 @@
   The signed-in app (SPEC sections 2 to 9, 14 to 16, 18 and 19): the sidebar
   with its search, the folders and feeds and their unread dots, the item
   list with the search field above it (its results take the list's place
-  until Escape), and the reading area, side by side as the window's width allows, with
+  until Escape), and the reading area, one thing at a time (decision 0275), with
   adding a feed, editing feeds and folders, Settings and the `?` shortcut
   list. An article shown in the reading area counts as read. Nothing in it
   moves unless the reader moves it. With Unread off (SPEC section 10) there's
@@ -21,7 +21,6 @@
   import ArticleView from "./ArticleView.svelte";
   import CheatSheet from "./CheatSheet.svelte";
   import EditFolder from "./EditFolder.svelte";
-  import EmptyReading from "./EmptyReading.svelte";
   import PickUp from "./PickUp.svelte";
   import WhoPage from "./WhoPage.svelte";
   import { placeLabels, placesOf, placesWatch, rowFor } from "./people";
@@ -47,12 +46,12 @@
   import { ReadingSettings } from "./reading-settings.svelte";
   import { type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader, keyFor, tip } from "./keyboard";
+  import { createKeyReader, keyFor } from "./keyboard";
   import { movePane, moveRow } from "./panes";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { writerItems } from "./rowMenu";
   import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
-  import { currentWidth, LIST_MIN, ScreenLayout, watchWidth } from "./layout.svelte";
+  import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { articleIn, isList, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
@@ -68,14 +67,13 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isOver, isWho, listForArticle, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
   import { topTapScrolls } from "./topTap";
   import { readArticle } from "./articles";
   import { arrivedBySwitching, settleBack, switchesOnMove, switchTo, updates, watchForNewVersions, type Carried } from "./updates.svelte";
-  import { deviceText, setDeviceText } from "./device";
 
   let {
     version,
@@ -142,14 +140,14 @@
   let cheatSheetOpen = $state(false);
   /** The article chosen in the list, shown in the reading area. */
   let selected: Article | undefined = $state();
-  /** On a phone-narrow window, the opened article takes the list's place. */
+  /** An opened article shows alone: on a computer in the whole window, on a phone in the list's place (decision 0275). */
   let reading = $state(false);
   /** What the search field holds, the search the list shows and the phone's search field (searching.svelte.ts, SPEC section 14). */
   const searching = new Searching(start);
   let searchBar: SearchBar | undefined = $state();
 
-  /** The window's width step, which areas show, the sidebar and list toggles and their dragged widths (layout.svelte.ts). */
-  const layout = new ScreenLayout(currentWidth(), innerWidth, () => reading, firstStep.screen === "home", { aside: (): boolean => whoShown, owner: () => owner });
+  /** The window's width step, which areas show, the sidebar's toggle and its dragged width (layout.svelte.ts). */
+  const layout = new ScreenLayout(currentWidth(), () => reading, firstStep.screen === "home", (): boolean => whoShown);
   let panes = $derived(layout.panes);
   let phone = $derived(layout.phone);
 
@@ -171,21 +169,8 @@
   const showFolders = (ids: number[]) => library.setOpen([...new Set([...library.openFolders, ...ids])]);
   /** The list's pane and the sidebar button, for where the keyboard goes when the sidebar hides. */
   let listSection: HTMLElement | undefined = $state();
-  /**
-   * The one-time tip in the empty reading area (decision 0062): shown until
-   * you first open an article, by any means, or the shortcut list, then
-   * never again on this device.
-   */
-  const TIP_KEY = "nine-turtles.shortcut-tip-seen";
-  let tipSeen = $state(deviceText(TIP_KEY) !== null);
   /** The list's note, drawn in the reading area while the list isn't on screen (decision 0229). */
   let listNote: ListNote | undefined = $state();
-  $effect(() => {
-    if (tipSeen || (!selected && !cheatSheetOpen)) return;
-    tipSeen = true;
-    // Private windows may refuse; the tip shows again next visit until an article is opened.
-    setDeviceText(TIP_KEY, "yes");
-  });
 
   let sidebarToggle: HTMLButtonElement | undefined = $state();
 
@@ -217,7 +202,7 @@
     const place = isWho(route) ? route : under;
     return place.kind === "feed" || isWho(place) ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
   });
-  /** A person's or publication's page, or their settings, is showing (decisions 0163, 0267): the reading area's, or on a phone the list's place. */
+  /** A person's or publication's page, or their settings, is showing (decisions 0163, 0267): alone in the window, or on a phone in the list's place. */
   let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
   // Their addresses say person or publication (decision 0163); an old /feeds/ address is tidied to its new one.
   $effect(() => {
@@ -256,10 +241,8 @@
   let listInstead = $derived(insteadOfList(under, found));
   /** No feeds yet: Unread and All show the welcome instead (`firstVisit.ts`). */
   let firstVisit = $derived(isFirstVisit(library.feeds));
-  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, article: panes.article, phone, missing: missing !== undefined }));
+  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, phone, missing: missing !== undefined }));
   let welcoming = $derived(whereWelcome.shown);
-  /** On a computer with the sidebar and the list both hidden, their two buttons become one, which brings both back. */
-  let bothHidden = $derived(!phone && !panes.sidebar && !panes.list && isList(route) && !welcoming);
   let welcomeWide = $derived(whereWelcome.wide);
   let welcomeAlone = $derived(whereWelcome.alone);
   /** "New to feeds?" is for the first visit only: once anything is followed, it becomes the home view. */
@@ -272,8 +255,6 @@
       queueMicrotask(() => placeFocus(home)?.focus());
     });
   });
-  /** The list's first article: the empty reading area offers j only when there's one to open. */
-  let listFirst: Article | undefined = $state();
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
   let tasking = $derived(route.kind === "add-feed" || (route.kind === "new-to-feeds" && firstVisit));
   /** Who Add just found, while it asks whether they're a person or a publication: the sheet's title asks about them. */
@@ -298,7 +279,7 @@
 
   $effect(() => {
     // While an article is open the tab names it, as every website does (decision 0231).
-    const open = selected && (phone ? reading : isList(route)) ? selected.title.trim() || untitledOpening(selected) : undefined;
+    const open = selected && reading ? selected.title.trim() || untitledOpening(selected) : undefined;
     document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName, open);
     // And the address names it, under its list (decision 0233), so reload, Back and bookmarks keep it.
     const address = withArticle(pathFor(route), open === undefined ? undefined : selected?.id);
@@ -316,10 +297,10 @@
     });
   });
 
-  // An article counts as read once the reading area shows it (SPEC section 8); only a newly shown one, so `m` on it keeps it unread until you move away and back.
+  // An article counts as read once it's open (SPEC section 8), never while their page has the window; only a newly shown one, so `m` on it keeps it unread until you move away and back.
   let lastShown: number | undefined;
   $effect(() => {
-    const showing = panes.article ? selected : undefined;
+    const showing = reading && !whoShown ? selected : undefined;
     const id = showing?.id;
     untrack(() => {
       if (id === lastShown) return;
@@ -400,7 +381,7 @@
       }
       if (move.closing && sheetOpener.giveBack()) return;
       arrive(stepOf(history.state)?.screen ?? (isList(route) ? "list" : "page"));
-      if (!layout.stepwise) openAddressed(articleIn(location.pathname).article); // One thing at a time (a phone), the article is a step of its own.
+      openAddressed(articleIn(location.pathname).article); // Back onto an article left for another place opens it again (decision 0233).
     };
     addEventListener("popstate", back);
 
@@ -467,7 +448,7 @@
 
   /** Shows a screen the browser's history went back (or forward) to. */
   function arrive(screen: Screen) {
-    reading = layout.stepwise && screen === "article" && selected !== undefined;
+    reading = screen === "article" && selected !== undefined;
     layout.showHome(screen === "home");
     if (phone && screen === "home") void library.catchUp(); // The feeds screen's dots catch up as you arrive on it (SPEC section 13).
     queueMicrotask(() => {
@@ -658,13 +639,6 @@
     }
   }
 
-  /** Full-screen reading (`f`, the article's More menu, decision 0241): hide the sidebar and the list together; again, both come back. */
-  function toggleBoth() {
-    if (layout.stepwise || !isList(route)) return;
-    const focusWasInside = (sidebar?.contains(document.activeElement) || listSection?.contains(document.activeElement)) ?? false;
-    if (layout.toggleBoth() && focusWasInside) queueMicrotask(() => (selected ? articleHeading : sidebarToggle)?.focus());
-  }
-
   /**
    * The sidebar hid with the keyboard's place in it. The place moves to the
    * list itself (its selected article, or its first, the list's own Tab
@@ -691,7 +665,6 @@
   function move(to: ArticleMove, step: 1 | -1) {
     const focus = moveArticle(itemList, to, step, { ...panes, reading, inArticle: inArticle() });
     if (!focus) return;
-    makeWay();
     if (focus === "row") itemList?.focusSelected();
     else queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
@@ -705,12 +678,11 @@
   function open() {
     if (!itemList || (!panes.list && !panes.article && !reading)) return;
     if (!selected && !itemList.move(1)) return;
-    if (layout.stepwise && !reading) {
-      // On a phone (or one thing at a time) the article is a screen of its own, one step on.
+    if (!reading) {
+      // The article is a screen of its own, one step on (decision 0275).
       steps.openArticle();
       reading = true;
     }
-    makeWay();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
@@ -723,13 +695,6 @@
     if (!itemList?.focusList()) headings.list?.focus();
   }
 
-  function chose(byKeyboard: boolean) {
-    if (layout.stepwise || byKeyboard) open();
-    else makeWay();
-  }
-
-  /** Room for a chosen article; beside their page, it takes the page's place, back on their list (`listForArticle`), the keyboard left where the choosing puts it. */
-  const makeWay = () => { const list = listForArticle(route, layout.stepwise); if (list) go(list, undefined, false); layout.makeWayForArticle(); };
 
   /**
    * Opens an article from outside the list (the "now playing" bar, SPEC 35; where you left off, SPEC 7): its feed's list
@@ -740,11 +705,10 @@
       if (!here && !(isList(route) && route.kind === "feed" && route.id === article.feedId)) go({ kind: "feed", id: article.feedId });
       selected = article;
     }
-    if (layout.stepwise && !reading) {
+    if (!reading) {
       if (!here || stepOf(history.state)?.screen !== "article") steps.openArticle(); // A reloaded article is its step already.
       reading = true;
     }
-    layout.makeWayForArticle();
     queueMicrotask(() => articleHeading?.focus({ preventScroll: true }));
   }
 
@@ -836,7 +800,6 @@
   /** What a shortcut can ask of the screen. */
   const keyHands: KeyHands = {
     openCheatSheet: () => (cheatSheetOpen = true),
-    toggleBoth,
     go: (place) => go(place),
     escape, startSearch, move, rowAfter, open, movePane, moveRow,
     openLink: (link) => window.open(link, "_blank", "noopener,noreferrer"),
@@ -876,20 +839,12 @@
   So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
   lines. A new scrolling area needs the same, and any new bar must sit inside an area, not beside it.
 -->
-<svelte:window bind:innerWidth={layout.windowWidth} />
 <!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
 <svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
-<!--
-  While an episode is in the player, the "now playing" bar takes its own room at the foot (SPEC section 35), so the
-  panes above it end where it starts and it never covers them. On a phone reading an article, it sits above the
-  article's toolbar instead.
--->
+<!-- While an episode plays, the "now playing" bar takes its own room at the foot, never covering the panes; on a phone reading, above the toolbar (SPEC 35). -->
 <main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
   {#if skipShown}
-    <!--
-      First in the Tab order (SPEC section 19; the keyboard itself starts later, on the list's title): out of sight until the keyboard reaches it, then a small
-      label at the top left. It goes past the sidebar to the articles: the chosen one, or the first.
-    -->
+    <!-- First in the Tab order (SPEC section 19), out of sight until the keyboard reaches it: past the sidebar to the chosen article, or the first. -->
     <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>
   {/if}
   <div class="relative flex min-h-0 flex-1 overflow-hidden">
@@ -898,21 +853,19 @@
     <h1 class="sr-only">nine turtles</h1>
   {/if}
   <!--
-    On a phone there's no sidebar toggle: the feeds list is the home screen, reached with the back arrow.
-    Everywhere else it sits on the sidebar it controls, at the right end of its top line across from
-    the wordmark; with the sidebar hidden it waits at the start of the next area's top line. It's one
-    button that moves, so the keyboard stays on it. The sidebar's and the list's top lines never scroll;
-    the article's tools scroll away with its title (decision 0263), and this button stays, in the 64px margin beside the text.
+    No sidebar toggle on a phone: the feeds list is the home screen, reached with the back arrow. On a computer it sits at the
+    right end of the sidebar's top line, across from the wordmark; hidden, at the start of the list's. One button that moves,
+    so the keyboard stays on it. An article or a person's page has the window and its own way back, so it steps aside (0275).
   -->
-  <div class={["fixed top-1.5 z-20", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", (phone || (layout.trial && panes.article)) && "hidden"]}>
+  <div class={["fixed top-1.5 z-20", panes.sidebar ? "left-[calc(var(--sidebar-w)-3.25rem)]" : "left-2", (phone || panes.article) && "hidden"]}>
     <button
       type="button"
       bind:this={sidebarToggle}
-      aria-label={bothHidden ? "Sidebar and article list" : "Sidebar"}
+      aria-label="Sidebar"
       aria-expanded={panes.sidebar}
-      aria-controls={bothHidden ? "sidebar list-pane" : "sidebar"}
-      title={bothHidden ? tip("Show the sidebar and the article list", "toggle-both") : panes.sidebar ? "Hide the sidebar" : "Show the sidebar"}
-      onclick={bothHidden ? toggleBoth : toggleSidebar}
+      aria-controls="sidebar"
+      title={panes.sidebar ? "Hide the sidebar" : "Show the sidebar"}
+      onclick={toggleSidebar}
       class="bar-button flex size-11 items-center justify-center rounded-press text-ink-2"
     >
       <Icon name="sidebar" size="alone" />
@@ -981,7 +934,7 @@
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />
-    {#if !phone && (panes.list || panes.article)}
+    {#if !phone && panes.list}
       <PaneResizer
         label="Resize the sidebar"
         bind:width={layout.sidebarWidth}
@@ -1066,25 +1019,11 @@
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
             "list-pane relative @container flex-col bg-paper",
-            phone && "phone", layout.trial && "one-thing",
-            // 352px by default below 1280px, so on a window about 1024px wide feed names and titles have room (SPEC section 4).
-            panes.article ? "w-[22rem] shrink-0 xl:w-96 2xl:w-[26rem]" : "min-w-0 flex-1",
+            // On a computer its rows sit in a centred column (`app.css`, decision 0275).
+            "min-w-0 flex-1", phone && "phone",
             panes.list && !welcomeWide && "flex",
-            // A 1px line where the list meets the reading pane, as where the sidebar meets the list (decision 0054).
-            !phone && panes.article && "pane-edge",
           ]}
-          style:width={!phone && panes.article && layout.listPx ? `${layout.listPx}px` : undefined}
         >
-          {#if !phone && panes.article && !welcomeWide}
-            <PaneResizer
-              label="Resize the article list"
-              bind:width={layout.listWidth}
-              min={LIST_MIN}
-              max={layout.listMax}
-              pane={listSection}
-              onDone={() => layout.storeListWidth()}
-            />
-          {/if}
           {#if phone}
             <!-- The phone's top bar (SPEC section 20): back to Home, the feeds screen, then the screen's title with More beside it. It never scrolls. -->
             <div class="pane-bar nav-bar">
@@ -1112,19 +1051,17 @@
             {/if}
             {#if listInstead}
               <p class="mt-4">{listInstead}</p>
-            {:else if welcoming && panes.article}
-              <!-- The welcome has the reading area and owns the screen: the list beside it stays empty, saying nothing (decision 0041). -->
+            {:else if welcomeWide}
+              <!-- On a computer the welcome has the list's room and owns the screen (below): the list stays empty, saying nothing (decision 0041). -->
             {:else if welcoming}
-              <!-- No reading area beside the list (a phone, or a medium window with the sidebar shown): the welcome is here. -->
               <!--
-                On a phone the list's title steps aside (screen readers still hear it, as the screen's
-                name), so one heading shows: the welcome's, 96px under the top line on the screen's
-                margin (decision 0052). A medium window keeps it centred.
+                On a phone, or where the address names nothing, the welcome is here. On a phone the list's title steps aside (screen
+                readers still hear it), so one heading shows: the welcome's, 96px under the top line on the screen's margin (decision
+                0052), out of the list's 28px dot gutter (decision 0054) to the 20px margin. A computer keeps it centred.
               -->
-              <!-- The list's 28px dot gutter (decision 0054) is for rows: the welcome steps back out to the 20px margin. -->
               <div class={phone ? "mt-24 ml-[calc(1.25rem-var(--list-start))] flex" : "mt-8 flex justify-center"}>{@render welcome(phone)}</div>
             {:else if library.feeds !== undefined && settings.sort !== undefined}
-              {#if !panes.article && !searching.shown}<PickUp class="pt-1 pb-3 text-left!" onOpen={openFromOutside} />{/if}
+              {#if !searching.shown}<PickUp class="pt-1 pb-3" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106); a paused one, with Resume (decision 0239). -->
                 <FailingLine class="pt-1 pb-2" feed={currentFeed} label="Find its new address" onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)} />
@@ -1140,15 +1077,14 @@
                   {notice}
                   empty={searching.shown ? nothingFound(searching.shown.words, scopeName(searching.shown.scope, library.names), searching.shown.scope.kind === "all" ? undefined : () => (searching.everywhere(), queueMicrotask(() => searchBar?.focus()))) : emptyText(under, currentFeed?.checkedAt ?? null)}
                   bold={searching.shown ? searchedTerms(searching.shown.words) : []}
-                  onChoose={chose}
+                  onChoose={open}
                   onUnreadChange={(feedId, change) => library.unreadChanged(feedId, change)}
                   onRefresh={() => (loadFeeds(), keeper.refreshed())}
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {unreadOff}
-                  bind:first={listFirst}
                   rowActions={(article) => [
-                    { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), chose(false), void tick().then(() => articleView?.act("write-back"))) }) },
+                    { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), open(), void tick().then(() => articleView?.act("write-back"))) }) },
                     { items: linkItems(article, addressOf(article), (message) => itemList?.inform(message)) },
                   ]}
                   {addressOf}
@@ -1157,25 +1093,29 @@
             {/if}
           </div>
         </section>
+        {#if welcomeWide && panes.list}
+          <!-- No feeds yet, on a computer: the welcome has the list's room beside the sidebar (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0206). -->
+          <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center overflow-y-auto bg-paper px-5 pt-[28vh] pb-10 md:px-10">
+            {@render welcome(false)}
+          </section>
+        {/if}
         {#if panes.article}
-          <!-- The reading area; with the sidebar and list hidden, their one button waits at the start of its top line. -->
+          <!-- The reading area: an article, or a person's page, alone in the window (on a phone, in the list's place). -->
           <div class="flex min-w-0 flex-1">
           {#if whoShown && !phone}
             {@render who()}
           {:else if selected}
             <ArticleView
               bind:this={articleView}
-              article={selected} {library} listNote={panes.list ? false : listNote}
-              toggles={layout.stepwise || panes.list || panes.sidebar ? 0 : 1}
+              article={selected} {library} {listNote}
               bind:heading={articleHeading}
               bind:preferences
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onHide={hideFrom}
-              fullScreen={layout.stepwise ? undefined : { on: bothHidden, toggle: toggleBoth }}
               onWriter={(id) => go({ kind: "about", id })}
               beforeToolbar={nowPlayingAboveToolbar}
-              back={layout.stepwise ? { name: nameFor(route, placeName), onBack: backToList } : undefined}
+              back={{ name: nameFor(route, placeName), onBack: backToList }}
               phone={phone
                 ? {
                     onPrevious: () => move("move", -1),
@@ -1185,13 +1125,6 @@
                   }
                 : undefined}
             />
-          {:else if welcoming && !missing}
-            <!-- No feeds yet: the welcome has the reading area (SPEC section 2), its heading still 28% down as what's under the field grows (decision 0206). -->
-            <section aria-labelledby="welcome-heading" class="flex min-w-0 flex-1 flex-col items-center overflow-y-auto bg-paper px-5 pt-[28vh] pb-10 md:px-10">
-              {@render welcome(false)}
-            </section>
-          {:else}
-            <EmptyReading first={listFirst} missing={missing !== undefined} {tipSeen} onOpen={openFromOutside} />
           {/if}
           </div>
         {/if}
@@ -1208,7 +1141,7 @@
   <NowPlaying onOpen={openFromOutside} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {unreadOff} oneThing={layout.trial} />
+<CheatSheet bind:open={cheatSheetOpen} {unreadOff} />
 
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
@@ -1233,7 +1166,7 @@
   {/if}
 {/snippet}
 
-<!-- A person's or publication's page, or their settings one press from it (decisions 0163, 0267): beside their list, or on a phone in its place. -->
+<!-- A person's or publication's page, or their settings one press from it (decisions 0163, 0267): alone in the window, or on a phone in the list's place. -->
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}

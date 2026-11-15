@@ -1,6 +1,6 @@
 ---
 title: Find your way around
-description: The sidebar, the list of articles and the reading pane, and how new articles arrive without moving anything under you.
+description: The sidebar, the list of articles and the article you read, one thing at a time, and how new articles arrive without moving anything under you.
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
@@ -10,8 +10,9 @@ related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 
 <p class="lede">
   nine turtles has three parts: the sidebar on the left, the list of articles
-  in the middle, and the article you're reading on the right. On a phone you
-  see one at a time.
+  beside it, and the article you're reading. You read one thing at a time:
+  open an article and it has the whole window to itself; go back and the
+  list is just as you left it.
 </p>
 
 On an iPhone, tap the top of the screen (where the clock is) to go
@@ -75,7 +76,7 @@ as you would a link.
 
 ## Reading
 
-Choose an article and it opens on the right. Across its top are **Open
+Choose an article and it opens, with the whole window to itself. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Star**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
 under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
@@ -93,14 +94,13 @@ To print an article, open it and use your browser's Print (<kbd>Command</kbd>
 prints, in black on white, and the last line says where it came from, with
 the address of the original.
 
-When you come back with nothing open, the reading pane offers the article
+When you come back with nothing open, the top of the list offers the article
 you last left part of the way through, in one quiet line: "You were reading
 *The long walk home*, by Ana." Press the title to carry on where you
-stopped, on any device you sign in on (on a phone, the line is at the top of
-the list). It goes once you open something else or finish it.
+stopped, on any device you sign in on. It goes once you open something else
+or finish it.
 
-Otherwise the reading pane rests on one quiet line until you choose
-something. Every list opens the same way: the newest article is simply the
+Every list opens the same way: the newest article is simply the
 first in the list, with its dot if it's unread. Nothing is marked read until
 you open it.
 
@@ -112,17 +112,21 @@ on a phone, to bring them in. If you refresh and nothing has come in, the
 note says so: "Nothing new has arrived since 14:05." Opening the app always shows the latest. On a
 phone, Unread's dot catches up each time you come back to the sidebar.
 
-## Make room to read
+## One thing at a time
 
-On a computer, the small button at the top of the sidebar hides it. For
-full-screen reading, press <kbd>F</kbd>, or choose **Full-screen reading**
-in an article's **More** menu: the sidebar and the list hide together, and
-one button brings them back. You can also
-drag the edge between two parts to make one wider; double-click the edge to
-put it back.
+On a computer, the list sits in a calm column beside the sidebar. Open an
+article and it fills the whole window, with **‹** and the list's name (say,
+**‹ Unread**) at its top left. Press that, or <kbd>Esc</kbd>, or your
+browser's Back, and you're back in the list where you were. While reading,
+<kbd>J</kbd> and <kbd>K</kbd> go to the next and previous article. A
+person's page fills the window the same way, with **×** to go back.
+
+The small button at the top of the sidebar hides it, so the list has more
+room. You can also drag the sidebar's edge to make it wider; double-click
+the edge to put it back.
 
 On a computer, an article's buttons (View original, Aa, Star and the rest)
-sit above its title and scroll away with it, so the whole pane is the
+sit above its title and scroll away with it, so the whole window is the
 writing. Most have a key that works all the way down, and at the end of the article
 **Star** and **View original** are there again.
 

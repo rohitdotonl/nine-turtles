@@ -749,13 +749,17 @@ test("a tab left open across an update is told to reload, switches on the next m
   );
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
   // The top bar's Star; the article's end has one too once its words arrive (decision 0263).
-  await page.getByRole("region", { name: "Article", exact: true }).getByRole("button", { name: "Star" }).first().click();
-  await expect(page.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
+  const reading = page.getByRole("region", { name: "Article", exact: true });
+  await reading.getByRole("button", { name: "Star" }).first().click();
+  // Said where the reader is: the article has the window, the list's own note is off screen (decision 0275).
+  await expect(reading.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
+  await expect(reading.getByRole("button", { name: "Reload", exact: true })).toBeVisible();
 
   // Going to another place opens the new version there, and the note is gone (decision 0085).
   await page.evaluate(() => Object.assign(window, { oldPage: true }));
-  await page.getByRole("link", { name: "Settings" }).click();
+  await reading.locator("h2.article-title").focus();
+  await page.keyboard.press("g");
+  await page.keyboard.press(",");
   await expect(page).toHaveURL(/\/settings$/);
   await expect.poll(() => page.evaluate(() => "oldPage" in window)).toBe(false);
   // The new page listens for the tab coming back into view only once its

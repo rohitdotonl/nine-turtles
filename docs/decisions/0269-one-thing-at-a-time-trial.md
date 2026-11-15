@@ -1,8 +1,10 @@
 # 0269: Read one thing at a time, a trial for the owner
 
-**In one line:** A trial switch, "Read one thing at a time", in Settings for the owner only, kept on that device and off by default: on a computer, the list alone (beside the sidebar, its rows in a centred column), then the article alone in the whole window with "‹ Unread" (the list's name) at its top left and Escape going back; not adopted, so three panes stay the rule (decision 0134) and `f` stays as decision 0241 says. Revisit when the owner decides.
+**In one line:** *(Replaced by 0275.)* A trial switch, "Read one thing at a time", in Settings for the owner only, kept on that device and off by default: on a computer, the list alone (beside the sidebar, its rows in a centred column), then the article alone in the whole window with "‹ Unread" (the list's name) at its top left and Escape going back; not adopted, so three panes stay the rule (decision 0134) and `f` stays as decision 0241 says. Revisit when the owner decides.
 
 *14 November 2026. From the owner's review of flow 4, "Reading on a laptop": the owner wants to live with it before deciding.*
+
+*Replaced by [0275](0275-one-thing-at-a-time.md): the owner adopted it, for every reader, as the only way a computer reads; the switch, `oneThing.svelte.ts`, `one-thing.css` and full-screen reading are gone.*
 
 **What the owner saw.** On a laptop the article gets about half the window,
 beside the sidebar and the list. Suggested: the list alone, then the article
@@ -33,7 +35,7 @@ alone, the way a phone already reads, which is today's full-window reading
      cheat sheet) has nothing left to do, so it isn't offered.
    A phone is unchanged: it already reads one thing at a time.
 3. **Built in the layout** (`layout.svelte.ts`, with the switch in
-   `oneThing.svelte.ts`, the centred column in `web/src/one-thing.css`):
+   `oneThing.svelte.ts`, the centred column in `one-thing.css`, all three gone since decision 0275):
    the same steps a phone takes for an article, so there's no second way
    of opening one.
 

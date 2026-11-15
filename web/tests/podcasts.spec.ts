@@ -49,6 +49,9 @@ async function press(page: Page, control: ReturnType<Page["getByRole"]>, key = "
 }
 
 async function open(page: Page, title: string): Promise<void> {
+  // An article already open has the window to itself (decision 0275): back to its list first.
+  const back = article(page).getByRole("button", { name: /^Back to / }).first();
+  if (await back.isVisible()) await back.click();
   await page.getByRole("button", { name: new RegExp(title) }).first().click();
   await expect(article(page).getByRole("heading", { name: title })).toBeVisible();
   await expect(player(page)).toBeVisible();
@@ -111,7 +114,9 @@ test("an episode plays, and carries on where it stopped after a reload", async (
   await player(page).getByRole("button", { name: "Play" }).click();
   await expect(bar(page)).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("nine-turtles.episode-places"))).not.toBeNull();
-  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Settings" }).click();
+  // To Settings by its keys: the sidebar is away while the episode is open (decision 0275).
+  await page.keyboard.press("g");
+  await page.keyboard.press(",");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
   await expect(bar(page)).toHaveCount(0);

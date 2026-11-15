@@ -4,7 +4,7 @@ import { TEXT_SIZES } from "./preferences";
 import type { Route } from "./router";
 import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
 
-/** A computer's three panes, Unread on, an article chosen and drawn. */
+/** Every area on screen at once (each test takes away what its case lacks), Unread on, an article chosen and drawn. */
 function scene(changes: Partial<KeyScene> = {}): KeyScene {
   return {
     unreadOff: false,
@@ -33,7 +33,6 @@ function hands(next?: Route) {
     };
   const handed: KeyHands = {
     openCheatSheet: note("openCheatSheet"),
-    toggleBoth: note("toggleBoth"),
     go: note("go"),
     escape: note("escape"),
     startSearch: note("startSearch"),

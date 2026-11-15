@@ -1,8 +1,8 @@
 <!--
   A person's or publication's page (SPEC section 36), the same for both, with
   no Edit mode: a page about them, and their settings on a page of its own,
-  one press away (decision 0267). On a computer both open in the reading
-  area, beside their list, where an article would; on a phone, as a screen of
+  one press away (decision 0267). On a computer both have the window to
+  themselves, as an open article does (decision 0275); on a phone, a screen of
   its own, with "‹" back. Opened by their name at the top of the list, "Info
   about …" in the list's More menu, or the i key; `e` (and the old Edit
   addresses) open their settings.

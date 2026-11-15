@@ -81,6 +81,8 @@ test("on a computer, the text is only text: a tap leaves the top bar where it is
 test("the list's search waits behind its magnifier, on a computer too", async ({ page, isMobile }) => {
   test.skip(isMobile, "the phone has always had it (phone.spec.ts)");
   await openLetter(page);
+  // Back to the list, where its search lives (an open article has the window, decision 0275).
+  await page.keyboard.press("Escape");
   const field = page.getByRole("textbox", { name: "Search articles", exact: true });
   const button = page.getByRole("button", { name: "Search", exact: true });
   // At rest, one field on screen: the sidebar's.
