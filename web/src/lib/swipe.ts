@@ -13,6 +13,8 @@ import { HOLD_MS } from "./sidebarDrag";
 export const EDGE = 24;
 /** How far a finger moves before it counts as sideways or as a scroll. */
 const DECIDE = 10;
+/** A finger lifted moving faster than this (pixels a millisecond, 600 a second) has flicked: a short swipe counts, as on every phone. */
+const FLICK = 0.6;
 
 export type SwipeHands = {
   /** The one way this place takes a swipe: 1 is right (back), -1 is left (on). */
@@ -63,6 +65,8 @@ const standalone = () => matchMedia("(display-mode: standalone)").matches;
 export function swipe(node: HTMLElement, hands: SwipeHands) {
   let start: { x: number; y: number; id: number; at: number } | undefined;
   let sideways = false;
+  /** Where the finger was lately, to tell a flick from a slow lift. */
+  let lately: { x: number; at: number }[] = [];
   let swallowClick = false;
   node.style.touchAction = "pan-y pinch-zoom";
 
@@ -79,6 +83,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     if (hands.allowed && !hands.allowed(event)) return;
     start = { x: event.clientX, y: event.clientY, id: event.pointerId, at: event.timeStamp };
     sideways = false;
+    lately = [];
   };
   const move = (event: PointerEvent) => {
     if (!start || event.pointerId !== start.id) return;
@@ -95,6 +100,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
       sideways = true;
       taken.add(start.id);
     }
+    lately = [...lately.filter((seen) => event.timeStamp - seen.at < 100), { x: event.clientX, at: event.timeStamp }];
     // Back past where it started is no further than where it started.
     hands.moved(hands.side * Math.max(0, hands.side * dx));
   };
@@ -104,7 +110,11 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     const dx = event.clientX - start.x;
     giveUp();
     if (!was) return;
-    hands.ended(hands.side * Math.max(0, hands.side * dx));
+    // A flick the swipe's way (at least 20px) counts as far enough, however short.
+    const first = lately[0];
+    const speed = first && event.timeStamp > first.at ? (event.clientX - first.x) / (event.timeStamp - first.at) : 0;
+    const gone = Math.max(0, hands.side * dx);
+    hands.ended(hands.side * (hands.side * speed >= FLICK && gone >= 2 * DECIDE ? Math.max(gone, reach(node.clientWidth || innerWidth)) : gone));
     // The press that ends a swipe doesn't also open what it started on (after what the swipe pressed itself).
     swallowClick = true;
   };

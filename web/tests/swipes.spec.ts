@@ -13,15 +13,21 @@ const note = (page: Page) => page.getByRole("status").filter({ hasText: /^(Marke
 
 /** A finger on the screen: put down, moved in a few steps, and lifted. */
 class Finger {
-  private constructor(private cdp: CDPSession, private at: { x: number; y: number }) {}
+  private constructor(
+    private page: Page,
+    private cdp: CDPSession,
+    private at: { x: number; y: number },
+  ) {}
   static async down(page: Page, x: number, y: number): Promise<Finger> {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-    return new Finger(cdp, { x, y });
+    return new Finger(page, cdp, { x, y });
   }
-  async move(dx: number, dy = 0) {
+  /** Moves in six steps, `pause` milliseconds apart: slowly enough, and it's a drag rather than a flick. */
+  async move(dx: number, dy = 0, pause = 40) {
     const from = this.at;
     for (let step = 1; step <= 6; step++) {
+      await this.page.waitForTimeout(pause);
       this.at = { x: from.x + (dx * step) / 6, y: from.y + (dy * step) / 6 };
       await this.cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [this.at] });
     }
@@ -32,11 +38,11 @@ class Finger {
   }
 }
 
-/** Swipes the element sideways by `dx`, starting at its middle (or `startX`). */
-async function swipe(page: Page, element: ReturnType<Page["locator"]>, dx: number, startX?: number) {
+/** Swipes the element sideways by `dx`, starting at its middle (or `startX`); a `pause` of 0 flicks. */
+async function swipe(page: Page, element: ReturnType<Page["locator"]>, dx: number, startX?: number, pause?: number) {
   const box = (await element.boundingBox())!;
   const finger = await Finger.down(page, startX ?? box.x + box.width / 2, box.y + box.height / 2);
-  await finger.move(dx);
+  await finger.move(dx, 0, pause);
   await finger.up();
 }
 
@@ -104,6 +110,10 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await expect(first.locator(".row-star")).toHaveCount(0);
   await expect(page.locator(".row-swipe")).toHaveCount(0);
   await expect(home(page)).toBeHidden();
+
+  // A quick flick counts, however short, as on every phone: the first of a row's swipes.
+  await swipe(page, first, -50, undefined, 0);
+  await expect(first.locator(".unread-dot")).toHaveCount(0);
 
   // Far enough right, from the middle of a row, the card says where it goes; letting go goes there, as ‹ Home does.
   const back = await Finger.down(page, box.x + 60, box.y + box.height / 2);
