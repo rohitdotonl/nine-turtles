@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import type { Article } from "./shapes";
-  import { leftAlone, reach, swipe } from "./swipe";
+  import { leftAlone, reach, swipe, zoomed } from "./swipe";
   import { follow, settle, slideIn } from "./swipeMotion";
 
   let {
@@ -76,7 +76,7 @@
     let ignored = false;
     const start = (event: TouchEvent) => {
       below = above = undefined;
-      ignored = event.touches.length > 1 || leftAlone(event.target, within);
+      ignored = event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
     };
     const move = (event: TouchEvent) => {
       const y = event.touches[0]?.clientY;

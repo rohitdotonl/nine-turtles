@@ -2,15 +2,16 @@
   Swiped right, any screen goes back (SPEC section 20, decision 0274): a
   finger moving right from anywhere on it (not only the edge) presses the
   screen's own back button, so it goes exactly where that button says.
-  The screen follows the finger, over the one it goes back to (where the
-  back button names it with `data-behind`), and when the finger lets go it
-  slides the rest of the way off, or springs back if it wasn't far enough
-  (`swipeMotion.ts`). Going back to a screen that isn't there behind it, a
-  quiet card at the left says where ("‹ Settings") once the finger is far
-  enough; moving back takes it away. A screen with no back
-  button (Home) takes no swipe. In an app on the home screen, a stroke from
-  the left edge counts too, since iOS gives such an app no back gesture of
-  its own.
+  Only where one screen shows at a time (a phone, or a narrow window), and
+  only for a stroke on that screen. The screen follows the finger, over the
+  one it goes back to (where the back button names it with `data-behind`),
+  and when the finger lets go it slides the rest of the way off, or springs
+  back if it wasn't far enough (`swipeMotion.ts`). Going back to a screen
+  that isn't there behind it, a quiet card at the left says where
+  ("‹ Settings") once the finger is far enough; moving back takes it away.
+  A screen with no back button (Home) takes no swipe. In an app on the home
+  screen, a stroke from the left edge counts too, since iOS gives such an
+  app no back gesture of its own.
 -->
 <script lang="ts">
   import { leftAlone, reach, swipe } from "./swipe";
@@ -44,6 +45,8 @@
       allowed: (event) => {
         button = leftAlone(event.target, document.body) ? undefined : backFor(event.target);
         panes = button && panesOf(button);
+        // Only where one screen shows at a time, and the stroke is on it: beside other panes (a tablet held wide, a touch laptop), each has its own back.
+        if (!panes || !panes.screen.contains(event.target as Node) || panes.screen.getBoundingClientRect().width < innerWidth - 1) button = panes = undefined;
         return button !== undefined;
       },
       moved: (dx) => {

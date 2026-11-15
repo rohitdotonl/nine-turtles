@@ -55,7 +55,11 @@ a stroke from the left edge too.
 finger with pointer events, leaves up-and-down to the browser
 (`touch-action: pan-y pinch-zoom` on the scrolling areas, so zooming stays
 the reader's), and lets the place nearest the finger take a stroke first, so
-a row's swipe left and the screen's swipe right never both act. A back
+a row's swipe left and the screen's swipe right never both act. Zoomed in
+with two fingers (`visualViewport.scale` over 1), no swipe or pull starts
+and sideways panning is the browser's again, so a reader who zooms can still
+move about the page (the first floor). Back by swipe works only where one
+screen fills the window, for a stroke on that screen. A back
 button names the pane it goes back to (`data-behind`), so the swipe can show
 it under the screen; the glide itself is `swipeMotion.ts`. The pulls
 past an article's ends use touch events, which keep coming while the phone

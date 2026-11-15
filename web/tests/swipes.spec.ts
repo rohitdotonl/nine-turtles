@@ -58,6 +58,12 @@ async function openBlog(page: Page): Promise<void> {
 }
 
 const card = (page: Page) => page.locator(".swipe-card");
+/** Marks the element `data-glided="yes"` if a glide is ever set on it. */
+const watchGlide = (element: ReturnType<Page["locator"]>) =>
+  element.evaluate((node: HTMLElement) => {
+    // A glide shows in the row's style as its length ("320ms").
+    new MutationObserver(() => /\dms\b/.test(node.getAttribute("style") ?? "") && (node.dataset.glided = "yes")).observe(node, { attributeFilter: ["style"] });
+  });
 /** Once a stroke's glide is over, nothing is left moved. */
 const settled = (screen: ReturnType<Page["locator"]>) => expect.poll(() => screen.evaluate((node: HTMLElement) => node.style.transform)).toBe("");
 const home = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
@@ -69,16 +75,17 @@ test("a row swiped left a little is marked read, with Undo; all the way, starred
 
   // Part of the way, the room it opens names what letting go does; the row follows the finger.
   const box = (await first.boundingBox())!;
+  await watchGlide(first);
   const finger = await Finger.down(page, box.x + box.width - 60, box.y + box.height / 2);
   await finger.move(-60);
   await expect(page.locator(".row-swipe")).toHaveText("Read");
   await expect(page.locator(".row-swipe")).not.toHaveAttribute("data-armed");
   await finger.move(-80);
   await expect(page.locator(".row-swipe")).toHaveAttribute("data-armed", "");
-  expect(await first.evaluate((row) => row.style.transform)).toBe("translateX(-140px)");
+  await expect.poll(() => first.evaluate((row) => row.style.transform)).toBe("translateX(-140px)");
   await finger.up();
   // It springs back, with nothing left beside it, and the article isn't opened.
-  expect(await first.evaluate((row) => row.style.transition)).toContain("320ms");
+  await expect(first).toHaveAttribute("data-glided", "yes");
   await expect(page.locator(".row-swipe")).toHaveCount(0);
   await settled(first);
   await expect(first.locator(".unread-dot")).toHaveCount(0);
@@ -102,9 +109,11 @@ test("a row swiped left a little is marked read, with Undo; all the way, starred
   // A phone set to reduce motion: no glide, it's back at once.
   await page.emulateMedia({ reducedMotion: "reduce" });
   const third = rows(page).nth(2);
+  await watchGlide(third);
   await swipe(page, third, -140, (await third.boundingBox())!.width - 30);
-  expect(await third.evaluate((row) => row.style.transition)).toBe("");
   await expect(page.locator(".row-swipe")).toHaveCount(0);
+  await settled(third);
+  await expect(third).not.toHaveAttribute("data-glided", "yes");
 });
 
 test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a list goes back home", async ({ page }) => {
@@ -218,5 +227,42 @@ test("the Aa sheet closes when swiped down; Settings goes back home when swiped 
   const settings = page.getByRole("heading", { level: 2, name: "Settings" });
   await expect(settings).toBeVisible();
   await swipe(page, settings, 160, 80);
+  await expect(home(page)).toBeVisible();
+});
+
+test("after a swipe a key still presses; zoomed in, a stroke moves the page; beside other panes, a swipe right on one leaves the others alone", async ({ page }) => {
+  await openBlog(page);
+  // The press a swipe swallows is the finger's own, never the next key's.
+  const first = rows(page).nth(0);
+  await swipe(page, first, -140, (await first.boundingBox())!.width - 30);
+  await expect(first.locator(".unread-dot")).toHaveCount(0);
+  await first.focus();
+  await page.keyboard.press("Enter");
+  const title = pane(page).getByRole("heading", { level: 2 });
+  await expect(title).toBeVisible();
+  const reading = await title.textContent();
+
+  // Zoomed in with two fingers, a stroke sideways is the reader moving about the page: no next article, no back.
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 2 });
+  await expect.poll(() => page.evaluate(() => visualViewport?.scale ?? 1)).toBeGreaterThan(1.5);
+  for (const dx of [-160, 160]) {
+    const finger = await Finger.down(page, dx < 0 ? 300 : 80, 400);
+    await finger.move(dx);
+    await expect(card(page)).toHaveCount(0);
+    await finger.up();
+  }
+  await expect(title).toHaveText(reading!);
+  await expect(pane(page)).toBeVisible();
+  await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 1 });
+
+  // A touch screen wide enough for Settings beside the sidebar: a swipe right on the sidebar doesn't take Settings back.
+  await page.setViewportSize({ width: 1200, height: 800 });
+  await page.goto(new URL("/settings/data", FEEDS_APP).href);
+  await appReady(page);
+  const back = page.getByRole("button", { name: "Back to Settings" });
+  await expect(back).toBeVisible();
+  await swipe(page, home(page), 160, 40);
+  await expect(back).toBeVisible();
   await expect(home(page)).toBeVisible();
 });

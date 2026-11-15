@@ -61,6 +61,20 @@ const taken = new Set<number>();
 
 const standalone = () => matchMedia("(display-mode: standalone)").matches;
 
+/**
+ * Zoomed in with two fingers, a one-finger stroke moves the page about, so
+ * no swipe or pull starts, and sideways panning is the browser's again
+ * (`data-zoomed` on the page, for `.scroller` in swipes.css).
+ */
+export const zoomed = () => (visualViewport?.scale ?? 1) > 1.01;
+/** The places that take swipes, each given its sideways strokes back while zoomed. */
+const places = new Set<HTMLElement>();
+function fitZoom() {
+  document.documentElement.toggleAttribute("data-zoomed", zoomed());
+  for (const node of places) node.style.touchAction = zoomed() ? "" : "pan-y pinch-zoom";
+}
+visualViewport?.addEventListener("resize", fitZoom);
+
 /** A Svelte action: `use:swipe={hands}`. Up-and-down scrolling and zooming stay the browser's. */
 export function swipe(node: HTMLElement, hands: SwipeHands) {
   let start: { x: number; y: number; id: number; at: number } | undefined;
@@ -68,7 +82,8 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
   /** Where the finger was lately, to tell a flick from a slow lift. */
   let lately: { x: number; at: number }[] = [];
   let swallowClick = false;
-  node.style.touchAction = "pan-y pinch-zoom";
+  places.add(node);
+  fitZoom();
 
   const giveUp = () => {
     if (sideways) hands.ended(0);
@@ -78,7 +93,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
   };
   const down = (event: PointerEvent) => {
     swallowClick = false;
-    if (event.pointerType !== "touch" || !event.isPrimary) return;
+    if (event.pointerType !== "touch" || !event.isPrimary || zoomed()) return;
     if (event.clientX > innerWidth - EDGE || (event.clientX < EDGE && !(hands.fromEdge && standalone()))) return;
     if (hands.allowed && !hands.allowed(event)) return;
     start = { x: event.clientX, y: event.clientY, id: event.pointerId, at: event.timeStamp };
@@ -119,7 +134,8 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     swallowClick = true;
   };
   const click = (event: MouseEvent) => {
-    if (!swallowClick || !event.isTrusted) return;
+    // Only the finger's own click: never a key's (Enter or Space, with no press of its own) or the swipe's.
+    if (!swallowClick || !event.isTrusted || event.detail === 0) return;
     swallowClick = false;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -135,6 +151,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
       hands = next;
     },
     destroy() {
+      places.delete(node);
       node.style.touchAction = "";
       node.removeEventListener("pointerdown", down);
       node.removeEventListener("pointermove", move);
@@ -156,7 +173,7 @@ export function swipeDown(node: HTMLElement, close: () => void) {
   const down = (event: TouchEvent) => {
     const target = event.target instanceof Element ? event.target : null;
     const touch = event.touches[0];
-    start = touch && event.touches.length === 1 && node.scrollTop <= 0 && !target?.closest(FIELDS) ? { x: touch.clientX, y: touch.clientY } : undefined;
+    start = touch && event.touches.length === 1 && node.scrollTop <= 0 && !zoomed() && !target?.closest(FIELDS) ? { x: touch.clientX, y: touch.clientY } : undefined;
   };
   const up = (event: TouchEvent) => {
     const touch = event.changedTouches[0];

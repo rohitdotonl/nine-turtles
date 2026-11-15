@@ -49,7 +49,7 @@ const sourceRules = [
   [/\.animate\(/g, "the browser's animation tool"],
   [/behavior:\s*["']smooth["']/g, "smooth scrolling"],
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
-  [/\.style\.(transition|animation)\b|\b(transition|animation)\s*:\s*["'`]/g, "motion set by a script"],
+  [/\.style\.(transition|animation)\b|\b(transition|animation)\s*:\s*[\w"'`$]|style:(transition|animation)\b|setProperty\(\s*["'`](transition|animation)/g, "motion set by a script"],
 ];
 /** The swipe's glide, the one place allowed to move (Exceptions log). */
 const glide = join(root, "web/src/lib/swipeMotion.ts");

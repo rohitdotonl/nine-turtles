@@ -28,8 +28,8 @@
   font-weight: 600;
 }
 
-/* Every screen's scrolling area leaves sideways strokes to the swipes; zooming stays the reader's. */
-.scroller {
+/* Every screen's scrolling area leaves sideways strokes to the swipes; zooming stays the reader's, and once zoomed in, panning too. */
+:root:not([data-zoomed]) .scroller {
   touch-action: pan-y pinch-zoom;
 }
 

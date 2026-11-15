@@ -19,7 +19,7 @@ const DIM = 0.88;
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** The inline styles this file sets, cleared again once a stroke is done. */
-const SET = ["transition", "transform", "position", "inset", "zIndex", "boxShadow", "filter", "display"] as const;
+const SET = ["transition", "transform", "position", "inset", "width", "zIndex", "boxShadow", "filter", "display"] as const;
 function clear(node: HTMLElement) {
   for (const key of SET) node.style[key] = "";
 }
@@ -42,7 +42,8 @@ export function follow(panes: Panes, dx: number) {
   if (behind && panes.wasHidden === undefined) {
     panes.wasHidden = behind.hidden === true;
     behind.hidden = false;
-    Object.assign(behind.style, { display: "flex", position: "fixed", inset: "0", zIndex: "0" });
+    // The whole screen's width, as it will be once it's the screen, not the narrower pane it is beside others.
+    Object.assign(behind.style, { display: "flex", position: "fixed", inset: "0", width: "100%", zIndex: "0" });
   }
   Object.assign(screen.style, { transition: "", position: "relative", zIndex: "2", transform: `translateX(${dx}px)`, boxShadow: dx ? "var(--shadow-float)" : "" });
   if (!behind) return;
