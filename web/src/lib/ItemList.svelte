@@ -62,7 +62,7 @@
   import { nothingNewSince } from "./times";
   import ItemRow from "./ItemRow.svelte";
   import RowMenu from "./RowMenu.svelte";
-  import { rowMenu } from "./rowMenu";
+  import { rowMenu, rowSwipes } from "./rowMenu";
   import type { MenuGroup } from "./MoreMenu.svelte";
   import { listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
@@ -391,10 +391,10 @@
     return true;
   }
 
-  /** Whether `move(step)` has an article to move to; on a phone, the article's Previous and Next say so. */
-  export function canMove(step: 1 | -1): boolean {
+  /** The article `move(step)` goes to (Previous is -1, Next 1), if there's one listed: on a phone, the article's Previous and Next say so, and its swipe names it (decision 0274). */
+  export function neighbour(step: 1 | -1): Article | undefined {
     const index = selectedIndex === -1 ? 0 : selectedIndex + step;
-    return index >= 0 && index < articles.length;
+    return index >= 0 && index < articles.length ? articles[index] : undefined;
   }
 
   /** "Skip to articles": the keyboard goes to the selected article, or the first. False with none listed. */
@@ -687,6 +687,7 @@
           onOpen={(byKeyboard) => (select(index), onChoose(byKeyboard))}
           onMenu={(x, y) => openMenu(index, x, y)}
           onStep={(step) => move(step) && focusSelected()}
+          swipes={rowSwipes(article, unreadOff, { star: toggleStar, read: markUnread })}
         />
       </li>
     {/each}

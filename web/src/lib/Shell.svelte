@@ -1180,8 +1180,8 @@
                 ? {
                     onPrevious: () => move("move", -1),
                     onNext: () => move("move", 1),
-                    hasPrevious: itemList?.canMove(-1) ?? false,
-                    hasNext: itemList?.canMove(1) ?? false,
+                    previous: itemList?.neighbour(-1),
+                    next: itemList?.neighbour(1),
                   }
                 : undefined}
             />

@@ -6,7 +6,8 @@
   article behind it.
 
   On a computer it is a small panel under its Aa button; on a phone, a sheet
-  along the bottom of the screen with its own Close button. It isn't modal:
+  along the bottom of the screen with its own Close button, which a swipe
+  down closes too (decision 0274). It isn't modal:
   the article stays readable and usable around it. Escape closes it and puts
   the keyboard back on the Aa button; a press outside it, or the keyboard
   leaving it, closes it too.
@@ -15,6 +16,7 @@
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
   import TextSize from "./TextSize.svelte";
+  import { swipeDown } from "./swipe";
   import { PAGES, swatch } from "./themes";
   import { READING_FONTS, type Preferences } from "./preferences";
 
@@ -65,6 +67,7 @@
   aria-label="Reading appearance"
   tabindex="-1"
   bind:this={panel}
+  use:swipeDown={() => onClose(true)}
   onkeydown={(event) => {
     if (event.key !== "Escape") return;
     // Handled here, so the app's own Escape (back to the list) waits for the next press.

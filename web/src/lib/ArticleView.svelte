@@ -32,6 +32,7 @@
   import { edge } from "./edge";
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
+  import ArticleSwipe from "./ArticleSwipe.svelte";
   import TextButton from "./TextButton.svelte";
   import LateLine from "./LateLine.svelte";
   import AwayNote from "./AwayNote.svelte";
@@ -91,12 +92,7 @@
     /** The list to go back to, by its name: on a phone's top bar, and one thing at a time on a computer (decision 0269), at the start of the article's bar. */
     back?: { name: string; onBack: () => void };
     /** On a phone-narrow window: moving to the previous or next article. */
-    phone?: {
-      onPrevious: () => void;
-      onNext: () => void;
-      hasPrevious: boolean;
-      hasNext: boolean;
-    };
+    phone?: { onPrevious: () => void; onNext: () => void; previous?: Article; next?: Article };
     /** How many pane buttons sit at the start of the top bar (on a computer), to keep clear of. */
     toggles?: number;
     onStar: () => void;
@@ -681,6 +677,7 @@
     {@render beforeToolbar()}
   {/if}
   {#if phone}
+    <ArticleSwipe area={scroller} previous={phone.previous} next={phone.next} onPrevious={phone.onPrevious} onNext={phone.onNext} />
     <!--
       Within thumb reach: quiet icons, each named for screen readers, above a
       hairline so the text ends at an edge rather than being sliced. Two
@@ -701,10 +698,10 @@
         {@render starIcon()}
       </button>
       <span aria-hidden="true" class="toolbar-rule"></span>
-      <button type="button" aria-label="Previous" aria-disabled={!phone.hasPrevious} onclick={() => phone.hasPrevious && phone.onPrevious()}>
+      <button type="button" aria-label="Previous" aria-disabled={!phone.previous} onclick={() => phone.previous && phone.onPrevious()}>
         <Icon name="chevron-up" size="alone" />
       </button>
-      <button type="button" aria-label="Next" aria-disabled={!phone.hasNext} onclick={() => phone.hasNext && phone.onNext()}>
+      <button type="button" aria-label="Next" aria-disabled={!phone.next} onclick={() => phone.next && phone.onNext()}>
         <Icon name="chevron-down" size="alone" />
       </button>
     </div>

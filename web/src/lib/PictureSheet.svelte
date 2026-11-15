@@ -4,7 +4,8 @@
   all round (never larger than it really is), its alt text under it as a
   caption in the second ink, and a quiet "Open in new tab" to the picture's
   own address. It's a picture you only look at, so it closes with an X
-  (DESIGN.md → "One close rule"), Escape, or a press on the dim; the page
+  (DESIGN.md → "One close rule"), Escape, a press on the dim, or on a touch
+  screen a swipe down (decision 0274); the page
   then gives the keyboard back to the picture (or to the article's title, if
   it no longer opens larger). The sheet is drawn outside the article, so it
   carries the article's language itself, as the article does, and its own
@@ -18,6 +19,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import { swipeDown } from "./swipe";
 
   let {
     src,
@@ -63,6 +65,7 @@
 
 <dialog
   bind:this={dialog}
+  use:swipeDown={close}
   aria-label={caption ? `Picture: ${caption}` : "Picture"}
   {lang}
   oncancel={cancel}
