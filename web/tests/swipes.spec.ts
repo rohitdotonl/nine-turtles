@@ -23,12 +23,12 @@ class Finger {
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
     return new Finger(page, cdp, { x, y });
   }
-  /** Moves in six steps, `pause` milliseconds apart: slowly enough, and it's a drag rather than a flick. */
-  async move(dx: number, dy = 0, pause = 40) {
+  /** Moves in `steps` steps, `pause` milliseconds apart: slowly enough, and it's a drag rather than a flick. */
+  async move(dx: number, dy = 0, pause = 40, steps = 6) {
     const from = this.at;
-    for (let step = 1; step <= 6; step++) {
+    for (let step = 1; step <= steps; step++) {
       await this.page.waitForTimeout(pause);
-      this.at = { x: from.x + (dx * step) / 6, y: from.y + (dy * step) / 6 };
+      this.at = { x: from.x + (dx * step) / steps, y: from.y + (dy * step) / steps };
       await this.cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [this.at] });
     }
   }
@@ -42,7 +42,7 @@ class Finger {
 async function swipe(page: Page, element: ReturnType<Page["locator"]>, dx: number, startX?: number, pause?: number) {
   const box = (await element.boundingBox())!;
   const finger = await Finger.down(page, startX ?? box.x + box.width / 2, box.y + box.height / 2);
-  await finger.move(dx, 0, pause);
+  await finger.move(dx, 0, pause, pause === 0 ? 2 : 6);
   await finger.up();
 }
 

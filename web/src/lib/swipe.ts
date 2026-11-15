@@ -83,7 +83,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     if (hands.allowed && !hands.allowed(event)) return;
     start = { x: event.clientX, y: event.clientY, id: event.pointerId, at: event.timeStamp };
     sideways = false;
-    lately = [];
+    lately = [{ x: event.clientX, at: event.timeStamp }];
   };
   const move = (event: PointerEvent) => {
     if (!start || event.pointerId !== start.id) return;
