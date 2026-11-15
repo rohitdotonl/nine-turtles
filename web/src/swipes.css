@@ -1,0 +1,80 @@
+/*
+  Swipes on a touch screen (SPEC section 20, decision 0274). A list's row
+  follows a finger to the left; the room it opens on the right shows what
+  letting go does, in the pointer's faint tone: the icon and word in the
+  second ink, then in the ink (and the star filled) once the finger is far
+  enough. When the finger lifts, the row springs back (`swipeMotion.ts`).
+*/
+.item-list > li {
+  position: relative;
+}
+.row-swipe {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  overflow: hidden;
+  white-space: nowrap;
+  width: calc(var(--pulled) + var(--pill-inset, 0.5rem));
+  padding-inline: 1.25rem;
+  background-color: var(--fill);
+  color: var(--muted);
+  font-size: var(--text-ui);
+}
+.row-swipe[data-armed] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Every screen's scrolling area leaves sideways strokes to the swipes; zooming stays the reader's, and once zoomed in, panning too. */
+:root:not([data-zoomed]) .scroller {
+  touch-action: pan-y pinch-zoom;
+}
+
+/*
+  Once a swipe is far enough, a quiet card at the side says where letting go
+  takes you, where the screen under the one being dragged doesn't: back
+  within one place ("‹ Settings", at the left) or on ("Next" and the next
+  article's title, at the right), or that there's no next one. It's only
+  seen; the back button and Next say the same in words.
+*/
+.swipe-card {
+  position: fixed;
+  top: 40%;
+  z-index: 60;
+  max-width: min(16rem, 70vw);
+  padding: 0.75rem 1rem;
+  background-color: var(--surface-raised);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+  font-size: var(--text-meta);
+  line-height: var(--text-meta--line-height);
+}
+.swipe-card[data-side="next"] {
+  right: 0;
+  border-radius: var(--radius-hold) 0 0 var(--radius-hold);
+  text-align: right;
+}
+.swipe-card[data-side="back"] {
+  left: 0;
+  border-radius: 0 var(--radius-hold) var(--radius-hold) 0;
+}
+.swipe-card strong {
+  display: block;
+  font-size: var(--text-ui);
+}
+.swipe-card:is([data-side="below"], [data-side="above"]) {
+  left: 50%;
+  translate: -50% 0;
+  border-radius: var(--radius-hold);
+  text-align: center;
+}
+.swipe-card[data-side="above"] {
+  top: 20%;
+}
+.swipe-card[data-side="below"] {
+  top: auto;
+  bottom: 20%;
+}

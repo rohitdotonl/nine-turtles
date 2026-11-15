@@ -23,6 +23,16 @@ export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, o
   return [{ items: own }, ...others.filter((group) => group.items.length > 0)];
 }
 
+/** What a swipe left on a row can do: its word and icon, shown in the room it opens, and what letting go does. */
+export type RowSwipe = { word: string; icon: "check" | "dot" | "star"; run(): void };
+
+/** A row's swipe left on a touch screen (SPEC section 20, decision 0274), nearest first: a little way marks it read or unread (not with Unread off), all the way stars or unstars it, as its menu does. */
+export function rowSwipes(article: Article, unreadOff: boolean, hands: RowHands): [RowSwipe, ...RowSwipe[]] {
+  const star: RowSwipe = { word: article.starred ? "Unstar" : "Star", icon: "star", run: () => hands.star(article) };
+  if (unreadOff) return [star];
+  return [{ word: article.read ? "Unread" : "Read", icon: article.read ? "dot" : "check", run: () => hands.read(article, !article.read) }, star];
+}
+
 /** What the reader knows of whoever wrote it (`LoadedLibrary`). */
 type Library = { feeds?: Feed[]; shownAs(feed: Feed | undefined): Feed | undefined; rowOf(id: number): number };
 

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "./fonts.css";
 @import "./themes.css";
-
+@source not "./lib/swipeMotion.ts"; /* The swipe's glide sets its own motion; its words aren't classes to make (DESIGN.md → Exceptions log). */
 /*
   Colors come from DESIGN.md → "Color". The backgrounds and the "where you are" accent
   are DESIGN.md's values; the three areas are told apart by tone (the reading

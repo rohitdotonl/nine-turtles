@@ -46,7 +46,8 @@
     <!-- One top for every screen below home (DESIGN.md → "The system"): Back in the top line's own height, the title on the line under it. -->
     <div class={["mx-auto flex w-full min-w-0 flex-col items-start pb-2", column]}>
       <div class="top-back">
-        <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} class="btn-quiet nav-back -ml-2 text-ink-2"
+        <!-- Back to Home, a phone's swipe drags this screen off the sidebar (SwipeBack.svelte). -->
+        <button type="button" onclick={onBack} aria-label={`Back to ${backTo}`} title={`Back to ${backTo} (Esc)`} data-behind={backTo === "Home" ? "sidebar" : undefined} class="btn-quiet nav-back -ml-2 text-ink-2"
           ><Icon name="back" size="alone" /><bdi>{backTo}</bdi></button
         >
       </div>

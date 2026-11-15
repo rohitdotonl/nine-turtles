@@ -15,6 +15,7 @@
 -->
 <script lang="ts">
   import Shell from "./lib/Shell.svelte";
+  import SwipeBack from "./lib/SwipeBack.svelte";
   import SignIn from "./lib/SignIn.svelte";
   import SignUp from "./lib/SignUp.svelte";
   import ResetPassword from "./lib/ResetPassword.svelte";
@@ -121,6 +122,7 @@
     passkeys={session.passkeys ?? null}
     onSignedOut={signedOut}
   />
+  <SwipeBack />
 {:else if session && path === SIGN_UP_PAGE}
   <SignUp onSignedIn={check} />
 {:else if session}

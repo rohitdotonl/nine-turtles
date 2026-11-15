@@ -10,6 +10,7 @@ import "./pressed.css";
 import "./print.css";
 import "./opening.css";
 import "./one-thing.css";
+import "./swipes.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";

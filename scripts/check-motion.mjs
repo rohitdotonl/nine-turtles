@@ -1,6 +1,9 @@
 // "No motion" (DESIGN.md): fails if any animation or transition appears in
 // the built styles, or if the frontend code uses Svelte's or the browser's
-// animation tools. Views switch instantly.
+// animation tools or sets motion itself. Views switch instantly. The one
+// exception (DESIGN.md → Exceptions log, decision 0274): a swipe's short
+// glide once the finger lets go, set only in `web/src/lib/swipeMotion.ts`,
+// which must leave it out for a reader who asks for reduced motion.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -46,16 +49,22 @@ const sourceRules = [
   [/\.animate\(/g, "the browser's animation tool"],
   [/behavior:\s*["']smooth["']/g, "smooth scrolling"],
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
+  [/\.style\.(transition|animation)\b|\b(transition|animation)\s*:\s*[\w"'`$]|style:(transition|animation)\b|setProperty\(\s*["'`](transition|animation)/g, "motion set by a script"],
 ];
+/** The swipe's glide, the one place allowed to move (Exceptions log). */
+const glide = join(root, "web/src/lib/swipeMotion.ts");
+if (!websiteOnly && !readFileSync(glide, "utf8").includes("prefers-reduced-motion: reduce")) {
+  problems.push(`${relative(root, glide)}: the swipe's glide must stop for a reader who asks for reduced motion`);
+}
 for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
-  if (file.endsWith(".test.ts")) continue;
+  if (file.endsWith(".test.ts") || file === glide) continue;
   scan(file, sourceRules);
   // Also name the source file a built style came from, so it's easy to find.
   if (file.endsWith(".css") || file.endsWith(".svelte")) scan(file, cssRules);
 }
 
 if (problems.length > 0) {
-  console.error("No-motion check failed. nine turtles never animates:\n" + problems.map((p) => `  - ${p}`).join("\n"));
+  console.error("No-motion check failed. nine turtles never animates (but for a swipe's glide, swipeMotion.ts):\n" + problems.map((p) => `  - ${p}`).join("\n"));
   process.exit(1);
 }
 console.log("No-motion check passed.");

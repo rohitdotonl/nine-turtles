@@ -130,7 +130,7 @@
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if route.settings}
       <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
-      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
+      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
       <h2 bind:this={settingsHeading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
       <div class="mt-4">
         <WhoSettings {feed} {library} {onSaved} {onFolders} {onHide} {onUnsubscribe}>
