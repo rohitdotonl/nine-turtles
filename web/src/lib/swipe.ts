@@ -1,11 +1,12 @@
-// Swipes on a touch screen (SPEC section 20, decision 0274), one rule: a
-// finger swiped right goes back, as the back button does, and swiped left
-// goes on (the next article, or what a row's menu does to it). Each is only
-// a shortcut for a button that's already there. Only a finger counts, never
-// a mouse or a pen; a stroke more up and down than sideways is a scroll, and
-// one at the screen's right edge is the phone's own. While the finger moves,
-// what follows it is the reader moving it; once it lifts, the stroke finishes
-// with a short glide (`swipeMotion.ts`, DESIGN.md → Exceptions log).
+// Swipes on a touch screen (SPEC section 20, decision 0274): a finger swiped
+// right goes back, as the back button does, and a row swiped left gets what
+// its menu does to it (an article's next and previous are pulls past its
+// ends, `ArticleSwipe.svelte`). Each is only a shortcut for a button that's
+// already there. Only a finger counts, never a mouse or a pen; a stroke more
+// up and down than sideways is a scroll, and one at the screen's right edge
+// is the phone's own. While the finger moves, what follows it is the reader
+// moving it; once it lifts, the stroke finishes with a short glide
+// (`swipeMotion.ts`, DESIGN.md → Exceptions log).
 
 import { HOLD_MS } from "./sidebarDrag";
 
@@ -17,7 +18,7 @@ const DECIDE = 10;
 const FLICK = 0.6;
 
 export type SwipeHands = {
-  /** The one way this place takes a swipe: 1 is right (back), -1 is left (on). */
+  /** The one way this place takes a swipe: 1 is right (back), -1 is left (a row's marks). */
   side: 1 | -1;
   /**
    * Whether a stroke may start at the screen's left edge. In Safari that edge

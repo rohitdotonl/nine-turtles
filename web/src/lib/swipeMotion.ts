@@ -1,11 +1,12 @@
 // The one place nine turtles moves by itself (DESIGN.md → Exceptions log,
-// decision 0274): when a finger lets go of a swipe, the screen it was
-// dragging finishes the stroke. Gone far enough, it slides the rest of the
-// way off (and the next article slides in); not far enough, it springs
-// back. While the finger is down, everything follows it exactly, as the
-// reader moves it. A phone set to reduce motion gets no glide: everything
-// lands at once, as every other part of the app does. `scripts/check-motion.mjs`
-// allows motion in this file and nowhere else.
+// decisions 0274 and 0276): when a finger lets go of a swipe, the screen it
+// was dragging finishes the stroke. Gone far enough, it slides the rest of
+// the way off; not far enough, it springs back. An article opened by a pull
+// past its end or top comes in the way it was pulled. While the finger is
+// down, everything follows it exactly, as the reader moves it. A phone set
+// to reduce motion gets no glide: everything lands at once, as every other
+// part of the app does. `scripts/check-motion.mjs` allows motion in this
+// file and nowhere else.
 
 /** How long letting go takes to finish: about a third of a second, quick enough not to wait for. */
 export const SETTLE_MS = 320;
@@ -75,13 +76,16 @@ export function settle(panes: Panes, to: number, done: () => void) {
   );
 }
 
-/** A new screen slides in, as a page turns: the next from the right (1), the previous from the left (-1). */
-export function slideIn(screen: HTMLElement, side: 1 | -1 = 1) {
+/** Where a new screen comes in from: the way the finger sent the last one. */
+const FROM = { below: () => `translateY(${innerHeight}px)`, above: () => `translateY(${-innerHeight}px)` };
+
+/** A new article slides in from `from`: from below after a pull up past the end, from above after a pull down past the top. */
+export function slideIn(screen: HTMLElement, from: keyof typeof FROM) {
   if (still()) return;
-  Object.assign(screen.style, { transition: "", position: "relative", transform: `translateX(${side * innerWidth}px)` });
+  Object.assign(screen.style, { transition: "", position: "relative", transform: FROM[from]() });
   // Laid out where it starts, so the glide has somewhere to go from.
   void screen.offsetWidth;
-  glide([screen], () => (screen.style.transform = "translateX(0)"), () => clear(screen));
+  glide([screen], () => (screen.style.transform = "none"), () => clear(screen));
 }
 
 /** A row let go of springs back under the finger's room (`room`, which closes as it does); `change` puts them back, then `done`. */

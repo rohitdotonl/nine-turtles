@@ -34,11 +34,25 @@
 }
 
 /*
-  Once a swipe is far enough, a quiet card at the side says where letting go
+  A pull past an article's top opens the previous one, so the browser's own
+  pull to refresh (Chrome on Android) never takes it: a scrolling area's
+  pull stays its own, and the page as a whole never refreshes on a pull,
+  which nine turtles never needs (new articles come in by themselves, and
+  "nothing pulls", decision 0274).
+*/
+.scroller {
+  overscroll-behavior-y: contain;
+}
+html {
+  overscroll-behavior-y: none;
+}
+
+/*
+  Once a swipe or pull is far enough, a quiet card says where letting go
   takes you, where the screen under the one being dragged doesn't: back
-  within one place ("‹ Settings", at the left) or on ("Next" and the next
-  article's title, at the right), or that there's no next one. It's only
-  seen; the back button and Next say the same in words.
+  within one place ("‹ Settings", at the left), or the next or previous
+  article (its title, above or below the text), or that there's none. It's
+  only seen; the back button, Next and Previous say the same in words.
 */
 .swipe-card {
   position: fixed;
@@ -52,11 +66,6 @@
   font-size: var(--text-meta);
   line-height: var(--text-meta--line-height);
 }
-.swipe-card[data-side="next"] {
-  right: 0;
-  border-radius: var(--radius-hold) 0 0 var(--radius-hold);
-  text-align: right;
-}
 .swipe-card[data-side="back"] {
   left: 0;
   border-radius: 0 var(--radius-hold) var(--radius-hold) 0;
@@ -64,6 +73,11 @@
 .swipe-card strong {
   display: block;
   font-size: var(--text-ui);
+}
+.swipe-card-by {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--ink-2);
 }
 .swipe-card:is([data-side="below"], [data-side="above"]) {
   left: 50%;

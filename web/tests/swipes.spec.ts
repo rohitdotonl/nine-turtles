@@ -64,6 +64,22 @@ const watchGlide = (element: ReturnType<Page["locator"]>) =>
     // A glide shows in the row's style as its length ("320ms").
     new MutationObserver(() => /\dms\b/.test(node.getAttribute("style") ?? "") && (node.dataset.glided = "yes")).observe(node, { attributeFilter: ["style"] });
   });
+/** A pull's card: where, the article's title, and who wrote it (the made-up blogs name no writer, so their feed's name). */
+const named = (where: string, title = "") => new RegExp(`^${where}${title.replace(/[()]/g, "\\$&")}\\s*Blog sw-[\\d-]+$`);
+/** Marks the element with where it was first moved from (`data-slid`), until it's watched again. */
+const watchSlide = (element: ReturnType<Page["locator"]>) =>
+  element.evaluate((node: HTMLElement) => {
+    delete node.dataset.slid;
+    // Each change's style before it, then as it is now: the first that moved it.
+    const watch = new MutationObserver((changes) => {
+      const seen = [...changes.map((change) => change.oldValue ?? ""), node.getAttribute("style") ?? ""];
+      const first = seen.map((style) => /transform: ([^;]+)/.exec(style)?.[1]).find((moved) => moved && moved !== "none");
+      if (!first) return;
+      node.dataset.slid = first;
+      watch.disconnect();
+    });
+    watch.observe(node, { attributeFilter: ["style"], attributeOldValue: true });
+  });
 /** Once a stroke's glide is over, nothing is left moved. */
 const settled = (screen: ReturnType<Page["locator"]>) => expect.poll(() => screen.evaluate((node: HTMLElement) => node.style.transform)).toBe("");
 const home = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
@@ -149,7 +165,7 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await expect(home(page)).toBeVisible();
 });
 
-test("in an article, a swipe left opens the next one, a pull past either end the next or previous, and a swipe right goes back", async ({ page }) => {
+test("in an article, a pull past its end opens the next one and past its top the previous one, each sliding in that way; a swipe left does nothing; a swipe right goes back", async ({ page }) => {
   await openBlog(page);
   const titles = (await rows(page).locator(".title").allTextContents()).map((title) => title.replace(/, unread$/, "").trim());
   await rows(page).nth(0).click();
@@ -158,25 +174,44 @@ test("in an article, a swipe left opens the next one, a pull past either end the
   const text = pane(page).locator(".reading-scroller");
   const box = (await text.boundingBox())!;
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  // The browser's own pull to refresh never takes a pull.
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).overscrollBehaviorY)).toBe("none");
+  expect(await text.evaluate((area) => getComputedStyle(area).overscrollBehaviorY)).toBe("contain");
 
-  // Far enough left, the article follows the finger and a card at the side names the next one; moving back takes it away.
-  const finger = await Finger.down(page, middle.x + 100, middle.y);
-  await finger.move(-150);
-  await expect.poll(() => pane(page).evaluate((node) => node.style.transform)).toBe("translateX(-150px)");
-  await expect(card(page)).toHaveText(`Next${titles[1]}`);
-  await finger.move(120);
+  // Sideways is only for going back: swiped left, the article stays as it is.
+  const left = await Finger.down(page, middle.x + 100, middle.y);
+  await left.move(-160);
   await expect(card(page)).toHaveCount(0);
-  await finger.move(-120);
-  await finger.up();
+  expect(await pane(page).evaluate((node) => node.style.transform)).toBe("");
+  await left.up();
+  await expect(heading(titles[0])).toBeVisible();
+
+  // Pulled up past its end, a card names the next one; moving back takes it away; letting go far enough, it rises from below.
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  const back = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await back.move(0, -200);
+  await expect(card(page)).toHaveText(named("Next", titles[1]));
+  await back.move(0, 200);
+  await expect(card(page)).toHaveCount(0);
+  await back.up();
+  await expect(heading(titles[0])).toBeVisible();
+  await watchSlide(pane(page));
+  const up = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await up.move(0, -200);
+  await expect(card(page)).toHaveText(named("Next", titles[1]));
+  await up.up();
   await expect(heading(titles[1])).toBeVisible();
+  await expect(pane(page)).toHaveAttribute("data-slid", /^translateY\(\d/);
   await settled(pane(page));
 
-  // Pulled down past its top: the previous one, named first.
+  // Pulled down past its top: the previous one, named first, coming down from above.
+  await watchSlide(pane(page));
   const down = await Finger.down(page, middle.x, box.y + 80);
   await down.move(0, 200);
-  await expect(card(page)).toHaveText(`Previous${titles[0]}`);
+  await expect(card(page)).toHaveText(named("Previous", titles[0]));
   await down.up();
   await expect(heading(titles[0])).toBeVisible();
+  await expect(pane(page)).toHaveAttribute("data-slid", /^translateY\(-/);
   await settled(pane(page));
   // Nothing before the first: the card says so, and letting go stays.
   const none = await Finger.down(page, middle.x, box.y + 80);
@@ -185,19 +220,28 @@ test("in an article, a swipe left opens the next one, a pull past either end the
   await none.up();
   await expect(heading(titles[0])).toBeVisible();
 
-  // Pulled up past its end: the next one.
-  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
-  const up = await Finger.down(page, middle.x, box.y + box.height - 60);
-  await up.move(0, -200);
-  await expect(card(page)).toHaveText(`Next${titles[1]}`);
-  await up.up();
-  await expect(heading(titles[1])).toBeVisible();
-  await settled(pane(page));
-
   // Swiped right: back to the list, as its back button says.
   await swipe(page, text, 160, middle.x - 100);
   await expect(pane(page)).toBeHidden();
   await expect(rows(page).first()).toBeVisible();
+});
+
+test("a pull's card names who wrote the article, when its feed names a writer", async ({ page }) => {
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/shelf/field-notes/sw-${test.info().workerIndex}-${Date.now()}/feed.xml`);
+  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await rows(page).nth(0).click();
+  const text = pane(page).locator(".reading-scroller");
+  const box = (await text.boundingBox())!;
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  const up = await Finger.down(page, box.x + box.width / 2, box.y + box.height - 60);
+  await up.move(0, -200);
+  await expect(card(page).locator(".swipe-card-by")).toHaveText("Maren Holt");
+  await up.move(0, 200);
+  await up.up();
 });
 
 test("the Aa sheet closes when swiped down; Settings goes back home when swiped right", async ({ page }) => {
