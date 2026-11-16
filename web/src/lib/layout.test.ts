@@ -9,18 +9,20 @@ describe("layout", () => {
   });
 
   // Decision 0275: one thing at a time, on a computer as on a phone.
+  // Decision 0282: there's no hiding the sidebar on a computer; only reading puts it away.
   it("on a computer, shows the list alone beside the sidebar, then the article alone", () => {
     for (const width of ["wide", "medium"] as const) {
-      expect(panesFor(width, "auto")).toEqual({ sidebar: true, list: true, article: false });
-      expect(panesFor(width, "hidden")).toEqual({ sidebar: false, list: true, article: false });
-      expect(panesFor(width, "auto", true)).toEqual({ sidebar: false, list: false, article: true });
+      for (const home of [true, false]) {
+        expect(panesFor(width, home)).toEqual({ sidebar: true, list: true, article: false });
+        expect(panesFor(width, home, true)).toEqual({ sidebar: false, list: false, article: true });
+      }
     }
   });
 
   it("shows one area at a time on a phone-narrow window, starting with the sidebar", () => {
-    expect(panesFor("narrow", "auto")).toEqual({ sidebar: true, list: false, article: false });
-    expect(panesFor("narrow", "hidden")).toEqual({ sidebar: false, list: true, article: false });
-    expect(panesFor("narrow", "hidden", true)).toEqual({ sidebar: false, list: false, article: true });
+    expect(panesFor("narrow", true)).toEqual({ sidebar: true, list: false, article: false });
+    expect(panesFor("narrow", false)).toEqual({ sidebar: false, list: true, article: false });
+    expect(panesFor("narrow", false, true)).toEqual({ sidebar: false, list: false, article: true });
   });
 });
 
@@ -65,38 +67,19 @@ describe("the screen's layout", () => {
     expect(layout.moved).toBe(true);
   });
 
-  it("toggles the sidebar, saying whether it hid", () => {
-    const layout = new ScreenLayout("wide", () => false, true);
-    expect(layout.toggleSidebar()).toBe(true);
-    expect(layout.panes.sidebar).toBe(false);
-    expect(layout.toggleSidebar()).toBe(false);
-    expect(layout.panes).toEqual({ sidebar: true, list: true, article: false });
-  });
-
   it("fills a computer's window with a person's page too, and leaves a phone's list in place", () => {
     expect(new ScreenLayout("wide", () => false, false, () => true).panes).toEqual({ sidebar: false, list: false, article: true });
     expect(new ScreenLayout("narrow", () => false, false, () => true).panes).toEqual({ sidebar: false, list: true, article: false });
   });
 
   it("goes back to what suits the width when the window crosses a breakpoint", () => {
-    const layout = new ScreenLayout("wide", () => false, true);
-    layout.toggleSidebar();
+    const layout = new ScreenLayout("narrow", () => false, false);
     layout.resized("medium");
-    expect(layout.sidebarChoice).toBe("auto");
     expect(layout.phone).toBe(false);
+    expect(layout.panes).toEqual({ sidebar: true, list: true, article: false });
     layout.resized("narrow");
     expect(layout.phone).toBe(true);
-  });
-
-  it("carries a hidden sidebar across a version switch, except on a phone", () => {
-    const before = new ScreenLayout("wide", () => false, true);
-    before.toggleSidebar();
-    const after = new ScreenLayout("wide", () => false, true);
-    after.putBack(before.carried());
-    expect(after.panes).toEqual({ sidebar: false, list: true, article: false });
-    const phone = new ScreenLayout("narrow", () => false, true);
-    phone.putBack(before.carried());
-    expect(phone.panes.sidebar).toBe(true);
+    expect(layout.panes.sidebar).toBe(true);
   });
 
   it("keeps the sidebar's dragged width on this device", () => {

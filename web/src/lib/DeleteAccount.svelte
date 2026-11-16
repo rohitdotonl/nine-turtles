@@ -31,7 +31,6 @@
     heading = $bindable(),
     sheet = false,
     data = false,
-    besideToggle = false,
     onDeleted,
     onCancel,
   }: {
@@ -40,7 +39,6 @@
     sheet?: boolean;
     /** Delete the reader's data, keeping their account, instead of the account. */
     data?: boolean;
-    besideToggle?: boolean;
     onDeleted: () => void;
     onCancel: () => void;
   } = $props();
@@ -155,7 +153,7 @@
 {:else}
   <section aria-labelledby="list-heading" class="page-sheet">
     <div class="page-sheet-card">
-      <PageHead title={TITLE} bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+      <PageHead title={TITLE} bind:heading onClose={onCancel} closeLabel="Close" />
       <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 pb-10 md:px-10">
         <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
           {@render body()}

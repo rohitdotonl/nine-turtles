@@ -14,7 +14,6 @@ const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" }
 const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
 // The reading area: an article, or the welcome on a nine turtles with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|Hello\. Who would you like to read\?)$/ });
-const toggle = (page: Page) => page.getByRole("button", { name: "Sidebar" });
 
 test("a wide or medium window shows the sidebar and the list, one thing at a time; a phone-narrow one one area", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -36,37 +35,14 @@ test("a wide or medium window shows the sidebar and the list, one thing at a tim
   await expect(readingArea(page)).toBeHidden();
 });
 
-test("its button hides and shows the sidebar; its button sits on the sidebar, then waits at the top left", async ({ page }) => {
+test("on a computer the sidebar always shows beside the list: there's no button to hide it (decision 0282)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "On a phone the sidebar is the home screen.");
   await page.setViewportSize({ width: 1280, height: 800 });
+  // A tab left open on an older version, with the sidebar hidden, switches to this one with it showing.
+  await page.addInitScript(() => sessionStorage.setItem("nine-turtles-switched", JSON.stringify({ keyboard: false, sidebar: "hidden", lastPlace: "/", sidebarScroll: 0 })));
   await openApp(page);
-  const shown = (await toggle(page).boundingBox())!;
-  const pane = (await sidebar(page).boundingBox())!;
-  // At the right end of the sidebar's own top line, across from the wordmark.
-  expect(shown.x + shown.width).toBeLessThanOrEqual(pane.x + pane.width);
-  expect(shown.x).toBeGreaterThan(pane.x + pane.width / 2);
-
-  // Hiding the sidebar with the keyboard leaves it on the sidebar button or the list itself,
-  // never on the list's title (decision 0038).
-  await toggle(page).focus();
-  await page.keyboard.press("Enter");
-  await expect(sidebar(page)).toBeHidden();
-  await expect(toggle(page)).toHaveAttribute("aria-expanded", "false");
-  expect((await toggle(page).boundingBox())!.x).toBeLessThan(20);
-  await expect(page.locator("#list-heading")).not.toBeFocused();
-  expect(
-    await page.evaluate(() => {
-      const focused = document.activeElement;
-      return focused?.getAttribute("aria-label") === "Sidebar" || focused?.closest("li") !== null;
-    }),
-  ).toBe(true);
-
-  await toggle(page).click();
   await expect(sidebar(page)).toBeVisible();
-  expect(await toggle(page).boundingBox()).toEqual(shown);
-
-  // The button does the same with a click.
-  await toggle(page).click();
-  await expect(sidebar(page)).toBeHidden();
+  await expect(page.getByRole("button", { name: /sidebar/i })).toHaveCount(0);
 });
 
 
@@ -445,18 +421,16 @@ test("every font comes from nine turtles itself", async ({ page }) => {
   expect(new Set(fontOrigins)).toEqual(new Set([new URL(page.url()).origin]));
 });
 
-test("nothing scrolls underneath the Sidebar button", async ({ page }) => {
+test("a long page scrolls only inside its own box, under its top line", async ({ page }) => {
   await page.setViewportSize({ width: 640, height: 400 });
   await openApp(page, "/settings");
   // Settings is longer than this window, so it scrolls, but only inside its
-  // own box, which starts below the band where the Sidebar button sits.
+  // own box, which starts below the band of the top line.
   const scroller = page.getByRole("region", { name: "Settings" }).locator(".overflow-y-auto");
   expect(await scroller.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true);
   const scrollingTop = (await scroller.boundingBox())!.y;
-  if (await toggle(page).isVisible()) {
-    const box = (await toggle(page).boundingBox())!;
-    expect(box.y + box.height).toBeLessThanOrEqual(scrollingTop);
-  }
+  const bar = (await page.getByRole("region", { name: "Settings" }).locator(".pane-bar").first().boundingBox())!;
+  expect(bar.y + bar.height).toBeLessThanOrEqual(scrollingTop + 1);
   // A faint line appears under the top line only once something has scrolled under it.
   await expect(scroller).not.toHaveAttribute("data-scrolled");
   await scroller.evaluate((element) => element.scrollBy(0, 200));
@@ -519,15 +493,12 @@ test("Add a person or publication opens as a sheet over the list you were on: a 
   await expect(sidebar(page).getByRole("link", { name: "Add a person or publication" })).not.toHaveAttribute("aria-current");
 });
 
-test("the chrome never advertises shortcuts: no hint under the list, with the sidebar shown or hidden; ? still opens them", async ({ page, isMobile }) => {
+test("the chrome never advertises shortcuts: no hint under the list; ? still opens them", async ({ page, isMobile }) => {
   test.skip(isMobile, "Shortcuts are for screens with a keyboard.");
-  // Medium: the sidebar shows (decision 0275); hidden, still no hint. Wide: it shows, with its keyboard icon at its foot (decision 0041).
+  // Medium: the sidebar shows (decision 0275), with no hint. Wide: it shows, with its keyboard icon at its foot (decision 0041).
   await page.setViewportSize({ width: 1000, height: 800 });
   await openApp(page);
   await expect(sidebar(page)).toBeVisible();
-  await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
-  await toggle(page).click();
-  await expect(sidebar(page)).toBeHidden();
   await expect(page.getByText("Press ? for shortcuts")).toHaveCount(0);
   await page.setViewportSize({ width: 1440, height: 800 });
   await expect(sidebar(page)).toBeVisible();
@@ -546,8 +517,8 @@ test("on a computer a 1px line parts the sidebar and the list (decision 0054)", 
   await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "0px");
 });
 
-test("the sidebar ends with Add, then Keys (icon and word) and Settings as an icon; its toggle says what it does", async ({ page, isMobile }) => {
-  test.skip(isMobile, "The phone has its own screens and no sidebar toggle.");
+test("the sidebar ends with Add, then Keys (icon and word) and Settings as an icon", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The phone has its own screens.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
   const box = async (locator: Locator) => (await locator.boundingBox())!;
@@ -587,9 +558,6 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   expect(await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(restingFill);
   await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
   await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
-  await expect(toggle(page)).toHaveAttribute("title", "Hide the sidebar");
-  await toggle(page).click();
-  await expect(toggle(page)).toHaveAttribute("title", "Show the sidebar");
 });
 
 test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a full-size button", async ({ page, isMobile }) => {
@@ -778,10 +746,7 @@ test("a tab left open across an update opens the new version at the next place i
   await expect.poll(samePage).toBe(false);
   await expect(page.getByRole("heading", { name: "Starred", level: 2 })).toBeFocused();
 
-  // The screen stays as the reader arranged it: the hidden sidebar stays hidden,
-  // and closing Settings goes back to the list they came from.
-  await toggle(page).click();
-  await expect(sidebar(page)).toBeHidden();
+  // The screen stays as the reader arranged it: closing Settings goes back to the list they came from.
   samePage = await markPage(page);
   await newerVersionLive(page);
   await page.keyboard.press("g");
@@ -790,8 +755,6 @@ test("a tab left open across an update opens the new version at the next place i
   await expect.poll(samePage).toBe(false);
   await page.getByRole("button", { name: "Close settings" }).click();
   await expect(page).toHaveURL(/\/starred$/);
-  await expect(sidebar(page)).toBeHidden();
-  await toggle(page).click();
   await expect(sidebar(page)).toBeVisible();
 
   // Back switches too: the address has already changed, so that's the page that loads.

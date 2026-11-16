@@ -58,7 +58,7 @@ what's live.
 ## The logo
 
 - **The drawing:** nine small turtles seen from the side, in three rows of three, the middle row a little to the right. One ink, the page's text color, never colored, never cut off, never moving. (Live)
-- **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line beside the sidebar button). All nine turtles stay in the sidebar. (Live)
+- **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line in the sidebar's top line). All nine turtles stay in the sidebar. (Live)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Live)
 - **The tab icon:** the app icon's black square, always, with one light turtle filling most of it (the original turtle: a half-circle shell and a round head), so it shows on any tab, light or dark. (Live)
