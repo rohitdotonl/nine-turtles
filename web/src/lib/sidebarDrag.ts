@@ -26,7 +26,7 @@
 // Ctrl is held), `data-drop` and the line itself; the CSS is in arranging.css.
 
 import { dropMarker, liftedCopy } from "./dropMark";
-import { onMac } from "./keyboard";
+import { onApple } from "./apple";
 
 /** What's being dragged. */
 export type Dragged = { kind: "folder"; id: number } | { kind: "person"; id: number; from: number | null };
@@ -80,7 +80,7 @@ export function dragValue(dragged: Dragged): string {
 
 /** Whether a drop copies rather than moves: Option on a Mac, Ctrl elsewhere. */
 function copying(event: { altKey: boolean; ctrlKey: boolean }): boolean {
-  return onMac ? event.altKey : event.ctrlKey;
+  return onApple ? event.altKey : event.ctrlKey;
 }
 
 /** A Svelte action on the sidebar's lists. */

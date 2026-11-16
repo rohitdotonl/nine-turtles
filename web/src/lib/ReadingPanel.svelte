@@ -1,16 +1,16 @@
 <!--
-  The "Aa" reading panel (SPEC section 7; decision 0034): the reader's own
-  controls, one press from the text, as in Apple Books. Text size (the same
+  The reading panel, Text and page (SPEC section 7; decisions 0034, 0292): the reader's own
+  controls, in the article's More, as in Apple Books. Text size (the same
   steps as `+` and `-`), the page (White, Paper, Night or Match device) and the reading font, all
   the same preferences as Settings › Look and feel, applied at once to the
   article behind it.
 
-  On a computer it is a small panel under its Aa button; on a phone, a sheet
+  On a computer it is a small panel under More, which opens it; on a phone, a sheet
   along the bottom of the screen with its own Close button, which a swipe
   down closes too (decision 0274). It isn't modal:
   the article stays readable and usable around it. Escape closes it and puts
-  the keyboard back on the Aa button; a press outside it, or the keyboard
-  leaving it, closes it too.
+  the keyboard back on More; a press outside it (More included, which then
+  opens its menu), or the keyboard leaving it, closes it too.
 -->
 <script lang="ts">
   import { onMount, tick } from "svelte";
@@ -27,11 +27,11 @@
     onClose,
   }: {
     preferences: Preferences;
-    /** The Aa button: the panel sits under it, and the keyboard goes back to it. */
+    /** More, on a computer: the panel sits under it, lined up with its right edge. Only where it goes, never a part of it. */
     anchor: HTMLElement | undefined;
     /** A sheet along the bottom of a phone's screen, rather than a panel under the button. */
     phone?: boolean;
-    /** `giveBack`: put the keyboard back on the Aa button. */
+    /** `giveBack`: put the keyboard back on More. */
     onClose: (giveBack: boolean) => void;
   } = $props();
 
@@ -39,7 +39,7 @@
   let first: HTMLButtonElement | undefined = $state();
   let place = $state({ top: 0, right: 0 });
 
-  /** Under the Aa button, its right edge lined up with the button's, never past the window's edges. */
+  /** Under More, its right edge lined up with the button's, never past the window's edges. */
   function measure() {
     if (phone || !anchor) return;
     const box = anchor.getBoundingClientRect();
@@ -57,8 +57,8 @@
   onresize={measure}
   onpointerdown={(event) => {
     const target = event.target as Node;
-    // A press on the Aa button is its own: it closes the panel by itself.
-    if (!panel?.contains(target) && !anchor?.contains(target)) onClose(false);
+    // Anywhere else, More too: the panel goes, so More's menu never opens hidden under it.
+    if (!panel?.contains(target)) onClose(false);
   }}
 />
 
@@ -78,7 +78,7 @@
   onfocusout={(event) => {
     const next = event.relatedTarget as Node | null;
     // The keyboard moved on to something outside: the panel closes behind it, so it never covers where it went.
-    if (next && !panel?.contains(next) && !anchor?.contains(next)) onClose(false);
+    if (next && !panel?.contains(next)) onClose(false);
   }}
   class={["reading-panel floating z-40 flex flex-col gap-4 overflow-y-auto font-sans", phone ? "phone" : "popover"]}
   style:top={phone ? undefined : `${place.top}px`}

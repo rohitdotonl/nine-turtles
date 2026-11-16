@@ -153,12 +153,10 @@
   /** The reading panel (Text and page, in More), and the More menu it opens from (there's one, on the top bar or the phone's bottom bar). */
   let panelOpen = $state(false);
   let moreAnchor: HTMLSpanElement | undefined = $state();
-  /** What the panel stands by: More on a computer, or the phone's bottom bar, which holds More (the sheet needs no place). */
-  let panelAnchor = $derived(phone ? toolbar : moreAnchor);
-
+  /** Where the keyboard goes back to: More, on the top bar or the phone's bottom bar. */
   function closePanel(giveBack: boolean) {
     panelOpen = false;
-    if (giveBack) panelAnchor?.querySelector<HTMLButtonElement>('[aria-controls="article-menu"], [aria-haspopup="menu"]')?.focus();
+    if (giveBack) (phone ? toolbar : moreAnchor)?.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.focus();
   }
 
   /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0072). */
@@ -466,7 +464,7 @@
   <button
     type="button"
     aria-label={sharing ? "Share" : "Copy link"}
-    title={phone || sharing ? "Share" : tip("Copy link", "copy-link")}
+    title={sharing ? "Share" : phone ? "Copy link" : tip("Copy link", "copy-link")}
     aria-keyshortcuts={phone || sharing ? undefined : keyFor("copy-link")}
     aria-disabled={!article.link}
     onclick={() => article.link && share()}
@@ -708,7 +706,7 @@
   {/if}
 
   {#if panelOpen}
-    <ReadingPanel bind:preferences anchor={panelAnchor} phone={phone !== undefined} onClose={closePanel} />
+    <ReadingPanel bind:preferences anchor={moreAnchor} phone={phone !== undefined} onClose={closePanel} />
   {/if}
 </section>
 

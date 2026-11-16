@@ -50,7 +50,7 @@
 
 **How to check it**
 1. Switch your computer to dark mode: nine turtles follows, at once, on Night. Choose Page White in Settings: it stays white regardless of the system. Choose Paper: the page turns warm cream, and its unread dots brown.
-2. Open Settings: there's no Sort order, Text size or Font; the lines under Reading and Look and feel say where they are. In an article's Aa panel, change the font and text size: the article updates immediately.
+2. Open Settings: there's no Sort order, Text size or Font; the lines under Reading and Look and feel say where they are. In an article's More › Text and page, change the font and text size: the article updates immediately.
 3. Look at the browser's network list (or ask an agent to): no requests to Google Fonts or any other font service.
 4. Once email is set up, sign in (as the owner or any reader). In Settings › Account press Change…, type another email you can read and your password, and press Send link. Your email in Settings stays as it was until you open the link and press Confirm email; then it shows the new one, and the old address has a note.
 5. Still as that reader, press Delete account…: the sheet offers Download everything first. Press Escape: nothing changes. Press it again, type a wrong password and press Delete account: it says "That isn't your password." and nothing is deleted. Type your password and press Delete account: you're at the sign-in page, and that email and password no longer sign in. Signed in as the owner, there is no Delete account.

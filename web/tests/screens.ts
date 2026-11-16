@@ -612,7 +612,6 @@ export function couldBeEither(title: RegExp | number) {
   };
 }
 
-/** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */
 /** Opens the reading panel the way a reader does: More (…), then Text and page (decision 0292). `within` is where its More is: the article, or a phone's bottom bar. */
 export async function openAppearance(page: Page, within: Locator = page.getByRole("region", { name: "Article", exact: true })): Promise<Locator> {
   await within.getByRole("button", { name: "More actions" }).first().click();
@@ -622,6 +621,7 @@ export async function openAppearance(page: Page, within: Locator = page.getByRol
   return panel;
 }
 
+/** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */
 export async function openReadingRoom(page: Page, { unread = false, read = false } = {}): Promise<void> {
   const id = await follow(page, `${FEED_SITE}/reading/`);
   if (unread) await unmark(page, id);

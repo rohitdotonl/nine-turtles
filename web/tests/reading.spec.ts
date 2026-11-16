@@ -286,6 +286,47 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
+  test("Text and page opens with the keyboard alone, and More pressed again closes the panel before its menu opens (decision 0292)", async ({ page }) => {
+    await openRoom(page);
+    await openFirst(page);
+    const more = article(page).getByRole("button", { name: "More actions" });
+    const panel = page.getByRole("dialog", { name: "Reading appearance" });
+    const menu = page.getByRole("menu", { name: "More actions" });
+    // With only a keyboard: Enter on More, the first row is Text and page, Enter opens the panel on its first control.
+    await more.focus();
+    await page.keyboard.press("Enter");
+    await expect(menu.getByRole("menuitem").first()).toBeFocused();
+    await expect(menu.getByRole("menuitem").first()).toHaveText(/Text and page/);
+    await page.keyboard.press("Enter");
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Smaller text" })).toBeFocused();
+    // Escape gives the keyboard back to More.
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(more).toBeFocused();
+    // Open again, then press More: the panel goes and the menu shows, never hidden under the panel.
+    await openAppearance(page);
+    await more.click();
+    await expect(panel).toHaveCount(0);
+    await expect(menu).toBeVisible();
+    await page.keyboard.press("Escape");
+  });
+
+  test("elsewhere than a Mac, Share is three linked dots (decision 0292)", async ({ page }) => {
+    const shareIcon = async () => article(page).getByRole("button", { name: "Copy link" }).locator("svg").evaluate((svg) => svg.querySelectorAll("circle").length);
+    await openRoom(page);
+    await openFirst(page);
+    expect(await shareIcon()).toBe(3);
+  });
+
+  test("on a Mac, Share is Apple's box with an arrow (decision 0292)", async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "platform", { get: () => "MacIntel" }));
+    await openRoom(page);
+    await openFirst(page);
+    const icon = article(page).getByRole("button", { name: "Copy link" }).locator("svg");
+    expect(await icon.evaluate((svg) => [svg.querySelectorAll("circle").length, svg.querySelectorAll("path").length])).toEqual([0, 3]);
+  });
+
   test("the reading panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
