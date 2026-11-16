@@ -1245,13 +1245,45 @@ test.describe("your place in an article (decision 0060)", () => {
     await expect.poll(() => top(page)).toBeGreaterThan(250);
     await kept;
     const stopped = await top(page);
+    // Coming back after half an hour away (decision 0292). Leaving a page writes down the time as it goes, so the
+    // time away is set as the next page starts.
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem("away")) return;
+      sessionStorage.removeItem("away");
+      localStorage.setItem("nine-turtles.here", String(Date.now() - 31 * 60_000));
+    });
+    const away = () => page.evaluate(() => sessionStorage.setItem("away", "yes"));
     // Another device: this one's own bookmarks are gone, but the server still knows.
     await page.evaluate(() => localStorage.removeItem("nine-turtles.places"));
+    await away();
 
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
     // Nothing open: the line sits at the top of the list (decision 0275).
     const line = page.locator("#list-pane .reading-empty");
+    await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
+    // Only on the first list you come back to (decision 0292): another list ends it, going back doesn't bring it back...
+    await page.locator("#sidebar").getByRole("link", { name: "Saved" }).click();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    await page.locator("#sidebar").getByRole("link", { name: "All articles" }).click();
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    // ...and nor does a refresh, which isn't coming back. Half an hour away is.
+    await page.reload();
+    await appReady(page);
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    // Coming back to a page that isn't a list, such as Add a feed: the list you go to next doesn't offer it either.
+    await away();
+    await page.goto(new URL("/add", page.url()).href);
+    await appReady(page);
+    await expect(page.getByRole("heading", { level: 2, name: "Add a person or publication" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    await away();
+    await page.reload();
+    await appReady(page);
     await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
     // The title is the way in, from the keyboard too.
     const title_ = line.getByRole("button", { name: "The pleasure of a slow letter" });
@@ -1266,6 +1298,7 @@ test.describe("your place in an article (decision 0060)", () => {
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
     await page.waitForTimeout(300);
+    await away();
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
     await expect(page.locator(".item-row").first()).toBeVisible();
