@@ -319,6 +319,7 @@ fn comments_link(
         .filter(|url| matches!(url.scheme(), "http" | "https"))
         .filter(|url| Some(url) != article)
         .map(String::from)
+        .filter(|address| address.len() <= LONGEST_ADDRESS)
 }
 
 /// What stands before each episode's `itunes:duration` and `itunes:image`,

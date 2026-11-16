@@ -43,14 +43,16 @@ V1, item 2). Its look gets a refinement round.*
   end Write back is a split button. Beside it, joined
   to it by a hairline, a 44px square with a downward arrow ("Other ways
   to reply to Maya Chen" to screen readers) opens a small menu like More's,
-  each row with its icon: **Email app** (a paper plane, with its key, W, on
-  a computer), **Gmail**, **Outlook.com**, **Copy maya@example.com** (two
+  each row with its icon: **Email app**, **Gmail** and **Outlook.com** (a
+  paper plane each; on a computer the one this device writes in shows W,
+  its key), **Copy maya@example.com** (two
   overlapping pages; only when an address is known), then, after a
   hairline, **Comment on their site** (a speech bubble). The way the main
   button does is ticked. Choosing one does it at once: an email opens
   where chosen (kept on this device, as Write in Gmail is, below), the
   address is copied ("Copied." under it), or their comments open in a new
-  tab. From then on, the main button does that way for this person, on
+  tab. A choice that can't be kept (offline, say) is said in oxblood under
+  it, with the alert icon, and the button stays as it was. From then on, the main button does that way for this person, on
   every article of theirs and every device: **Write back**, **Copy
   address** (two overlapping pages; "Copy address of Maya Chen" to screen
   readers) or **Comment** (a speech bubble; "Comment on Maya Chen's site"),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { headsOf, placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { befores, headsOf, placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
   return { id, title, siteUrl: null, unread: 0, folders: [], person: null, place: "blog", addedAt: id, ...more };
@@ -114,5 +114,13 @@ describe("Unread, by person (decisions 0271 and 0278)", () => {
 
   it("names nobody in a list that isn't by person", () => {
     expect(headsOf([article(1), article(2)])).toEqual([undefined, undefined]);
+  });
+});
+
+describe("Undo of a join or a separation", () => {
+  it("keeps everything the server gave back, so the note on them and Write back's switch and way come back too", () => {
+    const given = [{ feed: 3, writer: 9, name: "Alpha", folders: [1], write_to: "a@alpha.example", write_back_off: true, write_back_way: "comment", note: "Met at the fair." }];
+    expect(befores(given)).toEqual(given);
+    expect(befores([{ feed: 4 }])).toEqual([{ feed: 4, writer: null, name: null, folders: [], write_to: null, write_back_off: false, write_back_way: null, note: null }]);
   });
 });

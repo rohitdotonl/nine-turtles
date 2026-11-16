@@ -225,22 +225,7 @@ async fn edit_feed(
             crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
                 .await?;
         }
-        if form.write_back.is_some() || way.is_some() {
-            sqlx::query(
-                "UPDATE subscriptions SET write_back_off = COALESCE(?1, write_back_off),
-                     write_back_way = CASE WHEN ?2 THEN ?3 ELSE write_back_way END
-                 WHERE person_id = ?4 AND unsubscribed_at IS NULL
-                     AND (feed_id = ?5 OR writer_id = (SELECT writer_id FROM subscriptions
-                              WHERE person_id = ?4 AND feed_id = ?5 AND unsubscribed_at IS NULL))",
-            )
-            .bind(form.write_back.map(|on| !on))
-            .bind(way.is_some())
-            .bind(way.flatten())
-            .bind(person)
-            .bind(id)
-            .execute(&mut *transaction)
-            .await?;
-        }
+        crate::write_back::choose(&mut transaction, person, id, form.write_back, way).await?;
         // Switched on: that kind's videos stored since the reader followed
         // the channel join its list, as read, so nothing piles up in
         // Unread (an entry they already had, or one the clean-up removed

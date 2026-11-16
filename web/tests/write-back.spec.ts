@@ -202,8 +202,17 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toHaveCount(0);
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
   const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
-  await arrow.click();
   const ways = pane(page).getByRole("menu");
+  // By keyboard: Enter opens it on its first row, the arrows move, Escape closes it and gives the keyboard back to the arrow.
+  await arrow.focus();
+  await page.keyboard.press("Enter");
+  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(ways.getByRole("menuitemradio", { name: "Gmail" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(ways).toHaveCount(0);
+  await expect(arrow).toBeFocused();
+  await arrow.click();
   await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
   await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toHaveAttribute("aria-checked", "true");
 
@@ -264,9 +273,10 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(pane(page).getByText(/^Write back/)).toHaveCount(0);
   await expect(pane(page).getByRole("button", { name: /Other ways to reply/ })).toHaveCount(0);
   await expect(pane(page).getByRole("button", { name: "Write back" })).toHaveCount(0);
-  await page.locator(".item-row").first().focus();
+  // W writes nothing: no email opens (the address is known, so it would open at once, saying so).
+  await pane(page).getByRole("heading", { level: 2 }).focus();
   await page.keyboard.press("w");
-  await expect(pane(page).getByRole("textbox", { name: "Their email address" })).toHaveCount(0);
+  await expect(page.getByText(/Opening your email app/)).toHaveCount(0);
 
   // On again: Write back comes back, with the address kept.
   await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);

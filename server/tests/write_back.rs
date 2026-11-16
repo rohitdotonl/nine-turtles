@@ -298,6 +298,33 @@ async fn write_back_is_switched_off_and_its_way_chosen_for_the_whole_person() {
     assert_eq!(reader.place(blog).await["write_back_off"], json!(false));
     assert_eq!(way(blog).await, json!("copy"));
 
+    // A source that leaves the person starts afresh; Undo gives it back the person's switch and way.
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back": false }),
+        )
+        .await;
+    let (status, separated) = reader
+        .post("/api/writers/separate", json!({ "feed": letters }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{separated}");
+    assert_eq!(way(letters).await, Value::Null);
+    assert_eq!(reader.place(letters).await["write_back_off"], json!(false));
+    assert_eq!(way(blog).await, json!("copy"));
+    let (status, _) = reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": separated["before"] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(way(letters).await, json!("copy"));
+    assert_eq!(reader.place(letters).await["write_back_off"], json!(true));
+    let _ = reader
+        .post(&format!("/api/feeds/{blog}"), json!({ "write_back": true }))
+        .await;
+
     // Back to email: nothing kept.
     let _ = reader
         .post(
