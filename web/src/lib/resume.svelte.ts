@@ -1,10 +1,13 @@
 // Pick up where you left off (SPEC section 7, decision 0175): when you come
 // back to nine turtles, the one article you last left part of the way
 // through is offered in one quiet line, on whichever device you sign in on.
+// Only on the first list you see when you come back, after half an hour away
+// (decision 0292): a refresh isn't coming back, and another list ends it.
 // Each device keeps its own places for every article (places.ts); the server
 // keeps only the latest, so another device can offer it and open it there.
 // Nothing here is ever said when it fails: the line simply isn't offered.
 
+import { deviceText, setDeviceText } from "./device";
 import { getJson, isRecord } from "./http";
 import { keepPlace, type Place } from "./places";
 import { toArticle, type Article } from "./shapes";
@@ -22,6 +25,30 @@ let current: number | undefined;
 let asking = false;
 /** The requests to the server, one after another, so "keep" and "let go" arrive in the order they were made. */
 let queue: Promise<unknown> = Promise.resolve();
+/** Where this device writes down when the reader was last here: a time, in milliseconds. */
+const HERE = "nine-turtles.here";
+/** How long away counts as coming back (decision 0292). */
+export const AWAY = 30 * 60_000;
+
+/** Writes down that the reader is here now, or is leaving now. */
+export function stillHere(now = Date.now()): void {
+  setDeviceText(HERE, String(now));
+}
+
+/** Whether the reader has been away long enough for this to be coming back. Never here before counts too. */
+function cameBack(now: number): boolean {
+  const saved = deviceText(HERE);
+  const then = saved === null ? NaN : Number(saved);
+  return !Number.isFinite(then) || now - then >= AWAY || now < then;
+}
+
+/** Whether this visit is a coming back, and still on the list it began on. */
+let welcome = false;
+/** The first list on screen since coming back. */
+let first: string | undefined;
+// Leaving is written down, so a refresh, another tab or another app isn't coming back.
+globalThis.document?.addEventListener("visibilitychange", () => document.hidden && stillHere());
+globalThis.addEventListener?.("pagehide", () => stillHere());
 /** How long the empty reading area waits for the answer before it shows its usual line. */
 export const WAIT = 1_500;
 
@@ -39,9 +66,11 @@ export function toOffer(answer: unknown): (Offer & { place: Place }) | undefined
  * Asks, once, what to offer. A place kept on another device is kept on this
  * one too, so the article opens where you stopped however it's opened.
  */
-export function askWhereYouLeftOff(): void {
+export function askWhereYouLeftOff(now = Date.now()): void {
   if (asking) return;
   asking = true;
+  welcome = cameBack(now);
+  stillHere(now);
   const waited = setTimeout(() => (pickUp.asked = true), WAIT);
   getJson("/api/resume").then(
     (answer) => {
@@ -52,7 +81,7 @@ export function askWhereYouLeftOff(): void {
         keepPlace(held, offer.place);
         // Something else opened before the answer came: that place is let go, as below. An answer
         // after the usual line has shown never replaces it: nothing changes under the reader.
-        if (current === undefined && !pickUp.asked) pickUp.offer = { article: offer.article, writer: offer.writer };
+        if (current === undefined && !pickUp.asked && welcome) pickUp.offer = { article: offer.article, writer: offer.writer };
         else if (current !== undefined && current !== held) letGo(held);
       }
       clearTimeout(waited);
@@ -81,6 +110,32 @@ export function articleOpened(id: number): void {
   pickUp.offer = undefined;
   askWhereYouLeftOff();
   if (held !== undefined && held !== id) letGo(held);
+}
+
+/** A list is on screen: the line is for the first one since coming back, and goes once another shows (decision 0292). */
+export function listShown(list: string): void {
+  first ??= list;
+  if (list === first) return;
+  welcome = false;
+  pickUp.offer = undefined;
+}
+
+/**
+ * The page was shown again, with `list` on screen (if one is). After half an
+ * hour away with no article open, that's coming back, and the line is asked
+ * for afresh, for that list (or the next one to show): true then.
+ */
+export function lookedAgain(list: string | undefined, reading: boolean, now = Date.now()): boolean {
+  if (reading || !cameBack(now)) {
+    stillHere(now);
+    return false;
+  }
+  first = list;
+  asking = false;
+  current = undefined;
+  pickUp.asked = false;
+  askWhereYouLeftOff(now);
+  return true;
 }
 
 /** Your place in article `id` was written down: kept as where you left off, or let go at its top or end. */

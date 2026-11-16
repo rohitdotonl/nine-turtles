@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the article you read, one thi
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-16
+updated: 2026-11-17
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -102,11 +102,12 @@ To print an article, open it and use your browser's Print (<kbd>Command</kbd>
 prints, in black on white, and the last line says where it came from, with
 the address of the original.
 
-When you come back with nothing open, the top of the list offers the article
-you last left part of the way through, in one quiet line: "You were reading
-*The long walk home*, by Ana." Press the title to carry on where you
-stopped, on any device you sign in on. It goes once you open something else
-or finish it.
+When you come back after half an hour or more away (or open nine turtles on
+another device), the first list you see offers the article you last left
+part of the way through, in one quiet line: "You were reading *The long walk
+home*, by Ana." Press the title to carry on where you stopped. It shows only
+on that first list: it goes once you go to another list, open something
+else or finish it, and a refresh doesn't bring it back.
 
 Every list opens the same way: the newest article is simply the
 first in the list, with its dot if it's unread. Nothing is marked read until

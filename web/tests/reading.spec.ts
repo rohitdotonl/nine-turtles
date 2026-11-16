@@ -1245,13 +1245,28 @@ test.describe("your place in an article (decision 0060)", () => {
     await expect.poll(() => top(page)).toBeGreaterThan(250);
     await kept;
     const stopped = await top(page);
-    // Another device: this one's own bookmarks are gone, but the server still knows.
-    await page.evaluate(() => localStorage.removeItem("nine-turtles.places"));
+    // Another device: this one's own bookmarks are gone, and it has never been here, but the server still knows.
+    await page.evaluate(() => (localStorage.removeItem("nine-turtles.places"), localStorage.removeItem("nine-turtles.here")));
 
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
     // Nothing open: the line sits at the top of the list (decision 0275).
     const line = page.locator("#list-pane .reading-empty");
+    await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
+    // Only on the first list you come back to (decision 0292): another list ends it, going back doesn't bring it back...
+    await page.locator("#sidebar").getByRole("link", { name: "Saved" }).click();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    await page.locator("#sidebar").getByRole("link", { name: "All articles" }).click();
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    // ...and nor does a refresh, which isn't coming back. Half an hour away is.
+    await page.reload();
+    await appReady(page);
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    await page.evaluate(() => localStorage.setItem("nine-turtles.here", String(Date.now() - 31 * 60_000)));
+    await page.reload();
+    await appReady(page);
     await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
     // The title is the way in, from the keyboard too.
     const title_ = line.getByRole("button", { name: "The pleasure of a slow letter" });
