@@ -543,7 +543,7 @@ async function followLibrary(page: Page): Promise<void> {
   for (const { address, folder } of LIBRARY) {
     const id = await follow(page, address);
     if (!folder) continue;
-    const saved = await page.request.post(new URL(`/api/${id}`, page.url()).href, {
+    const saved = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, {
       data: { folders: [], new_folder: folder },
     });
     expect(saved.ok()).toBe(true);
@@ -581,7 +581,7 @@ export async function follow(page: Page, address: string, { asIs = false } = {})
   // The made-up blogs name no writer, so they could be either (decision 0264). As the reader
   // would in Add, they're settled as a person, unless the test is about could be either.
   if (!asIs && body.feed?.open) {
-    const settled = await page.request.post(new URL(`/api/${id}`, page.url()).href, { data: { kind: "person" } });
+    const settled = await page.request.post(new URL(`/api/feeds/${id}`, page.url()).href, { data: { kind: "person" } });
     expect(settled.status()).toBe(204);
   }
   return id;

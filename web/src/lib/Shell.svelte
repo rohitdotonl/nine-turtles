@@ -55,7 +55,7 @@
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { addressFor, articleIn, isList, nameFor, parentOf, parse, pathFor, sidebarViews, titleFor, type Route } from "./router";
-  import { articleAddress, namePlaces } from "./addressing";
+  import { articleAddress, nameAddressesFrom } from "./addressing";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeName, searchParams, searchedTerms } from "./search";
@@ -205,11 +205,11 @@
   });
   /** A person's or publication's page, or their settings, is showing (decisions 0163, 0267): alone in the window, or on a phone in the list's place. */
   let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
-  // Addresses carry the names of people, publications and folders (decision 0281): once the sidebar has loaded, an address
-  // with no name or an old one is tidied to today's, an open article's part kept as it is.
+  // Addresses carry the sidebar's names (decision 0281): once it has loaded, an old or nameless address is tidied, an open article's part kept.
+  nameAddressesFrom(library);
   $effect(() => {
     const { list } = articleIn(location.pathname);
-    if (namePlaces(library.rows, library.folders) && "id" in route && list !== addressFor(route)) untrack(() => history.replaceState(history.state, "", addressFor(route) + location.pathname.slice(list.length)));
+    if (library.rows && "id" in route && list !== addressFor(route)) untrack(() => history.replaceState(history.state, "", addressFor(route) + location.pathname.slice(list.length)));
   });
   /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
   let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);

@@ -199,7 +199,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   const blog = unique("kept");
   const folder = unique("Zz-folder");
   const ids = await openBlogs(page, [blog]);
-  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, {
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, {
     data: { title: `Blog ${blog}`, folders: [], new_folder: folder },
   });
   await page.reload();
@@ -633,7 +633,7 @@ test("+ Add over a folder files them there, and New folder… makes one with the
   const folder = unique("Zz-into");
   const fresh = unique("Zz-fresh");
   const ids = await openBlogs(page, [first]);
-  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
   await page.reload();
   await appReady(page);
   const inFolders = async (title: string) => {
@@ -684,7 +684,7 @@ test("closing + Add while it asks keeps the folder it showed (decision 0261)", a
   const [first, kept] = [unique("first"), unique("kept")];
   const folder = unique("Zz-kept");
   const ids = await openBlogs(page, [first]);
-  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
   await page.reload();
   await appReady(page);
   await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();

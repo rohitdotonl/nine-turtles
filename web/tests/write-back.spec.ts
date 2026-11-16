@@ -140,7 +140,7 @@ test("A publication has no Write back and no Write to; A person brings them back
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  const kept = await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "pub@pub.example" } });
+  const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "pub@pub.example" } });
   expect(kept.ok()).toBe(true);
   const who = () => whoPage(page, `Blog ${name}`);
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
@@ -187,7 +187,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/untitled/${name}/feed.xml`);
-  expect((await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
   await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
@@ -203,7 +203,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/`));
 
   // A note has no title: the email is about its opening words, so the writer knows which post.
-  expect((await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "notes@notes.example" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "notes@notes.example" } })).ok()).toBe(true);
   await page.reload();
   await appReady(page);
   await expect(pane(page).getByRole("link", { name: `Write back to Notes ${name}` })).toHaveAttribute(
@@ -256,8 +256,8 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  expect((await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  expect((await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "gm@gm.example" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "gm@gm.example" } })).ok()).toBe(true);
   await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
@@ -334,8 +334,8 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  expect((await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  expect((await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "t@t.example" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "t@t.example" } })).ok()).toBe(true);
   await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();

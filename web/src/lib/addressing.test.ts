@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { articleAddress, namePlaces } from "./addressing";
+import { articleAddress, nameAddressesFrom } from "./addressing";
 import { addressFor } from "./router";
-import type { Article, Feed } from "./shapes";
+import type { Article, Feed, Folder } from "./shapes";
 
 // The words in addresses (decision 0281), from the sidebar's names.
 
@@ -17,20 +17,22 @@ function article(feedId: number, more: Partial<Article> = {}): Article {
 const mira = { ...place(3, "Mira Chen"), places: [3, 5] };
 const rows = [mira, place(7, "Quiet Notes")];
 
-afterEach(() => void namePlaces(undefined, []));
+afterEach(() => nameAddressesFrom({ rows: undefined, folders: [] }));
 
 describe("addresses with the sidebar's names", () => {
   it("names people, publications and folders once the sidebar has loaded", () => {
-    expect(namePlaces(undefined, [])).toBe(false);
+    const library: { rows: Feed[] | undefined; folders: Folder[] } = { rows: undefined, folders: [] };
+    nameAddressesFrom(library);
     expect(addressFor({ kind: "feed", id: 3 })).toBe("/3");
-    expect(namePlaces(rows, [{ id: 4, name: "Friends" }])).toBe(true);
+    library.rows = rows;
+    library.folders = [{ id: 4, name: "Friends" }];
     expect(addressFor({ kind: "feed", id: 3 })).toBe("/mira-chen-3");
     expect(addressFor({ kind: "about", id: 7 })).toBe("/quiet-notes-7/about");
     expect(addressFor({ kind: "folder", id: 4 })).toBe("/folders/friends-4");
   });
 
   it("gives an article its title in its writer's list, and their name first in any other", () => {
-    namePlaces(rows, [{ id: 4, name: "Friends" }]);
+    nameAddressesFrom({ rows, folders: [{ id: 4, name: "Friends" }] });
     // From either of Mira's places, her list is hers.
     expect(articleAddress(article(5), { kind: "feed", id: 3 }, rows)).toBe("/mira-chen-3/a-slow-letter-29");
     expect(articleAddress(article(5), { kind: "view", view: "unread" }, rows)).toBe("/unread/mira-chen/a-slow-letter-29");

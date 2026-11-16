@@ -40,7 +40,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   const [filed, loose] = [unique("filed"), unique("loose")];
   const folder = unique("Shelf");
   const [filedId] = await start(page, [`${FEED_SITE}/blog/${filed}/`, `${FEED_SITE}/blog/${loose}/`]);
-  await page.request.post(new URL(`/api/${filedId}`, FEEDS_APP).href, {
+  await page.request.post(new URL(`/api/feeds/${filedId}`, FEEDS_APP).href, {
     data: { title: `Blog ${filed}`, folders: [], new_folder: folder },
   });
   const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();

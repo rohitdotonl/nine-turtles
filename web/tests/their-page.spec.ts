@@ -51,7 +51,7 @@ test("their page shows the words you highlighted in their writing, each one pres
   const at = (words: string) => text.search(new RegExp(words, "i"));
   expect(at(`Write to Blog ${name}`)).toBeLessThan(at("Your highlights"));
   const row = who.getByRole("link", { name: `Settings for Blog ${name}`, exact: true });
-  await expect(row).toHaveAttribute("href", `/${id}/settings`);
+  await expect(row).toHaveAttribute("href", new RegExp(`^/blog-${name}-${id}/settings$`));
   const card = who.locator(".yours");
   await expect(card.getByRole("button", { name: "Add a note…" })).toBeVisible();
   await expect(card.getByRole("region", { name: "Your highlights" })).toBeVisible();
@@ -192,7 +192,7 @@ test("back from their settings, the Settings row has the keyboard and is in view
   }
   // Each load of Your highlights takes a moment, as on a slow connection.
   let asked = 0;
-  await page.route(`**/api/${id}/highlights`, async (route) => {
+  await page.route(`**/api/feeds/${id}/highlights`, async (route) => {
     asked += 1;
     await new Promise((done) => setTimeout(done, 400));
     await route.continue();
@@ -242,7 +242,7 @@ test("when Your highlights can't be loaded, their page says so", async ({ page, 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.route(`**/api/${id}/highlights`, (route) => route.fulfill({ status: 500, json: { error: "trouble" } }));
+  await page.route(`**/api/feeds/${id}/highlights`, (route) => route.fulfill({ status: 500, json: { error: "trouble" } }));
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
@@ -258,7 +258,7 @@ test("by keyboard alone: Change corrects the address in place, Escape closes the
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
+  await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
@@ -335,7 +335,7 @@ test("a name that couldn't be saved stays as typed, with why, and Enter keeps th
   await appReady(page);
   const who = settingsFor(page, `Blog ${name}`);
   const field = who.getByRole("textbox", { name: "Name" });
-  await page.route(`**/api/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
+  await page.route(`**/api/feeds/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
   await field.fill(`Kept ${name}`);
   await field.press("Enter");
   await expect(who).toContainText("That couldn't be saved. Try again in a moment.");

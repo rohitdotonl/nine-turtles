@@ -113,7 +113,7 @@ test.describe("on a wide window", () => {
     const folder = `Keys-${test.info().workerIndex}-${Date.now()}`;
     const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
     const feed = library.feeds.find((each: { title: string }) => each.title === `Blog ${blog}`).id;
-    await page.request.post(new URL(`/api/${feed}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
+    await page.request.post(new URL(`/api/feeds/${feed}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
     await page.reload();
     await appReady(page);
     const toggle = sidebar(page).getByRole("button", { name: `What's in ${folder}` });

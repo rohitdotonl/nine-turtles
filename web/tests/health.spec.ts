@@ -383,8 +383,8 @@ test("with Write to pressed, the keyboard meets what it brought before Unsubscri
   const name = `write-order-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
-  expect((await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  expect((await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "ivy@ivy.example" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "ivy@ivy.example" } })).ok()).toBe(true);
   await page.route("**/api/health", async (route) => {
     const real = await (await route.fetch()).json();
     for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";

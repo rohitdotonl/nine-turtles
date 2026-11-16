@@ -31,7 +31,7 @@ async function blogsInFolders(page: Page, folders: string[]): Promise<string[]> 
   for (const folder of folders) {
     const blog = unique(`arr-${folder.toLowerCase()}`);
     const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-    await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
+    await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { title: `Blog ${blog}`, folders: [], new_folder: folder } });
     blogs.push(`Blog ${blog}`);
   }
   await page.goto(new URL("/unread", FEEDS_APP).href);
@@ -297,7 +297,7 @@ test("an indent means inside a folder: people in none line up with the folders (
   const [inside] = await blogsInFolders(page, [folder]);
   const loose = `Blog ${unique("arr-loose")}`;
   const id = await follow(page, `${FEED_SITE}/blog/${loose.slice(5)}/`);
-  await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { title: loose } });
+  await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { title: loose } });
   await page.reload();
   await appReady(page);
   await sidebar(page).getByRole("button", { name: `What's in ${folder}` }).click();

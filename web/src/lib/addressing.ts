@@ -5,13 +5,15 @@ import { rowFor } from "./people";
 import { addressFor, nameAddressesBy, withArticle, type Route } from "./router";
 import { untitledOpening, type Article, type Feed, type Folder } from "./shapes";
 
-/** Gives addresses the sidebar's names, once it has loaded. Whether it has. */
-export function namePlaces(rows: Feed[] | undefined, folders: Folder[]): boolean {
+/**
+ * Gives addresses the sidebar's names, read as they're needed, so a link drawn before the sidebar
+ * has loaded is drawn again with them, as any screen redraws with what it shows.
+ */
+export function nameAddressesFrom(library: { rows: Feed[] | undefined; folders: Folder[] }) {
   nameAddressesBy({
-    who: (id) => rowFor(id, rows ?? [])?.title,
-    folder: (id) => folders.find((folder) => folder.id === id)?.name,
+    who: (id) => rowFor(id, library.rows ?? [])?.title,
+    folder: (id) => library.folders.find((folder) => folder.id === id)?.name,
   });
-  return rows !== undefined;
 }
 
 /**
