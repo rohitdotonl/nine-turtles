@@ -182,7 +182,9 @@ test("A publication has no Write back and no Write to; A person brings them back
 test("Write back's arrow offers every way back, and the one chosen is kept for that person; Write back switches off per person", async ({ page }) => {
   // Each post of a "talk-" blog names its comments page (RSS's <comments>, decision 0286).
   const name = `talk-wb-${test.info().workerIndex}-${Date.now()}`;
-  await page.setViewportSize({ width: 1280, height: 800 });
+  // Tall enough that Write back sits high on the screen and its menu opens downwards, in the order the keys below expect
+  // (one opening upwards puts the row nearest the button first).
+  await page.setViewportSize({ width: 1280, height: 1100 });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
