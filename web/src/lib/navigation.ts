@@ -54,14 +54,14 @@ export function whoClosesTo(from: WhoFrom, place: Extract<Route, { kind: "about"
 }
 
 /**
- * Their list opened from an article's byline (decision 0288): their row, and the article, for "‹ Article" to go back
- * to. It lasts while the reader stays with them, on their list, their page or their settings, and ends anywhere else.
+ * Their list opened from an article's byline (decision 0288): their row, and the article and the list it was read in,
+ * for "‹ Article" to go back to. It lasts while the reader stays with them, on their list, their page or their settings, and ends anywhere else.
  */
-export type ListFrom = { row: number; article: Article } | undefined;
+export type ListFrom = { row: number; article: Article; list: Route } | undefined;
 
-/** Where `ListFrom` goes on a move to `next`: kept while it's still them, else gone. */
-export function listFromOnMove(was: ListFrom, next: Route): ListFrom {
-  return was && (next.kind === "feed" || next.kind === "about") && next.id === was.row ? was : undefined;
+/** Where `ListFrom` goes on a move to `next`: kept while it's still them, else gone, and gone once an article is open again. */
+export function listFromOnMove(was: ListFrom, next: Route, reading = false): ListFrom {
+  return was && !reading && (next.kind === "feed" || next.kind === "about") && next.id === was.row ? was : undefined;
 }
 
 /** With Unread off there's no Unread view: its address (and "/") leads to All. */

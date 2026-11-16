@@ -357,7 +357,7 @@
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
       whoFrom = whoFromOnPop(whoFrom, route, next, !!hidingFrom);
-      listFrom = listFromOnMove(listFrom, next);
+      listFrom = listFromOnMove(listFrom, next, stepOf(history.state)?.screen === "article");
       const move = moveTo({ route, under, phone }, next);
       returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
@@ -501,9 +501,13 @@
   const openFeed = (id: number) => go({ kind: "feed", id }); // Opens a feed's list.
 
   /** The writer's name under an article's title: their list, with "‹ Article" back to it (decision 0288). */
-  const openWriter = (row: number, article = selected) => (go({ kind: "feed", id: row }), article && (listFrom = { row, article }));
-  /** "‹ Article": a step back in history to the article, open where it was; or, if that step isn't there, the article again. */
-  const backToArticle = () => listFrom && (steps.cameFrom("article") ? steps.goBack() : openFromOutside(listFrom.article));
+  const openWriter = (row: number, article = selected, list = route) => (go({ kind: "feed", id: row }), article && (listFrom = { row, article, list }));
+  /** "‹ Article" (and Escape): a step back in history to the article, open where it was; or, if that step isn't there (their page opened and closed since), the article again in the list it was read in. */
+  function backToArticle(from = listFrom) {
+    listFrom = undefined;
+    if (steps.cameFrom("article")) steps.goBack();
+    else if (from) (go(from.list), openFromOutside(from.article, true));
+  }
 
   async function added(feed: Feed, note?: string) {
     const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
@@ -729,6 +733,7 @@
     else if (isWho(route)) closeWho();
     else if (reading || (selected && inArticle())) backToList();
     else if (searching.open || document.activeElement?.closest("search")) closeSearch();
+    else if (listFrom) backToArticle();
     else if (phone && !panes.sidebar) steps.back("home");
   }
 
@@ -948,17 +953,9 @@
             panes.list && !welcomeWide && "flex",
           ]}
         >
-          <ListTop {phone} titleHidden={welcomeAlone} toArticle={listFrom && backToArticle} onHome={() => steps.back("home")}>
-            <ListHead
-              text={headingText}
-              actions={!!itemList && !missing}
-              searchOpen={searching.open}
-              onSearch={toggleSearch}
-              menu={() => listMenu(menuScene(), menuHands)}
-              bind:heading={headings.list}
-              onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined}
-              face={currentFeed && faceOf(currentFeed, currentPlaces)}
-            />
+          <ListTop {phone} titleHidden={welcomeAlone} toArticle={listFrom && (() => backToArticle())} onHome={() => steps.back("home")}>
+            <ListHead text={headingText} actions={!!itemList && !missing} searchOpen={searching.open} onSearch={toggleSearch} menu={() => listMenu(menuScene(), menuHands)} bind:heading={headings.list}
+              onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined} face={currentFeed && faceOf(currentFeed, currentPlaces)} />
           </ListTop>
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-24 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">

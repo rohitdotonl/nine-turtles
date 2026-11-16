@@ -251,7 +251,7 @@ describe("where their page was opened from (decision 0284)", () => {
 });
 
 describe("their list opened from an article's byline (decision 0288)", () => {
-  const from = { row: 4, article: { id: 9 } as Article };
+  const from = { row: 4, article: { id: 9 } as Article, list: { kind: "view", view: "unread" } as Route };
   it("keeps the way back to the article while the reader stays with them", () => {
     expect(listFromOnMove(from, { kind: "feed", id: 4 })).toBe(from);
     expect(listFromOnMove(from, { kind: "about", id: 4 })).toBe(from);
@@ -261,5 +261,7 @@ describe("their list opened from an article's byline (decision 0288)", () => {
     expect(listFromOnMove(from, { kind: "feed", id: 5 })).toBeUndefined();
     expect(listFromOnMove(from, { kind: "view", view: "unread" })).toBeUndefined();
     expect(listFromOnMove(undefined, { kind: "feed", id: 4 })).toBeUndefined();
+    // Back in the article, read in their own list: the list it goes back to has "‹ Home" again.
+    expect(listFromOnMove(from, { kind: "feed", id: 4 }, true)).toBeUndefined();
   });
 });
