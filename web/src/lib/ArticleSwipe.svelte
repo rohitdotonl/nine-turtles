@@ -1,6 +1,6 @@
 <!--
   An article's own pulls on a phone (SPEC section 20, decisions 0274, 0276
-  and 0279), as the toolbar's Previous and Next: pulled on up past its end,
+  and 0280), as the toolbar's Previous and Next: pulled on up past its end,
   the next article; pulled on down past its top, the previous one. Sideways
   is only for going back (`SwipeBack.svelte`), so each way means one thing.
   As sideways, the screen follows the finger: the article moves with it, and

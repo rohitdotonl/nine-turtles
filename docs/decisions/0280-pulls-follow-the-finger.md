@@ -1,4 +1,4 @@
-# 0279: An article's pull follows the finger, with the next one hung beyond
+# 0280: An article's pull follows the finger, with the next one hung beyond
 
 **In one line:** A pull past an article's end or top moves the article with the finger, the next (or previous) one hanging just beyond it with its title and writer; far enough or a quick flick says "Let go", and letting go carries straight on into it
 
