@@ -32,5 +32,5 @@ never in the way; less, but better).
    list stays balanced in its own space (decision 0278).
 6. The logo's lockup keeps its size. Its Exceptions-log entry in DESIGN.md
    (Part 1) now gives the reason without the button: the lockup fits on one
-   line in the sidebar's top line. The owner approved
+   line in the sidebar's top line at its usual width. The owner approved
    that rewording.
