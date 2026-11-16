@@ -117,8 +117,8 @@ phone, Unread's dot catches up each time you come back to the sidebar.
 
 ## One thing at a time
 
-On a computer, the list sits in a calm column beside the sidebar, lined up
-with where an article's words start, so opening one turns the page in place.
+On a computer, the list sits in a calm column in the middle of the space
+beside the sidebar, as wide as an article's words.
 Open an article and it fills the whole window, with **‹** and the list's name
 (say, **‹ Unread**) above the start of its text. Press that, or <kbd>Esc</kbd>,
 or your browser's Back, and you're back in the list where you were. While reading,

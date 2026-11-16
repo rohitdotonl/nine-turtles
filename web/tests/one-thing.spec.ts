@@ -39,12 +39,15 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   const list = page.locator("#list-pane");
   const sidebar = page.locator("#sidebar");
 
-  // Nothing open: the sidebar and the list, no reading area, the list in one column with the article (decision 0277).
+  // Nothing open: the sidebar and the list, no reading area, the list in one column as wide as the article's,
+  // centred beside the sidebar (decisions 0277 and 0278).
   await expect(sidebar).toBeVisible();
   await expect(article(page)).toHaveCount(0);
   await expect(page.getByText(/^(Nothing open|Choose an article)/)).toHaveCount(0);
   const listTitleX = (await rows(page).first().locator(".title").boundingBox())!.x;
   expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - listTitleX)).toBeLessThan(1);
+  const [left, right] = await list.locator(".scroller").evaluate((element) => [parseFloat(getComputedStyle(element).paddingLeft), parseFloat(getComputedStyle(element).paddingRight)]);
+  expect(Math.abs(left! - right!)).toBeLessThan(2);
 
   // Opening the second article: it alone fills the window, with the list's name at its top left.
   const second = rows(page).nth(1);
@@ -59,12 +62,9 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   const [backBox, articleBox, viewport] = await Promise.all([back.boundingBox(), article(page).boundingBox(), page.viewportSize()]);
   expect(backBox!.height).toBeGreaterThanOrEqual(44);
   expect(articleBox!.width).toBeGreaterThan(viewport!.width - 2);
-  // One column (decision 0277): the article's title starts where the list's titles started, so opening it turns
-  // the page in place (within half a scroll bar, where scroll bars take room), and its bar stands over the text:
-  // the way back on its left edge, More's icon ending on its right edge.
+  // The article's column is as wide as the list's was (decision 0277), centred in the window, and its bar stands
+  // over the text: the way back on its left edge, More's icon ending on its right edge.
   const text = (await article(page).locator(".article").boundingBox())!;
-  const articleTitleX = (await titleOf(page).boundingBox())!.x;
-  expect(Math.abs(articleTitleX - listTitleX)).toBeLessThanOrEqual(10);
   expect(Math.abs(backBox!.x + 4 - text.x)).toBeLessThan(2);
   const more = (await page.getByRole("button", { name: "More actions" }).boundingBox())!;
   expect(Math.abs(more.x + more.width - 12 - (text.x + text.width))).toBeLessThan(2);

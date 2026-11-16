@@ -1,6 +1,6 @@
 # 0278: Unread shows how it's arranged, quietly
 
-**In one line:** In Unread each name has the day that placed it right beside it ("Simon Willison  Today"), "People" and "Publications" are matching quiet labels, titles get more room (16px above and below), and the unread dot everywhere is smaller (6px) and a softened accent held to 3 : 1; the order itself is unchanged.
+**In one line:** In Unread each name has the day that placed it right beside it ("Simon Willison  Today"), "People" and "Publications" are matching quiet labels, titles get more room (16px above and below), the unread dot everywhere is smaller (6px) and a softened accent held to 3 : 1, and every list is centred beside the sidebar; the order itself is unchanged.
 
 *16 November 2026. The owner asked how Unread is sorted, what takes precedence, and why All articles isn't sorted the same, then chose this from pictures over several rounds.*
 
@@ -39,7 +39,14 @@ owner chose to keep the order and show it, then trimmed it to this.
    it is the one sign besides what a screen reader hears). High-contrast
    modes still draw it in the text color. The sidebar's small Unread dot
    is unchanged.
-5. **Unchanged:** the order, All articles and every other list's order,
+5. **Every list, and Settings and Everyone you follow, is centred in the
+   area beside the sidebar** (the owner, comparing both on his Mac): its
+   column stays as wide as an opened article's (decision 0277) but no
+   longer starts where the article will; with the sidebar showing, an
+   opened article (alone in the window, decision 0275) starts about 128px
+   further left. The owner chose a balanced list, the screen read most,
+   over that line-up; with the sidebar hidden they still line up.
+6. **Unchanged:** the order, All articles and every other list's order,
    offline Unread, the weekly email and assistants.
 
 **Why All articles stays a timeline.** It holds read articles too; grouped
