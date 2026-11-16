@@ -102,13 +102,13 @@
 }
 
 /*
-  Settings sets the font and size on <html> (SPEC section 18); one line width
-  for all (decision 0187): 57ch, about 71 letters in Literata (a "ch" is a zero).
+  Settings sets the font and size on <html> (SPEC section 18); one line width in
+  every font, in em, not ch (a zero's width differs by font; decision 0288).
 */
 :root {
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
-  --reading-measure: 57ch;
+  --reading-measure: 32.5em;
 }
 
 body {

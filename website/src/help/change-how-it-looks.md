@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-11
+updated: 2026-11-16
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -60,7 +60,8 @@ Aa's text size still works on top, for the article alone.
 - Each page has one color, and it marks only what's yours to look at: the
   dot beside an unread article, and what a search found. It's blue on White
   and Night, and brown on Paper.
-- Every article has the same comfortable line width, about 71 letters
-  across. A larger text size makes the lines shorter by itself.
+- Every article has the same comfortable line width, about 70 letters
+  across, and changing the typeface keeps it. A larger text size makes the
+  lines shorter by itself.
 - Larger text sizes get a little less room between lines, as a printed
   book's larger type does, so the page never looks loose.
