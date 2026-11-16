@@ -30,6 +30,7 @@ never in the way; less, but better).
    accepted: the article is a new page with the window to itself, the
    reader no longer has to hide anything to get the calm column, and the
    list stays balanced in its own space (decision 0278).
-6. The logo's lockup keeps its size and its Exceptions-log entry in
-   DESIGN.md as they are; that entry's reason still names the button, and
-   rewording it is a Part 1 change left for the owner.
+6. The logo's lockup keeps its size. Its Exceptions-log entry in DESIGN.md
+   (Part 1) now gives the reason without the button: the lockup fits on one
+   line in the sidebar's top line at its usual width. The owner approved
+   that rewording.
