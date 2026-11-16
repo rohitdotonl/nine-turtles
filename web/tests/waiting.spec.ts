@@ -63,6 +63,7 @@ test("a slow list and a slow article say they're loading", async ({
 test("a video that takes a while to start says so", async ({ page }) => {
   // A stand-in for YouTube's player: the real one's page can take longer to
   // finish loading than this test waits.
+  await page.clock.install();
   const release = await hold(page, /youtube/, "<p>YouTube's player</p>");
   await signedIn(page);
   const id = await follow(page, `${FEED_SITE}/videos/`);
@@ -71,8 +72,13 @@ test("a video that takes a while to start says so", async ({ page }) => {
   await article(page)
     .getByRole("button", { name: "Play video: A river at dawn, for an hour" })
     .click();
+  await expect(article(page).getByText("Starting the video…")).toHaveCount(0);
+  await page.clock.runFor(500);
   await expect(article(page).getByText("Starting the video…")).toBeVisible();
   await expect(article(page).locator("iframe")).toBeFocused();
+  // A slow wait (decision 0286): five seconds on, it says so.
+  await page.clock.runFor(4_500);
+  await expect(article(page).getByText("Still starting… YouTube can be slow to answer.")).toBeVisible();
   release();
   await expect(article(page).getByText("Starting the video…")).toHaveCount(0);
 });
@@ -186,7 +192,9 @@ test("a slow look on someone's site keeps saying so, its dots breathing, and Sto
   const [stopBox, lineBox] = await Promise.all([stop.boundingBox(), line.boundingBox()]);
   expect(stopBox!.height).toBeGreaterThanOrEqual(44);
   expect(lineBox!.height).toBeLessThan(44);
-  await stop.click();
+  // By keyboard: Stop is reached and pressed like any button.
+  await stop.focus();
+  await page.keyboard.press("Enter");
   await expect(box.getByText(/looking/i)).toHaveCount(0);
   await expect(find).toBeFocused();
   // Its answer, when it comes, is let go.

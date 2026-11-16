@@ -46,8 +46,9 @@
   let chosen = $state("");
   let box: HTMLElement | undefined = $state();
 
-  /** The look on the site under way, if any: Stop forgets it, so its answer is let go. */
-  let looking: object | undefined = $state();
+  /** Looking on the site now; `asks` counts each look, so a look Stop let go (or an older one) is known by its number. */
+  let looking = $state(false);
+  let asks = 0;
 
   /** Find new address: asks the site once, then shows what it named. */
   export async function find() {
@@ -56,10 +57,11 @@
     choices = [];
     open = false;
     said = "";
-    const asked = (looking = {});
+    looking = true;
+    const asked = ++asks;
     const answer = await findAddress(feed.id);
-    if (looking !== asked) return;
-    looking = undefined;
+    if (asked !== asks) return;
+    looking = false;
     const next = found(answer);
     busy = false;
     said = next.said;
@@ -73,7 +75,8 @@
 
   /** Stop: the look changes nothing, so it's simply no longer waited for, and the place's button is back. */
   function stop() {
-    looking = undefined;
+    asks += 1;
+    looking = false;
     busy = false;
     onClosed();
   }

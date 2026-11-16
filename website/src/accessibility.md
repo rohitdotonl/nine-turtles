@@ -3,7 +3,7 @@ layout: page.njk
 title: Accessibility
 description: How nine turtles makes sure everyone can read, and how to tell me when something falls short.
 permalink: /accessibility/
-updated: 2026-11-06
+updated: 2026-11-16
 ---
 
 <p class="lede">
@@ -32,8 +32,9 @@ at level AA, and go further where reading is concerned:
   each article is marked with its language, so it's read in the right
   voice.
 - **Your device's settings.** nine turtles follows your text size, light or
-  dark, high contrast and reduced motion settings. It has no animations at
-  all.
+  dark, high contrast and reduced motion settings. With reduced motion on,
+  nothing moves at all; otherwise only two small things do: a swipe on a
+  phone finishing its slide, and the dots of a wait on someone else's site.
 - **Room to touch.** Everything you tap on a phone is at least 44 pixels
   across.
 - **Fonts for reading.** Besides Literata, you can read in Atkinson

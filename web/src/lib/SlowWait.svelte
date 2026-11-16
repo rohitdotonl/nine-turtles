@@ -54,12 +54,15 @@
   let tail = $derived(stage === 2 || (stage === 3 && !long) ? why : stage === 3 ? long : "");
 </script>
 
-<span class={["slow-wait", classes]}>
-  <span role={heard ? "status" : undefined} lang="en"
-    >{#if stage > 0}{head}<span class="dots" aria-hidden="true" use:breathe><span></span><span></span><span></span></span
-      ><span class="sr-only">…</span>{#if tail}{" "}{tail}{/if}{/if}</span
-  >{#if stage === 3 && long && onStop}<TextButton class="stop" onclick={onStop}>Stop</TextButton>{/if}
-</span>
+{#if heard || stage > 0}
+  <!-- Inside a line that's already heard, nothing at all until there's something to say, so that line can stay empty (and hidden) meanwhile. -->
+  <span class={["slow-wait", classes]}>
+    <span role={heard ? "status" : undefined} lang="en"
+      >{#if stage > 0}{head}<span class="dots" aria-hidden="true" use:breathe><span></span><span></span><span></span></span
+        ><span class="sr-only">…</span>{#if tail}{" "}{tail}{/if}{/if}</span
+    >{#if stage === 3 && long && onStop}<TextButton class="stop" onclick={onStop}>Stop</TextButton>{/if}
+  </span>
+{/if}
 
 <style>
   .slow-wait {

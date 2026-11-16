@@ -23,6 +23,8 @@
   import Waiting from "./Waiting.svelte";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
   import type { Feed } from "./shapes";
   import { addFeed, editFeed, type Problem } from "./feeds";
   import { droppedOn } from "./linkDrop.svelte";
@@ -104,7 +106,7 @@
     {#if into}<p class="text-meta text-ink-2">They'll go in {into.name}.</p>{/if}
     <!-- Screen readers hear each new line here without moving the keyboard's place: the question again once the name is known, since the keyboard reached the title before it was. -->
     <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2"]}>
-      {#if looking}Looking…{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
+      {#if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
     </p>
   </div>
 

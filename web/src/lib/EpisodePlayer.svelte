@@ -146,7 +146,7 @@
     <span>{clock(position)}</span>
     <span>{duration ? left(position, duration) : ""}</span>
   </div>
-  <p class="episode-note empty:hidden">{#if mine && player.waiting}<SlowWait words="Loading from the publisher" again="Still loading" />{/if}</p>
+  <p class="episode-note empty:hidden" role="status">{#if mine && player.waiting}<SlowWait words="Loading from the publisher" again="Still loading" heard={false} />{/if}</p>
   {#if mine && !player.waiting && player.said}
     <!-- Seen here; screen readers hear it once, from the Now playing bar's own line. -->
     <p class="episode-note">{player.said}</p>

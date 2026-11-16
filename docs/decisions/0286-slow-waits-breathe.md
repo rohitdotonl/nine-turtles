@@ -5,10 +5,11 @@
 *16 November 2026. The owner asked whether "Looking on the site…" in Find new address should show a loading icon, saw the waits side by side (words only, words that move on, the same with breathing dots, and a spinner) and chose words that move on with breathing dots.*
 
 **Why.** Most waits are on nine turtles' own server and end within a second;
-they stay as decision 0230 made them, a word after half a second. Five can
+they stay as decision 0230 made them, a word after half a second. These can
 take 20 seconds to a minute, because they wait on someone else's site:
-Find new address, Add, + Add a source, Write back's and Ask them for a
-feed's look on their site, a video starting and a podcast loading. Their
+Find new address, Add and "Follow this person?", + Add a source, Write
+back's and Ask them for a feed's look on their site, a video starting and
+a podcast loading. Their
 line never changed, so it looked stuck (principle 5, honest by default:
 nothing said how long, and nothing let the reader stop waiting). A spinner
 says only "busy", pulls the eye and says nothing to a screen reader.
@@ -19,7 +20,7 @@ says only "busy", pulls the eye and says nothing to a screen reader.
    "Looking…", "Starting the video…", "Loading from the publisher…"); after 5
    seconds (`STILL_AFTER_MS`) "Still looking… Some sites are slow to
    answer." ("Still starting… YouTube can be slow to answer." for a video,
-   "Still loading…" for a podcast); after 15 (`LONG_AFTER_MS`), for a look on
+   "Still loading… Some sites are slow to answer." for a podcast); after 15 (`LONG_AFTER_MS`), for a look on
    someone's site, "Still looking… It can take up to a minute." (every such
    look ends within a minute).
 2. **Stop,** a `TextButton` beside that last line, only where stopping
@@ -39,4 +40,6 @@ says only "busy", pulls the eye and says nothing to a screen reader.
 5. **Small fixes on the way:** Find new address says "Looking on their
    site…" as Write back does (it said "the site"), and only after half a
    second, like every other wait; + Add a source says "Looking…" and then
-   "Joining…" where it said "Working…".
+   "Joining…" where it said "Working…"; Add keeps "Following… 3 of 3 done"
+   while the ticked feeds are joined into one, rather than a slow wait's
+   "Looking…" for nine turtles' own work.

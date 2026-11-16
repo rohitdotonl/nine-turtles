@@ -258,6 +258,7 @@
   /** Clears what was said before a new try. */
   function begin() {
     busy = true;
+    progress = undefined;
     message = "";
     problem = false;
     badAddress = false;
@@ -326,7 +327,7 @@
       results.push(await addFeed(url));
       progress = { done: results.length, of: urls.length };
     }
-    progress = undefined;
+    // The count stays up while they're joined into one (nine turtles' own work, never a slow wait); the next begin() clears it.
     const together = followedTogether(urls, results, choices);
     note = together.note;
     const [first] = together.added;
