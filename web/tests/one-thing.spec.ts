@@ -56,7 +56,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(article(page)).toBeVisible();
   await expect(sidebar).toBeHidden();
   await expect(list).toBeHidden();
-  await expect(page).toHaveURL(/\/articles\/\d+$/);
+  await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
   const back = page.getByRole("button", { name: `Back to ${blog.title}`, exact: true });
   await expect(back).toBeVisible();
   const [backBox, articleBox, viewport] = await Promise.all([back.boundingBox(), article(page).boundingBox(), page.viewportSize()]);

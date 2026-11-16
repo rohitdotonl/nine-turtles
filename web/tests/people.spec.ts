@@ -44,7 +44,7 @@ async function openPlaces(
   }
   const ids = [];
   for (const path of paths) ids.push(await follow(page, `${FEED_SITE}${path}`));
-  // Their number alone, which opens them (and gains their name, decision 0279).
+  // Their number alone, which opens them (and gains their name, decision 0281).
   await page.goto(new URL(`/${ids[0]}`, FEEDS_APP).href);
   await appReady(page);
   return ids;

@@ -43,7 +43,7 @@ test.describe("a messy feed", () => {
     // The writer's name in the byline is a link to their page.
     await expect(pane(page).locator(".article-byline").getByRole("link", { name: `Messy ${name}` })).toHaveAttribute(
       "href",
-      `/${id}/about`,
+      new RegExp(`^/(?:[a-z0-9-]+-)?${id}/about$`),
     );
 
     const text = pane(page).locator(".article-text");

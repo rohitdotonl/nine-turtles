@@ -422,7 +422,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
     await expect(card).toHaveCount(0);
     await expect(one).toBeFocused();
-    await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/articles\/[0-9]+$/);
+    await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
     // From the keyboard alone: Enter on the number opens it; Tab reaches its ×, and Tab past it closes it.
     await page.keyboard.press("Enter");

@@ -35,6 +35,7 @@ describe("addresses with the sidebar's names", () => {
     nameAddressesFrom({ rows, folders: [{ id: 4, name: "Friends" }] });
     // From either of Mira's places, her list is hers.
     expect(articleAddress(article(5), { kind: "feed", id: 3 }, rows)).toBe("/mira-chen-3/a-slow-letter-29");
+    expect(articleAddress(article(3), { kind: "feed", id: 5 }, rows)).toBe("/mira-chen-5/a-slow-letter-29");
     expect(articleAddress(article(5), { kind: "view", view: "unread" }, rows)).toBe("/unread/mira-chen/a-slow-letter-29");
     expect(articleAddress(article(7), { kind: "folder", id: 4 }, rows)).toBe("/folders/friends-4/quiet-notes/a-slow-letter-29");
     // An untitled post goes by its opening words; a place not in the sidebar by the feed's own title.

@@ -115,6 +115,7 @@ describe("addresses", () => {
     expect(addressWords("Café Noël: Ça va? ", 40)).toBe("cafe-noel-ca-va");
     expect(addressWords("This Finally Cut Claude Code's Token Usage", 50)).toBe("this-finally-cut-claude-codes-token-usage");
     expect(addressWords("Straße & Smørrebrød", 40)).toBe("strasse-smorrebrod");
+    expect(addressWords("Kırmızı Başlık, Guðmundsson, Ħamrun", 50)).toBe("kirmizi-baslik-gudmundsson-hamrun");
     expect(addressWords("नमस्ते दुनिया", 40)).toBe("");
     expect(addressWords("東京 2026", 40)).toBe("2026");
     expect(addressWords("one two three four five six seven eight nine ten", 30)).toBe("one-two-three-four-five-six");

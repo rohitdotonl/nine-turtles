@@ -4,7 +4,7 @@ import { appReady, follow, signIn } from "./screens";
 
 // Each open article has an address of its own (decision 0233, SPEC section 6):
 // reload, a new tab and the browser's Back keep it, and it says who and what
-// (decision 0279). Each test follows a made-up blog of its own (three articles).
+// (decision 0281). Each test follows a made-up blog of its own (three articles).
 
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const NEWEST = "On keeping a commonplace book (3)";

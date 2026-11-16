@@ -22,7 +22,8 @@ export function nameAddressesFrom(library: { rows: Feed[] | undefined; folders: 
  */
 export function articleAddress(article: Article, list: Route, rows: Feed[] | undefined): string {
   const row = rowFor(article.feedId, rows ?? []);
-  const theirs = list.kind === "feed" && list.id === (row?.id ?? article.feedId);
+  // A person's list may be open at any of their places' numbers: theirs is by row.
+  const theirs = list.kind === "feed" && (rowFor(list.id, rows ?? [])?.id ?? list.id) === (row?.id ?? article.feedId);
   const title = article.title.trim() || (untitledOpening(article) ?? "");
   return withArticle(addressFor(list), { id: article.id, title, by: theirs ? undefined : (row?.title ?? article.feedTitle) });
 }

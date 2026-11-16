@@ -82,8 +82,8 @@ export function addressWords(text: string, most: number): string {
     .normalize("NFKD")
     .replace(/\p{M}/gu, "")
     .toLowerCase()
-    .replace(/ß/g, "ss").replace(/æ/g, "ae").replace(/œ/g, "oe").replace(/ø/g, "o").replace(/ł/g, "l").replace(/đ/g, "d").replace(/þ/g, "th")
-    .replace(/['’]/g, "");
+    .replace(/['’]/g, "")
+    .replace(/[ßæœøłđðþıħŋŧ]/g, (letter) => LETTERS[letter]!);
   let words = "";
   for (const word of plain.split(/[^a-z0-9]+/)) {
     if (!word) continue;
@@ -92,6 +92,9 @@ export function addressWords(text: string, most: number): string {
   }
   return words;
 }
+
+/** Latin letters with no accent to drop, as plain ones. */
+const LETTERS: Record<string, string> = { ß: "ss", æ: "ae", œ: "oe", ø: "o", ł: "l", đ: "d", ð: "d", þ: "th", ı: "i", ħ: "h", ŋ: "ng", ŧ: "t" };
 
 /** Words with a number after them: "jim-nielsen-54", or "54" when there are none. */
 const numbered = (words: string, id: number) => (words ? `${words}-${id}` : `${id}`);
