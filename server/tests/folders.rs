@@ -798,6 +798,7 @@ async fn a_paused_feed_piles_nothing_up_and_unpausing_brings_back_its_newest_thr
                 published_at: Some(now - 10 + number),
                 episode: None,
                 video_kind: None,
+                comments: None,
             })
             .collect()
     };
@@ -885,6 +886,7 @@ async fn a_paused_feed_piles_nothing_up_and_unpausing_brings_back_its_newest_thr
         published_at: Some(now),
         episode: None,
         video_kind: None,
+        comments: None,
     }];
     nine_turtles::feeds::store_articles(&mut connection, alpha, &later, now + 5)
         .await

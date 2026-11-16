@@ -27,6 +27,36 @@ V1, item 2). Its look gets a refinement round.*
   no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page
   has no Write to, and so no address on its page. Making it **A person**
   in its settings brings them back, with any address kept from before.
+- **Off for one person** (decision 0286, the owner's choice): their
+  settings (section 36) have a **Write back** switch, on unless the reader
+  switches it off ("Off takes Write back away from their articles and their
+  page."), kept on every source of theirs. Off, it's as for a publication:
+  no Write back at their articles' end, no paper plane, `w` does nothing,
+  no Write back in a row's menu or beside chosen words, and no Write to or
+  address on their page; but they stay a person, under People, and any
+  address is kept for when it's switched on again. Joining people keeps it
+  off if it was off for any of them; separating a source puts it back on
+  for that source. A publication, or someone who could be either, has no
+  switch: there's nothing to switch.
+- **Copy address** (decision 0286): the line that shows the address ends
+  in two quiet underlined words, **Copy address** ("Copy Maya Chen's email
+  address" to screen readers), at an article's end and on their page
+  (after Change), for writing from an email nine turtles can't open.
+  Pressed, it copies the address and the keyboard stays on it; a line under
+  says "Copied." (or, failing, the same oxblood words as Didn't open?'s
+  copy).
+- **In public: comments** (decision 0286). Write back is private. The
+  article's own page, where its comments usually are, is **View original**.
+  When the feed itself says where an article's comments are (RSS's
+  `<comments>`, or an Atom `rel="replies"` link to a web page, as WordPress,
+  Blogger and many others write; not a feed of comments, and not the
+  article's own address), its end on a computer has a third quiet button
+  beside Save and View original, **Comments**, with a speech bubble, opening
+  that page in a new tab; on a phone, whose end has no such row, it's
+  **Open comments** in the article's More menu. No platform is named in
+  nine turtles: only what the feed brought is used, and that page is only
+  ever linked to, never fetched. It's there for publications too, and with
+  Write back off.
 - **Write to, on their page** (the owner's core path, point 9): the same
   outlined button with the paper plane, **Write to Tomas Berg**, sits under
   their name on their page (section 36), with the address under it
@@ -218,3 +248,13 @@ V1, item 2). Its look gets a refinement round.*
    Gmail draft opens in a new tab with the address, "Re: " and the title.
    Open another article and press Write back: Gmail again, straight away.
    Press **Write in your email app** under it to go back.
+11. Open an article of someone whose address is known: the line under
+   Write back ends in **Copy address**. Press it: "Copied." under it, and
+   the address pastes into a new email.
+12. Follow a WordPress blog (its feed names each post's comments). On a
+   computer, read an article to its end: **Comments** beside View original
+   opens its comments on their site in a new tab. On a phone, the
+   article's More menu has **Open comments**.
+13. On their page, press Settings and switch **Write back** off: their page
+   has no Write to, and their articles end with no Write back, no paper
+   plane, and `w` does nothing. Switch it on: all back, with the address.

@@ -20,6 +20,12 @@ whether someone is a person or a publication, the end of their articles
 asks once instead: "Is … someone you might write back to?" Press **Yes, a
 person**, and Write back takes its place.
 
+Write back is private: an email between you and them. To answer in public,
+where the writer's other readers can see it, use their comments: **View
+original** opens the article on their site, and when their feed says where
+an article's comments are, a **Comments** link sits beside it at the
+article's end (on a phone, **Open comments** in the article's **…** menu).
+
 ## Write back
 
 1. Read to the end of the article and press **Write back** (under it,
@@ -46,9 +52,9 @@ new draft there, in a new tab. nine turtles remembers this on that
 computer, so from then on Write back goes straight to Gmail. To go back,
 press **Use your email app** under the button.
 
-If neither works for you, press **Didn't open?**, then **Copy their
-address**, and paste it into a new email. On a phone, Copy their address is
-already there under the button.
+If neither works for you, press **Copy address**, at the end of the line
+under the button that shows their address, and paste it into a new email.
+nine turtles says "Copied." under it.
 
 ## Write back about a line
 
@@ -78,7 +84,15 @@ about page, while the box says "Looking on their site…".
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Write to Tomas Berg**, which opens your email app to
 write to them about anything, with no subject. To change it, press
-**Change** beside the address.
+**Change** beside the address; **Copy address** copies it.
+
+## Turn Write back off for someone
+
+Some people you read you'll never write to. Open their page, press
+**Settings**, and switch **Write back** off. The button at the end of their
+articles, the paper plane, <kbd>W</kbd> and **Write to** on their page all
+go; they stay with your people, and any address nine turtles knows is kept
+for if you switch it on again.
 
 ## Good to know
 
