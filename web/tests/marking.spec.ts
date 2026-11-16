@@ -28,7 +28,7 @@ async function openBlog(page: Page, width = 1280): Promise<string> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(row(page, name, NEWEST)).toBeVisible();
   return name;
@@ -76,7 +76,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/untitled/${name}/`);
-    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${id}`, FEEDS_APP).href);
     await appReady(page);
     const rowOf = (start: string) => page.locator(".item-row", { hasText: start });
     const titleOf = (start: string) => rowOf(start).locator(".title");
@@ -176,7 +176,7 @@ test.describe("on a wide window", () => {
     // The list's own address, without the article: reopening the article
     // from the address (decision 0233) would rightly mark it read again.
     await savedUnread;
-    await page.goto(page.url().replace(/\/articles\/\d+$/, ""));
+    await page.goto(new URL(new URL(page.url()).pathname.split("/").slice(0, 2).join("/"), FEEDS_APP).href);
     await appReady(page);
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
     await expect(feedLink(page, blog)).toHaveAttribute("data-unread", `3`);
@@ -700,7 +700,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await page.keyboard.press("g");
   await page.keyboard.press("u");
   // Still their list, at its own address (the article was left, decision 0275).
-  await expect(page).toHaveURL(/\/people\/\d+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?\d+$/);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);

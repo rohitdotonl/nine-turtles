@@ -2,8 +2,8 @@
 
 /*
   One top line across the window (decision 0043): the sidebar's wordmark, the
-  list's title and More, the article's tools, a page's title and X, and the
-  sidebar button all sit in a band of the same height, centred in it, so the
+  list's title and More, the article's tools, and a page's title and X
+  all sit in a band of the same height, centred in it, so the
   sidebar's and the list's top lines end, and their hairlines fall, at one height,
   as Apple Books keeps every toolbar item on one line. A 44px button in it
   has 6px clear above and below. It's a minimum, so text set larger by the

@@ -46,7 +46,7 @@ section 36.*
 - **"Is this the same person?" is removed.** nine turtles no longer asks
   whether two sources are one person. This replaces 0146's same-person
   question and choice 8.
-- **Addresses:** `/people/12`, `/publications/7`, `…/about`, `…/edit`,
+- **Addresses** (replaced by decision 0281, which leads with names and drops `/people/` and `/publications/`): `/people/12`, `/publications/7`, `…/about`, `…/edit`,
   `/people/12/sources/34`. Old `/feeds/12` addresses still open and are
   tidied to the new ones.
 - **Data (structure change 33,** `server/migrations/0033_people_and_publications.sql`):

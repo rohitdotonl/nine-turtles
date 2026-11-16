@@ -19,7 +19,7 @@ test("Hide articles about… from someone's settings hides what matches at once,
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
 
   // Their settings › Hide articles about…: Settings › Hiding, the field set to them and waiting.
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
@@ -114,7 +114,7 @@ test("an article's More menu starts the same word, set to whoever wrote it", asy
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: /On keeping a commonplace book \(3\)/ }).first().click();
   await article(page).getByRole("button", { name: "More actions" }).click();
@@ -133,7 +133,7 @@ test("a word hides an article as it arrives; a week says so, and Remove has Undo
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
 
@@ -223,7 +223,7 @@ test("with the keyboard alone: a word added, then undone, keeps the keyboard's p
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Hide articles about…" }).click();
 

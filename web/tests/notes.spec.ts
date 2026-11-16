@@ -17,7 +17,7 @@ const NEWEST = "On keeping a commonplace book (3)";
 
 async function openNewest(page: Page, blog: string): Promise<number> {
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: new RegExp(NEWEST.replace(/[()]/g, "\\$&")) }).first().click();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
@@ -436,14 +436,14 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await expect(article(page).locator("mark.highlight")).toHaveCount(1);
 
   // Their page has a private note of the reader's own.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Add a note…" }).click();
   await page.getByRole("textbox", { name: `A note on Blog ${blog}` }).fill("Met at the spring fair");
   await page.getByRole("button", { name: "Save note" }).click();
   await expect(page.getByText("Met at the spring fair")).toBeVisible();
 
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const unsubscribe = page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` });
   await tabTo(page, unsubscribe);
@@ -467,7 +467,7 @@ test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
   await page.getByRole("menuitem", { name: /Highlight/ }).click();
   await expect(article(page).locator("mark.highlight")).toHaveCount(1);
 
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: `Unsubscribe from Blog ${blog}` }).click();
   const question = page.getByRole("group", { name: `Keep what you saved from Blog ${blog}?` });

@@ -31,7 +31,7 @@
   import SettleList from "./SettleList.svelte";
   import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
-  import { pathFor } from "./router";
+  import { addressFor } from "./router";
   import {
     folderNames,
     listTended,
@@ -53,7 +53,6 @@
     onBack,
     onOpenPerson,
     onFeedsChanged,
-    besideToggle = false,
   }: {
     heading?: HTMLHeadingElement;
     /** On a phone: back to Home. A computer shows the sidebar, where its row says where you are. */
@@ -62,7 +61,6 @@
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
-    besideToggle?: boolean;
   } = $props();
 
   let feeds: Tended[] | undefined = $state();
@@ -286,7 +284,7 @@
 </script>
 
 <section aria-labelledby="your-feeds-heading" class="lines-up flex flex-1 flex-col bg-paper">
-  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <NotWorking bind:this={notWorking} onOpen={onOpenPerson} />
@@ -330,7 +328,7 @@
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
                   {:else}
-                    <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
+                    <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words"><Dated text={line} /></span>

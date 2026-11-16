@@ -21,7 +21,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   // Nothing known yet: their page has no address.
   await expect(whoPage(page, `Blog ${name}`).getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
@@ -30,7 +30,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Write to Blog ${name}` })).toHaveClass(/\bbtn\b/);
   await expect(whoPage(page, `Blog ${name}`).locator(".btn-primary")).toHaveCount(0);
   await expect(whoPage(page, `Blog ${name}`)).not.toContainText("A person ·");
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   await page.locator(".item-row").first().click();
@@ -92,7 +92,7 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await page.keyboard.press("Escape");
 
   // Their page keeps it, and Change beside it corrects it in place.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const about = whoPage(page, `Blog ${name}`);
   // Write to opens the email app with the address only and an empty subject.
@@ -117,7 +117,7 @@ test("Write back fills in the address it finds on their site, for the reader to 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/writer/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   await pane(page).getByRole("button", { name: /^Write back to/ }).click();
@@ -143,12 +143,12 @@ test("A publication has no Write back and no Write to; A person brings them back
   const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "pub@pub.example" } });
   expect(kept.ok()).toBe(true);
   const who = () => whoPage(page, `Blog ${name}`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 
   // Made a publication, in their settings: Write to and its address go from their page as soon as it's chosen (decision 0192).
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("radio", { name: "A publication" }).check();
   await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
@@ -158,7 +158,7 @@ test("A publication has no Write back and no Write to; A person brings them back
 
   // Its article ends with no Write back, there's no paper plane, and W (which would ask for the
   // unknown address, as in the first test) does nothing.
-  await page.goto(new URL(`/publications/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
@@ -172,7 +172,7 @@ test("A publication has no Write back and no Write to; A person brings them back
   await page.keyboard.press("Escape");
 
   // A person again: Write to comes back, with the address kept through its spell as a publication.
-  await page.goto(new URL(`/publications/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("radio", { name: "A person" }).check();
   await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
@@ -188,7 +188,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/untitled/${name}/feed.xml`);
   expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   const plane = pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true });
@@ -200,7 +200,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await page.keyboard.press("Escape");
   await expect(field).toHaveCount(0);
   await expect(pane(page).getByRole("button", { name: `Write back to Notes ${name}` })).toBeFocused();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/`));
 
   // A note has no title: the email is about its opening words, so the writer knows which post.
   expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "notes@notes.example" } })).ok()).toBe(true);
@@ -258,7 +258,7 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
   expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
   expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "gm@gm.example" } })).ok()).toBe(true);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   const link = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
@@ -336,7 +336,7 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
   expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
   expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "t@t.example" } })).ok()).toBe(true);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
   await pane(page).getByRole("link", { name: `Write back to Blog ${name}` }).click();

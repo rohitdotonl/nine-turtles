@@ -148,17 +148,17 @@ describe("Opener", () => {
 describe("stepFor", () => {
   it("adds a step when the address or the screen changes, and none when both stay", () => {
     expect(stepFor(feed, "list", "/", false)).toEqual({ screen: "list", back: "list", fromParent: false });
-    expect(stepFor(settings, "list", "/people/7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
+    expect(stepFor(settings, "list", "/mira-chen-7", false)).toEqual({ screen: "page", back: "list", fromParent: false });
     expect(stepFor(following, "page", "/settings", true)).toEqual({ screen: "page", back: "page", fromParent: true });
     // The same place, from the article (a phone) or the feeds (home): back to its list is a step.
-    expect(stepFor(feed, "article", "/people/7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
-    expect(stepFor(feed, "list", "/people/7", false)).toBeUndefined();
+    expect(stepFor(feed, "article", "/mira-chen-7", false)).toEqual({ screen: "list", back: "article", fromParent: false });
+    expect(stepFor(feed, "list", "/mira-chen-7", false)).toBeUndefined();
   });
 });
 
 describe("Steps", () => {
   /** A browser history that records what's asked of it, and the screen's hands. */
-  function made(state: unknown = null, path = "/people/7") {
+  function made(state: unknown = null, path = "/mira-chen-7") {
     const asked: string[] = [];
     const browser: Browser = {
       get state() {
@@ -182,7 +182,7 @@ describe("Steps", () => {
     // Arrived straight from a link or a reload: nothing before it to go back to.
     const straight = made({ screen: "list" });
     straight.steps.back("home");
-    expect(straight.asked).toEqual(['replace /people/7 {"screen":"home"}', "arrive home"]);
+    expect(straight.asked).toEqual(['replace /mira-chen-7 {"screen":"home"}', "arrive home"]);
   });
 
   it("closes a sheet opened with a step by stepping back, so Back doesn't reopen it", () => {
@@ -208,7 +208,7 @@ describe("Steps", () => {
   it("opens an article on a phone as a step on from its list", () => {
     const { steps, asked } = made({ screen: "list" });
     steps.openArticle();
-    expect(asked).toEqual(['push /people/7 {"screen":"article","back":"list"}']);
+    expect(asked).toEqual(['push /mira-chen-7 {"screen":"article","back":"list"}']);
     expect(steps.cameFrom("list")).toBe(true);
     steps.goBack();
     expect(asked.at(-1)).toBe("back");

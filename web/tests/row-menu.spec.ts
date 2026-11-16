@@ -21,7 +21,7 @@ async function openBlog(page: Page, width = 1280): Promise<string> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(rows(page)).toHaveCount(3);
   return `Blog ${name}`;

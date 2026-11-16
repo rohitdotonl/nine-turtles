@@ -22,7 +22,7 @@ async function openNewest(page: Page, blog: string): Promise<number> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
-  await page.goto(new URL(`/feeds/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: button(NEWEST) }).first().click();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
@@ -120,7 +120,7 @@ test("a new name in their settings is kept the moment the field is left, so ther
   test.skip(isMobile, "the same page on a phone");
   const blog = `drafts-name-${test.info().workerIndex}-${Date.now()}`;
   const id = await openNewest(page, blog);
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const name = page.getByRole("textbox", { name: "Name" });
   await name.fill("Asha Rao, garden letters");

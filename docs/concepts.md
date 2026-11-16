@@ -170,7 +170,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The reading settings on screen: Unread on or off and sort order, each saved in order; a saved change made before the server first answers stays (`reading-settings.svelte.ts`, keys in `keys.svelte.ts`)
 - When a shortcut applies: what's on screen at the press (`KeyScene`) and what the screen can do (`KeyHands`), decided in one place (`shortcuts.ts`)
 - Moving between places: lists, sheets that open over a place (`underSheet`), what a move keeps (`moveTo`), giving the keyboard back when a sheet closes (`Opener`) and the browser's history steps (`Steps`), in `navigation.ts`
-- The screen's arrangement: the width step, which areas show (`panesFor`), the sidebar's toggle and its dragged width, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
+- The screen's arrangement: the width step, which areas show (`panesFor`), whether a phone shows its feeds screen, and the sidebar's dragged width, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
 - The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
 - A row's own menu in the article list: right-click, long press or the Menu key; save, read, write back, their page (`rowMenu.ts`, `RowMenu.svelte`, `longPress.ts`), sharing More's menu (`MenuList.svelte`)

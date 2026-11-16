@@ -11,18 +11,18 @@ describe("phone steps in the browser's history", () => {
 
   it("opens the feeds list on a phone's front page, and a named place as itself", () => {
     expect(startingStep(null, true, "/", true)).toEqual({ screen: "home" });
-    expect(startingStep(null, true, "/feeds/3", true)).toEqual({ screen: "list", back: undefined });
+    expect(startingStep(null, true, "/mira-chen-3", true)).toEqual({ screen: "list", back: undefined });
     expect(startingStep(null, false, "/", true)).toEqual({ screen: "list", back: undefined });
     expect(startingStep(null, true, "/settings", false)).toEqual({ screen: "page", back: undefined });
   });
 
   it("keeps the screen across a reload, except an open article, which opens its list", () => {
     expect(startingStep({ screen: "home" }, true, "/unread", true)).toEqual({ screen: "home" });
-    expect(startingStep({ screen: "list", back: "home" }, true, "/feeds/3", true)).toEqual({ screen: "list", back: "home" });
-    expect(startingStep({ screen: "article", back: "list" }, true, "/feeds/3", true)).toEqual({ screen: "list", back: undefined });
+    expect(startingStep({ screen: "list", back: "home" }, true, "/mira-chen-3", true)).toEqual({ screen: "list", back: "home" });
+    expect(startingStep({ screen: "article", back: "list" }, true, "/mira-chen-3", true)).toEqual({ screen: "list", back: undefined });
   });
 
   it("keeps an open article across a reload while its address names it (decision 0233)", () => {
-    expect(startingStep({ screen: "article", back: "list" }, true, "/people/3/articles/9", true)).toEqual({ screen: "article", back: "list" });
+    expect(startingStep({ screen: "article", back: "list" }, true, "/mira-chen-3/a-letter-9", true)).toEqual({ screen: "article", back: "list" });
   });
 });

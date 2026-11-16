@@ -76,7 +76,9 @@ see which one you're about to change.
 
 Each open article has its own address, so you can reload, bookmark it, or
 Command-click (Ctrl-click on Windows) an article to open it in a new tab,
-as you would a link.
+as you would a link. The address says who wrote it and what it's called, such as
+`/jim-nielsen-54/making-a-website-in-2026-5905`, and keeps
+working even if the title or name changes later.
 
 ## Reading
 
@@ -126,9 +128,9 @@ or your browser's Back, and you're back in the list where you were. While readin
 <kbd>J</kbd> and <kbd>K</kbd> go to the next and previous article. A
 person's page fills the window the same way, with **×** to go back.
 
-The small button at the top of the sidebar hides it, so the list has more
-room. You can also drag the sidebar's edge to make it wider; double-click
-the edge to put it back.
+The sidebar stays beside the list, and steps away on its own whenever an
+article or a person's page opens. Drag its edge to make it wider or
+narrower; double-click the edge to put it back.
 
 On a computer, an article's buttons (View original, Aa, Save and the rest)
 sit above its title and scroll away with it, so the whole window is the

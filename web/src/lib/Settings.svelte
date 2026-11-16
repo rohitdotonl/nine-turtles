@@ -83,7 +83,6 @@
     people,
     phone = false,
     ruleForFeed = $bindable(),
-    besideToggle = false,
   }: {
     /** One of Settings' own pages, or Settings itself (decision 0120). */
     page?: SettingsPage;
@@ -124,8 +123,6 @@
     phone?: boolean;
     /** Hiding opens set to this person ("Hide articles about…" on an article or a person's page). */
     ruleForFeed?: number;
-    /** The sidebar is hidden, so the top line starts clear of its toggle. */
-    besideToggle?: boolean;
   } = $props();
 
   /** Hiding started from someone's page or an article: the word field waits, set to them. */
@@ -250,7 +247,6 @@
 {#if task === "email"}
   <ChangeEmail
     sheet={!phone}
-    {besideToggle}
     bind:heading={taskHeading}
     onCancel={closeTask}
     onSent={(note) => {
@@ -261,7 +257,6 @@
 {:else if task === "password"}
   <ChangePassword
     sheet={!phone}
-    {besideToggle}
     bind:heading={taskHeading}
     onCancel={closeTask}
     onChanged={(note) => {
@@ -270,20 +265,20 @@
     }}
   />
 {:else if task === "data"}
-  <DeleteAccount data sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={closeTask} />
+  <DeleteAccount data sheet={!phone} bind:heading={taskHeading} onCancel={closeTask} onDeleted={closeTask} />
 {:else if task === "delete"}
-  <DeleteAccount sheet={!phone} {besideToggle} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
+  <DeleteAccount sheet={!phone} bind:heading={taskHeading} onCancel={closeTask} onDeleted={onSignedOut} />
 {/if}
 {#if !(task && phone)}
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
 <section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="lines-up flex min-w-0 flex-1 flex-col bg-paper">
   {#if page}
-    <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} {besideToggle} column="max-w-[35rem]" />
+    <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} column="max-w-[35rem]" />
   {:else if phone}
     <!-- On a phone Settings is a screen you go into, so it goes back, as every other screen there does (decision 0231). -->
     <PageHead title="Settings" id="settings-heading" bind:heading onBack={onClose} backTo="Home" column="max-w-[35rem]" />
   {:else}
-    <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" {besideToggle} column="max-w-[35rem]" />
+    <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" column="max-w-[35rem]" />
   {/if}
   {#key page}
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">

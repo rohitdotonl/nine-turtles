@@ -21,14 +21,12 @@
   let {
     heading = $bindable(),
     sheet = false,
-    besideToggle = false,
     onSent,
     onCancel,
   }: {
     heading?: HTMLHeadingElement;
     /** Shown as a sheet over Settings, not as a page. */
     sheet?: boolean;
-    besideToggle?: boolean;
     /** The link is on its way: what to say in Settings. */
     onSent: (message: string) => void;
     onCancel: () => void;
@@ -148,7 +146,7 @@
 {:else}
   <section aria-labelledby="list-heading" class="page-sheet">
     <div class="page-sheet-card">
-      <PageHead title="Change email" bind:heading {besideToggle} onClose={onCancel} closeLabel="Close" />
+      <PageHead title="Change email" bind:heading onClose={onCancel} closeLabel="Close" />
       <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
         <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
           {@render form()}

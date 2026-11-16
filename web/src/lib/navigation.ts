@@ -8,7 +8,7 @@
 // Shell still corrects the address in place (`history.replaceState`) when it
 // opens and when Back lands somewhere it leads on from.
 
-import { articleIn, isList, parentOf, pathFor, rowFor, type Route } from "./router";
+import { addressFor, articleIn, isList, parentOf, pathFor, rowFor, withoutWords, type Route } from "./router";
 import { stepOf, type Screen, type Step } from "./steps";
 
 /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
@@ -113,7 +113,7 @@ export class Opener {
  */
 export function stepFor(next: Route, from: Screen, at: string, fromParent: boolean): Step | undefined {
   const to: Screen = isList(next) ? "list" : "page";
-  if (pathFor(next) === at && from === to) return undefined;
+  if (pathFor(next) === withoutWords(at) && from === to) return undefined;
   return { screen: to, back: from, fromParent };
 }
 
@@ -164,7 +164,7 @@ export class Steps {
    */
   goTo(next: Route, from: Screen, fromParent: boolean, opening: boolean) {
     const step = stepFor(next, from, this.#path(), fromParent);
-    if (step) this.#browser.pushState(step, "", pathFor(next));
+    if (step) this.#browser.pushState(step, "", addressFor(next));
     if (opening) this.#sheetPushed = step !== undefined;
   }
 

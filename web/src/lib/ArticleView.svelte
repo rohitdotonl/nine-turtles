@@ -66,7 +66,7 @@
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
-  import { pathFor } from "./router";
+  import { addressFor } from "./router";
 
   let {
     article,
@@ -551,7 +551,7 @@
         {#if followed}
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
                A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
-          <a class="publisher writer-link" href={pathFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
+          <a class="publisher writer-link" href={addressFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
             onclick={(event) => {
               // A click meant for a new tab or window is the browser's.
               if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
