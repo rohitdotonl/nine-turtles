@@ -2,6 +2,7 @@
 // the top of their page: the one the reader chose, else the one their feed names, else their site's own icon, else
 // their initials.
 
+import { isSomeone } from "./people";
 import type { Feed } from "./shapes";
 
 const SMALL_WORDS = new Set(["the", "a", "an"]);
@@ -51,6 +52,11 @@ export function picturesOf(places: Feed[], siteUrl?: string | null): string[] {
     ...places.flatMap((place) => iconsOf(place.siteUrl)),
   ].filter((each): each is string => !!each);
   return [...new Set(all)];
+}
+
+/** Their picture as a list's title shows it (decision 0289): every picture of theirs to try, and whether to show two initials. */
+export function faceOf(row: Feed, places: Feed[]): { pictures: string[]; person: boolean } {
+  return { pictures: picturesOf(places), person: isSomeone(row) };
 }
 
 /** Narrower than this (in the picture's own pixels) and it would blur filling the circle: it sits small inside it. */

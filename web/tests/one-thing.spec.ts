@@ -238,17 +238,59 @@ test("every reader reads this way, not only the owner", async ({ browser }, test
   await stranger.close();
 });
 
-test("their page opened from an article's byline closes back to that article (decision 0279)", async ({ page, isMobile }) => {
+test("their page opened from an article's More closes back to that article (decisions 0284, 0289)", async ({ page, isMobile }) => {
   await signedIn(page);
   const blog = await openBlog(page, `one-thing-writer-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
   await rows(page).nth(1).click();
   await expect(article(page)).toBeVisible();
   const title = (await titleOf(page).textContent()) ?? "";
-  await article(page).getByRole("link", { name: blog.title, exact: true }).click();
+  await article(page).getByRole("button", { name: "More actions" }).last().click();
+  await page.getByRole("menuitem", { name: `Info about ${blog.title}` }).click();
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   // On a phone its ‹ says where it goes; on a computer, × (and Escape).
   if (isMobile) await page.getByRole("button", { name: "Article", exact: true }).click();
   else await page.keyboard.press("Escape");
   await expect(titleOf(page)).toHaveText(title);
   await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
+});
+
+test("their name in an article opens their list, and ‹ Article goes back to it, by the keyboard and through their page too (decision 0289)", async ({ page, isMobile }) => {
+  await signedIn(page);
+  const blog = await openBlog(page, `one-thing-byline-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
+  // Read in All articles, so going back to the article means going back to All.
+  await page.goto(at("/all"));
+  await appReady(page);
+  await page.locator("#list-pane .item-row").filter({ hasText: blog.title }).first().click();
+  const title = (await titleOf(page).textContent()) ?? "";
+  const toAll = page.getByRole("button", { name: "Back to All articles" });
+  await expect(toAll).toBeVisible();
+
+  // By the keyboard: the name under the title, Enter. Their list, their picture leading its title, with ‹ Article.
+  await article(page).locator(".article-byline").getByRole("link", { name: blog.title, exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#list-heading")).toContainText(blog.title);
+  await expect(page.locator("#list-heading .portrait")).toBeVisible();
+  const back = page.getByRole("button", { name: "Back to the article" });
+  await expect(back).toBeVisible();
+  if (isMobile) await expect(page.getByRole("button", { name: "Back to Home" })).toHaveCount(0);
+  // Escape goes back to the article too, as ‹ Article does.
+  await page.locator("#list-heading").focus();
+  await page.keyboard.press("Escape");
+  await expect(titleOf(page)).toHaveText(title);
+  await expect(toAll).toBeVisible();
+
+  // Through their page and back: ‹ Article still goes back to the article, in All, never round and round.
+  await article(page).locator(".article-byline").getByRole("link", { name: blog.title, exact: true }).click();
+  await page.locator("#list-heading").getByRole("button", { name: blog.title }).click();
+  await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
+  if (isMobile) await page.getByRole("button", { name: blog.title, exact: true }).first().click();
+  else await page.keyboard.press("Escape");
+  await expect(back).toBeVisible();
+  await back.focus();
+  await page.keyboard.press("Enter");
+  await expect(titleOf(page)).toHaveText(title);
+  await toAll.click();
+  await expect(page.locator("#list-heading")).toHaveText("All articles");
+  if (isMobile) await expect(page.getByRole("button", { name: "Back to Home" })).toBeVisible();
+  else await expect(back).toHaveCount(0);
 });

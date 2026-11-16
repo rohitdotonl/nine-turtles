@@ -165,11 +165,11 @@ test.describe("on a wide window", () => {
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-    // Credit: the source, with the author and time. Someone followed: their name opens the page about them (decision 0214),
+    // Credit: the source, with the author and time. Someone followed: their name opens their list (decision 0289),
     // a link that wraps as text does (decision 0260).
     const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
-    await expect(writer).toHaveAttribute("title", "Info about Reading Room (I)");
-    await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+\/about$/);
+    await expect(writer).toHaveAttribute("title", "Everything by Reading Room");
+    await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
@@ -257,12 +257,12 @@ test.describe("on a wide window", () => {
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
+    // More holds Copy link, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

@@ -113,17 +113,22 @@ PLAN.md → V1, item 1.*
   publication has no Write to, decision 0192), with no Edit mode
   (decision 0254) (`/mira-chen-12/about`): a page about them, with their
   settings on a page of its own, one press away (decision 0267). Opened by pressing their name at
-  the top of their list ("Alpha ›"), by their name under an article's title
-  (underlined, faintly), by **Info about Alpha** in the list's More menu or
-  a row's own menu, or by the `i` key (in any list, for the chosen
-  article's writer; decision 0214). On a computer it opens in the reading
+  the top of their list ("Alpha ›", with their picture before it), by
+  **Info about Alpha** in the list's More menu, a row's own menu or an
+  open article's More menu, or by the `i` key (in any list or article,
+  for the chosen article's writer; decision 0214). Their name under an
+  article's title (underlined, faintly) opens their list instead, the way
+  to what they've written lately, with **‹ Article** at its top (on a
+  computer too, above their name) back to that article, open where it was;
+  it stays while the reader goes on to their page or their settings and
+  back (decision 0289). On a computer it opens in the reading
   area, alone in the whole window as an article is (section 4, decision
   0275), in the article's own column (decision 0219), under the article's
   bar with an **×** at its right end (and Escape) back to their list. On a
   phone it's a screen of its own, with ‹ back to their list. Opened from
   Everyone you follow, both go back there instead (‹ reads "Everyone you
   follow"), with the keyboard on their line, and so does Unsubscribe, with
-  its Undo there (section 15); opened from an article (its byline, `i`),
+  its Undo there (section 15); opened from an article (its More menu, `i`),
   both go back to that article, open where it was (‹ reads "Article";
   decision 0284). After a visit to Hide articles about them, only the way
   back to Everyone you follow is kept.
@@ -169,7 +174,8 @@ PLAN.md → V1, item 1.*
     know it as "Settings for Tomas Berg", so it isn't taken for the app's
     own Settings.
 - **Their picture** (decision 0285): a circle beside an article's byline
-  (40px, 32px on a phone; section 7) and at the top of their page (72px), nowhere else. It
+  and before their name at the top of their list (40px, 32px on a phone;
+  section 7, decision 0289) and at the top of their page (72px), nowhere else. It
   is the first of these that loads: the picture the reader chose for them;
   the picture their feed names (RSS's image, a podcast's artwork, Atom's
   logo or icon, JSON Feed's icon); their site's own icon (the one a phone's
@@ -277,7 +283,11 @@ PLAN.md → V1, item 1.*
    article with one author's name is called by that name, and its page shows
    the blog's title under it; Write back at an article's end says "Write
    back to" and their full name, as in the sidebar.
-2. Press a person's name at the top of their list: their page opens alone
+2. Open an article of theirs and press their name under its title: their
+   list opens, their picture before their name at its top, with
+   **‹ Article** back to the article. In the article's More, **Info about
+   …** opens their page (decision 0289).
+3. Press a person's name at the top of their list: their page opens alone
    in the window (on a phone, as its own screen), with **Write to …** (outlined) under
    their name and their sources, one card with Your note and Your
    highlights, then one row, **Settings ›**, and no muted line. Press that
@@ -285,28 +295,28 @@ PLAN.md → V1, item 1.*
    **‹ their name** above; the tab says "Settings for" their name. Press
    it, or Escape: their page again, as it was, with the keyboard on the
    Settings row and the row in view.
-3. In their settings, choose **This is: A publication**: the
+4. In their settings, choose **This is: A publication**: the
    row moves under Publications at once, and on their page Write to has gone.
-4. In their settings, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:
+5. In their settings, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:
    it asks which folders, all ticked. Join: one row, both lists in one, each
    row labelled by kind. Undo: two rows again.
-5. In that person's settings, press **Take out** on a source's row under
+6. In that person's settings, press **Take out** on a source's row under
    Sources: two rows again. Undo joins them back.
-6. Press **Unsubscribe from …** on a person with two sources: the row goes.
+7. Press **Unsubscribe from …** on a person with two sources: the row goes.
    Undo: it's back with both.
-7. Make a folder holding two sources, open Edit folder, tick **This is one
+8. Make a folder holding two sources, open Edit folder, tick **This is one
    person** and Save: the folder is gone, one row with its name. Undo: the
    folder is back with both.
-8. In the sidebar, drag one blog onto another's row: the lifted name says
+9. In the sidebar, drag one blog onto another's row: the lifted name says
    "One person with …" and the row darkens. Let go: one row, under the
    name of the one dropped on, with "… is one person now." and Undo, which
    parts them again (decision 0250).
-9. Visit `/N`, their number alone: the list opens and the address bar shows
+10. Visit `/N`, their number alone: the list opens and the address bar shows
    their name before it, `/mira-chen-N` (decision 0281).
-10. Highlight words in an article of someone's, then open their page: under
+11. Highlight words in an article of someone's, then open their page: under
    Write to and your note, **Your highlights** shows those words, "From" the
    article's title, and there is no Lately. Press the title: the article opens.
-11. Import a list with a blog whose articles name no one, at an address
+12. Import a list with a blog whose articles name no one, at an address
    that isn't a name: it's under Publications, and its page says "nine
    turtles couldn't tell…" with neither option chosen. Choose A person: it
    moves under People, and the line says "Your choice.".

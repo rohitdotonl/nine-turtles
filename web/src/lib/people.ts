@@ -26,6 +26,11 @@ type Before = {
   note: string | null;
 };
 
+/** Someone rather than something (decision 0264): a person, or a source joined to others, which is always one. Could be either acts as a publication. */
+export function isSomeone(feed: Feed | undefined): boolean {
+  return (feed?.kind ?? "person") === "person" || feed?.person != null;
+}
+
 /** A place's person, if the reader joined it to others. */
 export function personOf(feed: Feed, people: Person[]): Person | undefined {
   return feed.person == null ? undefined : people.find((person) => person.id === feed.person);

@@ -14,7 +14,7 @@
   import type { FeedChanges, Notice } from "./feeds";
   import VideoSwitches from "./VideoSwitches.svelte";
   import type { LoadedLibrary } from "./library.svelte";
-  import { PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
+  import { isSomeone, PLACE_NAMES, placeShownAs, placesOf, putBack, separate } from "./people";
   import type { Feed } from "./shapes";
 
   let {
@@ -35,7 +35,7 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let many = $derived(places.length > 1);
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
-  let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
+  let person = $derived(isSomeone(feed));
   let message = $state("");
   let busy = $state(false);
 

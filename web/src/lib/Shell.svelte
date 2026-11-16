@@ -14,6 +14,7 @@
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
   import ListHead from "./ListHead.svelte";
+  import ListTop from "./ListTop.svelte";
   import PaneResizer from "./PaneResizer.svelte";
   import { onMount, tick, untrack } from "svelte";
   import AddFeed from "./AddFeed.svelte";
@@ -24,6 +25,7 @@
   import PickUp from "./PickUp.svelte";
   import WhoPage from "./WhoPage.svelte";
   import { placeLabels, placesOf, placesWatch } from "./people";
+  import { faceOf } from "./portrait";
   import FailingLine from "./FailingLine.svelte";
   import PausedLine from "./PausedLine.svelte";
   import ItemList from "./ItemList.svelte";
@@ -54,7 +56,7 @@
   import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { addressFor, articleIn, isList, nameFor, parentOf, parse, pathFor, sidebarViews, titleFor, type Route } from "./router";
+  import { addressFor, articleIn, isList, nameFor, ownClick, parentOf, parse, pathFor, sidebarViews, titleFor, type Route } from "./router";
   import { articleAddress, nameAddressesFrom } from "./addressing";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
@@ -68,7 +70,7 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type WhoFrom } from "./navigation";
+  import { homeFor, isOver, isWho, listFromOnMove, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type ListFrom, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -160,6 +162,7 @@
   /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   let whoFrom: WhoFrom = $state(); // Where their page was opened from (decision 0284).
+  let listFrom: ListFrom = $state(); // Their list opened from an article's byline: "‹ Article" goes back to it (decision 0289).
   let cameBackFrom: number | undefined = $state(); // Everyone you follow, back from their page: the keyboard goes back to their row.
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -354,6 +357,7 @@
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
       whoFrom = whoFromOnPop(whoFrom, route, next, !!hidingFrom);
+      listFrom = listFromOnMove(listFrom, next, stepOf(history.state)?.screen === "article");
       const move = moveTo({ route, under, phone }, next);
       returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
@@ -471,6 +475,7 @@
     stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
     whoFrom = whoFromOnGo(whoFrom, route, next, reading && !!selected, !!hidingFrom);
+    listFrom = listFromOnMove(listFrom, next);
     cameBackFrom = isWho(route) && next.kind === "your-feeds" && !withNotice ? route.id : undefined;
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
@@ -494,6 +499,15 @@
   }
 
   const openFeed = (id: number) => go({ kind: "feed", id }); // Opens a feed's list.
+
+  /** The writer's name under an article's title: their list, with "‹ Article" back to it (decision 0289). */
+  const openWriter = (row: number, article = selected, list = route) => (go({ kind: "feed", id: row }), article && (listFrom = { row, article, list }));
+  /** "‹ Article" (and Escape): a step back in history to the article, open where it was; or, if that step isn't there (their page opened and closed since), the article again in the list it was read in. */
+  function backToArticle(from = listFrom) {
+    listFrom = undefined;
+    if (steps.cameFrom("article")) steps.goBack();
+    else if (from) (go(from.list), openFromOutside(from.article, true));
+  }
 
   async function added(feed: Feed, note?: string) {
     const stay = route.kind !== "add-feed" && !firstVisit && !trying.current; // Add a feed closed while still looking: the feed only joins the sidebar.
@@ -545,12 +559,7 @@
     return typeof done === "string" ? done : void go({ kind: "feed", id: done.lead }, done);
   }
 
-  function follow(event: MouseEvent, next: Route) {
-    // Let the browser handle a click meant for a new tab or window.
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    go(next);
-  }
+  const follow = (event: MouseEvent, next: Route) => ownClick(event) && go(next); // A click meant for a new tab or window is the browser's.
 
   /**
    * Find new address moved a failing feed, from the line above its list or
@@ -724,6 +733,7 @@
     else if (isWho(route)) closeWho();
     else if (reading || (selected && inArticle())) backToList();
     else if (searching.open || document.activeElement?.closest("search")) closeSearch();
+    else if (listFrom) backToArticle();
     else if (phone && !panes.sidebar) steps.back("home");
   }
 
@@ -770,18 +780,6 @@
 
 {#snippet welcome(start: boolean)}
   <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
-{/snippet}
-
-{#snippet listHead()}
-  <ListHead
-    text={headingText}
-    actions={!!itemList && !missing}
-    searchOpen={searching.open}
-    onSearch={toggleSearch}
-    menu={() => listMenu(menuScene(), menuHands)}
-    bind:heading={headings.list}
-    onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined}
-  />
 {/snippet}
 
 <!--
@@ -955,26 +953,10 @@
             panes.list && !welcomeWide && "flex",
           ]}
         >
-          {#if phone}
-            <!-- The phone's top bar (SPEC section 20): back to Home, the feeds screen, then the screen's title with More beside it. It never scrolls. -->
-            <div class="pane-bar nav-bar">
-              <button type="button" onclick={() => steps.back("home")} aria-label="Back to Home" data-behind="sidebar" class="btn-quiet nav-back"
-                ><Icon name="back" size="alone" />Home</button
-              >
-            </div>
-            <div class={welcomeAlone ? "sr-only" : "pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>
-              {@render listHead()}
-            </div>
-          {/if}
-          {#if !phone}
-            <!--
-              The list's top line never scrolls. Its title starts with the search field and the titles, in the column
-              it shares with an article (list-column.css, decision 0277).
-            -->
-            <div class="pane-bar">
-              {@render listHead()}
-            </div>
-          {/if}
+          <ListTop {phone} titleHidden={welcomeAlone} toArticle={listFrom && (() => backToArticle())} onHome={() => steps.back("home")}>
+            <ListHead text={headingText} actions={!!itemList && !missing} searchOpen={searching.open} onSearch={toggleSearch} menu={() => listMenu(menuScene(), menuHands)} bind:heading={headings.list}
+              onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined} face={currentFeed && faceOf(currentFeed, currentPlaces)} />
+          </ListTop>
           <!-- A column, so the floating note can sit at the pane's foot even under a short list. -->
           <div use:edge class="scroller relative flex min-h-0 flex-1 scroll-pb-24 flex-col overflow-y-auto pt-2 pr-[var(--list-end)] pb-6 pl-[var(--list-start)]">
             {#if library.feeds && library.feeds.length > 0 && !missing && searching.open}
@@ -1044,7 +1026,8 @@
               onStar={() => itemList?.toggleStar()}
               onMarkUnread={() => itemList?.markUnread()}
               onHide={hideFrom}
-              onWriter={(id) => go({ kind: "about", id })}
+              onWriter={openWriter}
+              onAbout={(id) => go({ kind: "about", id })}
               beforeToolbar={nowPlayingAboveToolbar}
               back={{ name: nameFor(route, placeName), onBack: backToList }}
               phone={phone

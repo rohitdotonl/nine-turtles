@@ -186,7 +186,7 @@ test.describe("on a phone", () => {
     // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…. The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*(Share|Copy link)\s*$/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Reading Room/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*(Share|Copy link)\s*$/]);
     await expect(menu.getByRole("menuitem").last()).toBeFocused();
     // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
     // Enter opens on the nearest row, and the arrows on More open on the row nearest (up) or furthest (down).
@@ -567,9 +567,10 @@ test.describe("on a phone", () => {
     const near20 = (value: number) => near(value, 20);
 
     // The list keeps a gutter for its unread dot, as Books and Mail do on iOS (decision 0054): its title,
-    // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge.
+    // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge. A person's
+    // title starts with their picture (decision 0289).
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
-    near(await textStart(page.locator("#list-heading")), 28);
+    near((await page.locator("#list-heading .portrait").boundingBox())!.x, 28);
     await page.getByRole("button", { name: "Search", exact: true }).click();
     near((await list(page).locator(".search-box").boundingBox())!.x, 28);
     near(await textStart(row(page, "The pleasure of a slow letter").locator(".title")), 28);

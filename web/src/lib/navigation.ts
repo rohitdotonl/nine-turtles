@@ -9,6 +9,7 @@
 // opens and when Back lands somewhere it leads on from.
 
 import { addressFor, articleIn, isList, parentOf, pathFor, rowFor, withoutWords, type Route } from "./router";
+import type { Article } from "./shapes";
 import { stepOf, type Screen, type Step } from "./steps";
 
 /** The short tasks that open over a place: a sheet on a computer, a screen of their own on a phone. */
@@ -50,6 +51,17 @@ export function whoFromOnPop(was: WhoFrom, route: Route, next: Route, hiding: bo
 export function whoClosesTo(from: WhoFrom, place: Extract<Route, { kind: "about" }>): Route | "back" {
   if (from === "article" && !place.settings) return "back";
   return from === "following" ? { kind: "your-feeds" } : { kind: "feed", id: place.id };
+}
+
+/**
+ * Their list opened from an article's byline (decision 0289): their row, and the article and the list it was read in,
+ * for "‹ Article" to go back to. It lasts while the reader stays with them, on their list, their page or their settings, and ends anywhere else.
+ */
+export type ListFrom = { row: number; article: Article; list: Route } | undefined;
+
+/** Where `ListFrom` goes on a move to `next`: kept while it's still them, else gone, and gone once an article is open again. */
+export function listFromOnMove(was: ListFrom, next: Route, reading = false): ListFrom {
+  return was && !reading && (next.kind === "feed" || next.kind === "about") && next.id === was.row ? was : undefined;
 }
 
 /** With Unread off there's no Unread view: its address (and "/") leads to All. */

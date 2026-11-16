@@ -37,7 +37,7 @@
   import type { Notice } from "./feeds";
   import { listSick, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
-  import { placeShownAs, placesOf } from "./people";
+  import { isSomeone, placeShownAs, placesOf } from "./people";
   import { addressFor, type Route } from "./router";
   import type { Article, Feed } from "./shapes";
 
@@ -90,7 +90,7 @@
 
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
-  let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
+  let person = $derived(isSomeone(feed));
   /** Someone to write to: a person the reader hasn't switched Write back off for (decision 0286). */
   let writes = $derived(person && feed.writeBackOff !== true);
   /** Their sources that aren't working, by number: each box leads the page (decision 0279). */
