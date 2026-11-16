@@ -20,7 +20,14 @@
    turtles"; the turtles are hidden from them). The turtles are one SVG in
    the name's own units, pulled back over the name, so they keep their
    places at any size. Literata 600 is preloaded on those pages so the
-   turtles never land on a stand-in font's letters.
+   turtles never land on a stand-in font's letters. If Literata still
+   doesn't load (blocked, or the reader turned off a site's fonts), the
+   name shows in a stand-in font and the turtles drift a little off their
+   letters: the name stays readable and the links work, so it fails small.
+5. **Small on purpose:** at 28px each turtle is about 6px wide, as in the
+   picture the owner approved (`docs/logo/four-in-front.svg`,
+   turtles at 0.8 of the nine's own drawing). Making them bigger is a new
+   brand choice for the owner.
 
 **Why it's an exception.** BRAND.md said the turtle "never acts"; here the
 nine walk and one climbs. The owner chose it, for the website only, where the
