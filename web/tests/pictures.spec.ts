@@ -35,7 +35,7 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   // Beside the byline: a circle, hidden from screen readers (the name is beside it), with their initials.
@@ -44,7 +44,7 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   await expect(byline).toHaveAttribute("aria-hidden", "true");
   await expect(byline.locator(".initials")).toHaveText(/^B/);
 
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   const picture = who.getByRole("button", { name: `Picture of Blog ${name}` });
