@@ -4,6 +4,8 @@
 
 *16 November 2026. The owner, trying swipes on Android after decision 0274 went live: there was no working way to the previous article (a pull down at the top refreshed the page), two ways to the next (swipe left and pull up), and a pull up slid the next article in from the side, as if swiped. Chosen on a decision card: "Pulls only (up next, down back)". Partly replaces 0274.*
 
+> **Refined by [0279](0279-pulls-follow-the-finger.md):** the article now follows the finger, the next one hangs just beyond it, and letting go carries on into it instead of it sliding in.
+
 **Each way means one thing.** Sideways is for going back (right) and a
 row's marks (left); up and down move through the articles. A swipe left in
 an article no longer opens the next one, so next and previous are a pair,

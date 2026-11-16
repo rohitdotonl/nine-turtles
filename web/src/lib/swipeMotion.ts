@@ -1,8 +1,8 @@
 // The one place nine turtles moves by itself (DESIGN.md → Exceptions log,
 // decisions 0274 and 0276): when a finger lets go of a swipe, the screen it
 // was dragging finishes the stroke. Gone far enough, it slides the rest of
-// the way off; not far enough, it springs back. An article opened by a pull
-// past its end or top comes in the way it was pulled. While the finger is
+// the way off; not far enough, it springs back. A pull past an article's end
+// or top drags it, and the next or previous one hangs just beyond. While the finger is
 // down, everything follows it exactly, as the reader moves it. A phone set
 // to reduce motion gets no glide: everything lands at once, as every other
 // part of the app does. `scripts/check-motion.mjs` allows motion in this
@@ -76,16 +76,18 @@ export function settle(panes: Panes, to: number, done: () => void) {
   );
 }
 
-/** Where a new screen comes in from: the way the finger sent the last one. */
-const FROM = { below: () => `translateY(${innerHeight}px)`, above: () => `translateY(${-innerHeight}px)` };
+/** Where a pull drags the article's screen to `dy` (up is negative): the next or previous one, hung just past its end or top, comes with it. */
+export function pull(screen: HTMLElement, dy: number) {
+  if (!dy) return clear(screen);
+  Object.assign(screen.style, { transition: "", position: "relative", zIndex: "2", transform: `translateY(${dy}px)` });
+}
 
-/** A new article slides in from `from`: from below after a pull up past the end, from above after a pull down past the top. */
-export function slideIn(screen: HTMLElement, from: keyof typeof FROM) {
-  if (still()) return;
-  Object.assign(screen.style, { transition: "", position: "relative", transform: FROM[from]() });
-  // Laid out where it starts, so the glide has somewhere to go from.
-  void screen.offsetWidth;
-  glide([screen], () => (screen.style.transform = "none"), () => clear(screen));
+/** Lets go of a pull: the screen glides to `to` (0 is back where it was; a whole screen's height carries on into the article hung beyond), then `done` runs and it's put back as it was. */
+export function letGo(screen: HTMLElement, to: number, done: () => void) {
+  glide([screen], () => (screen.style.transform = `translateY(${to}px)`), () => {
+    done();
+    clear(screen);
+  });
 }
 
 /** A row let go of springs back under the finger's room (`room`, which closes as it does); `change` puts them back, then `done`. */

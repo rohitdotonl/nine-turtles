@@ -151,8 +151,9 @@ once instead.
   at the top left does. From an article to its list, from a list to Home.
 - **Swipe a row left** in a list: a little way marks it read, all the way
   stars it. **Undo** puts it back.
-- **Keep pulling up past the end** of an article: the next one rises from
-  below. **Pull down past its top**: the previous one comes down from above.
+- **Keep pulling up past the end** of an article: it moves with your finger,
+  and the next one comes up under it. When it says "Let go for the next",
+  let go and you're in it. **Pull down past its top** for the previous one.
 - **Swipe down** on the Aa sheet or an opened picture to close it.
 - A quick flick counts too, even a short one.
 

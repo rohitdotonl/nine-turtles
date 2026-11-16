@@ -34,6 +34,11 @@ export type SwipeHands = {
   allowed?(event: PointerEvent): boolean;
 };
 
+/** Whether a stroke `gone` pixels its way, lifted at `speed` (pixels a millisecond, its way positive), was a flick. */
+export function flicked(gone: number, speed: number): boolean {
+  return speed >= FLICK && gone >= 2 * DECIDE;
+}
+
 /** How far a finger has to go for a swipe to count: a third of the width, at most 120px. */
 export function reach(width: number): number {
   return Math.min(width / 3, 120);
@@ -130,7 +135,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     const first = lately[0];
     const speed = first && event.timeStamp > first.at ? (event.clientX - first.x) / (event.timeStamp - first.at) : 0;
     const gone = Math.max(0, hands.side * dx);
-    hands.ended(hands.side * (hands.side * speed >= FLICK && gone >= 2 * DECIDE ? Math.max(gone, reach(node.clientWidth || innerWidth)) : gone));
+    hands.ended(hands.side * (flicked(gone, hands.side * speed) ? Math.max(gone, reach(node.clientWidth || innerWidth)) : gone));
     // The press that ends a swipe doesn't also open what it started on (what the swipe presses itself, once it's glided, is let through).
     swallowClick = true;
   };
