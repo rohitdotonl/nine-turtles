@@ -1245,8 +1245,17 @@ test.describe("your place in an article (decision 0060)", () => {
     await expect.poll(() => top(page)).toBeGreaterThan(250);
     await kept;
     const stopped = await top(page);
-    // Another device: this one's own bookmarks are gone, and it has never been here, but the server still knows.
-    await page.evaluate(() => (localStorage.removeItem("nine-turtles.places"), localStorage.removeItem("nine-turtles.here")));
+    // Coming back after half an hour away (decision 0292). Leaving a page writes down the time as it goes, so the
+    // time away is set as the next page starts.
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem("away")) return;
+      sessionStorage.removeItem("away");
+      localStorage.setItem("nine-turtles.here", String(Date.now() - 31 * 60_000));
+    });
+    const away = () => page.evaluate(() => sessionStorage.setItem("away", "yes"));
+    // Another device: this one's own bookmarks are gone, but the server still knows.
+    await page.evaluate(() => localStorage.removeItem("nine-turtles.places"));
+    await away();
 
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
@@ -1264,7 +1273,7 @@ test.describe("your place in an article (decision 0060)", () => {
     await appReady(page);
     await expect(page.locator(".item-row").first()).toBeVisible();
     await expect(page.locator("#list-pane")).not.toContainText("You were reading");
-    await page.evaluate(() => localStorage.setItem("nine-turtles.here", String(Date.now() - 31 * 60_000)));
+    await away();
     await page.reload();
     await appReady(page);
     await expect(line).toHaveText(/^You were reading The pleasure of a slow letter(, by .+)?\.$/);
