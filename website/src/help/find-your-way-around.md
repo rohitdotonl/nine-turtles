@@ -83,11 +83,11 @@ working even if the title or name changes later.
 ## Reading
 
 Choose an article and it opens, with the whole window to itself. Across its top are **Open
-original** (the publisher's own page), **Aa** (how the text looks), **Save**,
-**Write back** (a paper plane, for a person) and **More**. The writer's name
+original** (the publisher's own page), **Share**, **Save**,
+**Write back** (a paper plane, for a person) and **More**, which holds **Text and page** (how the text looks). The writer's name
 under the title opens everything they've written, with **‹ Article** to come
 back; their picture and name at the top of that list open the page about
-them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Aa, Write back
+them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Share, Write back
 and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 A footnote's number opens its note in a small card just under the line, so
@@ -135,7 +135,7 @@ The sidebar stays beside the list, and steps away on its own whenever an
 article or a person's page opens. Drag its edge to make it wider or
 narrower; double-click the edge to put it back.
 
-On a computer, an article's buttons (View original, Aa, Save and the rest)
+On a computer, an article's buttons (View original, Share, Save and the rest)
 sit above its title and scroll away with it, so the whole window is the
 writing. Most have a key that works all the way down, and at the end of the article
 **Save** and **View original** are there again.
@@ -159,7 +159,7 @@ once instead.
 - **Keep pulling up past the end** of an article: it moves with your finger,
   and the next one comes up under it. When it says "Let go for the next",
   let go and you're in it. **Pull down past its top** for the previous one.
-- **Swipe down** on the Aa sheet or an opened picture to close it.
+- **Swipe down** on the Text and page sheet or an opened picture to close it.
 - A quick flick counts too, even a short one.
 
 ## Good to know

@@ -1,6 +1,6 @@
 import { expect, test, type CDPSession, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, openAppearance, signIn } from "./screens";
 
 // Swipes on a touch screen (SPEC section 20, decision 0274), made with real
 // touches, so the browser's own scrolling has its say as it would on a phone.
@@ -282,16 +282,14 @@ test("with Write back's ways or the Aa sheet open, the stroke that closes it nei
   const actions = pane(page).getByRole("group", { name: "Article actions" });
   const sheet = page.getByRole("dialog", { name: "Reading appearance" });
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
-  await actions.getByRole("button", { name: "Reading appearance" }).click();
-  await expect(sheet).toBeVisible();
+  await openAppearance(page, actions);
   const pull = await Finger.down(page, box.x + box.width / 2, box.y + 40);
   await pull.move(0, -200);
   await expect(peek(page)).toHaveCount(0);
   await pull.up();
   await expect(sheet).toHaveCount(0);
   await expect(heading).toHaveText(title ?? "");
-  await actions.getByRole("button", { name: "Reading appearance" }).click();
-  await expect(sheet).toBeVisible();
+  await openAppearance(page, actions);
   const right = await Finger.down(page, 80, box.y + 40);
   await right.move(160);
   await expect(card(page)).toHaveCount(0);
@@ -375,9 +373,7 @@ test("the Aa sheet closes when swiped down; Settings goes back home when swiped 
   await openBlog(page);
   await rows(page).nth(0).click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
-  await pane(page).getByRole("group", { name: "Article actions" }).getByRole("button", { name: "Reading appearance" }).click();
-  const sheet = page.getByRole("dialog", { name: "Reading appearance" });
-  await expect(sheet).toBeVisible();
+  const sheet = await openAppearance(page, pane(page).getByRole("group", { name: "Article actions" }));
   // A swipe across the sheet is the sheet's: no card offers to go back under it.
   const across = (await sheet.boundingBox())!;
   const sideways = await Finger.down(page, 80, across.y + across.height / 2);

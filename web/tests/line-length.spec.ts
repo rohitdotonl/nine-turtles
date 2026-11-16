@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { FEEDS_APP } from "../playwright.config";
-import { appReady, openReadingRoom, signIn } from "./screens";
+import { appReady, openAppearance, openReadingRoom, signIn } from "./screens";
 
 // Decision 0288, DESIGN.md → "Line length and spacing": one column width in
 // every reading font, and every font nine turtles ships lands at 60 to 75
@@ -33,8 +33,7 @@ test("every reading font fills the one column with 60 to 75 characters a line", 
   await page.keyboard.press("j");
   await page.keyboard.press("Enter");
   const article = page.getByRole("region", { name: "Article", exact: true });
-  await article.getByRole("button", { name: "Reading appearance" }).click();
-  const fonts = page.getByRole("dialog", { name: "Reading appearance" }).locator('input[name="aa-font"]');
+  const fonts = (await openAppearance(page, article)).locator('input[name="aa-font"]');
   const names = (await fonts.evaluateAll((radios) => radios.map((radio) => radio.getAttribute("value") ?? ""))).filter((name) => name !== "system-serif");
   expect(names.length).toBeGreaterThan(1);
   const widths: number[] = [];

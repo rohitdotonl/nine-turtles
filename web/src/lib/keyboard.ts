@@ -11,8 +11,7 @@
 import { inSidebar, paneTo } from "./panes";
 import type { View } from "./router";
 
-/** A Mac (or iPhone, iPad) names the Command key; every other computer, Ctrl. */
-export const onMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+import { onApple } from "./apple";
 
 export type Action =
   | { kind: "cheat-sheet" }
@@ -386,7 +385,7 @@ export function shortcutsFor(unreadOff: boolean): Shortcut[] {
 export function keyCap(press: string): string {
   if (press === "-") return "−";
   const mod = /^Mod\+(.)$/.exec(press);
-  if (mod) return `${onMac ? "Command" : "Ctrl"} ${mod[1]!.toUpperCase()}`;
+  if (mod) return `${onApple ? "Command" : "Ctrl"} ${mod[1]!.toUpperCase()}`;
   const shifted = /^Shift\+(Space|.)$/.exec(press);
   if (shifted) return `Shift ${shifted[1] === "Space" ? "Space" : shifted[1]!.toUpperCase()}`;
   if (/^[a-z]$/.test(press)) return press.toUpperCase();

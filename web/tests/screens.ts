@@ -141,8 +141,7 @@ export const SCREENS: Screen[] = [
       await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
       await page.keyboard.press("Enter");
       await expect(page.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeFocused();
-      await page.getByRole("button", { name: "Reading appearance" }).first().click();
-      await expect(page.getByRole("dialog", { name: "Reading appearance" })).toBeVisible();
+      await openAppearance(page);
     },
   },
   {
@@ -611,6 +610,15 @@ export function couldBeEither(title: RegExp | number) {
       Object.assign(feed, { kind: "publication", why: "unsure-no-names", open: true, person: null });
     }
   };
+}
+
+/** Opens the reading panel the way a reader does: More (…), then Text and page (decision 0292). `within` is where its More is: the article, or a phone's bottom bar. */
+export async function openAppearance(page: Page, within: Locator = page.getByRole("region", { name: "Article", exact: true })): Promise<Locator> {
+  await within.getByRole("button", { name: "More actions" }).first().click();
+  await page.getByRole("menuitem", { name: "Text and page" }).click();
+  const panel = page.getByRole("dialog", { name: "Reading appearance" });
+  await expect(panel).toBeVisible();
+  return panel;
 }
 
 /** Follows Reading Room and opens its list, with nothing selected yet (and, if asked, nothing read). */

@@ -15,7 +15,7 @@ export type Mode = "light" | "dark";
 /** The reader's choice: one of the pages, or Match device. */
 export type Page = Theme | "auto";
 
-/** The choices, in the order the Aa panel and Settings show them. */
+/** The choices, in the order the reading panel (Text and page) and Settings show them. */
 export const PAGES: { value: Page; label: string }[] = [
   { value: "white", label: "White" },
   { value: "paper", label: "Paper" },
@@ -34,7 +34,7 @@ export const LOOKS: Record<Theme, { label: string; mode: Mode; page: string; ink
   night: { label: "Night", mode: "dark", page: "#121212", ink: "#e8e8e8" },
 };
 
-/** A choice's swatch, the Aa panel's and Settings': the page it gives; Match device is half White, half Night. */
+/** A choice's swatch, the reading panel's and Settings': the page it gives; Match device is half White, half Night. */
 export function swatch(page: Page): string {
   return page === "auto" ? `linear-gradient(90deg, ${LOOKS.white.page} 50%, ${LOOKS.night.page} 50%)` : LOOKS[page].page;
 }

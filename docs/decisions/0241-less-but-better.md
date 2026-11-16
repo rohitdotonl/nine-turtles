@@ -2,6 +2,8 @@
 
 **In one line:** Less, but better: Search has no options panel (the chip says where, a search from Starred finds starred ones); sort order only in the list's More menu, text size and font only in Aa; Edit and Everyone you follow lose lines that repeat the screen; the welcome's two other ways in share one line; the list's own layout button goes (full-screen reading is `f` or the article's More menu)
 
+> **Partly replaced by [0292](0292-share-in-the-bar.md):** text size and font are still in one place, the reading panel, but it opens from the article's More as Text and page, not from an Aa button.
+
 *10 November 2026.*
 
 *Partly replaced by [0275](0275-one-thing-at-a-time.md): full-screen reading (`f` and its menu item) is gone, as an article now has the whole window on a computer anyway.*

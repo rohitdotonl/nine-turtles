@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-16
+updated: 2026-11-17
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -15,7 +15,7 @@ related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 
 ## While you read
 
-Open any article and press **Aa** at its top. The panel holds everything on
+Open any article, press **More** (…), then **Text and page**. The panel holds everything on
 this page: text size, the page and the font. To change
 only the size, press <kbd>+</kbd> or <kbd>-</kbd>.
 
@@ -36,7 +36,7 @@ whole app, not just the article:
   - **Match device** (where you start): White by day and Night by night,
     following your device's own setting.
 
-Text size and font are only in **Aa**, next to the text they change.
+Text size and font are only in **Text and page**, next to the text they change.
 
 ## Everything larger
 
@@ -52,7 +52,7 @@ the article), use your device's own setting:
 - **Computer:** zoom the browser with <kbd>⌘</kbd> <kbd>+</kbd> on a Mac or
   <kbd>Ctrl</kbd> <kbd>+</kbd> on Windows.
 
-Aa's text size still works on top, for the article alone.
+The text size in **Text and page** still works on top, for the article alone.
 
 ## Good to know
 

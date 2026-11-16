@@ -9,7 +9,7 @@
   (Unread on or off, shared across the reader's devices) and Look and feel
   (Page, for this device). Each setting has one place, where it acts
   (decision 0241): sort order is in each list's More menu, text size and
-  font in the Aa panel above an article. Everything else is a row ending in › that opens a page of its own
+  font in an article's Text and page (its More). Everything else is a row ending in › that opens a page of its own
   in place of Settings, at /settings/<page> (`page`), with "‹ Settings" above
   its title; Escape goes back too, and the keyboard returns to the row:
   Your library (Your data; Everyone you follow is a row in the sidebar now, decision 0266); More
@@ -339,8 +339,8 @@
             </div>
           </div>
         </div>
-        <!-- Text size and font are only in the Aa panel, beside the text they change (decision 0241). -->
-        <p class="inset-foot">This device only. Text size and font are in Aa, above any article.</p>
+        <!-- Text size and font are only in Text and page, the reading panel in an article's More (decisions 0241, 0292). -->
+        <p class="inset-foot">This device only. Text size and font are in Text and page, in any article’s More.</p>
       </section>
 
       <section aria-labelledby="library-heading">

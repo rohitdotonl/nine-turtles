@@ -316,7 +316,7 @@ test("Settings: appearance, font and size apply at once and are remembered on th
   const look = page.getByRole("region", { name: "Look and feel" });
   for (const name of ["Sort order", "Font"]) await expect(page.getByRole("group", { name, exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Larger text" })).toHaveCount(0);
-  await expect(look).toContainText("Text size and font are in Aa, above any article.");
+  await expect(look).toContainText("Text size and font are in Text and page, in any article’s More.");
 
   await page.reload();
   await appReady(page);

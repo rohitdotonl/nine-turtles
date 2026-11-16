@@ -4,11 +4,11 @@
   size. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right (decision 0050), and on a computer it scrolls
-  away with the title, Save and View original waiting again at the end (decision 0263): View original, Aa (the reading panel), Save,
-  Write back (a paper plane, for a person only, decision 0214) and More (…).
-  More holds Copy link (Share on phones), Mark unread, Add a note and Hide
-  (SPEC sections 7, 8, 9, 21, 33 and 37); on a phone it opens upwards, Copy
-  link or Share nearest the button (decision 0243). Write back also ends the article.
+  away with the title, Save and View original waiting again at the end (decision 0263): View original, Share (Copy link
+  on a computer), Save, Write back (a paper plane, for a person only, decision 0214) and More (…).
+  More holds Text and page (the reading panel), Mark unread, Add a note and Hide, each with its icon
+  (SPEC sections 7, 8, 9, 21, 33 and 37; decision 0292); on a phone it opens upwards, Text
+  and page nearest the button (decision 0243). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
   0214), as their name at the top of the list does. What was just done ("Link copied.")
   floats at the pane's foot on a computer, as the list's note does. The source is always credited and linked. A feed that gives only a summary
@@ -22,7 +22,7 @@
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and View original;
-  Previous, Next, Aa, Save, Write back (for a person) and More sit as icons in a toolbar at the bottom,
+  Previous, Next, Share, Save, Write back (for a person) and More sit as icons in a toolbar at the bottom,
   within thumb reach, above a hairline; one that can't act is faded in place.
   A tap on the text puts both bars away, and another brings them back (bars.svelte.ts).
 -->
@@ -150,13 +150,13 @@
   let arrow: HTMLSpanElement | undefined = $state();
   /** The article itself: a footnote's card is placed in it. */
   let column: HTMLElement | undefined = $state();
-  /** The Aa reading panel, and its button (there's one, on the top bar or the phone's bottom bar). */
+  /** The reading panel (Text and page, in More), and the More menu it opens from (there's one, on the top bar or the phone's bottom bar). */
   let panelOpen = $state(false);
-  let aaButton: HTMLButtonElement | undefined = $state();
-
+  let moreAnchor: HTMLSpanElement | undefined = $state();
+  /** Where the keyboard goes back to: More, on the top bar or the phone's bottom bar. */
   function closePanel(giveBack: boolean) {
     panelOpen = false;
-    if (giveBack) aaButton?.focus();
+    if (giveBack) (phone ? toolbar : moreAnchor)?.querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')?.focus();
   }
 
   /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0072). */
@@ -189,19 +189,22 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, and hiding others like it. */
+  /**
+   * The article's less frequent actions, behind More (…), each with its icon before its words (decision 0292):
+   * the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
+   */
   let more: MenuGroup[] = $derived([
     {
       items: [
-        ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
-        { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
-        ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
+        { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
+        { label: "Mark unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
+        ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
       ],
     },
     // Who wrote it, apart: the page about them, and hiding articles about them (decision 0289).
     ...(followed ? [{ items: [
-      { label: `Info about ${article.feedTitle}`, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
-      { label: "Hide articles about…", onSelect: () => onHide(article.feedId) },
+      { label: `Info about ${article.feedTitle}`, icon: "person" as const, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
+      { label: "Hide articles about…", icon: "eye-off" as const, onSelect: () => onHide(article.feedId) },
     ] }] : []),
   ]);
 
@@ -227,8 +230,8 @@
 
   function scrolled() {
     if (phone && scroller) bars.scrolled(scroller);
-    // On a computer, the Aa panel goes once its button has scrolled away with the bar (decision 0263).
-    if (panelOpen && !phone && scroller && aaButton && aaButton.getBoundingClientRect().bottom < scroller.getBoundingClientRect().top) closePanel(false);
+    // On a computer, the reading panel goes once More has scrolled away with the bar (decision 0263).
+    if (panelOpen && !phone && scroller && moreAnchor && moreAnchor.getBoundingClientRect().bottom < scroller.getBoundingClientRect().top) closePanel(false);
     if (!moved || !scroller || !text) return;
     latest = { id: article.id, place: placeIn(scroller, text) };
     clearTimeout(writing);
@@ -456,28 +459,17 @@
   }
 </script>
 
-{#snippet aa(style: string)}
-  <!-- The reading panel's button: text size, theme and font, one press from the text. -->
+{#snippet shareButton(style: string)}
+  <!-- Share, one press from the text (decision 0292): the phone's own share menu, or Copy link where there's none. -->
   <button
     type="button"
-    bind:this={aaButton}
-    aria-label="Reading appearance"
-    title="Reading appearance"
-    aria-haspopup="dialog"
-    aria-expanded={panelOpen}
-    onclick={() => (panelOpen ? closePanel(false) : (panelOpen = true))}
-    onkeydown={(event) => {
-      // With the panel open and the keyboard on its button, Escape closes the panel first.
-      if (event.key === "Escape" && panelOpen) {
-        event.preventDefault();
-        closePanel(true);
-      }
-    }}
-    class={[style, panelOpen && "text-ink"]}
+    aria-label={sharing ? "Share" : "Copy link"}
+    title={sharing ? "Share" : phone ? "Copy link" : tip("Copy link", "copy-link")}
+    aria-keyshortcuts={phone || sharing ? undefined : keyFor("copy-link")}
+    aria-disabled={!article.link}
+    onclick={() => article.link && share()}
+    class={style}><Icon name="share" size="alone" /></button
   >
-    <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-9 items-center justify-center rounded-press", panelOpen && "bg-[var(--pressed)]"]}><Icon name="aa" size="alone" /></span>
-  </button>
 {/snippet}
 
 {#snippet saveIcon()}
@@ -543,13 +535,13 @@
           {#if article.link}
             {@render original()}
           {/if}
-          {@render aa("btn-quiet btn-icon")}
+          {#if article.link}{@render shareButton("btn-quiet btn-icon")}{/if}
           <!-- A toggle keeps one name for screen readers ("Save", pressed or not); the filled bookmark shows its state. -->
           <button type="button" aria-label="Save" aria-pressed={article.starred} title={tip(article.starred ? "Remove from Saved" : "Save", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
             {@render saveIcon()}
           </button>
           {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
-          <MoreMenu id="article-menu" label="More actions" groups={more} />
+          <span bind:this={moreAnchor} class="inline-flex"><MoreMenu id="article-menu" label="More actions" groups={more} /></span>
         </div>
       </div>
     {/if}
@@ -684,7 +676,7 @@
       Within thumb reach: quiet icons, each named for screen readers, above a
       hairline so the text ends at an edge rather than being sliced. Two
       groups by job, in order of use (decision 0225): what you do to this
-      article on the left, the rarest furthest out (More, Aa, Write back,
+      article on the left, the rarest furthest out (More, Share, Write back,
       Save), then a short hairline, then moving through the list at the
       right, where a right thumb rests (Previous, Next). Previous on the
       first article (or Next on the last) keeps its arrow and its place,
@@ -692,9 +684,9 @@
       says "dimmed" to screen readers and does nothing (decision 0047).
     -->
     <div bind:this={toolbar} role="group" aria-label="Article actions" onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "toolbar relative z-10 flex shrink-0 bg-paper px-1 pb-[env(safe-area-inset-bottom)]"}>
-      <!-- Share (or Copy link) and the rest, in a menu that opens upwards, nearest the button first (decision 0243). -->
+      <!-- Text and page and the rest, in a menu that opens upwards, nearest the button first (decision 0243). -->
       <MoreMenu id="article-menu" label="More actions" groups={more} up start />
-      {@render aa("")}
+      {@render shareButton("")}
       {#if writable}{@render writeBackButton("")}{/if}
       <button type="button" aria-label="Save" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
         {@render saveIcon()}
@@ -714,7 +706,7 @@
   {/if}
 
   {#if panelOpen}
-    <ReadingPanel bind:preferences anchor={aaButton} phone={phone !== undefined} onClose={closePanel} />
+    <ReadingPanel bind:preferences anchor={moreAnchor} phone={phone !== undefined} onClose={closePanel} />
   {/if}
 </section>
 
