@@ -237,12 +237,14 @@ export type FeedChanges = Partial<VideoSettings> & {
   why?: Why;
   /** Write back for the person, kept on every place of theirs (decision 0286). */
   writeBack?: boolean;
+  /** How the reader answered them, which the button at their articles' end then offers (decision 0286). */
+  writeBackWay?: "email" | "copy" | "comment";
 };
 
 /** Saves Edit's or a source's settings: only what's given changes. */
 export async function editFeed(id: number, changes: FeedChanges): Promise<Refusal | undefined> {
-  const { newFolder, liveStreams, writeBack, ...rest } = changes;
-  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, live_streams: liveStreams, write_back: writeBack })).refusal;
+  const { newFolder, liveStreams, writeBack, writeBackWay, ...rest } = changes;
+  return (await change(`/api/feeds/${id}`, { ...rest, new_folder: newFolder, live_streams: liveStreams, write_back: writeBack, write_back_way: writeBackWay })).refusal;
 }
 
 export async function unsubscribe(id: number): Promise<Refusal | undefined> {

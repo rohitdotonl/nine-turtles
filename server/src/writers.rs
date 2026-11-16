@@ -75,6 +75,9 @@ pub struct Before {
     /// Write back switched off for them (decision 0286), so Undo brings that back too.
     #[serde(default)]
     pub write_back_off: bool,
+    /// How the reader answered them (decision 0286), so Undo brings that back too.
+    #[serde(default)]
+    pub write_back_way: Option<String>,
     /// The reader's note on them (decision 0164), so Undo brings it back too.
     #[serde(default)]
     pub note: Option<String>,
@@ -113,7 +116,7 @@ async fn before_of(
     feeds: &[i64],
 ) -> Result<Vec<Before>, sqlx::Error> {
     // Each place: its feed, person, that person's name, the address typed for it, Write back
-    // switched off, and the note.
+    // switched off, how they were answered, and the note.
     type Place = (
         i64,
         Option<i64>,
@@ -121,10 +124,12 @@ async fn before_of(
         Option<String>,
         bool,
         Option<String>,
+        Option<String>,
     );
     let places: Vec<Place> = sqlx::query_as(
         "SELECT subscriptions.feed_id, subscriptions.writer_id, writers.name,
-             subscriptions.write_to, subscriptions.write_back_off, subscriptions.note FROM subscriptions
+             subscriptions.write_to, subscriptions.write_back_off, subscriptions.write_back_way,
+             subscriptions.note FROM subscriptions
          LEFT JOIN writers ON writers.id = subscriptions.writer_id
          WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
              AND subscriptions.feed_id IN (SELECT value FROM json_each(?))
@@ -135,7 +140,7 @@ async fn before_of(
     .fetch_all(&mut *connection)
     .await?;
     let mut before = Vec::with_capacity(places.len());
-    for (feed, writer, name, write_to, write_back_off, note) in places {
+    for (feed, writer, name, write_to, write_back_off, write_back_way, note) in places {
         let folders: Vec<i64> = sqlx::query_scalar(
             "SELECT feed_folders.folder_id FROM feed_folders
              JOIN folders ON folders.id = feed_folders.folder_id
@@ -153,6 +158,7 @@ async fn before_of(
             folders,
             write_to,
             write_back_off,
+            write_back_way,
             note,
         });
     }
@@ -236,16 +242,17 @@ pub async fn join(
         }
     };
     // Their notes become one, on every place (decision 0164); Write back is
-    // off for the person if the reader switched it off for any of them
-    // (decision 0286).
+    // off for the person if the reader switched it off for any of them, and
+    // answered the way the first of them was (decision 0286).
     let notes: Vec<Option<String>> = before.iter().map(|place| place.note.clone()).collect();
     sqlx::query(
-        "UPDATE subscriptions SET writer_id = ?, note = ?, write_back_off = ?
+        "UPDATE subscriptions SET writer_id = ?, note = ?, write_back_off = ?, write_back_way = ?
          WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
     )
     .bind(writer)
     .bind(crate::notes::joined(&notes))
     .bind(before.iter().any(|place| place.write_back_off))
+    .bind(before.iter().find_map(|place| place.write_back_way.as_deref()))
     .bind(person)
     .bind(ids(&places))
     .execute(&mut *connection)
@@ -303,7 +310,8 @@ pub async fn put_back(
         let changed = sqlx::query(
             "UPDATE subscriptions SET writer_id =
                  (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2), write_to = ?4, note = ?5,
-                 write_back_off = ?6
+                 write_back_off = ?6,
+                 write_back_way = CASE WHEN ?7 IN ('copy', 'comment') THEN ?7 END
              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL",
         )
         .bind(place.writer)
@@ -323,6 +331,7 @@ pub async fn put_back(
                 .and_then(|note| crate::notes::clean_note(note).ok().flatten()),
         )
         .bind(place.write_back_off)
+        .bind(&place.write_back_way)
         .execute(&mut *connection)
         .await?;
         if changed.rows_affected() > 0 {
@@ -511,7 +520,7 @@ async fn separate_place(
         // brings them back.
         sqlx::query(
             "UPDATE subscriptions SET writer_id = NULL, kind = NULL, kind_why = NULL, write_to = NULL,
-                 write_back_off = 0
+                 write_back_off = 0, write_back_way = NULL
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)

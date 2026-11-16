@@ -24,6 +24,23 @@ export function writesBack(feed: Pick<Feed, "kind" | "writeBackOff"> | undefined
   return feed !== undefined && feed.kind !== "publication" && feed.writeBackOff !== true;
 }
 
+/** The ways back an article's end offers (decision 0286): an email, their address copied, or a comment on their site. */
+export type WriteBackWay = "email" | "copy" | "comment";
+
+/**
+ * The way the reader last chose for this person, kept for them on the server (on each of their
+ * places): what Write back's main button does. Copying needs their address, so without one it's email.
+ */
+export function wayOf(feed: Feed, feeds: Feed[], address: string | undefined): WriteBackWay {
+  const way = placesOf(feed, feeds).find((place) => place.writeBackWay)?.writeBackWay ?? "email";
+  return way === "copy" && !address ? "email" : way;
+}
+
+/** Where to comment on an article: the comments its feed names, else the article itself on their site. */
+export function commentsOf(comments: string | null | undefined, link: string | null | undefined): string | undefined {
+  return webPage(comments)?.href ?? webPage(link)?.href;
+}
+
 /** Where to write to the person `feed` is a place of, or undefined while nine turtles doesn't know. */
 export function addressFor(feed: Feed, feeds: Feed[]): string | undefined {
   const places = placesOf(feed, feeds);

@@ -3,28 +3,14 @@
   bar scrolls away with the title, so what's wanted on finishing waits under
   the closing rule, above Write back: Save and View original, as quiet
   buttons with their words. View original is left out when the note above
-  already links the rest on the publisher's site. Comments follows, when the
-  feed itself says where the article's comments are (decision 0286): the
-  publisher's own page, linked, never fetched. A phone keeps its toolbar
+  already links the rest on the publisher's site. A phone keeps its toolbar
   in reach instead, so this is a computer's only.
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
   import { tip } from "./keyboard";
 
-  let {
-    starred,
-    onStar,
-    original,
-    comments,
-  }: {
-    starred: boolean;
-    onStar: () => void;
-    /** The original's address, when this row offers it. */
-    original?: string;
-    /** Where its comments are, when its feed says (decision 0286). */
-    comments?: string | null;
-  } = $props();
+  let { starred, onStar, original }: { starred: boolean; onStar: () => void; /** The original's address, when this row offers it. */ original?: string } = $props();
 </script>
 
 <div class="end-tools" lang="en">
@@ -35,11 +21,6 @@
   {#if original}
     <a href={original} target="_blank" rel="noopener noreferrer" title={tip("View original", "open-original")} class="btn-quiet btn-small"
       ><Icon name="open" />View original<span class="sr-only">{" "}(opens in a new tab)</span></a
-    >
-  {/if}
-  {#if comments}
-    <a href={comments} target="_blank" rel="noopener noreferrer" class="btn-quiet btn-small"
-      ><Icon name="comments" />Comments<span class="sr-only">{" "}(opens in a new tab)</span></a
     >
   {/if}
 </div>

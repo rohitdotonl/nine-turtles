@@ -146,6 +146,10 @@ struct EditFeed {
     /// Write back for the person (decision 0286): off takes it away from
     /// every place of theirs, as the address typed for them is kept on each.
     write_back: Option<bool>,
+    /// How the reader answered them, which the button at their articles'
+    /// end then offers (decision 0286): "email", "copy" or "comment", kept
+    /// on every place of theirs too.
+    write_back_way: Option<String>,
 }
 
 /// How many of the articles a feed brought while it was paused go back to
@@ -184,6 +188,12 @@ async fn edit_feed(
     {
         return problem(StatusCode::BAD_REQUEST, "why");
     }
+    let way = match form.write_back_way.as_deref() {
+        None => None,
+        Some("email") => Some(None),
+        Some(way @ ("copy" | "comment")) => Some(Some(way)),
+        Some(_) => return problem(StatusCode::BAD_REQUEST, "way"),
+    };
     let saved: Result<Option<()>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         if !follows(&mut transaction, person, id).await? {
@@ -215,14 +225,17 @@ async fn edit_feed(
             crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
                 .await?;
         }
-        if let Some(on) = form.write_back {
+        if form.write_back.is_some() || way.is_some() {
             sqlx::query(
-                "UPDATE subscriptions SET write_back_off = ?1
-                 WHERE person_id = ?2 AND unsubscribed_at IS NULL
-                     AND (feed_id = ?3 OR writer_id = (SELECT writer_id FROM subscriptions
-                              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL))",
+                "UPDATE subscriptions SET write_back_off = COALESCE(?1, write_back_off),
+                     write_back_way = CASE WHEN ?2 THEN ?3 ELSE write_back_way END
+                 WHERE person_id = ?4 AND unsubscribed_at IS NULL
+                     AND (feed_id = ?5 OR writer_id = (SELECT writer_id FROM subscriptions
+                              WHERE person_id = ?4 AND feed_id = ?5 AND unsubscribed_at IS NULL))",
             )
-            .bind(!on)
+            .bind(form.write_back.map(|on| !on))
+            .bind(way.is_some())
+            .bind(way.flatten())
             .bind(person)
             .bind(id)
             .execute(&mut *transaction)

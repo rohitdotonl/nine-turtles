@@ -46,6 +46,8 @@ export type Feed = {
   email?: string | null;
   /** The reader switched Write back off for the person (decision 0286), kept on each of their places. */
   writeBackOff?: boolean;
+  /** How the reader last answered them at an article's end (decision 0286): copying their address, or their site's comments; none is by email. */
+  writeBackWay?: "copy" | "comment" | null;
   /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
   note?: string | null;
   /** The picture the feed names (decision 0285), on the publisher's site. */
@@ -127,7 +129,7 @@ export type FullArticle = Article & {
   audio?: Episode | null;
   /** A YouTube Short plays in a tall box (decision 0144); a live stream or any other video in a wide one. */
   videoKind?: "short" | "live" | null;
-  /** Where its comments are, as its feed says (decision 0286): the publisher's own page, linked as Comments at its end. */
+  /** Where its comments are, as its feed says (decision 0286): the publisher's own page, where Write back's Comment on their site goes (else the article). */
   commentsUrl?: string | null;
   /** The reader's highlights on it and their note on the whole of it (SPEC section 42), oldest first; none in copies kept before them. */
   notes?: Note[];
@@ -266,6 +268,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     writeTo: text(feed.write_to),
     email: text(feed.email),
     writeBackOff: feed.write_back_off === true,
+    writeBackWay: feed.write_back_way === "copy" || feed.write_back_way === "comment" ? feed.write_back_way : null,
     note: text(feed.note),
     pictureUrl: text(feed.picture_url),
     pictureChosen: typeof feed.picture_chosen === "number" ? feed.picture_chosen : null,

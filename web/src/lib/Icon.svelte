@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments" | "copy"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash"
     // What went wrong with a feed that isn't working (decision 0279).
@@ -224,6 +224,10 @@
   {:else if name === "comments"}
     <!-- Comments (decision 0286): a speech bubble, its tail at the lower left, as people talking in public. -->
     <path d="M3.75 4.75a1 1 0 0 1 1-1h10.5a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1H9l-3.75 3v-3h-.5a1 1 0 0 1-1-1z" />
+  {:else if name === "copy"}
+    <!-- Copy address (decision 0286): a second page lying over the first, as a copy is. -->
+    <rect x="6.75" y="6.75" width="10.5" height="10.5" rx="1.5" />
+    <path d="M13.25 4.25v-.5a1 1 0 0 0-1-1h-8.5a1 1 0 0 0-1 1v8.5a1 1 0 0 0 1 1h.5" />
   {:else if name === "note"}
     <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
     <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />

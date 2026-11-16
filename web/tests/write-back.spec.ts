@@ -179,7 +179,7 @@ test("A publication has no Write back and no Write to; A person brings them back
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 });
 
-test("Copy address sits on the address line, Comments opens what the feed names, and Write back switches off per person", async ({ page }) => {
+test("Write back's arrow offers every way back, and the one chosen is kept for that person; Write back switches off per person", async ({ page }) => {
   // Each post of a "talk-" blog names its comments page (RSS's <comments>, decision 0286).
   const name = `talk-wb-${test.info().workerIndex}-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -190,24 +190,58 @@ test("Copy address sits on the address line, Comments opens what the feed names,
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
   const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "talk@talk.example" } });
   expect(kept.ok()).toBe(true);
-  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
-  await appReady(page);
-  await page.locator(".item-row").first().click();
-  await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
+  const openArticle = async () => {
+    await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+    await appReady(page);
+    await page.locator(".item-row").first().click();
+    await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
+  };
+  await openArticle();
 
-  // The article's end: Comments beside View original, to the page the feed names, in a new tab.
-  const comments = pane(page).locator(".end-tools").getByRole("link", { name: "Comments (opens in a new tab)" });
-  await expect(comments).toHaveAttribute("href", new RegExp(`^https://${name}\\.example/\\d+#comments$`));
-  await expect(comments).toHaveAttribute("target", "_blank");
+  // The end tools stay Save and View original; the arrow beside Write back holds the other ways, Email app ticked.
+  await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toHaveCount(0);
+  await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
+  const arrow = pane(page).getByRole("button", { name: `Other ways back to Blog ${name}` });
+  await arrow.click();
+  const ways = pane(page).getByRole("menu");
+  await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
+  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toHaveAttribute("aria-checked", "true");
 
-  // Copy address, on the line that shows the address: copied, said so, and the keyboard stays on it.
-  const copy = pane(page).getByRole("button", { name: `Copy Blog ${name}'s email address` });
+  // Copy: copied at once, said so, and from then on the main button copies, for this person, after a reload too.
+  await ways.getByRole("menuitemradio", { name: "Copy talk@talk.example" }).click();
+  await expect(pane(page).getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("talk@talk.example");
+  await openArticle();
+  const copy = pane(page).getByRole("button", { name: `Copy address of Blog ${name}` });
+  await expect(copy).toBeVisible();
+  await page.evaluate(() => navigator.clipboard.writeText(""));
   await copy.click();
   await expect(pane(page).getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
-  await expect(copy).toBeFocused();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("talk@talk.example");
 
-  // Their page has it too, beside Change.
+  // Comment: opens the comments the feed names in a new tab, and the main button becomes Comment.
+  await page.evaluate(() => {
+    window.open = ((address: string) => ((document.body.dataset.opened = address), null)) as typeof window.open;
+  });
+  await arrow.click();
+  await expect(ways.getByRole("menuitemradio", { name: "Copy talk@talk.example" })).toHaveAttribute("aria-checked", "true");
+  await ways.getByRole("menuitemradio", { name: "Comment on their site" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-opened", new RegExp(`^https://${name}\\.example/\\d+#comments$`));
+  const comment = pane(page).getByRole("link", { name: `Comment on Blog ${name}'s site` });
+  await expect(comment).toHaveAttribute("href", new RegExp(`^https://${name}\\.example/\\d+#comments$`));
+  await expect(comment).toHaveAttribute("target", "_blank");
+  await expect(pane(page).getByText(`on ${name}.example`, { exact: true })).toBeVisible();
+
+  // The paper plane still writes an email, whatever the main button does.
+  await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toBeVisible();
+
+  // Back to email from the arrow: Email app opens it, and Write back is the main button again.
+  await arrow.click();
+  await ways.getByRole("menuitemradio", { name: "Email app" }).click();
+  await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toBeVisible();
+  await expect(pane(page).getByText(/^Opening your email app/)).toBeVisible();
+
+  // Their page keeps Copy address beside Change.
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Copy Blog ${name}'s email address` })).toBeVisible();
@@ -227,8 +261,8 @@ test("Copy address sits on the address line, Comments opens what the feed names,
   await appReady(page);
   await page.locator(".item-row").first().click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
-  await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toBeVisible();
   await expect(pane(page).getByText(/^Write back/)).toHaveCount(0);
+  await expect(pane(page).getByRole("button", { name: /Other ways back/ })).toHaveCount(0);
   await expect(pane(page).getByRole("button", { name: "Write back" })).toHaveCount(0);
   await page.locator(".item-row").first().focus();
   await page.keyboard.press("w");

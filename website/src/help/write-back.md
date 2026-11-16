@@ -21,10 +21,8 @@ asks once instead: "Is … someone you might write back to?" Press **Yes, a
 person**, and Write back takes its place.
 
 Write back is private: an email between you and them. To answer in public,
-where the writer's other readers can see it, use their comments: **View
-original** opens the article on their site, and when their feed says where
-an article's comments are, a **Comments** link sits beside it at the
-article's end (on a phone, **Open comments** in the article's **…** menu).
+where the writer's other readers can see it, comment on their site instead
+(see "Other ways back", below).
 
 ## Write back
 
@@ -52,9 +50,25 @@ new draft there, in a new tab. nine turtles remembers this on that
 computer, so from then on Write back goes straight to Gmail. To go back,
 press **Use your email app** under the button.
 
-If neither works for you, press **Copy address**, at the end of the line
-under the button that shows their address, and paste it into a new email.
-nine turtles says "Copied." under it.
+The arrow beside Write back does the same in one press: choose **Gmail**
+or **Outlook.com** there.
+
+## Other ways back
+
+Press the arrow beside **Write back** at the end of an article. Its menu
+has every way to answer them:
+
+- **Email app**, **Gmail** or **Outlook.com**: writes an email there.
+- **Copy** and their address: copies it, to paste into any email. nine
+  turtles says "Copied." under the button.
+- **Comment on their site**: opens the article's comments on their site, in
+  a new tab, so you can answer in public. When their feed says where the
+  comments are, it goes straight there; otherwise to the article's page.
+
+Whatever you choose becomes the button for that person, on every device:
+**Write back**, **Copy address** or **Comment**. The paper plane at the top
+and <kbd>W</kbd> always write an email. To change it, choose another way
+from the arrow.
 
 ## Write back about a line
 
