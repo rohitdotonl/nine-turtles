@@ -109,17 +109,6 @@ function since(at: number, now: Date): string {
 }
 
 /**
- * The day a failing feed's row shows (decision 0279): since when nothing has
- * come through, "24 Oct", "Today" or "3 Dec 2025", or nothing when that isn't known.
- */
-export function failingDay(feed: Sick, now: Date = new Date()): string {
-  const from = feed.problem === "not-found" && feed.missingSince !== null ? feed.missingSince : feed.failingSince;
-  if (from === null) return "";
-  const day = dayOrToday(from, now);
-  return day === "today" ? "Today" : day;
-}
-
-/**
  * A YouTube feed YouTube won't send (decision 0272): not found, no answer, or
  * a problem of YouTube's own. The server says which feeds are YouTube's.
  */
@@ -128,36 +117,45 @@ export function youTubeRefusing(feed: Pick<Sick, "youtube" | "problem">): boolea
   return feed.youtube && (problem === "not-found" || problem === "unreachable" || Number(problem?.match(/^answered-(\d{3})$/)?.[1]) >= 500);
 }
 
+/** What went wrong, as a row says it: a few plain words, and the icon that stands for them. */
+export type Reason = { words: string; icon: "feed-gone" | "site-down" | "page" | "shield" | "alert" | "video" };
+
 /**
- * What went wrong, in a few plain words and never a code, said once over
- * every feed it happened to (decision 0279). A YouTube feed that YouTube
- * won't send says so, rather than that it may have moved (decision 0272); a
- * guard in front of the site is named as one (decision 0258).
+ * What went wrong, in a few plain words and never a code, with its icon
+ * (decision 0279). A YouTube feed that YouTube won't send says so, rather
+ * than that it's gone (decision 0272); a guard in front of the site is a
+ * site that blocks (decision 0258).
  */
-export function reason(feed: Pick<Sick, "youtube" | "problem">): string {
-  if (youTubeRefusing(feed)) return "YouTube isn't sending these for now";
+export function reason(feed: Pick<Sick, "youtube" | "problem">): Reason {
+  if (youTubeRefusing(feed)) return { words: "YouTube not sending", icon: "video" };
   switch (feed.problem) {
     case "not-found":
-      return "The feed isn't there any more";
+      return { words: "Feed gone", icon: "feed-gone" };
     case "unreachable":
-      return "The site doesn't answer";
-    case "blocked":
-      return "The site's guard against bots keeps nine turtles out";
+      return { words: "Site not answering", icon: "site-down" };
     case "not-a-feed":
-      return "The address leads to a page, not a feed";
-    case "too-big":
-      return "The feed is too big to read";
-    case "slow-down":
-      return "The site asked nine turtles to wait";
+      return { words: "Not a feed any more", icon: "page" };
+    case "blocked":
+      return { words: "Blocked by the site", icon: "shield" };
     case "not-allowed":
-      return "The address points somewhere nine turtles never visits";
+      return { words: "Address not allowed", icon: "shield" };
+    case "too-big":
+      return { words: "Feed too big", icon: "alert" };
+    case "slow-down":
+      return { words: "Site asked to wait", icon: "alert" };
     case "not-an-address":
-      return "The address isn't a web address";
+      return { words: "Not a web address", icon: "alert" };
   }
   const code = Number(feed.problem?.match(/^answered-(\d{3})$/)?.[1]);
-  if (code === 401 || code === 403) return "The site refuses to share the feed";
-  if (code >= 500) return "The site has a problem of its own";
-  return "The site answered, but not with the feed";
+  if (code === 401 || code === 403) return { words: "Site won't share it", icon: "shield" };
+  if (code >= 500) return { words: "Site has a problem", icon: "alert" };
+  return { words: "Site sent something else", icon: "alert" };
+}
+
+/** Failing feeds, gathered by what went wrong so alike ones sit together, each reason where its longest failing feed was. */
+export function byReason(feeds: Sick[]): Sick[] {
+  const order = [...new Set(feeds.map((feed) => reason(feed).words))];
+  return [...feeds].sort((one, other) => order.indexOf(reason(one).words) - order.indexOf(reason(other).words));
 }
 
 /**

@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-14
+updated: 2026-11-16
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -16,17 +16,16 @@ related: [unfollow-someone, follow-someone, one-person-several-places]
 ## Look at Everyone you follow
 
 Open **Everyone you follow**, in the sidebar under All articles (on a phone, on Home). Anything that isn't working is at
-the top, **Not working** first, then **Having trouble**, one row each, with
-a small drawing of a person or a newspaper page before the name. Each one says when
-something last came through and why, for example: "Nothing has come
-through since 1 Nov. The site says the feed isn't there any more. It
-may have moved."
+the top, **Not working** first, then **Having trouble**. In each, they're
+gathered by what went wrong, said once, for example "The feed isn't there
+any more" or "The site doesn't answer". Under it, each one is a single
+line: the name, and the day nothing has come through since.
 
 If everything's working, the page starts straight with everyone you follow.
 
 ## Fix it
 
-Under each, underlined words say what you can do:
+Press one to open their page. Under their name, you can:
 
 - **Find new address**: nine turtles looks once at the website for a feed
   under a new address. If it finds one, press **Use it**. Their name,
@@ -35,13 +34,15 @@ Under each, underlined words say what you can do:
   know their feed broke, and a short email is often all it takes. It opens
   your own email app, or first asks for their address if nine turtles
   doesn't know it yet.
-- **Unsubscribe**, in red: let it go. **Undo** brings it back.
+- **Unsubscribe**, in their **Settings**: let it go. **Undo** brings it
+  back.
 
 There's no need to try again yourself: nine turtles keeps checking, and
 picks up anything new as soon as the site is back.
 
-You'll also see a line above a broken one's list, such as "This feed hasn't
-worked since 12 Oct.", with a button to find its new address.
+Their page says when it broke, such as "garden.example hasn't worked since
+12 Oct.", and so does a line above a broken one's list, each with a button
+to find its new address.
 
 ## Good to know
 
@@ -54,11 +55,11 @@ worked since 12 Oct.", with a button to find its new address.
   once an hour to once a day. When a site asks it to slow down, it does.
 - Some sites put a guard in front of them to keep bots out, and it can
   turn nine turtles away too. Then it says "The site's guard against bots
-  turns nine turtles away." Only the site can let it in: if it's a person,
+  keeps nine turtles out." Only the site can let it in: if it's a person,
   **Write to** them and say so. nine turtles never sneaks past a guard.
 - YouTube sometimes stops sending a channel's videos to nine turtles, even
   though the channel is still there. Then it says "YouTube isn't sending
-  these videos to nine turtles at the moment." nine turtles keeps
+  these for now." nine turtles keeps
   asking, a few times a day at different times, and the videos arrive
   once YouTube sends them again.
 - Quiet isn't broken: some people write once a year. In **Everyone you

@@ -1,22 +1,21 @@
 <!--
   Who isn't working, at the top of Everyone you follow (SPEC section 15,
-  decisions 0186 and 0279), worst first: "Not working" (a week of "not
-  found", or three weeks of failing), then "Having trouble". The group's name
-  says which, in words, so no status color is needed, and one line under it
-  says what it means and what to do. Then the feeds, gathered by what went
-  wrong, said once in a few plain words ("The site doesn't answer") over a
-  grouped list of them; the reason whose feed has failed longest comes first.
-  Each feed is one line: their name, the day nothing has come through since,
-  and ›. It opens their page, which has what can be done: Find new address,
-  Write to and, in their settings, Unsubscribe. nine turtles keeps checking
-  by itself, so there's no Retry. With nothing to list, it shows nothing.
+  decisions 0186 and 0279). Under "Not working" (a week of "not found", or
+  three weeks of failing), one grouped list, a line for each: the icon for
+  what went wrong, their name, what went wrong in a few words at the
+  right ("Feed gone"), and ›, alike ones together, the longest failing first.
+  It opens their page, which has what can be done: Find new address, Write
+  to and, in their settings, Unsubscribe. One line under it says so.
+  Those only "Having trouble" usually come back on their own, so they're one
+  row, "3 more having trouble", that shows them in place. nine turtles keeps
+  checking by itself, so there's no Retry. With nothing to list, it shows
+  nothing.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
-  import { failingDay, listSick, reason, type Sick } from "./health";
+  import { byReason, listSick, reason, type Sick } from "./health";
   import { pathFor } from "./router";
 
   let {
@@ -28,6 +27,8 @@
 
   let feeds: Sick[] | undefined = $state();
   let failed = $state(false);
+  /** Having trouble, shown in place. */
+  let showingTrouble = $state(false);
 
   /** Lists who isn't working: when the page opens, and again after the list below unsubscribes, moves or undoes. */
   export function reload() {
@@ -41,65 +42,60 @@
 
   onMount(reload);
 
-  /** The feeds, gathered by what went wrong, in the order the server lists them (longest failing first). */
-  function byReason(sick: Sick[]): { reason: string; feeds: Sick[] }[] {
-    const gathered = new Map<string, Sick[]>();
-    for (const feed of sick) {
-      const why = reason(feed);
-      gathered.set(why, [...(gathered.get(why) ?? []), feed]);
-    }
-    return [...gathered].map(([why, feeds]) => ({ reason: why, feeds }));
-  }
-
-  let groups = $derived([
-    {
-      id: "dead",
-      name: "Not working",
-      reasons: byReason((feeds ?? []).filter((feed) => feed.state === "dead")),
-      how: "Nothing has come through from these for weeks. Open one to find its new address, or to unsubscribe.",
-    },
-    {
-      id: "trouble",
-      name: "Having trouble",
-      reasons: byReason((feeds ?? []).filter((feed) => feed.state !== "dead")),
-      how: "Most come back on their own; nine turtles keeps trying.",
-    },
-  ]);
+  let dead = $derived(byReason((feeds ?? []).filter((feed) => feed.state === "dead")));
+  let trouble = $derived(byReason((feeds ?? []).filter((feed) => feed.state !== "dead")));
 </script>
+
+{#snippet row(feed: Sick)}
+  {@const why = reason(feed)}
+  <li class="contents">
+    <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpen(event, feed.id)} class="inset-row inset-action">
+      <span class="why"><Icon name={why.icon} /></span>
+      <span class="min-w-0 flex-1 py-2 break-words">{feed.title}</span>
+      <span class="said text-meta text-muted text-right">{why.words}</span>
+      <span class="row-glyph"><Icon name="chevron-right" /></span>
+    </a>
+  </li>
+{/snippet}
 
 {#if failed}
   <LoadFailed words="Who isn't working couldn't be checked." heading="your-feeds-heading" onRetry={() => ((failed = false), reload())} />
 {:else}
-  {#each groups as group (group.id)}
-    {#if group.reasons.length > 0}
-      <section aria-labelledby={`health-${group.id}`} aria-describedby={`health-${group.id}-how`}>
-        <h3 id={`health-${group.id}`} class="inset-head">{group.name}</h3>
-        <p id={`health-${group.id}-how`} class="inset-foot mt-0">{group.how}</p>
-        {#each group.reasons as each (each.reason)}
-          <h4 class="inset-foot reason">{each.reason}</h4>
-          <ul class="inset-group">
-            {#each each.feeds as feed (feed.id)}
-              {@const day = failingDay(feed)}
-              <li class="contents">
-                <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpen(event, feed.id)} class="inset-row inset-action">
-                  <span class="min-w-0 flex-1 py-2 break-words">{feed.title}</span>
-                  {#if day}<span class="text-meta text-muted shrink-0"><span class="sr-only">Nothing since{" "}</span><Dated text={day} /></span>{/if}
-                  <span class="row-glyph"><Icon name="chevron-right" /></span>
-                </a>
-              </li>
-            {/each}
-          </ul>
-        {/each}
-      </section>
-    {/if}
-  {/each}
+  {#if dead.length > 0}
+    <section aria-labelledby="health-dead" aria-describedby="health-dead-how">
+      <h3 id="health-dead" class="inset-head">Not working</h3>
+      <ul class="inset-group">
+        {#each dead as feed (feed.id)}{@render row(feed)}{/each}
+      </ul>
+      <p id="health-dead-how" class="inset-foot">Open one to fix it.</p>
+    </section>
+  {/if}
+  {#if trouble.length > 0}
+    <section aria-label="Having trouble">
+      <ul class="inset-group">
+        <li class="contents">
+          <button type="button" class="inset-row inset-action" aria-expanded={showingTrouble} onclick={() => (showingTrouble = !showingTrouble)}>
+            <span class="min-w-0 flex-1 py-2 text-left">{trouble.length}{dead.length > 0 ? " more" : ""} having trouble</span>
+            <span class="text-meta text-muted shrink-0">Usually back soon</span>
+            <span class="row-glyph"><Icon name={showingTrouble ? "chevron-up" : "chevron-down"} /></span>
+          </button>
+        </li>
+        {#if showingTrouble}
+          {#each trouble as feed (feed.id)}{@render row(feed)}{/each}
+        {/if}
+      </ul>
+    </section>
+  {/if}
 {/if}
 
 <style>
-  /* What went wrong, over the feeds it happened to: the group's quiet words, a step apart from the list before. */
-  .reason {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    font-weight: inherit;
+  /* What went wrong, at a glance: its icon in the second ink, so alike ones line up down the left edge. */
+  .why {
+    display: flex;
+    color: var(--ink-2);
+  }
+  /* Its words sit at the right as a row's own small words do, and give way to a long name on a phone. */
+  .said {
+    max-width: 45%;
   }
 </style>
