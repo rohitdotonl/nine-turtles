@@ -93,7 +93,7 @@
   </p>
   <p class={small ? "text-meta text-muted" : "text-meta text-ink-2"}>{help}</p>
   <div class="flex flex-wrap gap-2">
-    <button type="submit" class="btn-primary" aria-disabled={busy}><Waiting {busy} word={message ? "Try again" : "Save"} doing="Saving…" /></button>
+    <button type="submit" class="btn-primary" aria-disabled={busy}><Waiting {busy} word={message ? "Try again" : "Save note"} doing="Saving…" /></button>
     <button type="button" class="btn-quiet" onclick={onNotNow}>Not now</button>
   </div>
 </form>

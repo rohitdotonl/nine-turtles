@@ -21,7 +21,7 @@ related: [save-an-article, search-everything, download-everything]
    the words there and then, or **Done**.
 
 To write a note on them instead, press **Add a note…** (or
-<kbd>N</kbd>), type it and press **Save**.
+<kbd>N</kbd>), type it and press **Save note**.
 
 Press a highlight to see its note, edit it, copy the words, or remove it.
 From someone you follow, both menus also offer **Write back about this**,
@@ -39,7 +39,7 @@ highlights.
 Left a note half-written? It isn't lost. Whether you pressed **Not now**,
 went to another article or closed the box by mistake, nine turtles keeps it
 on this device. Come back and its box is open again with your words and
-**Not saved yet.** Press **Save** to keep it, or **Discard** to throw it
+**Not saved yet.** Press **Save note** to keep it, or **Discard** to throw it
 away (**Undo** brings it back).
 
 If a note can't be saved, its words stay in the box with a line saying so.

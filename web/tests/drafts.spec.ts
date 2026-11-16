@@ -55,7 +55,7 @@ test("a half-written note waits for the reader's return, and Discard has Undo", 
   await expect(box).toHaveValue("Ask about the hedgerow survey");
 
   // Saved, it's no longer kept as a draft: coming back shows the note, not the box.
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save note" }).click();
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
   await expect(box).toHaveCount(0);
   // A reload opens the article its address names, alone.
@@ -74,7 +74,7 @@ test("a note that couldn't be saved keeps its words, and Try again saves them", 
   await page.keyboard.type("Lovely point about writing slowly");
 
   await page.route("**/api/articles/*/note", (route) => route.fulfill({ status: 500, json: { error: "trouble" } }));
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save note" }).click();
   await expect(article(page).getByText("The note couldn't be saved, so your words are still here. Try again in a moment.")).toBeVisible();
   const box = page.getByRole("textbox", { name: "A note on this article" });
   await expect(box).toHaveValue("Lovely point about writing slowly");
@@ -111,7 +111,7 @@ test("a note on highlighted words survives Escape, and waits at the article's en
   await backToList(page);
   await page.getByRole("button", { name: button(NEWEST) }).first().click();
   await expect(ends.getByRole("textbox", { name: "A note on these words" })).toHaveValue("Compare with the spring list, and the autumn one");
-  await ends.getByRole("button", { name: "Save" }).click();
+  await ends.getByRole("button", { name: "Save note" }).click();
   await expect(ends.getByText("Compare with the spring list, and the autumn one")).toBeVisible();
   await expect(ends.getByRole("textbox")).toHaveCount(0);
 });

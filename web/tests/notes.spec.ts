@@ -67,7 +67,7 @@ test("highlights and a note stay with the article, and Notes and search find the
   const box = page.getByRole("textbox", { name: "A note on this article" });
   await expect(box).toBeFocused();
   await page.keyboard.type("Ask about the hedgerow survey");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save note" }).click();
   await expect(article(page).getByText("Ask about the hedgerow survey")).toBeVisible();
 
   // Both are kept: after a reload they're there, and Notes is in the sidebar.
@@ -196,7 +196,7 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     await page.keyboard.press("Escape");
     // The kept box is now the highlight's: Save notes it, and highlights nothing again.
     const noted = onServer(page, "note");
-    await article(page).getByRole("button", { name: "Save" }).click();
+    await article(page).getByRole("button", { name: "Save note" }).click();
     expect((await noted).ok()).toBe(true);
     const ends = article(page).getByRole("list", { name: "Your highlights" });
     await expect(ends.getByText("Kept on the words")).toBeVisible();
@@ -210,7 +210,7 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     const ends = article(page).getByRole("list", { name: "Your highlights" });
     await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
     await page.getByRole("textbox", { name: "A note on these words" }).fill("Written while waiting");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Save note" }).click();
     await expect(ends.getByText("Written while waiting")).toBeVisible();
     const noted = onServer(page, "note");
     await backOnline(page);
@@ -251,7 +251,7 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     await choose(page, "for article");
     await page.keyboard.press("h");
     const noted = onServer(page, "note");
-    await article(page).getByRole("button", { name: "Save" }).click();
+    await article(page).getByRole("button", { name: "Save note" }).click();
     expect((await noted).ok()).toBe(true);
     expect(saves).toBe(1);
     await expect(page.getByRole("textbox", { name: "A note on these words" })).toHaveCount(0);
@@ -277,7 +277,7 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     const made = highlightSave(page);
     await choose(page, "for article");
     await page.keyboard.press("h");
-    await article(page).getByRole("button", { name: "Save" }).click();
+    await article(page).getByRole("button", { name: "Save note" }).click();
     expect((await made).status()).toBe(201);
     await expect(page.getByText("The note couldn't be saved, so your words are still here.")).toBeVisible();
     await page.getByRole("button", { name: "Not now" }).click();
@@ -323,7 +323,7 @@ test.describe("a highlight still being saved", () => {
       // After: the box, opened with the stand-in, is still there when the save answers.
       if (when === "after") await saved;
       const noted = onServer(page, "note");
-      await page.getByRole("button", { name: "Save" }).click();
+      await page.getByRole("button", { name: "Save note" }).click();
       expect(save.answered).toBe(when === "after");
       await expect(ends.getByText(`Saved ${when}`)).toBeVisible();
       expect((await noted).ok()).toBe(true);
@@ -350,7 +350,7 @@ test.describe("a highlight still being saved", () => {
     await ends.getByRole("button", { name: "Add a note on “for article”" }).click();
     const box = page.getByRole("textbox", { name: "A note on these words" });
     await box.fill("Words worth keeping");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Save note" }).click();
     expect(save.answered).toBe(false);
     // Highlighting it again is refused too: the words stay, with why, and Try again.
     const again = page.getByRole("button", { name: "Try again" });
@@ -380,7 +380,7 @@ test.describe("a highlight still being saved", () => {
     const box = page.getByRole("textbox", { name: "A note on these words" });
     await expect(box).toHaveValue("Kept for later");
     const made = page.waitForResponse((answer) => /\/highlights$/.test(answer.url()) && answer.request().method() === "POST");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Save note" }).click();
     await expect(ends.getByText("Kept for later")).toBeVisible();
     expect((await made).ok()).toBe(true);
     await reopen(page);
@@ -415,7 +415,7 @@ test("without a connection a highlight is kept on the device, and sent once back
   await choose(page, "short made-up");
   await page.getByRole("menuitem", { name: /Highlight/ }).click();
   await expect(article(page).locator("mark.highlight")).toHaveText("short made-up");
-  await expect(page.getByText("You're offline. This is saved on this device only, and reaches your account once you're back online.")).toBeVisible();
+  await expect(page.getByText("You're offline. This is kept on this device only, and reaches your account once you're back online.")).toBeVisible();
 
   const sent = page.waitForResponse((response) => /\/api\/articles\/\d+\/highlights$/.test(response.url()) && response.status() === 201);
   await context.setOffline(false);
@@ -440,7 +440,7 @@ test("unsubscribing asks whether to keep what was saved", async ({ page, isMobil
   await appReady(page);
   await page.getByRole("button", { name: "Add a note…" }).click();
   await page.getByRole("textbox", { name: `A note on Blog ${blog}` }).fill("Met at the spring fair");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save note" }).click();
   await expect(page.getByText("Met at the spring fair")).toBeVisible();
 
   await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);

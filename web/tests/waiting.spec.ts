@@ -92,9 +92,8 @@ test("a mark refused because the reader is signed out says so, with Sign in", as
     .click();
   await expect(
     page
-      .getByText("You're signed out, so the star wasn't saved.", {
-        exact: true,
-      })
+      // Another test may have saved this article already, so either way round.
+      .getByText(/^You're signed out, so the article wasn't (saved|taken out of Saved)\.$/)
       .locator("visible=true"),
   ).toBeVisible();
   const signInButton = page

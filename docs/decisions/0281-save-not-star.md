@@ -36,3 +36,7 @@ shape everyone knows for it.
 
 **Revisit if** the internal name starts to mislead the next agent more than
 a rename would cost.
+
+**Also.** A note's box said **Save** too, right beside the article's Save
+at its end, so its button now says **Save note**: two buttons with one
+name on one screen is a puzzle for a screen reader.

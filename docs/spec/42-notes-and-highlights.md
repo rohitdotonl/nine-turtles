@@ -29,25 +29,25 @@ anywhere or counted.
   until something else is done. A highlight can be removed, or given a
   note, the moment it's made: if its save hasn't answered yet, the change
   waits for it, then follows. If the server refuses that save, a note
-  written on it meanwhile stays: Save (or **Try again**) highlights the
+  written on it meanwhile stays: Save note (or **Try again**) highlights the
   words again, with the note, and one left for later comes back as a note
   on those words.
-- A note is written in a box in place, with **Save** and **Not now**. An
+- A note is written in a box in place, with **Save note** and **Not now** ("Save note", not "Save", since decision 0281: the article's own Save is beside it). An
   empty note takes the note off, never the highlight.
 - **Nothing typed is thrown away** (decision 0235). The box stays open, with
-  the words, until the save is confirmed (Save says "Saving…" after half a
+  the words, until the save is confirmed (Save note says "Saving…" after half a
   second). If it fails, the message sits under the words in oxblood with the
   alert icon, "The note couldn't be saved, so your words are still here.
-  Try again in a moment.", and Save becomes **Try again**. A note written
+  Try again in a moment.", and Save note becomes **Try again**. A note written
   and not saved is kept on this device: Not now, Escape, a press outside
   the box, Back and going to another article all keep it. Coming back to
   the article, its box is open at the end with the words and "**Not saved
   yet.** Kept from when you left this article." (a note on highlighted
   words waits under its highlight; one on words chosen but not yet
-  highlighted waits under those words, and Save highlights them; each
+  highlighted waits under those words, and Save note highlights them; each
   words chosen keep their own, so one never replaces another). Those words
   highlighted meanwhile with `h` or Highlight take the note with them: it
-  then waits under the new highlight, and Save never highlights them a
+  then waits under the new highlight, and Save note never highlights them a
   second time (even while that highlight is still saving; a note it has
   already comes first). Each kept box reads its words after its name, for a
   screen reader. Opened
@@ -152,7 +152,7 @@ anywhere or counted.
 **How to check it**
 1. Open an article, choose a few words, press **Highlight**: they're drawn
    in soft pencil, and listed under Your highlights at the end.
-2. Press the highlight, **Add a note…**, type and Save: a small page shows
+2. Press the highlight, **Add a note…**, type and Save note: a small page shows
    after it. Reload: both are still there.
 3. Press `n` with nothing chosen: write a note on the article. Notes
    appears in the sidebar and lists the article.
