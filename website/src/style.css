@@ -15,16 +15,6 @@
   font-weight: 600;
   font-display: swap;
   src: url("/fonts/literata-600-latin.woff2") format("woff2");
-  unicode-range: U+0000-00FF;
-}
-/* Only for the dotless ı in the walking name (decision 0291), which wears a
-   turtle for its dot; the browser fetches it only where that letter is. */
-@font-face {
-  font-family: "Literata";
-  font-weight: 600;
-  font-display: swap;
-  src: url("/fonts/literata-600-latin-ext.woff2") format("woff2");
-  unicode-range: U+0131;
 }
 @font-face {
   font-family: "Atkinson Hyperlegible Next";
@@ -168,40 +158,30 @@ a:focus-visible {
 .top a:hover {
   text-decoration: underline;
 }
-/* The logo stands on the name's baseline (BRAND.md → "The logo"): the nine
-   27px tall beside the 22px name, 9px apart. */
+/* The logo (decision 0291): the turtles walk on the name, four out in
+   front, on every page. The drawing is in the name's own units (60 to the
+   em, baseline at 0), so 449 wide is 7.4833em, and it is pulled back by the
+   name's width at 60 (348.91 with its dotless ı, so 5.8151em) to sit over
+   the letters. The name is 28px on tablets and computers and 22px on a
+   phone, so Help and Open the app stay on one line. */
 .top a.wordmark {
   display: block;
   margin-right: auto;
   line-height: 44px;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 1.375rem;
-  font-weight: 600;
-}
-.wordmark .logo {
-  margin-right: 9px;
-  vertical-align: baseline;
-}
-
-/* The website's other pages (decision 0291): the turtles walk on the name,
-   four out in front. The drawing is in the name's own units (60 to the em,
-   baseline at 0), so 445 wide is 7.4167em and it is pulled back by the
-   name's width at 60 (344.94 with its dotless ı, so 5.7490em) to sit over the letters. The
-   name is a size up on tablets and computers (28px) and today's 22px on a
-   phone, so Help and Open the app stay on one line. */
-.top a.wordmark.walking {
   font-size: 1.75rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 .walkers {
-  width: 7.4167em;
+  width: 7.4833em;
   height: 0.9333em;
-  margin-left: -5.749em;
+  margin-left: -5.8151em;
   vertical-align: baseline;
 }
 @media (max-width: 760px) {
-  .top a.wordmark.walking {
+  .top a.wordmark {
     font-size: 1.375rem;
   }
 }
