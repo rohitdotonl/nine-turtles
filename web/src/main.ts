@@ -1,4 +1,5 @@
 import "./app.css";
+import "./lib/portrait";
 import "./tops.css";
 import "./lists.css";
 import "./article-lists.css";

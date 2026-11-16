@@ -29,8 +29,8 @@ export function iconsOf(siteUrl: string | null | undefined): string[] {
 
 export type PortraitStyle = "initials" | "favicon";
 
-/** Prototype only: which fallback to show, chosen with ?portrait=initials or ?portrait=favicon and remembered. */
-export function portraitStyle(): PortraitStyle {
+/** Prototype only: which fallback to show, chosen with ?portrait=initials or ?portrait=favicon and remembered. Read as the app loads, before it tidies the address. */
+const chosen: PortraitStyle = (() => {
   try {
     const asked = new URLSearchParams(location.search).get("portrait");
     if (asked === "initials" || asked === "favicon") localStorage.setItem("nt-portrait", asked);
@@ -38,4 +38,8 @@ export function portraitStyle(): PortraitStyle {
   } catch {
     return "initials";
   }
+})();
+
+export function portraitStyle(): PortraitStyle {
+  return chosen;
 }
