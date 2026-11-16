@@ -745,7 +745,14 @@ export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<
     await page.keyboard.press("Tab");
   }
   const path = await page.evaluate(() => (window as unknown as { walk: Walk }).walk.path);
-  throw new Error(`Tab never reached the element; it went: ${path.join(" › ")}`);
+  // And why the element itself was passed by: what hides it, or keeps it out of the Tab order.
+  const why = await target.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const shut = element.closest("[hidden], [inert], [aria-hidden='true']");
+    const box = element.getBoundingClientRect();
+    return `tabIndex ${(element as HTMLElement).tabIndex}, display ${style.display}, visibility ${style.visibility}, seen ${element.checkVisibility()}, box ${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}x${Math.round(box.height)}${shut ? `, inside ${shut.tagName.toLowerCase()}.${shut.className}` : ""}`;
+  });
+  throw new Error(`Tab never reached the element (${why}); it went: ${path.join(" › ")}`);
 }
 
 /** Chooses `words` in the open article's text, as a reader does with the mouse. */
