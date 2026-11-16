@@ -4,7 +4,7 @@ description: nine turtles reads writing in any language and script, and sets eac
 groupId: reading
 order: 12
 spec: 24
-updated: 2026-11-10
+updated: 2026-11-17
 related: [search-everything, change-how-it-looks, highlight-and-take-notes]
 ---
 
@@ -21,8 +21,8 @@ related: [search-everything, change-how-it-looks, highlight-and-take-notes]
   so your screen reader reads each article in the right voice, and your
   device draws the right letter shapes.
 - **Right to left reads right to left.** Arabic, Persian, Urdu and Hebrew
-  articles start on the right, title and all, with their lists and quotations
-  on the right side too.
+  articles start on the right, with their lists and quotations on the right
+  side too. Their title is centred, as every article's is.
 - **Each script gets room to breathe.** Hindi and other Devanagari writing,
   Arabic, Hebrew, Chinese, Japanese and Korean get more space between lines than English, so
   their marks above and below the letters never crowd. Nothing is slanted

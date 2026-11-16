@@ -69,8 +69,3 @@
   text-emphasis-position: under;
 }
 
-/* Right to left: the title and the text share the right edge, and so does
-   the byline under them, though its words, nine turtles' own, stay English. */
-.article.rtl .article-byline {
-  text-align: right;
-}

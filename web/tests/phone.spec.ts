@@ -578,7 +578,8 @@ test.describe("on a phone", () => {
     if ((await dot.count()) > 0) near((await dot.boundingBox())!.x, 10);
     // The article: its title and its text.
     await row(page, "The pleasure of a slow letter").click();
-    near20(await textStart(title(page, "The pleasure of a slow letter")));
+    // The title is centred (decision 0294): its box keeps the margin, and so do the text's words.
+    near20((await title(page, "The pleasure of a slow letter").boundingBox())!.x);
     near20(await textStart(article(page).locator(".article-text p").first()));
 
     // Settings: its title and what's under it.

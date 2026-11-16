@@ -84,8 +84,10 @@ working even if the title or name changes later.
 
 Choose an article and it opens, with the whole window to itself. Across its top are **Open
 original** (the publisher's own page), **Share**, **Save**,
-**Write back** (a paper plane, for a person) and **More**, which holds **Text and page** (how the text looks). The writer's name
-under the title opens everything they've written, with **‹ Article** to come
+**Write back** (a paper plane, for a person) and **More**, which holds **Text and page** (how the text looks). The title is
+centred, large when it's short and smaller when it's long, and under it is who
+wrote it ("by Asha Rao") with the day, small, beneath. The writer's name
+opens everything they've written, with **‹ Article** to come
 back; their picture and name at the top of that list open the page about
 them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Share, Write back
 and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
