@@ -7,7 +7,6 @@
 -->
 <script lang="ts">
   import Waiting from "./Waiting.svelte";
-  import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import PasswordField from "./PasswordField.svelte";
   import { PASSWORD_MINIMUM } from "./readers";
@@ -53,7 +52,6 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
   <div class="flex flex-col items-center text-center">
-    <div class="mb-5"><Logo height={56} /></div>
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">Choose a new password.</p>
   </div>
