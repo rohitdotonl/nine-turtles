@@ -19,7 +19,8 @@ lists stay words.
    A picture narrower than 96 of its own pixels would blur filling the
    circle: it is kept back while a bigger one is tried, then shown small in
    the middle of the circle. The circle shows only its tone while pictures
-   load, so initials never flash first.
+   load, so initials never flash first. A picture a tab found missing is
+   not asked for again in that tab (fetch politely).
 2. **Who fetches them:** the reader's browser, from the publisher's site,
    exactly as an article's pictures load (decision 0017); nine turtles'
    server never asks a site for an icon. The page's rules already allow
@@ -28,9 +29,14 @@ lists stay words.
    hairline edge; initials never get a color per person (the accent marks
    only what's yours to look at, decision 0037).
 4. **Choosing one** is on their page only: the picture is a button (named
-   "Picture of {name}") opening a small menu. The browser cuts the picture
-   to its middle square, 256px, as a JPEG, before sending it; nine turtles
-   keeps only JPEG, PNG or WebP, judged by its first bytes, at most 256 KB,
+   "Change picture of {name}", with a small pencil on its edge so it reads
+   as changeable) opening a small menu. Any picture the device can open,
+   of any size, will do: the browser turns it the way the camera held it,
+   cuts its middle square, shrinks it to 256px (smoothly), and writes it as
+   WebP, or JPEG where it can't write WebP: a 4 MB phone photo arrives as
+   about 10 KB. nine turtles keeps only JPEG, PNG or WebP, judged by its
+   first bytes, at most 256 KB (far above what a shrunk picture weighs: a
+   safety net, never a limit a reader meets),
    in the `pictures` table (structure change 52), a copy on each of the
    person's places (as a note is), each reader's own. It is served only to
    that reader, with `nosniff` and a `default-src 'none'` rule. Changing it

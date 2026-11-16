@@ -60,13 +60,15 @@ export const CRISP = 96;
 export const SIDE = 256;
 
 /**
- * A chosen picture, made small before it's sent: its middle square, `SIDE` pixels on each side, as a JPEG on
- * white (a picture with see-through parts gets a white ground). Undefined when the browser can't read it.
+ * A chosen picture, made small on the reader's device before it's sent, whatever its size: its middle square, turned
+ * the way the camera held it, `SIDE` pixels on each side (or its own size, if smaller), on white, as WebP (a few
+ * kilobytes), or JPEG where the browser can't write WebP. Any picture the browser can open will do: JPEG, PNG, WebP,
+ * GIF, AVIF, and HEIC where the device reads it (Safari). Undefined when it can't be opened.
  */
 export async function madeSmall(file: Blob): Promise<Blob | undefined> {
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(file);
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   } catch {
     return undefined;
   }
@@ -77,7 +79,22 @@ export async function madeSmall(file: Blob): Promise<Blob | undefined> {
   if (!context || side === 0) return undefined;
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
+  context.imageSmoothingQuality = "high";
   context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
   bitmap.close();
-  return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob ?? undefined), "image/jpeg", 0.88));
+  const written = (type: string) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.85));
+  const webp = await written("image/webp");
+  // A browser that can't write WebP hands back a PNG instead: JPEG is smaller for a photo.
+  return (webp?.type === "image/webp" ? webp : await written("image/jpeg")) ?? undefined;
+}
+
+/** Pictures this tab found missing or broken, so a writer's page and articles ask each site only once (fetch politely). */
+const missing = new Set<string>();
+
+export function isMissing(address: string): boolean {
+  return missing.has(address);
+}
+
+export function markMissing(address: string): void {
+  missing.add(address);
 }

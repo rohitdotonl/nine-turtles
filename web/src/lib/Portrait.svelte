@@ -8,7 +8,7 @@
   before a picture. Their name is always beside it, so screen readers skip it.
 -->
 <script lang="ts">
-  import { CRISP, initialsOf } from "./portrait";
+  import { CRISP, initialsOf, isMissing, markMissing } from "./portrait";
 
   let {
     name,
@@ -35,7 +35,9 @@
     small = undefined;
     filled = undefined;
   });
-  let trying = $derived(filled ? undefined : pictures[tried]);
+  // A picture this tab already found missing isn't asked for again.
+  let tryable = $derived(pictures.filter((each) => !isMissing(each)));
+  let trying = $derived(filled ? undefined : tryable[tried]);
   let initials = $derived(initialsOf(name, person));
 
   function loaded(event: Event) {
@@ -53,7 +55,10 @@
     <img src={filled} alt="" referrerpolicy="no-referrer" />
   {:else if trying}
     <!-- Looked at, not yet shown. -->
-    {#key trying}<img src={trying} alt="" referrerpolicy="no-referrer" class="trying" onload={loaded} onerror={() => (tried += 1)} />{/key}
+    {#key trying}<img src={trying} alt="" referrerpolicy="no-referrer" class="trying" onload={loaded} onerror={() => {
+          markMissing(trying!);
+          tried += 1;
+        }} />{/key}
   {:else if small}
     <img src={small} alt="" referrerpolicy="no-referrer" class="inside" />
   {:else}

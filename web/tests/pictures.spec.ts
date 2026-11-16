@@ -15,10 +15,16 @@ const about = (page: Page, name: string) => page.getByRole("region", { name: `Ab
 async function choosePicture(where: Locator) {
   await where.locator('input[type="file"]').evaluate(async (input: HTMLInputElement) => {
     const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 120;
+    // A phone photo's size, with detail everywhere, so it weighs what a photo does.
+    canvas.width = 4032;
+    canvas.height = 3024;
     const context = canvas.getContext("2d")!;
-    context.fillStyle = "#7a5a3c";
-    context.fillRect(0, 0, 120, 120);
+    for (let x = 0; x < canvas.width; x += 16) {
+      for (let y = 0; y < canvas.height; y += 16) {
+        context.fillStyle = `rgb(${(x * 7) % 256}, ${(y * 13) % 256}, ${(x + y) % 256})`;
+        context.fillRect(x, y, 16, 16);
+      }
+    }
     const blob = await new Promise<Blob>((resolve) => canvas.toBlob((made) => resolve(made!), "image/png"));
     const files = new DataTransfer();
     files.items.add(new File([blob], "face.png", { type: "image/png" }));
@@ -47,18 +53,21 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
-  const picture = who.getByRole("button", { name: `Picture of Blog ${name}` });
+  const picture = who.getByRole("button", { name: `Change picture of Blog ${name}` });
   await expect(picture.locator(".initials")).toHaveText(/^B/);
   // Nothing chosen yet: the menu only offers to choose one.
   await picture.click();
-  const menu = page.getByRole("menu", { name: `Picture of Blog ${name}` });
+  const menu = page.getByRole("menu", { name: `Change picture of Blog ${name}` });
   await expect(menu.getByRole("menuitem")).toHaveText(["Choose a picture…"]);
   await page.keyboard.press("Escape");
 
-  // Chosen: it shows, made small by the browser and kept by nine turtles; Undo puts the initials back.
+  // Chosen: whatever its size, the browser sends it small, as WebP; it shows, and Undo puts the initials back.
   await choosePicture(who);
   await expect(who.getByText("Picture changed.")).toBeVisible();
   await expect(picture.locator("img")).toHaveAttribute("src", new RegExp(`/api/feeds/${id}/picture\\?v=\\d+`));
+  const kept = await page.request.get(new URL((await picture.locator("img").getAttribute("src"))!, FEEDS_APP).href);
+  expect(kept.headers()["content-type"]).toBe("image/webp");
+  expect((await kept.body()).length).toBeLessThan(40_000);
   await who.getByRole("button", { name: "Undo" }).click();
   await expect(picture.locator(".initials")).toHaveText(/^B/);
 

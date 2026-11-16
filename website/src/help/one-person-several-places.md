@@ -52,9 +52,11 @@ A small round picture sits beside their name under each of their articles'
 titles, and a bigger one tops their page. nine turtles uses the picture
 their feed gives, else their website's own icon, else their initials.
 
-To use a picture of your own, press their picture on their page and choose
-**Choose a picture…**. nine turtles uses the middle square of it, made
-small, and it's kept for all their sources. Only you see it. To go back,
+To use a picture of your own, press their picture on their page (the
+small pencil on it says you can) and choose **Choose a picture…**. Any
+photo will do, whatever its size: JPEG, PNG, WebP, and on an iPhone or
+Mac, HEIC too. nine turtles uses the middle square of it, made small on
+your device before it's sent, and it's kept for all their sources. Only you see it. To go back,
 press the picture again and choose **Use the automatic picture**. Either
 way, **Undo** beside the picture puts it back as it was.
 

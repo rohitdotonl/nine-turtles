@@ -8,6 +8,7 @@
 -->
 <script lang="ts">
   import { tick } from "svelte";
+  import Icon from "./Icon.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import Portrait from "./Portrait.svelte";
   import type { LoadedLibrary } from "./library.svelte";
@@ -72,7 +73,7 @@
     if (!file) return;
     const small = await madeSmall(file);
     if (!small) {
-      said = "That file isn't a picture nine turtles can read. Try a JPEG or PNG.";
+      said = "nine turtles couldn't open that file. Try a photo saved as JPEG, PNG or WebP.";
       before = undefined;
       return;
     }
@@ -89,8 +90,14 @@
 
 <!-- What just happened sits beside the picture, so nothing under it moves. -->
 <div class="flex items-center gap-4" lang="en">
-  <MoreMenu id="picture-menu" label="Picture of {name}" start groups={groups}>
-    {#snippet face()}<Portrait {name} pictures={picturesOf(places)} {person} large />{/snippet}
+  <MoreMenu id="picture-menu" label="Change picture of {name}" start groups={groups}>
+    {#snippet face()}
+      <span class="relative block">
+        <Portrait {name} pictures={picturesOf(places)} {person} large />
+        <!-- A pencil on the circle's edge says it can be changed, as a contact card's does. -->
+        <span class="pencil"><Icon name="edit" /></span>
+      </span>
+    {/snippet}
   </MoreMenu>
   <input bind:this={input} type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true" onchange={picked} />
   <div class={["flex flex-wrap items-center gap-x-3 text-meta", said === undefined && "sr-only"]}>
@@ -98,3 +105,26 @@
     {#if said !== undefined && before !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
   </div>
 </div>
+
+<style>
+  /* A small round badge on the circle's lower right, the page's own color with a hairline edge, the pencil in the ink; under a pointer, the grouped rows' tone. */
+  .pencil {
+    position: absolute;
+    right: -0.25rem;
+    bottom: -0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--line);
+    background-color: var(--paper);
+    color: var(--ink);
+  }
+  @media (hover: hover) {
+    :global(.face:hover) .pencil {
+      background-color: var(--group, var(--list));
+    }
+  }
+</style>

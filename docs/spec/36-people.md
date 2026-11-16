@@ -123,12 +123,13 @@ PLAN.md → V1, item 1.*
   phone it's a screen of its own, with ‹ back to their list. Either way
   there's no list beside it to choose from. Top to bottom:
   - **Their picture** (below, "Their picture"), 72px, a button named
-    "Picture of Tomas Berg" that opens a small menu: **Choose a
+    "Change picture of Tomas Berg" (its tooltip too), with a small pencil
+    on the circle's lower right so it reads as changeable, that opens a small menu: **Choose a
     picture…** (the device's own file picker) and, once one is chosen,
     **Use the automatic picture**. Either says so beside the picture
     ("Picture changed." or "Back to the automatic picture.") with **Undo**;
-    a file it can't read says "That file isn't a picture nine turtles can
-    read. Try a JPEG or PNG.";
+    a file it can't open says "nine turtles couldn't open that file. Try a
+    photo saved as JPEG, PNG or WebP.";
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas
@@ -170,7 +171,10 @@ PLAN.md → V1, item 1.*
   of the circle. The circle is a quiet grey with a hairline edge, never a
   color of its own. The reader's browser loads these from the publisher's
   site, as an article's pictures; nine turtles never fetches them. A chosen
-  picture is cut to its middle square, made small on the device, and kept
+  picture may be any size and any kind the device can open (JPEG, PNG,
+  WebP, GIF, AVIF, and HEIC on Apple devices): it is turned the way the
+  camera held it, cut to its middle square and made small on the device
+  (256 pixels across, a few kilobytes) before it's sent, and kept
   for every source of theirs; only that reader sees it. Deleting one's
   account or data removes it.
 - **Their settings** (`/mira-chen-12/settings`, decision 0267): a page of its
