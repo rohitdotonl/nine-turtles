@@ -36,7 +36,7 @@ page of whoever wrote the chosen article). On a
 computer their page fills the window, with **×** back to their list; on a
 phone, it's a screen of its own.
 
-Their page starts with their name and, under it, where they publish, each
+Their page starts with their picture, then their name and, under it, where they publish, each
 place a link to its own website. Under a person's name is **Write to Maya
 Chen**, which opens your own email app to write to them, with their address
 under it once nine turtles knows it, and **Change** beside the address to
@@ -45,6 +45,20 @@ Then, in one card, what's yours of them: your note, and the words you
 highlighted in their writing. Last comes one row, **Settings**. On a
 computer, the **×** at the top right (or <kbd>Esc</kbd>) takes you back to
 their list.
+
+## Their picture
+
+A small round picture sits beside their name under each of their articles'
+titles, and a bigger one tops their page. nine turtles uses the picture
+their feed gives, else their website's own icon, else their initials.
+
+To use a picture of your own, press their picture on their page (the
+small pencil on it says you can) and choose **Choose a picture…**. Any
+photo will do, whatever its size: JPEG, PNG, WebP, and on an iPhone or
+Mac, HEIC too. nine turtles uses the middle square of it, made small on
+your device before it's sent, and it's kept for all their sources. Only you see it. To go back,
+press the picture again and choose **Use the automatic picture**. Either
+way, **Undo** beside the picture puts it back as it was.
 
 ## Their settings
 

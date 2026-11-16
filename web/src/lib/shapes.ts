@@ -46,6 +46,10 @@ export type Feed = {
   email?: string | null;
   /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
   note?: string | null;
+  /** The picture the feed names (decision 0285), on the publisher's site. */
+  pictureUrl?: string | null;
+  /** When the reader chose a picture for them (its version); none while it's the automatic one. */
+  pictureChosen?: number | null;
   /** A YouTube channel's feed, whose Shorts and live streams are sorted out (decision 0144). */
   sortsVideos?: boolean;
 } & VideoSettings;
@@ -252,6 +256,8 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     writeTo: text(feed.write_to),
     email: text(feed.email),
     note: text(feed.note),
+    pictureUrl: text(feed.picture_url),
+    pictureChosen: typeof feed.picture_chosen === "number" ? feed.picture_chosen : null,
     sortsVideos: feed.sorts_videos === true,
     shorts: feed.shorts === true,
     liveStreams: feed.live_streams === true,

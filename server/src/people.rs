@@ -82,6 +82,8 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
         "DELETE FROM episode_progress WHERE person_id = ?",
     ),
     ("entries", "DELETE FROM entries WHERE person_id = ?"),
+    // The pictures they chose for people they follow (decision 0285).
+    ("pictures", "DELETE FROM pictures WHERE person_id = ?"),
     (
         "subscriptions",
         "DELETE FROM subscriptions WHERE person_id = ?",
@@ -158,6 +160,7 @@ pub const DATA_TABLES: &[&str] = &[
     "notes",
     "episode_progress",
     "entries",
+    "pictures",
     "subscriptions",
     "writers",
     "rules",

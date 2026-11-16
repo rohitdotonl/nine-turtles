@@ -71,6 +71,8 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
   ).toBeFocused();
   const heading = desktop ? await about.getByRole("heading", { level: 2, name: `Blog ${ana}` }).boundingBox() : null;
+  // Their picture leads the page (decision 0285), where an article's title starts.
+  const picture = desktop ? await about.getByRole("button", { name: `Change picture of Blog ${ana}` }).boundingBox() : null;
   // No muted line saying what they are (the owner's core path, point 10); Write to under their name (point 9).
   await expect(about).not.toContainText("A person ·");
   await expect(about.getByRole("button", { name: `Write to Blog ${ana}` })).toBeVisible();
@@ -103,13 +105,15 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   await page.getByRole("button", { name: "More", exact: true }).click();
   await page.getByRole("menuitem", { name: `Info about Blog ${ana}` }).click();
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
-  // On a computer their page keeps the article's column: an article's title has the same left edge and first line (decision 0219).
+  // On a computer their page keeps the article's column: an article's title has the same left edge as their name
+  // (decision 0219), and starts where their picture does (decision 0285).
   if (desktop) {
     await page.keyboard.press("Escape");
     await page.locator(".item-row").first().click();
     const title = await page.getByRole("region", { name: "Article", exact: true }).locator(".article-title").boundingBox();
     expect(Math.abs(heading!.x - title!.x)).toBeLessThan(1);
-    expect(Math.abs(heading!.y - title!.y)).toBeLessThan(1);
+    expect(Math.abs(picture!.x - title!.x)).toBeLessThan(1);
+    expect(Math.abs(picture!.y - title!.y)).toBeLessThan(1);
   }
 });
 

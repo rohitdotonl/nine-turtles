@@ -580,6 +580,12 @@ pub async fn clear(
     .await?;
     // Their rules for it move to another of the person's places, or stay, matching nothing (SPEC section 27).
     rules::place_gone_for(connection, person, id).await?;
+    // The picture they chose: the person's other places keep their copies.
+    sqlx::query("DELETE FROM pictures WHERE person_id = ? AND feed_id = ?")
+        .bind(person)
+        .bind(id)
+        .execute(&mut *connection)
+        .await?;
     sqlx::query(
         "DELETE FROM subscriptions WHERE person_id = ?1 AND feed_id = ?2 AND note IS NULL
          AND NOT EXISTS (SELECT 1 FROM entries WHERE person_id = ?1 AND feed_id = ?2)",

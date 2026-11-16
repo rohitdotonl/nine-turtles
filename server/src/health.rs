@@ -340,7 +340,7 @@ async fn move_to(
                  check_every = ?, next_check_at = ?, failures = 0, failing_since = NULL,
                  missing_since = NULL, problem = NULL,
                  site_url = COALESCE(?, site_url), language = COALESCE(?, language),
-                 email = COALESCE(?, email)
+                 email = COALESCE(?, email), picture_url = COALESCE(?, picture_url)
              WHERE id = ?",
         )
         .bind(lasting.as_str())
@@ -353,6 +353,7 @@ async fn move_to(
         .bind(&parsed.site_url)
         .bind(&parsed.language)
         .bind(&parsed.email)
+        .bind(&parsed.picture)
         .bind(id)
         .execute(&mut *transaction)
         .await?;
@@ -464,6 +465,13 @@ async fn follow_elsewhere(
         .await?;
     carry_entries_over(&mut *transaction, person, old, new).await?;
     folders::take_out_of_folders(&mut *transaction, person, old).await?;
+    // The picture they chose comes along too (decision 0285).
+    sqlx::query("UPDATE OR REPLACE pictures SET feed_id = ? WHERE person_id = ? AND feed_id = ?")
+        .bind(new)
+        .bind(person)
+        .bind(old)
+        .execute(&mut *transaction)
+        .await?;
     // No entry points at it any more (the foreign key would refuse
     // otherwise), so the line can go.
     sqlx::query("DELETE FROM subscriptions WHERE person_id = ? AND feed_id = ?")

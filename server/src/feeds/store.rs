@@ -351,11 +351,11 @@ pub async fn follow_in(
     // follow is left exactly as it is: their checks carry on.
     let fresh: Option<i64> = sqlx::query_scalar(
         "INSERT INTO feeds (url, url_key, title, site_url, language, etag, last_modified, added_at,
-             fetched_at, check_every, next_check_at, email)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             fetched_at, check_every, next_check_at, email, picture_url)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (url_key) DO UPDATE SET
              url = excluded.url, title = excluded.title, site_url = excluded.site_url,
-             email = excluded.email,
+             email = excluded.email, picture_url = excluded.picture_url,
              language = excluded.language, etag = excluded.etag,
              last_modified = excluded.last_modified, added_at = excluded.added_at,
              fetched_at = excluded.fetched_at, check_every = excluded.check_every,
@@ -376,6 +376,7 @@ pub async fn follow_in(
     .bind(every)
     .bind(now + checking::wait(state, every))
     .bind(&parsed.email)
+    .bind(&parsed.picture)
     .fetch_optional(&mut *transaction)
     .await?;
     let feed_id = match fresh {

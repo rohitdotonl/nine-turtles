@@ -338,11 +338,12 @@ async fn worked(
                 .execute(&mut *transaction)
                 .await?;
             }
-            // Where to write back, and the feed's own title, as the feed says now
-            // (decisions 0147 and 0167); then its followers still waiting for a name get one.
-            sqlx::query("UPDATE feeds SET email = ?, title = ? WHERE id = ?")
+            // Where to write back, the feed's own title and its picture, as the feed says now
+            // (decisions 0147, 0167 and 0285); then its followers still waiting for a name get one.
+            sqlx::query("UPDATE feeds SET email = ?, title = ?, picture_url = ? WHERE id = ?")
                 .bind(&parsed.email)
                 .bind(&parsed.title)
+                .bind(&parsed.picture)
                 .bind(feed_id)
                 .execute(&mut *transaction)
                 .await?;
