@@ -51,7 +51,7 @@ needs to work:
 |---|---|
 | Your email address | To check it's yours when you sign up (until you confirm it, it's kept with your scrambled password for at most a day, and no account exists), to sign you in, reset your password and send receipts |
 | Your password, scrambled so it can't be read back (a "hash") | To sign you in |
-| The feeds and folders you follow, the articles they bring, what you've read and starred, and your settings | To be your reader: this is the service |
+| The feeds and folders you follow, the articles they bring, what you've read and saved, and your settings | To be your reader: this is the service |
 | A sign-in cookie on each device you use | To keep you signed in; it's the only cookie, and it never tracks you anywhere else |
 | The day you were last here (not the time), and when you joined | To check less often the feeds of readers who've been away a month; whoever runs nine turtles sees the day, never what you read |
 | If you answer it at sign-up, how you heard about nine turtles | To learn which ways of telling people about it work; whoever runs nine turtles sees only how many gave each answer, never with your name or email. Deleting your data removes it |
@@ -89,7 +89,7 @@ never use your reading to train anyone's AI.
 Wherever you live, you can ask me to show you what I hold about you,
 correct it, give you a copy, or delete it, and you can complain to your
 data protection authority. In the app you can already export your feeds
-(as OPML) and your starred articles (as JSON Feed) at any time. Deleting
+(as OPML) and your saved articles (as JSON Feed) at any time. Deleting
 your account will delete everything in it.
 
 ## How long I keep it

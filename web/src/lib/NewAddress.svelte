@@ -6,7 +6,7 @@
   what came back, in place:
 
   - one feed: a plain question, "Use https://… instead?", with Cancel and
-    Use it, and a line saying its name, folders, articles and stars stay;
+    Use it, and a line saying its name, folders and articles stay, saved ones too;
   - several: the choice of one (a round mark at each row's end, the first
     chosen) with Cancel and Use this address;
   - none: a plain sentence saying why.
@@ -89,7 +89,7 @@
 <div bind:this={box} class={["new-address", (said || choices.length > 0) && "showing"]}>
   <p role="status" id={`${id}-said`} class={["break-words text-ink-2", !said && "sr-only"]}><Dated text={said} /></p>
   {#if choices.length === 1}
-    <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders, articles and stars stay.</p>
+    <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders and articles stay, saved ones too.</p>
     <div class="actions">
       <button type="button" class="btn btn-small" onclick={cancel}>Cancel</button>
       <button type="button" class="btn-primary" data-focus="use" aria-describedby={`${id}-said ${id}-keeps`} aria-disabled={busy} onclick={use}
@@ -109,7 +109,7 @@
         </label>
       {/each}
     </div>
-    <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders, articles and stars stay.</p>
+    <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders and articles stay, saved ones too.</p>
     <div class="actions">
       <button type="button" class="btn btn-small" onclick={cancel}>Cancel</button>
       <button type="button" class="btn-primary" aria-describedby={`${id}-keeps`} aria-disabled={busy} onclick={use}>Use this address</button>

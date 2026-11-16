@@ -4,6 +4,8 @@ import { HELP_URL, SETTINGS_PAGES, articleIn, helpPage, inSettings, knownPath, p
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
     expect(parse("/unread")).toEqual({ kind: "view", view: "unread" });
+    expect(parse("/saved/")).toEqual({ kind: "view", view: "starred" });
+    // Saved was Starred (decision 0279): its old address still opens it.
     expect(parse("/starred/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/all")).toEqual({ kind: "view", view: "all" });
     expect(parse("/settings")).toEqual({ kind: "settings" });
@@ -51,7 +53,7 @@ describe("addresses", () => {
   });
 
   it("knows its own places, so any other address is a wrong turn", () => {
-    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/following", "/settings/feeds", "/people/12/settings", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/notes"])
+    for (const path of ["/", "/unread", "/unread/", "/saved", "/starred", "/all", "/settings", "/following", "/settings/feeds", "/people/12/settings", "/add-feed", "/new-to-feeds", "/feeds/12", "/folders/4/edit", "/notes"])
       expect(knownPath(path), path).toBe(true);
     // Recently read, saved searches and collections are gone (decision 0174): their old addresses too.
     for (const path of ["/nowhere", "/feeds/0", "/feeds/abc", "/feeds/12/more", "/recent", "/searches/7", "/searches/new", "/collections/3", "/blog", "/settings/nothing", "/settings/toString", "/settings/readers/none"])
@@ -59,7 +61,8 @@ describe("addresses", () => {
   });
 
   it("turns a place back into its address and title", () => {
-    expect(pathFor({ kind: "view", view: "starred" })).toBe("/starred");
+    expect(pathFor({ kind: "view", view: "starred" })).toBe("/saved");
+    expect(titleFor({ kind: "view", view: "starred" })).toBe("Saved · nine turtles");
     expect(pathFor({ kind: "settings" })).toBe("/settings");
     expect(titleFor({ kind: "view", view: "all" })).toBe("All articles · nine turtles");
     expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
@@ -166,7 +169,7 @@ describe("an open article's address (decision 0233)", () => {
     expect(articleIn("/people/5")).toEqual({ list: "/people/5" });
     expect(articleIn("/people/5/articles/0")).toEqual({ list: "/people/5/articles/0" });
     expect(parse("/folders/3/articles/12")).toEqual({ kind: "folder", id: 3 });
-    expect(parse("/starred/articles/12")).toEqual({ kind: "view", view: "starred" });
+    expect(parse("/saved/articles/12")).toEqual({ kind: "view", view: "starred" });
   });
 
   it("opens only under a list of articles", () => {

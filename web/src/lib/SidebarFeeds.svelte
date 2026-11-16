@@ -9,7 +9,7 @@
 
   As in a Mac source list (decision 0041), a folder's show-or-hide arrow
   sits before its name. No row here says what's unread (decision 0242):
-  Unread's own dot does, above them. Unread, Starred and All start their names 46px
+  Unread's own dot does, above them. Unread, Saved and All start their names 46px
   into the sidebar, after their icons; folders, and the people and
   publications in no folder, start at the 20px margin; a folder's feeds
   start one step in, on the 46px edge, so an indent always means "inside a

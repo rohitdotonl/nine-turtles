@@ -34,7 +34,7 @@ export type Welcome = {
 };
 
 export function welcomeFor(scene: WelcomeScene): Welcome {
-  // Starred keeps its own list even with no feeds: it is where its More menu and sort live.
+  // Saved keeps its own list even with no feeds: it is where its More menu and sort live.
   const starred = scene.under.kind === "view" && scene.under.view === "starred";
   const shown = scene.firstVisit && !starred;
   return {

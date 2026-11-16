@@ -4,7 +4,7 @@
   size. A quiet bar of icons sits at the top of the pane, anchored
   to its edges (decision 0038), each named in its tooltip (with its key) and
   to screen readers, together at the right (decision 0050), and on a computer it scrolls
-  away with the title, Star and View original waiting again at the end (decision 0263): View original, Aa (the reading panel), Star,
+  away with the title, Save and View original waiting again at the end (decision 0263): View original, Aa (the reading panel), Save,
   Write back (a paper plane, for a person only, decision 0214) and More (…).
   More holds Copy link (Share on phones), Mark unread, Add a note and Hide
   (SPEC sections 7, 8, 9, 21, 33 and 37); on a phone it opens upwards, Copy
@@ -22,7 +22,7 @@
 
   On a phone (SPEC section 20) the article is a screen of its own: the top
   bar has the back button, labeled with the list's name, and View original;
-  Previous, Next, Aa, Star, Write back (for a person) and More sit as icons in a toolbar at the bottom,
+  Previous, Next, Aa, Save, Write back (for a person) and More sit as icons in a toolbar at the bottom,
   within thumb reach, above a hairline; one that can't act is faded in place.
   A tap on the text puts both bars away, and another brings them back (bars.svelte.ts).
 -->
@@ -470,9 +470,9 @@
   </button>
 {/snippet}
 
-{#snippet starIcon()}
-  <!-- Filled when starred, an outline when not: the shape says it, not only the color. -->
-  <Icon name="star" size="alone" filled={article.starred} />
+{#snippet saveIcon()}
+  <!-- Filled when saved, an outline when not: the shape says it, not only the color. -->
+  <Icon name="bookmark" size="alone" filled={article.starred} />
 {/snippet}
 
 {#snippet writeBackButton(style: string)}
@@ -534,9 +534,9 @@
             {@render original()}
           {/if}
           {@render aa("btn-quiet btn-icon")}
-          <!-- A toggle keeps one name for screen readers ("Star", pressed or not); the filled star shows its state. -->
-          <button type="button" aria-label="Star" aria-pressed={article.starred} title={tip(article.starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
-            {@render starIcon()}
+          <!-- A toggle keeps one name for screen readers ("Save", pressed or not); the filled bookmark shows its state. -->
+          <button type="button" aria-label="Save" aria-pressed={article.starred} title={tip(article.starred ? "Remove from Saved" : "Save", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
+            {@render saveIcon()}
           </button>
           {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
           <MoreMenu id="article-menu" label="More actions" groups={more} />
@@ -675,7 +675,7 @@
       hairline so the text ends at an edge rather than being sliced. Two
       groups by job, in order of use (decision 0225): what you do to this
       article on the left, the rarest furthest out (More, Aa, Write back,
-      Star), then a short hairline, then moving through the list at the
+      Save), then a short hairline, then moving through the list at the
       right, where a right thumb rests (Previous, Next). Previous on the
       first article (or Next on the last) keeps its arrow and its place,
       faded, as iOS dims a toolbar button, so the bar never shows a hole; it
@@ -686,8 +686,8 @@
       <MoreMenu id="article-menu" label="More actions" groups={more} up start />
       {@render aa("")}
       {#if writable}{@render writeBackButton("")}{/if}
-      <button type="button" aria-label="Star" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
-        {@render starIcon()}
+      <button type="button" aria-label="Save" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
+        {@render saveIcon()}
       </button>
       <span aria-hidden="true" class="toolbar-rule"></span>
       <button type="button" aria-label="Previous" aria-disabled={!phone.previous} onclick={() => phone.previous && phone.onPrevious()}>
@@ -725,7 +725,7 @@
   /*
     The phone's bottom toolbar: five equal places of quiet icons (six with
     Write back, for a person), each at
-    least 44px square, in the second ink (a starred star in full ink).
+    least 44px square, in the second ink (a saved article's bookmark in full ink).
   */
   .toolbar {
     border-top: 1px solid var(--line);

@@ -1,4 +1,4 @@
-//! The tools that change things: marking and starring, adding, editing and
+//! The tools that change things: marking and saving, adding, editing and
 //! unsubscribing feeds, folders and rules. Each one's answer says what an
 //! assistant needs to undo it.
 
@@ -21,7 +21,9 @@ use crate::{
 pub(super) struct Marking {
     article_ids: Vec<i64>,
     read: Option<bool>,
-    starred: Option<bool>,
+    /// `starred` was its name before Save (decision 0279).
+    #[serde(alias = "starred")]
+    saved: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -60,14 +62,14 @@ pub(super) async fn mark(state: &AppState, person: i64, asked: Marking) -> Answe
     if asked.article_ids.len() > MOST_AT_ONCE {
         return Err(format!("At most {MOST_AT_ONCE} articles at once."));
     }
-    let (which, value, word) = match (asked.read, asked.starred) {
+    let (which, value, word) = match (asked.read, asked.saved) {
         (Some(read), None) => (Mark::Read, read, if read { "read" } else { "unread" }),
-        (None, Some(starred)) => (
+        (None, Some(saved)) => (
             Mark::Starred,
-            starred,
-            if starred { "starred" } else { "unstarred" },
+            saved,
+            if saved { "saved" } else { "not saved" },
         ),
-        _ => return Err("Say read (for mark_read) or starred (for star).".to_owned()),
+        _ => return Err("Say read (for mark_read) or saved (for save).".to_owned()),
     };
     let changed = marks::set(
         &state.db,

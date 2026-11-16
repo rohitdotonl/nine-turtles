@@ -4,8 +4,8 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-10
-related: [unread-on-or-off, star-an-article, find-your-way-around]
+updated: 2026-11-16
+related: [unread-on-or-off, save-an-article, find-your-way-around]
 ---
 
 <p class="lede">
@@ -20,7 +20,7 @@ its dot back and waits in Unread again.
 
 Or, without opening it: right-click it in the list (on a phone, press and
 hold it) and choose **Mark as read** or **Mark as unread**. The same menu
-stars it, writes back, or opens the writer's page.
+saves it, writes back, or opens the writer's page.
 
 ## Mark a whole list as read
 
@@ -34,7 +34,7 @@ you're looking at are marked: anything that arrived since stays unread.
 
 ## Undo
 
-After you mark or star something, a note at the bottom of the list says
+After you mark or save something, a note at the bottom of the list says
 what happened, with an **Undo** button. Press it, or <kbd>U</kbd> (or
 <kbd>Command</kbd> <kbd>Z</kbd>, <kbd>Ctrl</kbd> <kbd>Z</kbd> on Windows), to
 put things back as they were. If you're reading with the list out of sight (an
@@ -52,7 +52,7 @@ its note says which list it was ("Marked 3 articles as read in Reading
 Room.") and follows you to the next list, with **Undo** and <kbd>U</kbd>,
 until you do something else that can be undone.
 
-Undo works for marking read and unread, starring, unfollowing someone and
+Undo works for marking read and unread, saving, unfollowing someone and
 deleting a folder.
 
 ## Let old articles go

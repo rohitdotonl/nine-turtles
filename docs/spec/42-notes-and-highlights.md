@@ -95,12 +95,12 @@ anywhere or counted.
 - The Notes list needs a connection; it says so, as search does.
 
 **Notes**
-- **Notes** in the sidebar, under Starred, lists every article the reader
+- **Notes** in the sidebar, under Saved, lists every article the reader
   highlighted or wrote a note on, in the reader's order, each with its first
   highlight ("Highlighted · …") or its note ("Your note · …") under the
   title. The row is there from the first day (decision 0222): before any
   highlight or note, its list says "No notes yet." and how to make one.
-- A marked article is kept like a starred one: the yearly clean-up and
+- A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).
 
 **A note on a person** (section 36)
@@ -120,13 +120,13 @@ anywhere or counted.
   (decision 0189).
 
 **Unsubscribing** (section 15)
-- When the reader starred, highlighted or wrote a note on any of a place's
+- When the reader saved, highlighted or wrote a note on any of a place's
   articles, or wrote a note on the person, Unsubscribe asks first: "Keep
   what you saved from {name}?", saying what there is, with **Keep them**
   and **Cancel** together; then, under a hairline, apart (decision 0239),
   "Or, if you don't want them any more:" and an oxblood button that names
-  exactly what goes: "Remove the 2 starred articles too", "Remove the
-  starred article, the 3 highlighted or noted articles and your note on
+  exactly what goes: "Remove the 2 saved articles too", "Remove the
+  saved article, the 3 highlighted or noted articles and your note on
   them too". Keep them works as unsubscribing always has. The red button
   removes those articles, their highlights and notes, and the note on the
   person as well. Either can be undone straight

@@ -87,7 +87,7 @@ test("a mark refused because the reader is signed out says so, with Sign in", as
   );
   await page.getByRole("button", { name: SLOW_LETTER }).click();
   await article(page)
-    .getByRole("button", { name: "Star", exact: true })
+    .getByRole("button", { name: "Save", exact: true })
     .first()
     .click();
   await expect(
@@ -139,7 +139,7 @@ test("following someone says so, with Undo", async ({ page }) => {
 test("a key that needs an article says to choose one first", async ({
   page,
 }) => {
-  test.skip(phone(), "A phone has no keys; its Star sits on an article.");
+  test.skip(phone(), "A phone has no keys; its Save button sits on an article.");
   await signedIn(page);
   await openReadingRoom(page);
   await page.keyboard.press("s");
@@ -150,5 +150,5 @@ test("a key that needs an article says to choose one first", async ({
   ).toBeVisible();
   await page.keyboard.press("j");
   await page.keyboard.press("s");
-  await expect(page.getByText("Starred.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
 });

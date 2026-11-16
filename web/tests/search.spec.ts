@@ -91,11 +91,11 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await results(page).first().getByRole("button").focus();
   await page.keyboard.press("j");
   await page.keyboard.press("s");
-  await expect(results(page).first()).toContainText("Starred");
+  await expect(results(page).first()).toContainText("Saved");
 
   // 3. Typing a filter is gone (decision 0180): "is:starred" is searched as words.
   await field(page).fill("is:starred");
-  await expect(page.getByRole("button", { name: "Remove Starred", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Remove Saved", exact: true })).toHaveCount(0);
   await field(page).fill("walking");
 
   // 5 is the Hindi test below. 6. Escape: back exactly where you were, the search gone.
@@ -213,7 +213,7 @@ test("with nothing found, nothing offers j", async ({ page }) => {
   await expect(page.locator("main")).not.toContainText(/press j/i);
 });
 
-test("a search from Starred finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {
+test("a search from Saved finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {
   const blog = unique("starred-search");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
   await open(page, `/people/${id}`, `Blog ${blog}`);
@@ -224,18 +224,18 @@ test("a search from Starred finds only starred ones: the place is the filter (de
   await results(page).first().getByRole("button").focus();
   await page.keyboard.press("j");
   await page.keyboard.press("s");
-  await expect(results(page).first()).toContainText("Starred");
+  await expect(results(page).first()).toContainText("Saved");
   await page.keyboard.press("Escape");
-  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Starred", exact: true }).click();
-  await expect(heading(page)).toHaveText("Starred");
+  await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Saved", exact: true }).click();
+  await expect(heading(page)).toHaveText("Saved");
   await page.keyboard.press("/");
-  await expect(page.getByRole("button", { name: "Remove in: Starred" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Remove in: Saved" })).toBeVisible();
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");
   // Other tests star articles here too, so: this blog's one starred match, and nothing unstarred.
   await expect(results(page).filter({ hasText: `Blog ${blog}` })).toHaveCount(1);
   await expect(results(page).filter({ hasText: `Blog ${blog}` })).toContainText("Walking the long way home");
-  await expect(results(page).filter({ hasNotText: "Starred" })).toHaveCount(0);
+  await expect(results(page).filter({ hasNotText: "Saved" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Search options" })).toHaveCount(0);
 });
 

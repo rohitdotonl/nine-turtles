@@ -1,7 +1,7 @@
 <!--
   The article's end, on a computer (SPEC section 7, decision 0263): the top
   bar scrolls away with the title, so what's wanted on finishing waits under
-  the closing rule, above Write back: Star and View original, as quiet
+  the closing rule, above Write back: Save and View original, as quiet
   buttons with their words. View original is left out when the note above
   already links the rest on the publisher's site. A phone keeps its toolbar
   in reach instead, so this is a computer's only.
@@ -14,9 +14,9 @@
 </script>
 
 <div class="end-tools" lang="en">
-  <!-- One name for screen readers, pressed or not, as the top bar's Star; the filled star shows its state. -->
-  <button type="button" aria-pressed={starred} title={tip(starred ? "Unstar" : "Star", "star")} onclick={onStar} class={["btn-quiet btn-small", starred && "text-ink"]}
-    ><Icon name="star" filled={starred} />Star</button
+  <!-- One name for screen readers, pressed or not, as the top bar's Save; the filled bookmark shows its state. -->
+  <button type="button" aria-pressed={starred} title={tip(starred ? "Remove from Saved" : "Save", "star")} onclick={onStar} class={["btn-quiet btn-small", starred && "text-ink"]}
+    ><Icon name="bookmark" filled={starred} />Save</button
   >
   {#if original}
     <a href={original} target="_blank" rel="noopener noreferrer" title={tip("View original", "open-original")} class="btn-quiet btn-small"

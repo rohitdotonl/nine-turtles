@@ -1,13 +1,13 @@
 // Picking up an article (SPEC section 6, decision 0250): on a computer, a
 // row of the list can be dragged. It carries the publisher's own link
 // (never nine turtles' address), so dropped in a note, an email or another
-// tab it's their page that goes, credited to them. Dropped on Starred in the
+// tab it's their page that goes, credited to them. Dropped on Saved in the
 // sidebar, it's starred, as `s` does, with the list's note and its Undo.
 //
 // Native drag and drop, as only a fine pointer has: a finger's press and hold
 // is the row's menu (longPress.ts), which stars too. While a row is held,
 // the page carries `data-dragging="article"` (so linkDrop.svelte.ts leaves
-// it alone) and Starred, under the pointer, takes the drop tone
+// it alone) and Saved, under the pointer, takes the drop tone
 // (arranging.css), unless the article is starred already.
 
 import { dropMarker, liftedCopy } from "./dropMark";
@@ -21,7 +21,7 @@ let held: Article | undefined;
 
 const fine = () => typeof matchMedia === "function" && matchMedia("(pointer: fine)").matches;
 
-/** What a dragged row carries: the publisher's link, as a link and as text, and its id for Starred. */
+/** What a dragged row carries: the publisher's link, as a link and as text, and its id for Saved. */
 export function carried(article: Pick<Article, "id" | "link">): [string, string][] {
   const link = article.link?.startsWith("http") ? article.link : undefined;
   return [...(link ? ([["text/uri-list", link], ["text/plain", link]] as [string, string][]) : []), [ARTICLE, String(article.id)]];
@@ -61,7 +61,7 @@ export function carriesArticle(row: HTMLElement, article: () => Article) {
   };
 }
 
-/** Listens for a row let go on Starred (`[data-drop-star]`); `star` stars it. Returns what stops listening. */
+/** Listens for a row let go on Saved (`[data-drop-star]`); `star` stars it. Returns what stops listening. */
 export function listenForStarring(star: (id: number) => void): () => void {
   const { mark } = dropMarker();
   const starTarget = (event: DragEvent) =>

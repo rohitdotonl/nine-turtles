@@ -85,7 +85,7 @@ export type Article = {
   at: number;
   read: boolean;
   starred: boolean;
-  /** A rule (or the reader) muted it: only search, the Muted page and Starred show it (SPEC section 27). */
+  /** A rule (or the reader) muted it: only search, the Muted page and Saved show it (SPEC section 27). */
   muted: boolean;
   /**
    * A search result's line of its text around the first searched word, in

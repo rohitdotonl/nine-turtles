@@ -316,6 +316,8 @@ async fn the_reader_approves_and_the_assistant_works() {
         .map(|tool| tool["name"].as_str().unwrap())
         .collect();
     assert!(names.contains(&"search_articles") && names.contains(&"export_feed_list"));
+    assert!(names.contains(&"save") && names.contains(&"list_saved"));
+    assert!(!names.contains(&"star") && !names.contains(&"list_starred"));
 
     // Reading.
     let (unread, error) = tool(&base, &access, "list_unread", json!({})).await;
@@ -358,13 +360,34 @@ async fn the_reader_approves_and_the_assistant_works() {
     let (_, error) = tool(
         &base,
         &access,
-        "star",
-        json!({ "article_ids": [article], "starred": true }),
+        "save",
+        json!({ "article_ids": [article], "saved": true }),
     )
     .await;
     assert!(!error);
-    let (starred, _) = tool(&base, &access, "list_starred", json!({})).await;
-    assert_eq!(starred["articles"][0]["id"], article);
+    let (saved, _) = tool(&base, &access, "list_saved", json!({})).await;
+    assert_eq!(saved["articles"][0]["id"], article);
+    assert_eq!(saved["articles"][0]["saved"], true);
+    // Star became Save (decision 0279): the old names and argument still work.
+    let (_, error) = tool(
+        &base,
+        &access,
+        "star",
+        json!({ "article_ids": [article], "starred": false }),
+    )
+    .await;
+    assert!(!error);
+    let (starred, error) = tool(&base, &access, "list_starred", json!({})).await;
+    assert!(!error);
+    assert_eq!(starred["articles"].as_array().unwrap().len(), 0);
+    let (_, error) = tool(
+        &base,
+        &access,
+        "save",
+        json!({ "article_ids": [article], "saved": true }),
+    )
+    .await;
+    assert!(!error);
     let (_, error) = tool(
         &base,
         &access,

@@ -82,7 +82,7 @@ test("a moved feed is a calm row in plain words, and Find new address moves it",
   // The site names one feed: one plain question, rather than a list of one (decision 0106).
   await feed.getByRole("button", { name: `Find new address for ${title}` }).click();
   await expect(feed.getByText(new RegExp(`^Use ${FEED_SITE}/blog/${name}/new\\.xml instead\\?$`))).toBeVisible();
-  await expect(feed).toContainText("Its name, folders, articles and stars stay.");
+  await expect(feed).toContainText("Its name, folders and articles stay, saved ones too.");
   await expect(feed.getByRole("radio")).toHaveCount(0);
   await feed.getByRole("button", { name: "Use it" }).click();
   await expect(feed.getByText(/It now reads from its new address and works again/)).toBeVisible();
@@ -142,7 +142,7 @@ test("a failing feed says so above its list, and Find its new address moves it w
   // One feed on the site: a plain question in place, and the keyboard on Use it.
   const question = list.getByRole("status").filter({ hasText: /instead\?$/ });
   await expect(question).toHaveText(`Use ${FEED_SITE}/blog/${name}/new.xml instead?`);
-  await expect(list).toContainText("Its name, folders, articles and stars stay.");
+  await expect(list).toContainText("Its name, folders and articles stay, saved ones too.");
   await expect(list.getByRole("radio")).toHaveCount(0);
   const useIt = list.getByRole("button", { name: "Use it" });
   await expect(useIt).toBeFocused();
@@ -189,7 +189,7 @@ test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, 
   await page.keyboard.press("Enter");
   const useIt = feed.getByRole("button", { name: "Use it" });
   await expect(useIt).toBeFocused();
-  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders, articles and stars stay\.$/);
+  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders and articles stay, saved ones too\.$/);
   await page.keyboard.press("Shift+Tab");
   await expect(feed.getByRole("button", { name: "Cancel" })).toBeFocused();
   await page.keyboard.press("Enter");

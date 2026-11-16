@@ -1,6 +1,6 @@
 <!--
-  Bringing stars over from another feed reader (SPEC section 23), as a row of
-  Settings › Your data. "Import starred articles…" (ending in ›) opens the
+  Bringing saved articles over from another feed reader (most call them starred) (SPEC section 23), as a row of
+  Settings › Your data. "Import saved articles…" (ending in ›) opens the
   device's file chooser, reads the chosen file (the JSON file Inoreader,
   Feedly, Feedbin, another nine turtles and others export starred articles
   in) and says plainly what it did, in `lines`, which Settings shows under
@@ -42,5 +42,5 @@
   aria-hidden="true"
 />
 <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
-  >Import starred articles…<span class="row-glyph"><Icon name="chevron-right" /></span></button
+  >Import saved articles…<span class="row-glyph"><Icon name="chevron-right" /></span></button
 >

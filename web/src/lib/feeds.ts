@@ -91,7 +91,7 @@ export type SidebarRow = { kind: "view"; view: View } | { kind: "feed" | "folder
 /**
  * Shift+J and Shift+K (decisions 0110, 0180): the row after (1) or before (-1)
  * the place you're in, top to bottom as the sidebar shows them: its lists
- * (Unread, Starred, Notes, All), then folders A to Z, each with its feeds while
+ * (Unread, Saved, Notes, All), then folders A to Z, each with its feeds while
  * it's open, then the people and then the publications in no folder. A folded folder's feeds are passed
  * over, as you can't see them, so the next press goes on to the next folder. A
  * feed in two folders counts once, where it's first listed. At either end

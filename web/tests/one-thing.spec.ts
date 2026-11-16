@@ -173,7 +173,7 @@ test("Settings and Everyone you follow are centred beside the sidebar; with the 
   // A window just wide enough, the sidebar hidden and the reader's text at its largest: the reading column is
   // nearly the window's width, yet the list's title and Settings' still start clear of the sidebar button.
   await page.setViewportSize({ width: 896, height: 800 });
-  await page.goto(at("/starred"));
+  await page.goto(at("/saved"));
   await appReady(page);
   await page.evaluate(() => document.querySelector("main")!.style.setProperty("--reading-size", "1.625rem"));
   const toggle = page.getByRole("button", { name: "Sidebar", exact: true });

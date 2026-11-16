@@ -4,8 +4,8 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-11
-related: [star-an-article, search-everything, download-everything]
+updated: 2026-11-16
+related: [save-an-article, search-everything, download-everything]
 ---
 
 <p class="lede">
@@ -68,6 +68,6 @@ person or folder** finds them.
   reach your account as soon as you're back online. A quiet line says so
   until they do.
 - Articles you highlighted or wrote a note on are kept for good, like
-  starred ones.
+  saved ones.
 - If the writer changes the article, nine turtles finds your words again.
   Words that are gone stay in your list, marked "No longer in the article".

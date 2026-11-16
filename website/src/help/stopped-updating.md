@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-14
+updated: 2026-11-16
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -30,7 +30,7 @@ Under each, underlined words say what you can do:
 
 - **Find new address**: nine turtles looks once at the website for a feed
   under a new address. If it finds one, press **Use it**. Their name,
-  folders, articles and stars all stay.
+  folders and articles all stay, saved ones too.
 - **Write to** them, for a person whose feed has stopped: they may not
   know their feed broke, and a short email is often all it takes. It opens
   your own email app, or first asks for their address if nine turtles

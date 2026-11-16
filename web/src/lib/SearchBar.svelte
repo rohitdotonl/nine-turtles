@@ -2,8 +2,8 @@
   The search field (SPEC section 14), above the item list. Where it searches
   shows as one chip inside the field (`in: Tech`), where you are to begin
   with; its button removes it, to search everything, and so does Backspace
-  at the start of the field. Nothing else is chosen: a search from Starred
-  finds only starred ones (decision 0241).
+  at the start of the field. Nothing else is chosen: a search from Saved
+  finds only saved ones (decision 0241).
 
   Enter searches straight away; otherwise the search follows a moment after
   typing stops. Escape is the app's: it closes search and returns you to

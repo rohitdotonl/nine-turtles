@@ -83,10 +83,10 @@ test.describe("on a computer", () => {
     await row(page, name, NEWEST).click();
     await expect(page).toHaveURL(new RegExp(`${list}/articles/[0-9]+$`));
     const opened = path(page);
-    // To Starred from the open article (the sidebar is away while it's open, decision 0275).
+    // To Saved from the open article (the sidebar is away while it's open, decision 0275).
     await page.keyboard.press("g");
     await page.keyboard.press("s");
-    await expect(page).toHaveURL(/\/starred$/);
+    await expect(page).toHaveURL(/\/saved$/);
     await page.goBack();
     await expect(page).toHaveURL(new RegExp(`${opened}$`));
     await expect(article(page).getByRole("heading", { level: 2, name: NEWEST })).toBeVisible();
@@ -95,6 +95,14 @@ test.describe("on a computer", () => {
     await appReady(page);
     await expect(page.getByText("That article couldn't be opened. It may be gone, or nine turtles can't be reached just now.")).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${list}$`));
+  });
+
+  test("Starred's old address opens Saved, under its new address (decision 0279)", async ({ page }) => {
+    await openBlog(page);
+    await page.goto(new URL("/starred", FEEDS_APP).href);
+    await appReady(page);
+    await expect(page).toHaveURL(/\/saved$/);
+    await expect(page).toHaveTitle("Saved · nine turtles");
   });
 
   test("an address naming an article under a page that isn't a list is a wrong turn", async ({ page }) => {

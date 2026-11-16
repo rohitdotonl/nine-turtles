@@ -26,7 +26,7 @@ From the top:
   sidebar. Under what it finds, **Search articles for “…”** (or
   <kbd>Enter</kbd>) looks for the same words in every article instead.
   <kbd>Esc</kbd> empties it.
-- **Unread**, **Starred**, **Notes** and **All articles**.
+- **Unread**, **Saved**, **Notes** and **All articles**.
 - **Everyone you follow**: one page with everyone on it, for looking after
   them. Who isn't working comes first, then everyone A to Z.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
@@ -45,7 +45,7 @@ such as a short note, shows its first words instead, in plain type, up to
 two lines. Under each title are who wrote it and when: "Today",
 "Yesterday" or the day of the week for the past week, then the date,
 written the way your device writes dates ("20 Oct" or "Oct 20"). Rest
-the pointer on it to see the exact day and time. A star means you starred
+the pointer on it to see the exact day and time. A bookmark means you saved
 it, headphones mean a podcast episode, and a small screen means a video.
 Older articles load as you reach the bottom, and every list ends with
 "That's everything."
@@ -69,7 +69,7 @@ list: mark it all as read, refresh it, or sort it oldest first. In a
 person's or publication's list it also has **Info about …**, their page, which
 opens too when you press their name at the top of the list. Each article
 has a menu of its own too: right-click it (on a phone, press and hold it)
-to star it, mark it read or unread, write back, see the writer's page,
+to save it, mark it read or unread, write back, see the writer's page,
 open it in a new tab or copy its link (on a phone, share it).
 While the menu is open, the article it belongs to stays shaded, so you can
 see which one you're about to change.
@@ -81,10 +81,10 @@ as you would a link.
 ## Reading
 
 Choose an article and it opens, with the whole window to itself. Across its top are **Open
-original** (the publisher's own page), **Aa** (how the text looks), **Star**,
+original** (the publisher's own page), **Aa** (how the text looks), **Save**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
 under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
-and Star on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
+and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 A footnote's number opens its note in a small card just under the line, so
 you don't lose your place; <kbd>Esc</kbd>, × or a press anywhere else closes
@@ -130,10 +130,10 @@ The small button at the top of the sidebar hides it, so the list has more
 room. You can also drag the sidebar's edge to make it wider; double-click
 the edge to put it back.
 
-On a computer, an article's buttons (View original, Aa, Star and the rest)
+On a computer, an article's buttons (View original, Aa, Save and the rest)
 sit above its title and scroll away with it, so the whole window is the
 writing. Most have a key that works all the way down, and at the end of the article
-**Star** and **View original** are there again.
+**Save** and **View original** are there again.
 
 On a phone, tap the words of an article once to put its top and bottom bars
 away, so only the writing shows. Tap again, or read to the end, and they're
@@ -150,7 +150,7 @@ once instead.
 - **Swipe right**, from anywhere on the screen: go back, as the back button
   at the top left does. From an article to its list, from a list to Home.
 - **Swipe a row left** in a list: a little way marks it read, all the way
-  stars it. **Undo** puts it back.
+  saves it. **Undo** puts it back.
 - **Keep pulling up past the end** of an article: the next one rises from
   below. **Pull down past its top**: the previous one comes down from above.
 - **Swipe down** on the Aa sheet or an opened picture to close it.

@@ -1,7 +1,7 @@
 # Moving hosts
 
 How to move nine turtles from Render to any other host, keeping everything:
-your feeds, folders, articles, read marks, stars and settings. nine turtles is
+your feeds, folders, articles, read marks, saved articles and settings. nine turtles is
 one ready-to-run package (the container image) plus one database file, and
 the nightly backup (`backups.md`) is a full copy of that file, so a move is:
 start the same package somewhere else, and let it restore last night's copy.
@@ -13,7 +13,7 @@ DigitalOcean, or a computer at home.
 
 ## The steps
 
-1. **Pick the moment.** Anything you read or star on the old host after its
+1. **Pick the moment.** Anything you read or save on the old host after its
    last backup isn't in the copy. For a clean move, do it in the morning
    after the night's backup and don't read on the old host in between. (Or
    take a fresh copy first: restart the old service after deleting today's
@@ -29,7 +29,7 @@ DigitalOcean, or a computer at home.
 4. **Add** `NINE_TURTLES_RESTORE_FROM` with the name of the newest copy, such
    as `nightly/2026-10-25.sqlite`.
 5. **Start it.** The log says `restored the database from …`. Open its
-   address, sign in, and check your feeds, stars and what's unread.
+   address, sign in, and check your feeds, saved articles and what's unread.
 6. **Remove** `NINE_TURTLES_RESTORE_FROM` from the new host's settings.
 7. **Point the address** `app.nineturtles.app` at the new host
    (`website-and-domain.md` says where the domain's records live), and update
@@ -40,7 +40,7 @@ DigitalOcean, or a computer at home.
 
 ## If backups aren't working
 
-Your feeds and folders can always leave as an OPML file, and your stars as a
+Your feeds and folders can always leave as an OPML file, and your saved articles as a
 JSON Feed file (Settings → Your data). Import both into the new nine turtles.
 Read marks don't travel that way.
 

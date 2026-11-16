@@ -184,7 +184,7 @@ export function found(answer: Choice[] | HealthRefusal): Found {
 }
 
 /** What Use it or Use this address says once the feed has moved. */
-export const MOVED = "It now reads from its new address and works again. Its articles, stars and folders stayed.";
+export const MOVED = "It now reads from its new address and works again. Its articles, saved ones too, and its folders stayed.";
 
 /** What Find new address or Use this address says when it couldn't. */
 export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): string {
@@ -194,7 +194,7 @@ export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): 
     case "already":
       return "You already follow that feed.";
     case "kept-stars":
-      return "You followed the feed at that address before, and its starred articles are kept under it. Add it again with + Add instead, then unsubscribe from this one.";
+      return "You followed the feed at that address before, and its saved articles are kept under it. Add it again with + Add instead, then unsubscribe from this one.";
     case "no-feed":
       return doing === "find"
         ? "The site doesn't name another feed. You could try again another day, or unsubscribe."

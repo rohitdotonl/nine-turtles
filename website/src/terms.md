@@ -49,7 +49,7 @@ writing outside nine turtles is between you and its publisher.
 
 ## Your data
 
-What you put into nine turtles (your feeds, folders, stars and settings)
+What you put into nine turtles (your feeds, folders, saved articles and settings)
 is yours. You can export it at any time, and deleting your account deletes
 it. How I look after it is in the [privacy policy](/privacy/).
 

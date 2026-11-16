@@ -18,6 +18,18 @@ pub(super) fn all() -> &'static [Value] {
     &ALL
 }
 
+/// A tool's name now, from the name it's called by. Star became Save
+/// (decision 0279): an assistant that learned the old names (`star`,
+/// `list_starred`) is still answered, though only the new ones are listed,
+/// as a renamed tool should be (its arguments' old names work too).
+pub(super) fn current_name(name: &str) -> &str {
+    match name {
+        "star" => "save",
+        "list_starred" => "list_saved",
+        other => other,
+    }
+}
+
 /// A tool's description for `tools/list`.
 fn tool(
     name: &str,
@@ -69,7 +81,7 @@ fn list() -> Vec<Value> {
         tool(
             "search_articles",
             "Search articles",
-            "Find the reader's articles by words, author, feed, folder, starred or unread. \
+            "Find the reader's articles by words, author, feed, folder, saved or unread. \
              Words find longer words they start; put words in double quotes to find them together. \
              50 a page, best matches (in the title) first, then newest.",
             json!({
@@ -77,7 +89,7 @@ fn list() -> Vec<Value> {
                 "author": { "type": "string", "description": "Only articles whose author's name holds this." },
                 "feed_id": feed_id,
                 "folder_id": folder_id,
-                "starred": { "type": "boolean" },
+                "saved": { "type": "boolean", "description": "Only articles the reader saved." },
                 "unread": { "type": "boolean" },
                 "cursor": cursor,
             }),
@@ -93,9 +105,9 @@ fn list() -> Vec<Value> {
             reading(),
         ),
         tool(
-            "list_starred",
-            "List starred articles",
-            "The reader's starred articles, newest first, 50 a page.",
+            "list_saved",
+            "List saved articles",
+            "The articles the reader saved to keep, newest first, 50 a page.",
             json!({ "cursor": cursor }),
             &[],
             reading(),
@@ -152,11 +164,11 @@ fn list() -> Vec<Value> {
             changing(false, true),
         ),
         tool(
-            "star",
-            "Star or unstar",
-            "Stars articles (starred: true) or takes their star off (starred: false).",
-            json!({ "article_ids": article_ids, "starred": { "type": "boolean" } }),
-            &["article_ids", "starred"],
+            "save",
+            "Save or unsave",
+            "Saves articles to the reader's Saved list (saved: true) or takes them out of it (saved: false).",
+            json!({ "article_ids": article_ids, "saved": { "type": "boolean" } }),
+            &["article_ids", "saved"],
             changing(false, true),
         ),
         tool(

@@ -74,8 +74,8 @@
 
 /* An article's row in the list (ItemRow.svelte). */
 /*
-  The source, time and star on one line (decision 0048): the source shrinks
-  and ends in "…"; the time and the star keep their room. Figures are
+  The source, time and bookmark on one line (decision 0048): the source shrinks
+  and ends in "…"; the time and the bookmark keep their room. Figures are
   proportional, as in running text, so the digits in a name and a date set
   as tightly as they do in the sidebar.
 */
@@ -103,12 +103,12 @@
 }
 .row-date,
 .row-muted,
-.row-star {
+.row-saved {
   flex: none;
 }
-.row-star {
+.row-saved {
   display: flex;
-  /* The theme's ink, as every star is (decision 0143); the filled shape says it. */
+  /* The theme's ink, as every bookmark is (decisions 0143, 0279); the filled shape says it. */
   color: var(--ink);
 }
 
@@ -121,7 +121,7 @@
   below each other, so each title reads on its own and each person as one
   block. The name carries the weight, so
   an unread title under it is regular, in full ink; the dot still marks it. Each row's small line (the day,
-  and a publication's writer, an episode's length, "Half read", the star)
+  and a publication's writer, an episode's length, "Half read", the bookmark)
   sits at its right end beside the title's first line while the title
   keeps at least 12rem and three fifths of the row; otherwise it goes
   under the title, 8px down, as in every other list: on a narrow phone, at

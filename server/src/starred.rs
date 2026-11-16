@@ -1,7 +1,7 @@
 //! Starred articles as a file (SPEC section 23): every starred article as a
 //! JSON Feed file (<https://jsonfeed.org/version/1.1>), a standard, open
 //! format other feed tools can read. It goes into Download everything
-//! (`everything`, decision 0251) as `starred.json`.
+//! (`everything`, decision 0251) as `saved.json`.
 //!
 //! Each article keeps what the publisher sent, its original link and the
 //! feed it came from, so the credit travels with it (the publisher floor).
@@ -58,8 +58,8 @@ pub const AT_ONCE: i64 = 100;
 fn opening() -> String {
     let mut text = json!({
         "version": "https://jsonfeed.org/version/1.1",
-        "title": "nine turtles starred articles",
-        "description": "Articles starred in nine turtles, each with the feed it came from.",
+        "title": "nine turtles saved articles",
+        "description": "Articles saved in nine turtles, each with the feed it came from.",
     })
     .to_string();
     text.pop(); // its closing brace: the items follow

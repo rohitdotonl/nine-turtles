@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
   export type IconSize = "word" | "alone" | "tick" | "picture";
@@ -16,7 +16,7 @@
   // touch screen), "alone" by itself in a button (20px, 22 on a touch screen).
   // Two named exceptions: "tick" inside a tick box, "picture" in Add's question.
   // The line stays 1.5px at every size. `filled` fills a shape that has an
-  // inside (the star, when starred).
+  // inside (the bookmark, when saved).
   let { name, size = "word", filled = false }: { name: IconName; size?: IconSize; filled?: boolean } = $props();
   const px = $derived({ word: 16, alone: 20, tick: 14, picture: 36 }[size]);
 </script>
@@ -87,8 +87,9 @@
   {:else if name === "sort"}
     <!-- Sort order: an arrow down and an arrow up, side by side. -->
     <path d="M6.5 3.5v13M3.5 13.5l3 3 3-3M13.5 16.5v-13M10.5 6.5l3-3 3 3" />
-  {:else if name === "star"}
-    <path d="M10 2.5l2.4 4.9 5.35.78-3.87 3.77.91 5.33L10 14.77l-4.79 2.51.91-5.33-3.87-3.77 5.35-.78z" fill={filled ? "currentColor" : "none"} />
+  {:else if name === "bookmark"}
+    <!-- Save: a ribbon bookmark, filled while the article is saved (decision 0279). -->
+    <path d="M5.75 3.75a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v13l-4.25-3.25-4.25 3.25z" fill={filled ? "currentColor" : "none"} />
   {:else if name === "chevron-up"}
     <!-- The phone's Previous article: the one above in the list (Next is chevron-down). -->
     <path d="m5.5 12 4.5-4.5 4.5 4.5" />

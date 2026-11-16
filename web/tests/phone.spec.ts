@@ -178,7 +178,7 @@ test.describe("on a phone", () => {
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     // Two groups by job, in order of use (decision 0225): acting on the article, then a hairline, then moving through the list at the right.
-    expect(names).toEqual(["More actions", "Reading appearance", "Write back", "Star", "Previous", "Next"]);
+    expect(names).toEqual(["More actions", "Reading appearance", "Write back", "Save", "Previous", "Next"]);
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
@@ -257,8 +257,8 @@ test.describe("on a phone", () => {
     await toolbar(page).getByRole("button", { name: "Previous" }).click();
     await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
 
-    // Star flips and flips back. Another test may have starred this article already, so start from what it shows.
-    const star = toolbar(page).getByRole("button", { name: "Star" });
+    // Save flips and flips back. Another test may have starred this article already, so start from what it shows.
+    const star = toolbar(page).getByRole("button", { name: "Save", exact: true });
     const before = await star.getAttribute("aria-pressed");
     const after = before === "true" ? "false" : "true";
     await star.click();
@@ -471,10 +471,10 @@ test.describe("on a phone", () => {
     await appReady(page);
     const all = page.getByRole("region", { name: "All articles" });
     const mine = all.getByRole("button", { name: new RegExp(`On keeping a commonplace book.*Blog ${name}`) });
-    // Star it, so the row's meta line carries the star too.
+    // Save it, so the row's meta line carries the star too.
     await mine.click();
-    await toolbar(page).getByRole("button", { name: "Star" }).click();
-    await expect(toolbar(page).getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await toolbar(page).getByRole("button", { name: "Save", exact: true }).click();
+    await expect(toolbar(page).getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "true");
     await article(page).getByRole("button", { name: "Back to All articles" }).click();
     const meta = mine.locator(".row-meta");
     const shape = await meta.evaluate((element) => {
@@ -491,7 +491,7 @@ test.describe("on a phone", () => {
     expect(shape.cut).toBe(true);
     // Proportional figures, as in running text, not the sidebar counts' tabular ones.
     expect(shape.figures).toBe("proportional-nums");
-    const [rowBox, dateBox, starBox] = [(await mine.boundingBox())!, (await meta.locator("time").boundingBox())!, (await meta.locator(".row-star").boundingBox())!];
+    const [rowBox, dateBox, starBox] = [(await mine.boundingBox())!, (await meta.locator("time").boundingBox())!, (await meta.locator(".row-saved").boundingBox())!];
     expect(Math.abs(starBox.y + starBox.height / 2 - (dateBox.y + dateBox.height / 2))).toBeLessThan(3);
     expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
@@ -750,7 +750,7 @@ test("a tab left open across an update is told to reload, switches on the next m
   await page.getByRole("button", { name: /The pleasure of a slow letter/ }).click();
   // The top bar's Star; the article's end has one too once its words arrive (decision 0263).
   const reading = page.getByRole("region", { name: "Article", exact: true });
-  await reading.getByRole("button", { name: "Star" }).first().click();
+  await reading.getByRole("button", { name: "Save", exact: true }).first().click();
   // Said where the reader is: the article has the window, the list's own note is off screen (decision 0275).
   await expect(reading.getByText("nine turtles was updated. Reload to continue.")).toBeVisible();
   await expect(reading.getByRole("button", { name: "Reload", exact: true })).toBeVisible();

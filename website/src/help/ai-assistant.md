@@ -4,7 +4,7 @@ description: Connect your own AI assistant, such as Claude or ChatGPT, so it can
 groupId: bringing-more-in
 order: 3
 spec: 33
-updated: 2026-11-14
+updated: 2026-11-16
 related: [search-everything, unfollow-someone, questions]
 ---
 
@@ -27,8 +27,8 @@ ChatGPT works the same way, as a custom connector in its developer mode.
 
 ## What it can and can't do
 
-It can read what you follow, your articles, stars and rules; mark articles
-read or starred; and follow, rename, move and unfollow, and make folders and
+It can read what you follow, your articles, saved articles and rules; mark articles
+read or save them; and follow, rename, move and unfollow, and make folders and
 rules.
 
 It can't see your password or email, see or change your plan, or change or

@@ -229,7 +229,7 @@ test.describe("on a wide window", () => {
     await expect(line(page)).toHaveText(`Marked 3 articles as read in Blog ${blog}.`);
     await page.keyboard.press("j");
     await page.keyboard.press("s");
-    await expect(line(page)).toHaveText("Starred.");
+    await expect(line(page)).toHaveText("Saved.");
     await sidebar(page).getByRole("link", { name: "All articles" }).click();
     await expect(page.getByRole("heading", { level: 2, name: "All articles" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
@@ -418,37 +418,37 @@ test.describe("on a wide window", () => {
     await expect(row(page, blog, MIDDLE)).toHaveCount(0);
   });
 
-  test("s stars an article: a star mark, and it's under Starred until unstarred", async ({ page }) => {
+  test("s stars an article: a star mark, and it's under Saved until unstarred", async ({ page }) => {
     const blog = await openBlog(page);
     await page.keyboard.press("j");
     await page.keyboard.press("j");
     await page.keyboard.press("s");
-    await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Starred/);
+    await expect(row(page, blog, MIDDLE)).toHaveAccessibleName(/, Saved/);
     await expect(row(page, blog, MIDDLE).locator("svg")).toBeVisible();
-    await expect(line(page)).toHaveText("Starred.");
-    // Opened, its Star is pressed.
+    await expect(line(page)).toHaveText("Saved.");
+    // Opened, its Save is pressed.
     await page.keyboard.press("Enter");
-    await expect(article(page).getByRole("button", { name: "Star", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
+    await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
 
     await page.keyboard.press("g");
     await page.keyboard.press("s");
-    await expect(page).toHaveURL(/\/starred$/);
+    await expect(page).toHaveURL(/\/saved$/);
     await expect(row(page, blog, MIDDLE)).toBeVisible();
     await expect(row(page, blog, NEWEST)).toHaveCount(0);
 
-    // Unstar it with the Star button: it leaves Starred.
+    // Take it out of Saved with the Save button: it leaves Saved.
     await row(page, blog, MIDDLE).click();
-    const star = article(page).getByRole("button", { name: "Star", exact: true }).first();
+    const star = article(page).getByRole("button", { name: "Save", exact: true }).first();
     // The star changes at once; reload only once the server has it saved.
     const saved = page.waitForResponse((response) => response.url().endsWith("/api/articles/starred") && response.ok());
     await star.click();
     await expect(star).toHaveAttribute("aria-pressed", "false");
     await page.keyboard.press("Escape");
-    await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, Starred/);
+    await expect(row(page, blog, MIDDLE)).not.toHaveAccessibleName(/, Saved/);
     await saved;
     await page.reload();
     await appReady(page);
-    await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toBeVisible();
     await expect(row(page, blog, MIDDLE)).toHaveCount(0);
   });
 
@@ -457,8 +457,8 @@ test.describe("on a wide window", () => {
     const blog = await openBlog(page);
     await page.keyboard.press("j");
     await page.keyboard.press("s");
-    await expect(line(page)).toHaveText("The star couldn't be saved.");
-    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, Starred/);
+    await expect(line(page)).toHaveText("The article couldn't be saved.");
+    await expect(row(page, blog, NEWEST)).not.toHaveAccessibleName(/, Saved/);
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
   });
 });
@@ -520,12 +520,12 @@ test.describe("when saving fails", () => {
     const blog = await openBlog(page);
     await page.keyboard.press("j");
     await page.keyboard.press("s");
-    await expect(line(page)).toHaveText("The star couldn't be saved.");
+    await expect(line(page)).toHaveText("The article couldn't be saved.");
     failing = false;
     const again = page.getByRole("button", { name: "Try again" });
     await tabTo(page, again);
     await page.keyboard.press("Enter");
-    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
+    await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Saved/);
     await expect(again).toHaveCount(0);
     // The button is gone; the keyboard's place stays nearby, on an article, not lost.
     await expect(page.locator(".item-row:focus")).toHaveCount(1);
@@ -610,10 +610,10 @@ test("a newer version waits until a mark is saved before switching", async ({ pa
   await page.waitForResponse((response) => response.url().endsWith("/api/session"));
   await page.evaluate(() => Object.assign(window, { stillHere: true }));
 
-  // The mark is still on its way: going somewhere (back to the list, then Starred) stays in this page, so it isn't lost.
+  // The mark is still on its way: going somewhere (back to the list, then Saved) stays in this page, so it isn't lost.
   await page.keyboard.press("Escape");
-  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
-  await expect(page).toHaveURL(/\/starred$/);
+  await sidebar(page).getByRole("link", { name: /^Saved/ }).click();
+  await expect(page).toHaveURL(/\/saved$/);
   expect(await page.evaluate(() => "stillHere" in window)).toBe(true);
 
   // Once it's saved, the next move switches.
@@ -629,20 +629,20 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   test.skip(!isMobile, "the phone layout only");
   const blog = await openBlog(page, 412);
   await row(page, blog, NEWEST).click();
-  await article(page).getByRole("button", { name: "Star", exact: true }).first().click();
+  await article(page).getByRole("button", { name: "Save", exact: true }).first().click();
   await article(page).getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Mark unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}`, exact: true }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
-  await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Starred/);
+  await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Saved/);
 });
 
 test("the list's More menu sets the sort order, saved for every device", async ({ page, isMobile }) => {
   test.skip(isMobile, "one browser at a time changes this shared setting");
   // The nine turtles with no feeds, so changing its sort order affects no other test's list.
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Starred has a list even with no feeds. Sort order lives only here, not in Settings (decision 0241).
-  await page.goto("/starred");
+  // Saved has a list even with no feeds. Sort order lives only here, not in Settings (decision 0241).
+  await page.goto("/saved");
   await appReady(page);
   await signIn(page);
   const more = page.getByRole("button", { name: "More", exact: true });

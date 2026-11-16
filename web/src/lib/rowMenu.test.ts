@@ -11,13 +11,13 @@ describe("rowMenu", () => {
     return { done, star: (a: Article) => done.push(["star", a.id]), read: (a: Article, read: boolean) => done.push(["read", a.id, read]) };
   };
 
-  it("offers the star and read or unread, each as it isn't yet", () => {
-    expect(labels(rowMenu(article(), false, hands()))).toEqual([["Star", "Mark as read"]]);
-    expect(labels(rowMenu(article({ read: true, starred: true }), false, hands()))).toEqual([["Unstar", "Mark as unread"]]);
+  it("offers Save and read or unread, each as it isn't yet", () => {
+    expect(labels(rowMenu(article(), false, hands()))).toEqual([["Save", "Mark as read"]]);
+    expect(labels(rowMenu(article({ read: true, starred: true }), false, hands()))).toEqual([["Remove from Saved", "Mark as unread"]]);
   });
 
   it("leaves out read and unread with Unread off", () => {
-    expect(labels(rowMenu(article(), true, hands()))).toEqual([["Star"]]);
+    expect(labels(rowMenu(article(), true, hands()))).toEqual([["Save"]]);
   });
 
   it("puts the writer's items and the links in groups of their own, leaving out an empty one", () => {
@@ -26,7 +26,7 @@ describe("rowMenu", () => {
       { items: [] },
       { items: [{ label: "Open in a new tab", onSelect: () => {} }] },
     ]);
-    expect(labels(groups)).toEqual([["Star", "Mark as read"], ["Write back"], ["Open in a new tab"]]);
+    expect(labels(groups)).toEqual([["Save", "Mark as read"], ["Write back"], ["Open in a new tab"]]);
   });
 
   it("acts on the row's own article", () => {

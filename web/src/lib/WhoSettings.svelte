@@ -43,7 +43,7 @@
     /** A folder just made or chosen: the sidebar opens it to show them there. */
     onFolders?: (folders: number[]) => void;
     onHide: () => void;
-    /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
+    /** `removeKept`: what the reader saved or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** Their sources' own settings, between this group and Unsubscribe, saving through the same queue. */
     sources?: Snippet<[Save]>;
@@ -300,13 +300,13 @@
           bind:this={leaveButton}
           aria-disabled={busy}
           aria-describedby="{id}-leave"
-          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards."
+          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards."
           onclick={() => leave()}
           class="inset-row inset-action font-semibold text-danger">Unsubscribe from {name}</button
         >
       </div>
     {/if}
-    <span id="{id}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
+    <span id="{id}-leave" class="sr-only">Removes their articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards.</span>
   </div>
 </div>
 

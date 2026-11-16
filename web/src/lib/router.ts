@@ -46,7 +46,7 @@ function settingsPage(name: string): SettingsPage | undefined {
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All articles" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Saved", notes: "Notes", all: "All articles" };
 
 /**
  * The lists the sidebar shows above the folders, top to bottom: every one, the same for everyone (decision 0187),
@@ -117,6 +117,8 @@ export function parse(path: string): Route {
   }
   const folder = name.match(/^folders\/([1-9][0-9]{0,15})(\/edit)?$/);
   if (folder) return folder[2] ? { kind: "edit-folder", id: Number(folder[1]) } : { kind: "folder", id: Number(folder[1]) };
+  // Saved was Starred until decision 0279: its old address still opens it.
+  if (name === "saved" || name === "starred") return { kind: "view", view: "starred" };
   if ((VIEWS as readonly string[]).includes(name)) return { kind: "view", view: name as View };
   return { kind: "view", view: "unread" };
 }
@@ -155,7 +157,8 @@ export function pathFor(route: Route): string {
     case "edit-folder":
       return `/folders/${route.id}/edit`;
     case "view":
-      return `/${route.view}`;
+      // The view keeps its first name inside the app; its address is the name readers see (decision 0279).
+      return route.view === "starred" ? "/saved" : `/${route.view}`;
   }
 }
 

@@ -134,7 +134,7 @@
   }
 </script>
 
-<span id="health-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
+<span id="health-unsubscribe-help" class="sr-only">Removes their articles; saved ones stay. You can undo it straight afterwards.</span>
 {#if failed}
   <LoadFailed words="Who isn't working couldn't be checked." heading="your-feeds-heading" onRetry={() => ((failed = false), reload())} />
 {:else if rows}
@@ -180,7 +180,7 @@
                       <button
                         type="button"
                         class="text-link text-ui text-danger"
-                        title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
+                        title="Stops following them and removes their articles; saved ones stay. You can undo it straight afterwards."
                         aria-label={`Unsubscribe from ${row.feed.title}`}
                         aria-describedby="health-unsubscribe-help"
                         data-focus="unsubscribe"

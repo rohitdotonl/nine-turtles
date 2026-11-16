@@ -29,7 +29,7 @@ describe("the results' title", () => {
     expect(resultsTitle({ kind: "all" }, library)).toBe("Results in All articles");
     expect(resultsTitle({ kind: "feed", id: 1 }, library)).toBe("Results in Garden Notes");
     expect(resultsTitle({ kind: "folder", id: 7 }, library)).toBe("Results in Tech");
-    expect(resultsTitle({ kind: "view", view: "starred" }, library)).toBe("Results in Starred");
+    expect(resultsTitle({ kind: "view", view: "starred" }, library)).toBe("Results in Saved");
   });
 });
 

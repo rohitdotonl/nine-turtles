@@ -58,12 +58,12 @@ export function emptyText(place: Route, checkedAt: number | null = null, now: Da
   if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from this feed yet." } : { fact: "Nothing from this feed yet.", how: lastChecked(checkedAt, now) };
   if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
   if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread.", how: "New writing will show up here." };
-  if (place.kind === "view" && place.view === "starred") return { fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." };
+  if (place.kind === "view" && place.view === "starred") return { fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." };
   if (place.kind === "view" && place.view === "notes") return { fact: "No notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
   return { fact: "No articles yet." };
 }
 
-/** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Starred." */
+/** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Saved." */
 export function nothingFound(words: string, where: string, wider?: () => void): EmptyWords {
   const typed = words.trim();
   return { fact: typed === "" ? `Nothing found in ${where}.` : `Nothing found for “${typed}” in ${where}.`, wider };

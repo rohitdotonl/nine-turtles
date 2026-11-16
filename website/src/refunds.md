@@ -18,7 +18,7 @@ draft: This policy will be finished before anyone can pay for nine turtles. The 
   cancelling. You don't need to write to anyone or give a reason.
 - After you cancel, you won't be charged again. You keep using nine
   turtles until the end of the month or year you've already paid for.
-- Your reading stays yours: you can export your feeds and starred articles
+- Your reading stays yours: you can export your feeds and saved articles
   before or after you cancel, and delete your account whenever you like.
 
 ## Refunds

@@ -83,7 +83,7 @@ describe("changes kept on this device without a connection", () => {
 
 describe("unsubscribing asks about what was kept", () => {
   it("in plain words", () => {
-    expect(keptWords({ starred: 3, marked: 1, note: true })).toBe("You starred 3 of their articles, highlighted or noted 1 and wrote a note on them.");
+    expect(keptWords({ starred: 3, marked: 1, note: true })).toBe("You saved 3 of their articles, highlighted or noted 1 and wrote a note on them.");
     expect(keptWords({ starred: 0, marked: 2, note: false })).toBe("You highlighted or noted 2 of their articles.");
     expect(keptWords({ starred: 0, marked: 0, note: true })).toBe("You wrote a note on them.");
   });

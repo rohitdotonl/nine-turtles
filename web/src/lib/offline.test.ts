@@ -84,7 +84,7 @@ describe("lists without a connection", () => {
     );
   });
 
-  it("Starred shows every starred copy, muted ones too", () => {
+  it("Saved shows every saved copy, muted ones too", () => {
     expect(ids(keptList(all, { view: "starred" }, "newest"))).toEqual([5, 3]);
   });
 

@@ -50,7 +50,7 @@ what's live.
 
 - **Links in articles** are the text's own color, underlined, on every page. (Live)
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
-- **The star** is drawn in the page's own ink: filled when starred, an outline when not. Green retired. (Live, decision 0143)
+- **The Save bookmark** is drawn in the page's own ink: filled when saved, an outline when not. It was a star until decision 0279. Green retired. (Live, decisions 0143, 0279)
 - **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Live, decision 0143)
 - **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's page color is theirs, not the brand's. (Live)
 - **No more colors.** A new feature uses ink strengths, the greys, the one accent and oxblood. Tags and folders get names, never colors. (Live)
@@ -85,12 +85,12 @@ A glance at an icon tells the reader, without doubt, what it's for.
 6. **Judged at real size.** Every icon is chosen at its real sizes on White, Paper and Night, never only enlarged.
 7. **One hand.** A thin 1.5px line on a 20px grid, round ends and corners, the players' buttons too. Two sizes, and the line stays 1.5px at both: 16px beside a word (a row's › too) and 20px alone in a button, 18 and 22 on a touch screen ([`DESIGN.md`](DESIGN.md) → "The system", decision 0244).
 
-"View original" is an arrow with no box. **A person** is one head and shoulders (the Readers icon's single figure) and **a publication** a newspaper page with one solid picture, on Add's two tiles, in a person's or publication's settings (This is), and before each name under who isn't working in Everyone you follow (decision 0268; still one meaning: who someone is); **Write back** and **Write to** are a paper plane, on an outlined button at an article's end and under their name on their page (decisions 0242 and 0267; the one solid ink button of decision 0183 before), and, for a person, a quiet icon beside Star in the article's top bar and the phone's bottom toolbar (decision 0214). **Move** (a row's handle in the sidebar's Edit) is the grip, three short level lines, as a phone draws a row you can drag (decision 0207). A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
+"View original" is an arrow with no box. **A person** is one head and shoulders (the Readers icon's single figure) and **a publication** a newspaper page with one solid picture, on Add's two tiles, in a person's or publication's settings (This is), and before each name under who isn't working in Everyone you follow (decision 0268; still one meaning: who someone is); **Write back** and **Write to** are a paper plane, on an outlined button at an article's end and under their name on their page (decisions 0242 and 0267; the one solid ink button of decision 0183 before), and, for a person, a quiet icon beside Save in the article's top bar and the phone's bottom toolbar (decision 0214). **Move** (a row's handle in the sidebar's Edit) is the grip, three short level lines, as a phone draws a row you can drag (decision 0207). A new icon follows these rules; if Rohit dislikes one later, offer three versions side by side at real size.
 
 ## Empty screens and the ends of lists (Live, decision 0142)
 
 - **One shape for every empty list:** on a computer the empty list has the page to itself, so the end looks finished on purpose (decision 0277): the fact large in Literata's display cut, in the ink, centred about a third of the way down ("Nothing unread."), and under it one line in Literata, muted ("New writing will show up here."). On a phone, on the list's left edge: the fact in Literata, in the second ink ("Nothing in this folder yet."), then, only if there's something to do, how to do it in Atkinson, muted ("Add an article from its More menu."), or, in Unread, that "New writing will show up here.". A button only where one action is the obvious next step. No picture, no turtle, no icon.
-- **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Starred.").
+- **One pattern for the words:** "Nothing … yet." A feed says when it was last checked; a search says where it looked ("Nothing found for "walking" in Saved.").
 - **The end of a list:** every list ends "That's everything.", Unread too (decision 0187); search "No more results."
 - **Nothing open:** there's no empty reading pane any more, on a computer as on a phone (decision 0275): the list has the window beside the sidebar. When you left an article part of the way through, one quiet line in Literata at the top of the list offers it: "You were reading *{title}*, by {writer}.", the title a link in the text color (decision 0175). The same in every list, whether its first article is read or not (decision 0220): the newest article waits in the list as every other does.
 - **The welcome:** "Hello." then "Who would you like to read?"
@@ -104,8 +104,8 @@ the floating note at the bottom of a list, the line under a form or a
 group in Settings, the line in a sheet. One house style, so the same thing
 is always said the same way.
 
-- **Something you did:** one full sentence, with a full stop, naming what changed. "Starred.", "Marked 3 articles as read.", "Unsubscribed from Mira Okafor.", "Deleted the folder Essays."
-- **Something failed:** name the thing, then what to do. "*The thing* couldn't be *done*. Try again in a moment." ("The star couldn't be saved. Try again in a moment.") Never a vague "That couldn't be saved.", "That didn't work just now." or "Couldn't change that."
+- **Something you did:** one full sentence, with a full stop, naming what changed. "Saved.", "Marked 3 articles as read.", "Unsubscribed from Mira Okafor.", "Deleted the folder Essays."
+- **Something failed:** name the thing, then what to do. "*The thing* couldn't be *done*. Try again in a moment." ("The article couldn't be saved. Try again in a moment.") Never a vague "That couldn't be saved.", "That didn't work just now." or "Couldn't change that."
 - **When to try again:** "Try again in a moment." when nine turtles itself had trouble; "Try again later." when another site didn't answer; "Try again in *2 minutes*." when the wait is known. When trying again won't help, say what will instead ("Select the address and copy it yourself.").
 - **nine turtles can't be reached:** "nine turtles can't be reached right now. Try again in a moment."
 - **No connection:** "You're offline." first, then what it means here ("You're offline. Adding a feed works again once you're back online.").

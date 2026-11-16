@@ -3,7 +3,7 @@
 // (in their sort order; with Unread off, the first 200 of All) and their newest
 // 200 starred ones on this device, words only: each image is a short note
 // that it shows once the device is back online. Without a connection, Unread,
-// Starred, All, feeds and folders list those copies, articles open from them,
+// Saved, All, feeds and folders list those copies, articles open from them,
 // and reading, marking and starring carry on. Those marks wait here and are
 // sent once the connection is back, each saying when it was made, so the
 // latest mark wins (decision 0101).
@@ -60,16 +60,16 @@ export type KeptSession = {
 // ---- The words the screens say ------------------------------------------
 
 export const SHOWING_KEPT =
-  "You're offline. Showing the articles saved on this device.";
+  "You're offline. Showing the articles kept on this device.";
 export const NOTHING_KEPT_HERE =
-  "Nothing here is saved on this device. It will show when you're back online.";
-export const END_OF_KEPT = "That's everything saved on this device.";
+  "Nothing here is kept on this device. It will show when you're back online.";
+export const END_OF_KEPT = "That's everything kept on this device.";
 export const NOT_KEPT =
-  "This article isn't saved on this device. It opens when you're back online.";
+  "This article isn't kept on this device. It opens when you're back online.";
 export const SEARCH_NEEDS_CONNECTION =
   "You're offline. Search works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION =
-  "You're offline. This is what's saved on this device.";
+  "You're offline. This is what's kept on this device.";
 export const NOTES_NEED_CONNECTION =
   "You're offline. Notes show once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
@@ -146,7 +146,7 @@ function feedsOf(
 /**
  * A list as it shows without a connection, from the kept articles, in the
  * reader's order. Unread shows those still unread (with Unread off it's All
- * that was kept), Starred the starred ones, everything else what's kept.
+ * that was kept), Saved the starred ones, everything else what's kept.
  * Search can't be done here.
  */
 export function keptList(
@@ -166,7 +166,7 @@ export function keptList(
     if (view === "unread")
       return article.first && !article.read && !article.muted;
     if (view === "starred") return article.starred;
-    // Only Starred lists a muted article, as on the server.
+    // Only Saved lists a muted article, as on the server.
     return !article.muted;
   });
   shown.sort((one, other) => one.at - other.at || one.id - other.id);

@@ -2,7 +2,7 @@
   Swipes on a touch screen (SPEC section 20, decision 0274). A list's row
   follows a finger to the left; the room it opens on the right shows what
   letting go does, in the pointer's faint tone: the icon and word in the
-  second ink, then in the ink (and the star filled) once the finger is far
+  second ink, then in the ink (and the bookmark filled) once the finger is far
   enough. When the finger lifts, the row springs back (`swipeMotion.ts`).
 */
 .item-list > li {

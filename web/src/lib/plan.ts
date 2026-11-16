@@ -94,7 +94,7 @@ export function describe(plan: Standing): { title: string; detail: string } {
       return {
         title: "Your free trial or plan has ended",
         detail:
-          "You can still read, star, search and export everything you have. Choose a plan to add feeds and keep them up to date.",
+          "You can still read, save, search and export everything you have. Choose a plan to add feeds and keep them up to date.",
       };
   }
 }

@@ -9,7 +9,7 @@ test.skip(({ isMobile }) => !isMobile, "a phone's swipes");
 
 const pane = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const rows = (page: Page) => page.locator(".item-row");
-const note = (page: Page) => page.getByRole("status").filter({ hasText: /^(Marked as|Starred|Unstarred)/ });
+const note = (page: Page) => page.getByRole("status").filter({ hasText: /^(Marked as|Saved|Removed from Saved)/ });
 
 /** A finger on the screen: put down, moved in a few steps, and lifted. */
 class Finger {
@@ -110,16 +110,16 @@ test("a row swiped left a little is marked read, with Undo; all the way, starred
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(first.locator(".unread-dot")).toBeVisible();
 
-  // All the way: the word changes to Star, and letting go stars it (and leaves it unread).
+  // All the way: the word changes to Save, and letting go saves it (and leaves it unread).
   const second = rows(page).nth(1);
   const at = (await second.boundingBox())!;
   const far = await Finger.down(page, at.x + at.width - 30, at.y + at.height / 2);
   await far.move(-300);
-  await expect(page.locator(".row-swipe")).toHaveText("Star");
+  await expect(page.locator(".row-swipe")).toHaveText("Save");
   await far.up();
-  await expect(second.locator(".row-star")).toBeVisible();
+  await expect(second.locator(".row-saved")).toBeVisible();
   await expect(second.locator(".unread-dot")).toBeVisible();
-  await expect(note(page)).toHaveText(/Starred/);
+  await expect(note(page)).toHaveText(/^Saved/);
   await expect(pane(page)).toHaveCount(0);
 
   // A phone set to reduce motion: no glide, it's back at once.
@@ -142,7 +142,7 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await finger.move(-30, -120);
   await finger.up();
   await expect(first.locator(".unread-dot")).toBeVisible();
-  await expect(first.locator(".row-star")).toHaveCount(0);
+  await expect(first.locator(".row-saved")).toHaveCount(0);
   await expect(page.locator(".row-swipe")).toHaveCount(0);
   await expect(home(page)).toBeHidden();
 

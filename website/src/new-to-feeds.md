@@ -66,7 +66,7 @@ The web is full of personal sites worth following. A few ways to find them:
 3. Say what they are: **A person** (someone you might write back to) or
    **A publication** (anything you only read or watch, such as a magazine).
    nine turtles has already guessed.
-4. Its newest articles appear in your list. Read, star the ones worth
+4. Its newest articles appear in your list. Read, save the ones worth
    keeping, and close it when you're done.
 
 nine turtles checks your feeds on its own from then on, politely, and new

@@ -17,11 +17,11 @@ V1, item 2). Its look gets a refinement round.*
   whatever the name's length, so a long name never swells it into a block
   (decision 0260; it said "Write back to Maya Chen" before); screen readers
   still hear "Write back to Maya Chen" as the button's name. It's also one press from the
-  text, a paper plane beside Star in the article's top bar (on a phone, in
+  text, a paper plane beside Save in the article's top bar (on a phone, in
   its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
   own menu in the list, which opens the article and starts it (section 6;
   decision 0214). An article of a place you no longer follow (one kept only
-  in Starred) has none: there's no person to write to.
+  in Saved) has none: there's no person to write to.
 - **Not for publications** (decision 0192, the owner's choice): a
   publication is something you only read or watch, so its articles end with
   no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page

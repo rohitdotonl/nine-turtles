@@ -2,7 +2,7 @@
   "Delete your account?" (SPEC section 18, decision 0088), opened from
   Settings › Leaving by any reader but the owner. It is the one "Are you
   sure?": it first offers the reader's two downloads (their feeds and folders
-  as OPML, their starred articles), then asks for their password (decision
+  as OPML, their saved articles), then asks for their password (decision
   0200, so a device left signed in can't delete anything), then Delete account, which deletes the
   reader and everything theirs at once and for good, with no waiting period
   (the owner's choice, decision 0088), and signs this device out. Cancel,
@@ -15,7 +15,7 @@
 
   With `data`, it is "Delete your data?" instead (decision 0117), opened by
   every reader, the owner too: the same downloads first, then Delete data,
-  which empties the account (feeds, folders, articles, stars, notes,
+  which empties the account (feeds, folders, articles, saves, notes,
   rules) for good and keeps the reader signed in. This
   device's saved copies go too, and the app starts again, empty.
 -->
@@ -100,10 +100,10 @@
   <form onsubmit={remove} class={["flex flex-col gap-5", !sheet && "flex-1"]}>
     <p id="delete-account-help">
       {#if data}
-        Your feeds, folders, read and starred articles, notes and rules go for good. This can't
+        Your feeds, folders, read and saved articles, notes and rules go for good. This can't
         be undone. Your account stays: you stay signed in, with the same email, password and settings.
       {:else}
-        Your feeds, folders, read and starred articles, notes, rules, app password and passkeys go
+        Your feeds, folders, read and saved articles, notes, rules, app password and passkeys go
         for good, along with your email and password. This can't be undone.
       {/if}
     </p>
@@ -115,7 +115,7 @@
         >
       </div>
       <p class="field-help">
-        One folder of plain pages any browser opens: who you follow, what you starred or highlighted, and your notes.
+        One folder of plain pages any browser opens: who you follow, what you saved or highlighted, and your notes.
       </p>
     </div>
     <!-- Asked for, as for a new email, so a device left signed in can't delete anything (decision 0200). -->
