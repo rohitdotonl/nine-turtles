@@ -25,7 +25,7 @@
   import PageHead from "./PageHead.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
-  import { deleteFolder, explain, refused, undoRefused } from "./feeds";
+  import { deleteFolder, explain, firstShowing, refused, undoRefused, type Notice } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import SettleList from "./SettleList.svelte";
@@ -53,6 +53,8 @@
     onBack,
     onOpenPerson,
     onFeedsChanged,
+    notice,
+    returnTo,
   }: {
     heading?: HTMLHeadingElement;
     /** On a phone: back to Home. A computer shows the sidebar, where its row says where you are. */
@@ -61,6 +63,10 @@
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
+    /** Just done on someone's page opened from here (Unsubscribe, decision 0284): its words show on the line, with Undo. */
+    notice?: Notice;
+    /** Back from the page of this row's person (decision 0284): the keyboard goes back to their row. */
+    returnTo?: number;
   } = $props();
 
   let feeds: Tended[] | undefined = $state();
@@ -72,7 +78,8 @@
   let busy = $state(false);
   /** What the last action said, and its Undo until the next action. */
   let message = $state("");
-  let undo: (() => Promise<void>) | undefined = $state();
+  /** Undo; a sentence back says why it couldn't be done. */
+  let undo: (() => Promise<string | void>) | undefined = $state();
   /** The message says something failed: oxblood, with the alert icon. */
   let refusal = $state(false);
   let moving = $state(false);
@@ -114,8 +121,19 @@
     }
   }
 
-  onMount(() => {
-    load();
+  // Arriving with what was just done on their page: its words (once the line is there to say them) and the keyboard on Undo.
+  // Back from their page: the keyboard on their row, the first that opens it (who isn't working comes first).
+  onMount(async () => {
+    await Promise.all([load(), notWorking?.listed()]);
+    await tick();
+    if (notice && firstShowing(notice)) {
+      [message, undo] = [notice.message, notice.undo];
+      await tick();
+      undoButton?.focus();
+    } else if (returnTo !== undefined) {
+      const row = document.querySelector<HTMLElement>(`[aria-labelledby="your-feeds-heading"] a[href="${addressFor({ kind: "about", id: returnTo })}"]`);
+      (row ?? heading)?.focus();
+    }
   });
 
   /** Undo lasts until your next action here. */
@@ -268,8 +286,8 @@
     if (!undo || busy) return;
     busy = true;
     try {
-      await undo();
-      [message, undo] = [UNDONE, undefined];
+      const problem = await undo();
+      [message, undo, refusal] = problem ? [problem, undefined, true] : [UNDONE, undefined, false];
     } catch (why) {
       [message, undo, refusal] = [undoRefused(why === "too-late" ? "too-late" : "trouble", "feed"), undefined, true];
     }
@@ -287,13 +305,12 @@
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
+      <!-- What the last action did, with its Undo, until the next one: first, above who isn't working, so it's seen. -->
+      <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />
       <NotWorking bind:this={notWorking} onOpen={onOpenPerson} />
       {#if failed}
         <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
       {:else if feeds}
-        <!-- What the last action did, with its Undo, until the next one. -->
-        <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />
-
         {#if listed.length === 0}
           <p class="text-ink-2">You don't follow anyone yet.</p>
         {/if}

@@ -550,7 +550,7 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
-      <!-- Their picture leads the byline (decision 0284): the one the reader chose, else their feed's, else their site's icon, else initials. -->
+      <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="flex items-center gap-3" dir={rtl ? "rtl" : undefined}>
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={(source?.kind ?? "person") === "person" || source?.person != null} beside />
         <!-- Left to right whatever the article's script, as the byline always was; only the circle's side follows the script. -->

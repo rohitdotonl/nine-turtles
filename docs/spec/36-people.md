@@ -120,7 +120,14 @@ PLAN.md → V1, item 1.*
   area, alone in the whole window as an article is (section 4, decision
   0275), in the article's own column (decision 0219), under the article's
   bar with an **×** at its right end (and Escape) back to their list. On a
-  phone it's a screen of its own, with ‹ back to their list. Either way
+  phone it's a screen of its own, with ‹ back to their list. Opened from
+  Everyone you follow, both go back there instead (‹ reads "Everyone you
+  follow"), with the keyboard on their line, and so does Unsubscribe, with
+  its Undo there (section 15); opened from an article (its byline, `i`),
+  both go back to that article, open where it was (‹ reads "Article";
+  decision 0284). After a visit to Hide articles about them, only the way
+  back to Everyone you follow is kept.
+  Either way
   there's no list beside it to choose from. Top to bottom:
   - **Their picture** (below, "Their picture"), 72px, a button named
     "Change picture of Tomas Berg" (its tooltip too), with a small pencil
@@ -161,7 +168,7 @@ PLAN.md → V1, item 1.*
     and ›, which opens their settings. Screen readers and voice control
     know it as "Settings for Tomas Berg", so it isn't taken for the app's
     own Settings.
-- **Their picture** (decision 0284): a circle beside an article's byline
+- **Their picture** (decision 0285): a circle beside an article's byline
   (40px, 32px on a phone; section 7) and at the top of their page (72px), nowhere else. It
   is the first of these that loads: the picture the reader chose for them;
   the picture their feed names (RSS's image, a podcast's artwork, Atom's
@@ -188,7 +195,7 @@ PLAN.md → V1, item 1.*
   it was left, with nothing loading again, the keyboard on its Settings
   row, in view; on a computer the **×** stays at
   the bar's right end, titled just "Close" (Escape belongs to ‹ there), and
-  goes back to their list. The keyboard starts on
+  goes back to their list (or Everyone you follow, as above). The keyboard starts on
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on

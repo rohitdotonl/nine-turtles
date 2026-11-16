@@ -339,7 +339,7 @@ async fn worked(
                 .await?;
             }
             // Where to write back, the feed's own title and its picture, as the feed says now
-            // (decisions 0147, 0167 and 0284); then its followers still waiting for a name get one.
+            // (decisions 0147, 0167 and 0285); then its followers still waiting for a name get one.
             sqlx::query("UPDATE feeds SET email = ?, title = ?, picture_url = ? WHERE id = ?")
                 .bind(&parsed.email)
                 .bind(&parsed.title)

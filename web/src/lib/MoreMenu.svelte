@@ -49,7 +49,7 @@
     up?: boolean;
     /** Lines the menu up with the button's left edge, for a button at the screen's left (the phone's bottom bar). */
     start?: boolean;
-    /** What the button shows instead of an icon: a person's picture, on their page (decision 0284). */
+    /** What the button shows instead of an icon: a person's picture, on their page (decision 0285). */
     face?: Snippet;
   } = $props();
 

@@ -237,3 +237,18 @@ test("every reader reads this way, not only the owner", async ({ browser }, test
   await expect(page.getByRole("button", { name: `Back to ${blog.title}`, exact: true })).toBeVisible();
   await stranger.close();
 });
+
+test("their page opened from an article's byline closes back to that article (decision 0279)", async ({ page, isMobile }) => {
+  await signedIn(page);
+  const blog = await openBlog(page, `one-thing-writer-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
+  await rows(page).nth(1).click();
+  await expect(article(page)).toBeVisible();
+  const title = (await titleOf(page).textContent()) ?? "";
+  await article(page).getByRole("link", { name: blog.title, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
+  // On a phone its ‹ says where it goes; on a computer, × (and Escape).
+  if (isMobile) await page.getByRole("button", { name: "Article", exact: true }).click();
+  else await page.keyboard.press("Escape");
+  await expect(titleOf(page)).toHaveText(title);
+  await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
+});

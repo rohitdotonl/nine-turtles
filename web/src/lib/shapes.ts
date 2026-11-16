@@ -46,7 +46,7 @@ export type Feed = {
   email?: string | null;
   /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
   note?: string | null;
-  /** The picture the feed names (decision 0284), on the publisher's site. */
+  /** The picture the feed names (decision 0285), on the publisher's site. */
   pictureUrl?: string | null;
   /** When the reader chose a picture for them (its version); none while it's the automatic one. */
   pictureChosen?: number | null;

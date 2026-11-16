@@ -1,4 +1,4 @@
-// A picture of someone or something followed (SPEC section 36, decision 0284), beside an article's byline and at
+// A picture of someone or something followed (SPEC section 36, decision 0285), beside an article's byline and at
 // the top of their page: the one the reader chose, else the one their feed names, else their site's own icon, else
 // their initials.
 

@@ -1,5 +1,5 @@
 //! A picture for each person and publication (SPEC section 36, decision
-//! 0284): beside an article's byline and at the top of their page.
+//! 0285): beside an article's byline and at the top of their page.
 //!
 //! Most come from elsewhere and never pass through here: the picture the
 //! feed names (`feeds.picture_url`), or the site's own icon, both loaded by

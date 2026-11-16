@@ -46,11 +46,11 @@
   import { ReadingSettings } from "./reading-settings.svelte";
   import { type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader, keyFor } from "./keyboard";
+  import { keyFor } from "./keyboard";
   import { movePane, moveRow } from "./panes";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { writerItems } from "./rowMenu";
-  import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
+  import { keyListener, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
@@ -68,7 +68,7 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -159,6 +159,8 @@
   let ruleForFeed: number | undefined = $state();
   /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
+  let whoFrom: WhoFrom = $state(); // Where their page was opened from (decision 0284).
+  let cameBackFrom: number | undefined = $state(); // Everyone you follow, back from their page: the keyboard goes back to their row.
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
   let sidebar: HTMLElement | undefined = $state();
@@ -351,6 +353,7 @@
       const next = parse(location.pathname);
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
+      whoFrom = whoFromOnPop(whoFrom, route, next, !!hidingFrom);
       const move = moveTo({ route, under, phone }, next);
       returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
@@ -375,18 +378,7 @@
     };
     addEventListener("popstate", back);
 
-    const readKey = createKeyReader();
-    const pressed = (event: KeyboardEvent) => {
-      // A sheet keeps the keyboard to itself; its Escape is the dialog's own (Settings' own sheets are asked of the page).
-      // The shortcuts sheet is asked of the page too: it says it has closed a moment after it has, and a key pressed then counts.
-      if (event.defaultPrevented || sheetShown || document.querySelector("dialog:modal")) return;
-      const action = readKey(event, event.timeStamp);
-      if (!action) return;
-      const scene = keyScene();
-      if (!keyIsOurs(action, event.key, scene)) return;
-      event.preventDefault();
-      carryOut(action, scene, keyHands);
-    };
+    const pressed = keyListener(() => sheetShown, keyScene, keyHands); // Settings' own sheets are asked of the page.
     addEventListener("keydown", pressed);
 
     // After signing in, the password field is gone. Move the keyboard's place
@@ -478,6 +470,8 @@
     const from = screenNow();
     stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
+    whoFrom = whoFromOnGo(whoFrom, route, next, reading && !!selected, !!hidingFrom);
+    cameBackFrom = isWho(route) && next.kind === "your-feeds" && !withNotice ? route.id : undefined;
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
     steps.goTo(next, from, cameFromSettings, move.opening);
@@ -529,11 +523,11 @@
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
-  /** Unsubscribes, then shows Unread (All with Unread off) with "Unsubscribed from … · Undo". */
+  /** Unsubscribes, then shows "Unsubscribed from … · Undo" on Everyone you follow if their page came from there, else on Unread. */
   async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
     const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
-    go(home, done);
+    go(whoFrom === "following" ? { kind: "your-feeds" } : home, done);
     return undefined;
   }
 
@@ -593,11 +587,7 @@
   let hidingFrom: { route: Route; name: string } | undefined = $state();
   $effect(() => void ((route.kind === "settings" && route.page === "hiding") || (hidingFrom = undefined)));
 
-  /**
-   * Close a page opened from Settings (Hidden articles, All readers, and
-   * Settings' own pages, decision 0120) or a person's settings (decision 0267), or Escape there: back to the page it was opened from, a
-   * step back in history when it came from there.
-   */
+  /** Closes a page opened from Settings (its own pages, decision 0120) or their settings (decision 0267), or Escape there: back to that page, a step back when it came from there. */
   function closeSettingsPage() {
     if (hidingFrom) return go(hidingFrom.route);
     const parent = parentOf(route);
@@ -605,6 +595,9 @@
     if (cameFromSettings) steps.goBack();
     else go(parent);
   }
+
+  /** × on their page (Escape, and ‹ on a phone): back where it was opened from (`whoClosesTo`). */
+  const closeWho = () => isWho(route) && ((to) => (to === "back" ? steps.goBack() : go(to, undefined, to.kind !== "your-feeds")))(whoClosesTo(whoFrom, route));
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
@@ -728,7 +721,7 @@
     if (parentOf(route)) closeSettingsPage();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-folder") edited(false);
-    else if (isWho(route)) go({ kind: "feed", id: route.id }); // their page: back to their list
+    else if (isWho(route)) closeWho();
     else if (reading || (selected && inArticle())) backToList();
     else if (searching.open || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) steps.back("home");
@@ -917,6 +910,8 @@
           onBack={phone ? () => steps.back("home") : undefined}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds}
+          {notice}
+          returnTo={cameBackFrom}
         />
       {:else if route.kind === "muted"}
         <Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />
@@ -1106,7 +1101,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onClose={closeWho} closeTo={whoFrom && { following: "Everyone you follow", article: "Article" }[whoFrom]} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
     {/key}
   {/if}
 {/snippet}

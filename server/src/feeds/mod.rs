@@ -113,7 +113,7 @@ struct FeedRow {
     email: Option<String>,
     /// The reader's note on the person (decision 0164).
     note: Option<String>,
-    /// The picture the feed names (decision 0284), an address on the publisher's site.
+    /// The picture the feed names (decision 0285), an address on the publisher's site.
     picture_url: Option<String>,
     /// When the reader chose a picture for them, kept on this place (`pictures`); its version.
     picture_chosen: Option<i64>,

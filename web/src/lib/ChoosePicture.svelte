@@ -1,5 +1,5 @@
 <!--
-  Their picture at the top of their page (SPEC section 36, decision 0284),
+  Their picture at the top of their page (SPEC section 36, decision 0285),
   and the one way to change it: pressed, it opens a small menu, "Choose a
   picture…" and, once one is chosen, "Use the automatic picture". A chosen
   picture is made small here, in the browser (portrait.ts → madeSmall),

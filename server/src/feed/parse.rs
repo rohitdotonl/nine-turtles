@@ -18,7 +18,7 @@ pub struct ParsedFeed {
     pub hub: Option<Hub>,
     /// Where to write to its writer, if the feed says (`write_back::from_feed`).
     pub email: Option<String>,
-    /// The feed's own picture of who it's from (decision 0284): RSS's
+    /// The feed's own picture of who it's from (decision 0285): RSS's
     /// `<image>` or `itunes:image`, Atom's logo, else Atom's or JSON Feed's icon.
     pub picture: Option<String>,
 }

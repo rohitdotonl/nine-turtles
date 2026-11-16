@@ -40,6 +40,9 @@ likeliest first:
 - **Unsubscribe**: let it go. **Undo** brings it back. (For someone you
   follow in several places, it's in their **Settings**.)
 
+After **Unsubscribe** you're back on **Everyone you follow**, with the list still
+open, so you can see to the next one. Closing their page does the same.
+
 There's no need to try again yourself: nine turtles keeps checking, and
 picks up anything new as soon as the site is back.
 

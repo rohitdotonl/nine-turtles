@@ -4,7 +4,7 @@ import type { Feed } from "./shapes";
 
 const place = (id: number, more: Partial<Feed> = {}): Feed => ({ id, title: "Mara Quill", siteUrl: null, unread: 0, folders: [], ...more });
 
-describe("a person's or publication's picture (decision 0284)", () => {
+describe("a person's or publication's picture (decision 0285)", () => {
   it("falls back to two initials for a person, one for a publication", () => {
     expect(initialsOf("Steph Ango", true)).toBe("SA");
     expect(initialsOf("Susan B. Glasser", true)).toBe("SG");
