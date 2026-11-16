@@ -513,14 +513,11 @@ test.describe("on a wide window", () => {
     await expect(selected).toHaveCSS("outline-width", "2px");
     // The selection is a pill (decision 0037): filled, 8px corners, 8px in
     // from the list's edge, grey with no bar (decision 0057). The outline is
-    // drawn inside its edge. The list's edge is its centred 42rem column's (decision 0275).
+    // drawn inside its edge. The list's edge is its column's: the reading column's, 32px in from it (decision 0277).
     await expect(selected).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
     await expect(selected).toHaveCSS("border-top-left-radius", "8px");
     expect(await selected.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
-    const paneX = await selected.evaluate((element) => {
-      const pane = element.closest("section")!.getBoundingClientRect();
-      return pane.left + Math.max(0, (pane.width - 42 * 16) / 2);
-    });
+    const paneX = await selected.evaluate((element) => element.closest(".scroller")!.getBoundingClientRect().left + parseFloat(getComputedStyle(element.closest(".scroller")!).paddingLeft) - 32);
     const inset = (await selected.boundingBox())!.x - paneX;
     expect(Math.abs(inset - 8)).toBeLessThan(1);
     // Every title starts 32px into the column, lined up with the list's title
@@ -579,7 +576,7 @@ test.describe("on a wide window", () => {
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
 
-  test("on a wide window the article sits in the middle, and its actions sit together at the pane's right edge",async ({ page }) => {
+  test("on a wide window the article sits in the middle, and its actions sit together over the text's right edge",async ({ page }) => {
     await openRoom(page, 2560);
     await openFirst(page);
     const text = (await article(page).locator("article").boundingBox())!;
@@ -594,15 +591,15 @@ test.describe("on a wide window", () => {
         return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
-    // The bar is anchored to the pane, not the text column (decision 0038): its tools sit together at the
-    // right, View original first and More near the pane's edge, all outside the text (decision 0050).
-    const pane = (await article(page).boundingBox())!;
+    // The bar stands over the text column (decision 0277, replacing the pane's edges of 0050): its tools sit
+    // together at the right, View original first, More's icon ending on the text's right edge, so on a very
+    // wide window they stay within reach of the words; the way back starts on its left edge.
     const first = (await article(page).getByRole("link", { name: "View original" }).first().boundingBox())!;
     const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
-    expect(first.x).toBeGreaterThan(text.x + text.width);
+    const back = (await article(page).getByRole("button", { name: /^Back to / }).boundingBox())!;
     expect(last.x - (first.x + first.width)).toBeLessThan(3 * 44 + 4 * 8 + 1);
-    expect(pane.x + pane.width - (last.x + last.width)).toBeLessThan(40);
-    expect(last.x + last.width).toBeGreaterThan(text.x + text.width + 100);
+    expect(Math.abs(last.x + last.width - 12 - (text.x + text.width))).toBeLessThan(2);
+    expect(Math.abs(back.x + 4 - text.x)).toBeLessThan(2);
     expect(Math.abs(first.y - last.y)).toBeLessThan(2);
   });
 

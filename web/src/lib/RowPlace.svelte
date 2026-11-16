@@ -8,7 +8,8 @@
 <script lang="ts">
   import { howFarWords, keptPlace, onPlaces } from "./places";
 
-  let { article }: { article: number } = $props();
+  /** `first`: nothing shows before it on the line, so no "·" leads it. */
+  let { article, first = false }: { article: number; first?: boolean } = $props();
 
   let words: string | undefined = $state();
 
@@ -23,7 +24,7 @@
   });
 </script>
 
-{#if words}<span class="row-place">·&nbsp;{words}</span>{/if}
+{#if words}<span class="row-place">{#if !first}·&nbsp;{/if}{words}</span>{/if}
 
 <style>
   .row-place {

@@ -121,17 +121,21 @@ test("the sidebar lists Unread, Starred, Notes (from the first day, decision 022
   await expect(sidebar(page).getByRole("link", { name: "Unread" })).not.toHaveAttribute("aria-current", "page");
   // Where you are is the grey pill, so Starred's star stays an outline: filled only ever means starred (decision 0182).
   await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg path")).toHaveAttribute("fill", "none");
-  // An empty list (decision 0142): the fact in the serif, then how to start, quieter, both on the list's left edge.
+  // An empty list (decision 0142): the fact in the serif, then how to start, quieter. On a computer the end has
+  // the page (decision 0277): the fact set as an article's title is, both centred in the list's column, a good
+  // way down. (A phone keeps them on the list's left edge.)
   const fact = page.getByText("Nothing starred yet.");
   const how = page.getByText("Press the star on any article to keep it here.");
   await expect(fact).toBeVisible();
-  await expect(fact).toHaveCSS("font-family", /Literata/);
+  await expect(fact).toHaveCSS("font-family", /Literata Display/);
+  await expect(fact).toHaveCSS("font-size", "38px");
+  await expect(fact).toHaveCSS("text-align", "center");
   await expect(how).toBeVisible();
-  await expect(fact).toHaveCSS("text-align", "start");
   const [factBox, howBox, title] = await Promise.all([fact.boundingBox(), how.boundingBox(), page.locator("#list-heading").boundingBox()]);
-  expect(Math.abs(factBox!.x - howBox!.x)).toBeLessThan(1);
-  expect(Math.abs(factBox!.x - title!.x)).toBeLessThan(2);
   expect(howBox!.y).toBeGreaterThan(factBox!.y + factBox!.height);
+  const middle = (box: { x: number; width: number }) => box.x + box.width / 2;
+  expect(Math.abs(middle(factBox!) - middle(howBox!))).toBeLessThan(1);
+  expect(factBox!.y - (title!.y + title!.height)).toBeGreaterThan(120);
 });
 
 test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {

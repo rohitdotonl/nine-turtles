@@ -57,7 +57,7 @@ export type EmptyWords = { fact: string; how?: string; wider?: () => void };
 export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {
   if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from this feed yet." } : { fact: "Nothing from this feed yet.", how: lastChecked(checkedAt, now) };
   if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
-  if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread." };
+  if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread.", how: "New writing will show up here." };
   if (place.kind === "view" && place.view === "starred") return { fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." };
   if (place.kind === "view" && place.view === "notes") return { fact: "No notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
   return { fact: "No articles yet." };

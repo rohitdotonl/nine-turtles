@@ -842,7 +842,7 @@
 <!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
 <svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
 <!-- While an episode plays, the "now playing" bar takes its own room at the foot, never covering the panes; on a phone reading, above the toolbar (SPEC 35). -->
-<main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
+<main class="reading-width relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
   {#if skipShown}
     <!-- First in the Tab order (SPEC section 19), out of sight until the keyboard reaches it: past the sidebar to the chosen article, or the first. -->
     <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>

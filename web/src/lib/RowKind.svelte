@@ -11,13 +11,14 @@
   import type { Article } from "./shapes";
   import { youtubeVideo } from "./youtube";
 
-  let { article }: { article: Article } = $props();
+  /** `first`: nothing shows before it on the line, so no "·" leads it. */
+  let { article, first = false }: { article: Article; first?: boolean } = $props();
 </script>
 
 {#if article.episode}
-  <span class="row-kind">·&nbsp;<Icon name="headphones" /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
+  <span class="row-kind">{#if !first}·&nbsp;{/if}<Icon name="headphones" /><span class="sr-only">Episode</span>{#if article.episodeSeconds}&nbsp;{length(article.episodeSeconds)}{/if}</span>
 {:else if youtubeVideo(article.link)}
-  <span class="row-kind">·&nbsp;<Icon name="video" /><span class="sr-only">Video</span></span>
+  <span class="row-kind">{#if !first}·&nbsp;{/if}<Icon name="video" /><span class="sr-only">Video</span></span>
 {/if}
 
 <style>

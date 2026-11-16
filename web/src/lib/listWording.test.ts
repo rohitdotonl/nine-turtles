@@ -47,7 +47,7 @@ describe("insteadOfList", () => {
 
 describe("emptyText", () => {
   it("says each empty list in one pattern, with how to start only where there's something to do", () => {
-    expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread." });
+    expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread.", how: "New writing will show up here." });
     expect(emptyText({ kind: "folder", id: 2 })).toEqual({ fact: "Nothing in this folder yet." });
     expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." });
     expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "No articles yet." });
