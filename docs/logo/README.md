@@ -7,14 +7,12 @@ heavier redrawn nine (D2) was live from 2 to 4 November 2026 and was
 dropped at the owner's request (decision 0179).
 
 One drawing at every size. Its box ends at the turtles' edges and the
-shells' feet, so beside the name it stands on the name's baseline:
+shells' feet. Inside the app the name stands alone, with no logo (decision
+0290); on the website the turtles walk on the name instead (decision 0291).
 
-- the logo beside the name, in the website's top
-  (`website/src/_includes/base.njk`); inside the app the name stands alone,
-  with no logo (decision 0290);
 - `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink;
 - `four-in-front.svg`: "four out in front" (decision 0291), the website's
-  top on every page but the front page: the name in Literata 600 at 60
+  top on every page: the name in Literata 600 at 60
   (baseline at 0) with the nine walking on it, five on the letters and four
   ahead of the name. The website draws the same turtles over the name as
   real text (`base.njk`, `.walkers` in `style.css`); change them together.

@@ -32,8 +32,8 @@ and installing (`apple-touch-icon.png` 180px, `icon-192.png`,
 smaller, so a phone that crops icons to a circle keeps them whole).
 
 **Easy to change:** redraw the SVGs and export the PNGs at those sizes.
-The drawing is also inline in `website/src/_includes/base.njk` (the
-website): change them together. (The app's copy, `Logo.svelte`, was removed
-by decision 0290.)
+(The app's copy, `Logo.svelte`, was removed by decision 0290; the website's
+top wears "four out in front" instead, decision 0291, so the nine now live
+only in the icons and the share picture.)
 
 *Updated by decision 0078: the logo's frame, its size beside the name, a one-turtle tab icon and roomier home-screen icons.*
