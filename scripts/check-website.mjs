@@ -96,6 +96,15 @@ try {
         for (const violation of results.violations) {
           problems.push(`${path} (${colorScheme}, ${device}): ${violation.help} (${violation.nodes.length} place(s))`);
         }
+        // The top (decision 0291): screen readers hear the name alone, and
+        // the name, its turtles and the places stay on one line.
+        const top = await page.evaluate(() => {
+          const name = document.querySelector(".top .wordmark");
+          const places = document.querySelector(".top .places");
+          return { text: name.textContent.trim(), oneLine: Math.abs(name.getBoundingClientRect().top - places.getBoundingClientRect().top) < 2 };
+        });
+        if (top.text !== "nine turtles") problems.push(`${path} (${colorScheme}, ${device}): the top's name reads "${top.text}", not "nine turtles"`);
+        if (!top.oneLine) problems.push(`${path} (${colorScheme}, ${device}): the top's name and places don't fit on one line`);
         // Every link and picture within the website leads somewhere real.
         if (colorScheme === "light" && device === "computer") {
           const targets = await page.evaluate(() =>
