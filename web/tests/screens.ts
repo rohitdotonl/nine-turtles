@@ -367,7 +367,7 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    // Everyone you follow with two broken feeds at the top, one of each kind,
+    // Everyone you follow with two broken feeds at the top, one not working and one having trouble,
     // as the server would describe them, so the library the screenshots follow stays healthy.
     name: "your-feeds-not-working",
     path: "/following",
@@ -401,7 +401,9 @@ export const SCREENS: Screen[] = [
       );
       await page.reload();
       await appReady(page);
-      await expect(page.getByRole("heading", { name: "Not working" })).toBeVisible();
+      // Open, so the picture shows each one and what went wrong with it (decision 0279).
+      await page.locator("#health-summary").click();
+      await expect(page.getByRole("link", { name: /^\s*The Old Almanac/ })).toBeVisible();
     },
   },
   {
