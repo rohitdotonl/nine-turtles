@@ -13,7 +13,8 @@
   source's line, and a box for a source that isn't working (NotWorkingBox,
   with its own Write to); and Write to, with the address under it (Change
   beside it). Then one card holding your note and the words you highlighted.
-  Last, one row, Settings ›. No picture and no color.
+  Last, one row, Settings ›. Their picture above their name (decision
+  0283) is the page's only picture, and it has no color of its own.
 
   Their settings (`route.settings`) are Settings' rows (WhoSettings,
   TheirPlaces), each changing as it's touched, under the title "Settings"
@@ -22,10 +23,10 @@
 -->
 <script lang="ts">
   import { untrack } from "svelte";
+  import ChoosePicture from "./ChoosePicture.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PageRow from "./PageRow.svelte";
-  import Portrait from "./Portrait.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
@@ -169,7 +170,8 @@
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->
     <header class={["flex flex-col", phone ? "pt-2" : ""]}>
-      <div class="mb-5"><Portrait {name} siteUrl={places.find((place) => place.siteUrl)?.siteUrl} {person} large /></div>
+      <!-- Their picture first, as a contact card has it (decision 0283); pressed, it can be changed. -->
+      <div class="mb-5"><ChoosePicture {feed} {places} {name} {person} {library} /></div>
       <h2 bind:this={nameHeading} tabindex="-1" class="who-name">{name}</h2>
       <p class="who-places">
         {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only">{" "}(opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}

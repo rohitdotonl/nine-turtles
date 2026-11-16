@@ -1,44 +1,57 @@
 <!--
-  A picture for someone or something followed (prototype): beside the byline,
-  and at the top of their page. Their initials, or their site's own icon,
-  falling back to initials when the site has none. The name sits beside it,
-  so screen readers skip it.
+  A picture of someone or something followed (SPEC section 36, decision
+  0283): beside an article's byline, and at the top of their page. Each
+  picture given is tried in turn (portrait.ts → picturesOf); the first one
+  big enough fills the circle. A small one (a site's tab icon) sits small in
+  the middle of it, if nothing bigger loads; with none, their initials. The
+  circle shows only its tone while pictures load, so initials never flash
+  before a picture. Their name is always beside it, so screen readers skip it.
 -->
 <script lang="ts">
-  import { iconsOf, initialsOf, portraitStyle } from "./portrait";
+  import { CRISP, initialsOf } from "./portrait";
 
-  let { name, siteUrl, person = true, large = false }: { name: string; siteUrl?: string | null; person?: boolean; large?: boolean } = $props();
+  let { name, pictures, person = true, large = false }: { name: string; pictures: string[]; person?: boolean; large?: boolean } = $props();
 
-  const style = portraitStyle();
-  let icons = $derived(style === "favicon" ? iconsOf(siteUrl) : []);
   let tried = $state(0);
-  let small = $state(false);
+  let small: string | undefined = $state();
+  let filled: string | undefined = $state();
+  // Another person, or a picture just chosen: start again from the first.
   $effect(() => {
-    void siteUrl;
+    void pictures.join(" ");
     tried = 0;
-    small = false;
+    small = undefined;
+    filled = undefined;
   });
-  let src = $derived(icons[tried]);
+  let trying = $derived(filled ? undefined : pictures[tried]);
   let initials = $derived(initialsOf(name, person));
+
+  function loaded(event: Event) {
+    const image = event.currentTarget as HTMLImageElement;
+    if (image.naturalWidth >= CRISP) filled = image.src;
+    else {
+      small ??= image.src;
+      tried += 1;
+    }
+  }
 </script>
 
 <span aria-hidden="true" class={["portrait", large && "large"]}>
-  {#if src}
-    <img
-      {src}
-      alt=""
-      referrerpolicy="no-referrer"
-      class={small ? "inset" : ""}
-      onload={(event) => (small = (event.currentTarget as HTMLImageElement).naturalWidth < 96)}
-      onerror={() => (tried += 1)}
-    />
+  {#if filled}
+    <img src={filled} alt="" referrerpolicy="no-referrer" />
+  {:else if trying}
+    <!-- Looked at, not yet shown. -->
+    {#key trying}<img src={trying} alt="" referrerpolicy="no-referrer" class="trying" onload={loaded} onerror={() => (tried += 1)} />{/key}
+  {:else if small}
+    <img src={small} alt="" referrerpolicy="no-referrer" class="inside" />
   {:else}
     <span class="initials">{initials}</span>
   {/if}
 </span>
 
 <style>
+  /* A circle in the grouped rows' tone with a faint edge, so a white picture still has its round shape on a white page. */
   .portrait {
+    position: relative;
     flex: none;
     display: inline-flex;
     align-items: center;
@@ -48,7 +61,7 @@
     height: 2.5rem;
     border-radius: 9999px;
     background-color: var(--group, var(--list));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
   .portrait.large {
     width: 4.5rem;
@@ -59,19 +72,24 @@
     height: 100%;
     object-fit: cover;
   }
-  img.inset {
+  img.trying {
+    position: absolute;
+    opacity: 0;
+  }
+  img.inside {
     width: 55%;
     height: 55%;
     object-fit: contain;
   }
+  /* Their initials in the titles' face, in the second ink: a monogram, never a color of their own. */
   .initials {
     color: var(--ink-2);
     font-family: var(--font-display);
-    font-size: 1rem;
+    font-size: var(--text-ui);
     line-height: 1;
     letter-spacing: 0.02em;
   }
   .large .initials {
-    font-size: 1.75rem;
+    font-size: var(--text-heading);
   }
 </style>

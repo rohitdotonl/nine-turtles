@@ -27,6 +27,7 @@
 </script>
 
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import MenuList from "./MenuList.svelte";
 
@@ -37,6 +38,7 @@
     up = false,
     start = false,
     icon = "more",
+    face,
   }: {
     id: string;
     label?: string;
@@ -47,6 +49,8 @@
     up?: boolean;
     /** Lines the menu up with the button's left edge, for a button at the screen's left (the phone's bottom bar). */
     start?: boolean;
+    /** What the button shows instead of an icon: a person's picture, on their page (decision 0283). */
+    face?: Snippet;
   } = $props();
 
   let open = $state(false);
@@ -94,12 +98,24 @@
     title={label}
     onclick={() => (open ? close(false) : show())}
     onkeydown={onButtonKey}
-    class={["btn-quiet btn-icon", open && "text-ink"]}
+    class={face ? "face" : ["btn-quiet btn-icon", open && "text-ink"]}
   >
-    <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
-    <span class={["flex size-8 items-center justify-center rounded-press", open && "bg-[var(--pressed)]"]}><Icon name={icon} size="alone" /></span>
+    {#if face}
+      {@render face()}
+    {:else}
+      <!-- Open, the icon sits on a small rounded tone, like a pressed toolbar button. -->
+      <span class={["flex size-8 items-center justify-center rounded-press", open && "bg-[var(--pressed)]"]}><Icon name={icon} size="alone" /></span>
+    {/if}
   </button>
   {#if open}
     <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
   {/if}
 </div>
+
+<style>
+  /* A picture as the button: round, as the picture is, so the keyboard's outline follows it. */
+  .face {
+    display: block;
+    border-radius: 9999px;
+  }
+</style>

@@ -417,6 +417,8 @@ async fn follow(
         write_to: None,
         email: parsed.email,
         note: None,
+        picture_url: parsed.picture,
+        picture_chosen: None,
         folders: Vec::new(),
         latest,
     })

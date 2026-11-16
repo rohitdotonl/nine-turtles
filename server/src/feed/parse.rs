@@ -18,6 +18,9 @@ pub struct ParsedFeed {
     pub hub: Option<Hub>,
     /// Where to write to its writer, if the feed says (`write_back::from_feed`).
     pub email: Option<String>,
+    /// The feed's own picture of who it's from (decision 0283): RSS's
+    /// `<image>` or `itunes:image`, Atom's logo, else Atom's or JSON Feed's icon.
+    pub picture: Option<String>,
 }
 
 /// Where a feed's WebSub hub is, and the address the publisher announces
@@ -177,6 +180,11 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         .logo
         .as_ref()
         .and_then(|logo| web_address(feed_url, &logo.uri));
+    let picture = feed_artwork.clone().or_else(|| {
+        feed.icon
+            .as_ref()
+            .and_then(|icon| web_address(feed_url, &icon.uri))
+    });
     let title = feed
         .title
         .as_ref()
@@ -278,6 +286,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         articles,
         hub,
         email,
+        picture,
     })
 }
 

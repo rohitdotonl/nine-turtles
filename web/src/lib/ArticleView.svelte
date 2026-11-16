@@ -30,6 +30,7 @@
   import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
   import { authorBesides } from "./byline";
   import Portrait from "./Portrait.svelte";
+  import { picturesOf } from "./portrait";
   import { edge } from "./edge";
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
@@ -50,7 +51,7 @@
   import { followAnchors, type Footnote } from "./footnotes";
   import { setPunctuation, setsEnglishPunctuation } from "./punctuation";
   import type { LoadedLibrary } from "./library.svelte";
-  import { siteName } from "./people";
+  import { placesOf, siteName } from "./people";
   import { tick, type Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
@@ -549,28 +550,29 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
-      <div class="byline-row">
-      <Portrait name={article.feedTitle} siteUrl={full?.siteUrl ?? source?.siteUrl} person={(source?.kind ?? "person") === "person" || source?.person != null} />
-      <p class="article-byline" lang="en">
-        {#if followed}
-          <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
-               A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
-          <a class="publisher writer-link" href={addressFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
-            onclick={(event) => {
-              // A click meant for a new tab or window is the browser's.
-              if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-              event.preventDefault();
-              onWriter(library.rowOf(article.feedId));
-            }}><bdi>{article.feedTitle}</bdi></a
-          ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
-        {:else if full?.siteUrl}
-          <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
-        {:else}
-          <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
-        {/if}
-        {#if author}· <bdi>{author}</bdi>{/if}
-        · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
-      </p>
+      <!-- Their picture leads the byline (decision 0283): the one the reader chose, else their feed's, else their site's icon, else initials. -->
+      <div class="flex items-center gap-3" dir={rtl ? "rtl" : undefined}>
+        <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={(source?.kind ?? "person") === "person" || source?.person != null} />
+        <p class="article-byline min-w-0" lang="en">
+          {#if followed}
+            <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
+                 A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
+            <a class="publisher writer-link" href={addressFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
+              onclick={(event) => {
+                // A click meant for a new tab or window is the browser's.
+                if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                event.preventDefault();
+                onWriter(library.rowOf(article.feedId));
+              }}><bdi>{article.feedTitle}</bdi></a
+            ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
+          {:else if full?.siteUrl}
+            <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
+          {:else}
+            <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
+          {/if}
+          {#if author}· <bdi>{author}</bdi>{/if}
+          · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
+        </p>
       </div>
 
       {#if video && connection.offline}

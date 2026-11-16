@@ -113,6 +113,10 @@ struct FeedRow {
     email: Option<String>,
     /// The reader's note on the person (decision 0164).
     note: Option<String>,
+    /// The picture the feed names (decision 0283), an address on the publisher's site.
+    picture_url: Option<String>,
+    /// When the reader chose a picture for them, kept on this place (`pictures`); its version.
+    picture_chosen: Option<i64>,
     /// The folders it's in, by number.
     #[sqlx(skip)]
     folders: Vec<i64>,
@@ -133,7 +137,9 @@ pub const FEEDS: &str = concat!(
         (feeds.fetched_at IS NULL AND feeds.failures = 0
              AND feeds.url NOT LIKE 'newsletter:%') AS waiting,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
-        subscriptions.note, feeds.email, subscriptions.shorts, subscriptions.live_streams,
+        subscriptions.note, feeds.email, feeds.picture_url,
+        (SELECT chosen_at FROM pictures WHERE pictures.person_id = subscriptions.person_id
+             AND pictures.feed_id = subscriptions.feed_id) AS picture_chosen, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,
         COALESCE(subscriptions.place, CASE WHEN feeds.url LIKE 'newsletter:%' THEN 'newsletter'
              WHEN feeds.url LIKE '%youtube.com/feeds/%' THEN 'video' ELSE 'blog' END) AS place,
