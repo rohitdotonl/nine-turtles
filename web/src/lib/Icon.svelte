@@ -88,7 +88,7 @@
     <!-- Sort order: an arrow down and an arrow up, side by side. -->
     <path d="M6.5 3.5v13M3.5 13.5l3 3 3-3M13.5 16.5v-13M10.5 6.5l3-3 3 3" />
   {:else if name === "bookmark"}
-    <!-- Save: a ribbon bookmark, filled while the article is saved (decision 0281). -->
+    <!-- Save: a ribbon bookmark, filled while the article is saved (decision 0283). -->
     <path d="M5.75 3.75a1 1 0 0 1 1-1h6.5a1 1 0 0 1 1 1v13l-4.25-3.25-4.25 3.25z" fill={filled ? "currentColor" : "none"} />
   {:else if name === "chevron-up"}
     <!-- The phone's Previous article: the one above in the list (Next is chevron-down). -->

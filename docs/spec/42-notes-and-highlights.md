@@ -32,7 +32,7 @@ anywhere or counted.
   written on it meanwhile stays: Save note (or **Try again**) highlights the
   words again, with the note, and one left for later comes back as a note
   on those words.
-- A note is written in a box in place, with **Save note** and **Not now** ("Save note", not "Save", since decision 0281: the article's own Save is beside it). An
+- A note is written in a box in place, with **Save note** and **Not now** ("Save note", not "Save", since decision 0283: the article's own Save is beside it). An
   empty note takes the note off, never the highlight.
 - **Nothing typed is thrown away** (decision 0235). The box stays open, with
   the words, until the save is confirmed (Save note says "Saving…" after half a

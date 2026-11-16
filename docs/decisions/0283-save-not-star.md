@@ -1,4 +1,4 @@
-# 0281: Star became Save
+# 0283: Star became Save
 
 **In one line:** What readers and assistants see says **Save** and **Saved** (with a bookmark) instead of Star and Starred; old addresses, old assistant tool names and old arguments still work, and inside the app the mark keeps its first name, `starred`.
 

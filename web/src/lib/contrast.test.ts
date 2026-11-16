@@ -106,7 +106,7 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
-  it("gives the Save bookmark no color of its own: it's drawn in the ink (decisions 0143, 0281)", () => {
+  it("gives the Save bookmark no color of its own: it's drawn in the ink (decisions 0143, 0283)", () => {
     expect(colors.star).toBeUndefined();
   });
 

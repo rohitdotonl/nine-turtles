@@ -19,7 +19,7 @@ pub(super) fn all() -> &'static [Value] {
 }
 
 /// A tool's name now, from the name it's called by. Star became Save
-/// (decision 0281): an assistant that learned the old names (`star`,
+/// (decision 0283): an assistant that learned the old names (`star`,
 /// `list_starred`) is still answered, though only the new ones are listed,
 /// as a renamed tool should be (its arguments' old names work too).
 pub(super) fn current_name(name: &str) -> &str {

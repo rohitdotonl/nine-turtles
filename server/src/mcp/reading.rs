@@ -21,7 +21,7 @@ pub(super) struct Searching {
     author: Option<String>,
     feed_id: Option<i64>,
     folder_id: Option<i64>,
-    /// `starred` was its name before Save (decision 0281).
+    /// `starred` was its name before Save (decision 0283).
     #[serde(default, alias = "starred")]
     saved: bool,
     #[serde(default)]

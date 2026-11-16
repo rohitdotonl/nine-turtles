@@ -24,7 +24,7 @@
   | Read | A softer second ink, regular-weight title (the title stays full-strength while it's the selected row) |
   | Selected | A rounded pill of soft neutral grey set a little in from the list's edges, with no color (the same as in the sidebar; decision 0057); the title in full ink. When you're using the keyboard, an outline is drawn just inside the pill's edge too |
   | Menu open | The pointer's fainter tone, never the pill, while the row's own menu is open, on touch screens too |
-  | Saved | A small filled bookmark after the time, in the ink (read out as "Saved"; decisions 0143, 0281). The article's own Save button (a bookmark) is filled, in full ink, while it's saved; the Saved icon in the sidebar stays an outline, even while you're there (decision 0182) |
+  | Saved | A small filled bookmark after the time, in the ink (read out as "Saved"; decisions 0143, 0283). The article's own Save button (a bookmark) is filled, in full ink, while it's saved; the Saved icon in the sidebar stays an outline, even while you're there (decision 0182) |
   | Part read | While your place in it is kept (section 7), a few words after the time in the source name's muted grey: "· Just begun", "· A third read", "· Half read", "· Two-thirds read" or "· Nearly finished", by how much of it has been in view; "· Part read" for a place kept on another device, which can't say how far (decision 0224). Words, never a bar or a number; they go when you reach the end or scroll back to the top, as the place does |
 
 - A podcast episode's meta line ends with a small headphones icon and the episode's length ("45 min"), in the same quiet text (section 35).

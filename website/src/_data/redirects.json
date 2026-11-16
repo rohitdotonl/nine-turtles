@@ -9,6 +9,6 @@
   { "from": "/blog/what-we-left-out/", "to": "/about/", "title": "About", "why": "A hidden blog post (decision 0166)." },
   { "from": "/help/inbox-or-river/", "to": "/help/unread-on-or-off/", "title": "Unread, on or off", "why": "Inbox and River became one switch, Unread on or off (decision 0172)." },
   { "from": "/help/keep-articles-in-collections/", "to": "/help/save-an-article/", "title": "Save an article", "why": "Collections went; Saved (then Starred) is the one place to keep articles (decision 0174)." },
-  { "from": "/help/star-an-article/", "to": "/help/save-an-article/", "title": "Save an article", "why": "Star became Save, and Starred became Saved (decision 0281)." },
+  { "from": "/help/star-an-article/", "to": "/help/save-an-article/", "title": "Save an article", "why": "Star became Save, and Starred became Saved (decision 0283)." },
   { "from": "/help/other-apps/", "to": "/help/questions/", "title": "Questions people ask", "why": "Syncing with other apps went; Questions says why (decision 0184)." }
 ]

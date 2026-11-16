@@ -50,7 +50,7 @@ what's live.
 
 - **Links in articles** are the text's own color, underlined, on every page. (Live)
 - **The dot is never green or red** (green and red are the colors most often confused). (Live)
-- **The Save bookmark** is drawn in the page's own ink: filled when saved, an outline when not. It was a star until decision 0281. Green retired. (Live, decisions 0143, 0281)
+- **The Save bookmark** is drawn in the page's own ink: filled when saved, an outline when not. It was a star until decision 0283. Green retired. (Live, decisions 0143, 0283)
 - **Delete and errors** are oxblood, `#8C2F39` by day and `#E39AA4` by night, always with words that say what. (Live, decision 0143)
 - **No brand color outside the app.** The website, icons and share picture use ink only: near-black `#141414` and light `#EFEFF1`. The reader's page color is theirs, not the brand's. (Live)
 - **No more colors.** A new feature uses ink strengths, the greys, the one accent and oxblood. Tags and folders get names, never colors. (Live)
