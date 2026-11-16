@@ -1,7 +1,8 @@
 // Who isn't working, at the top of Everyone you follow (SPEC section 15,
-// decision 0186): what went wrong in plain words, with Find new address and
-// Unsubscribe. The server sends a short problem word ("not-found"); only
-// this file turns it into sentences, and no error code is ever shown.
+// decisions 0186 and 0279): what went wrong in a few plain words, and Find
+// new address on their page. The server sends a short problem word
+// ("not-found"); only this file turns it into words, and no error code is
+// ever shown.
 
 import type { Choice } from "./feeds";
 import { dayOrToday, until } from "./times";
@@ -107,11 +108,15 @@ function since(at: number, now: Date): string {
   return day === "today" ? "since earlier today" : `since ${day}`;
 }
 
-/** The first line about a feed: "Nothing has come through since 1 Nov", or "Working again" once it has moved. */
-export function headline(feed: Sick, now: Date = new Date()): string {
-  if (feed.state === "working") return "Working again";
+/**
+ * The day a failing feed's row shows (decision 0279): since when nothing has
+ * come through, "24 Oct", "Today" or "3 Dec 2025", or nothing when that isn't known.
+ */
+export function failingDay(feed: Sick, now: Date = new Date()): string {
   const from = feed.problem === "not-found" && feed.missingSince !== null ? feed.missingSince : feed.failingSince;
-  return from === null ? "Nothing has come through lately" : `Nothing has come through ${since(from, now)}`;
+  if (from === null) return "";
+  const day = dayOrToday(from, now);
+  return day === "today" ? "Today" : day;
 }
 
 /**
@@ -124,35 +129,35 @@ export function youTubeRefusing(feed: Pick<Sick, "youtube" | "problem">): boolea
 }
 
 /**
- * What went wrong, and what it may mean, in plain words. For a YouTube feed
- * that YouTube won't send, it says so plainly instead of "it may have moved"
- * (decision 0272): YouTube turns away some servers' asks for a while.
+ * What went wrong, in a few plain words and never a code, said once over
+ * every feed it happened to (decision 0279). A YouTube feed that YouTube
+ * won't send says so, rather than that it may have moved (decision 0272); a
+ * guard in front of the site is named as one (decision 0258).
  */
-export function reason(problem: string | null, youtube = false): string {
-  if (youTubeRefusing({ youtube, problem }))
-    return "YouTube isn't sending these videos to nine turtles at the moment. nine turtles keeps asking; if they were taken down, nothing more will come.";
-  switch (problem) {
+export function reason(feed: Pick<Sick, "youtube" | "problem">): string {
+  if (youTubeRefusing(feed)) return "YouTube isn't sending these for now";
+  switch (feed.problem) {
     case "not-found":
-      return "The site says the feed isn't there any more. It may have moved.";
+      return "The feed isn't there any more";
     case "unreachable":
-      return "The site didn't answer. It may be down for a while, or gone.";
+      return "The site doesn't answer";
     case "blocked":
-      return "The site's guard against bots turns nine turtles away. Only the site can let it in.";
+      return "The site's guard against bots keeps nine turtles out";
     case "not-a-feed":
-      return "The address now leads to a page that isn't a feed. The site may have moved it.";
+      return "The address leads to a page, not a feed";
     case "too-big":
-      return "The feed has grown bigger than nine turtles reads.";
+      return "The feed is too big to read";
     case "slow-down":
-      return "The site asked nine turtles to slow down, so it's waiting as asked.";
+      return "The site asked nine turtles to wait";
     case "not-allowed":
-      return "The address now points somewhere nine turtles never visits.";
+      return "The address points somewhere nine turtles never visits";
     case "not-an-address":
-      return "Its address isn't a web address nine turtles can read.";
+      return "The address isn't a web address";
   }
-  const code = Number(problem?.match(/^answered-(\d{3})$/)?.[1]);
-  if (code === 401 || code === 403) return "The site refuses to share this feed.";
-  if (code >= 500) return "The site has a problem of its own. It may be fixed soon.";
-  return "The site answered, but not with the feed.";
+  const code = Number(feed.problem?.match(/^answered-(\d{3})$/)?.[1]);
+  if (code === 401 || code === 403) return "The site refuses to share the feed";
+  if (code >= 500) return "The site has a problem of its own";
+  return "The site answered, but not with the feed";
 }
 
 /**

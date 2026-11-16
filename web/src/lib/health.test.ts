@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brokenSince, found, headline, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
+import { brokenSince, failingDay, found, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -18,40 +18,41 @@ const sick = (change: Partial<Sick>): Sick => ({
 });
 
 describe("the words for who isn't working", () => {
-  it("leads with since when nothing has come through", () => {
+  it("shows the day nothing has come through since", () => {
     const now = new Date(2026, 10, 6, 12, 0);
     const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
-    expect(headline(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("Nothing has come through since 1 Nov");
-    expect(
-      headline(sick({ problem: "not-found", failingSince: at(2026, 9, 1, 9), missingSince: at(2026, 9, 20, 9), state: "dead" }), now),
-    ).toBe("Nothing has come through since 20 Oct");
-    expect(headline(sick({ failingSince: at(2026, 10, 6, 8) }), now)).toBe("Nothing has come through since earlier today");
-    expect(headline(sick({ state: "working" }), now)).toBe("Working again");
+    expect(failingDay(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("1 Nov");
+    // A feed that's gone counts from when it went, not from its first failure.
+    expect(failingDay(sick({ problem: "not-found", failingSince: at(2026, 9, 1, 9), missingSince: at(2026, 9, 20, 9), state: "dead" }), now)).toBe("20 Oct");
+    expect(failingDay(sick({ failingSince: at(2026, 10, 6, 8) }), now)).toBe("Today");
+    expect(failingDay(sick({ failingSince: at(2025, 11, 3, 8) }), now)).toBe("3 Dec 2025");
+    expect(failingDay(sick({ failingSince: null }), now)).toBe("");
   });
 
-  it("explains every problem in plain words, never with a code", () => {
+  it("explains every problem in a few plain words, never with a code", () => {
     const problems = ["not-found", "unreachable", "blocked", "not-a-feed", "too-big", "slow-down", "not-allowed", "not-an-address"];
     for (const problem of [...problems, "answered-403", "answered-500", "answered-418", null]) {
-      const words = reason(problem);
-      expect(words).toMatch(/^[A-Z].*\.$/);
+      const words = reason(sick({ problem }));
+      expect(words).toMatch(/^[A-Z][^.]*[a-z]$/);
       expect(words).not.toMatch(/\d{3}|-/);
+      expect(words.split(" ").length).toBeLessThanOrEqual(9);
     }
-    expect(reason("answered-403")).toBe("The site refuses to share this feed.");
-    // A guard against bots is named as such, and the reader learns only the site can fix it (decision 0258).
-    expect(reason("blocked")).toMatch(/guard against bots .* Only the site can let it in\./);
+    expect(reason(sick({ problem: "not-found" }))).toBe("The feed isn't there any more");
+    expect(reason(sick({ problem: "answered-403" }))).toBe("The site refuses to share the feed");
+    // A guard against bots is named as such (decision 0258).
+    expect(reason(sick({ problem: "blocked" }))).toMatch(/guard against bots/);
     expect(refusalMessage({ error: "blocked" }, "find")).toMatch(/guard against bots/);
   });
 
-  it("says YouTube isn't sending, instead of that a YouTube feed may have moved (decision 0272)", () => {
+  it("says YouTube isn't sending, instead of that a YouTube feed may have gone (decision 0272)", () => {
     for (const problem of ["not-found", "unreachable", "answered-500"]) {
-      expect(reason(problem, true)).toMatch(/^YouTube isn't sending these videos to nine turtles at the moment\./);
+      expect(reason(sick({ youtube: true, problem }))).toBe("YouTube isn't sending these for now");
       expect(youTubeRefusing(sick({ youtube: true, problem }))).toBe(true);
     }
     // Its other problems, and other sites, keep their own words.
-    expect(reason("blocked", true)).toMatch(/guard against bots/);
-    expect(reason("answered-403", true)).toBe("The site refuses to share this feed.");
+    expect(reason(sick({ youtube: true, problem: "blocked" }))).toMatch(/guard against bots/);
+    expect(reason(sick({ youtube: true, problem: "answered-403" }))).toBe("The site refuses to share the feed");
     expect(youTubeRefusing(sick({ youtube: true, problem: "blocked" }))).toBe(false);
-    expect(reason("not-found", false)).toMatch(/It may have moved\./);
     expect(youTubeRefusing(sick({ problem: "not-found" }))).toBe(false);
   });
 

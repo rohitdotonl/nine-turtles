@@ -978,7 +978,7 @@
           bind:heading={headings.yourFeeds}
           onBack={phone ? () => steps.back("home") : undefined}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
-          onFeedsChanged={loadFeeds} {library}
+          onFeedsChanged={loadFeeds}
           besideToggle={!phone && !panes.sidebar}
         />
       {:else if route.kind === "muted"}
