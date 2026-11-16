@@ -646,7 +646,7 @@ test("Newsletters: the reader's address with Copy, a label's switch, and New add
   // The email made a feed; unsubscribing it tidies up after the test.
   const feeds = await (await page.request.get(app("/api/feeds"))).json();
   const kitchen = feeds.feeds.find((feed: { title: string }) => feed.title === "Kitchen");
-  expect((await page.request.post(app(`/api/feeds/${kitchen.id}/unsubscribe`), { data: {} })).ok()).toBe(true);
+  expect((await page.request.post(app(`/api/${kitchen.id}/unsubscribe`), { data: {} })).ok()).toBe(true);
 
   await expect(page.getByRole("button", { name: "Copy address" })).toBeVisible();
   await page.getByRole("button", { name: "New address" }).focus();

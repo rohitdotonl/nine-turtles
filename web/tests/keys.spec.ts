@@ -19,7 +19,7 @@ async function signedIn(page: Page) {
 async function openBlog(page: Page): Promise<number> {
   const name = `rekey-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("listitem").getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
   return id;
@@ -75,14 +75,14 @@ test.describe("on a wide window", () => {
     await page.goto(new URL("/all", FEEDS_APP).href);
     await appReady(page);
     // Once the sidebar has the feeds (the blog, in no folder, among them).
-    await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href="/people/${blog}"]`)).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href$="-${blog}"]`)).toBeVisible();
     await page.keyboard.press("Shift+J");
-    await expect(page).toHaveURL(/\/(people|publications|folders)\/\d+$/);
+    await expect(page).toHaveURL(/\/(?:folders\/)?(?:[a-z0-9-]+-)?\d+$/);
     const first = page.url();
     await page.keyboard.press("Shift+J");
     await expect(page).not.toHaveURL(first);
     // The next row may be a folder, a person or a publication, whatever other tests followed meanwhile.
-    await expect(page).toHaveURL(/\/(people|publications|folders)\/\d+$/);
+    await expect(page).toHaveURL(/\/(?:folders\/)?(?:[a-z0-9-]+-)?\d+$/);
     await page.keyboard.press("Shift+K");
     await expect(page).toHaveURL(first);
 

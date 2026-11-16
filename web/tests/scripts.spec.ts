@@ -15,7 +15,7 @@ test("a Hindi article is marked Hindi, gets room between its lines and its own r
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/hindi/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: /पुस्तकालय की एक शाम/ }).click();
 

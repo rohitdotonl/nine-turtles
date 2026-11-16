@@ -125,13 +125,13 @@ test("a failing feed says so above its list, and Find its new address moves it w
   await expect.poll(failingSince, { timeout: 30_000 }).not.toBeNull();
 
   // Their page offers it too, only while the feed is failing, naming what isn't working.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: /^About / }).getByText(/hasn't worked since/)).not.toContainText("This feed");
   // Escape goes back to their list.
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 
   const list = page.locator("#list-pane");
   await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find its new address$/)).toBeVisible();
@@ -227,7 +227,7 @@ async function failing(page: Page, name: string, how: "move" | "break"): Promise
 test("when the site names several feeds, the list's line offers a choice; when it names none, it says so", async ({ page }) => {
   const several = `moving-two-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, several, "move");
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   const list = page.locator("#list-pane");
   await list.getByRole("button", { name: "Find its new address" }).click();
@@ -248,7 +248,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
   // A feed whose site names nothing new: one plain sentence, on their page too.
   const none = `moving-gone-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const gone = await failing(page, none, "break");
-  await page.goto(new URL(`/people/${gone}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${gone}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: /^The site doesn't name another feed/ })).toBeVisible();
@@ -259,7 +259,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
 test("their page moves a failing feed at once, says so, and keeps what was typed", async ({ page }) => {
   const name = `moving-edit-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, name, "move");
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   // A note half written on their page.
   await page.getByRole("button", { name: "Add a note…" }).click();
@@ -288,11 +288,11 @@ test("moving a feed to a new number (others follow the old address) keeps their 
     const feed = health.feeds.find((each: { id: number }) => each.id === other);
     await route.fulfill({ json: { feed: { ...feed, state: "working", failing_since: null } } });
   });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await page.getByRole("button", { name: "Use it" }).click();
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${other}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${other}/about$`));
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
 });
 
@@ -383,8 +383,8 @@ test("with Write to pressed, the keyboard meets what it brought before Unsubscri
   const name = `write-order-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
-  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "ivy@ivy.example" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  expect((await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "ivy@ivy.example" } })).ok()).toBe(true);
   await page.route("**/api/health", async (route) => {
     const real = await (await route.fetch()).json();
     for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";

@@ -4,8 +4,7 @@ import { appReady, follow, signIn } from "./screens";
 
 // SPEC section 36 (people and publications), "How to check it", done by a
 // browser: the page opened by the name at the top of the list (its settings
-// one row away on a page of their own, each changing as it's touched; the old
-// Edit addresses open them), person or publication, "+ Add a source" with its folder question, Take
+// one row away on a page of their own, each changing as it's touched), person or publication, "+ Add a source" with its folder question, Take
 // out on a source's row, Unsubscribe from a person, each Undo, and the
 // keyboard's way through them. Each test uses blogs of its own,
 // since every test shares the one nine turtles that has feeds.
@@ -45,8 +44,8 @@ async function openPlaces(
   }
   const ids = [];
   for (const path of paths) ids.push(await follow(page, `${FEED_SITE}${path}`));
-  // The old address, which still opens (and is tidied to the new one).
-  await page.goto(new URL(`/feeds/${ids[0]}`, FEEDS_APP).href);
+  // Their number alone, which opens them (and gains their name, decision 0279).
+  await page.goto(new URL(`/${ids[0]}`, FEEDS_APP).href);
   await appReady(page);
   return ids;
 }
@@ -56,8 +55,8 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
 }) => {
   const ana = unique("pp-ana");
   const [id] = await openPlaces(page, [`/blog/${ana}/feed.xml`]);
-  // An old address is tidied to the new one.
-  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+  // The number alone gains their name.
+  await expect(page).toHaveURL(new RegExp(`/blog-pp-ana-[a-z0-9-]*${id}$`));
   await expect(page.locator(".item-row")).toHaveCount(3);
   const desktop = test.info().project.name === "desktop";
 
@@ -66,7 +65,7 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
     .getByRole("button", { name: `Blog ${ana}` });
   await name.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   const about = page_(page, `Blog ${ana}`);
   await expect(
     about.getByRole("heading", { level: 2, name: `Blog ${ana}` }),
@@ -87,23 +86,23 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   const row = about.getByRole("link", { name: `Settings for Blog ${ana}`, exact: true });
   await row.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
   await expect(page.getByRole("region", { name: `Settings for Blog ${ana}`, exact: true }).getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
   await expect(page.locator(".item-row")).toHaveCount(3);
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(row).toBeFocused();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 
   // The i key, and "Info about …" in More, open it too.
   await page.locator("body").focus();
   await page.keyboard.press("i");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "More", exact: true }).click();
   await page.getByRole("menuitem", { name: `Info about Blog ${ana}` }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   // On a computer their page keeps the article's column: an article's title has the same left edge and first line (decision 0219).
   if (desktop) {
     await page.keyboard.press("Escape");
@@ -114,18 +113,18 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   }
 });
 
-test("This is: A publication moves someone under Publications, at its own address, as it's chosen", async ({
+test("This is: A publication moves someone under Publications as it's chosen", async ({
   page,
 }) => {
   const ben = unique("pp-ben");
   const [id] = await openPlaces(page, [`/blog/${ben}/feed.xml`]);
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("radio", { name: "A publication" }).check();
-  await expect(page).toHaveURL(new RegExp(`/publications/${id}/settings$`));
-  // Their page no longer says what they are (the core path); the address and the sidebar do.
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
+  // Their page no longer says what they are (the core path); the sidebar does.
   await page.getByRole("button", { name: `Back to Blog ${ben}` }).click();
-  await expect(page).toHaveURL(new RegExp(`/publications/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(page_(page, `Blog ${ben}`)).not.toContainText("A publication ·");
   // Their page has the window (decision 0275): Escape goes back to their list, beside the sidebar.
   await page.locator("body").focus();
@@ -157,7 +156,7 @@ test("+ Add a source joins someone in another folder, asking which folders, and 
     );
     expect(made.ok()).toBe(true);
   }
-  await page.goto(new URL(`/people/${ids[0]}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${ids[0]}/settings`, FEEDS_APP).href);
   await appReady(page);
 
   // One source: the quiet line's link under their settings (the owner's core path, point 12).
@@ -219,7 +218,7 @@ test("Take out, on a source's row in their settings, makes it someone of its own
     { data: { feeds: [first, second], name: `Eli ${eli}` } },
   );
   expect(joined.ok()).toBe(true);
-  await page.goto(new URL(`/people/${first}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${first}/settings`, FEEDS_APP).href);
   await appReady(page);
 
   // What kind of source it is isn't a setting any more (decision 0183).
@@ -250,7 +249,7 @@ test("Unsubscribe from a person leaves every source, and Undo brings them all ba
   await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, {
     data: { feeds: [first, second], name: `Gus ${gus}` },
   });
-  await page.goto(new URL(`/people/${first}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${first}/settings`, FEEDS_APP).href);
   await appReady(page);
   await page
     .getByRole("button", { name: `Unsubscribe from Gus ${gus}` })
@@ -321,7 +320,7 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   const jo = unique("pp-jo");
   const kit = unique("two-pp-kit");
   const [id] = await openPlaces(page, [`/blog/${jo}/feed.xml`]);
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
 
   await page.getByRole("button", { name: "+ Add their newsletter, videos or podcast" }).click();

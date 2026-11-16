@@ -40,7 +40,7 @@ test("a search starts where you are, marks the words it found, and Escape brings
   const [filed, loose] = [unique("filed"), unique("loose")];
   const folder = unique("Shelf");
   const [filedId] = await start(page, [`${FEED_SITE}/blog/${filed}/`, `${FEED_SITE}/blog/${loose}/`]);
-  await page.request.post(new URL(`/api/feeds/${filedId}`, FEEDS_APP).href, {
+  await page.request.post(new URL(`/api/${filedId}`, FEEDS_APP).href, {
     data: { title: `Blog ${filed}`, folders: [], new_folder: folder },
   });
   const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
@@ -107,13 +107,13 @@ test("a search starts where you are, marks the words it found, and Escape brings
   await page.keyboard.press("/");
   await expect(page.getByRole("button", { name: `Remove in: ${folder}` })).toBeVisible();
   // The folder, at its own address: j only chose a result, and an article opens alone (decision 0275).
-  await expect(page).toHaveURL(new RegExp(`/folders/${folderId}$`));
+  await expect(page).toHaveURL(new RegExp(`/folders/(?:[a-z0-9-]+-)?${folderId}$`));
 });
 
 test("Mark all as read marks only the results, and u undoes it", async ({ page }) => {
   const name = unique("marked");
   const [id] = await start(page, [`${FEED_SITE}/blog/${name}/`]);
-  await open(page, `/people/${id}`, `Blog ${name}`);
+  await open(page, `/${id}`, `Blog ${name}`);
   const count = (unread: number) =>
     page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: `Blog ${name}`, exact: true }).and(page.locator(`[data-unread="${unread}"]`));
   await expect(count(3)).toBeVisible();
@@ -134,7 +134,7 @@ test("Mark all as read marks only the results, and u undoes it", async ({ page }
 test("Hindi words are found whole", async ({ page }) => {
   const name = unique("kavita");
   const [id] = await start(page, [`${FEED_SITE}/hindi/${name}/`]);
-  await open(page, `/people/${id}`, `Kavita ${name}`);
+  await open(page, `/${id}`, `Kavita ${name}`);
   await page.keyboard.press("/");
   await page.keyboard.type("किताबें");
   await page.keyboard.press("Enter");
@@ -149,7 +149,7 @@ test("Hindi words are found whole", async ({ page }) => {
 test("each result shows its text around the match under the title, and × clears the field", async ({ page, isMobile }) => {
   const blog = unique("excerpt");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await open(page, `/${id}`, `Blog ${blog}`);
   await page.keyboard.press("/");
   // No × until there's something to clear.
   await expect(page.getByRole("button", { name: "Clear search" })).toHaveCount(0);
@@ -201,7 +201,7 @@ test("with nothing found, nothing offers j", async ({ page }) => {
   await nothingToPickUp(page);
   const blog = unique("nothing");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await open(page, `/${id}`, `Blog ${blog}`);
   // Nothing open: the list has the window beside the sidebar, with no reading area (decision 0275).
   const reading = page.getByRole("region", { name: "Article", exact: true });
   await expect(reading).toHaveCount(0);
@@ -216,7 +216,7 @@ test("with nothing found, nothing offers j", async ({ page }) => {
 test("a search from Starred finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {
   const blog = unique("starred-search");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await open(page, `/${id}`, `Blog ${blog}`);
   await page.keyboard.press("/");
   await page.keyboard.type("walking");
   await page.keyboard.press("Enter");
@@ -243,7 +243,7 @@ test("a search that found nothing in one place offers Search all articles, which
   // Decision 0212: no dead ends.
   const blog = unique("wider");
   const [id] = await start(page, [`${FEED_SITE}/blog/${blog}/`]);
-  await open(page, `/people/${id}`, `Blog ${blog}`);
+  await open(page, `/${id}`, `Blog ${blog}`);
   await page.keyboard.press("/");
   await page.keyboard.type("zzyzxquux");
   await page.keyboard.press("Enter");

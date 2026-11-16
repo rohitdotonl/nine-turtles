@@ -6,7 +6,7 @@
 // "feed" about them.
 //
 // A person's row stands for all their places: it links to their first place
-// (`/people/3`), whose list the server widens to all of them, and its count is
+// (`/mira-chen-3`), whose list the server widens to all of them, and its count is
 // their places' counts added up.
 
 import { change, plainSourceName, refused, undoRefused, type Notice } from "./feeds";

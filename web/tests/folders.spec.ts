@@ -83,7 +83,7 @@ async function openBlogs(page: Page, names: string[]): Promise<number[]> {
   await signIn(page);
   const ids = [];
   for (const name of names) ids.push(await follow(page, `${FEED_SITE}/blog/${name}/`));
-  await page.goto(new URL(`/people/${ids[0]}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${ids[0]}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${names[0]}` })).toBeVisible();
   return ids;
@@ -96,7 +96,7 @@ test("a feed put in two folders appears under both", async ({ page }) => {
 
   await editWho(page, `Blog ${blog}`);
   // Their settings, a page of their own in place of their list: no Edit mode, and nothing waits for a Done.
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/settings$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/settings$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.locator(".item-row")).toHaveCount(3);
   await expect(page.getByRole("button", { name: /^(Done|Cancel)$/ })).toHaveCount(0);
@@ -127,7 +127,7 @@ test("a feed put in two folders appears under both", async ({ page }) => {
   await expect(page.locator("#list-heading")).toContainText(`Renamed ${blog}`);
   // Their settings have the window to themselves (decision 0275): ‹ goes to their page, and its × to their list and the sidebar.
   await page.getByRole("button", { name: `Back to Renamed ${blog}` }).click();
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/about$/);
   await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(sidebar(page)).toBeVisible();
 
@@ -166,7 +166,7 @@ test("a feed put in two folders appears under both", async ({ page }) => {
 
   // A folder's own list holds its feeds' articles.
   await sidebar(page).getByRole("link", { name: `${first}`, exact: true }).and(page.locator(`[data-unread="3"]`)).click();
-  await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/folders\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: first })).toBeFocused();
   await expect(page.getByRole("region", { name: first }).getByRole("listitem")).toHaveCount(3);
   // The whole row is its toggle: choosing the folder you're in folds it, and again unfolds it (decision 0123).
@@ -178,7 +178,7 @@ test("a feed put in two folders appears under both", async ({ page }) => {
   await expect(firstToggle).toHaveAttribute("aria-expanded", "false");
   // A screen reader hears the change on the name too.
   await expect(firstRow).toHaveAttribute("aria-expanded", "false");
-  await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/folders\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await firstRow.click();
   await expect(firstToggle).toHaveAttribute("aria-expanded", "true");
   // With the keyboard too: Enter on the folder you're in folds it.
@@ -199,7 +199,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
   const blog = unique("kept");
   const folder = unique("Zz-folder");
   const ids = await openBlogs(page, [blog]);
-  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, {
+  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, {
     data: { title: `Blog ${blog}`, folders: [], new_folder: folder },
   });
   await page.reload();
@@ -421,12 +421,12 @@ test("with only the keyboard: their settings, a new folder, opening it, Edit fol
   await page.keyboard.type(folder);
   await page.keyboard.press("Enter");
   // Enter makes it and puts them in it, at once, in their settings.
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/settings$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/settings$/);
   await expect(page.getByRole("checkbox", { name: folder })).toBeChecked();
   // Escape, to their page, then their list, beside the sidebar (their settings had the window, decision 0275).
   await page.locator("body").focus();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/\/people\/[0-9]+\/about$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/about$/);
   await page.keyboard.press("Escape");
 
   // The folder just made opens (the core path); its button closes and opens it, by Enter.
@@ -516,7 +516,7 @@ test("their page has the window to itself; Escape gives the keyboard back to the
   await page.keyboard.press("Escape");
   await expect(about).toHaveCount(0);
   // Back to their list, the keyboard in it.
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await expect(page.locator("#list-pane")).toBeVisible();
   await expect(page.locator("#list-pane :focus")).toHaveCount(1);
 });
@@ -599,10 +599,10 @@ test("with only the keyboard: pausing someone in their settings is remembered, w
   await expect(page.locator("#list-pane").getByText("Paused today. Their new articles arrive already read.")).toBeVisible();
   await expect(page.locator("#list-pane").getByRole("button", { name: "Resume", exact: true })).toBeVisible();
 
-  await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${paused}/settings`, FEEDS_APP).href);
   await appReady(page);
   await expect(pause).toBeChecked();
-  await page.goto(new URL(`/people/${paused}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${paused}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(theirs.getByText(/Paused today\./)).toBeVisible();
 });
@@ -610,20 +610,20 @@ test("with only the keyboard: pausing someone in their settings is remembered, w
 test("Resume above a paused list unticks Pause for a while", async ({ page }) => {
   const blog = unique("resume");
   const [paused] = await openBlogs(page, [blog]);
-  await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${paused}/settings`, FEEDS_APP).href);
   await appReady(page);
   const sheet = settingsOf(page, `Blog ${blog}`);
   await sheet.getByRole("switch", { name: "Pause for a while" }).check();
   // Saved as it's switched: their list says so (their settings have the window, decision 0275, so it's off screen).
   await expect(page.locator("#list-pane").getByRole("button", { name: "Resume", exact: true, includeHidden: true })).toHaveCount(1);
-  await page.goto(new URL(`/people/${paused}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${paused}`, FEEDS_APP).href);
   await appReady(page);
   // With only the keyboard: Tab to Resume, Enter, and the keyboard lands on what happened.
   await tabTo(page, page.getByRole("button", { name: "Resume", exact: true }));
   await page.keyboard.press("Enter");
   await expect(page.getByText("Resumed.", { exact: true })).toBeFocused();
   await expect(page.getByText(/Their new articles arrive already read/)).toHaveCount(0);
-  await page.goto(new URL(`/people/${paused}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${paused}/settings`, FEEDS_APP).href);
   await appReady(page);
   await expect(sheet.getByRole("switch", { name: "Pause for a while" })).not.toBeChecked();
 });
@@ -633,7 +633,7 @@ test("+ Add over a folder files them there, and New folder… makes one with the
   const folder = unique("Zz-into");
   const fresh = unique("Zz-fresh");
   const ids = await openBlogs(page, [first]);
-  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
   await page.reload();
   await appReady(page);
   const inFolders = async (title: string) => {
@@ -684,7 +684,7 @@ test("closing + Add while it asks keeps the folder it showed (decision 0261)", a
   const [first, kept] = [unique("first"), unique("kept")];
   const folder = unique("Zz-kept");
   const ids = await openBlogs(page, [first]);
-  await page.request.post(new URL(`/api/feeds/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
+  await page.request.post(new URL(`/api/${ids[0]}`, FEEDS_APP).href, { data: { title: `Blog ${first}`, folders: [], new_folder: folder } });
   await page.reload();
   await appReady(page);
   await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();

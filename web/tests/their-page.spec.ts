@@ -23,7 +23,7 @@ test("their page shows the words you highlighted in their writing, each one pres
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   // Highlight words in their newest article.
@@ -33,7 +33,7 @@ test("their page shows the words you highlighted in their writing, each one pres
   await page.getByRole("menu", { name: "Chosen words" }).getByRole("menuitem", { name: /Highlight/ }).click();
   await page.getByRole("menu", { name: "Highlight" }).getByRole("menuitem", { name: "Done" }).click();
 
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   await expect(who.getByRole("region", { name: "Lately" })).toHaveCount(0);
@@ -51,7 +51,7 @@ test("their page shows the words you highlighted in their writing, each one pres
   const at = (words: string) => text.search(new RegExp(words, "i"));
   expect(at(`Write to Blog ${name}`)).toBeLessThan(at("Your highlights"));
   const row = who.getByRole("link", { name: `Settings for Blog ${name}`, exact: true });
-  await expect(row).toHaveAttribute("href", `/people/${id}/settings`);
+  await expect(row).toHaveAttribute("href", `/${id}/settings`);
   const card = who.locator(".yours");
   await expect(card.getByRole("button", { name: "Add a note…" })).toBeVisible();
   await expect(card.getByRole("region", { name: "Your highlights" })).toBeVisible();
@@ -62,7 +62,7 @@ test("their page shows the words you highlighted in their writing, each one pres
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
 
   // And from the keyboard alone: Tab reaches the title, Enter opens it.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await tabTo(page, highlights.getByRole("button", { name: title }));
   await page.keyboard.press("Enter");
@@ -77,7 +77,7 @@ test("on a phone, their page's quiet words are still 44px each way to touch", as
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   const row = who.getByRole("link", { name: `Settings for Blog ${name}`, exact: true });
@@ -87,7 +87,7 @@ test("on a phone, their page's quiet words are still 44px each way to touch", as
   }
   // Their settings, one press on: the way back and each quiet row are 44px too.
   await row.click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
   const settings = settingsFor(page, `Blog ${name}`);
   for (const target of [settings.getByRole("button", { name: `Back to Blog ${name}` }), settings.getByRole("button", { name: /^Folders/ }), settings.getByRole("button", { name: "Hide articles about…" })]) {
     const box = await target.boundingBox();
@@ -95,7 +95,7 @@ test("on a phone, their page's quiet words are still 44px each way to touch", as
   }
   // ‹ their name goes back to their page.
   await settings.getByRole("button", { name: `Back to Blog ${name}` }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(who.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
 });
 
@@ -109,9 +109,9 @@ test("their settings change the moment they're touched, with no Edit, Cancel or 
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
 
   // The old Edit address opens their settings, a page of its own, with the keyboard on its title.
-  await page.goto(new URL(`/people/${id}/edit`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
   const who = settingsFor(page, `Blog ${name}`);
   await expect(who.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
   await expect(who.getByRole("button", { name: `Back to Blog ${name}` })).toBeVisible();
@@ -144,18 +144,18 @@ test("their settings change the moment they're touched, with no Edit, Cancel or 
   const writeTo = theirs.getByRole("link", { name: /^Write to/ }).or(theirs.getByRole("button", { name: /^Write to/ }));
   await renamed.getByRole("radio", { name: "A publication" }).check();
   await back.click();
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(theirs.getByRole("heading", { level: 2, name: `Mira ${name}` })).toBeVisible();
   await expect(row).toBeFocused();
   await expect(writeTo).toHaveCount(0);
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
   await expect(renamed.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
   await renamed.getByRole("radio", { name: "A person" }).check();
   // Escape does what ‹ their name does.
   await page.locator("body").focus();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(row).toBeFocused();
   await expect(writeTo).toHaveCount(1);
 
@@ -170,7 +170,7 @@ test("their settings change the moment they're touched, with no Edit, Cancel or 
 
   // The X at the bar's right end goes back to their list, from their settings as from their page.
   await renamed.getByRole("button", { name: "Close" }).click();
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
   // Beside their list the sidebar shows again (their settings had the window, decision 0275), with the new name.
   await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: new RegExp(`Mira ${name}`) })).toBeVisible();
 });
@@ -192,12 +192,12 @@ test("back from their settings, the Settings row has the keyboard and is in view
   }
   // Each load of Your highlights takes a moment, as on a slow connection.
   let asked = 0;
-  await page.route(`**/api/feeds/${id}/highlights`, async (route) => {
+  await page.route(`**/api/${id}/highlights`, async (route) => {
     asked += 1;
     await new Promise((done) => setTimeout(done, 400));
     await route.continue();
   });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   const items = who.getByRole("region", { name: "Your highlights" }).getByRole("listitem");
@@ -224,7 +224,7 @@ test("back from their settings, the Settings row has the keyboard and is in view
     if (!isMobile) await expect(settings.getByRole("button", { name: "Close" })).toHaveAttribute("title", "Close");
     if (way === "Escape") await page.keyboard.press("Escape");
     else await settings.getByRole("button", { name: `Back to Blog ${name}` }).click();
-    await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+    await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
     await expect(items).toHaveCount(8);
     await expect(row).toBeFocused();
     expect(await inView()).toBe(true);
@@ -242,8 +242,8 @@ test("when Your highlights can't be loaded, their page says so", async ({ page, 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.route(`**/api/feeds/${id}/highlights`, (route) => route.fulfill({ status: 500, json: { error: "trouble" } }));
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.route(`**/api/${id}/highlights`, (route) => route.fulfill({ status: 500, json: { error: "trouble" } }));
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   await expect(who).toContainText("Your highlights from their writing couldn't be loaded.");
@@ -258,8 +258,8 @@ test("by keyboard alone: Change corrects the address in place, Escape closes the
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.request.post(new URL(`/api/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   const change = who.getByRole("button", { name: `Change Blog ${name}'s email address` });
@@ -271,7 +271,7 @@ test("by keyboard alone: Change corrects the address in place, Escape closes the
   // Escape closes the box only, never the page, and the keyboard is back on Change.
   await page.keyboard.press("Escape");
   await expect(field).toHaveCount(0);
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   await expect(change).toBeFocused();
   await page.keyboard.press("Enter");
   await page.keyboard.press("ControlOrMeta+a");
@@ -295,7 +295,7 @@ test("with nothing yet, their page says so; the × and Escape go back to their l
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   await expect(who.getByRole("region", { name: "Your highlights" })).toContainText("Nothing highlighted yet.");
@@ -304,10 +304,10 @@ test("with nothing yet, their page says so; the × and Escape go back to their l
   // The × by keyboard.
   await tabTo(page, who.getByRole("button", { name: "Close" }));
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 
   // Hide articles about…, in their settings, opens Hiding with "‹ Blog …" as its way back; the button and Escape both lead back to their settings.
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const settings = settingsFor(page, `Blog ${name}`);
   await settings.getByRole("button", { name: "Hide articles about…" }).click();
@@ -315,12 +315,12 @@ test("with nothing yet, their page says so; the × and Escape go back to their l
   const back = page.getByRole("button", { name: new RegExp(`Blog ${name}`) }).first();
   await expect(back).toBeVisible();
   await back.click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
   await settings.getByRole("button", { name: "Hide articles about…" }).click();
   await expect(page).toHaveURL(/\/settings\/hiding$/);
   await page.locator("body").focus();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${id}/settings$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/settings$`));
 });
 
 test("a name that couldn't be saved stays as typed, with why, and Enter keeps the keyboard in the field", async ({ page, isMobile }) => {
@@ -331,11 +331,11 @@ test("a name that couldn't be saved stays as typed, with why, and Enter keeps th
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const who = settingsFor(page, `Blog ${name}`);
   const field = who.getByRole("textbox", { name: "Name" });
-  await page.route(`**/api/feeds/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
+  await page.route(`**/api/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
   await field.fill(`Kept ${name}`);
   await field.press("Enter");
   await expect(who).toContainText("That couldn't be saved. Try again in a moment.");
@@ -352,7 +352,7 @@ test("on a phone, each place under their name is 44px to touch", async ({ page, 
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const place = about(page, `Blog ${name}`).locator(".who-places a").first();
   expect((await place.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -379,7 +379,7 @@ test("on a phone, a very long name in ‹ their name shortens inside the top lin
   };
 
   // Their page's own way back, to their list.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   await fits(who.getByRole("button", { name: `Blog ${name}`, exact: true }));

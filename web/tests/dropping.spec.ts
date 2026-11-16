@@ -32,7 +32,7 @@ async function aBlog(page: Page, prefix: string, folder?: string, signedIn = fal
   const blog = unique(prefix);
   const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
   const name = `Blog ${blog}`;
-  await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { title: name, folders: [], ...(folder ? { new_folder: folder } : {}) } });
+  await page.request.post(new URL(`/api/${id}`, FEEDS_APP).href, { data: { title: name, folders: [], ...(folder ? { new_folder: folder } : {}) } });
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   return { name, id };

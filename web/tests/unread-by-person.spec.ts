@@ -23,7 +23,7 @@ async function openUnread(page: Page, writer?: string): Promise<{ people: string
   await signIn(page);
   const ids: number[] = [];
   for (const name of [`${stem}-a`, `${stem}-b`, `${stem}-p`]) ids.push(await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`));
-  const settled = await page.request.post(new URL(`/api/feeds/${ids[2]}`, page.url()).href, { data: { kind: "publication" } });
+  const settled = await page.request.post(new URL(`/api/${ids[2]}`, page.url()).href, { data: { kind: "publication" } });
   expect(settled.status()).toBe(204);
   await page.route("**/api/articles?*", async (route) => {
     const url = new URL(route.request().url());

@@ -23,7 +23,7 @@
   import EditFolder from "./EditFolder.svelte";
   import PickUp from "./PickUp.svelte";
   import WhoPage from "./WhoPage.svelte";
-  import { placeLabels, placesOf, placesWatch, rowFor } from "./people";
+  import { placeLabels, placesOf, placesWatch } from "./people";
   import FailingLine from "./FailingLine.svelte";
   import PausedLine from "./PausedLine.svelte";
   import ItemList from "./ItemList.svelte";
@@ -54,7 +54,8 @@
   import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
-  import { articleIn, isList, nameFor, parentOf, parse, pathFor, placeAddressesBy, sidebarViews, titleFor, withArticle, type Route } from "./router";
+  import { addressFor, articleIn, isList, nameFor, parentOf, parse, pathFor, sidebarViews, titleFor, type Route } from "./router";
+  import { articleAddress, namePlaces } from "./addressing";
   import { sharedAddress } from "./share";
   import { followTitle } from "./follow";
   import { scopeName, searchParams, searchedTerms } from "./search";
@@ -123,7 +124,7 @@
     untrack(() => {
       route = next;
       if (isList(lastPlace)) lastPlace = homeFor(lastPlace, settings.unread);
-      history.replaceState(history.state, "", pathFor(next));
+      history.replaceState(history.state, "", addressFor(next));
     });
   });
   /** The feeds and folders (library.svelte.ts). */
@@ -204,12 +205,11 @@
   });
   /** A person's or publication's page, or their settings, is showing (decisions 0163, 0267): alone in the window, or on a phone in the list's place. */
   let whoShown = $derived(isWho(route) && currentFeed !== undefined && library.feeds !== undefined);
-  // Their addresses say person or publication (decision 0163); an old /feeds/ address is tidied to its new one.
+  // Addresses carry the names of people, publications and folders (decision 0281): once the sidebar has loaded, an address
+  // with no name or an old one is tidied to today's, an open article's part kept as it is.
   $effect(() => {
-    const rows = library.rows;
-    placeAddressesBy((id) => rowFor(id, rows ?? [])?.kind === "publication");
-    const { list, article } = articleIn(location.pathname);
-    if (rows && (route.kind === "feed" || isWho(route)) && list !== pathFor(route)) untrack(() => history.replaceState(history.state, "", withArticle(pathFor(route), article)));
+    const { list } = articleIn(location.pathname);
+    if (namePlaces(library.rows, library.folders) && "id" in route && list !== addressFor(route)) untrack(() => history.replaceState(history.state, "", addressFor(route) + location.pathname.slice(list.length)));
   });
   /** The places of the person on screen (SPEC section 36): just the place, for one on its own. */
   let currentPlaces = $derived(currentFeed && library.feeds ? placesOf(currentFeed, library.feeds) : []);
@@ -282,7 +282,7 @@
     const open = selected && reading ? selected.title.trim() || untitledOpening(selected) : undefined;
     document.title = shared ? `${taskTitle} · nine turtles` : titleFor(route, placeName, open);
     // And the address names it, under its list (decision 0233), so reload, Back and bookmarks keep it.
-    const address = withArticle(pathFor(route), open === undefined ? undefined : selected?.id);
+    const address = selected && open !== undefined ? articleAddress(selected, route, library.rows) : addressFor(route);
     if (isList(route) && location.pathname !== address) history.replaceState(history.state, "", address);
   });
 
@@ -333,7 +333,7 @@
 
   onMount(() => {
     // "/" and unknown addresses open Unread (All with Unread off); the address bar says so.
-    history.replaceState(firstStep, "", pathFor(route));
+    history.replaceState(firstStep, "", addressFor(route));
     openAddressed(fromAddress);
 
     // Arriving here by switching to a new version: the screen is as the reader left it, and the
@@ -420,7 +420,7 @@
       if (openedHome && pathFor(route) === pathFor(start) && settings.unread && !(route.kind === "view" && route.view === "unread")) {
         route = { kind: "view", view: "unread" };
         lastPlace = route;
-        history.replaceState(history.state, "", pathFor(route));
+        history.replaceState(history.state, "", addressFor(route));
       }
     });
 
@@ -484,7 +484,7 @@
     // A newer nine turtles is live: going somewhere else redraws the screen
     // anyway, so arrive there in the new version (decision 0085).
     if (!move.keepsArticle && switchesOnMove(updates.ready, marksUnsaved(), !!withNotice)) {
-      switchTo(pathFor(next), carried(next));
+      switchTo(addressFor(next), carried(next));
       return;
     }
     const from = screenNow();
@@ -719,7 +719,7 @@
   }
 
   /** An article's own address, under the list on screen (decision 0233). */
-  const addressOf = (article: Article) => withArticle(pathFor(isList(route) ? route : under), article.id);
+  const addressOf = (article: Article) => articleAddress(article, isList(route) ? route : under, library.rows);
 
   /** Back from the article to its row in the list. */
   function backToList() {

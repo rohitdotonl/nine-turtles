@@ -30,7 +30,7 @@ test.describe("a messy feed", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/messy/${name}/feed.xml`);
-    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${id}`, FEEDS_APP).href);
     await appReady(page);
 
     // "Blog – Messy NAME » Latest Posts" is shown as the blog's own name.
@@ -43,7 +43,7 @@ test.describe("a messy feed", () => {
     // The writer's name in the byline is a link to their page.
     await expect(pane(page).locator(".article-byline").getByRole("link", { name: `Messy ${name}` })).toHaveAttribute(
       "href",
-      `/people/${id}/about`,
+      `/${id}/about`,
     );
 
     const text = pane(page).locator(".article-text");

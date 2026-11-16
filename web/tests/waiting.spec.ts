@@ -45,7 +45,7 @@ test("a slow list and a slow article say they're loading", async ({
   await signedIn(page);
   const id = await follow(page, `${FEED_SITE}/reading/`);
   const release = await hold(page, /\/api\/articles\?/);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await expect(page.getByText(/^Loading .+…$/)).toBeVisible();
   release();
   await expect(page.getByRole("button", { name: SLOW_LETTER })).toBeVisible();
@@ -66,7 +66,7 @@ test("a video that takes a while to start says so", async ({ page }) => {
   const release = await hold(page, /youtube/, "<p>YouTube's player</p>");
   await signedIn(page);
   const id = await follow(page, `${FEED_SITE}/videos/`);
-  await page.goto(new URL(`/people/${id}`, page.url()).href);
+  await page.goto(new URL(`/${id}`, page.url()).href);
   await page.getByRole("button", { name: /A river at dawn/ }).click();
   await article(page)
     .getByRole("button", { name: "Play video: A river at dawn, for an hour" })
@@ -119,7 +119,7 @@ test("following someone says so, with Undo", async ({ page }) => {
   await signIn(page);
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   // Its articles name no writer, so it could be either: kept with Publications (decision 0264).
-  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await expect(
     page.getByText(`You're following Blog ${name}.`, { exact: true }),
   ).toBeVisible();
@@ -129,7 +129,7 @@ test("following someone says so, with Undo", async ({ page }) => {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page).not.toHaveURL(/\/publications\/[0-9]+$/);
+  await expect(page).not.toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   const feeds = await (
     await page.request.get(new URL("/api/feeds", FEEDS_APP).href)
   ).text();
