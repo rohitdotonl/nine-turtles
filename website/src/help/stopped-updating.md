@@ -35,7 +35,8 @@ likeliest first:
   folders, articles and stars all stay.
 - **Write to** them, for a person: they may not know their feed broke, and
   a short email is often all it takes. It opens your own email app, or
-  first asks for their address if nine turtles doesn't know it yet.
+  first asks for their address if nine turtles doesn't know it yet. Once
+  it knows, the address shows under it, with **Change** to correct it.
 - **Unsubscribe**: let it go. **Undo** brings it back. (For someone you
   follow in several places, it's in their **Settings**.)
 

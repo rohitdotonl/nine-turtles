@@ -4,43 +4,48 @@
   place. First the icon and a few words with since when ("Feed gone since
   24 Oct"), then one sentence on what it may mean, then what can be done, the
   likeliest first (`fixFirst`): Find new address (NewAddress.svelte), Write
-  to them (a person; "They may not know." when nothing has come for a week
-  or more), and Unsubscribe in oxblood words (someone with this one source;
+  to them (a person, in one box only, never when it's YouTube refusing;
+  "They may not know." once it's not working), and Unsubscribe in oxblood words (someone with this one source;
   one with several leaves a source in their settings). Only while Everyone
   you follow lists it; nothing is fetched from the site until the reader
-  presses Find new address (decision 0016). Once it has moved, the box says
-  so, and stays until the reader leaves.
+  presses Find new address (decision 0016). Their page learns what went
+  wrong, once for all their sources (WhoPage). Once it has moved, the box
+  says so, and stays until the reader leaves.
 -->
 <script lang="ts">
   import { tick, untrack } from "svelte";
   import Icon from "./Icon.svelte";
   import NewAddress from "./NewAddress.svelte";
-  import { explain, failingFor, fixFirst, listSick, reason, youTubeRefusing, type Sick } from "./health";
+  import { explain, failingFor, fixFirst, reason, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import type { Feed } from "./shapes";
   import WriteBack from "./WriteBack.svelte";
 
   let {
     feed,
+    sick,
     subject,
     person,
+    write,
     library,
     onMoved,
     onUnsubscribe,
   }: {
     feed: Feed;
+    /** What went wrong, as Everyone you follow has it: only that list knows. */
+    sick: Sick | undefined;
     /** The source's name, when they have more than one: "Garden Letters: Feed gone since 24 Oct". */
     subject?: string;
     /** A person, not a publication: someone to write to (decision 0192). */
     person: boolean;
+    /** The one box that offers Write to them: one way to write, not two. */
+    write: boolean;
     library: LoadedLibrary;
     onMoved: (feed: Sick) => void;
     /** Only for someone with this one source: unsubscribing leaves all of them. */
     onUnsubscribe?: () => Promise<string | undefined>;
   } = $props();
 
-  /** What went wrong, as Everyone you follow has it: only that list knows. */
-  let sick: Sick | undefined = $state();
   let finder: NewAddress | undefined = $state();
   let findButton: HTMLButtonElement | undefined = $state();
   let choosing = $state(false);
@@ -49,28 +54,21 @@
   /** The move just made, from one number to another (decision 0071): the box goes on saying so on the new one. */
   let move: { from: number; to: number } | undefined = $state();
 
-  // Another source: the box starts afresh, and learns what went wrong with it.
+  // Another source: the box starts afresh.
   let shownFor: number | undefined;
   $effect.pre(() => {
     const id = feed.id;
-    const failing = feed.failingSince != null;
     untrack(() => {
       if (id === shownFor) return;
       shownFor = id;
       if (move && id !== move.from && id !== move.to) move = undefined;
-      if (move) return;
-      [sick, choosing, message] = [undefined, false, ""];
-      if (failing)
-        listSick()
-          .then((all) => {
-            if (feed.id === id) sick = all.find((each) => each.id === id);
-          })
-          .catch(() => undefined);
+      if (!move) [choosing, message] = [false, ""];
     });
   });
 
   let why = $derived(sick && reason(sick));
-  let first = $derived(sick ? fixFirst(sick) : "find");
+  let first = $derived(sick ? fixFirst(sick) : "wait");
+  let writing = $derived(person && write);
 
   async function leave() {
     if (busy || !onUnsubscribe) return;
@@ -118,9 +116,9 @@
     />
     {#if !move}
       <div class="actions flex flex-wrap items-center" hidden={choosing}>
-        {#if first === "find" || !person}{@render find()}{/if}
-        {#if person}<WriteBack feedId={feed.id} {library} quiet />{/if}
-        {#if first === "write" && person}{@render find()}{/if}
+        {#if first !== "write" || !writing}{@render find()}{/if}
+        {#if writing}<WriteBack feedId={feed.id} {library} quiet />{/if}
+        {#if first === "write" && writing}{@render find()}{/if}
         {#if onUnsubscribe}
           <button
             type="button"

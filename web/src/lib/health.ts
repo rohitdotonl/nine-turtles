@@ -199,12 +199,15 @@ export function explain(problem: string | null, youtube = false): string {
 
 /**
  * What to offer first (decision 0279): a feed that's gone or now a page may
- * have moved, so Find new address; a site that doesn't answer, blocks or
- * breaks can only be fixed by the person, so Write to them.
+ * have moved, so Find new address; a site that has stopped answering,
+ * blocks or breaks for good can only be fixed by the person, so Write to
+ * them. Anything else, nothing first: a feed having trouble is usually back
+ * soon, and YouTube refusing is no one's to fix (decision 0272).
  */
-export function fixFirst(feed: Pick<Sick, "youtube" | "problem">): "find" | "write" {
-  if (youTubeRefusing(feed)) return "find";
-  return feed.problem === "not-found" || feed.problem === "not-a-feed" ? "find" : "write";
+export function fixFirst(feed: Pick<Sick, "youtube" | "problem" | "state">): "find" | "write" | "wait" {
+  if (youTubeRefusing(feed)) return "wait";
+  if (feed.problem === "not-found" || feed.problem === "not-a-feed") return "find";
+  return feed.state === "dead" ? "write" : "wait";
 }
 
 /**

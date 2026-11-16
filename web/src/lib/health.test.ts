@@ -60,11 +60,14 @@ describe("the words for who isn't working", () => {
     expect(explain("not-found")).toMatch(/It may have moved\.$/);
     expect(explain("not-found", true)).toMatch(/^YouTube isn't sending these videos/);
     expect(explain("blocked")).toMatch(/Only the site can let it in\.$/);
-    // Gone or now a page: it may have moved. A site that won't answer or turns nine turtles away: only they can fix it.
+    // Gone or now a page: it may have moved. A site that won't answer or turns nine turtles away for good: only they can fix it.
     expect(fixFirst(sick({ problem: "not-found" }))).toBe("find");
     expect(fixFirst(sick({ problem: "not-a-feed" }))).toBe("find");
-    expect(fixFirst(sick({ problem: "unreachable" }))).toBe("write");
-    expect(fixFirst(sick({ problem: "blocked" }))).toBe("write");
+    expect(fixFirst(sick({ problem: "unreachable", state: "dead" }))).toBe("write");
+    expect(fixFirst(sick({ problem: "blocked", state: "dead" }))).toBe("write");
+    // Having trouble is usually back soon, and YouTube refusing is no one's to fix: nothing first.
+    expect(fixFirst(sick({ problem: "unreachable" }))).toBe("wait");
+    expect(fixFirst(sick({ problem: "not-found", youtube: true, state: "dead" }))).toBe("wait");
   });
 
   it("gathers alike ones together, each reason where its longest failing feed was", () => {

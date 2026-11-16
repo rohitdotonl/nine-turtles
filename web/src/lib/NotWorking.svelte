@@ -48,7 +48,7 @@
       const words = reason(feed).words;
       counts.set(words, (counts.get(words) ?? 0) + 1);
     }
-    const parts = [...counts].map(([words, count]) => `${count} ${words.charAt(0).toLowerCase()}${words.slice(1)}`);
+    const parts = [...counts].map(([words, count]) => `${count} ${words.startsWith("YouTube") ? words : words.charAt(0).toLowerCase() + words.slice(1)}`);
     if (troubled.length > 0) parts.push(dead.length > 0 ? `${troubled.length} having trouble` : "Usually back soon");
     return parts.join(" · ");
   });

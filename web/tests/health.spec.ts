@@ -369,8 +369,65 @@ test("a YouTube channel YouTube won't send says so, rather than that it may have
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("YouTube isn't sending these videos to nine turtles at the moment.");
   await expect(box).not.toContainText("It may have moved");
-  // They can't change what YouTube does, so nothing says they may not know.
+  // They can't change what YouTube does, so nothing says they may not know, the box offers no Write to, and nothing comes first.
   await expect(box).not.toContainText("may not know");
+  await expect(box.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+  await expect(box.getByRole("button", { name: "Find new address", exact: true })).toHaveClass(/text-link/);
+  // The page's own Write to stays, as on any day.
+  await expect(page.getByRole("button", { name: `Write to ${title}` })).toHaveCount(1);
+});
+
+test("the box shows the address it writes to, with Change, so a wrong one can be corrected while the feed is broken", async ({ page }) => {
+  const name = `write-dead-known-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
+  await seenDead(page, title, { problem: "unreachable" });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box.getByRole("link", { name: `Write to ${title}` })).toBeVisible();
+  await expect(box).toContainText("old@there.example");
+  await box.getByRole("button", { name: `Change ${title}'s email address` }).click();
+  await expect(box.getByRole("textbox", { name: "Their email address" })).toHaveValue("old@there.example");
+  // One way to write, not two.
+  await expect(page.getByRole("link", { name: `Write to ${title}` })).toHaveCount(0);
+});
+
+test("someone with two broken sources gets a box for each, and one Write to", async ({ page }) => {
+  const stamp = `${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const ids = [await failing(page, `two-broken-a-${stamp}`, "break"), await failing(page, `two-broken-b-${stamp}`, "break")];
+  const name = `Two ${stamp}`;
+  expect((await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: ids, name } })).ok()).toBe(true);
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (ids.includes(feed.id)) Object.assign(feed, { state: "dead", problem: "unreachable" });
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL(`/people/${ids[0]}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const boxes = page.getByRole("group", { name: "Not working" });
+  await expect(boxes).toHaveCount(2);
+  await expect(boxes.first()).toContainText(": Site not answering since");
+  await expect(page.getByRole("button", { name: `Write to ${name}` })).toHaveCount(1);
+  await expect(boxes.first().getByRole("button", { name: `Write to ${name}` })).toBeVisible();
+});
+
+test("a feed only having trouble offers nothing first: it's usually back soon", async ({ page }) => {
+  const name = `trouble-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await seenDead(page, title, { problem: "unreachable", state: "trouble" });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = page.getByRole("group", { name: "Not working" });
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  await expect(find).toHaveClass(/text-link/);
+  await expect(box).not.toContainText("may not know");
+  // Find new address, then Write to: the order they're read and tabbed.
+  await tabTo(page, find);
+  await page.keyboard.press("Tab");
+  await expect(box.getByRole("button", { name: `Write to ${title}` })).toBeFocused();
 });
 
 test("the quiet row says how many aren't working, and what went wrong with each, worst first (decision 0279)", async ({ page }) => {

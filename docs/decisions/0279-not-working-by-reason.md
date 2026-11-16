@@ -20,8 +20,12 @@
    what went wrong and since when, one sentence, then Find new address,
    Write to for a person, and Unsubscribe, in that box rather than in three
    places. Find comes first, as the bordered button, when the feed may have
-   moved; Write to comes first when the site stopped answering, since only
-   the writer can fix that.
+   moved; Write to comes first when the site stopped answering for good,
+   since only the writer can fix that. A feed only having trouble, or one
+   YouTube won't send, puts nothing first: it's usually back soon, or no
+   one's to fix. As decision 0272 has it, a YouTube refusal offers no Write
+   to in the box. Write to keeps the address under it, with Change, and only
+   one box offers it, so there's one way to write, not two.
 4. Gone: the row's own actions, Undo and "Working again", the person or
    publication icon before each name, and "Having trouble" as a separate
    heading.

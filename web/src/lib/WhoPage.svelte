@@ -21,6 +21,7 @@
   the keyboard on the row that opened it, as one of Settings' own pages does.
 -->
 <script lang="ts">
+  import { untrack } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import PageRow from "./PageRow.svelte";
@@ -32,7 +33,7 @@
   import TheirReading from "./TheirReading.svelte";
   import WhoSettings from "./WhoSettings.svelte";
   import type { Notice } from "./feeds";
-  import type { Sick } from "./health";
+  import { listSick, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { placeShownAs, placesOf } from "./people";
   import { pathFor, type Route } from "./router";
@@ -82,8 +83,25 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
-  /** One of their sources isn't working: its box leads the page, with Write to in it (decision 0279). */
-  let failing = $derived(places.some((place) => place.failingSince != null));
+  /** Their sources that aren't working, by number: each box leads the page (decision 0279). */
+  let failing = $derived(places.filter((place) => place.failingSince != null).map((place) => place.id).join(","));
+  /** What went wrong with them, as Everyone you follow has it, learned once for all their sources; undefined while it's asked. */
+  let sick: Sick[] | undefined = $state([]);
+  let asked = 0;
+  $effect(() => {
+    const ids = failing;
+    untrack(() => {
+      const ask = ++asked;
+      if (!ids) return void (sick = []);
+      sick = undefined;
+      listSick()
+        .then((all) => ask === asked && (sick = all))
+        .catch(() => ask === asked && (sick = []));
+    });
+  });
+  const sickOf = (place: Feed) => (place.failingSince != null ? sick?.find((each) => each.id === place.id) : undefined);
+  /** The one box that offers Write to them, the first that isn't YouTube refusing (decision 0272); none, and the page's own Write to shows, with the address and Change. */
+  let writer = $derived(person ? places.find((place) => { const each = sickOf(place); return each && !youTubeRefusing(each); })?.id : undefined);
   /**
    * A place by its own title when that isn't their name ("Garden Letters" under Hal Brennan, decision 0167), else by its
    * website or name; one called just what they are ("xkcd.com" under xkcd.com) by what it is, so the line never repeats the name.
@@ -159,15 +177,17 @@
         <!-- What isn't working leads, with what can be done (decision 0279). Unkeyed, so a source that just moved to a new number keeps its box saying so (decision 0106). -->
         {#each places as place}<NotWorkingBox
             feed={place}
+            sick={sickOf(place)}
             subject={places.length > 1 ? placeShownAs(place) : undefined}
             {person}
+            write={place.id === writer}
             {library}
             onMoved={(after) => onMoved(place, after)}
             onUnsubscribe={places.length === 1 ? () => onUnsubscribe(false) : undefined}
           />{/each}
       </div>
-      <!-- Write to, unless a box above already offers it. -->
-      {#if person && !failing}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
+      <!-- Write to, unless a box above already offers it; while what went wrong is asked, neither, so nothing jumps. -->
+      {#if person && writer === undefined && sick !== undefined}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
     </header>
 
     <!-- What's yours of them, held together in one card: where the eye rests. -->
