@@ -1,8 +1,9 @@
 <!--
   A failing feed says so where the reader already is (decision 0106): one
   quiet line in the second ink, "This feed hasn't worked since 12 Oct.",
-  and a text button that runs Find new address (NewAddress.svelte), above
-  the feed's own list (SPEC section 6) and on their page (section 15). Only
+  and a text button, Find its new address, that runs Find new address
+  (NewAddress.svelte), above the feed's own list (SPEC section 6); their
+  page has a box of its own (NotWorkingBox, decision 0279). Only
   while Everyone you follow would list it as not working; nothing is
   fetched until the reader presses the button (decision 0016). Once the feed
   has moved, the line says so, and stays until the reader leaves.
@@ -16,18 +17,12 @@
 
   let {
     feed,
-    label,
-    subject,
     onMoved,
     class: look = "",
   }: {
     feed: Feed;
     /** Room around the line, as the place sets it. */
     class?: string;
-    /** The button's words: "Find its new address" above the list, "Find new address" on their page. */
-    label: string;
-    /** What isn't working, by name ("blog.jim-nielsen.com"), on their page; "This feed" elsewhere. */
-    subject?: string;
     /** The feed moved: the place reloads its feeds and puts the keyboard somewhere sensible. */
     onMoved: (feed: Sick) => void;
   } = $props();
@@ -64,14 +59,14 @@
   <div class={["failing", look]}>
     {#if !moved}
       <p class="text-meta text-ink-2">
-        <Dated text={brokenSince(feed.failingSince ?? 0, undefined, subject)} />
+        <Dated text={brokenSince(feed.failingSince ?? 0)} />
         {#if !choosing}
           <button
             bind:this={button}
             type="button"
             class="text-link find"
             aria-disabled={busy}
-            onclick={() => finder?.find()}>{label}</button
+            onclick={() => finder?.find()}>Find its new address</button
           >
         {/if}
       </p>

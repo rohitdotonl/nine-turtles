@@ -34,9 +34,10 @@
   (`start`). Started while this is off screen, "Opening your email app…" is said at the reading
   area's foot instead, where the reader is (`away`, drawn by the article's AwayNote; decision 0229).
 
-  In a row under Not working (Everyone you follow, decision 0268; `quiet`), Write to is one of the
-  row's plain links, with no paper plane and no address under it (their page shows it); what
-  follows a press, the line or the box, takes a line of its own straight after it.
+  In the box on the page of someone whose feed isn't working (NotWorkingBox, decision 0279;
+  `quiet`), Write to is one of the box's plain links, with no paper plane; the address with
+  Change, and what follows a press, the line or the box, each take a line of their own straight
+  after it.
 
   A publication has none of this (decision 0192): nothing shows, and `start` does nothing. For
   someone nine turtles couldn't sort, at an article's end, the question stands in its place
@@ -71,7 +72,7 @@
     library: LoadedLibrary;
     /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
     quotes?: () => string[];
-    /** In a row of plain links (who isn't working, decision 0268): Write to is a plain link among them, what follows it takes a line of its own straight after it, and the address box's own button is bordered, not the solid one. */
+    /** In a row of plain links (the box of who isn't working, decision 0279): Write to is a plain link among them, the address with Change and what follows it takes a line of its own straight after it, and the address box's own button is bordered, not the solid one. */
     quiet?: boolean;
     /** The article's scroller, to tell whether this is on screen. */
     within?: HTMLElement;
@@ -393,7 +394,7 @@
       <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
       {#if article}
         <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
-      {:else if !quiet}
+      {:else}
         <!-- On their page the address is theirs to correct, where it's shown. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
       {/if}
@@ -449,7 +450,7 @@
     margin-top: 0;
   }
   /*
-    In a row of plain links (who isn't working, decision 0268): Write to is one of the row's own
+    In a row of plain links (the box of who isn't working, decision 0279): Write to is one of the row's own
     links, at their size, and whatever follows a press (the line, the box) takes a line of its own
     straight after it, before the links that follow, so the eye and the keyboard meet them in the
     same order.

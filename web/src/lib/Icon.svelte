@@ -7,7 +7,9 @@
 <script lang="ts" module>
   export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
-    | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
+    | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash"
+    // What went wrong with a feed that isn't working (decision 0279).
+    | "feed-gone" | "site-down" | "page" | "shield";
   export type IconSize = "word" | "alone" | "tick" | "picture";
 </script>
 
@@ -142,6 +144,24 @@
     <circle cx="6.6" cy="8.9" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="9.9" cy="6.6" r="1.3" fill="currentColor" stroke="none" />
     <circle cx="13.3" cy="8" r="1.3" fill="currentColor" stroke="none" />
+  {:else if name === "feed-gone"}
+    <!-- A feed that isn't there any more: the feed's waves, with an x where the next wave would be. -->
+    <path d="M4.5 10.5a5 5 0 0 1 5 5" />
+    <path d="M4.5 7a8.5 8.5 0 0 1 8.5 8.5" />
+    <circle cx="5.25" cy="14.75" r="1" fill="currentColor" />
+    <path d="m13 3.5 3.5 3.5m0-3.5L13 7" />
+  {:else if name === "site-down"}
+    <!-- A site that doesn't answer: a browser window with an x in it. -->
+    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="2" />
+    <path d="M2.75 7.25h14.5" />
+    <path d="m8.25 9.75 3.5 3.5m0-3.5-3.5 3.5" />
+  {:else if name === "page"}
+    <!-- An address that now leads to a web page, not a feed: a plain page of lines. -->
+    <rect x="3.75" y="3.25" width="12.5" height="13.5" rx="1.5" />
+    <path d="M6.75 7.25h6.5M6.75 10.25h6.5M6.75 13.25h4" />
+  {:else if name === "shield"}
+    <!-- A site that turns nine turtles away: a guard's shield. -->
+    <path d="M10 2.75 16 5v4.5c0 3.9-2.6 6.6-6 7.75-3.4-1.15-6-3.85-6-7.75V5Z" />
   {:else if name === "feed"}
     <!-- Everyone you follow, in the sidebar: a feed's waves. -->
     <path d="M4.5 9.25a6.25 6.25 0 0 1 6.25 6.25" />

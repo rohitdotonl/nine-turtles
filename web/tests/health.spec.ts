@@ -7,7 +7,7 @@ import { appReady, follow, signIn, tabTo } from "./screens";
 // keeps it. The test nine turtles checks every feed every two seconds, so a
 // moved feed fails twice within moments. Each run follows a blog of its own.
 
-test("a moved feed is a calm row in plain words, and Find new address moves it", async ({ page, isMobile }) => {
+test("who isn't working is one quiet row, then a line each, and their page leads with the fix", async ({ page, isMobile }) => {
   const name = `moving-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   await page.goto(new URL("/settings", FEEDS_APP).href);
@@ -15,17 +15,6 @@ test("a moved feed is a calm row in plain words, and Find new address moves it",
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
   expect((await page.request.get(`${FEED_SITE}/move/${name}`)).ok()).toBe(true);
-  // A blog whose feed names no writer may be sorted either way; this page alone sees it as a person.
-  await page.route("**/api/feeds", async (route) => {
-    if (route.request().method() !== "GET") return route.continue();
-    try {
-      const real = await (await route.fetch()).json();
-      for (const feed of real.feeds) if (feed.id === id) Object.assign(feed, { kind: "person", open: false });
-      await route.fulfill({ json: real });
-    } catch {
-      // The page reloaded (below, while waiting for the feed to fail) before this answer was given: nothing waits for it.
-    }
-  });
 
   // Everyone you follow: a row of its own in the sidebar, under the lists (decision 0266).
   await page.goto(new URL("/", FEEDS_APP).href);
@@ -34,67 +23,62 @@ test("a moved feed is a calm row in plain words, and Find new address moves it",
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
   await expect(page).toHaveURL(/\/following$/);
 
-  const feed = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(async () => {
-    await page.reload();
-    await appReady(page);
-    await expect(feed).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 30_000 });
-  // Grouped under words, never by color alone, and explained without codes.
-  await expect(page.getByRole("heading", { name: "Having trouble" })).toBeVisible();
-  await expect(feed).toContainText("Nothing has come through since earlier today.");
-  await expect(feed).toContainText("The site says the feed isn't there any more.");
-  // A word on its own: the title carries a timestamp, which may end in 404.
-  await expect(feed).not.toContainText(/\b404\b/);
-  // A calm row in its group's one grouped list (decision 0268): its name and what happened in regular weight,
-  // with no address or codes, on a computer and a phone alike.
-  await expect(feed.locator("xpath=..")).toHaveCSS("border-top-left-radius", "12px");
-  await expect(feed.locator("dt")).toHaveCount(0);
-  await expect(feed).not.toContainText(FEED_SITE);
-  await expect(feed.locator(".what")).toHaveCSS("font-weight", "400");
-  // Who it is, at a glance and in words: the person or publication icon before the name.
-  const heading = feed.getByRole("heading", { name: title });
-  await expect(heading).toHaveText(`Person: ${title}`);
-  await expect(feed.locator(".kind")).toHaveAttribute("title", "A person");
-  const [iconBox, nameBox, whatBox] = await Promise.all([feed.locator(".kind svg").boundingBox(), heading.boundingBox(), feed.locator(".what").boundingBox()]);
-  expect(iconBox!.x + iconBox!.width).toBeLessThanOrEqual(nameBox!.x);
-  expect(Math.abs(iconBox!.y + iconBox!.height / 2 - (nameBox!.y + nameBox!.height / 2))).toBeLessThanOrEqual(2);
-  // The sentence starts on the name's own left edge.
-  expect(Math.abs(whatBox!.x - nameBox!.x)).toBeLessThanOrEqual(1);
-  // What can be done is plain underlined words, no solid or red button: Find new address, then Unsubscribe, with
-  // no Retry; each at least 44px tall, on the name's left edge, side by side.
-  const find = feed.getByRole("button", { name: `Find new address for ${title}` });
-  const leave = feed.getByRole("button", { name: `Unsubscribe from ${title}` });
-  await expect(feed.locator(".actions > button")).toHaveText(["Find new address", "Unsubscribe"]);
-  await expect(feed.locator(".btn-primary, .btn-danger, .btn")).toHaveCount(0);
-  for (const link of [find, leave]) {
-    await expect(link).toHaveClass(/text-link/);
-    await expect(link).toHaveCSS("text-decoration-line", "underline");
-  }
-  // Unsubscribe is in the destructive red, and its words say what it does: never color alone.
-  expect(await leave.evaluate((el) => getComputedStyle(el).color)).not.toBe(await find.evaluate((el) => getComputedStyle(el).color));
-  const [findBox, leaveBox] = await Promise.all([find.boundingBox(), leave.boundingBox()]);
-  for (const box of [findBox!, leaveBox!]) expect(box.height).toBeGreaterThanOrEqual(44);
-  expect(Math.abs(findBox!.x - nameBox!.x)).toBeLessThanOrEqual(1);
-  expect(Math.abs(leaveBox!.y - findBox!.y)).toBeLessThanOrEqual(1);
-  expect(leaveBox!.x).toBeGreaterThanOrEqual(findBox!.x + findBox!.width + 16);
-
-  // The site names one feed: one plain question, rather than a list of one (decision 0106).
-  await feed.getByRole("button", { name: `Find new address for ${title}` }).click();
-  await expect(feed.getByText(new RegExp(`^Use ${FEED_SITE}/blog/${name}/new\\.xml instead\\?$`))).toBeVisible();
-  await expect(feed).toContainText("Its name, folders, articles and stars stay.");
-  await expect(feed.getByRole("radio")).toHaveCount(0);
-  await feed.getByRole("button", { name: "Use it" }).click();
-  await expect(feed.getByText(/It now reads from its new address and works again/)).toBeVisible();
-  await expect(feed).toContainText("Working again.");
-  // Working again, its row offers nothing more, and the keyboard rests on its name.
-  await expect(feed.getByRole("button")).toHaveCount(0);
-  await expect(heading).toBeFocused();
-  // It stays where it was until the page is opened again; then it's gone.
+  // One quiet row (decision 0279): how many, and what went wrong in a few words; nothing else until it's pressed.
+  // Listed once two checks in a row have failed; other tests' feeds may be listed already, so this one is waited for.
+  await expect
+    .poll(async () => (await (await page.request.get(new URL("/api/health", FEEDS_APP).href)).json()).feeds.some((sick: { id: number }) => sick.id === id), { timeout: 30_000 })
+    .toBe(true);
+  const summary = page.locator("#health-summary");
   await page.reload();
   await appReady(page);
+  await expect(summary).toBeVisible();
+  // Only having trouble so far (it fails for a week before it's not working): it says how many, and that they usually come back.
+  await expect(summary).toHaveText(/\d+ having trouble\s*(Usually back soon|.*having trouble)/);
+  await expect(summary).toHaveAttribute("aria-expanded", "false");
+  const feed = page.getByRole("link", { name: new RegExp(`^${title}\\s*Feed gone$`) });
+  await expect(feed).toHaveCount(0);
+  await summary.click();
+  await expect(summary).toHaveAttribute("aria-expanded", "true");
+
+  // A line each: the icon for what went wrong, their name, a few words on it, and ›; no address, no codes, no
+  // buttons but the row above them.
+  await expect(feed).toBeVisible();
+  const list = feed.locator("xpath=ancestor::section[1]");
+  await expect(list).not.toContainText(FEED_SITE);
+  await expect(list).not.toContainText(/\b404\b/);
+  await expect(list.getByRole("button")).toHaveCount(1);
+  await expect(feed.locator(".why svg")).toHaveCount(1);
+  const [iconBox, nameBox, rowBox] = await Promise.all([feed.locator(".why svg").boundingBox(), feed.getByText(title).boundingBox(), feed.boundingBox()]);
+  expect(rowBox!.height).toBeGreaterThanOrEqual(44);
+  expect(iconBox!.x + iconBox!.width).toBeLessThanOrEqual(nameBox!.x);
+  await expect(feed.locator("xpath=../..")).toHaveCSS("border-top-left-radius", "12px");
+
+  // The row opens their page, which leads with one box: what went wrong and since when, what it may mean, and
+  // what can be done, the likeliest first.
+  await feed.click();
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box).toContainText("Feed gone since earlier today");
+  await expect(box).toContainText("The site says the feed isn't there any more. It may have moved.");
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  await expect(find).toHaveClass(/\bbtn\b/);
+  const [findBox, boxBox] = await Promise.all([find.boundingBox(), box.boundingBox()]);
+  expect(findBox!.height).toBeGreaterThanOrEqual(44);
+  expect(findBox!.y).toBeGreaterThan(boxBox!.y);
+  // The site names one feed: one plain question, rather than a list of one (decision 0106).
+  await find.click();
+  await expect(box.getByText(new RegExp(`^Use ${FEED_SITE}/blog/${name}/new\\.xml instead\\?$`))).toBeVisible();
+  await expect(box.getByRole("radio")).toHaveCount(0);
+  await box.getByRole("button", { name: "Use it" }).click();
+  await expect(box.getByText(/It now reads from its new address and works again/)).toBeVisible();
+  await expect(box.getByRole("button", { name: "Find new address", exact: true })).toHaveCount(0);
+
+  // Back in Everyone you follow, it's gone from the top.
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
   await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: title })).toHaveCount(0);
+  if (await summary.isVisible()) await summary.click();
+  await expect(page.getByRole("link", { name: new RegExp(`^${title}\\s*Feed gone`) })).toHaveCount(0);
 
   // A place of its own, not one of Settings' pages (decision 0266): no ‹ Settings. On a phone, ‹ Home goes back to the
   // feeds screen (decision 0231); on a computer the sidebar is beside it, so there's no way back to press.
@@ -128,7 +112,7 @@ test("a failing feed says so above its list, and Find its new address moves it w
   await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
-  await expect(page.getByRole("region", { name: /^About / }).getByText(/hasn't worked since/)).not.toContainText("This feed");
+  await expect(page.getByRole("region", { name: /^About / }).getByRole("group", { name: "Not working" })).toContainText(/^\s*Feed gone since/);
   // Escape goes back to their list.
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
@@ -154,55 +138,67 @@ test("a failing feed says so above its list, and Find its new address moves it w
   expect(await failingSince()).toBeNull();
 });
 
-test("with the keyboard alone: Unsubscribe and Undo, Find new address and back, Escape", async ({ page, isMobile }) => {
+test("with the keyboard alone: the row, their page, Find new address and back, Unsubscribe and Undo", async ({ page, isMobile }) => {
   const name = `moving-keys-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   // The old Feed health address opens Everyone you follow.
   await page.goto(new URL("/settings/feed-health", FEEDS_APP).href);
   await appReady(page);
   await signIn(page);
-  await follow(page, `${FEED_SITE}/blog/${name}/`);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
   expect((await page.request.get(`${FEED_SITE}/move/${name}`)).ok()).toBe(true);
-  const feed = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(async () => {
-    await page.reload();
-    await appReady(page);
-    await expect(feed).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 30_000 });
-  // The feed's own status line (Find new address has one of its own, after it).
-  const status = feed.getByRole("status").first();
-
-  // Unsubscribe: the keyboard moves to Undo, and Undo brings it back.
-  await tabTo(page, feed.getByRole("button", { name: `Unsubscribe from ${title}` }));
-  await page.keyboard.press("Enter");
-  await expect(status).toHaveText(`Unsubscribed from ${title}.`);
-  const undo = feed.getByRole("button", { name: `Undo unsubscribing from ${title}` });
-  await expect(undo).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(status).toHaveText("Undone.");
-  await expect(feed.getByRole("button", { name: `Unsubscribe from ${title}` })).toBeFocused();
-  const library = await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json();
-  expect(library.feeds.map((followed: { title: string }) => followed.title)).toContain(title);
-
-  // Find new address: the keyboard lands on Use it, which says what it asks; Cancel goes back to the button.
-  await tabTo(page, feed.getByRole("button", { name: `Find new address for ${title}` }));
-  await page.keyboard.press("Enter");
-  const useIt = feed.getByRole("button", { name: "Use it" });
-  await expect(useIt).toBeFocused();
-  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders, articles and stars stay\.$/);
-  await page.keyboard.press("Shift+Tab");
-  await expect(feed.getByRole("button", { name: "Cancel" })).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(feed.getByRole("button", { name: `Find new address for ${title}` })).toBeFocused();
+  // Listed once two checks in a row have failed; other tests' feeds may be listed already, so this one is waited for.
+  await expect
+    .poll(async () => (await (await page.request.get(new URL("/api/health", FEEDS_APP).href)).json()).feeds.some((sick: { id: number }) => sick.id === id), { timeout: 30_000 })
+    .toBe(true);
+  const summary = page.locator("#health-summary");
+  await page.reload();
+  await appReady(page);
+  await expect(summary).toBeVisible();
 
   // Escape: on a phone, back to the feeds screen, as on every phone screen; on a computer the page is a place of
   // its own beside the sidebar (decision 0266), so it stays.
   await page.keyboard.press("Escape");
-  if (isMobile) await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
-  else {
+  if (isMobile) {
+    await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+    await page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: "Everyone you follow" }).click();
+  } else {
     await expect(page.getByRole("heading", { name: "Everyone you follow", level: 2 })).toBeVisible();
     await expect(page).toHaveURL(/\/following$/);
   }
+
+  // The quiet row opens with Enter and keeps the keyboard; each line is one stop, and Enter opens their page.
+  await tabTo(page, summary);
+  await page.keyboard.press("Enter");
+  await expect(summary).toHaveAttribute("aria-expanded", "true");
+  await expect(summary).toBeFocused();
+  const feed = summary.locator("xpath=ancestor::section[1]").getByRole("link", { name: new RegExp(`^${title}\\b`) });
+  await tabTo(page, feed);
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+
+  // Find new address: the keyboard lands on Use it, which says what it asks; Cancel goes back to the button.
+  const box = page.getByRole("group", { name: "Not working" });
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  await tabTo(page, find);
+  await page.keyboard.press("Enter");
+  const useIt = box.getByRole("button", { name: "Use it" });
+  await expect(useIt).toBeFocused();
+  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders, articles and stars stay\.$/);
+  await page.keyboard.press("Shift+Tab");
+  await expect(box.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(find).toBeFocused();
+
+  // Unsubscribe, in the same box: it says so with Undo, and Undo brings them back.
+  await tabTo(page, box.getByRole("button", { name: "Unsubscribe" }));
+  await page.keyboard.press("Enter");
+  const undo = page.getByRole("button", { name: "Undo" });
+  await expect(undo).toBeVisible();
+  await undo.click();
+  await expect
+    .poll(async () => (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()).feeds.map((followed: { id: number }) => followed.id))
+    .toContain(id);
 });
 
 /** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until Everyone you follow would list it. */
@@ -296,128 +292,45 @@ test("moving a feed to a new number (others follow the old address) keeps their 
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
 });
 
-test("moving a dead feed in Everyone you follow keeps its place and its confirmation", async ({ page }) => {
-  // A feed is dead only after a week; the page's list is changed to call this one dead.
-  const name = `moving-dead-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
-  const title = `Blog ${name}`;
-  await failing(page, name, "move");
+/** Makes Everyone you follow see this feed as not working: it is only after a week, so this page's answer says so. */
+async function seenDead(page: Page, title: string, change: Record<string, unknown> = {}): Promise<void> {
   await page.route("**/api/health", async (route) => {
     const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
+    for (const feed of real.feeds) if (feed.title === title) Object.assign(feed, { state: "dead" }, change);
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/following", FEEDS_APP).href);
-  await appReady(page);
-  const dead = page.getByRole("region", { name: "Not working" });
-  const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(feed).toBeVisible();
-  await feed.getByRole("button", { name: `Find new address for ${title}` }).click();
-  await feed.getByRole("button", { name: "Use it" }).click();
-  // It stays under Not working, saying it moved, with the keyboard on its name.
-  await expect(feed.getByText("It now reads from its new address and works again.", { exact: false })).toBeVisible();
-  await expect(feed).toContainText("Working again.");
-  await expect(feed.getByRole("heading", { name: title })).toBeFocused();
-  // Working again, so nothing more to do, and nothing to write to them about (decisions 0212, 0268).
-  await expect(feed).not.toContainText("may not know");
-  await expect(feed.getByRole("button")).toHaveCount(0);
-});
+}
 
-test("a person whose feed stopped may not know: their Not working row offers Write to them", async ({ page }) => {
-  // Decision 0212: no dead ends. A feed is dead only after a week; the page's list is changed to call this one dead.
+test("a person whose site stopped answering may not know: their page offers Write to them first", async ({ page }) => {
+  // Decision 0212: no dead ends. Only they can bring their site back, so Write to comes before Find new address (decision 0279).
   const name = `write-dead-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
-  await failing(page, name, "break");
-  await page.route("**/api/health", async (route) => {
-    const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
-    await route.fulfill({ json: real });
-  });
-  await page.goto(new URL("/following", FEEDS_APP).href);
+  const id = await failing(page, name, "break");
+  await seenDead(page, title, { problem: "unreachable" });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
   await appReady(page);
-  const dead = page.getByRole("region", { name: "Not working" });
-  const feed = dead.getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(feed).toContainText(`${title} may not know.`);
-  // One of the row's plain links, between Find new address and Unsubscribe, on their line (decision 0268): no
-  // paper plane, no button.
-  const write = feed.getByRole("button", { name: `Write to ${title}` });
-  const find = feed.getByRole("button", { name: `Find new address for ${title}` });
-  const leave = feed.getByRole("button", { name: `Unsubscribe from ${title}` });
-  await expect(write).toBeVisible();
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box).toContainText("They may not know.");
+  const write = box.getByRole("button", { name: `Write to ${title}` });
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  const leave = box.getByRole("button", { name: "Unsubscribe" });
+  // Plain underlined words, in the order they're read and tabbed: Write to, Find new address, Unsubscribe; no paper plane.
   await expect(write).toHaveClass(/text-link/);
   await expect(write.locator("svg")).toHaveCount(0);
-  await expect(feed.locator(".btn-primary, .btn-danger, .btn")).toHaveCount(0);
-  const [findBox, writeBox, leaveBox, rowBox] = await Promise.all([find.boundingBox(), write.boundingBox(), leave.boundingBox(), feed.boundingBox()]);
-  expect(writeBox!.height).toBeGreaterThanOrEqual(44);
-  // Read in order, wrapping where the row is too narrow (a long name on a phone): each one beside the one before
-  // it, or starting a line of its own on the name's left edge, never past the row's end.
-  const after = (box: typeof findBox, before: typeof findBox) =>
-    (Math.abs(box!.y - before!.y) <= 1 && box!.x >= before!.x + before!.width + 16) || (box!.y >= before!.y + before!.height - 1 && Math.abs(box!.x - findBox!.x) <= 1);
-  expect(after(writeBox, findBox)).toBe(true);
-  expect(after(leaveBox, writeBox)).toBe(true);
-  for (const box of [findBox, writeBox, leaveBox]) expect(box!.x + box!.width).toBeLessThanOrEqual(rowBox!.x + rowBox!.width);
-  // From the keyboard, in the order they're read: Find new address, Write to, Unsubscribe.
-  await tabTo(page, find);
-  await page.keyboard.press("Tab");
-  await expect(write).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(leave).toBeFocused();
-  // Write to: the box asks for their address in place, under the row's links, its Write an everyday button.
-  await page.keyboard.press("Shift+Tab");
-  await page.keyboard.press("Enter");
-  const box = feed.getByRole("form", { name: `Write to ${title}` });
-  await expect(box.getByLabel("Their email address")).toBeFocused();
-  await expect(box.getByRole("button", { name: "Write", exact: true })).not.toHaveClass(/btn-primary/);
-  // On a line of its own after Find new address, and before Unsubscribe, for the eye as for the keyboard.
-  const [boxBox, leaveNow] = await Promise.all([box.boundingBox(), leave.boundingBox()]);
-  expect(boxBox!.y).toBeGreaterThanOrEqual(findBox!.y + findBox!.height - 1);
-  expect(leaveNow!.y).toBeGreaterThanOrEqual(boxBox!.y + boxBox!.height - 1);
-  await box.getByRole("button", { name: "Not now" }).focus();
-  await page.keyboard.press("Tab");
-  await expect(leave).toBeFocused();
-  await box.getByRole("button", { name: "Not now" }).click();
-  await expect(write).toBeFocused();
-});
-
-test("with Write to pressed, the keyboard meets what it brought before Unsubscribe, as the eye does", async ({ page }) => {
-  // Decision 0268: what follows Write to takes a line of its own straight after it, so the order read and the order tabbed agree.
-  const name = `write-order-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
-  const title = `Blog ${name}`;
-  const id = await failing(page, name, "break");
-  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
-  expect((await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "ivy@ivy.example" } })).ok()).toBe(true);
-  await page.route("**/api/health", async (route) => {
-    const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
-    await route.fulfill({ json: real });
-  });
-  await page.goto(new URL("/following", FEEDS_APP).href);
-  await appReady(page);
-  const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  const write = feed.getByRole("link", { name: `Write to ${title}` });
-  const leave = feed.getByRole("button", { name: `Unsubscribe from ${title}` });
-  // The address is known: Write to opens the email app, and the row says so on a line of its own (no address shown here).
-  await expect(write).toHaveAttribute("href", /^mailto:ivy@ivy\.example/);
-  await expect(feed).not.toContainText("ivy@ivy.example");
+  await expect(find).toHaveClass(/text-link/);
   await tabTo(page, write);
-  await page.keyboard.press("Enter");
-  const line = feed.locator(".opening-line");
-  await expect(line).toBeVisible();
-  const [writeBox, lineBox, leaveBox] = await Promise.all([write.boundingBox(), line.boundingBox(), leave.boundingBox()]);
-  expect(lineBox!.y).toBeGreaterThanOrEqual(writeBox!.y + writeBox!.height - 1);
-  expect(leaveBox!.y).toBeGreaterThanOrEqual(lineBox!.y + lineBox!.height - 1);
-  // Tab from Write to: through the line's own words (Didn't open?, or a touch screen's Copy their address), then Unsubscribe.
-  const stops: string[] = [];
-  for (let step = 0; step < 6; step++) {
-    await page.keyboard.press("Tab");
-    if (await leave.evaluate((el) => el === document.activeElement)) break;
-    stops.push(await page.evaluate(() => (document.activeElement?.closest(".opening-line") ? "line" : (document.activeElement?.textContent ?? "").trim())));
-  }
+  await page.keyboard.press("Tab");
+  await expect(find).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(leave).toBeFocused();
-  expect(stops.length).toBeGreaterThan(0);
-  expect(stops.every((stop) => stop === "line")).toBe(true);
-  // And back again, the same way.
-  for (const _ of stops) await page.keyboard.press("Shift+Tab");
-  await page.keyboard.press("Shift+Tab");
+  // The page's own Write to waits while the box offers it: one way to write, not two.
+  await expect(page.getByRole("button", { name: `Write to ${title}` })).toHaveCount(1);
+  // Write to: the box asks for their address in place, its Write an everyday bordered button.
+  await write.click();
+  const form = box.getByRole("form", { name: `Write to ${title}` });
+  await expect(form.getByLabel("Their email address")).toBeFocused();
+  await expect(form.getByRole("button", { name: "Write", exact: true })).not.toHaveClass(/btn-primary/);
+  await form.getByRole("button", { name: "Not now" }).click();
   await expect(write).toBeFocused();
 });
 
@@ -425,54 +338,135 @@ test("a publication whose feed stopped gets no Write to", async ({ page }) => {
   const name = `write-dead-pub-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
-  await page.route("**/api/health", async (route) => {
-    const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.title === title) feed.state = "dead";
-    await route.fulfill({ json: real });
-  });
-  // This page alone sees it as one nine turtles couldn't sort (decision 0264): it could be either, kept with the
-  // publications until the reader says, so it has no Write to and shows the publication icon.
+  await seenDead(page, title, { problem: "unreachable" });
+  // This page alone sees it as one nine turtles couldn't sort (decision 0264): kept with the publications, so no Write to.
   await page.route("**/api/feeds", async (route) => {
     if (route.request().method() !== "GET") return route.continue();
     const real = await (await route.fetch()).json();
     for (const feed of real.feeds) if (feed.id === id) Object.assign(feed, { kind: "publication", open: true });
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL("/following", FEEDS_APP).href);
+  await page.goto(new URL(`/publications/${id}/about`, FEEDS_APP).href);
   await appReady(page);
-  const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(feed).toBeVisible();
-  // The publication icon, at a glance and in words (decision 0268).
-  await expect(feed.getByRole("heading", { name: title })).toHaveText(`Publication: ${title}`);
-  await expect(feed.locator(".kind")).toHaveAttribute("title", "A publication");
-  await expect(feed).not.toContainText("may not know");
-  await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box).toContainText("Site not answering since");
+  await expect(box).not.toContainText("may not know");
+  await expect(page.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+  await expect(box.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
 });
 
-test("a YouTube channel YouTube won't send says so, with no Write to (decision 0272)", async ({ page }) => {
+test("a YouTube channel YouTube won't send says so, rather than that it may have moved (decision 0272)", async ({ page }) => {
   const name = `youtube-refused-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
-  // This page alone sees it as a person's YouTube channel that YouTube has refused for a week.
-  await page.route("**/api/health", async (route) => {
-    const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.title === title) Object.assign(feed, { state: "dead", problem: "not-found", youtube: true });
-    await route.fulfill({ json: real });
-  });
-  await page.route("**/api/feeds", async (route) => {
-    if (route.request().method() !== "GET") return route.continue();
-    const real = await (await route.fetch()).json();
-    for (const feed of real.feeds) if (feed.id === id) Object.assign(feed, { kind: "person", open: false });
-    await route.fulfill({ json: real });
-  });
+  await seenDead(page, title, { problem: "not-found", youtube: true });
   await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
-  const feed = page.getByRole("region", { name: "Not working" }).getByRole("listitem").filter({ has: page.getByRole("heading", { name: title }) });
-  await expect(feed).toBeVisible();
-  await expect(feed).toContainText("YouTube isn't sending these videos to nine turtles at the moment.");
-  await expect(feed).not.toContainText("It may have moved");
-  // They can't change what YouTube does, so nothing suggests writing to them.
-  await expect(feed).not.toContainText("may not know");
-  await expect(feed.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
-  await expect(feed.getByRole("button", { name: `Unsubscribe from ${title}` })).toBeVisible();
+  await page.locator("#health-summary").click();
+  await expect(page.getByRole("link", { name: new RegExp(`^${title}\\s*YouTube not sending$`) })).toBeVisible();
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box).toContainText("YouTube isn't sending these videos to nine turtles at the moment.");
+  await expect(box).not.toContainText("It may have moved");
+  // They can't change what YouTube does, so nothing says they may not know, the box offers no Write to, and nothing comes first.
+  await expect(box).not.toContainText("may not know");
+  await expect(box.getByRole("button", { name: `Write to ${title}` })).toHaveCount(0);
+  await expect(box.getByRole("button", { name: "Find new address", exact: true })).toHaveClass(/text-link/);
+  // The page's own Write to stays, as on any day.
+  await expect(page.getByRole("button", { name: `Write to ${title}` })).toHaveCount(1);
+});
+
+test("the box shows the address it writes to, with Change, so a wrong one can be corrected while the feed is broken", async ({ page }) => {
+  const name = `write-dead-known-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
+  await seenDead(page, title, { problem: "unreachable" });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = page.getByRole("group", { name: "Not working" });
+  await expect(box.getByRole("link", { name: `Write to ${title}` })).toBeVisible();
+  await expect(box).toContainText("old@there.example");
+  await box.getByRole("button", { name: `Change ${title}'s email address` }).click();
+  await expect(box.getByRole("textbox", { name: "Their email address" })).toHaveValue("old@there.example");
+  // One way to write, not two.
+  await expect(page.getByRole("link", { name: `Write to ${title}` })).toHaveCount(0);
+});
+
+test("someone with two broken sources gets a box for each, and one Write to", async ({ page }) => {
+  // Two feeds to break, each waiting for two failed checks: twice the usual time.
+  test.slow();
+  const stamp = `${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const ids = [await failing(page, `two-broken-a-${stamp}`, "break"), await failing(page, `two-broken-b-${stamp}`, "break")];
+  const name = `Two ${stamp}`;
+  expect((await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: ids, name } })).ok()).toBe(true);
+  await page.route("**/api/health", async (route) => {
+    const real = await (await route.fetch()).json();
+    for (const feed of real.feeds) if (ids.includes(feed.id)) Object.assign(feed, { state: "dead", problem: "unreachable" });
+    await route.fulfill({ json: real });
+  });
+  await page.goto(new URL(`/people/${ids[0]}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const boxes = page.getByRole("group", { name: "Not working" });
+  await expect(boxes).toHaveCount(2);
+  await expect(boxes.first()).toContainText(": Site not answering since");
+  await expect(page.getByRole("button", { name: `Write to ${name}` })).toHaveCount(1);
+  await expect(boxes.first().getByRole("button", { name: `Write to ${name}` })).toBeVisible();
+});
+
+test("a feed only having trouble offers nothing first: it's usually back soon", async ({ page }) => {
+  const name = `trouble-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await seenDead(page, title, { problem: "unreachable", state: "trouble" });
+  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  const box = page.getByRole("group", { name: "Not working" });
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  await expect(find).toHaveClass(/text-link/);
+  await expect(box).not.toContainText("may not know");
+  // Find new address, then Write to: the order they're read and tabbed.
+  await tabTo(page, find);
+  await page.keyboard.press("Tab");
+  await expect(box.getByRole("button", { name: `Write to ${title}` })).toBeFocused();
+});
+
+test("the quiet row says how many aren't working, and what went wrong with each, worst first (decision 0279)", async ({ page }) => {
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
+  if (await page.getByLabel("Password", { exact: true }).isVisible()) await signIn(page);
+  // As the server would list them: longest failing first. Made up, so nothing shared changes.
+  const day = 24 * 60 * 60;
+  const now = Math.floor(Date.now() / 1000);
+  const sick = (id: number, title: string, state: string, problem: string, days: number) => ({
+    id, title, url: `https://feeds.example/${id}.xml`, site_url: null, problem, failing_since: now - days * day,
+    missing_since: problem === "not-found" ? now - days * day : null, fetched_at: null, next_check_at: now + day, failures: 9, state, youtube: false,
+  });
+  await page.route("**/api/health", (route) =>
+    route.fulfill({
+      json: {
+        feeds: [
+          sick(9901, "Ines Duarte", "dead", "unreachable", 40),
+          sick(9902, "The Old Almanac", "dead", "not-found", 30),
+          sick(9903, "Harbour Notes", "dead", "unreachable", 25),
+          sick(9904, "Letters from the Coast", "trouble", "answered-503", 2),
+        ],
+      },
+    }),
+  );
+  await page.reload();
+  await appReady(page);
+  const summary = page.locator("#health-summary");
+  await expect(summary).toHaveText(/^\s*3 feeds aren't working\s*2 site not answering · 1 feed gone · 1 having trouble\s*$/);
+  await summary.click();
+  // Alike ones together, each reason where its longest failing feed was; those having trouble after.
+  const section = summary.locator("xpath=ancestor::section[1]");
+  await expect(section.getByRole("link")).toHaveText([
+    /^\s*Ines Duarte\s*Site not answering\s*$/,
+    /^\s*Harbour Notes\s*Site not answering\s*$/,
+    /^\s*The Old Almanac\s*Feed gone\s*$/,
+    /^\s*Letters from the Coast\s*Site has a problem\s*$/,
+  ]);
+  await expect(section).toContainText("Open one to fix it, write to them or unsubscribe.");
 });
