@@ -4,7 +4,7 @@
 
 *16 November 2026. The owner, after reading one thing at a time (decision 0275): "nothing's changed except moving the article pane behind a click. We must optimise other things for the two-pane structure." He chose these three from now-vs-after pictures ("Implement both of these suggestions. Just shorten the copy of Nothing unread. And implement … One column for both screens"), and said to implement and merge without a local trial.*
 
-**What changes (computer only; a phone is unchanged).**
+**What changes (on a computer, unless said; a phone keeps its layout).**
 1. **One column.** The list's column was centred in the room the sidebar
    left (42rem with its edges), and the article's text in the whole window,
    so opening one jumped about 150px sideways. Now both use the reading
@@ -20,7 +20,7 @@
    text size), in the ink, centred about a third of the way down,
    and one line under it in the reading serif at the reader's text size, muted. Unread now says
    "Nothing unread." and "New writing will show up here." (the owner asked
-   for the copy to be short). Words only: the brand sheet keeps the turtles
+   for the copy to be short), on a phone too, in its usual shape. Words only: the brand sheet keeps the turtles
    off empty lists. This amends decision 0142's "on the list's left edge,
    never centred", which a phone keeps.
 3. **Unread as a contents page.** Each person's name is a chapter heading

@@ -153,6 +153,43 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
 });
 
+test("Settings and Everyone you follow start on the list's line; with the sidebar hidden and large text, nothing starts under its button", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone has one edge for every screen.");
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await signedIn(page);
+  await page.goto(at("/starred"));
+  await appReady(page);
+  const listX = (await page.locator("#list-heading").boundingBox())!.x;
+  // One column (decision 0277): Settings' title and Everyone you follow's start where the list's did.
+  await page.goto(at("/settings"));
+  await appReady(page);
+  expect(Math.abs((await page.locator("#settings-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+  await page.getByRole("link", { name: "Everyone you follow" }).click();
+  await expect(page.locator("#your-feeds-heading")).toBeVisible();
+  expect(Math.abs((await page.locator("#your-feeds-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+
+  // A window just wide enough, the sidebar hidden and the reader's text at its largest: the reading column is
+  // nearly the window's width, yet the list's title and Settings' still start clear of the sidebar button.
+  await page.setViewportSize({ width: 896, height: 800 });
+  await page.goto(at("/starred"));
+  await appReady(page);
+  await page.evaluate(() => document.querySelector("main")!.style.setProperty("--reading-size", "1.625rem"));
+  const toggle = page.getByRole("button", { name: "Sidebar", exact: true });
+  await toggle.click();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  const clear = async (heading: string) => {
+    const [button, title] = await Promise.all([toggle.boundingBox(), page.locator(heading).boundingBox()]);
+    expect(title!.x).toBeGreaterThanOrEqual(button!.x + button!.width + 8);
+  };
+  await clear("#list-heading");
+  await page.locator("#list-heading").focus();
+  await page.keyboard.press("g");
+  await page.keyboard.press(",");
+  await expect(page.locator("#settings-heading")).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await clear("#settings-heading");
+});
+
 test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone has no j.");
   await signedIn(page);

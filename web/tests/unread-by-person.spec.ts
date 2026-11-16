@@ -142,6 +142,15 @@ for (const [what, width, text] of [
     expect(title.width).toBeGreaterThanOrEqual(box.width * 0.6);
     expect(meta.y).toBeGreaterThanOrEqual(title.y + title.height - 1);
     expect(meta.x + meta.width).toBeLessThanOrEqual(box.x + box.width + 1);
+    // With no day, no "·" is left dangling at either end of the small line: the writer stands alone (screen readers
+    // still hear a pause after them, and the publication's name and the day).
+    const shown = await row.locator(".row-meta").evaluate((meta) => {
+      const walker = document.createTreeWalker(meta, NodeFilter.SHOW_TEXT);
+      let text = "";
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) if (!node.parentElement!.closest(".sr-only")) text += node.textContent;
+      return text.replace(/\s+/g, " ").trim();
+    });
+    expect(shown).toBe("Margarethe Vandenberghe-Okonkwo and Friends");
     // Nothing runs off the side.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await list(page).evaluate((pane) => [...pane.querySelectorAll(".item-row")].every((each) => each.scrollWidth <= each.clientWidth + 1))).toBe(true);

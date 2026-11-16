@@ -1,9 +1,10 @@
 /*
   The article list's empty state and closing caption (SPEC section 6; decision 0142): one shape for every list.
-  The fact in the reading serif at the row titles' size, in the second ink,
-  40px down from where the list starts (under its search field); how to
-  start, when there is something to do, in the interface's text, muted, 8px
-  under it; at most 300px wide, on the list's left edge, never centred.
+  On a phone (and while a list is still arriving, or has nothing kept on
+  this device), the fact in the reading serif at the row titles' size, in
+  the second ink, 40px down from where the list starts (under its search
+  field); the line under it in the interface's text, muted, 8px under it; at
+  most 300px wide, on the list's left edge. A computer's empty list is below.
   The closing caption sits 40px under the last row with 96px of room below;
   in a list with unread articles, "Mark all as read" sits 12px under it and
   takes the room below (decision 0214).
@@ -31,14 +32,16 @@
   column about a third of the way down, and the line under it in the
   reading serif at the reader's text size. It's
   the end of reading, so it looks finished on purpose. Words only, no turtle
-  (BRAND.md → "The turtles' only job"). A phone keeps the list's edge.
+  (BRAND.md → "The turtles' only job"). A phone keeps the list's edge, and
+  so do a list still arriving and the offline "nothing kept" line (not
+  finished, so not set as the end: ItemList.svelte marks the end .finished).
 */
-.list-pane:not(.phone) .list-empty {
+.list-pane:not(.phone) .finished.list-empty {
   max-width: 30rem;
   margin: max(2.5rem, 30vh - var(--bar-h)) auto 0;
   text-align: center;
 }
-.list-pane:not(.phone) .list-empty-fact {
+.list-pane:not(.phone) .finished .list-empty-fact {
   font-family: var(--font-display);
   font-size: calc(var(--reading-size) * 1.9);
   font-weight: 400;
@@ -46,7 +49,7 @@
   letter-spacing: -0.012em;
   color: var(--ink);
 }
-.list-pane:not(.phone) .list-empty-how {
+.list-pane:not(.phone) .finished .list-empty-how {
   margin-top: 0.75rem;
   font-family: var(--font-serif);
   font-size: var(--reading-size);

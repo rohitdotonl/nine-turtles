@@ -30,17 +30,21 @@
   its right edge, so opening an article turns the page in place instead of
   jumping sideways. 100% is the area beside the sidebar and 100vw the
   window, so the sidebar's width needs no reading. Where the sidebar leaves
-  too little room, the column keeps the list's own edges. Its scroll bar
-  stays at the window's edge.
+  too little room, the column keeps the list's own edges; with the sidebar
+  hidden it never starts under the sidebar button (--toggle-room, 64px:
+  the button ends 52px in). Its scroll bar stays at the window's edge.
 */
+.sidebar-off {
+  --toggle-room: 4rem;
+}
 .list-pane:not(.phone) > :is(.pane-bar, .scroller) {
-  --column-start: max(var(--list-start), 100% - (100vw + var(--reading-width)) / 2);
+  --column-start: max(var(--list-start), var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
   padding-inline: var(--column-start) max(var(--list-end), 100% - var(--column-start) - var(--reading-width));
 }
 /* Settings, Everyone you follow and the pages under Settings start their column on the same line. */
 @media (min-width: 56rem) {
   .lines-up > :is(.pane-bar, .scroller) {
-    padding-left: max(2.5rem, 100% - (100vw + var(--reading-width)) / 2);
+    padding-left: max(2.5rem, var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
   }
   .lines-up > :is(.pane-bar, .scroller) > .mx-auto {
     margin-left: 0;

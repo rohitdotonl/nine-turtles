@@ -138,6 +138,21 @@ test("the sidebar lists Unread, Starred, Notes (from the first day, decision 022
   expect(factBox!.y - (title!.y + title!.height)).toBeGreaterThan(120);
 });
 
+test("on a phone an empty list keeps the list's left edge, in the list's own sizes", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "A computer's empty list has the page to itself, checked above (decision 0277).");
+  await openApp(page, "/starred");
+  const fact = page.getByText("Nothing starred yet.");
+  const how = page.getByText("Press the star on any article to keep it here.");
+  await expect(fact).toBeVisible();
+  await expect(how).toBeVisible();
+  await expect(fact).toHaveCSS("text-align", "start");
+  await expect(fact).not.toHaveCSS("font-family", /Literata Display/);
+  const [factBox, howBox, title] = await Promise.all([fact.boundingBox(), how.boundingBox(), page.locator("#list-heading").boundingBox()]);
+  expect(Math.abs(factBox!.x - howBox!.x)).toBeLessThan(1);
+  expect(Math.abs(factBox!.x - title!.x)).toBeLessThan(2);
+  expect(howBox!.y).toBeGreaterThan(factBox!.y + factBox!.height);
+});
+
 test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {
   await openApp(page);
   await page.keyboard.press("g");

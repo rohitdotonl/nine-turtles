@@ -2,6 +2,8 @@
 
 **In one line:** Unread names each person once, as a heading in the reading serif, with their unread titles under it in regular type (each with its day at the row's right end), people first by their newest unread article (oldest, sorting oldest first), then "Publications"; every other list, the weekly email and assistants are unchanged.
 
+> **Partly replaced by [0277](0277-one-column.md):** Unread shows no day beside its titles, and on a computer each name is set larger, regular, as a chapter.
+
 *14 November 2026. Flow 1 of the owner's design critique, "Unread: the person first, no extra presses", which the owner approved with its pictures.*
 
 **What the owner saw.** Unread listed titles, each with the writer in small

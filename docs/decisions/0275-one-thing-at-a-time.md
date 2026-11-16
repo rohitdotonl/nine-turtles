@@ -2,6 +2,8 @@
 
 **In one line:** One thing at a time is how nine turtles reads on a computer, for every reader, with no setting: the list alone (beside the sidebar, its rows in a centred column), then the article alone in the whole window with "‹ <list name>" and Escape going back; it replaces the trial of decision 0269 and full-screen reading (`f`, decision 0241), and amends the three panes of decision 0134.
 
+> **Partly replaced by [0277](0277-one-column.md):** the list's column is no longer centred beside the sidebar; it starts where an article's text starts.
+
 *15 November 2026. The owner, after living with the trial: "I tried and I like Read one thing at a time. Implement it."*
 
 **What changes.** The trial's behaviour (decision 0269, point 2) becomes the

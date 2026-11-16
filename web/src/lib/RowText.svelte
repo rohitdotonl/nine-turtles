@@ -12,9 +12,8 @@
   import { exactly, when } from "./times";
   import { hugEllipsis } from "./hug";
   import { boldParts } from "./search";
-  import RowKind from "./RowKind.svelte";
+  import RowKind, { kindShown } from "./RowKind.svelte";
   import RowPlace from "./RowPlace.svelte";
-  import { youtubeVideo } from "./youtube";
 
   let {
     article,
@@ -39,7 +38,7 @@
   let undated = $derived(article.whose !== undefined);
   /** With no day shown, the kind of article opens the line unless a publication's writer comes before it. */
   let kindFirst = $derived(undated && !writerOf(article));
-  let placeFirst = $derived(kindFirst && !(article.episode || youtubeVideo(article.link)));
+  let placeFirst = $derived(kindFirst && !kindShown(article));
 </script>
 
   <!-- Unread: full ink, semibold (regular under a name in Unread, where the name carries the weight: lists.css .by-person). Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
@@ -73,7 +72,7 @@
   -->
   <span class={["row-meta mt-2 text-date tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
     <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
-    {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>{#if !undated}&nbsp;·{/if}</span>{/if}
+    {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span><span class={[undated && "sr-only"]}>&nbsp;·</span></span>{/if}
     <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
     <time datetime={new Date(article.at * 1000).toISOString()} class={["row-date", undated && "sr-only"]} title={exactly(article.at)}>{when(article.at)}</time>
     <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
