@@ -64,6 +64,13 @@ export function leftAlone(target: EventTarget | null, within: HTMLElement): bool
   return false;
 }
 
+/**
+ * Whether a menu or sheet is open. A press outside one closes it (MoreMenu, the
+ * Aa sheet), and only that: asked as the press lands, before it closes, so no
+ * swipe or pull starts with it, nor does a tap put the bars away.
+ */
+export const somethingOpen = () => document.querySelector("[role='menu'], [role='dialog']") !== null;
+
 /** Strokes a place nearer the finger has taken, so the places around it leave them alone. */
 const taken = new Set<number>();
 
@@ -103,7 +110,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
     swallowClick = false;
     if (event.pointerType !== "touch" || !event.isPrimary || zoomed()) return;
     if (event.clientX > innerWidth - EDGE || (event.clientX < EDGE && !(hands.fromEdge && standalone()))) return;
-    if (hands.allowed && !hands.allowed(event)) return;
+    if (somethingOpen() || (hands.allowed && !hands.allowed(event))) return;
     start = { x: event.clientX, y: event.clientY, id: event.pointerId, at: event.timeStamp };
     sideways = false;
     lately = [{ x: event.clientX, at: event.timeStamp }];
