@@ -40,12 +40,14 @@
   --column-start: max(var(--list-start), var(--toggle-room, 0px), (100% - var(--reading-width)) / 2);
   padding-inline: var(--column-start) max(var(--list-end), 100% - var(--column-start) - var(--reading-width));
 }
-/* Settings, Everyone you follow and the pages under Settings start their column on the same line. */
+/*
+  Settings, Everyone you follow and the pages under Settings: their own
+  column (centred by .mx-auto) sits in the middle of the area beside the
+  sidebar too (decision 0278), and with the sidebar hidden never starts
+  under the sidebar button.
+*/
 @media (min-width: 56rem) {
   .lines-up > :is(.pane-bar, .scroller) {
-    padding-left: max(2.5rem, var(--toggle-room, 0px), (100% - var(--reading-width)) / 2);
-  }
-  .lines-up > :is(.pane-bar, .scroller) > .mx-auto {
-    margin-left: 0;
+    padding-inline: max(2.5rem, var(--toggle-room, 0px));
   }
 }

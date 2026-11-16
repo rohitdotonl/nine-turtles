@@ -37,15 +37,18 @@ owner chose to keep the order and show it, then trimmed it to this.
    #667ca2), each at least 3 : 1 on the page, the list and the selected
    row's tint, so it still clearly marks unread for everyone (under a name
    it is the one sign besides what a screen reader hears). High-contrast
-   modes still draw it in the text color. The sidebar's small Unread dot
-   is unchanged.
+   modes still draw it in the text color. The sidebar's Unread dot keeps
+   the full accent: on the sidebar's selected pill the softened one would
+   fall below 3 : 1.
 5. **Every list, and Settings and Everyone you follow, is centred in the
    area beside the sidebar** (the owner, comparing both on his Mac): its
    column stays as wide as an opened article's (decision 0277) but no
    longer starts where the article will; with the sidebar showing, an
    opened article (alone in the window, decision 0275) starts about 128px
    further left. The owner chose a balanced list, the screen read most,
-   over that line-up; with the sidebar hidden they still line up.
+   over that line-up; with the sidebar hidden they still line up. Settings,
+   Everyone you follow and the pages under Settings centre their own
+   column (560px for Settings) in the same area.
 6. **Unchanged:** the order, All articles and every other list's order,
    offline Unread, the weekly email and assistants.
 

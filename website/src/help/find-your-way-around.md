@@ -56,10 +56,11 @@ book's contents page, and on a computer each name is set larger, like a
 chapter's. The name carries the
 weight, so the titles under it are plain, each new one with its dot. When
 you've read everything, it says so across the page: "Nothing unread."
-Beside each name is the day they last posted, so the people who posted most
-recently come first, under **People**; publications follow, under
+Beside each name is the day of their newest unread article, so the people
+whose newest is most recent come first, under **People**; publications follow, under
 **Publications**. Someone with a blog and a podcast is one name. Sorted
-oldest first, the people who have waited longest come first. <kbd>J</kbd>
+oldest first, the day is their oldest unread one's, and the people who have
+waited longest come first. <kbd>J</kbd>
 and <kbd>K</kbd> still go from article to article, past the names, and with
 a screen reader you can jump from name to name by heading.
 

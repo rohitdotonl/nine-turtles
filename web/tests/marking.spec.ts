@@ -121,7 +121,7 @@ test.describe("on a wide window", () => {
     await expect(dot).toBeVisible();
     // A drawn 6px dot in the theme's accent, softened (decision 0278), in the gutter left of the title.
     await expect(dot).toHaveCSS("width", "6px");
-    const [dotColor, accent] = await dot.evaluate((element) => {
+    const [dotColor, softened] = await dot.evaluate((element) => {
       const probe = document.createElement("div");
       probe.style.backgroundColor = "var(--unread-dot)";
       document.body.append(probe);
@@ -129,11 +129,11 @@ test.describe("on a wide window", () => {
       probe.remove();
       return [getComputedStyle(element).backgroundColor, color];
     });
-    expect(dotColor).toBe(accent);
+    expect(dotColor).toBe(softened);
     const [dotBox, titleBox] = [(await dot.boundingBox())!, (await row(page, blog, MIDDLE).locator(".title").boundingBox())!];
-    // Its own gutter, not a bullet: 8px clear of the title (10px for the 6px dot), and the title
+    // Its own gutter, not a bullet: 10px clear of the title, and the title
     // starts where a read row's does (decision 0041).
-    expect(titleBox.x - (dotBox.x + dotBox.width)).toBeGreaterThanOrEqual(7.5);
+    expect(titleBox.x - (dotBox.x + dotBox.width)).toBeGreaterThanOrEqual(9.5);
     expect(Math.abs((await row(page, blog, NEWEST).locator(".title").boundingBox())!.x - titleBox.x)).toBeLessThan(1);
     // Titles in the reading serif, like a book's contents page, with the dot centred on the first line (decision 0128).
     const title1 = row(page, blog, MIDDLE).locator(".title");

@@ -100,6 +100,12 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
+  it("has the list's softened unread dot (decision 0278) at 3 : 1 on the page, the list and the selected row", () => {
+    for (const background of ["paper", "list", "tint-list"]) {
+      expect(contrast(colors["unread-dot"]!, colors[background]!), background).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("gives the star no color of its own: it's drawn in the ink (decision 0143)", () => {
     expect(colors.star).toBeUndefined();
   });

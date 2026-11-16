@@ -160,7 +160,6 @@
   padding-top: 0.5rem;
 }
 .by-person .list-when {
-  font-family: var(--font-dates);
   font-size: var(--text-date);
   font-weight: 400;
   letter-spacing: 0.06em;

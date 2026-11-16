@@ -153,20 +153,22 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
 });
 
-test("Settings and Everyone you follow start on the list's line; with the sidebar hidden and large text, nothing starts under its button", async ({ page, isMobile }) => {
+test("Settings and Everyone you follow are centred beside the sidebar; with the sidebar hidden and large text, nothing starts under its button", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone has one edge for every screen.");
   await page.setViewportSize({ width: 1440, height: 800 });
   await signedIn(page);
-  await page.goto(at("/starred"));
-  await appReady(page);
-  const listX = (await page.locator("#list-heading").boundingBox())!.x;
-  // One column (decision 0277): Settings' title and Everyone you follow's start where the list's did.
+  // Each page's own column sits in the middle of the area beside the sidebar, as the list does (decision 0278).
+  const centred = async (section: string) => {
+    const [area, column] = await Promise.all([page.locator(section).boundingBox(), page.locator(`${section} .scroller > .mx-auto`).first().boundingBox()]);
+    expect(Math.abs(column!.x - area!.x - (area!.x + area!.width - column!.x - column!.width))).toBeLessThan(20);
+    expect(column!.x - area!.x).toBeGreaterThan(100);
+  };
   await page.goto(at("/settings"));
   await appReady(page);
-  expect(Math.abs((await page.locator("#settings-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+  await centred("section[aria-labelledby='settings-heading']");
   await page.getByRole("link", { name: "Everyone you follow" }).click();
   await expect(page.locator("#your-feeds-heading")).toBeVisible();
-  expect(Math.abs((await page.locator("#your-feeds-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+  await centred("section[aria-labelledby='your-feeds-heading']");
 
   // A window just wide enough, the sidebar hidden and the reader's text at its largest: the reading column is
   // nearly the window's width, yet the list's title and Settings' still start clear of the sidebar button.
@@ -188,6 +190,19 @@ test("Settings and Everyone you follow start on the list's line; with the sideba
   await expect(page.locator("#settings-heading")).toBeVisible();
   await expect(page.locator("#sidebar")).toBeHidden();
   await clear("#settings-heading");
+});
+
+test("with the sidebar hidden, the list and an opened article start on one line, so opening turns the page in place", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone has one edge for every screen.");
+  await signedIn(page);
+  await openBlog(page, `one-thing-line-${test.info().workerIndex}-${Date.now()}`);
+  await page.getByRole("button", { name: "Sidebar", exact: true }).click();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  const listTitleX = (await rows(page).first().locator(".title").boundingBox())!.x;
+  await rows(page).first().click();
+  await expect(article(page)).toBeVisible();
+  // Within half a scroll bar, where scroll bars take room (decision 0277).
+  expect(Math.abs((await titleOf(page).boundingBox())!.x - listTitleX)).toBeLessThanOrEqual(10);
 });
 
 test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {
