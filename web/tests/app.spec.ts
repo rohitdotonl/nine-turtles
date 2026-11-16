@@ -100,8 +100,8 @@ test("the sidebar lists Unread, Saved, Notes (from the first day, decision 0222)
   // An empty list (decision 0142): the fact in the serif, then how to start, quieter. On a computer the end has
   // the page (decision 0277): the fact set as an article's title is, both centred in the list's column, a good
   // way down. (A phone keeps them on the list's left edge.)
-  const fact = page.getByText("Nothing starred yet.");
-  const how = page.getByText("Press the star on any article to keep it here.");
+  const fact = page.getByText("Nothing saved yet.");
+  const how = page.getByText("Press Save on any article to keep it here.");
   await expect(fact).toBeVisible();
   await expect(fact).toHaveCSS("font-family", /Literata Display/);
   await expect(fact).toHaveCSS("font-size", "38px");
@@ -117,8 +117,8 @@ test("the sidebar lists Unread, Saved, Notes (from the first day, decision 0222)
 test("on a phone an empty list keeps the list's left edge, in the list's own sizes", async ({ page, isMobile }) => {
   test.skip(!isMobile, "A computer's empty list has the page to itself, checked above (decision 0277).");
   await openApp(page, "/saved");
-  const fact = page.getByText("Nothing starred yet.");
-  const how = page.getByText("Press the star on any article to keep it here.");
+  const fact = page.getByText("Nothing saved yet.");
+  const how = page.getByText("Press Save on any article to keep it here.");
   await expect(fact).toBeVisible();
   await expect(how).toBeVisible();
   await expect(fact).toHaveCSS("text-align", "start");
@@ -680,7 +680,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   for (const row of [
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("button", { name: "Import YouTube subscriptions" }),
-    page.getByRole("button", { name: "Import starred articles" }),
+    page.getByRole("button", { name: "Import saved articles" }),
     page.getByRole("link", { name: "Download everything" }),
   ]) {
     const box = (await row.boundingBox())!;
