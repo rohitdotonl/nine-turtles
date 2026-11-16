@@ -24,6 +24,34 @@ export function isWho(place: Route): place is Extract<Route, { kind: "about" }> 
   return place.kind === "about";
 }
 
+/**
+ * Where their page (or its settings) was opened from (decision 0284): Everyone you follow or an open article, or
+ * anywhere else (undefined, their list). Closing it goes back there, and unsubscribing from Everyone you follow too.
+ */
+export type WhoFrom = "following" | "article" | undefined;
+
+/**
+ * `go` from `route` to `next`: their page remembers where it was opened from, and keeps it while it moves to their
+ * settings and back. Back from Hide articles (`hiding`), Everyone you follow is still there to go back to; an article,
+ * a step back in history, no longer is.
+ */
+export function whoFromOnGo(was: WhoFrom, route: Route, next: Route, reading: boolean, hiding: boolean): WhoFrom {
+  if (!isWho(next) || isWho(route)) return was;
+  if (hiding) return was === "following" ? was : undefined;
+  return route.kind === "your-feeds" ? "following" : reading ? "article" : undefined;
+}
+
+/** The browser's Back or Forward onto their page from another place: where it was opened from isn't known. */
+export function whoFromOnPop(was: WhoFrom, route: Route, next: Route, hiding: boolean): WhoFrom {
+  return isWho(next) && !isWho(route) && !hiding ? undefined : was;
+}
+
+/** Where closing their page goes: Everyone you follow, a step back to the article (which opens it again), or their list. */
+export function whoClosesTo(from: WhoFrom, place: Extract<Route, { kind: "about" }>): Route | "back" {
+  if (from === "article" && !place.settings) return "back";
+  return from === "following" ? { kind: "your-feeds" } : { kind: "feed", id: place.id };
+}
+
 /** With Unread off there's no Unread view: its address (and "/") leads to All. */
 export function homeFor(place: Route, unread: boolean): Route {
   return !unread && place.kind === "view" && place.view === "unread" ? { kind: "view", view: "all" } : place;

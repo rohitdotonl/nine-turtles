@@ -33,16 +33,19 @@
   let showing = $state(leftOpen);
 
   /** Lists who isn't working: when the page opens, and again after the list below unsubscribes, moves or undoes. */
-  export function reload() {
-    listSick()
+  export function reload(): Promise<void> {
+    return listSick()
       .then((sick) => {
         failed = false;
         feeds = sick;
       })
-      .catch(() => (failed = true));
+      .catch(() => void (failed = true));
   }
 
-  onMount(reload);
+  let first: Promise<void> | undefined;
+  onMount(() => void (first = reload()));
+  /** Once who isn't working is first listed, so the keyboard can go back to a row in it. */
+  export const listed = () => first;
 
   let dead = $derived(byReason((feeds ?? []).filter((feed) => feed.state === "dead")));
   let troubled = $derived(byReason((feeds ?? []).filter((feed) => feed.state !== "dead")));

@@ -68,7 +68,7 @@
   import { isFirstVisit, newToFeedsGivesWay, welcomeFor } from "./firstVisit";
   import { stopTrying, trying } from "./welcomeTry.svelte";
   import { startingStep, stepOf, type Screen } from "./steps";
-  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet } from "./navigation";
+  import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -159,8 +159,8 @@
   let ruleForFeed: number | undefined = $state();
   /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
-  /** Their page (or its settings) was opened from Everyone you follow: closing it, or unsubscribing, goes back there (decision 0279). */
-  let fromFollowing = $state(false);
+  let whoFrom: WhoFrom = $state(); // Where their page was opened from (decision 0284).
+  let cameBackFrom: number | undefined = $state(); // Everyone you follow, back from their page: the keyboard goes back to their row.
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
   let sidebar: HTMLElement | undefined = $state();
@@ -353,7 +353,7 @@
       const next = parse(location.pathname);
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
-      fromFollowing &&= isWho(next) && isWho(route) && next.id === route.id; // Back from their settings keeps it.
+      whoFrom = whoFromOnPop(whoFrom, route, next, !!hidingFrom);
       const move = moveTo({ route, under, phone }, next);
       returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
@@ -470,7 +470,8 @@
     const from = screenNow();
     stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
-    fromFollowing = isWho(next) && (route.kind === "your-feeds" || (isWho(route) && fromFollowing));
+    whoFrom = whoFromOnGo(whoFrom, route, next, reading && !!selected, !!hidingFrom);
+    cameBackFrom = isWho(route) && next.kind === "your-feeds" && !withNotice ? route.id : undefined;
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
     steps.goTo(next, from, cameFromSettings, move.opening);
@@ -526,7 +527,7 @@
   async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
     const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
-    go(fromFollowing ? { kind: "your-feeds" } : home, done);
+    go(whoFrom === "following" ? { kind: "your-feeds" } : home, done);
     return undefined;
   }
 
@@ -586,11 +587,7 @@
   let hidingFrom: { route: Route; name: string } | undefined = $state();
   $effect(() => void ((route.kind === "settings" && route.page === "hiding") || (hidingFrom = undefined)));
 
-  /**
-   * Close a page opened from Settings (Hidden articles, All readers, and
-   * Settings' own pages, decision 0120) or a person's settings (decision 0267), or Escape there: back to the page it was opened from, a
-   * step back in history when it came from there.
-   */
+  /** Closes a page opened from Settings (its own pages, decision 0120) or their settings (decision 0267), or Escape there: back to that page, a step back when it came from there. */
   function closeSettingsPage() {
     if (hidingFrom) return go(hidingFrom.route);
     const parent = parentOf(route);
@@ -599,8 +596,8 @@
     else go(parent);
   }
 
-  /** × on their page (Escape, and ‹ on a phone): back to Everyone you follow when it was opened from there, else to their list. */
-  const closeWho = () => isWho(route) && go(fromFollowing ? { kind: "your-feeds" } : { kind: "feed", id: route.id });
+  /** × on their page (Escape, and ‹ on a phone): back where it was opened from (`whoClosesTo`). */
+  const closeWho = () => isWho(route) && ((to) => (to === "back" ? steps.goBack() : go(to, undefined, to.kind !== "your-feeds")))(whoClosesTo(whoFrom, route));
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
@@ -914,6 +911,7 @@
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds}
           {notice}
+          returnTo={cameBackFrom}
         />
       {:else if route.kind === "muted"}
         <Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />
@@ -1103,7 +1101,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onClose={closeWho} closeTo={fromFollowing ? "Everyone you follow" : undefined} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onClose={closeWho} closeTo={whoFrom && { following: "Everyone you follow", article: "Article" }[whoFrom]} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
     {/key}
   {/if}
 {/snippet}

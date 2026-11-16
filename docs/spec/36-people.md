@@ -122,7 +122,11 @@ PLAN.md → V1, item 1.*
   bar with an **×** at its right end (and Escape) back to their list. On a
   phone it's a screen of its own, with ‹ back to their list. Opened from
   Everyone you follow, both go back there instead (‹ reads "Everyone you
-  follow"), and so does Unsubscribe, with its Undo there (section 15).
+  follow"), with the keyboard on their line, and so does Unsubscribe, with
+  its Undo there (section 15); opened from an article (its byline, `i`),
+  both go back to that article, open where it was (‹ reads "Article";
+  decision 0284). After a visit to Hide articles about them, only the way
+  back to Everyone you follow is kept.
   Either way
   there's no list beside it to choose from. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
