@@ -61,15 +61,23 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   const checked = await new AxeBuilder({ page }).withRules(["label-content-name-mismatch"]).analyze();
   expect(checked.violations).toEqual([]);
   // Nothing chosen yet: the menu only offers to choose one. With the keyboard alone: Enter opens it, and its
-  // one item opens the device's file picker; Escape closes the menu and leaves the keyboard on the picture.
+  // one item asks for the device's file picker (a test can't drive the system's own picker, so it's only noted
+  // here, never opened); Escape closes the menu and leaves the keyboard on the picture.
   await picture.focus();
   await page.keyboard.press("Enter");
   const menu = page.getByRole("menu", { name: `Change picture of Blog ${name}` });
   await expect(menu.getByRole("menuitem")).toHaveText(["Choose a picture…"]);
   await expect(menu.getByRole("menuitem", { name: "Choose a picture…" })).toBeFocused();
-  const picker = page.waitForEvent("filechooser");
+  const file = who.locator('input[type="file"]');
+  await file.evaluate((input: HTMLInputElement) =>
+    input.addEventListener("click", (event) => {
+      event.preventDefault();
+      input.dataset.asked = "yes";
+    }, { once: true }),
+  );
   await page.keyboard.press("Enter");
-  expect((await picker).isMultiple()).toBe(false);
+  await expect(file).toHaveAttribute("data-asked", "yes");
+  await expect(file).not.toHaveAttribute("multiple");
   await expect(menu).toBeHidden();
   await picture.focus();
   await page.keyboard.press("Enter");
