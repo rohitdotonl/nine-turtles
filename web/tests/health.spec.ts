@@ -395,6 +395,8 @@ test("the box shows the address it writes to, with Change, so a wrong one can be
 });
 
 test("someone with two broken sources gets a box for each, and one Write to", async ({ page }) => {
+  // Two feeds to break, each waiting for two failed checks: twice the usual time.
+  test.slow();
   const stamp = `${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const ids = [await failing(page, `two-broken-a-${stamp}`, "break"), await failing(page, `two-broken-b-${stamp}`, "break")];
   const name = `Two ${stamp}`;
