@@ -215,6 +215,19 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await arrow.click();
   await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
   await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toHaveAttribute("aria-checked", "true");
+  // No room under the arrow (a short window, at the article's end): it opens upwards, wholly in view, its first row nearest the arrow.
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 1280, height: 480 });
+  await pane(page).locator(".reading-scroller").evaluate((area) => (area.scrollTop = area.scrollHeight));
+  await arrow.click();
+  await expect(ways.getByRole("menuitemradio")).toHaveText([/Comment on their site/, /Copy talk@talk\.example/, /Outlook\.com/, /Gmail/, /Email app/]);
+  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toBeFocused();
+  const [menuBox, arrowBox, areaBox] = await Promise.all([ways.boundingBox(), arrow.boundingBox(), pane(page).locator(".reading-scroller").boundingBox()]);
+  expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(arrowBox!.y);
+  expect(menuBox!.y).toBeGreaterThanOrEqual(areaBox!.y);
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await arrow.click();
 
   // Copy: copied at once, said so, and from then on the main button copies, for this person, after a reload too.
   await ways.getByRole("menuitemradio", { name: "Copy talk@talk.example" }).click();
