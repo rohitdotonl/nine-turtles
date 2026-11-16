@@ -152,7 +152,9 @@ test("with only the keyboard: Edit, a folder's handle, Move to the top, then Don
   await tabTo(page, handle);
   await page.keyboard.press("Enter");
   const top = page.getByRole("menuitem", { name: "Move to the top" });
-  await page.keyboard.press("Home");
+  // Low in a full sidebar the menu opens upwards, read from the handle outwards, so its first item is at the bottom (End).
+  const [menuBox, handleBox] = await Promise.all([page.getByRole("menu").boundingBox(), handle.boundingBox()]);
+  await page.keyboard.press(menuBox!.y < handleBox!.y ? "End" : "Home");
   await expect(top).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(note(page)).toContainText(`Moved the folder ${second}.`);

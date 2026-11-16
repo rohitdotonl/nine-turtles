@@ -248,7 +248,7 @@ test("in an article, a pull past its end opens the next one and past its top the
   await expect(rows(page).first()).toBeVisible();
 });
 
-test("with Write back's ways open at an article's end, a stroke up scrolls rather than opening the next article", async ({ page }) => {
+test("with Write back's ways or the Aa sheet open, the stroke that closes it neither opens the next article nor goes back", async ({ page }) => {
   const name = `sw-${test.info().workerIndex}-${Date.now()}`;
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
@@ -266,10 +266,39 @@ test("with Write back's ways open at an article's end, a stroke up scrolls rathe
   const ways = pane(page).getByRole("menu");
   await expect(ways).toBeVisible();
   const box = (await text.boundingBox())!;
-  const stroke = await Finger.down(page, box.x + 30, box.y + box.height - 60);
+  // Above the bottom bar, every row is in view (upwards when there's no room under the arrow).
+  const menuBox = (await ways.boundingBox())!;
+  expect(menuBox.y).toBeGreaterThanOrEqual(box.y);
+  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(box.y + box.height);
+  const stroke = await Finger.down(page, box.x + 30, box.y + 40);
   await stroke.move(0, -200);
   await expect(peek(page)).toHaveCount(0);
   await stroke.up();
+  // The touch landed outside the menu, so it closed it, and that's all.
+  await expect(ways).toHaveCount(0);
+  await expect(heading).toHaveText(title ?? "");
+
+  // The same with the Aa sheet open: pulled up past the end, or swiped right, it only closes.
+  const actions = pane(page).getByRole("group", { name: "Article actions" });
+  const sheet = page.getByRole("dialog", { name: "Reading appearance" });
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  await actions.getByRole("button", { name: "Reading appearance" }).click();
+  await expect(sheet).toBeVisible();
+  const pull = await Finger.down(page, box.x + box.width / 2, box.y + 40);
+  await pull.move(0, -200);
+  await expect(peek(page)).toHaveCount(0);
+  await pull.up();
+  await expect(sheet).toHaveCount(0);
+  await expect(heading).toHaveText(title ?? "");
+  await actions.getByRole("button", { name: "Reading appearance" }).click();
+  await expect(sheet).toBeVisible();
+  const right = await Finger.down(page, 80, box.y + 40);
+  await right.move(160);
+  await expect(card(page)).toHaveCount(0);
+  await right.up();
+  await expect(card(page)).toHaveCount(0);
+  await expect(sheet).toHaveCount(0);
+  await expect(pane(page)).toBeVisible();
   await expect(heading).toHaveText(title ?? "");
 });
 

@@ -7,12 +7,13 @@
   the one letting go opens hangs just beyond its end (or top), its title and
   who wrote it showing as it comes into view, or saying there's none. Once
   the pull is far enough (or a quick flick), it says "Let go", and letting go
-  carries straight on into it; short of that, it slides back. While a menu is
-  open (Write back's ways, say), the stroke that closes it only scrolls.
+  carries straight on into it; short of that, it slides back. While a menu or
+  sheet is open (Write back's ways, the Aa sheet), the stroke that closes it
+  only scrolls.
 -->
 <script lang="ts">
   import type { Article } from "./shapes";
-  import { DECIDE, RECENT_MS, flicked, leftAlone, reach, zoomed } from "./swipe";
+  import { DECIDE, RECENT_MS, flicked, leftAlone, reach, somethingOpen, zoomed } from "./swipe";
   import { letGo, pull } from "./swipeMotion";
   import { sourceOf, writerOf } from "./people";
 
@@ -57,9 +58,9 @@
     let last = { y: 0, at: 0 };
     let speed = 0;
     let settling = false;
-    /** A menu was open as the finger came down: the touch closes it (MoreMenu), so it's asked first, as the press lands. */
-    let menuOpen = false;
-    const landed = () => (menuOpen = document.querySelector("[role='menu']") !== null);
+    /** A menu or sheet was open as the finger came down: the touch closes it, and does nothing more. */
+    let closing = false;
+    const landed = () => (closing = somethingOpen());
     const start = (event: TouchEvent) => {
       pulled = speed = 0;
       decided = false;
@@ -69,7 +70,7 @@
       below = atEnd() ? from.y : undefined;
       above = atTop() ? from.y : undefined;
       last = { y: from.y, at: event.timeStamp };
-      ignored = settling || menuOpen || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
+      ignored = settling || closing || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
     };
     const move = (event: TouchEvent) => {
       const touch = event.touches[0];
