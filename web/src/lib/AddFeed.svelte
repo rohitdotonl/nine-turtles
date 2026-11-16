@@ -53,7 +53,7 @@
   import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
   import { newslettersOn } from "./newsletters";
-  import { addressFor } from "./router";
+  import { addressFor, ownClick } from "./router";
 
   let {
     field = $bindable(),
@@ -626,11 +626,7 @@
       <p class="-mt-1 mb-2">
         <a
           href={addressFor({ kind: "feed", id: alreadyId })}
-          onclick={(event) => {
-            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-            event.preventDefault();
-            if (alreadyId !== undefined) onOpen(alreadyId);
-          }}
+          onclick={(event) => ownClick(event) && alreadyId !== undefined && onOpen(alreadyId)}
           class="inline-flex min-h-11 items-center underline underline-offset-4">Go to {alreadyTitle ?? "it"}</a
         >
       </p>

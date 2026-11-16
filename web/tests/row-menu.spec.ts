@@ -85,11 +85,22 @@ test.describe("on a wide window", () => {
     await expect(pane(page).getByRole("textbox", { name: "Their email address" })).toBeFocused();
   });
 
-  test("the writer's name under the title opens their page, and I does from any list", async ({ page }) => {
+  test("the writer's name under the title opens their list, Info about in More their page, and I does from any list", async ({ page }) => {
     const name = await openBlog(page);
     await rows(page).nth(0).click();
-    const writer = pane(page).locator(".article-byline").getByRole("link", { name });
-    await writer.click();
+    const title = (await pane(page).getByRole("heading", { level: 2 }).textContent()) ?? "";
+    // Their name: their list, everything of theirs, with their picture beside their name at its top (decision 0288).
+    await pane(page).locator(".article-byline").getByRole("link", { name }).click();
+    const heading = page.locator("#list-heading");
+    await expect(heading).toContainText(name);
+    await expect(heading.locator(".portrait")).toBeVisible();
+    // "‹ Article" goes back to the article.
+    await page.getByRole("button", { name: "Back to the article" }).click();
+    await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
+
+    // More's "Info about …": their page.
+    await pane(page).getByRole("button", { name: "More actions" }).last().click();
+    await page.getByRole("menuitem", { name: `Info about ${name}` }).click();
     await expect(aboutPage(page, name).getByRole("heading", { level: 2, name })).toBeVisible();
 
     // From All, where the list isn't theirs, I goes to the chosen article's writer.

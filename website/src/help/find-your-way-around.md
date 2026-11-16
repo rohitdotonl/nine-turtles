@@ -85,7 +85,9 @@ working even if the title or name changes later.
 Choose an article and it opens, with the whole window to itself. Across its top are **Open
 original** (the publisher's own page), **Aa** (how the text looks), **Save**,
 **Write back** (a paper plane, for a person) and **More**. The writer's name
-under the title opens their page. On a phone they're in the bar at the bottom: More, Aa, Write back
+under the title opens everything they've written, with **‹ Article** to come
+back; their picture and name at the top of that list open the page about
+them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Aa, Write back
 and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 A footnote's number opens its note in a small card just under the line, so

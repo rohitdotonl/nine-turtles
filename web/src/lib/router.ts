@@ -294,3 +294,10 @@ export function rowFor(route: Route): string | undefined {
 export function inSettings(route: Route): boolean {
   return route.kind === "settings" || route.kind === "muted" || route.kind === "readers";
 }
+
+/** A plain click on a link to a place here is the app's to follow: it stops the browser and says so. One meant for a new tab or window is the browser's. */
+export function ownClick(event: MouseEvent): boolean {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return false;
+  event.preventDefault();
+  return true;
+}

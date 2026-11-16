@@ -238,13 +238,14 @@ test("every reader reads this way, not only the owner", async ({ browser }, test
   await stranger.close();
 });
 
-test("their page opened from an article's byline closes back to that article (decision 0279)", async ({ page, isMobile }) => {
+test("their page opened from an article's More closes back to that article (decisions 0284, 0288)", async ({ page, isMobile }) => {
   await signedIn(page);
   const blog = await openBlog(page, `one-thing-writer-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
   await rows(page).nth(1).click();
   await expect(article(page)).toBeVisible();
   const title = (await titleOf(page).textContent()) ?? "";
-  await article(page).getByRole("link", { name: blog.title, exact: true }).click();
+  await article(page).getByRole("button", { name: "More actions" }).last().click();
+  await page.getByRole("menuitem", { name: `Info about ${blog.title}` }).click();
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   // On a phone its ‹ says where it goes; on a computer, × (and Escape).
   if (isMobile) await page.getByRole("button", { name: "Article", exact: true }).click();

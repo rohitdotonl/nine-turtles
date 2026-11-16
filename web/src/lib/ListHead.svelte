@@ -6,11 +6,13 @@
   it's asked for) and one quiet More (…) button, as Apple Books has one
   per collection (decision 0038): Mark all as read, Refresh, the sort order, and "Info about …" or
   Edit folder in a person's, publication's or folder's own list (SPEC section 6). A person's or
-  publication's name is itself the way to their page, a button ending in › (decision 0163).
+  publication's name is itself the way to their page, a button ending in ›, with their picture before it, the
+  same circle as beside an article's byline, so it reads as the way to who they are (decisions 0163, 0288).
 -->
 <script lang="ts">
   import { tip } from "./keyboard";
   import Icon from "./Icon.svelte";
+  import Portrait from "./Portrait.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
 
   let {
@@ -21,6 +23,7 @@
     menu,
     heading = $bindable(),
     onAbout,
+    face,
   }: {
     /** The list's name (`listHeading.ts`). */
     text: string;
@@ -33,6 +36,8 @@
     heading?: HTMLHeadingElement;
     /** A person's or publication's list: the name opens their page. */
     onAbout?: () => void;
+    /** Their picture, before their name (`portrait.ts`). */
+    face?: { pictures: string[]; person: boolean };
   } = $props();
 </script>
 
@@ -42,12 +47,13 @@
     tabindex="-1"
     bind:this={heading}
     title={text}
-    class="min-w-0 flex-1 truncate font-display text-heading leading-[1.3] font-semibold tracking-[-0.01em]"
+    class={["min-w-0 flex-1 font-display text-heading leading-[1.3] font-semibold tracking-[-0.01em]", onAbout ? "flex items-center" : "truncate"]}
   >
     {#if onAbout}
-      <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch. -->
+      <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch.
+           The heading holds it centred (flex), so their picture, once loaded, never moves the line off the bar's centre. -->
       <button type="button" onclick={onAbout} title={tip(`Info about ${text}`, "about")} aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
-        ><span class="truncate">{text}</span><span aria-hidden="true" class="ml-2 shrink-0 font-normal text-muted">›</span></button
+        >{#if face}<span class="mr-3 flex shrink-0"><Portrait name={text} pictures={face.pictures} person={face.person} beside /></span>{/if}<span class="truncate">{text}</span><span aria-hidden="true" class="ml-2 shrink-0 font-normal text-muted">›</span></button
       >
     {:else}
       {text}

@@ -51,7 +51,7 @@
   import { followAnchors, type Footnote } from "./footnotes";
   import { setPunctuation, setsEnglishPunctuation } from "./punctuation";
   import type { LoadedLibrary } from "./library.svelte";
-  import { placesOf, siteName } from "./people";
+  import { isSomeone, placesOf, siteName } from "./people";
   import { tick, type Snippet } from "svelte";
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
@@ -68,7 +68,7 @@
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
-  import { addressFor } from "./router";
+  import { addressFor, ownClick } from "./router";
 
   let {
     article,
@@ -80,6 +80,7 @@
     onMarkUnread,
     onHide,
     onWriter,
+    onAbout,
     beforeToolbar,
     library,
     listNote,
@@ -97,8 +98,10 @@
     onMarkUnread: () => void;
     /** "Hide articles about…": Settings › Hiding, with a new rule for whoever wrote it (SPEC section 27). */
     onHide: (feed: number) => void;
-    /** The writer's name under the title: the page about them (their row's place, `library.rowOf`). */
+    /** The writer's name under the title: their list, everything of theirs (their row's place, `library.rowOf`). */
     onWriter: (row: number) => void;
+    /** "Info about …" in More (and `i`): the page about them. */
+    onAbout: (row: number) => void;
     /** On a phone, the "now playing" bar, which sits above the article's toolbar (SPEC section 35). */
     beforeToolbar?: Snippet;
     /** The reader's people, for writing back to whoever wrote it (SPEC section 37). */
@@ -193,9 +196,13 @@
         ...(article.link ? [{ label: sharing ? "Share" : "Copy link", shortcut: phone || sharing ? undefined : keyFor("copy-link"), onSelect: share }] : []),
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
-        ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
       ],
     },
+    // Who wrote it, apart: the page about them, and hiding articles about them (decision 0288).
+    ...(followed ? [{ items: [
+      { label: `Info about ${article.feedTitle}`, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
+      { label: "Hide articles about…", onSelect: () => onHide(article.feedId) },
+    ] }] : []),
   ]);
 
   // Your place, like a bookmark (decision 0060). Only the reader's own
@@ -552,20 +559,15 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="flex items-center gap-3" dir={rtl ? "rtl" : undefined}>
-        <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={(source?.kind ?? "person") === "person" || source?.person != null} beside />
+        <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
         <!-- Left to right whatever the article's script, as the byline always was; only the circle's side follows the script. -->
         <p class="article-byline min-w-0" lang="en" dir="ltr">
           {#if followed}
-            <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
+            <!-- Someone followed: their name opens their list, everything of theirs (decision 0288); the page about them is a press on from there, or More's "Info about …". No "›" here, where the "·" follows.
                  A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
-            <a class="publisher writer-link" href={addressFor({ kind: "about", id: library.rowOf(article.feedId) })} title={tip(`Info about ${article.feedTitle}`, "about")} aria-describedby="byline-about"
-              onclick={(event) => {
-                // A click meant for a new tab or window is the browser's.
-                if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-                event.preventDefault();
-                onWriter(library.rowOf(article.feedId));
-              }}><bdi>{article.feedTitle}</bdi></a
-            ><span id="byline-about" aria-hidden="true" class="sr-only">Opens the page about them.</span>
+            <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
+              onclick={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}><bdi>{article.feedTitle}</bdi></a
+            ><span id="byline-about" aria-hidden="true" class="sr-only">Opens everything of theirs.</span>
           {:else if full?.siteUrl}
             <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
           {:else}

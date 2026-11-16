@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isList } from "./router";
-import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type Browser, type Here } from "./navigation";
+import { homeFor, isOver, isWho, listFromOnMove, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
+import type { Article } from "./shapes";
 
 const unread: Route = { kind: "view", view: "unread" };
 const all: Route = { kind: "view", view: "all" };
@@ -246,5 +247,19 @@ describe("where their page was opened from (decision 0284)", () => {
     expect(whoClosesTo("article", { kind: "about", id: 4 })).toBe("back");
     expect(whoClosesTo("article", { kind: "about", id: 4, settings: true })).toEqual({ kind: "feed", id: 4 });
     expect(whoClosesTo(undefined, { kind: "about", id: 4 })).toEqual({ kind: "feed", id: 4 });
+  });
+});
+
+describe("their list opened from an article's byline (decision 0288)", () => {
+  const from = { row: 4, article: { id: 9 } as Article };
+  it("keeps the way back to the article while the reader stays with them", () => {
+    expect(listFromOnMove(from, { kind: "feed", id: 4 })).toBe(from);
+    expect(listFromOnMove(from, { kind: "about", id: 4 })).toBe(from);
+    expect(listFromOnMove(from, { kind: "about", id: 4, settings: true })).toBe(from);
+  });
+  it("forgets it anywhere else", () => {
+    expect(listFromOnMove(from, { kind: "feed", id: 5 })).toBeUndefined();
+    expect(listFromOnMove(from, { kind: "view", view: "unread" })).toBeUndefined();
+    expect(listFromOnMove(undefined, { kind: "feed", id: 4 })).toBeUndefined();
   });
 });
