@@ -117,7 +117,7 @@
   once, a heading in the reading serif (20px, semibold, full ink) on the row
   titles' edge, 40px under the group before, with the day that placed it
   right after it (12px on), in the rows' date type, so the eye never crosses
-  the page; under it their titles, 8px under the name and 16px above and
+  the page; under it their titles, 12px under the name and 16px above and
   below each other, so each title reads on its own and each person as one
   block. The name carries the weight, so
   an unread title under it is regular, in full ink; the dot still marks it. Each row's small line (the day,
@@ -177,7 +177,7 @@
   padding-bottom: 1rem;
 }
 .by-person li:has(.list-name) .item-row {
-  --row-top: 0.5rem;
+  --row-top: 0.75rem;
 }
 .by-person .item-row > .title {
   flex: 1 1 max(12rem, 60%);

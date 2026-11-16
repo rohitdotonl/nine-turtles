@@ -29,7 +29,7 @@ owner chose to keep the order and show it, then trimmed it to this.
    words. Rows still show no day (decision 0277).
 2. **"People" and "Publications"**, matching quiet labels: the meta size,
    regular, in the dates' grey. Both `h3`; every name `h4` under its label.
-3. **Room:** titles 16px above and below each other, the first 8px under
+3. **Room:** titles 16px above and below each other, the first 12px under
    its name, 40px between people, the labels 48px above (16px at the top)
    and 8px over the first name.
 4. **The unread dot, everywhere a row has one,** is 6px (was 8px) in the
