@@ -248,6 +248,31 @@ test("in an article, a pull past its end opens the next one and past its top the
   await expect(rows(page).first()).toBeVisible();
 });
 
+test("with Write back's ways open at an article's end, a stroke up scrolls rather than opening the next article", async ({ page }) => {
+  const name = `sw-${test.info().workerIndex}-${Date.now()}`;
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  expect((await page.request.post(new URL(`/api/feeds/${id}`, FEEDS_APP).href, { data: { kind: "person" } })).ok()).toBe(true);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await rows(page).nth(0).click();
+  const heading = pane(page).getByRole("heading", { level: 2 });
+  const title = await heading.textContent();
+  const text = pane(page).locator(".reading-scroller");
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  await pane(page).getByRole("button", { name: /^Other ways to reply/ }).click();
+  const ways = pane(page).getByRole("menu");
+  await expect(ways).toBeVisible();
+  const box = (await text.boundingBox())!;
+  const stroke = await Finger.down(page, box.x + 30, box.y + box.height - 60);
+  await stroke.move(0, -200);
+  await expect(peek(page)).toHaveCount(0);
+  await stroke.up();
+  await expect(heading).toHaveText(title ?? "");
+});
+
 test("a pull follows the finger back; held still before lifting, a quick pull isn't a flick; a touch while it glides opens nothing more; a swipe right that drifts down still goes back", async ({ page }) => {
   await openBlog(page);
   const titles = (await rows(page).locator(".title").allTextContents()).map((title) => title.replace(/, unread$/, "").trim());

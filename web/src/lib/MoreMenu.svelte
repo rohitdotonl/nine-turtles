@@ -11,7 +11,9 @@
   upwards, from the phone's bottom bar, reads from the button outwards: its
   first item sits nearest the button and finger, so its rows (and groups)
   are drawn in reverse, and opening it puts the keyboard on that nearest
-  one (decision 0243). A choice that is
+  one (decision 0243). A menu that would open downwards past the edge of
+  what's showing (the end of an article, above the phone's bottom bar) opens
+  upwards instead, the same way, when there's more room above. A choice that is
   one of several (the sort order) is ticked, so it shows without color.
 -->
 <script lang="ts" module>
@@ -29,7 +31,7 @@
 </script>
 
 <script lang="ts">
-  import type { Snippet } from "svelte";
+  import { tick, type Snippet } from "svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import MenuList from "./MenuList.svelte";
 
@@ -62,14 +64,41 @@
   let wrap: HTMLDivElement | undefined = $state();
   let button: HTMLButtonElement | undefined = $state();
   let list: MenuList | undefined = $state();
+  /** No room below the button in what's showing, so it opens upwards this time. */
+  let flipped = $state(false);
+  let upwards = $derived(up || flipped);
   /** Nearest the button first: upwards, the last row drawn is the first item. */
-  let shown = $derived(up ? [...groups].reverse().map((group) => ({ ...group, items: [...group.items].reverse() })) : groups);
+  let shown = $derived(upwards ? [...groups].reverse().map((group) => ({ ...group, items: [...group.items].reverse() })) : groups);
 
   /** `at` is where it sits on the screen: the top row ("first") or the bottom one; by default, the one nearest the button. */
-  async function show(at: "first" | "last" = up ? "last" : "first") {
+  async function show(at?: "first" | "last") {
+    flipped = false;
     open = true;
-    await Promise.resolve();
-    await list?.focus(at);
+    await tick();
+    if (!up) flipped = noRoomBelow();
+    await list?.focus(at ?? (upwards ? "last" : "first"));
+  }
+
+  /** The bottom of what's showing around the button: the screen's, or a scrolling area's that ends sooner (an article's, above the phone's bottom bar). */
+  function shownBounds(): { top: number; bottom: number } {
+    let top = 0;
+    let bottom = window.innerHeight;
+    for (let node = wrap?.parentElement; node; node = node.parentElement) {
+      if (getComputedStyle(node).overflowY === "visible") continue;
+      const it = node.getBoundingClientRect();
+      top = Math.max(top, it.top);
+      bottom = Math.min(bottom, it.bottom);
+    }
+    return { top, bottom };
+  }
+
+  /** Whether the menu, drawn downwards, runs past what's showing while there's more room above the button. */
+  function noRoomBelow(): boolean {
+    const menu = wrap?.querySelector("[role='menu']");
+    if (!menu || !button) return false;
+    const view = shownBounds();
+    const it = button.getBoundingClientRect();
+    return menu.getBoundingClientRect().bottom > view.bottom && it.top - view.top > view.bottom - it.bottom;
   }
 
   function close(giveBack: boolean) {
@@ -113,7 +142,7 @@
     {/if}
   </button>
   {#if open}
-    <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${up ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
+    <MenuList bind:this={list} {id} {label} groups={shown} place={`${start ? "left-0" : "right-0"} ${upwards ? "bottom-full mb-1" : "top-full mt-1"}`} onClose={close} />
   {/if}
 </div>
 
