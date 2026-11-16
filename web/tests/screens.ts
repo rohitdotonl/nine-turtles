@@ -715,15 +715,18 @@ export async function markAllFromMenu(page: Page): Promise<void> {
  * calling that a full lap (decision 0114).
  */
 export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<void> {
-  type Walk = { tabbed: WeakSet<Element>; last: Element | null; fresh: number };
+  type Walk = { tabbed: WeakSet<Element>; last: Element | null; fresh: number; path: string[] };
   await page.evaluate(() => {
-    (window as unknown as { walk: Walk }).walk = { tabbed: new WeakSet(), last: null, fresh: 0 };
+    (window as unknown as { walk: Walk }).walk = { tabbed: new WeakSet(), last: null, fresh: 0, path: [] };
   });
   for (let i = 0; i <= limit; i++) {
     const where = await target.evaluate((element) => {
       const here = document.activeElement;
       if (element === here) return "reached";
       const walk = (window as unknown as { walk: Walk }).walk;
+      // Where Tab has been, so a walk that never gets there says why.
+      const name = here ? `${here.tagName.toLowerCase()} "${(here.getAttribute("aria-label") ?? here.textContent ?? "").trim().slice(0, 40)}"` : "nothing";
+      walk.path = [...walk.path.slice(-11), document.hasFocus() ? name : `${name} (page not focused)`];
       if (walk.last && !walk.last.isConnected && walk.fresh < 20) {
         walk.tabbed = new WeakSet();
         walk.last = null;
@@ -741,7 +744,8 @@ export async function tabTo(page: Page, target: Locator, limit = 2000): Promise<
     if (where === "round" || i === limit) break;
     await page.keyboard.press("Tab");
   }
-  throw new Error("Tab never reached the element");
+  const path = await page.evaluate(() => (window as unknown as { walk: Walk }).walk.path);
+  throw new Error(`Tab never reached the element; it went: ${path.join(" › ")}`);
 }
 
 /** Chooses `words` in the open article's text, as a reader does with the mouse. */
