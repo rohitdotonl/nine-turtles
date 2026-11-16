@@ -858,7 +858,7 @@
           {follow}
           {phone}
           {unreadOff}
-          {searchArticles} onLeft={(row) => { if ((route.kind === "feed" || isWho(route)) && (row.places ?? [row.id]).includes(route.id)) go(home); else itemList?.refresh(); }} onBack={() => itemList?.refresh()} onLink={(address) => { shared = address; go({ kind: "add-feed" }); }}
+          {searchArticles} onLeft={(row, kept) => { const places = row.places ?? [row.id]; if ((route.kind === "feed" || isWho(route)) && places.includes(route.id)) go(home); else itemList?.letGo(places, kept); }} onBack={() => itemList?.refresh()} onLink={(address) => { shared = address; go({ kind: "add-feed" }); }}
         />
       {/if}
       {#if library.feedsFailed}
