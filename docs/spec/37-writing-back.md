@@ -47,7 +47,11 @@ V1, item 2). Its look gets a refinement round.*
   paper plane each; on a computer the one this device writes in shows W,
   its key), **Copy maya@example.com** (two
   overlapping pages; only when an address is known), then, after a
-  hairline, **Comment on their site** (a speech bubble). The way the main
+  hairline, **Comment on their site** (a speech bubble). It drops down
+  under the arrow; where there isn't room for it there (an article's end,
+  just above a phone's bottom bar or a short window's edge), it opens
+  upwards instead, read from the arrow outwards as More's does on a phone, so
+  every row shows. The way the main
   button does is ticked. Choosing one does it at once: an email opens
   where chosen (kept on this device, as Write in Gmail is, below), the
   address is copied ("Copied." under it), or their comments open in a new

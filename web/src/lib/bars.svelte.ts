@@ -12,6 +12,8 @@
 // Put away, the bars are drawn as `sr-only`: screen readers still have every
 // button, and Tab still reaches them (and brings them back).
 
+import { somethingOpen } from "./swipe";
+
 /** What a tap on these leaves to them: links, buttons, a highlight, a picture, a player, a field. */
 const THEIRS = "a, button, input, textarea, select, label, summary, mark, img, video, audio, iframe, [role='button'], [tabindex]";
 
@@ -26,7 +28,7 @@ export class Bars {
   /** A press starting anywhere, before any menu closes on it: whether something was open. */
   pressed() {
     const chosen = window.getSelection();
-    this.#closing = !!document.querySelector("[role='menu'], [role='dialog']") || (!!chosen && !chosen.isCollapsed);
+    this.#closing = somethingOpen() || (!!chosen && !chosen.isCollapsed);
   }
 
   /** A tap on the text: puts the bars away or brings them back, unless the tap was for something in the text. */
