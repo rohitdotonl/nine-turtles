@@ -51,12 +51,12 @@
     <path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.54 3.54 0 0 0-5-5l-.75.75" />
     <path d="M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.54 3.54 0 0 0 5 5l.75-.75" />
   {:else if name === "share" && onApple}
-    <!-- Share on an Apple device (decision 0292): Apple's own, an arrow up out of a box. -->
+    <!-- Share on an Apple device (decision 0293): Apple's own, an arrow up out of a box. -->
     <path d="M10 12.5V2.75" />
     <path d="M6.5 6.25 10 2.75l3.5 3.5" />
     <path d="M6.25 9H5a1 1 0 0 0-1 1v6.25a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V10a1 1 0 0 0-1-1h-1.25" />
   {:else if name === "share"}
-    <!-- Share everywhere else (decision 0292): three linked points, one passing to two, as Android and the New York Times draw it. -->
+    <!-- Share everywhere else (decision 0293): three linked points, one passing to two, as Android and the New York Times draw it. -->
     <circle cx="14.75" cy="4.75" r="2.25" />
     <circle cx="5.25" cy="10" r="2.25" />
     <circle cx="14.75" cy="15.25" r="2.25" />

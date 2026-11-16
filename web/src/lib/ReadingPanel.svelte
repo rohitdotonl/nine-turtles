@@ -1,5 +1,5 @@
 <!--
-  The reading panel, Text and page (SPEC section 7; decisions 0034, 0292): the reader's own
+  The reading panel, Text and page (SPEC section 7; decisions 0034, 0293): the reader's own
   controls, in the article's More, as in Apple Books. Text size (the same
   steps as `+` and `-`), the page (White, Paper, Night or Match device) and the reading font, all
   the same preferences as Settings › Look and feel, applied at once to the

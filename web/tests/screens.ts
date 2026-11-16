@@ -612,7 +612,7 @@ export function couldBeEither(title: RegExp | number) {
   };
 }
 
-/** Opens the reading panel the way a reader does: More (…), then Text and page (decision 0292). `within` is where its More is: the article, or a phone's bottom bar. */
+/** Opens the reading panel the way a reader does: More (…), then Text and page (decision 0293). `within` is where its More is: the article, or a phone's bottom bar. */
 export async function openAppearance(page: Page, within: Locator = page.getByRole("region", { name: "Article", exact: true })): Promise<Locator> {
   await within.getByRole("button", { name: "More actions" }).first().click();
   await page.getByRole("menuitem", { name: "Text and page" }).click();

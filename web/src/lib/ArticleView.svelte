@@ -7,7 +7,7 @@
   away with the title, Save and View original waiting again at the end (decision 0263): View original, Share (Copy link
   on a computer), Save, Write back (a paper plane, for a person only, decision 0214) and More (…).
   More holds Text and page (the reading panel), Mark unread, Add a note and Hide, each with its icon
-  (SPEC sections 7, 8, 9, 21, 33 and 37; decision 0292); on a phone it opens upwards, Text
+  (SPEC sections 7, 8, 9, 21, 33 and 37; decision 0293); on a phone it opens upwards, Text
   and page nearest the button (decision 0243). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
   0214), as their name at the top of the list does. What was just done ("Link copied.")
@@ -190,7 +190,7 @@
   );
 
   /**
-   * The article's less frequent actions, behind More (…), each with its icon before its words (decision 0292):
+   * The article's less frequent actions, behind More (…), each with its icon before its words (decision 0293):
    * the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
    */
   let more: MenuGroup[] = $derived([
@@ -460,7 +460,7 @@
 </script>
 
 {#snippet shareButton(style: string)}
-  <!-- Share, one press from the text (decision 0292): the phone's own share menu, or Copy link where there's none. -->
+  <!-- Share, one press from the text (decision 0293): the phone's own share menu, or Copy link where there's none. -->
   <button
     type="button"
     aria-label={sharing ? "Share" : "Copy link"}

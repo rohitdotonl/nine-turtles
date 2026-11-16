@@ -173,7 +173,7 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0292).
+    // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0293).
     const names = await toolbar(page)
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
@@ -183,7 +183,7 @@ test.describe("on a phone", () => {
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
     // More opens upwards, over the article, reading from the button outwards (decision 0243): Text and page nearest
-    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0292).
+    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0293).
     // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
