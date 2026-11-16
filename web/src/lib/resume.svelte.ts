@@ -42,12 +42,14 @@ function cameBack(now: number): boolean {
   return !Number.isFinite(then) || now - then >= AWAY || now < then;
 }
 
-/** Whether this visit is a coming back, and still on the list it began on. */
-let welcome = false;
-/** The first list on screen since coming back. */
+/** Whether this visit is a coming back, and still on the first screen it began on. */
+let comingBack = false;
+/** The first screen since coming back: a list's address, or "page" for any other page (Add a feed, Settings…). */
 let first: string | undefined;
-// Leaving is written down, so a refresh, another tab or another app isn't coming back.
-globalThis.document?.addEventListener("visibilitychange", () => document.hidden && stillHere());
+/** The screen on show now: a list's address, or "home" (a phone's feeds screen), "article" or "page". */
+let at = "home";
+// Leaving is written down, so a refresh, another tab or another app isn't coming back; shown again, it may be.
+globalThis.document?.addEventListener("visibilitychange", () => (document.hidden ? stillHere() : shownAgain()));
 globalThis.addEventListener?.("pagehide", () => stillHere());
 /** How long the empty reading area waits for the answer before it shows its usual line. */
 export const WAIT = 1_500;
@@ -69,7 +71,7 @@ export function toOffer(answer: unknown): (Offer & { place: Place }) | undefined
 export function askWhereYouLeftOff(now = Date.now()): void {
   if (asking) return;
   asking = true;
-  welcome = cameBack(now);
+  comingBack = cameBack(now);
   stillHere(now);
   const waited = setTimeout(() => (pickUp.asked = true), WAIT);
   getJson("/api/resume").then(
@@ -81,9 +83,9 @@ export function askWhereYouLeftOff(now = Date.now()): void {
         keepPlace(held, offer.place);
         // Something else opened before the answer came: that place is let go, as below. An answer
         // after the usual line has shown never replaces it: nothing changes under the reader.
-        if (current === undefined && !pickUp.asked && welcome) pickUp.offer = { article: offer.article, writer: offer.writer };
+        if (current === undefined && !pickUp.asked && comingBack) pickUp.offer = { article: offer.article, writer: offer.writer };
         else if (current !== undefined && current !== held) letGo(held);
-      }
+      } else pickUp.offer = undefined; // Finished or let go on another device since the line showed.
       clearTimeout(waited);
       pickUp.asked = true;
     },
@@ -112,25 +114,30 @@ export function articleOpened(id: number): void {
   if (held !== undefined && held !== id) letGo(held);
 }
 
-/** A list is on screen: the line is for the first one since coming back, and goes once another shows (decision 0292). */
-export function listShown(list: string): void {
-  first ??= list;
-  if (list === first) return;
-  welcome = false;
+/**
+ * A screen shows: a list's address, or "home", "article" or "page". The line is for the first list
+ * since coming back, and only when that's the first screen: another list or a page ends it (decision 0292).
+ */
+export function screenShown(screen: string): void {
+  at = screen;
+  if (screen === "home" || screen === "article") return;
+  first ??= screen;
+  if (screen === first) return;
+  comingBack = false;
   pickUp.offer = undefined;
 }
 
 /**
- * The page was shown again, with `list` on screen (if one is). After half an
- * hour away with no article open, that's coming back, and the line is asked
- * for afresh, for that list (or the next one to show): true then.
+ * The page was shown again. After half an hour away with no article open,
+ * that's coming back, and the line is asked for afresh, for the screen on
+ * show (or the next one, from a phone's feeds screen): true then.
  */
-export function lookedAgain(list: string | undefined, reading: boolean, now = Date.now()): boolean {
-  if (reading || !cameBack(now)) {
+export function shownAgain(now = Date.now()): boolean {
+  if (at === "article" || !cameBack(now)) {
     stillHere(now);
     return false;
   }
-  first = list;
+  first = at === "home" ? undefined : at;
   asking = false;
   current = undefined;
   pickUp.asked = false;

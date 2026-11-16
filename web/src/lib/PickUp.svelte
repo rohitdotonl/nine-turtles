@@ -7,17 +7,18 @@
 -->
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { askWhereYouLeftOff, listShown, lookedAgain, pickUp, pickUpWords } from "./resume.svelte";
+  import { askWhereYouLeftOff, pickUp, pickUpWords, screenShown } from "./resume.svelte";
   import type { Article } from "./shapes";
 
-  /** `list`: the list on screen, if one is (not while an article, a page or a phone's feeds screen shows). */
-  let { onOpen, list, reading, class: classes = "" }: { onOpen: (article: Article) => void; list: string | undefined; reading: boolean; class?: string } = $props();
+  /** `screen`: the list on screen (its address), or "home" (a phone's feeds screen), "article" or "page". */
+  let { onOpen, screen, class: classes = "" }: { onOpen: (article: Article) => void; screen: string; class?: string } = $props();
 
   onMount(() => askWhereYouLeftOff());
-  $effect(() => void (list !== undefined && untrack(() => listShown(list))));
+  $effect(() => {
+    const shown = screen;
+    untrack(() => screenShown(shown));
+  });
 </script>
-
-<svelte:document onvisibilitychange={() => !document.hidden && lookedAgain(list, reading)} />
 
 {#if pickUp.offer}
   {@const offer = pickUp.offer}

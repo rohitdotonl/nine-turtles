@@ -9,6 +9,7 @@
 **How.**
 1. Each device writes down, in its own storage (`nine-turtles.here`), when the reader was last there: when the app opens, when the page is hidden (another app, another tab, a refresh) and when it's left. Nothing runs in the background: the time is compared once, when the app opens or is shown again.
 2. Opening the app, or showing it again with no article open, after 30 minutes or more since that time is coming back; so is a device with no time written down. Only then is the line offered.
-3. It sits on the first list on screen, and goes for the rest of the visit once another list shows.
+3. It sits on the first list on screen, and goes for the rest of the visit once another list or any other page shows. If the first screen after coming back isn't a list (Add a feed from a share, Settings), it isn't offered at all, so adding a feed and pressing the button to read it never shows it. A phone's feeds screen doesn't count: the list you choose from it is the first.
+4. The time belongs to the device, not the reader: on a shared device, a second reader signing in within half an hour of the first isn't offered their line until they've been away. Rare enough to accept; a reader-keyed time would cost more than it gives.
 
 The server keeps the place as before (decision 0175), so another device still offers it when you come back there.

@@ -168,10 +168,10 @@ describe("Pick up where you left off", () => {
   it("goes once you go to another list, and a late answer doesn't bring it back", async () => {
     storage();
     server({ article: ARTICLE, writer: null, block: 3, within: 0.5 });
-    const { askWhereYouLeftOff, listShown, pickUp } = await load();
+    const { askWhereYouLeftOff, screenShown, pickUp } = await load();
     askWhereYouLeftOff();
-    listShown("/unread");
-    listShown("/feeds/armin");
+    screenShown("/unread");
+    screenShown("/feeds/armin");
     await settle();
     expect(pickUp.offer).toBeUndefined();
   });
@@ -179,20 +179,50 @@ describe("Pick up where you left off", () => {
   it("comes back when the page shows again only after half an hour away, with no article open, on the list then on screen", async () => {
     storage();
     const sent = server({ article: ARTICLE, writer: null, block: 3, within: 0.5 });
-    const { askWhereYouLeftOff, listShown, lookedAgain, pickUp, stillHere, AWAY } = await load();
+    const { askWhereYouLeftOff, screenShown, shownAgain, pickUp, stillHere, AWAY } = await load();
     const now = Date.now();
     askWhereYouLeftOff(now);
     await settle();
-    listShown("/unread");
-    listShown("/saved");
+    screenShown("/unread");
+    screenShown("/saved");
     expect(pickUp.offer).toBeUndefined();
     stillHere(now);
-    expect(lookedAgain("/saved", false, now + 60_000)).toBe(false);
-    expect(lookedAgain(undefined, true, now + 60_000 + AWAY)).toBe(false);
-    expect(lookedAgain("/saved", false, now + 120_000 + 2 * AWAY)).toBe(true);
+    expect(shownAgain(now + 60_000)).toBe(false);
+    screenShown("article");
+    expect(shownAgain(now + 60_000 + AWAY)).toBe(false);
+    screenShown("/saved");
+    expect(shownAgain(now + 120_000 + 2 * AWAY)).toBe(true);
     await settle();
-    listShown("/saved");
+    screenShown("/saved");
     expect(sent.filter((request) => request === "GET /api/resume")).toHaveLength(2);
     expect(pickUp.offer?.article.id).toBe(7);
+  });
+
+  it("isn't offered when the first screen after coming back is a page, such as Add a feed", async () => {
+    storage();
+    server({ article: ARTICLE, writer: null, block: 3, within: 0.5 });
+    const { askWhereYouLeftOff, screenShown, pickUp } = await load();
+    screenShown("home");
+    screenShown("page");
+    askWhereYouLeftOff();
+    await settle();
+    screenShown("/feeds/armin");
+    expect(pickUp.offer).toBeUndefined();
+  });
+
+  it("goes when a fresh answer after time away has nothing to offer, such as an article finished elsewhere", async () => {
+    storage();
+    let offer: unknown = { article: ARTICLE, writer: null, block: 3, within: 0.5 };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(offer), { status: 200 })));
+    const { askWhereYouLeftOff, screenShown, shownAgain, pickUp, AWAY } = await load();
+    const now = Date.now();
+    askWhereYouLeftOff(now);
+    await settle();
+    screenShown("/unread");
+    expect(pickUp.offer?.article.id).toBe(7);
+    offer = {};
+    expect(shownAgain(now + AWAY)).toBe(true);
+    await settle();
+    expect(pickUp.offer).toBeUndefined();
   });
 });

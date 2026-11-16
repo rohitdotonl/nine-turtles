@@ -1273,6 +1273,14 @@ test.describe("your place in an article (decision 0060)", () => {
     await appReady(page);
     await expect(page.locator(".item-row").first()).toBeVisible();
     await expect(page.locator("#list-pane")).not.toContainText("You were reading");
+    // Coming back to a page that isn't a list, such as Add a feed: the list you go to next doesn't offer it either.
+    await away();
+    await page.goto(new URL("/add", page.url()).href);
+    await appReady(page);
+    await expect(page.getByRole("heading", { level: 2, name: "Add a person or publication" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".item-row").first()).toBeVisible();
+    await expect(page.locator("#list-pane")).not.toContainText("You were reading");
     await away();
     await page.reload();
     await appReady(page);
@@ -1290,6 +1298,7 @@ test.describe("your place in an article (decision 0060)", () => {
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
     await page.waitForTimeout(300);
+    await away();
     await page.goto(new URL("/all", page.url()).href);
     await appReady(page);
     await expect(page.locator(".item-row").first()).toBeVisible();
