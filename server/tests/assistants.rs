@@ -318,6 +318,12 @@ async fn the_reader_approves_and_the_assistant_works() {
     assert!(names.contains(&"search_articles") && names.contains(&"export_feed_list"));
     assert!(names.contains(&"save") && names.contains(&"list_saved"));
     assert!(!names.contains(&"star") && !names.contains(&"list_starred"));
+    // What an assistant reads says Save, never Star (decision 0281).
+    let said = listed["result"]["tools"].to_string().to_lowercase();
+    let old = said
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .find(|word| ["star", "stars", "starred", "unstar", "unstarred"].contains(word));
+    assert_eq!(old, None, "the tools still say {old:?}");
 
     // Reading.
     let (unread, error) = tool(&base, &access, "list_unread", json!({})).await;

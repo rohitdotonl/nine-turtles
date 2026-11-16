@@ -127,7 +127,7 @@ test("a new name in their settings is kept the moment the field is left, so ther
 
   // Leaving the field keeps it, with no Save to forget; a reload shows it kept.
   await page.getByRole("heading", { level: 2 }).first().click();
-  await expect(page.getByText("Saved.")).toBeVisible();
+  await expect(page.getByText("Name changed.")).toBeVisible();
   await page.reload();
   await appReady(page);
   await expect(name).toHaveValue("Asha Rao, garden letters");

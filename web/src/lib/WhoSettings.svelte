@@ -130,7 +130,7 @@
     // Only once it's kept does the field follow the saved name again; refused, what was typed stays.
     if (renamed && document.activeElement !== nameField) editing = false;
   }
-  /** "Saved." under Name once a new name is kept, until the field is used again: the field itself doesn't change, so a word does. */
+  /** "Name changed." under Name once a new name is kept, until the field is used again: the field itself doesn't change, so a word does. */
   let renamed = $state(false);
 
   function nameKeys(event: KeyboardEvent) {
@@ -216,7 +216,7 @@
     <label class="inset-row setting has-control">
       <span class="setting-words">
         <span class="setting-name">Name</span>
-        <span role="status" class={["setting-hint", !renamed && "sr-only"]}>{renamed ? "Saved." : ""}</span>
+        <span role="status" class={["setting-hint", !renamed && "sr-only"]}>{renamed ? "Name changed." : ""}</span>
       </span>
       <input
         bind:this={nameField}

@@ -251,8 +251,8 @@ fn list() -> Vec<Value> {
             "unsubscribe_feed",
             "Unsubscribe from a feed",
             "Stops following a feed. It's kept, hidden, for 30 days, and the reader can bring it back in \
-             Settings (or with resubscribe_feed); then its unstarred articles are removed for good. \
-             Starred articles always stay. Ask the reader first.",
+             Settings (or with resubscribe_feed); then its articles that aren't saved are removed for good. \
+             Saved articles always stay. Ask the reader first.",
             json!({ "feed_id": feed_id }),
             &["feed_id"],
             changing(true, true),

@@ -162,7 +162,7 @@ PLAN.md → V1, item 1.*
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on
-      leaving the field, with "Saved." under it; Escape while typing puts it
+      leaving the field, with "Name changed." under it; Escape while typing puts it
       back. An empty name isn't kept ("Give them a name."); a name that
       couldn't be saved stays as typed, with why under the settings;
     - for one source, **This is: A person / A publication**; A publication
