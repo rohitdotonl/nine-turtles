@@ -9,8 +9,8 @@ A "ch" is the width of the font's zero, so the column was measured in a
 different ruler for each font. Atkinson Hyperlegible Next has a wide zero
 (0.65em against Literata's 0.58em) but narrower letters on average (0.43em
 against 0.47em). So in Atkinson the column grew an eighth wider and held
-about 85 letters a line, past the 45 to 75 that reads best and past WCAG
-1.4.8's 80.
+about 80 characters a line on a real article, past the 45 to 75 that reads
+best and at the very edge of WCAG 1.4.8's 80.
 
 **Decision.** The column is measured in the text's size (em), not in its
 zero: 32.5em for every font, 650px at the usual size. Measured on a long
