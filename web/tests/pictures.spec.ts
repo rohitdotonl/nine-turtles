@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
@@ -48,18 +49,33 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   await page.locator(".item-row").first().click();
   const byline = page.locator("article .portrait");
   await expect(byline).toHaveAttribute("aria-hidden", "true");
-  await expect(byline.locator(".initials")).toHaveText(/^B/);
+  await expect(byline.locator(".initials")).toHaveAttribute("data-initials", /^B/);
 
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
   const picture = who.getByRole("button", { name: `Change picture of Blog ${name}` });
-  await expect(picture.locator(".initials")).toHaveText(/^B/);
-  // Nothing chosen yet: the menu only offers to choose one.
-  await picture.click();
+  await expect(picture.locator(".initials")).toHaveAttribute("data-initials", /^B/);
+  // The initials are drawn, not written, so the button's name is only its words (WCAG 2.5.3, Label in Name).
+  await expect(picture.locator(".initials")).toHaveText("");
+  const checked = await new AxeBuilder({ page }).withRules(["label-content-name-mismatch"]).analyze();
+  expect(checked.violations).toEqual([]);
+  // Nothing chosen yet: the menu only offers to choose one. With the keyboard alone: Enter opens it, and its
+  // one item opens the device's file picker; Escape closes the menu and leaves the keyboard on the picture.
+  await picture.focus();
+  await page.keyboard.press("Enter");
   const menu = page.getByRole("menu", { name: `Change picture of Blog ${name}` });
   await expect(menu.getByRole("menuitem")).toHaveText(["Choose a picture…"]);
+  await expect(menu.getByRole("menuitem", { name: "Choose a picture…" })).toBeFocused();
+  const picker = page.waitForEvent("filechooser");
+  await page.keyboard.press("Enter");
+  expect((await picker).isMultiple()).toBe(false);
+  await expect(menu).toBeHidden();
+  await picture.focus();
+  await page.keyboard.press("Enter");
+  await expect(menu).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(picture).toBeFocused();
 
   // Chosen: whatever its size, the browser sends it small, as WebP; it shows, and Undo puts the initials back.
   await choosePicture(who);
@@ -69,7 +85,7 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   expect(kept.headers()["content-type"]).toBe("image/webp");
   expect((await kept.body()).length).toBeLessThan(40_000);
   await who.getByRole("button", { name: "Undo" }).click();
-  await expect(picture.locator(".initials")).toHaveText(/^B/);
+  await expect(picture.locator(".initials")).toHaveAttribute("data-initials", /^B/);
 
   // Chosen again, then back to the automatic picture from the menu, which says so.
   await choosePicture(who);
@@ -77,6 +93,6 @@ test("their picture: initials when nothing loads, and one of the reader's own, w
   await picture.click();
   await menu.getByRole("menuitem", { name: "Use the automatic picture" }).click();
   await expect(who.getByText("Back to the automatic picture.")).toBeVisible();
-  await expect(picture.locator(".initials")).toHaveText(/^B/);
+  await expect(picture.locator(".initials")).toHaveAttribute("data-initials", /^B/);
   await expect(who.getByRole("button", { name: "Undo" })).toBeFocused();
 });

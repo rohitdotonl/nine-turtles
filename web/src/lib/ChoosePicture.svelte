@@ -35,15 +35,15 @@
     },
   ]);
 
-  /** The chosen picture as it is now, for Undo; none while it's the automatic one. */
-  async function current(): Promise<Blob | null> {
+  /** The chosen picture as it is now, for Undo; none while it's the automatic one; undefined if it couldn't be fetched. */
+  async function current(): Promise<Blob | null | undefined> {
     if (!chosen) return null;
     const response = await api(chosen).catch(() => undefined);
-    return response?.ok ? response.blob() : null;
+    return response?.ok ? response.blob() : undefined;
   }
 
-  /** Sends a picture to keep, or none to go back to the automatic one. Answers whether it worked. */
-  async function send(picture: Blob | null): Promise<boolean> {
+  /** Sends a picture to keep, or none to go back to the automatic one. Answers whether it worked, or that the reader keeps too many already. */
+  async function send(picture: Blob | null): Promise<boolean | "full"> {
     const response = await api(picture ? `/api/feeds/${feed.id}/picture` : `/api/feeds/${feed.id}/picture/delete`, {
       method: "POST",
       headers: { "content-type": picture ? picture.type : "application/json" },
@@ -51,13 +51,17 @@
       signal: AbortSignal.timeout(15_000),
     }).catch(() => undefined);
     if (response?.ok) await library.loadFeeds();
-    return !!response?.ok;
+    return response?.status === 413 ? "full" : !!response?.ok;
   }
 
+  const FAILED = "That didn't work. Try again in a moment.";
+
   async function change(picture: Blob | null, done: string) {
+    // The picture there now, so Undo can put it back; without it, nothing changes, so nothing is lost.
     const was = await current();
-    if (!(await send(picture))) {
-      said = "That didn't work. Try again in a moment.";
+    const sent = was === undefined ? false : await send(picture);
+    if (sent !== true) {
+      said = sent === "full" ? "There’s no room for more pictures. Use the automatic picture for someone else first." : FAILED;
       before = undefined;
       return;
     }
@@ -82,9 +86,14 @@
 
   async function undo() {
     const picture = before;
+    if (picture === undefined) return;
+    if ((await send(picture)) !== true) {
+      // Undo stays, to try again.
+      said = FAILED;
+      return;
+    }
     said = undefined;
     before = undefined;
-    if (picture !== undefined) await send(picture);
   }
 </script>
 

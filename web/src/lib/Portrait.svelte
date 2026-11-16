@@ -28,9 +28,11 @@
   let tried = $state(0);
   let small: string | undefined = $state();
   let filled: string | undefined = $state();
-  // Another person, or a picture just chosen: start again from the first.
+  // Another person, or a picture just chosen: start again from the first. (By the addresses, not the list,
+  // which is rebuilt each time the feeds load, so an unchanged picture never blinks.)
+  let addresses = $derived(pictures.join(" "));
   $effect(() => {
-    void pictures.join(" ");
+    void addresses;
     tried = 0;
     small = undefined;
     filled = undefined;
@@ -62,7 +64,8 @@
   {:else if small}
     <img src={small} alt="" referrerpolicy="no-referrer" class="inside" />
   {:else}
-    <span class="initials">{initials}</span>
+    <!-- Drawn by the style, not written in the page: the monogram is part of the picture, so a button around it is named only by its words (WCAG 2.5.3, Label in Name). -->
+    <span class="initials" data-initials={initials}></span>
   {/if}
 </span>
 
@@ -111,6 +114,9 @@
     object-fit: contain;
   }
   /* Their initials in the titles' face, in the second ink: a monogram, never a color of their own. */
+  .initials::before {
+    content: attr(data-initials);
+  }
   .initials {
     color: var(--ink-2);
     font-family: var(--font-display);

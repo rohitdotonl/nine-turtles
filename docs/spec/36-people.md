@@ -129,7 +129,9 @@ PLAN.md → V1, item 1.*
     **Use the automatic picture**. Either says so beside the picture
     ("Picture changed." or "Back to the automatic picture.") with **Undo**;
     a file it can't open says "nine turtles couldn't open that file. Try a
-    photo saved as JPEG, PNG or WebP.";
+    photo saved as JPEG, PNG or WebP."; one past what a reader may keep
+    (8 MB of pictures in all, room for hundreds) says "There's no room for
+    more pictures. Use the automatic picture for someone else first.";
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas
@@ -174,9 +176,11 @@ PLAN.md → V1, item 1.*
   picture may be any size and any kind the device can open (JPEG, PNG,
   WebP, GIF, AVIF, and HEIC on Apple devices): it is turned the way the
   camera held it, cut to its middle square and made small on the device
-  (256 pixels across, a few kilobytes) before it's sent, and kept
+  (256 pixels across, a smaller one enlarged to fill the circle, a few
+  kilobytes) before it's sent, and kept
   for every source of theirs; only that reader sees it. Deleting one's
-  account or data removes it.
+  account or data removes it. A picture that didn't load is asked for
+  again only on a later visit, or once back online.
 - **Their settings** (`/mira-chen-12/settings`, decision 0267): a page of its
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
   above the title (a very long name there ends in "…"); the browser's tab

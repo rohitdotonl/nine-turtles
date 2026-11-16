@@ -61,7 +61,7 @@ export const SIDE = 256;
 
 /**
  * A chosen picture, made small on the reader's device before it's sent, whatever its size: its middle square, turned
- * the way the camera held it, `SIDE` pixels on each side (or its own size, if smaller), on white, as WebP (a few
+ * the way the camera held it, `SIDE` pixels on each side (a smaller one is enlarged, so it still fills the circle), on white, as WebP (a few
  * kilobytes), or JPEG where the browser can't write WebP. Any picture the browser can open will do: JPEG, PNG, WebP,
  * GIF, AVIF, and HEIC where the device reads it (Safari). Undefined when it can't be opened.
  */
@@ -74,7 +74,7 @@ export async function madeSmall(file: Blob): Promise<Blob | undefined> {
   }
   const side = Math.min(bitmap.width, bitmap.height);
   const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = Math.min(SIDE, side);
+  canvas.width = canvas.height = SIDE;
   const context = canvas.getContext("2d");
   if (!context || side === 0) return undefined;
   context.fillStyle = "#ffffff";
@@ -96,5 +96,6 @@ export function isMissing(address: string): boolean {
 }
 
 export function markMissing(address: string): void {
-  missing.add(address);
+  // Offline, nothing loads: that says nothing about the site, so it's asked again once back online.
+  if (navigator.onLine) missing.add(address);
 }

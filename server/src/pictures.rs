@@ -24,11 +24,16 @@ use serde_json::json;
 use crate::{
     AppState,
     auth::{SignedIn, database_problem},
-    now, refused,
+    refused,
 };
 
-/// The biggest picture kept, in bytes: far more than a small square needs.
-pub const LARGEST: usize = 256 * 1024;
+/// The biggest picture kept, in bytes: the web app sends a few kilobytes, so
+/// this is several times what a small square needs.
+pub const LARGEST: usize = 64 * 1024;
+
+/// All the pictures one reader may keep, in bytes (every copy counted): room
+/// for hundreds of people, and no more, so one account can't fill the disk.
+pub const ALL_OF_ONES_OWN: i64 = 8 * 1024 * 1024;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -37,6 +42,15 @@ pub fn routes() -> Router<AppState> {
             get(picture).merge(post(choose).layer(DefaultBodyLimit::max(LARGEST))),
         )
         .route("/api/feeds/{id}/picture/delete", post(reset))
+}
+
+/// Now, in milliseconds since 1970 (UTC).
+fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |elapsed| {
+            i64::try_from(elapsed.as_millis()).unwrap_or(i64::MAX)
+        })
 }
 
 /// The picture's kind, from its first bytes, never from what the sender says.
@@ -81,15 +95,16 @@ pub async fn chosen(
 }
 
 /// Keeps a picture for the person this place is one of, on each of their
-/// places, in place of any they had. Answers when it was chosen (its version), or None when the
-/// reader doesn't follow this place.
+/// places, in place of any they had. Answers when it was chosen (its version),
+/// that the reader doesn't follow this place, or that it would take them past
+/// `ALL_OF_ONES_OWN`.
 pub async fn choose_picture(
     db: &sqlx::SqlitePool,
     person: i64,
     feed: i64,
     image: &[u8],
     kind: &str,
-) -> Result<Option<i64>, sqlx::Error> {
+) -> Result<Chosen, sqlx::Error> {
     let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let follows: bool = sqlx::query_scalar(
         "SELECT EXISTS (SELECT 1 FROM subscriptions
@@ -100,10 +115,29 @@ pub async fn choose_picture(
     .fetch_one(&mut *transaction)
     .await?;
     if !follows {
-        return Ok(None);
+        return Ok(Chosen::NotFollowed);
+    }
+    // What this reader keeps besides this person's picture, and what this one would add, a copy on each place.
+    let (kept, places): (i64, i64) = sqlx::query_as(concat!(
+        "SELECT (SELECT COALESCE(SUM(LENGTH(image)), 0) FROM pictures WHERE person_id = ?1 AND feed_id NOT IN (",
+        same_person!(),
+        ")), (SELECT COUNT(*) FROM (",
+        same_person!(),
+        "))"
+    ))
+    .bind(person)
+    .bind(feed)
+    .fetch_one(&mut *transaction)
+    .await?;
+    let adding = i64::try_from(image.len())
+        .unwrap_or(i64::MAX)
+        .saturating_mul(places);
+    if kept.saturating_add(adding) > ALL_OF_ONES_OWN {
+        return Ok(Chosen::TooMany);
     }
     forget(&mut transaction, person, feed).await?;
-    let at = now();
+    // In milliseconds: each change is a new version, however quickly it follows the last.
+    let at = now_ms();
     sqlx::query(concat!(
         "INSERT INTO pictures (person_id, feed_id, image, type, chosen_at)
          SELECT ?1, feed_id, ?3, ?4, ?5 FROM (",
@@ -118,7 +152,16 @@ pub async fn choose_picture(
     .execute(&mut *transaction)
     .await?;
     transaction.commit().await?;
-    Ok(Some(at))
+    Ok(Chosen::At(at))
+}
+
+/// What choosing a picture came to.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Chosen {
+    /// Kept; its version, milliseconds since 1970 (UTC).
+    At(i64),
+    NotFollowed,
+    TooMany,
 }
 
 /// Takes off the picture chosen for the person this place is one of.
@@ -156,10 +199,6 @@ async fn picture(
                     header::CACHE_CONTROL,
                     HeaderValue::from_static("private, max-age=31536000, immutable"),
                 ),
-                (
-                    header::CONTENT_SECURITY_POLICY,
-                    HeaderValue::from_static("default-src 'none'"),
-                ),
             ],
             image,
         )
@@ -179,8 +218,9 @@ async fn choose(
         return refused(StatusCode::UNSUPPORTED_MEDIA_TYPE, "not-a-picture");
     };
     match choose_picture(&state.db, person, id, &body, kind).await {
-        Ok(Some(at)) => Json(json!({ "chosen": at })).into_response(),
-        Ok(None) => refused(StatusCode::NOT_FOUND, "not-found"),
+        Ok(Chosen::At(at)) => Json(json!({ "chosen": at })).into_response(),
+        Ok(Chosen::NotFollowed) => refused(StatusCode::NOT_FOUND, "not-found"),
+        Ok(Chosen::TooMany) => refused(StatusCode::PAYLOAD_TOO_LARGE, "too-many-pictures"),
         Err(error) => database_problem("keeping a picture", &error),
     }
 }

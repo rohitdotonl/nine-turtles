@@ -182,4 +182,38 @@ async fn a_chosen_picture_is_kept_shown_and_taken_off() {
     let row = their_feed(&base, &cookie, feed).await;
     assert_eq!(row["picture_chosen"], Value::Null);
     assert_eq!(row["picture_url"], "https://quill.example/mara.jpg");
+
+    // One reader's pictures, all together, have a limit, so one account can't fill the disk.
+    let other_address = publisher().await;
+    let other_feed: Value = post(
+        &base,
+        &cookie,
+        "/api/feeds",
+        json!({ "address": other_address }).to_string().into_bytes(),
+        "application/json",
+    )
+    .await
+    .text()
+    .await
+    .map(|text| serde_json::from_str(&text).unwrap())
+    .unwrap();
+    let other_feed = other_feed["feed"]["id"].as_i64().unwrap();
+    let reader: i64 = sqlx::query_scalar("SELECT person_id FROM subscriptions WHERE feed_id = ?")
+        .bind(feed)
+        .fetch_one(&state.db)
+        .await
+        .unwrap();
+    sqlx::query("INSERT INTO pictures (person_id, feed_id, image, type, chosen_at) VALUES (?, ?, zeroblob(?), 'image/jpeg', 1)")
+        .bind(reader)
+        .bind(other_feed)
+        .bind(nine_turtles::pictures::ALL_OF_ONES_OWN)
+        .execute(&state.db)
+        .await
+        .unwrap();
+    assert_eq!(
+        post(&base, &cookie, &path, JPEG.to_vec(), "image/jpeg")
+            .await
+            .status(),
+        StatusCode::PAYLOAD_TOO_LARGE
+    );
 }

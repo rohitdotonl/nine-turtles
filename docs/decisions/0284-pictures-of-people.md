@@ -32,14 +32,17 @@ lists stay words.
    "Change picture of {name}", with a small pencil on its edge so it reads
    as changeable) opening a small menu. Any picture the device can open,
    of any size, will do: the browser turns it the way the camera held it,
-   cuts its middle square, shrinks it to 256px (smoothly), and writes it as
+   cuts its middle square, shrinks it to 256px (smoothly; a smaller one is
+   enlarged, so it fills the circle), and writes it as
    WebP, or JPEG where it can't write WebP: a 4 MB phone photo arrives as
    about 10 KB. nine turtles keeps only JPEG, PNG or WebP, judged by its
-   first bytes, at most 256 KB (far above what a shrunk picture weighs: a
-   safety net, never a limit a reader meets),
-   in the `pictures` table (structure change 52), a copy on each of the
-   person's places (as a note is), each reader's own. It is served only to
-   that reader, with `nosniff` and a `default-src 'none'` rule. Changing it
+   first bytes, at most 64 KB (several times what a shrunk picture weighs: a
+   safety net, never a limit a reader meets), and 8 MB for all of one
+   reader's pictures together (room for hundreds, so one account can't fill
+   the disk), in the `pictures` table (structure change 52), a copy on each
+   of the person's places (as a note is), each reader's own, its version
+   the millisecond it was chosen. It is served only to that reader, with
+   `nosniff` under the app's own security rules. Changing it
    and going back to the automatic picture both say so beside it, with Undo
    (the floor: nothing deletes without undo). Deleting the account or one's
    data removes them.

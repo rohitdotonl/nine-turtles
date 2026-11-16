@@ -19,8 +19,8 @@ CREATE TABLE pictures (
     feed_id INTEGER NOT NULL REFERENCES feeds (id) ON DELETE CASCADE,
     image BLOB NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('image/jpeg', 'image/png', 'image/webp')),
-    -- When it was chosen, seconds since 1970 (UTC): also the picture's version,
-    -- so a browser that kept an older one asks again.
+    -- When it was chosen, milliseconds since 1970 (UTC): also the picture's
+    -- version, so a browser that kept an older one asks again.
     chosen_at INTEGER NOT NULL,
     PRIMARY KEY (person_id, feed_id)
 ) STRICT;
