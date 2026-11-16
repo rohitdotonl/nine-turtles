@@ -48,6 +48,8 @@
     go,
     follow,
     onBack,
+    onClose,
+    closeTo,
     onUnsubscribe,
     onHide,
     onMoved,
@@ -66,6 +68,10 @@
     follow: (event: MouseEvent, next: Route) => void;
     /** Their settings' way back to their page (Escape does the same). */
     onBack: () => void;
+    /** × (Escape) and, on a phone, ‹: back where their page was opened from, Everyone you follow or their list. */
+    onClose: () => void;
+    /** Where onClose goes, for the phone's ‹: "Everyone you follow", or their name (their list). */
+    closeTo?: string;
     /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** "Hide articles about…": Settings › Hiding, with the field set to them ("Only from …"). */
@@ -143,7 +149,7 @@
   {#if !phone}
     <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
     <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
-      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
+      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={onClose}><Icon name="close" size="alone" /></button>
     </div>
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
@@ -163,7 +169,7 @@
     <div class={route.settings ? "hidden" : "contents"}>
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
-      <div class="top-back"><button type="button" onclick={() => go({ kind: "feed", id: feed.id })} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
+      <div class="top-back"><button type="button" onclick={onClose} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{closeTo ?? name}</bdi></button></div>
     {/if}
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->

@@ -190,15 +190,56 @@ test("with the keyboard alone: the row, their page, Find new address and back, U
   await page.keyboard.press("Enter");
   await expect(find).toBeFocused();
 
-  // Unsubscribe, in the same box: it says so with Undo, and Undo brings them back.
+  // Close (Escape) goes back where their page was opened from: Everyone you follow, its list still open.
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/following$/);
+  await expect(summary).toHaveAttribute("aria-expanded", "true");
+  // The keyboard is back on their line.
+  await expect(feed).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
+
+  // Unsubscribe, in the same box: back on Everyone you follow, it says so with Undo, and Undo brings them back.
   await tabTo(page, box.getByRole("button", { name: "Unsubscribe" }));
   await page.keyboard.press("Enter");
-  const undo = page.getByRole("button", { name: "Undo" });
-  await expect(undo).toBeVisible();
-  await undo.click();
+  await expect(page).toHaveURL(/\/following$/);
+  await expect(page.getByRole("status").filter({ hasText: `Unsubscribed from ${title}.` })).toBeVisible();
+  // The keyboard is on Undo, and Enter brings them back.
+  await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect
     .poll(async () => (await (await page.request.get(new URL("/api/feeds", FEEDS_APP).href)).json()).feeds.map((followed: { id: number }) => followed.id))
     .toContain(id);
+});
+
+test("their page opened from Everyone you follow closes back there, even after a visit to their settings", async ({ page, isMobile }) => {
+  const name = `close-following-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
+  await page.locator("#health-summary").click();
+  await page.locator("#health-summary").locator("xpath=ancestor::section[1]").getByRole("link", { name: new RegExp(`^${title}\\b`) }).click();
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
+  await page.getByRole("link", { name: `Settings for ${title}`, exact: true }).click();
+  await page.getByRole("button", { name: `Back to ${title}` }).click();
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
+  // On a computer, ×; on a phone, ‹ says where it goes.
+  if (isMobile) await page.getByRole("button", { name: "Everyone you follow", exact: true }).click();
+  else await page.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page).toHaveURL(/\/following$/);
+  await expect(page.locator("#health-summary")).toHaveAttribute("aria-expanded", "true");
+});
+
+test("their page opened any other way: Unsubscribe there still goes to Unread", async ({ page }) => {
+  const name = `close-list-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  const title = `Blog ${name}`;
+  const id = await failing(page, name, "break");
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("group", { name: "Not working" }).getByRole("button", { name: "Unsubscribe" }).click();
+  await expect(page.getByText(`Unsubscribed from ${title}.`)).toBeVisible();
+  await expect(page).toHaveURL(/\/(unread|all)$/);
 });
 
 /** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until Everyone you follow would list it. */

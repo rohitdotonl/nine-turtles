@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { isList } from "./router";
-import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, type Browser, type Here } from "./navigation";
+import { homeFor, isOver, isWho, moveTo, Opener, opensFromHere, stepFor, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type Browser, type Here } from "./navigation";
 import type { Route } from "./router";
 
 const unread: Route = { kind: "view", view: "unread" };
@@ -212,5 +212,39 @@ describe("Steps", () => {
     expect(steps.cameFrom("list")).toBe(true);
     steps.goBack();
     expect(asked.at(-1)).toBe("back");
+  });
+});
+
+describe("where their page was opened from (decision 0284)", () => {
+  const who: Route = { kind: "about", id: 4 };
+  const theirSettings: Route = { kind: "about", id: 4, settings: true };
+  const following: Route = { kind: "your-feeds" };
+  const unread: Route = { kind: "view", view: "unread" };
+  const hiding: Route = { kind: "settings", page: "hiding" };
+
+  it("remembers Everyone you follow or an open article, and keeps it through their settings", () => {
+    expect(whoFromOnGo(undefined, following, who, false, false)).toBe("following");
+    expect(whoFromOnGo(undefined, unread, who, true, false)).toBe("article");
+    expect(whoFromOnGo(undefined, unread, who, false, false)).toBeUndefined();
+    expect(whoFromOnGo("following", who, theirSettings, false, false)).toBe("following");
+    expect(whoFromOnGo("article", theirSettings, who, false, false)).toBe("article");
+  });
+
+  it("back from Hide articles keeps Everyone you follow, but not the article's step back", () => {
+    expect(whoFromOnGo("following", hiding, who, false, true)).toBe("following");
+    expect(whoFromOnGo("article", hiding, who, false, true)).toBeUndefined();
+  });
+
+  it("forgets it when Back or Forward lands on their page from elsewhere", () => {
+    expect(whoFromOnPop("following", following, who, false)).toBeUndefined();
+    expect(whoFromOnPop("following", theirSettings, who, false)).toBe("following");
+    expect(whoFromOnPop("following", hiding, theirSettings, true)).toBe("following");
+  });
+
+  it("closes to Everyone you follow, a step back to the article, or their list", () => {
+    expect(whoClosesTo("following", { kind: "about", id: 4 })).toEqual(following);
+    expect(whoClosesTo("article", { kind: "about", id: 4 })).toBe("back");
+    expect(whoClosesTo("article", { kind: "about", id: 4, settings: true })).toEqual({ kind: "feed", id: 4 });
+    expect(whoClosesTo(undefined, { kind: "about", id: 4 })).toEqual({ kind: "feed", id: 4 });
   });
 });

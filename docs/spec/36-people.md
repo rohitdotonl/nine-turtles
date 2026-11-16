@@ -120,7 +120,14 @@ PLAN.md → V1, item 1.*
   area, alone in the whole window as an article is (section 4, decision
   0275), in the article's own column (decision 0219), under the article's
   bar with an **×** at its right end (and Escape) back to their list. On a
-  phone it's a screen of its own, with ‹ back to their list. Either way
+  phone it's a screen of its own, with ‹ back to their list. Opened from
+  Everyone you follow, both go back there instead (‹ reads "Everyone you
+  follow"), with the keyboard on their line, and so does Unsubscribe, with
+  its Undo there (section 15); opened from an article (its byline, `i`),
+  both go back to that article, open where it was (‹ reads "Article";
+  decision 0284). After a visit to Hide articles about them, only the way
+  back to Everyone you follow is kept.
+  Either way
   there's no list beside it to choose from. Top to bottom:
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
@@ -158,7 +165,7 @@ PLAN.md → V1, item 1.*
   it was left, with nothing loading again, the keyboard on its Settings
   row, in view; on a computer the **×** stays at
   the bar's right end, titled just "Close" (Escape belongs to ‹ there), and
-  goes back to their list. The keyboard starts on
+  goes back to their list (or Everyone you follow, as above). The keyboard starts on
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on
