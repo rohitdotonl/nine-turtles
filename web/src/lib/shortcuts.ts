@@ -5,7 +5,7 @@
 // itself at the moment of the press (`KeyScene`) and the things it can do
 // (`KeyHands`), so every rule about when a key works is here, in one place,
 // and can be tested without drawing anything.
-import type { Action } from "./keyboard";
+import { createKeyReader, type Action } from "./keyboard";
 import type { ArticleMove } from "./moving";
 import { TEXT_SIZES } from "./preferences";
 import { parse, type Route } from "./router";
@@ -90,6 +90,24 @@ export function keyIsOurs(action: Action, key: string, scene: KeyScene): boolean
  */
 function canMarkAll(scene: KeyScene): boolean {
   return !scene.unreadOff && scene.onList && (scene.list || scene.article || scene.reading);
+}
+
+/**
+ * The page's keydown listener: reads each key and carries out what's ours. A sheet, or any open dialog, keeps the
+ * keyboard to itself (`quiet`); its Escape is the dialog's own. The shortcuts sheet counts too: it says it has
+ * closed a moment after it has, and a key pressed then counts.
+ */
+export function keyListener(quiet: () => boolean, scene: () => KeyScene, hands: KeyHands): (event: KeyboardEvent) => void {
+  const readKey = createKeyReader();
+  return (event) => {
+    if (event.defaultPrevented || quiet() || document.querySelector("dialog:modal")) return;
+    const action = readKey(event, event.timeStamp);
+    if (!action) return;
+    const now = scene();
+    if (!keyIsOurs(action, event.key, now)) return;
+    event.preventDefault();
+    carryOut(action, now, hands);
+  };
 }
 
 /** Does what a shortcut means here, or nothing where it doesn't apply. */

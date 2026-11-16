@@ -46,11 +46,11 @@
   import { ReadingSettings } from "./reading-settings.svelte";
   import { type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
-  import { createKeyReader, keyFor } from "./keyboard";
+  import { keyFor } from "./keyboard";
   import { movePane, moveRow } from "./panes";
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { writerItems } from "./rowMenu";
-  import { carryOut, keyIsOurs, type KeyHands, type KeyScene } from "./shortcuts";
+  import { keyListener, type KeyHands, type KeyScene } from "./shortcuts";
   import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
@@ -159,6 +159,8 @@
   let ruleForFeed: number | undefined = $state();
   /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
+  /** Their page (or its settings) was opened from Everyone you follow: closing it, or unsubscribing, goes back there (decision 0279). */
+  let fromFollowing = $state(false);
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
   let sidebar: HTMLElement | undefined = $state();
@@ -351,6 +353,7 @@
       const next = parse(location.pathname);
       // Back or Forward onto a page opened from its parent: closing it is a step back again.
       cameFromSettings = stepOf(history.state)?.fromParent === true;
+      fromFollowing &&= isWho(next) && isWho(route) && next.id === route.id; // Back from their settings keeps it.
       const move = moveTo({ route, under, phone }, next);
       returnRow = move.returnRow;
       // The address has already changed: loading it opens the new version there.
@@ -375,18 +378,7 @@
     };
     addEventListener("popstate", back);
 
-    const readKey = createKeyReader();
-    const pressed = (event: KeyboardEvent) => {
-      // A sheet keeps the keyboard to itself; its Escape is the dialog's own (Settings' own sheets are asked of the page).
-      // The shortcuts sheet is asked of the page too: it says it has closed a moment after it has, and a key pressed then counts.
-      if (event.defaultPrevented || sheetShown || document.querySelector("dialog:modal")) return;
-      const action = readKey(event, event.timeStamp);
-      if (!action) return;
-      const scene = keyScene();
-      if (!keyIsOurs(action, event.key, scene)) return;
-      event.preventDefault();
-      carryOut(action, scene, keyHands);
-    };
+    const pressed = keyListener(() => sheetShown, keyScene, keyHands); // Settings' own sheets are asked of the page.
     addEventListener("keydown", pressed);
 
     // After signing in, the password field is gone. Move the keyboard's place
@@ -478,6 +470,7 @@
     const from = screenNow();
     stopTrying(); // Going anywhere ends the welcome's "Or try one" (decision 0198).
     cameFromSettings = opensFromHere(route, next);
+    fromFollowing = isWho(next) && (route.kind === "your-feeds" || (isWho(route) && fromFollowing));
     returnRow = move.returnRow;
     if (move.opening) sheetOpener.remember(document.activeElement);
     steps.goTo(next, from, cameFromSettings, move.opening);
@@ -529,11 +522,11 @@
     else if (route.kind === "edit-folder") go({ kind: "folder", id: route.id });
   }
 
-  /** Unsubscribes, then shows Unread (All with Unread off) with "Unsubscribed from … · Undo". */
+  /** Unsubscribes, then shows "Unsubscribed from … · Undo" on Everyone you follow if their page came from there, else on Unread. */
   async function unsubscribeFrom(feed: Feed, removeKept = false): Promise<string | undefined> {
     const done = await library.unsubscribe(feed, removeKept);
     if (typeof done === "string") return done;
-    go(home, done);
+    go(fromFollowing ? { kind: "your-feeds" } : home, done);
     return undefined;
   }
 
@@ -605,6 +598,9 @@
     if (cameFromSettings) steps.goBack();
     else go(parent);
   }
+
+  /** × on their page (Escape, and ‹ on a phone): back to Everyone you follow when it was opened from there, else to their list. */
+  const closeWho = () => isWho(route) && go(fromFollowing ? { kind: "your-feeds" } : { kind: "feed", id: route.id });
 
   /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
@@ -728,7 +724,7 @@
     if (parentOf(route)) closeSettingsPage();
     else if (route.kind === "settings" || route.kind === "add-feed" || route.kind === "new-to-feeds") closePage();
     else if (route.kind === "edit-folder") edited(false);
-    else if (isWho(route)) go({ kind: "feed", id: route.id }); // their page: back to their list
+    else if (isWho(route)) closeWho();
     else if (reading || (selected && inArticle())) backToList();
     else if (searching.open || document.activeElement?.closest("search")) closeSearch();
     else if (phone && !panes.sidebar) steps.back("home");
@@ -917,6 +913,7 @@
           onBack={phone ? () => steps.back("home") : undefined}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds}
+          {notice}
         />
       {:else if route.kind === "muted"}
         <Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />
@@ -1106,7 +1103,7 @@
 {#snippet who()}
   {#if isWho(route) && currentFeed}
     {#key editKey(currentFeed.id)}
-      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
+      <WhoPage route={route} feed={currentFeed} {library} {phone} bind:heading={headings.who} {go} {follow} onBack={closeSettingsPage} onClose={closeWho} closeTo={fromFollowing ? "Everyone you follow" : undefined} onUnsubscribe={(removeKept) => unsubscribeFrom(currentFeed!, removeKept)} onHide={() => hideFrom(currentFeed!.id)} onMoved={(source, after) => feedMoved(source.id, after.id, () => headings.who)} onSaved={() => itemList?.refresh()} onFolders={showFolders} onOpen={openFromOutside} />
     {/key}
   {/if}
 {/snippet}

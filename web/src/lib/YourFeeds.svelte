@@ -25,7 +25,7 @@
   import PageHead from "./PageHead.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import type { Folder } from "./shapes";
-  import { deleteFolder, explain, refused, undoRefused } from "./feeds";
+  import { deleteFolder, explain, firstShowing, refused, undoRefused, type Notice } from "./feeds";
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import SettleList from "./SettleList.svelte";
@@ -53,6 +53,7 @@
     onBack,
     onOpenPerson,
     onFeedsChanged,
+    notice,
   }: {
     heading?: HTMLHeadingElement;
     /** On a phone: back to Home. A computer shows the sidebar, where its row says where you are. */
@@ -61,6 +62,8 @@
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
+    /** Just done on someone's page opened from here (Unsubscribe, decision 0279): its words show on the line, with Undo. */
+    notice?: Notice;
   } = $props();
 
   let feeds: Tended[] | undefined = $state();
@@ -72,7 +75,8 @@
   let busy = $state(false);
   /** What the last action said, and its Undo until the next action. */
   let message = $state("");
-  let undo: (() => Promise<void>) | undefined = $state();
+  /** Undo; a sentence back says why it couldn't be done. */
+  let undo: (() => Promise<string | void>) | undefined = $state();
   /** The message says something failed: oxblood, with the alert icon. */
   let refusal = $state(false);
   let moving = $state(false);
@@ -116,6 +120,7 @@
 
   onMount(() => {
     load();
+    if (notice && firstShowing(notice)) [message, undo] = [notice.message, notice.undo];
   });
 
   /** Undo lasts until your next action here. */
@@ -268,8 +273,8 @@
     if (!undo || busy) return;
     busy = true;
     try {
-      await undo();
-      [message, undo] = [UNDONE, undefined];
+      const problem = await undo();
+      [message, undo, refusal] = problem ? [problem, undefined, true] : [UNDONE, undefined, false];
     } catch (why) {
       [message, undo, refusal] = [undoRefused(why === "too-late" ? "too-late" : "trouble", "feed"), undefined, true];
     }

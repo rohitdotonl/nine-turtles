@@ -9,6 +9,11 @@
   nine turtles keeps checking by itself, so there's no Retry. With nothing to
   list, it shows nothing.
 -->
+<script lang="ts" module>
+  /** Opened, it stays open for the visit: back from someone's page, the rest are still there to see to. */
+  let leftOpen = false;
+</script>
+
 <script lang="ts">
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
@@ -25,7 +30,7 @@
 
   let feeds: Sick[] | undefined = $state();
   let failed = $state(false);
-  let showing = $state(false);
+  let showing = $state(leftOpen);
 
   /** Lists who isn't working: when the page opens, and again after the list below unsubscribes, moves or undoes. */
   export function reload() {
@@ -60,7 +65,7 @@
   <section aria-labelledby="health-summary">
     <ul class="inset-group">
       <li class="contents">
-        <button type="button" id="health-summary" class="inset-row inset-action two" aria-expanded={showing} onclick={() => (showing = !showing)}>
+        <button type="button" id="health-summary" class="inset-row inset-action two" aria-expanded={showing} onclick={() => (showing = leftOpen = !showing)}>
           <span class="why"><Icon name="alert" /></span>
           <span class="flex min-w-0 flex-1 flex-col py-2">
             <span>{dead.length > 0 ? `${dead.length} ${dead.length === 1 ? "feed isn't" : "feeds aren't"} working` : `${troubled.length} having trouble`}</span>
