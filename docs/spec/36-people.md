@@ -121,7 +121,7 @@ PLAN.md → V1, item 1.*
   to what they've written lately, with **‹ Article** at its top (on a
   computer too, above their name) back to that article, open where it was;
   it stays while the reader goes on to their page or their settings and
-  back (decision 0288). On a computer it opens in the reading
+  back (decision 0289). On a computer it opens in the reading
   area, alone in the whole window as an article is (section 4, decision
   0275), in the article's own column (decision 0219), under the article's
   bar with an **×** at its right end (and Escape) back to their list. On a
@@ -175,7 +175,7 @@ PLAN.md → V1, item 1.*
     own Settings.
 - **Their picture** (decision 0285): a circle beside an article's byline
   and before their name at the top of their list (40px, 32px on a phone;
-  section 7, decision 0288) and at the top of their page (72px), nowhere else. It
+  section 7, decision 0289) and at the top of their page (72px), nowhere else. It
   is the first of these that loads: the picture the reader chose for them;
   the picture their feed names (RSS's image, a podcast's artwork, Atom's
   logo or icon, JSON Feed's icon); their site's own icon (the one a phone's
@@ -286,7 +286,7 @@ PLAN.md → V1, item 1.*
 2. Open an article of theirs and press their name under its title: their
    list opens, their picture before their name at its top, with
    **‹ Article** back to the article. In the article's More, **Info about
-   …** opens their page (decision 0288).
+   …** opens their page (decision 0289).
 3. Press a person's name at the top of their list: their page opens alone
    in the window (on a phone, as its own screen), with **Write to …** (outlined) under
    their name and their sources, one card with Your note and Your

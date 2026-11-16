@@ -238,7 +238,7 @@ test("every reader reads this way, not only the owner", async ({ browser }, test
   await stranger.close();
 });
 
-test("their page opened from an article's More closes back to that article (decisions 0284, 0288)", async ({ page, isMobile }) => {
+test("their page opened from an article's More closes back to that article (decisions 0284, 0289)", async ({ page, isMobile }) => {
   await signedIn(page);
   const blog = await openBlog(page, `one-thing-writer-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
   await rows(page).nth(1).click();
@@ -254,7 +254,7 @@ test("their page opened from an article's More closes back to that article (deci
   await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
 });
 
-test("their name in an article opens their list, and ‹ Article goes back to it, by the keyboard and through their page too (decision 0288)", async ({ page, isMobile }) => {
+test("their name in an article opens their list, and ‹ Article goes back to it, by the keyboard and through their page too (decision 0289)", async ({ page, isMobile }) => {
   await signedIn(page);
   const blog = await openBlog(page, `one-thing-byline-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`);
   // Read in All articles, so going back to the article means going back to All.

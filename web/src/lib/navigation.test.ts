@@ -250,7 +250,7 @@ describe("where their page was opened from (decision 0284)", () => {
   });
 });
 
-describe("their list opened from an article's byline (decision 0288)", () => {
+describe("their list opened from an article's byline (decision 0289)", () => {
   const from = { row: 4, article: { id: 9 } as Article, list: { kind: "view", view: "unread" } as Route };
   it("keeps the way back to the article while the reader stays with them", () => {
     expect(listFromOnMove(from, { kind: "feed", id: 4 })).toBe(from);

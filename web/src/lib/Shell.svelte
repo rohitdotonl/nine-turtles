@@ -162,7 +162,7 @@
   /** Hidden articles, Readers or one of Settings' own pages was opened from Settings, so closing it is a step back in history. */
   let cameFromSettings = false;
   let whoFrom: WhoFrom = $state(); // Where their page was opened from (decision 0284).
-  let listFrom: ListFrom = $state(); // Their list opened from an article's byline: "‹ Article" goes back to it (decision 0288).
+  let listFrom: ListFrom = $state(); // Their list opened from an article's byline: "‹ Article" goes back to it (decision 0289).
   let cameBackFrom: number | undefined = $state(); // Everyone you follow, back from their page: the keyboard goes back to their row.
   /** Back from a page opened from Settings: the row on its parent page that opened it, for the keyboard to return to (decision 0120). */
   let returnRow: string | undefined;
@@ -500,7 +500,7 @@
 
   const openFeed = (id: number) => go({ kind: "feed", id }); // Opens a feed's list.
 
-  /** The writer's name under an article's title: their list, with "‹ Article" back to it (decision 0288). */
+  /** The writer's name under an article's title: their list, with "‹ Article" back to it (decision 0289). */
   const openWriter = (row: number, article = selected, list = route) => (go({ kind: "feed", id: row }), article && (listFrom = { row, article, list }));
   /** "‹ Article" (and Escape): a step back in history to the article, open where it was; or, if that step isn't there (their page opened and closed since), the article again in the list it was read in. */
   function backToArticle(from = listFrom) {

@@ -3,7 +3,7 @@
   screen; then the list's title with Search and More (`ListHead`). On a computer, the title line alone, in
   the column it shares with an article (list-column.css, decision 0277). Their list opened from an
   article's byline has "‹ Article" leading it, on both, where an article's own "‹ Unread" stands, back to
-  that article (decision 0288).
+  that article (decision 0289).
 -->
 <script lang="ts">
   import type { Snippet } from "svelte";

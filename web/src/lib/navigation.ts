@@ -54,7 +54,7 @@ export function whoClosesTo(from: WhoFrom, place: Extract<Route, { kind: "about"
 }
 
 /**
- * Their list opened from an article's byline (decision 0288): their row, and the article and the list it was read in,
+ * Their list opened from an article's byline (decision 0289): their row, and the article and the list it was read in,
  * for "‹ Article" to go back to. It lasts while the reader stays with them, on their list, their page or their settings, and ends anywhere else.
  */
 export type ListFrom = { row: number; article: Article; list: Route } | undefined;

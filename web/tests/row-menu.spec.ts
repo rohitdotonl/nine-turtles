@@ -89,7 +89,7 @@ test.describe("on a wide window", () => {
     const name = await openBlog(page);
     await rows(page).nth(0).click();
     const title = (await pane(page).getByRole("heading", { level: 2 }).textContent()) ?? "";
-    // Their name: their list, everything of theirs, with their picture beside their name at its top (decision 0288).
+    // Their name: their list, everything of theirs, with their picture beside their name at its top (decision 0289).
     await pane(page).locator(".article-byline").getByRole("link", { name }).click();
     const heading = page.locator("#list-heading");
     await expect(heading).toContainText(name);

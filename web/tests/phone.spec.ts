@@ -568,7 +568,7 @@ test.describe("on a phone", () => {
 
     // The list keeps a gutter for its unread dot, as Books and Mail do on iOS (decision 0054): its title,
     // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge. A person's
-    // title starts with their picture (decision 0288).
+    // title starts with their picture (decision 0289).
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     near((await page.locator("#list-heading .portrait").boundingBox())!.x, 28);
     await page.getByRole("button", { name: "Search", exact: true }).click();

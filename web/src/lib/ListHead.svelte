@@ -7,7 +7,7 @@
   per collection (decision 0038): Mark all as read, Refresh, the sort order, and "Info about …" or
   Edit folder in a person's, publication's or folder's own list (SPEC section 6). A person's or
   publication's name is itself the way to their page, a button ending in ›, with their picture before it, the
-  same circle as beside an article's byline, so it reads as the way to who they are (decisions 0163, 0288).
+  same circle as beside an article's byline, so it reads as the way to who they are (decisions 0163, 0289).
 -->
 <script lang="ts">
   import { tip } from "./keyboard";

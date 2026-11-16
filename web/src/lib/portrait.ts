@@ -54,7 +54,7 @@ export function picturesOf(places: Feed[], siteUrl?: string | null): string[] {
   return [...new Set(all)];
 }
 
-/** Their picture as a list's title shows it (decision 0288): every picture of theirs to try, and whether to show two initials. */
+/** Their picture as a list's title shows it (decision 0289): every picture of theirs to try, and whether to show two initials. */
 export function faceOf(row: Feed, places: Feed[]): { pictures: string[]; person: boolean } {
   return { pictures: picturesOf(places), person: isSomeone(row) };
 }

@@ -198,7 +198,7 @@
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
       ],
     },
-    // Who wrote it, apart: the page about them, and hiding articles about them (decision 0288).
+    // Who wrote it, apart: the page about them, and hiding articles about them (decision 0289).
     ...(followed ? [{ items: [
       { label: `Info about ${article.feedTitle}`, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
       { label: "Hide articles about…", onSelect: () => onHide(article.feedId) },
@@ -563,7 +563,7 @@
         <!-- Left to right whatever the article's script, as the byline always was; only the circle's side follows the script. -->
         <p class="article-byline min-w-0" lang="en" dir="ltr">
           {#if followed}
-            <!-- Someone followed: their name opens their list, everything of theirs (decision 0288); the page about them is a press on from there, or More's "Info about …". No "›" here, where the "·" follows.
+            <!-- Someone followed: their name opens their list, everything of theirs (decision 0289); the page about them is a press on from there, or More's "Info about …". No "›" here, where the "·" follows.
                  A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
             <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
               onclick={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}><bdi>{article.feedTitle}</bdi></a

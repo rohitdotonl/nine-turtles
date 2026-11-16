@@ -1,4 +1,4 @@
-# 0288: An article's byline opens the writer's list; their page is a press on
+# 0289: An article's byline opens the writer's list; their page is a press on
 
 **In one line:** The writer's name under an article's title opens their list (what they've written lately), with "‹ Article" back to the article on a phone and a computer; their picture leads their name at the top of that list, the way on to their page; and an article's More menu gains "Info about {name}".
 

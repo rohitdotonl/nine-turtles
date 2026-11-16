@@ -165,7 +165,7 @@ test.describe("on a wide window", () => {
     await expect(image).toBeVisible();
     await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-    // Credit: the source, with the author and time. Someone followed: their name opens their list (decision 0288),
+    // Credit: the source, with the author and time. Someone followed: their name opens their list (decision 0289),
     // a link that wraps as text does (decision 0260).
     const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
     await expect(writer).toHaveAttribute("title", "Everything by Reading Room");
