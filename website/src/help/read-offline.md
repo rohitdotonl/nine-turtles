@@ -1,23 +1,23 @@
 ---
 title: Read without an internet connection
-description: nine turtles keeps your newest unread and starred articles on each device, so you can read on a plane or underground.
+description: nine turtles keeps your newest unread and saved articles on each device, so you can read on a plane or underground.
 groupId: reading
 order: 6
 spec: 32
-updated: 2026-11-06
-related: [install-the-app, star-an-article, mark-read-or-unread]
+updated: 2026-11-16
+related: [install-the-app, save-an-article, mark-read-or-unread]
 ---
 
 <p class="lede">
   There's nothing to set up. Each device you use keeps a copy of your newest
-  unread and starred articles, ready for when the connection goes.
+  unread and saved articles, ready for when the connection goes.
 </p>
 
 ## What's kept
 
 - The first 200 articles in your Unread (or in All articles, if you've switched
   <a href="/help/unread-on-or-off/">Unread off</a>).
-- Your newest 200 starred articles.
+- Your newest 200 saved articles.
 
 Only the words are kept. Pictures, videos and podcast episodes show a line
 saying they'll appear when you're back online.
@@ -28,7 +28,7 @@ connection comes back, and when you refresh.
 ## Reading offline
 
 Just open nine turtles. The list says **You're offline. Showing the articles
-saved on this device.** You can read, mark articles read or unread, star them and
+kept on this device.** You can read, mark articles read or unread, save them and
 undo, as usual. Everything you do is sent as soon as you're back online.
 
 ## What needs a connection

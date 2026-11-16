@@ -2,10 +2,10 @@
 //! gives the reader one .zip file that opens as a folder of plain pages, so
 //! what they kept outlives nine turtles. Its `index.html` opens in any
 //! browser, with or without nine turtles or the internet: who they follow,
-//! and every article they kept (starred, or with a highlight or a note), each
+//! and every article they kept (saved, or with a highlight or a note), each
 //! as a page of its own with its text, the original's link, and their
 //! highlights and notes. Beside it, the files other apps read: the OPML file
-//! (`subscriptions`), starred articles as JSON Feed (`starred`), and notes and
+//! (`subscriptions`), saved (starred) articles as JSON Feed (`saved.json`), and notes and
 //! highlights as Markdown (`notes::export`).
 //!
 //! The pages are plain HTML with their style inside, no scripts and no fonts
@@ -171,7 +171,7 @@ pub async fn zip_for(
         zip.add(&format!("{folder}/follows.opml"), opml.as_bytes());
     }
     zip.add(
-        &format!("{folder}/starred.json"),
+        &format!("{folder}/saved.json"),
         starred::file(db, person).await?.as_bytes(),
     );
     let markdown = notes::export::markdown(db, person, today).await?;

@@ -146,7 +146,7 @@ pub(super) fn index(
     body.push_str("<h2>What you kept</h2>\n");
     if kept.is_empty() {
         body.push_str(
-            "<p class=\"small\">Nothing yet. Star an article, or highlight words in it, and it's kept here.</p>\n",
+            "<p class=\"small\">Nothing yet. Save an article, or highlight words in it, and it's kept here.</p>\n",
         );
     }
     let mut year = None;
@@ -161,7 +161,7 @@ pub(super) fn index(
         }
         let mut line = byline(article);
         if article.starred {
-            line.push_str(" · Starred");
+            line.push_str(" · Saved");
         }
         if *marked {
             line.push_str(" · Your notes");
@@ -181,7 +181,7 @@ pub(super) fn index(
     body.push_str(
         "<h2>For other apps</h2>\n<ul class=\"plain\">\n\
          <li><a href=\"follows.opml\">follows.opml</a><span class=\"small\">Who you follow, in their folders. Any feed reader imports it.</span></li>\n\
-         <li><a href=\"starred.json\">starred.json</a><span class=\"small\">Your starred articles as a JSON Feed file, which other feed readers import.</span></li>\n\
+         <li><a href=\"saved.json\">saved.json</a><span class=\"small\">Your saved articles as a JSON Feed file, which other feed readers import.</span></li>\n\
          <li><a href=\"notes-and-highlights.md\">notes-and-highlights.md</a><span class=\"small\">Your notes and highlights as plain text, for any notes app.</span></li>\n\
          </ul>\n",
     );
@@ -287,6 +287,6 @@ mod tests {
             "A to Z"
         );
         assert!(index.contains("<h3>2026</h3>"));
-        assert!(index.contains(r#"<a href="articles/2026/7-seeds.html" dir="auto">Seeds</a><span class="small">Ivy · 2 Nov 2026 · Starred</span>"#));
+        assert!(index.contains(r#"<a href="articles/2026/7-seeds.html" dir="auto">Seeds</a><span class="small">Ivy · 2 Nov 2026 · Saved</span>"#));
     }
 }

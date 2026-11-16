@@ -1,10 +1,10 @@
 ---
 title: Bring your feeds from Feedly, Inoreader or another reader
-description: Move everything you follow, and your folders, from another feed reader in one file, and bring your starred articles too.
+description: Move everything you follow, and your folders, from another feed reader in one file, and bring your saved articles too.
 groupId: getting-started
 order: 3
 spec: 13, 16 and 36
-updated: 2026-11-14
+updated: 2026-11-16
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -47,11 +47,12 @@ sidebar.
 New here? At the foot of the welcome screen, **Bring your list from another
 app…** does the same thing.
 
-## Bring your starred articles
+## Bring your saved articles
 
 Many readers, including Inoreader, Feedly, Feedbin, The Old Reader and
 FreshRSS, can export starred or saved articles as a JSON file. In **Settings
-› Your data**, press **Import starred articles…** and choose that file.
+› Your data**, press **Import saved articles…** and choose that file. They arrive in
+**Saved**.
 Pocket's export isn't one nine turtles can read.
 
 ## Bring your YouTube subscriptions

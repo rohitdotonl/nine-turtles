@@ -36,7 +36,7 @@ Agreed with the owner on 2 November 2026. One at a time, each in its own
 thread, in this order:
 
 1. **Typefaces** ✅ (decision 0141)
-2. **Colours:** the star in ink, oxblood for delete and errors ✅
+2. **Colours:** the star (now the Save bookmark) in ink, oxblood for delete and errors ✅
 3. **Four themes,** moving readers' saved theme over safely ❌ Dropped (the owner, 3 November 2026): replaced by themes named by the page they give, such as White, Paper and Night, step 10 of the owner's review plan. Now live: White, Paper, Night and Match device (decision 0176).
 4. **Logo and icons:** the heavier sidebar logo, the black app icon, the tab icon 🔨
 5. **The final icon set** 🔨
@@ -137,7 +137,7 @@ milestone order above.
 **Decided with the owner (2 November 2026):**
 
 - **No tags: folders stay folders.** They already work like Feedbin's tags
-  (a person can be in several folders); Starred keeps articles (collections
+  (a person can be in several folders); Saved keeps articles (collections
   went, decision 0174). Pictures: https://claude.ai/artifact/8jqmkxsTabDuKAUWmq9RKY
 - **The note to bloggers whose feed breaks is written by hand**
   ([`RnD/marketing.md`](RnD/marketing.md), items 3 and 8). nine turtles

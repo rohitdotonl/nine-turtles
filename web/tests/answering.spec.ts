@@ -51,18 +51,18 @@ test("a mark made while the list is out of sight is said in the article, with Un
   ).toBeVisible();
   // The article is alone, on a computer as on a phone (decision 0275): the list, and its note, are out of sight.
   await article(page)
-    .getByRole("button", { name: "Star", exact: true })
+    .getByRole("button", { name: "Save", exact: true })
     .first()
     .click();
   await expect(
-    article(page).getByText("Starred.", { exact: true }),
+    article(page).getByText("Saved.", { exact: true }),
   ).toBeVisible();
   await article(page).getByRole("button", { name: "Undo" }).click();
   await expect(
     article(page).getByText("Undone.", { exact: true }),
   ).toBeVisible();
   await expect(
-    article(page).getByRole("button", { name: "Star", exact: true }).first(),
+    article(page).getByRole("button", { name: "Save", exact: true }).first(),
   ).toHaveAttribute("aria-pressed", "false");
   await article(page).getByRole("button", { name: "Close the note" }).click();
   await expect(

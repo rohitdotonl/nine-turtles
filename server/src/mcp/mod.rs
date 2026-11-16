@@ -12,7 +12,7 @@
 //! An assistant signs in first (`assistants`) and then acts only for the
 //! reader who connected it, with the same walls as the reader's own screen
 //! (decision 0086). The tools read and tidy: search, the lists, an article's
-//! own text, feeds, folders and rules; marking, starring, adding and
+//! own text, feeds, folders and rules; marking, saving, adding and
 //! unsubscribing. Nothing about the account (password, email, payments,
 //! sign-up) is reachable. A feed an assistant unsubscribes from is kept for
 //! 30 days (`folders::KEPT_FOR`), as the reader's own unsubscribes are, so
@@ -62,7 +62,7 @@ const CALLS_A_MINUTE: u32 = 60;
 const CALLS_A_DAY: u32 = 3_000;
 /// And add this many feeds an hour.
 const ADDS_AN_HOUR: u32 = 20;
-/// The most articles marked or starred in one call.
+/// The most articles marked or saved in one call.
 const MOST_AT_ONCE: usize = 500;
 /// An article's text is cut after this many characters.
 const LONGEST_TEXT: usize = 30_000;
@@ -187,7 +187,7 @@ async fn message(
             }
         }
         "tools/call" => {
-            let name = message["params"]["name"].as_str().unwrap_or_default();
+            let name = tools::current_name(message["params"]["name"].as_str().unwrap_or_default());
             if !tools::all().iter().any(|tool| tool["name"] == name) {
                 return rpc_error(id, -32602, &format!("There's no tool named {name:?}."));
             }
@@ -255,12 +255,12 @@ async fn call(state: &AppState, person: i64, name: &str, given: Value) -> Answer
     match name {
         "search_articles" => reading::search_articles(state, person, arguments(given)?).await,
         "list_unread" => reading::list_unread(state, person, arguments(given)?).await,
-        "list_starred" => reading::list_starred(state, person, arguments(given)?).await,
+        "list_saved" => reading::list_saved(state, person, arguments(given)?).await,
         "open_article" => reading::open_article(state, person, arguments(given)?).await,
         "list_feeds" => reading::list_feeds(state, person).await,
         "feed_health" => reading::feed_health(state, person).await,
         "list_rules" => reading::list_rules(state, person).await,
-        "mark_read" | "star" => changing::mark(state, person, arguments(given)?).await,
+        "mark_read" | "save" => changing::mark(state, person, arguments(given)?).await,
         "mark_feed_read" => changing::mark_feed_read(state, person, arguments(given)?).await,
         "add_feed" => changing::add_feed(state, person, arguments(given)?).await,
         "edit_feed" => changing::edit_feed(state, person, arguments(given)?).await,

@@ -19,7 +19,7 @@ describe("welcomeFor", () => {
     expect(welcomeFor(scene({ firstVisit: false }))).toEqual({ shown: false, wide: false, alone: false });
   });
 
-  it("leaves Starred its own list", () => {
+  it("leaves Saved its own list", () => {
     expect(welcomeFor(scene({ under: { kind: "view", view: "starred" } })).shown).toBe(false);
     expect(welcomeFor(scene({ under: { kind: "view", view: "all" } })).shown).toBe(true);
   });

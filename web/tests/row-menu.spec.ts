@@ -35,13 +35,13 @@ test.describe("on a wide window", () => {
     const first = rows(page).nth(0);
     await first.click({ button: "right" });
     const menu = rowMenu(page);
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Star\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`), /Open in a new tab/, /Copy link/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Save\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`), /Open in a new tab/, /Copy link/]);
     // No keys printed: the same actions have theirs elsewhere.
     await expect(menu.locator("kbd")).toHaveCount(0);
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
-    await menu.getByRole("menuitem", { name: "Star" }).click();
+    await menu.getByRole("menuitem", { name: "Save", exact: true }).click();
     await expect(menu).toHaveCount(0);
-    await expect(first.locator(".row-star")).toBeVisible();
+    await expect(first.locator(".row-saved")).toBeVisible();
     await expect(first).toBeFocused();
     // Nothing opened: no row is chosen.
     await expect(page.locator(".item-row[aria-current]")).toHaveCount(0);
@@ -149,8 +149,8 @@ test("on a phone, a long press on a row opens its menu, and the tap doesn't open
   // Inside the screen, whatever the press's place.
   const menu = (await rowMenu(page).boundingBox())!;
   expect(menu.x + menu.width).toBeLessThanOrEqual(412);
-  await rowMenu(page).getByRole("menuitem", { name: "Star" }).click();
-  await expect(first.locator(".row-star")).toBeVisible();
+  await rowMenu(page).getByRole("menuitem", { name: "Save", exact: true }).click();
+  await expect(first.locator(".row-saved")).toBeVisible();
   // Closed, the row lets go.
   await expect(first).not.toHaveAttribute("data-held");
 });

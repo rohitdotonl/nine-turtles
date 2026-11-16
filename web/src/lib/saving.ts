@@ -118,7 +118,7 @@ export function markRead(ids: number[], read: boolean): Promise<void> {
   return sendMark("read", ids, read, serverNow());
 }
 
-/** Stars or unstars articles. The screen has already changed; this tells the server. */
+/** Saves articles or takes them out of Saved. The screen has already changed; this tells the server. */
 export function markStarred(ids: number[], starred: boolean): Promise<void> {
   return sendMark("starred", ids, starred, serverNow());
 }

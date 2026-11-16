@@ -504,8 +504,8 @@ test("Your data offers Download everything from the first day, even with nothing
   // With nothing kept, its front page says how to keep something.
   const zip = await page.request.get("/api/everything");
   const text = (await zip.body()).toString("utf8");
-  expect(text).toContain("Nothing yet. Star an article, or highlight words in it, and it's kept here.");
-  expect(text).toContain("starred.json");
+  expect(text).toContain("Nothing yet. Save an article, or highlight words in it, and it's kept here.");
+  expect(text).toContain("saved.json");
   await page.context().close();
 });
 

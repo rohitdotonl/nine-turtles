@@ -1,10 +1,10 @@
 <!--
   Unsubscribing from a place where the reader kept something (SPEC section
   42): it asks, in place of Unsubscribe in their settings, whether what they kept stays.
-  "Keep them" leaves their starred and marked articles, and their note on
-  the person, where they are (Starred, Notes, search). The safe answers sit
+  "Keep them" leaves their saved and marked articles, and their note on
+  the person, where they are (Saved, Notes, search). The safe answers sit
   together (Keep them, Cancel); under a hairline, apart, the oxblood button
-  names exactly what it removes ("Remove the 2 starred articles too",
+  names exactly what it removes ("Remove the 2 saved articles too",
   decision 0239). Either can be undone straight afterwards, as any
   unsubscribe can. Asked only when there's something kept.
 -->

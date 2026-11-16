@@ -4,8 +4,8 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-11
-related: [star-an-article, search-everything, download-everything]
+updated: 2026-11-16
+related: [save-an-article, search-everything, download-everything]
 ---
 
 <p class="lede">
@@ -21,7 +21,7 @@ related: [star-an-article, search-everything, download-everything]
    the words there and then, or **Done**.
 
 To write a note on them instead, press **Add a note…** (or
-<kbd>N</kbd>), type it and press **Save**.
+<kbd>N</kbd>), type it and press **Save note**.
 
 Press a highlight to see its note, edit it, copy the words, or remove it.
 From someone you follow, both menus also offer **Write back about this**,
@@ -39,7 +39,7 @@ highlights.
 Left a note half-written? It isn't lost. Whether you pressed **Not now**,
 went to another article or closed the box by mistake, nine turtles keeps it
 on this device. Come back and its box is open again with your words and
-**Not saved yet.** Press **Save** to keep it, or **Discard** to throw it
+**Not saved yet.** Press **Save note** to keep it, or **Discard** to throw it
 away (**Undo** brings it back).
 
 If a note can't be saved, its words stay in the box with a line saying so.
@@ -68,6 +68,6 @@ person or folder** finds them.
   reach your account as soon as you're back online. A quiet line says so
   until they do.
 - Articles you highlighted or wrote a note on are kept for good, like
-  starred ones.
+  saved ones.
 - If the writer changes the article, nine turtles finds your words again.
   Words that are gone stay in your list, marked "No longer in the article".

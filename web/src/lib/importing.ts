@@ -88,7 +88,7 @@ export function importMessage(summary: Omit<ImportSummary, "undoable">): string[
 
 export type StarsSummary = { starred: number; already: number; unreadable: number };
 
-/** Imports a file of starred articles from another feed reader (SPEC section 23). A string is a problem, said plainly. */
+/** Imports a file of saved (starred) articles from another feed reader (SPEC section 23). A string is a problem, said plainly. */
 export async function importStars(file: File): Promise<StarsSummary | string> {
   let response: Response;
   try {
@@ -110,7 +110,7 @@ export async function importStars(file: File): Promise<StarsSummary | string> {
     };
   }
   if (isRecord(body) && body.error === "not-stars") {
-    return "That file doesn't look like starred articles from a feed reader. Choose the file of starred articles your other app exports.";
+    return "That file doesn't look like saved articles from a feed reader. Choose the file of saved (or starred) articles your other app exports.";
   }
   if (isRecord(body) && body.error === "too-much") {
     return "Nothing was imported. With this file you'd keep more than 10,000 imported articles (or 50 MB of their text), as many as one reader can.";
@@ -119,17 +119,17 @@ export async function importStars(file: File): Promise<StarsSummary | string> {
   return "The file couldn't be imported. Try again in a moment.";
 }
 
-/** The plain summary after importing starred articles (SPEC section 23). */
+/** The plain summary after importing saved articles (SPEC section 23). */
 export function starsMessage(summary: StarsSummary): string[] {
   const number = new Intl.NumberFormat("en-GB");
   const articles = (count: number) => `${number.format(count)} ${count === 1 ? "article" : "articles"}`;
   const lines = [
     summary.starred === 0
-      ? "No new stars were added."
-      : `Starred ${articles(summary.starred)}. ${summary.starred === 1 ? "It's in Starred, with a link" : "They're in Starred, each with a link"} to the original.`,
+      ? "No new articles were saved."
+      : `Saved ${articles(summary.starred)}. ${summary.starred === 1 ? "It's in Saved, with a link" : "They're in Saved, each with a link"} to the original.`,
   ];
   if (summary.already > 0) {
-    lines.push(`${articles(summary.already)} ${summary.already === 1 ? "was" : "were"} starred here already.`);
+    lines.push(`${articles(summary.already)} ${summary.already === 1 ? "was" : "were"} saved here already.`);
   }
   if (summary.unreadable > 0) {
     lines.push(`${articles(summary.unreadable)} couldn't be brought over, as the file gives no link to the original.`);

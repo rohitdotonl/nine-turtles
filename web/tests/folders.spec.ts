@@ -275,15 +275,15 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await expect(page.getByRole("region", { name: `Blog ${other}` }).getByRole("listitem")).toHaveCount(3);
   await page.keyboard.press("j");
   await page.keyboard.press("s");
-  await expect(line(page)).toHaveText("Starred.");
+  await expect(line(page)).toHaveText("Saved.");
   await editWho(page, `Blog ${other}`);
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   // With a star there, it asks first whether to keep it (SPEC section 42).
   const keep = page.getByRole("group", { name: `Keep what you saved from Blog ${other}?` });
-  await expect(keep).toContainText("You starred 1 of their articles.");
+  await expect(keep).toContainText("You saved 1 of their articles.");
   await keep.getByRole("button", { name: "Keep them" }).click();
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${other}.`);
-  // Other tests star articles too, so look through every page of Starred.
+  // Other tests star articles too, so look through every page of Saved.
   const starredFrom: string[] = [];
   for (let after: string | null = null, first = true; first || after; first = false) {
     const query: string = after ? `view=starred&after=${after}` : "view=starred";
@@ -384,7 +384,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeFocused();
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) })).toHaveCount(0);
 
-  // Stars come over from another feed reader's export, into Starred.
+  // Stars come over from another feed reader's export, into Saved.
   const title = unique("Brought over");
   const stars = JSON.stringify({
     items: [
@@ -398,16 +398,16 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
       { title: "No link" },
     ],
   });
-  await opensFilePicker(page, () => page.getByRole("button", { name: "Import starred articles" }).click(), "json");
+  await opensFilePicker(page, () => page.getByRole("button", { name: "Import saved articles" }).click(), "json");
   await page.locator('input[type="file"][accept*="json"]').evaluate((input: HTMLInputElement, text) => {
     const chosen = new DataTransfer();
-    chosen.items.add(new File([text], "starred.json", { type: "application/json" }));
+    chosen.items.add(new File([text], "saved.json", { type: "application/json" }));
     input.files = chosen.files;
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }, stars);
-  await expect(page.getByText("Starred 1 article. It's in Starred, with a link to the original.")).toBeVisible();
+  await expect(page.getByText("Saved 1 article. It's in Saved, with a link to the original.")).toBeVisible();
   await expect(page.getByText("1 article couldn't be brought over, as the file gives no link to the original.")).toBeVisible();
-  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
+  await sidebar(page).getByRole("link", { name: /^Saved/ }).click();
   await expect(page.getByText(title)).toBeVisible();
 });
 
@@ -483,7 +483,7 @@ test("with only the keyboard: their settings, a new folder, opening it, Edit fol
   await opensFilePicker(
     page,
     async () => {
-      await tabTo(page, page.getByRole("button", { name: "Import starred articles" }));
+      await tabTo(page, page.getByRole("button", { name: "Import saved articles" }));
       await page.keyboard.press("Enter");
     },
     "json",

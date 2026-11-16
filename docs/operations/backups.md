@@ -22,7 +22,7 @@ how to switch it on, how to check it's working, and how to bring a copy back.
 - The copy is made in the computer's temporary folder, never on Render's
   1 GB disk, so backups never need spare room there.
 - At worst, you'd lose up to a day of reading activity (what you read or
-  starred since the last copy). Feeds and their new articles come back by
+  saved since the last copy). Feeds and their new articles come back by
   themselves at the next check.
 
 **Where the copies go** is chosen only through settings. Any storage that
@@ -36,7 +36,7 @@ own computer, and many more. Switching is a matter of changing five settings.
 | `monthly/2026-10.sqlite` | The first copy of that month | 12 |
 | `before-change/2026-10-25T141725Z-before-change-8.sqlite` | The copy taken just before structure change 8 | 10 |
 
-Just after each nightly copy is stored, the yearly clean-up removes articles nobody starred that arrived over a year ago (decision 0089). It never runs without a stored copy, so a removed article is always in last night's copy, and in that month's copy for a year. While backups are off or failing, nothing is removed.
+Just after each nightly copy is stored, the yearly clean-up removes articles nobody saved that arrived over a year ago (decision 0089). It never runs without a stored copy, so a removed article is always in last night's copy, and in that month's copy for a year. While backups are off or failing, nothing is removed.
 
 ## Switching it on (the owner does this; agents never see the keys)
 
@@ -154,7 +154,7 @@ agent first if you can; the steps:
 1. In Cloudflare, open the copy and click **Download**.
 2. Put it in an empty folder named `data`, renamed to `nine-turtles.sqlite`.
 3. Start nine turtles there (`docs/operations/building-and-running.md`) and
-   sign in. Your feeds, read marks and stars are as they were that night.
+   sign in. Your feeds, read marks and saved articles are as they were that night.
 
 ## Using another storage service
 

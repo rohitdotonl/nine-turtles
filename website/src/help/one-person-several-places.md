@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-15
+updated: 2026-11-16
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -55,7 +55,7 @@ page. There's no Edit and no Save: each setting changes the moment you
 touch it, as in Settings.
 
 - **Name**: type a new one and press <kbd>Enter</kbd>, or just move on;
-  "Saved." shows under it. <kbd>Esc</kbd> while typing puts the old one
+  "Name changed." shows under it. <kbd>Esc</kbd> while typing puts the old one
   back.
 - **This is**: a person or a publication (while they have one source; a
   publication has no Write to or Write back), with why under it ("nine

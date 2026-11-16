@@ -47,7 +47,7 @@ describe("keyboard shortcuts", () => {
     expect(read(press("a"), 10)).toEqual({ kind: "go", view: "all" });
   });
 
-  it("goes to Unread, Starred and All with g then u, s or a", () => {
+  it("goes to Unread, Saved and All with g then u, s or a", () => {
     const read = createKeyReader();
     for (const [key, view] of [
       ["u", "unread"],
@@ -82,7 +82,7 @@ describe("keyboard shortcuts", () => {
     expect(read(press("-"), 0)).toEqual({ kind: "text-size", step: -1 });
   });
 
-  it("stars with s, marks unread with m, marks all as read with Shift+A and undoes with u", () => {
+  it("saves with s, marks unread with m, marks all as read with Shift+A and undoes with u", () => {
     const read = createKeyReader();
     expect(read(press("s"), 0)).toEqual({ kind: "star" });
     // l added an article to a collection; collections are gone (decision 0174).
@@ -278,9 +278,9 @@ describe("keys printed as words", () => {
     expect(keyFor("star")).toBe("s");
     expect(keyOf("text-smaller")).toBe("-");
     expect(keyOf("no-such-key")).toBeUndefined();
-    expect(tip("Star", "star")).toBe("Star (S)");
-    expect(withKey("Star", "s")).toBe("Star (S)");
-    expect(withKey("Star", undefined)).toBe("Star");
+    expect(tip("Save", "star")).toBe("Save (S)");
+    expect(withKey("Save", "s")).toBe("Save (S)");
+    expect(withKey("Save", undefined)).toBe("Save");
     expect(withKey("Mark all as read", "Shift+A")).toBe("Mark all as read (Shift A)");
     expect(withKey("Smaller text", "-")).toBe("Smaller text (−)");
   });

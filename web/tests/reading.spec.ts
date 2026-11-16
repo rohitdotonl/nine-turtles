@@ -248,14 +248,14 @@ test.describe("on a wide window", () => {
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
     // After the way back to the list (decision 0275), the actions are quiet icons, each named in its tooltip with its key;
-    // the way to the publisher comes first, then Aa, Star, Write back (a person's, decision 0214) and More (decision 0038).
+    // the way to the publisher comes first, then Aa, Save, Write back (a person's, decision 0214) and More (decision 0038).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Back to Reading Room", "View original", "Reading appearance", "Star", "Write back", "More actions"]);
+    expect(order).toEqual(["Back to Reading Room", "View original", "Reading appearance", "Save", "Write back", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
-    await expect(article(page).getByRole("button", { name: "Star" }).first()).toHaveAttribute("title", "Star (S)");
+    await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
     // More holds Copy link, Mark unread, Add a note and Hide articles about…, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
@@ -647,18 +647,18 @@ test.describe("on a wide window", () => {
     expect((await bar.boundingBox())!.y).toBeLessThan(scrollerBox.y - 100);
     // No hairline at the window's top: nothing stays above the text for it to part from.
     await expect(scroller).toHaveCSS("border-top-width", "0px");
-    // At the end, Star and View original wait under the closing rule, Star the same toggle as the bar's.
+    // At the end, Save and View original wait under the closing rule, Save the same toggle as the bar's.
     await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
     const end = article(page).locator(".end-tools");
-    await expect(end.getByRole("button", { name: "Star" })).toBeInViewport();
+    await expect(end.getByRole("button", { name: "Save", exact: true })).toBeInViewport();
     await expect(end.getByRole("link", { name: "View original" })).toHaveAttribute("target", "_blank");
     // From the keyboard alone: Tab reaches the end's Star, and Enter or Space presses it.
-    const endStar = end.getByRole("button", { name: "Star" });
+    const endStar = end.getByRole("button", { name: "Save", exact: true });
     await tabTo(page, endStar);
     await page.keyboard.press("Enter");
-    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "true");
+    await expect(bar.getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "true");
     await page.keyboard.press(" ");
-    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+    await expect(bar.getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "false");
     // What was just done floats at the pane's foot, wherever the bar is, with its ×.
     await article(page).locator(".article-title").focus();
     await page.keyboard.press("c");
@@ -667,9 +667,9 @@ test.describe("on a wide window", () => {
     expect((await said.boundingBox())!.y).toBeGreaterThan(scrollerBox.y + scrollerBox.height - 120);
     // A note that comes later (here the star's Undo) puts the older line away, so the newest shows.
     await page.keyboard.press("s");
-    await expect(said).toContainText("Starred.");
+    await expect(said).toContainText("Saved.");
     await said.getByRole("button", { name: "Undo" }).click();
-    await expect(bar.getByRole("button", { name: "Star" })).toHaveAttribute("aria-pressed", "false");
+    await expect(bar.getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "false");
     await said.getByRole("button", { name: "Close the note" }).click();
     await expect(said).toHaveClass(/sr-only/);
     // The scrollbar's track is see-through, so its gutter is the page's own color in every theme.
@@ -790,12 +790,12 @@ test.describe("on a wide window", () => {
     expect(await link.evaluate((element) => element.getClientRects().length)).toBe(1);
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
-    // It comes after the short closing line; then Star alone, since the note is already the way to the original (decision 0263),
+    // It comes after the short closing line; then Save alone, since the note is already the way to the original (decision 0263),
     // and Write back, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
     const tools = article(page).locator(".end-tools");
     expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("end-tools"))).toBe(true);
-    await expect(tools.getByRole("button", { name: "Star" })).toBeVisible();
+    await expect(tools.getByRole("button", { name: "Save", exact: true })).toBeVisible();
     await expect(tools.getByRole("link")).toHaveCount(0);
     expect(await tools.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
     // Then only the credit line that shows on paper alone (decision 0236).

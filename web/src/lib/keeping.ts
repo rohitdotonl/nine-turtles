@@ -22,11 +22,11 @@ export function keptAny(kept: Kept): boolean {
   return kept.starred > 0 || kept.marked > 0 || kept.note;
 }
 
-/** In plain words: "You starred 3 of their articles, highlighted or noted 1 and wrote a note on them." */
+/** In plain words: "You saved 3 of their articles, highlighted or noted 1 and wrote a note on them." */
 export function keptWords(kept: Kept): string {
   const articles = (n: number, first: boolean) => (first ? `${n} of their articles` : String(n));
   const parts: string[] = [];
-  if (kept.starred > 0) parts.push(`starred ${articles(kept.starred, true)}`);
+  if (kept.starred > 0) parts.push(`saved ${articles(kept.starred, true)}`);
   if (kept.marked > 0) parts.push(`highlighted or noted ${articles(kept.marked, parts.length === 0)}`);
   if (kept.note) parts.push("wrote a note on them");
   const last = parts.pop() ?? "";
@@ -35,13 +35,13 @@ export function keptWords(kept: Kept): string {
 
 /**
  * The red button's own words, naming exactly what goes (decision 0239):
- * "Remove the 2 starred articles too", "Remove the starred article, the 3
+ * "Remove the 2 saved articles too", "Remove the saved article, the 3
  * highlighted or noted articles and your note on them too".
  */
 export function removeWords(kept: Kept): string {
   const these = (n: number, what: string) => (n === 1 ? `the ${what} article` : `the ${n} ${what} articles`);
   const parts: string[] = [];
-  if (kept.starred > 0) parts.push(these(kept.starred, "starred"));
+  if (kept.starred > 0) parts.push(these(kept.starred, "saved"));
   if (kept.marked > 0) parts.push(these(kept.marked, "highlighted or noted"));
   if (kept.note) parts.push("your note on them");
   const last = parts.pop() ?? "them";

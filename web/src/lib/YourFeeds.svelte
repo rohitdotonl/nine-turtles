@@ -351,14 +351,14 @@
           <button
             type="button"
             class="btn-danger text-meta"
-            title="Stops following them and removes their articles; starred ones stay. You can undo it straight afterwards."
+            title="Stops following them and removes their articles; saved ones stay. You can undo it straight afterwards."
             aria-describedby="your-feeds-unsubscribe-help"
             aria-disabled={chosen.length === 0 || busy}
             onclick={leave}>Unsubscribe</button
           >
           <p class="text-meta text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
           <button type="button" class="btn-primary" data-focus="move" aria-disabled={chosen.length === 0 || busy} onclick={openMove}>Move to…</button>
-          <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; starred ones stay. You can undo it straight afterwards.</span>
+          <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; saved ones stay. You can undo it straight afterwards.</span>
         </div>
       {:else}
         <div class="pb-16"></div>

@@ -158,7 +158,7 @@
 
   let message = $state("");
   let unreadMessage = $state("");
-  /** What the last import (OPML or starred articles) did, in plain words. */
+  /** What the last import (OPML or saved articles) did, in plain words. */
   let importLines: string[] = $state([]);
   /** After an import that added something, "Wrong file? Undo the import" until the next action here (decision 0238). */
   let importUndo: (() => Promise<"too-late" | undefined>) | undefined = $state();
@@ -477,9 +477,9 @@
 
         <p class="inset-foot">
           Download everything gives you one folder: open its index.html in any browser, with or without nine turtles, to
-          find who you follow, every article you starred or highlighted, and your notes. It also holds an OPML file and a
-          JSON Feed file for other feed apps. To bring your stars over from Inoreader, Feedly, Feedbin or another feed
-          reader, import the JSON file it exports them in.
+          find who you follow, every article you saved or highlighted, and your notes. It also holds an OPML file and a
+          JSON Feed file for other feed apps. To bring your saved (or starred) articles over from Inoreader, Feedly, Feedbin or another
+          feed reader, import the JSON file it exports them in.
         </p>
       </section>
       {:else if page === "install"}

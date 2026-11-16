@@ -4,13 +4,13 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-14
-related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
+updated: 2026-11-16
+related: [put-people-in-folders, save-an-article, highlight-and-take-notes]
 ---
 
 <p class="lede">
   Unfollowing takes someone out of your sidebar and their articles out of
-  your lists. Anything you starred or highlighted can stay.
+  your lists. Anything you saved or highlighted can stay.
 </p>
 
 ## Unfollow
@@ -19,10 +19,10 @@ related: [put-people-in-folders, star-an-article, highlight-and-take-notes]
    at the top of their list, then **Settings** at the foot of their page.
    Or press <kbd>E</kbd> in their list.
 2. Press **Unsubscribe from …** at the foot of their settings.
-3. If you starred, highlighted or wrote notes on any of their articles, or
+3. If you saved, highlighted or wrote notes on any of their articles, or
    wrote a note on them, nine turtles asks what to do with it: **Keep them**,
    or, set apart below a line, a red button that names exactly what would
-   go, such as **Remove the 2 starred articles too**.
+   go, such as **Remove the 2 saved articles too**.
 
 nine turtles says "Unsubscribed from …" with **Undo**. Undo brings them
 back exactly as they were, with what you'd read and their folders. If they
@@ -36,7 +36,7 @@ hold them, **+ Add** and **Settings** make way for two places to drop them,
 name until it lifts first.
 
 - Let go on **Unsubscribe** and they're gone, with "Unsubscribed from …"
-  and **Undo** at the bottom of the sidebar. If you starred, highlighted or
+  and **Undo** at the bottom of the sidebar. If you saved, highlighted or
   noted anything of theirs, nine turtles asks first, right there, whether
   to keep it, just as their settings do.
 - Let go on **Pause** for a noisy week: their new articles arrive already
@@ -62,7 +62,7 @@ all back.
 
 ## Good to know
 
-- Starred articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too. Those go once Undo has passed; **Bring back** doesn't return them.
+- Saved articles and articles you highlighted or wrote a note on are kept for good, unless you chose to remove them too. Those go once Undo has passed; **Bring back** doesn't return them.
 - Following someone again after their 30 days starts afresh: their five
   newest articles wait in **Unread**, and anything older is in their list,
   already read.

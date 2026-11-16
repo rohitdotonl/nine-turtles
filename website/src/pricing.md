@@ -25,7 +25,7 @@ draft: Prices aren't set yet. This page will show them before anyone pays for ni
 - A calm reader for the blogs, newsletters and sites you choose to follow,
   through their RSS, Atom or JSON feeds.
 - The app on the web, installable on your phone, tablet and computer.
-- Search, stars, folders, reading settings and exports of everything you
+- Search, saving, folders, reading settings and exports of everything you
   put in (each one explained in [Help](/help/)).
 - No ads, no tracking, and nothing sold or shared. More in the
   [privacy policy](/privacy/).

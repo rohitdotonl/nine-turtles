@@ -5,7 +5,7 @@ groupId: reading
 order: 7
 spec: 6 and 21
 updated: 2026-11-10
-related: [write-back, star-an-article]
+related: [write-back, save-an-article]
 ---
 
 <p class="lede">

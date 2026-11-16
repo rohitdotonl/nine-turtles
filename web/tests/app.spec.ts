@@ -11,15 +11,15 @@ async function openApp(page: Page, path = "/unread") {
 }
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Starred|All)$/ });
+const list = (page: Page) => page.getByRole("region", { name: /^(Unread|Saved|All)$/ });
 // The reading area: an article, or the welcome on a nine turtles with no feeds.
 const readingArea = (page: Page) => page.getByRole("region", { name: /^(Article|Hello\. Who would you like to read\?)$/ });
 
 test("a wide or medium window shows the sidebar and the list, one thing at a time; a phone-narrow one one area", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Starred: with no feeds yet, Unread and All show one welcome in place of the list
-  // (decision 0048); Starred keeps its own list. Nothing is open, so there's no reading area (decision 0275).
-  await openApp(page, "/starred");
+  // Saved: with no feeds yet, Unread and All show one welcome in place of the list
+  // (decision 0048); Saved keeps its own list. Nothing is open, so there's no reading area (decision 0275).
+  await openApp(page, "/saved");
   await expect(sidebar(page)).toBeVisible();
   await expect(list(page)).toBeVisible();
   await expect(readingArea(page)).toBeHidden();
@@ -46,15 +46,15 @@ test("on a computer the sidebar always shows beside the list: there's no button 
 });
 
 
-test("the sidebar lists Unread, Starred, Notes (from the first day, decision 0222) and All articles, then Everyone you follow, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar lists Unread, Saved, Notes (from the first day, decision 0222) and All articles, then Everyone you follow, with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  // Starred: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
-  await openApp(page, "/starred");
+  // Saved: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
+  await openApp(page, "/saved");
   const links = sidebar(page).getByRole("list").getByRole("link");
   // Under the lists, built as they are: Everyone you follow, the page that looks after the people themselves (decision 0266).
-  await expect(links).toHaveText(["Unread", "Starred", "Notes", "All articles", "Everyone you follow"]);
+  await expect(links).toHaveText(["Unread", "Saved", "Notes", "All articles", "Everyone you follow"]);
 
-  const here = sidebar(page).getByRole("link", { name: "Starred" });
+  const here = sidebar(page).getByRole("link", { name: "Saved" });
   await expect(here).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
@@ -95,13 +95,13 @@ test("the sidebar lists Unread, Starred, Notes (from the first day, decision 022
   expect(Math.abs(feetAboveBaseline)).toBeLessThan(1);
 
   await expect(sidebar(page).getByRole("link", { name: "Unread" })).not.toHaveAttribute("aria-current", "page");
-  // Where you are is the grey pill, so Starred's star stays an outline: filled only ever means starred (decision 0182).
-  await expect(sidebar(page).getByRole("link", { name: "Starred" }).locator("svg path")).toHaveAttribute("fill", "none");
+  // Where you are is the grey pill, so Saved's star stays an outline: filled only ever means starred (decision 0182).
+  await expect(sidebar(page).getByRole("link", { name: "Saved" }).locator("svg path")).toHaveAttribute("fill", "none");
   // An empty list (decision 0142): the fact in the serif, then how to start, quieter. On a computer the end has
   // the page (decision 0277): the fact set as an article's title is, both centred in the list's column, a good
   // way down. (A phone keeps them on the list's left edge.)
-  const fact = page.getByText("Nothing starred yet.");
-  const how = page.getByText("Press the star on any article to keep it here.");
+  const fact = page.getByText("Nothing saved yet.");
+  const how = page.getByText("Press Save on any article to keep it here.");
   await expect(fact).toBeVisible();
   await expect(fact).toHaveCSS("font-family", /Literata Display/);
   await expect(fact).toHaveCSS("font-size", "38px");
@@ -116,9 +116,9 @@ test("the sidebar lists Unread, Starred, Notes (from the first day, decision 022
 
 test("on a phone an empty list keeps the list's left edge, in the list's own sizes", async ({ page, isMobile }) => {
   test.skip(!isMobile, "A computer's empty list has the page to itself, checked above (decision 0277).");
-  await openApp(page, "/starred");
-  const fact = page.getByText("Nothing starred yet.");
-  const how = page.getByText("Press the star on any article to keep it here.");
+  await openApp(page, "/saved");
+  const fact = page.getByText("Nothing saved yet.");
+  const how = page.getByText("Press Save on any article to keep it here.");
   await expect(fact).toBeVisible();
   await expect(how).toBeVisible();
   await expect(fact).toHaveCSS("text-align", "start");
@@ -129,15 +129,15 @@ test("on a phone an empty list keeps the list's left edge, in the list's own siz
   expect(howBox!.y).toBeGreaterThan(factBox!.y + factBox!.height);
 });
 
-test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your place", async ({ page }) => {
+test("g then u, s or a goes to Unread, Saved or All; reload and Back keep your place", async ({ page }) => {
   await openApp(page);
   await page.keyboard.press("g");
   await page.keyboard.press("s");
-  await expect(page).toHaveURL(/\/starred$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeFocused();
+  await expect(page).toHaveURL(/\/saved$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toBeFocused();
   // A heading can't be pressed: after a shortcut it takes the keyboard's place but draws no ring.
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toHaveCSS("outline-style", "none");
-  await expect(page).toHaveTitle("Starred · nine turtles");
+  await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toHaveCSS("outline-style", "none");
+  await expect(page).toHaveTitle("Saved · nine turtles");
 
   await page.keyboard.press("g");
   await page.keyboard.press("a");
@@ -150,8 +150,8 @@ test("g then u, s or a goes to Unread, Starred or All; reload and Back keep your
   await expect(page.locator("#list-heading")).toHaveText("All articles");
 
   await page.goBack();
-  await expect(page).toHaveURL(/\/starred$/);
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
+  await expect(page).toHaveURL(/\/saved$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toBeVisible();
 
   await page.keyboard.press("g");
   await page.keyboard.press("u");
@@ -368,7 +368,7 @@ test("at 200% zoom nothing overlaps and everything still works", async ({ page }
 
   await page.keyboard.press("g");
   await page.keyboard.press("s");
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toBeVisible();
   expect(await overflow()).toBe(false);
 
   // Escape goes back to the sidebar, the phone-narrow home screen.
@@ -389,8 +389,8 @@ test("on a phone, feeds that arrive late never take you away from the home scree
     if (route.request().method() === "GET") await held;
     await route.continue();
   });
-  await openApp(page, "/starred");
-  await expect(page.getByRole("heading", { level: 2, name: "Starred" })).toBeVisible();
+  await openApp(page, "/saved");
+  await expect(page.getByRole("heading", { level: 2, name: "Saved" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(sidebar(page)).toBeVisible();
   const feedsArrived = page.waitForResponse("**/api/feeds");
@@ -680,7 +680,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   for (const row of [
     page.getByRole("button", { name: "Import OPML" }),
     page.getByRole("button", { name: "Import YouTube subscriptions" }),
-    page.getByRole("button", { name: "Import starred articles" }),
+    page.getByRole("button", { name: "Import saved articles" }),
     page.getByRole("link", { name: "Download everything" }),
   ]) {
     const box = (await row.boundingBox())!;
@@ -726,7 +726,7 @@ async function markPage(page: Page): Promise<() => Promise<boolean>> {
 test("a tab left open across an update opens the new version at the next place it goes", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width; Back on a phone is tested below");
   await page.setViewportSize({ width: 1280, height: 800 });
-  await openApp(page, "/starred");
+  await openApp(page, "/saved");
   let samePage = await markPage(page);
 
   // No newer version yet: going somewhere stays in the same page.
@@ -739,12 +739,12 @@ test("a tab left open across an update opens the new version at the next place i
 
   // Going to another place loads the new version there, with the keyboard's place on its heading.
   await page.keyboard.press("Shift"); // the keyboard is in use
-  await sidebar(page).getByRole("link", { name: /^Starred/ }).focus();
+  await sidebar(page).getByRole("link", { name: /^Saved/ }).focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/starred$/);
+  await expect(page).toHaveURL(/\/saved$/);
   await appReady(page);
   await expect.poll(samePage).toBe(false);
-  await expect(page.getByRole("heading", { name: "Starred", level: 2 })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Saved", level: 2 })).toBeFocused();
 
   // The screen stays as the reader arranged it: closing Settings goes back to the list they came from.
   samePage = await markPage(page);
@@ -754,7 +754,7 @@ test("a tab left open across an update opens the new version at the next place i
   await expect(page).toHaveURL(/\/settings$/);
   await expect.poll(samePage).toBe(false);
   await page.getByRole("button", { name: "Close settings" }).click();
-  await expect(page).toHaveURL(/\/starred$/);
+  await expect(page).toHaveURL(/\/saved$/);
   await expect(sidebar(page)).toBeVisible();
 
   // Back switches too: the address has already changed, so that's the page that loads.
@@ -770,8 +770,8 @@ test("on a phone, Back after an update opens the new version one step back", asy
   test.skip(!isMobile, "the phone layout only");
   // A phone opens on the feeds, its home screen (on a nine turtles that follows some: with none, it opens on the welcome).
   await openApp(page, new URL("/", FEEDS_APP).href);
-  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
-  await expect(page).toHaveURL(/\/starred$/);
+  await sidebar(page).getByRole("link", { name: /^Saved/ }).click();
+  await expect(page).toHaveURL(/\/saved$/);
   await expect(list(page)).toBeVisible();
   const samePage = await markPage(page);
   await newerVersionLive(page);

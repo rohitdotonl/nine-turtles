@@ -59,7 +59,7 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await appReady(page);
   await signIn(page);
   const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  // Starred, so all three are kept whatever else this test reader has unread.
+  // Saved, so all three are kept whatever else this test reader has unread.
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
   const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
   const [newest, middle] = ids as [number, number];
@@ -73,8 +73,8 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
 
   await context.setOffline(true);
-  await sidebar(page).getByRole("link", { name: /^Starred/ }).click();
-  await expect(page.getByText("You're offline. Showing the articles saved on this device.")).toBeVisible();
+  await sidebar(page).getByRole("link", { name: /^Saved/ }).click();
+  await expect(page.getByText("You're offline. Showing the articles kept on this device.")).toBeVisible();
   const row = (title: string) => page.getByRole("button", { name: new RegExp(`${title.replace(/[()]/g, "\\$&")}.*Blog ${name}`) });
   await row(NEWEST).click();
   await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();
@@ -90,13 +90,13 @@ test("articles kept on the device open, mark and star offline, and the marks are
   // What needs a connection says so.
   await page.getByRole("button", { name: /^More/ }).first().click();
   await page.getByRole("menuitem", { name: "Refresh" }).click();
-  await expect(page.getByText("You're offline. This is what's saved on this device.")).toBeVisible();
+  await expect(page.getByText("You're offline. This is what's kept on this device.")).toBeVisible();
   await sidebar(page).getByRole("link", { name: "Settings" }).click();
   await expect(page.getByText("You're offline. Settings open once you're back online.")).toBeVisible();
 
   // Opened again without a connection: the app and its kept articles are still here.
-  await page.goto(new URL("/starred", FEEDS_APP).href);
-  await expect(page.getByText("You're offline. Showing the articles saved on this device.")).toBeVisible();
+  await page.goto(new URL("/saved", FEEDS_APP).href);
+  await expect(page.getByText("You're offline. Showing the articles kept on this device.")).toBeVisible();
   await expect(row(NEWEST)).toBeVisible();
   await expect(row(MIDDLE)).toHaveCount(0);
 

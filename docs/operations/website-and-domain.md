@@ -44,7 +44,7 @@ padlock), which GitHub Pages and Render set up for you.
 4. Open https://app.nineturtles.app and sign in. A browser keeps sign-ins
    and per-device settings (theme, font, text size) for each address
    separately, so you sign in once on each device and choose those again.
-   Your feeds, stars, reading history and sort order are on the server, so
+   Your feeds, saved articles, reading history and sort order are on the server, so
    they're all there. On a phone, add the app to the home screen again from
    the new address, and remove the old icon.
 

@@ -104,7 +104,7 @@ PLAN.md → V1, item 1.*
   (or as the reader sorts), one list across all their sources (`/mira-chen-12`
   or `/ai-as-normal-technology-7`). With two or more sources, each row says which source
   it came from in place of their name: **Blog**, **Video**, **Newsletter**,
-  or **Podcast**. Everywhere else (All articles, Starred, search, Notes,
+  or **Podcast**. Everywhere else (All articles, Saved, search, Notes,
   the article's own line) an article is credited by their name; in Unread
   their name heads their articles once (section 6, decision 0271). Mark
   all as read, "new articles", search in their list and reading offline all
@@ -162,7 +162,7 @@ PLAN.md → V1, item 1.*
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on
-      leaving the field, with "Saved." under it; Escape while typing puts it
+      leaving the field, with "Name changed." under it; Escape while typing puts it
       back. An empty name isn't kept ("Give them a name."); a name that
       couldn't be saved stays as typed, with why under the settings;
     - for one source, **This is: A person / A publication**; A publication

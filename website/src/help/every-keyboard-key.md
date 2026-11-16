@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-15
+updated: 2026-11-16
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -24,9 +24,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 |---|---|
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
 | <kbd>W</kbd> | Write back (a person's article) |
-| <kbd>Shift</kbd> <kbd>F10</kbd> or the Menu key | An article's own menu in the list: star, mark read, write back, their page |
+| <kbd>Shift</kbd> <kbd>F10</kbd> or the Menu key | An article's own menu in the list: save, mark read, write back, their page |
 | <kbd>Enter</kbd> | Open the article |
-| <kbd>S</kbd> | Star or unstar |
+| <kbd>S</kbd> | Save, or take out of Saved |
 | <kbd>H</kbd> | Highlight chosen words |
 | <kbd>N</kbd> | Add a note, on the words you've chosen or on the whole article |
 | <kbd>V</kbd> | View the original, on the writer's website |
@@ -40,7 +40,7 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | Key | What it does |
 |---|---|
 | <kbd>G</kbd> then <kbd>U</kbd> | Unread |
-| <kbd>G</kbd> then <kbd>S</kbd> | Starred |
+| <kbd>G</kbd> then <kbd>S</kbd> | Saved |
 | <kbd>G</kbd> then <kbd>N</kbd> | Notes |
 | <kbd>G</kbd> then <kbd>A</kbd> | All articles |
 | <kbd>G</kbd> then <kbd>,</kbd> | Settings |

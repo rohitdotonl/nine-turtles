@@ -88,7 +88,7 @@ export function noFurther(step: 1 | -1, more: boolean): string {
 
 /** A mark the server refused because the reader is signed out (decision 0230): the real reason, for Sign in beside it. */
 export function notSavedSignedOut(field: "read" | "starred", value: boolean, count: number): string {
-  if (field === "starred") return `You're signed out, so the star wasn't ${value ? "saved" : "removed"}.`;
+  if (field === "starred") return `You're signed out, so the article wasn't ${value ? "saved" : "taken out of Saved"}.`;
   const what = count === 1 ? "the article wasn't" : `the ${count} articles weren't`;
   return `You're signed out, so ${what} marked as ${value ? "read" : "unread"}.`;
 }

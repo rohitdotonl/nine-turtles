@@ -76,7 +76,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Atom
 - JSON Feed
 - OPML
-- Google Reader format (starred exports)
+- Google Reader format (other readers' starred exports)
 - Starter feeds
 - Podcasts, enclosures and `itunes:duration`
 - YouTube channel and playlist feeds, Shorts and live streams lists, Google Takeout
@@ -173,7 +173,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - The screen's arrangement: the width step, which areas show (`panesFor`), whether a phone shows its feeds screen, and the sidebar's dragged width, kept on the device (`ScreenLayout`, in `layout.svelte.ts`)
 - The search on screen: what the field holds, the results the list shows, searching a moment after typing stops, the phone's Search field, and what Save search will save (`Searching`, in `searching.svelte.ts`)
 - The list's More menu: which rows show for the list on screen (`MenuScene`) and what each asks of the screen (`MenuHands`), decided in one place (`listMenu.ts`)
-- A row's own menu in the article list: right-click, long press or the Menu key; star, read, write back, their page (`rowMenu.ts`, `RowMenu.svelte`, `longPress.ts`), sharing More's menu (`MenuList.svelte`)
+- A row's own menu in the article list: right-click, long press or the Menu key; save, read, write back, their page (`rowMenu.ts`, `RowMenu.svelte`, `longPress.ts`), sharing More's menu (`MenuList.svelte`)
 - The list's words when it has nothing to show: a place you don't have (`missingFrom`, "Folder not found"), a list that couldn't load, and each empty list's line (`listWording.ts`)
 - The first visit: where the welcome shows, and when "New to feeds?" gives way to home (`firstVisit.ts`); the welcome itself (`Welcome.svelte`)
 - The welcome's "Or try one": three example addresses followed in one press (`welcomeTry.svelte.ts`, `TryOne.svelte`); no feed found offers your newsletter address (`ByEmail.svelte`)
@@ -181,7 +181,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Pick up where you left off: the one article left partway, kept on the server and offered in one line (`resume.svelte.ts`, `PickUp.svelte`)
 - Stepping through articles and feeds with the keyboard (`moving.ts`)
 - Where the keyboard lands on arriving somewhere (`landing.ts`)
-- The sidebar's fixed lists: Unread, Starred, Notes and All articles, which show (`SidebarViews.svelte`)
+- The sidebar's fixed lists: Unread, Saved, Notes and All articles, which show (`SidebarViews.svelte`)
 - The sidebar's foot: + Add, Keys and Settings, always at the bottom of the sidebar (`SidebarFoot.svelte`)
 - Arranging the sidebar: the folders' own order, its steps and filing someone (`arranging.ts`), dragging with a mouse, finger or handle (`sidebarDrag.ts`), and the Move sheet (`MoveSheet.svelte`)
 
@@ -211,7 +211,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Readers (accounts) and the `people` table
 - Subscriptions and entries (each reader's feeds and marks)
 - Soft deletion (kept, hidden, for a while: Recently unsubscribed, decision 0240)
-- Collections (the reader's old shelves of articles, retired for Starred, decision 0174) and tags (in JSON Feed)
+- Collections (the reader's old shelves of articles, retired for Saved, decision 0174) and tags (in JSON Feed)
 - Highlights and notes (anchoring words by their text, not a position) and Markdown
 - Episode progress (each reader's place in an episode)
 - Admin page (the owner's Readers page) and usage limits (fair-use quotas)

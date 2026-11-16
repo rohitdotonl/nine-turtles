@@ -15,7 +15,7 @@ import { currentTabReader } from "./updates.svelte";
 import { toNote, type FullArticle, type Note } from "./shapes";
 import { UNDO_FAILED } from "./messages";
 
-export const OFFLINE_LINE = "You're offline. This is saved on this device only, and reaches your account once you're back online.";
+export const OFFLINE_LINE = "You're offline. This is kept on this device only, and reaches your account once you're back online.";
 
 /** The longest note the server keeps (server/src/notes.rs → LONGEST_NOTE). */
 export const LONGEST_NOTE = 5000;
