@@ -70,8 +70,8 @@
       <div class="flex flex-col gap-2">
         <h2 class="font-semibold">{name} will be able to</h2>
         <ul class="list">
-          <li>read your feeds, articles, starred articles and rules</li>
-          <li>mark articles read or starred</li>
+          <li>read your feeds, articles, saved articles and rules</li>
+          <li>mark articles read, or save them</li>
           <li>add, rename, move and unsubscribe from feeds</li>
           <li>make and remove folders and rules</li>
           <li>download your feed list</li>

@@ -4,6 +4,8 @@ import { HELP_URL, SETTINGS_PAGES, addressFor, addressWords, articleIn, helpPage
 describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
     expect(parse("/unread")).toEqual({ kind: "view", view: "unread" });
+    expect(parse("/saved/")).toEqual({ kind: "view", view: "starred" });
+    // Saved was Starred (decision 0283): its old address still opens it.
     expect(parse("/starred/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/all")).toEqual({ kind: "view", view: "all" });
     expect(parse("/settings")).toEqual({ kind: "settings" });
@@ -50,7 +52,7 @@ describe("addresses", () => {
   });
 
   it("knows its own places, so any other address is a wrong turn", () => {
-    for (const path of ["/", "/unread", "/unread/", "/starred", "/all", "/settings", "/following", "/settings/feeds", "/mira-chen-12/settings", "/add-feed", "/new-to-feeds", "/12", "/folders/4/edit", "/notes"])
+    for (const path of ["/", "/unread", "/unread/", "/saved", "/starred", "/all", "/settings", "/following", "/settings/feeds", "/mira-chen-12/settings", "/add-feed", "/new-to-feeds", "/12", "/folders/4/edit", "/notes"])
       expect(knownPath(path), path).toBe(true);
     // Recently read, saved searches and collections are gone (decision 0174): their old addresses too.
     for (const path of ["/nowhere", "/0", "/people/12", "/mira-chen-12/more", "/recent", "/searches/7", "/searches/new", "/collections/3", "/blog", "/settings/nothing", "/settings/toString", "/settings/readers/none"])
@@ -58,7 +60,8 @@ describe("addresses", () => {
   });
 
   it("turns a place back into its address and title", () => {
-    expect(pathFor({ kind: "view", view: "starred" })).toBe("/starred");
+    expect(pathFor({ kind: "view", view: "starred" })).toBe("/saved");
+    expect(titleFor({ kind: "view", view: "starred" })).toBe("Saved · nine turtles");
     expect(pathFor({ kind: "settings" })).toBe("/settings");
     expect(titleFor({ kind: "view", view: "all" })).toBe("All articles · nine turtles");
     expect(titleFor({ kind: "settings" })).toBe("Settings · nine turtles");
@@ -100,7 +103,7 @@ describe("addresses", () => {
       expect(addressFor({ kind: "edit-folder", id: 4 })).toBe("/folders/friends-4/edit");
       // No name known (yet), or none in plain letters: the number alone.
       expect(addressFor({ kind: "feed", id: 9 })).toBe("/9");
-      expect(addressFor({ kind: "view", view: "starred" })).toBe("/starred");
+      expect(addressFor({ kind: "view", view: "starred" })).toBe("/saved");
       // The place itself is still its number, whatever its name.
       expect(pathFor({ kind: "feed", id: 54 })).toBe("/54");
       expect(withoutWords("/jim-nielsen-54/about")).toBe("/54/about");
@@ -194,7 +197,9 @@ describe("an open article's address (decisions 0233, 0281)", () => {
     expect(articleIn("/jim-nielsen-54/about")).toEqual({ list: "/jim-nielsen-54/about" });
     expect(articleIn("/unread/a-title-0")).toEqual({ list: "/unread/a-title-0" });
     expect(parse("/folders/friends-3/mira-chen/a-letter-12")).toEqual({ kind: "folder", id: 3 });
-    expect(parse("/starred/a-letter-12")).toEqual({ kind: "view", view: "starred" });
+    expect(parse("/saved/a-letter-12")).toEqual({ kind: "view", view: "starred" });
+    expect(articleIn("/saved/mira-chen/a-letter-12")).toEqual({ list: "/saved", article: 12 });
+    expect(articleIn("/starred/mira-chen/a-letter-12")).toEqual({ list: "/starred", article: 12 });
   });
 
   it("opens only under a list of articles", () => {

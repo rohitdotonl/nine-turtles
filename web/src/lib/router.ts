@@ -46,7 +46,15 @@ function settingsPage(name: string): SettingsPage | undefined {
   return Object.hasOwn(SETTINGS_PAGES, name) ? (name as SettingsPage) : undefined;
 }
 
-export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Starred", notes: "Notes", all: "All articles" };
+export const VIEW_NAMES: Record<View, string> = { unread: "Unread", starred: "Saved", notes: "Notes", all: "All articles" };
+
+/** Each view's word in its address: Saved keeps its first name, starred, inside the app (decision 0283). */
+const VIEW_ADDRESSES: Record<View, string> = { unread: "unread", starred: "saved", notes: "notes", all: "all" };
+
+/** The view an address's first word opens, if any; Starred's old word still opens Saved. */
+function viewAt(word: string | undefined): View | undefined {
+  return word === "starred" ? "starred" : VIEWS.find((view) => VIEW_ADDRESSES[view] === word);
+}
 
 /**
  * The lists the sidebar shows above the folders, top to bottom: every one, the same for everyone (decision 0187),
@@ -141,7 +149,7 @@ export function articleIn(path: string): { list: string; article?: number } {
   const parts = path.split("/").filter(Boolean);
   const folder = parts[0] === "folders";
   const rest = parts.slice(folder ? 2 : 1);
-  const byWriter = rest.length === 2 && /^[a-z0-9-]+$/.test(rest[0]!) && (folder || (VIEWS as readonly string[]).includes(parts[0]!));
+  const byWriter = rest.length === 2 && /^[a-z0-9-]+$/.test(rest[0]!) && (folder || viewAt(parts[0]) !== undefined);
   const article = rest.length === 1 || byWriter ? numberIn(rest.at(-1)) : undefined;
   return article ? { list: `/${parts.slice(0, folder ? 2 : 1).join("/")}`, article } : { list: path };
 }
@@ -177,7 +185,8 @@ export function parse(path: string): Route {
   }
   const folder = name.match(new RegExp(`^folders/${NUMBERED}(/edit)?$`));
   if (folder) return folder[2] ? { kind: "edit-folder", id: Number(folder[1]) } : { kind: "folder", id: Number(folder[1]) };
-  if ((VIEWS as readonly string[]).includes(name)) return { kind: "view", view: name as View };
+  const view = viewAt(name);
+  if (view) return { kind: "view", view };
   return { kind: "view", view: "unread" };
 }
 
@@ -216,7 +225,7 @@ export function pathFor(route: Route): string {
     case "edit-folder":
       return `/folders/${route.id}/edit`;
     case "view":
-      return `/${route.view}`;
+      return `/${VIEW_ADDRESSES[route.view]}`;
   }
 }
 

@@ -2,7 +2,7 @@
   The words of one row of the item list (SPEC section 6): its title, or an
   untitled post's opening; a search result's text around the first searched
   word; and the one-line meta under them, with who it's from, when, its kind,
-  your place in it, Hidden and the star. The row itself, a button that opens
+  your place in it, Hidden and the bookmark. The row itself, a button that opens
   the article, is `ItemRow.svelte`'s.
 -->
 <script lang="ts">
@@ -66,7 +66,7 @@
     >
   {/if}
   <!--
-    Always one line (decision 0048): a long source name ends in "…", the time and star never wrap. The "·" hugs the "…" (decision 0051). The whole line
+    Always one line (decision 0048): a long source name ends in "…", the time and bookmark never wrap. The "·" hugs the "…" (decision 0051). The whole line
     is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
     (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
   -->
@@ -80,11 +80,11 @@
     <!-- Your place, while one is kept: "· Half read" (decision 0224). -->
     <RowPlace article={article.id} first={placeFirst} />
     {#if article.muted}
-      <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
+      <!-- Only search (and Saved) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
       <span class="row-muted">· Hidden</span>
     {/if}
     {#if article.starred}
-      <span class="row-star"><Icon name="star" filled /><span class="sr-only">, Starred</span></span>
+      <span class="row-saved"><Icon name="bookmark" filled /><span class="sr-only">, Saved</span></span>
     {/if}
   </span>
 

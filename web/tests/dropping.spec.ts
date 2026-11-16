@@ -7,7 +7,7 @@ import { appReady, follow, signIn } from "./screens";
 // dropped on nine turtles, or on a folder, opens "Follow <name>?" (SPEC
 // section 3). Decision 0250: someone dropped onto someone else makes one
 // person (SPEC section 36), and an article dragged from the list carries
-// the publisher's link and stars on Starred (SPEC section 6). Each test follows blogs of its own, since every test shares
+// the publisher's link and stars on Saved (SPEC section 6). Each test follows blogs of its own, since every test shares
 // the one nine turtles that has feeds.
 
 test.skip(({ isMobile }) => isMobile, "the wide layout shows the sidebar beside the list");
@@ -88,7 +88,7 @@ test("dropped on Unsubscribe with a starred article of theirs, the foot asks fir
   await dragTo(page, row(page, name), act(page, "unsubscribe"));
   const question = sidebar(page).getByRole("group", { name: `Keep what you saved from ${name}?` });
   await expect(question).toBeVisible();
-  await expect(question).toContainText("You starred 1 of their articles.");
+  await expect(question).toContainText("You saved 1 of their articles.");
   // Nothing has gone yet, and the keyboard is on the safe answer.
   await expect(row(page, name)).toBeVisible();
   await expect(question.getByRole("button", { name: "Keep them" })).toBeFocused();
@@ -251,7 +251,7 @@ test("someone dropped onto someone else makes one person, under the name of the 
   await expect(row(page, theirs)).toBeVisible();
 });
 
-test("an article dragged from the list carries the publisher's link, and let go on Starred it's starred, with Undo", async ({ page }) => {
+test("an article dragged from the list carries the publisher's link, and let go on Saved it's starred, with Undo", async ({ page }) => {
   const { name, id } = await aBlog(page, "drag-article");
   await row(page, name).click();
   const first = page.locator(".item-row").first();
@@ -262,13 +262,13 @@ test("an article dragged from the list carries the publisher's link, and let go 
   const data = await page.evaluateHandle(() => new DataTransfer());
   await rowOf.dispatchEvent("dragstart", { dataTransfer: data });
   expect(await data.evaluate((transfer) => transfer.getData("text/uri-list"))).toBe(article.link);
-  const starred = sidebar(page).getByRole("link", { name: "Starred" });
+  const starred = sidebar(page).getByRole("link", { name: "Saved" });
   await starred.dispatchEvent("dragover", { dataTransfer: data });
   await expect(starred).toHaveAttribute("data-drop", "");
   await starred.dispatchEvent("drop", { dataTransfer: data });
   await rowOf.dispatchEvent("dragend", { dataTransfer: data });
   await expect(starred).not.toHaveAttribute("data-drop");
-  await expect(page.getByText("Starred.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
   const kept = async () => (await (await page.request.get(new URL("/api/articles?view=starred", FEEDS_APP).href)).json()).articles.map((each: { id: number }) => each.id);
   await expect.poll(kept).toContain(article.id);
   await page.getByRole("button", { name: "Undo" }).first().click();
@@ -294,15 +294,15 @@ test("held someone who's a person already and dropped onto a blog, the one perso
   await expect(row(page, theirs)).toBeVisible();
 });
 
-test("an article dragged with the mouse onto Starred is starred; one starred already isn't taken", async ({ page }) => {
+test("an article dragged with the mouse onto Saved is starred; one starred already isn't taken", async ({ page }) => {
   const { name } = await aBlog(page, "drag-real");
   await row(page, name).click();
   const rows = page.locator(".item-row");
   await expect(rows.first()).toBeVisible();
-  const starred = sidebar(page).getByRole("link", { name: "Starred" });
+  const starred = sidebar(page).getByRole("link", { name: "Saved" });
   await rows.first().dragTo(starred);
-  await expect(page.getByText("Starred.", { exact: true })).toBeVisible();
-  // Starred already: Starred takes no drop tone, and nothing changes.
+  await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
+  // Saved already: Saved takes no drop tone, and nothing changes.
   const data = await page.evaluateHandle(() => new DataTransfer());
   await rows.first().dispatchEvent("dragstart", { dataTransfer: data });
   await starred.dispatchEvent("dragover", { dataTransfer: data });

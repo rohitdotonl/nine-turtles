@@ -49,7 +49,7 @@ describe("emptyText", () => {
   it("says each empty list in one pattern, with how to start only where there's something to do", () => {
     expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread.", how: "New writing will show up here." });
     expect(emptyText({ kind: "folder", id: 2 })).toEqual({ fact: "Nothing in this folder yet." });
-    expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing starred yet.", how: "Press the star on any article to keep it here." });
+    expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." });
     expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "No articles yet." });
   });
 
@@ -65,10 +65,10 @@ describe("emptyText", () => {
 
 describe("nothingFound", () => {
   it("says what a search looked for, and where", () => {
-    expect(nothingFound(" walking ", "Starred")).toEqual({ fact: "Nothing found for “walking” in Starred." });
+    expect(nothingFound(" walking ", "Saved")).toEqual({ fact: "Nothing found for “walking” in Saved." });
     // In one place, it offers to look everywhere (decision 0212).
     const wider = () => undefined;
-    expect(nothingFound("walking", "Starred", wider).wider).toBe(wider);
+    expect(nothingFound("walking", "Saved", wider).wider).toBe(wider);
     expect(nothingFound("", "Unread")).toEqual({ fact: "Nothing found in Unread." });
   });
 });

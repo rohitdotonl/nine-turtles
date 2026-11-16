@@ -9,8 +9,8 @@ export type Scope = { kind: "all" } | { kind: "view"; view: "unread" | "starred"
 
 /**
  * Everything searched for: `words` is what's typed outside the chip, then
- * where (`scope`). Nothing else (decision 0241): a search from Starred finds
- * only starred ones.
+ * where (`scope`). Nothing else (decision 0241): a search from Saved finds
+ * only saved ones.
  */
 export type Query = {
   words: string;
@@ -42,7 +42,7 @@ export function scopeName(scope: Scope, library: Library): string {
     case "all":
       return "All articles";
     case "view":
-      return { unread: "Unread", starred: "Starred", notes: "Notes" }[scope.view];
+      return { unread: "Unread", starred: "Saved", notes: "Notes" }[scope.view];
     case "feed":
       return library.feeds.find((feed) => feed.id === scope.id)?.title ?? "A feed";
     case "folder":

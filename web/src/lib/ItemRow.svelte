@@ -5,7 +5,7 @@
   Shift+F10) opens its own menu; the arrow keys work like j and k; a drag
   carries the article (decision 0250); Command-click or a middle click opens
   it in a new tab (decision 0233); on a touch screen, swiped left a little
-  way it's marked read, and all the way it's starred, as its menu does,
+  way it's marked read, and all the way it's saved, as its menu does,
   and springs back when the finger lets go (decision 0274). Which row is chosen, and what each of
   these does to the list, is `ItemList.svelte`'s.
 -->
@@ -131,6 +131,6 @@
   {@const ready = closing ? closing.armed : armed !== undefined}
   <!-- In the room the row opens: the word and icon of what letting go does, in the ink once it's far enough. Seen only; the menu and keys say the same in words. -->
   <span bind:this={room} aria-hidden="true" class="row-swipe" data-armed={ready ? "" : undefined} style:top="{row.offsetTop}px" style:height="{row.offsetHeight}px" style:--pulled="{-pulled}px">
-    <Icon name={shown.icon} filled={ready && shown.icon === "star"} />{shown.word}
+    <Icon name={shown.icon} filled={ready && shown.icon === "bookmark"} />{shown.word}
   </span>
 {/if}

@@ -50,7 +50,7 @@ pub const MOST_KEPT: i64 = 10_000;
 pub const MOST_KEPT_BYTES: i64 = 50 * 1024 * 1024;
 /// The name of the feed that holds stars whose file doesn't say where they
 /// came from.
-const NO_FEED_TITLE: &str = "Imported stars";
+const NO_FEED_TITLE: &str = "Imported articles";
 
 pub fn routes() -> Router<AppState> {
     Router::new().route(

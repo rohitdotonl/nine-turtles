@@ -13,4 +13,4 @@
 
 **How to check it**
 1. Use the app for a few minutes: you never wait for it. On a slow connection, Sign in says "Signing in…" while it waits. On a phone, a row under your finger takes a faint tone.
-2. On a slow phone connection, star an article: the star appears immediately. If saving fails, you're told plainly and the star is taken back, rather than silently lost.
+2. On a slow phone connection, save an article: the bookmark fills immediately. If saving fails, you're told plainly and the bookmark is taken back, rather than silently lost.

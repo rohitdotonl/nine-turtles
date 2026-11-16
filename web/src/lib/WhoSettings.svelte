@@ -43,7 +43,7 @@
     /** A folder just made or chosen: the sidebar opens it to show them there. */
     onFolders?: (folders: number[]) => void;
     onHide: () => void;
-    /** `removeKept`: what the reader starred or marked of theirs goes too (SPEC section 42). */
+    /** `removeKept`: what the reader saved or marked of theirs goes too (SPEC section 42). */
     onUnsubscribe: (removeKept: boolean) => Promise<string | undefined>;
     /** Their sources' own settings, between this group and Unsubscribe, saving through the same queue. */
     sources?: Snippet<[Save]>;
@@ -130,7 +130,7 @@
     // Only once it's kept does the field follow the saved name again; refused, what was typed stays.
     if (renamed && document.activeElement !== nameField) editing = false;
   }
-  /** "Saved." under Name once a new name is kept, until the field is used again: the field itself doesn't change, so a word does. */
+  /** "Name changed." under Name once a new name is kept, until the field is used again: the field itself doesn't change, so a word does. */
   let renamed = $state(false);
 
   function nameKeys(event: KeyboardEvent) {
@@ -216,7 +216,7 @@
     <label class="inset-row setting has-control">
       <span class="setting-words">
         <span class="setting-name">Name</span>
-        <span role="status" class={["setting-hint", !renamed && "sr-only"]}>{renamed ? "Saved." : ""}</span>
+        <span role="status" class={["setting-hint", !renamed && "sr-only"]}>{renamed ? "Name changed." : ""}</span>
       </span>
       <input
         bind:this={nameField}
@@ -300,13 +300,13 @@
           bind:this={leaveButton}
           aria-disabled={busy}
           aria-describedby="{id}-leave"
-          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards."
+          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards."
           onclick={() => leave()}
           class="inset-row inset-action font-semibold text-danger">Unsubscribe from {name}</button
         >
       </div>
     {/if}
-    <span id="{id}-leave" class="sr-only">Removes their articles; what you starred, highlighted or noted can stay. You can undo it straight afterwards.</span>
+    <span id="{id}-leave" class="sr-only">Removes their articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards.</span>
   </div>
 </div>
 

@@ -140,7 +140,7 @@ pub fn newest_link(outbox: &nine_turtles::email::Outbox, to: &str) -> (String, S
 }
 
 /// One file from the reader's Download everything (`/api/everything`), by
-/// the end of its name, such as "starred.json", as text.
+/// the end of its name, such as "saved.json", as text.
 pub async fn from_everything(base: &str, cookie: &str, name: &str) -> String {
     let response = reqwest::Client::new()
         .get(format!("{base}/api/everything"))
@@ -159,5 +159,5 @@ pub async fn from_everything(base: &str, cookie: &str, name: &str) -> String {
 
 /// The starred articles' JSON Feed file from Download everything.
 pub async fn starred_file(base: &str, cookie: &str) -> serde_json::Value {
-    serde_json::from_str(&from_everything(base, cookie, "starred.json").await).unwrap()
+    serde_json::from_str(&from_everything(base, cookie, "saved.json").await).unwrap()
 }

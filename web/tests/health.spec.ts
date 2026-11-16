@@ -126,7 +126,7 @@ test("a failing feed says so above its list, and Find its new address moves it w
   // One feed on the site: a plain question in place, and the keyboard on Use it.
   const question = list.getByRole("status").filter({ hasText: /instead\?$/ });
   await expect(question).toHaveText(`Use ${FEED_SITE}/blog/${name}/new.xml instead?`);
-  await expect(list).toContainText("Its name, folders, articles and stars stay.");
+  await expect(list).toContainText("Its name, folders and articles stay, saved ones too.");
   await expect(list.getByRole("radio")).toHaveCount(0);
   const useIt = list.getByRole("button", { name: "Use it" });
   await expect(useIt).toBeFocused();
@@ -184,7 +184,7 @@ test("with the keyboard alone: the row, their page, Find new address and back, U
   await page.keyboard.press("Enter");
   const useIt = box.getByRole("button", { name: "Use it" });
   await expect(useIt).toBeFocused();
-  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders, articles and stars stay\.$/);
+  await expect(useIt).toHaveAccessibleDescription(/^Use .*new\.xml instead\? Its name, folders and articles stay, saved ones too\.$/);
   await page.keyboard.press("Shift+Tab");
   await expect(box.getByRole("button", { name: "Cancel" })).toBeFocused();
   await page.keyboard.press("Enter");

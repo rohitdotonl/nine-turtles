@@ -5,7 +5,7 @@
   titles under them, under "People", then "Publications" (decisions 0271
   and 0278, `people.ts` → `headsOf`).
   Unread titles are full strength and semibold (regular under a name), read
-  ones muted and regular, starred ones a small star: each shows without color. With
+  ones muted and regular, saved ones a small bookmark: each shows without color. With
   Unread off (SPEC section 10) every title looks the same, read or not.
 
   It shows 50; when you reach the bottom, the next 50 load below by
@@ -20,7 +20,7 @@
   Refresh and "Mark all as read" (which marks only the articles listed here)
   sit in the list's More menu, in Shell; Mark all as read waits at the end of
   a list with unread articles too (decision 0214). A row's own menu (a
-  right-click, a long press, or the Menu key) stars it, marks it read or
+  right-click, a long press, or the Menu key) saves it, marks it read or
   unread, writes back, or goes to the page about its writer (`rowMenu.ts`).
   Search results say how many above
   the list. "New articles · press r" and "Marked 23 articles as read"
@@ -115,7 +115,7 @@
     oneFeed?: OneSource;
     /** Unread off (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     unreadOff?: boolean;
-    /** A row's menu, after its star and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
+    /** A row's menu, after Save and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
     rowActions?: (article: Article) => MenuGroup[];
     /** An article's own address (decision 0233), for Command-click and a middle click on its row. */
     addressOf?: (article: Article) => string;
@@ -345,7 +345,7 @@
     if (filling) onChecking();
     void askForNew(filling);
   }));
-  // A row let go on Starred is starred, as `s` does (decision 0250).
+  // A row let go on Saved is saved, as `s` does (decision 0250).
   onMount(() => listenForStarring((id) => {
     const article = articles.find((each) => each.id === id);
     if (article && !article.starred) toggleStar(article);
@@ -509,7 +509,7 @@
       starred,
       markStarred,
       (each, value) => (each.starred = value),
-      starred ? "The star couldn't be saved." : "The star couldn't be removed.",
+      starred ? "The article couldn't be saved." : "The article couldn't be taken out of Saved.",
     );
   }
 
@@ -579,11 +579,11 @@
     setRead([article], read);
   }
 
-  /** `s`, the star control and a row's menu: stars or unstars the article (the selected one). */
+  /** `s`, the Save button and a row's menu: saves the article (the selected one) or takes it out of Saved. */
   export function toggleStar(article = selected) {
     if (!article) return;
     const starred = !article.starred;
-    did(starred ? "Starred." : "Unstarred.", () => setStarred(article, !starred));
+    did(starred ? "Saved." : "Removed from Saved.", () => setStarred(article, !starred));
     setStarred(article, starred);
   }
 

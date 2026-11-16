@@ -120,7 +120,7 @@ export const SHORTCUTS: Shortcut[] = [
   ),
   shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
   shortcut("Reading", "Open article", [["open-enter", "Enter", { kind: "open" }]]),
-  shortcut("Reading", "Star / unstar", [["star", "s", { kind: "star" }]]),
+  shortcut("Reading", "Save / unsave", [["star", "s", { kind: "star" }]]),
   shortcut("Reading", "Highlight chosen words", [["highlight", "h", { kind: "highlight" }]]),
   shortcut("Reading", "Add a note", [["note", "n", { kind: "note" }]]),
   shortcut("Reading", "View original", [["open-original", "v", { kind: "open-original" }]]),
@@ -140,7 +140,7 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Reading", "Copy link", [["copy-link", "c", { kind: "copy-link" }]]),
   shortcut("Reading", "Back / close", [["escape", "Esc", { kind: "escape" }]]),
   shortcut(GO_TO, "Unread", [["go-unread", "g then u", { kind: "go", view: "unread" }]]),
-  shortcut(GO_TO, "Starred", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
+  shortcut(GO_TO, "Saved", [["go-starred", "g then s", { kind: "go", view: "starred" }]]),
   shortcut(GO_TO, "Notes", [["go-notes", "g then n", { kind: "go", view: "notes" }]]),
   shortcut(GO_TO, "All articles", [["go-all", "g then a", { kind: "go", view: "all" }]]),
   shortcut(GO_TO, "Settings", [["go-settings", "g then ,", { kind: "go-to", path: "/settings" }]]),
@@ -195,7 +195,7 @@ export function keyOf(id: string): string | undefined {
   return BINDINGS.get(id)?.key;
 }
 
-/** A button's tooltip with its key: "Star (S)". */
+/** A button's tooltip with its key: "Save (S)". */
 export function tip(label: string, id: string): string {
   return withKey(label, keyOf(id));
 }
@@ -395,7 +395,7 @@ export function keyCap(press: string): string {
 
 /**
  * A button's tooltip with its key, as SPEC section 19 has it (decision
- * 0064): "Star (S)", "Mark all as read (Shift A)";
+ * 0064): "Save (S)", "Mark all as read (Shift A)";
  * with no key, the name alone.
  */
 export function withKey(label: string, key: string | undefined): string {

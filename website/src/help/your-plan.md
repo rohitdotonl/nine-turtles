@@ -4,7 +4,7 @@ description: How the free trial works, how to choose a plan, and how to cancel i
 groupId: you-and-your-account
 order: 4
 spec: 29
-updated: 2026-11-03
+updated: 2026-11-16
 related: [download-everything, delete-your-account, create-your-account]
 ---
 
@@ -37,7 +37,7 @@ with nobody to ask. The plan lasts until the end of what you paid for.
 
 ## If a trial or plan ends
 
-You can still read, star, search, download and change settings, and your
+You can still read, save, search, download and change settings, and your
 newsletters keep arriving. You can't follow anyone new, and nine turtles
 checks for new articles once a day instead of all day long.
 

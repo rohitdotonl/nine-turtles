@@ -262,7 +262,7 @@ each one, what ties us to it, and what leaving would take.
 | **Cloudflare Email Routing and a Worker** (newsletters) | Receives newsletter emails for in.nineturtles.app and posts each one to nine turtles | nine turtles accepts standard raw email from anything that can post it; the Worker's code is in the repository (`cloudflare/newsletter-worker/`) | Point mail for in.nineturtles.app at another service that posts incoming email to a web address, such as Mailgun or Postmark (`docs/operations/newsletters.md`) |
 | **Cloudflare R2** (backups) | Stores the nightly copies of the database | Any S3-compatible storage works; nine turtles speaks S3 itself, and the copies are ordinary SQLite files | Make a bucket at another provider (Backblaze B2, for example) and change five settings (`docs/operations/backups.md`) |
 | **Brevo** (email) | Sends nine turtles' few emails: a new password, a sign-in link, a changed email (decision 0088) | nine turtles speaks plain SMTP, which every email service offers | Get another service's SMTP details and change the five `NINE_TURTLES_SMTP_*` settings (`docs/operations/email.md`) |
-| **Your reading data** | Your feeds, folders, starred articles and notes | Download everything: plain pages any browser opens, plus an OPML file (feeds and folders), a JSON Feed file (starred articles) and a Markdown file (notes), all standard formats | Press Download everything in Settings → Your data, and import its files into another reader |
+| **Your reading data** | Your feeds, folders, saved articles and notes | Download everything: plain pages any browser opens, plus an OPML file (feeds and folders), a JSON Feed file (saved articles) and a Markdown file (notes), all standard formats | Press Download everything in Settings → Your data, and import its files into another reader |
 
 **The rule agents follow:** nothing important lives only inside one tool's
 settings or dashboard. If a tool needs to know something, it's written in the
@@ -303,7 +303,7 @@ documents do. What helps most from your side:
 | Commit | One saved step of work, with a message |
 | Container image | A standard, ready-to-run bundle of the program that any host can run |
 | Compiler | The tool that turns written code into a working program, refusing code with certain mistakes |
-| Database | Where nine turtles keeps feeds, articles, read/star state and settings (one SQLite file) |
+| Database | Where nine turtles keeps feeds, articles, read and saved marks and settings (one SQLite file) |
 | Deploy | Put a new version on the live app |
 | Environment variable | A setting given to the app by the host (Render), e.g. the scrambled password, kept outside the code |
 | GitHub Actions | GitHub's service that runs the checks on every pull request |

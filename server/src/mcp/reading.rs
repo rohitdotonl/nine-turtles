@@ -21,8 +21,9 @@ pub(super) struct Searching {
     author: Option<String>,
     feed_id: Option<i64>,
     folder_id: Option<i64>,
-    #[serde(default)]
-    starred: bool,
+    /// `starred` was its name before Save (decision 0283).
+    #[serde(default, alias = "starred")]
+    saved: bool,
     #[serde(default)]
     unread: bool,
     cursor: Option<String>,
@@ -53,7 +54,7 @@ pub(super) async fn search_articles(state: &AppState, person: i64, asked: Search
             feed: asked.feed_id,
             folder: asked.folder_id,
             unread: asked.unread,
-            starred: asked.starred,
+            starred: asked.saved,
             author,
             after: asked.cursor,
             ..Search::default()
@@ -77,7 +78,7 @@ pub(super) async fn list_unread(state: &AppState, person: i64, asked: Paged) -> 
     .await
 }
 
-pub(super) async fn list_starred(state: &AppState, person: i64, asked: Paged) -> Answer {
+pub(super) async fn list_saved(state: &AppState, person: i64, asked: Paged) -> Answer {
     find(
         state,
         person,
@@ -106,7 +107,7 @@ async fn find(state: &AppState, person: i64, search: Search) -> Answer {
                         "link": article.link.as_deref().map(feeds::stored_link),
                         "date": rfc3339(article.at),
                         "read": article.read,
-                        "starred": article.starred,
+                        "saved": article.starred,
                     });
                     if article.muted {
                         line["muted"] = json!(true);
@@ -209,7 +210,7 @@ pub(super) async fn open_article(state: &AppState, person: i64, asked: OneArticl
         "site": article.site_url,
         "language": article.language,
         "read": article.read,
-        "starred": article.starred,
+        "saved": article.starred,
         "only_a_summary": article.content.is_none(),
         "text": text,
         "text_cut_short": cut,

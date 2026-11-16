@@ -30,7 +30,7 @@ A few words used throughout:
 | 6 | [Item list](spec/06-item-list.md) |
 | 7 | [Reading an article](spec/07-reading-an-article.md) |
 | 8 | [Read state, marking unread, "mark all as read", undo](spec/08-read-state-and-undo.md) |
-| 9 | [Star](spec/09-star.md) |
+| 9 | [Save](spec/09-save.md) |
 | 10 | [Unread, on or off](spec/10-reading-modes.md) |
 | 11 | [Background fetching (being polite to publishers)](spec/11-background-fetching.md) |
 | 12 | [WebSub (instant updates from publishers who offer it)](spec/12-websub.md) |
@@ -55,7 +55,7 @@ A few words used throughout:
 | 31 | *Retired: starter packs, removed from the website (decision 0158)* |
 | 32 | [Reading offline](spec/32-reading-offline.md) |
 | 33 | [Connecting your own AI assistant (MCP)](spec/33-ai-assistants-mcp.md) |
-| 34 | *Retired: collections, removed in favour of Starred (decision 0174)* |
+| 34 | *Retired: collections, removed in favour of Saved, then called Saved (decision 0174)* |
 | 35 | [Podcasts](spec/35-podcasts.md) |
 | 36 | [People and publications](spec/36-people.md) |
 | 37 | [Writing back](spec/37-writing-back.md) |

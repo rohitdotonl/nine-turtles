@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-14
+updated: 2026-11-16
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -24,7 +24,7 @@ person**, and Write back takes its place.
 
 1. Read to the end of the article and press **Write back** (under it,
    nine turtles says who it goes to: their name as it is in your sidebar). You don't have to scroll there:
-   the paper plane beside **Star** at the top of the article (on a phone,
+   the paper plane beside **Save** at the top of the article (on a phone,
    in the bar at the bottom) does the same, and so does <kbd>W</kbd>. In a
    list, right-click an article (or press and hold it on a phone) and
    choose **Write back**.

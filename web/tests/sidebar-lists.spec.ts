@@ -17,7 +17,7 @@ test("Recently read is gone", async ({ page, isMobile }) => {
   await signIn(page);
   await follow(page, `${FEED_SITE}/blog/${blog}/`);
 
-  // Unread, Starred and All articles are the sidebar's lists; Recently read is gone (decision 0174).
+  // Unread, Saved and All articles are the sidebar's lists; Recently read is gone (decision 0174).
   await expect(sidebar(page).getByRole("link", { name: "All articles", exact: true })).toBeVisible();
   await expect(sidebar(page).getByRole("link", { name: "Recently read", exact: true })).toHaveCount(0);
 
@@ -38,7 +38,7 @@ test("the sidebar shows every list, Notes always (decision 0222), and Show in th
   await appReady(page);
   await expect(page).toHaveURL(/\/settings$/);
   const nav = sidebar(page);
-  for (const name of ["Unread", "Starred", "Notes", "All articles", "Everyone you follow"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
+  for (const name of ["Unread", "Saved", "Notes", "All articles", "Everyone you follow"]) await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
 
   // Everyone you follow, under the lists (decision 0266): pressed, it opens at its own address with the keyboard on its
   // title, its row marked as your place and Settings' button no longer; no way back to press, as the sidebar is beside it.
