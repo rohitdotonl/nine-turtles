@@ -10,7 +10,8 @@
   Their page is who they are, then what's yours of them. First their name,
   the one large thing on the screen, set as an article's title is; under it,
   where they publish, each place a link to the publisher's own site; a paused
-  or failing source's line; and Write to, with the address under it (Change
+  source's line, and a box for a source that isn't working (NotWorkingBox,
+  with its own Write to); and Write to, with the address under it (Change
   beside it). Then one card holding your note and the words you highlighted.
   Last, one row, Settings ›. No picture and no color.
 
@@ -26,7 +27,7 @@
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
-  import FailingLine from "./FailingLine.svelte";
+  import NotWorkingBox from "./NotWorkingBox.svelte";
   import TheirPlaces from "./TheirPlaces.svelte";
   import TheirReading from "./TheirReading.svelte";
   import WhoSettings from "./WhoSettings.svelte";
@@ -81,6 +82,8 @@
   let places = $derived(placesOf(feed, library.feeds ?? []));
   let name = $derived(library.shownAs(feed)?.title ?? feed.title);
   let person = $derived((feed.kind ?? "person") === "person" || feed.person != null);
+  /** One of their sources isn't working: its box leads the page, with Write to in it (decision 0279). */
+  let failing = $derived(places.some((place) => place.failingSince != null));
   /**
    * A place by its own title when that isn't their name ("Garden Letters" under Hal Brennan, decision 0167), else by its
    * website or name; one called just what they are ("xkcd.com" under xkcd.com) by what it is, so the line never repeats the name.
@@ -153,10 +156,18 @@
       </p>
       <div class="mt-6 flex flex-col gap-3 empty:hidden">
         {#key feed.id}<PausedLine {places} {library} onResumed={onSaved} />{/key}
-        <!-- Unkeyed, so a source that just moved to a new number keeps its line saying so (decision 0106). -->
-        {#each places as place}<FailingLine feed={place} subject={placeShownAs(place)} label="Find new address" onMoved={(after) => onMoved(place, after)} />{/each}
+        <!-- What isn't working leads, with what can be done (decision 0279). Unkeyed, so a source that just moved to a new number keeps its box saying so (decision 0106). -->
+        {#each places as place}<NotWorkingBox
+            feed={place}
+            subject={places.length > 1 ? placeShownAs(place) : undefined}
+            {person}
+            {library}
+            onMoved={(after) => onMoved(place, after)}
+            onUnsubscribe={places.length === 1 ? () => onUnsubscribe(false) : undefined}
+          />{/each}
       </div>
-      {#if person}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
+      <!-- Write to, unless a box above already offers it. -->
+      {#if person && !failing}<div class="mt-2"><WriteBack feedId={feed.id} {library} /></div>{/if}
     </header>
 
     <!-- What's yours of them, held together in one card: where the eye rests. -->

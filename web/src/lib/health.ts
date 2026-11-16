@@ -108,6 +108,12 @@ function since(at: number, now: Date): string {
   return day === "today" ? "since earlier today" : `since ${day}`;
 }
 
+/** Since when nothing has come through: "since 1 Nov", "since earlier today", or "lately" when that isn't known. */
+export function failingFor(feed: Sick, now: Date = new Date()): string {
+  const from = feed.problem === "not-found" && feed.missingSince !== null ? feed.missingSince : feed.failingSince;
+  return from === null ? "lately" : since(from, now);
+}
+
 /**
  * A YouTube feed YouTube won't send (decision 0272): not found, no answer, or
  * a problem of YouTube's own. The server says which feeds are YouTube's.
@@ -159,12 +165,55 @@ export function byReason(feeds: Sick[]): Sick[] {
 }
 
 /**
- * The quiet line above a failing feed's list, and on their page, naming the source (decision
- * 0106): "This feed hasn't worked since 12 Oct." (with the year when it
- * isn't this one), in the device's time zone.
+ * What went wrong, and what it may mean, in a sentence, when a row is
+ * opened (decision 0279). For a YouTube feed
+ * that YouTube won't send, it says so plainly instead of "it may have moved"
+ * (decision 0272): YouTube turns away some servers' asks for a while.
  */
-export function brokenSince(failingSince: number, now: Date = new Date(), subject = "This feed"): string {
-  return `${subject} hasn't worked ${since(failingSince, now)}.`;
+export function explain(problem: string | null, youtube = false): string {
+  if (youTubeRefusing({ youtube, problem }))
+    return "YouTube isn't sending these videos to nine turtles at the moment. nine turtles keeps asking; if they were taken down, nothing more will come.";
+  switch (problem) {
+    case "not-found":
+      return "The site says the feed isn't there any more. It may have moved.";
+    case "unreachable":
+      return "The site didn't answer. It may be down for a while, or gone.";
+    case "blocked":
+      return "The site's guard against bots turns nine turtles away. Only the site can let it in.";
+    case "not-a-feed":
+      return "The address now leads to a page that isn't a feed. The site may have moved it.";
+    case "too-big":
+      return "The feed has grown bigger than nine turtles reads.";
+    case "slow-down":
+      return "The site asked nine turtles to slow down, so it's waiting as asked.";
+    case "not-allowed":
+      return "The address now points somewhere nine turtles never visits.";
+    case "not-an-address":
+      return "Its address isn't a web address nine turtles can read.";
+  }
+  const code = Number(problem?.match(/^answered-(\d{3})$/)?.[1]);
+  if (code === 401 || code === 403) return "The site refuses to share this feed.";
+  if (code >= 500) return "The site has a problem of its own. It may be fixed soon.";
+  return "The site answered, but not with the feed.";
+}
+
+/**
+ * What to offer first (decision 0279): a feed that's gone or now a page may
+ * have moved, so Find new address; a site that doesn't answer, blocks or
+ * breaks can only be fixed by the person, so Write to them.
+ */
+export function fixFirst(feed: Pick<Sick, "youtube" | "problem">): "find" | "write" {
+  if (youTubeRefusing(feed)) return "find";
+  return feed.problem === "not-found" || feed.problem === "not-a-feed" ? "find" : "write";
+}
+
+/**
+ * The quiet line above a failing feed's list (decision 0106): "This feed
+ * hasn't worked since 12 Oct." (with the year when it isn't this one), in
+ * the device's time zone.
+ */
+export function brokenSince(failingSince: number, now: Date = new Date()): string {
+  return `This feed hasn't worked ${since(failingSince, now)}.`;
 }
 
 

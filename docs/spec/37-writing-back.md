@@ -39,8 +39,10 @@ V1, item 2). Its look gets a refinement round.*
   no-feed message (section 3), which asks a site nobody follows yet. Its
   Write to is an everyday bordered button, and so is the box's Write, so
   Add's own main button stays the only solid one. A person whose feed
-  stopped is written to from their page, which their line under Not
-  working in Everyone you follow opens (section 15, decision 0279).
+  isn't working is written to from the box at the top of their page
+  (section 15, decision 0279): there Write to is plain underlined words,
+  with no paper plane and no address under it, the box's Write an everyday
+  bordered button, and the page's own Write to waits until the feed works.
 - **It opens your own email app,** with their address and the subject
   "Re: " and the article's title filled in (a title that already starts
   "Re:" keeps its own). A post with no title (a note) is named by its

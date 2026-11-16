@@ -1064,7 +1064,7 @@
               {#if !searching.shown}<PickUp class="pt-1 pb-3" onOpen={openFromOutside} />{/if}
               {#if under.kind === "feed" && !searching.shown && currentFeed}
                 <!-- A feed that isn't working says so above its list, with Find new address (decision 0106); a paused one, with Resume (decision 0239). -->
-                <FailingLine class="pt-1 pb-2" feed={currentFeed} label="Find its new address" onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)} />
+                <FailingLine class="pt-1 pb-2" feed={currentFeed} onMoved={(after) => feedMoved(currentFeed!.id, after.id, () => headings.list)} />
                 {#key currentFeed.id}<PausedLine class="pt-1 pb-2" places={currentPlaces} {library} onResumed={() => itemList?.refresh()} />{/key}
               {/if}
               <!-- The list, with "New articles · press r" and Undo in a note floating at its foot (More, with Refresh, sits beside the title). -->

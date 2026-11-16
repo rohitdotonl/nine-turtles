@@ -1,32 +1,35 @@
-# 0279: Who isn't working, one line each, gathered by what went wrong
+# 0279: Who isn't working: one quiet row, a line each, and a box on their page
 
-**In one line:** At the top of Everyone you follow, each failing feed is one line (its name, the day nothing has come through since, and ›) under a few plain words saying what went wrong, said once for every feed it happened to; the row opens their page, where Find new address, Write to and Unsubscribe already are.
+**In one line:** At the top of Everyone you follow, failing feeds fold into one quiet row ("8 feeds aren't working", with how many of each reason); opened, each is one line (an icon and a few words for what went wrong, its name, ›), and their page leads with one box holding the problem and what can be done, the likeliest first.
 
-*16 November 2026. The owner, looking at eight failing feeds: "Look at the giant wall of text. That's not good UX." Shown a now-vs-after picture of two ways (one row each, like the people list; or gathered by reason), he chose the second ("Show B locally"), tried it on his Mac and said ship it.*
+*16 November 2026. The owner, looking at eight failing feeds: "Look at the giant wall of text. That's not good UX." Shown two ways, then the reasons cut to a few words with icons, then five versions of growing boldness, he tried two and four side by side on his Mac and chose four, the folded row. Asked what next, so that fixing, writing to them or unfollowing is simple, he chose the box on their page: "Implement B and merge".*
 
 **What changes.**
 1. Each row was a sentence ("Nothing has come through since 24 Oct. The site
    says the feed isn't there any more. It may have moved. Jet Williams may
    not know.") and two or three underlined words (decision 0268). Eight
-   failing feeds made 1,700px of text and 24 links on a phone. Now the
-   reason is said once, over the feeds it happened to, and each feed is one
-   line: about 650px for the same eight.
-2. The reasons are a few plain words, never a code: "The feed isn't there
-   any more", "The site doesn't answer", and so on (SPEC section 15). The
-   reason whose feed has failed longest comes first.
-3. What can be done moves to their page, which already had Find new address
-   under their name (decision 0106), Write to for a person (decision 0212)
-   and Unsubscribe in their settings. One line under the group says so:
-   "Open one to find its new address, or to unsubscribe."
-4. Gone with the row's actions: the person or publication icon before each
-   name, "… may not know.", the row's own Undo and "Working again", and
-   Write back's quiet in-a-row look (WriteBack's `quiet`).
+   failing feeds made 1,700px of text and 24 links on a phone. Now they
+   start as one row of about 56px, which says how many and why, and opens
+   in place.
+2. The reasons are two to five plain words with an icon, never a code:
+   "Feed gone", "Site not answering", "Not a feed any more", "Blocked by
+   the site", and so on (SPEC section 15). The icons are new (BRAND.md →
+   Icons). Feeds that are gone come before those having trouble, and alike
+   reasons sit together.
+3. What can be done moves to their page, into one box under their name:
+   what went wrong and since when, one sentence, then Find new address,
+   Write to for a person, and Unsubscribe, in that box rather than in three
+   places. Find comes first, as the bordered button, when the feed may have
+   moved; Write to comes first when the site stopped answering, since only
+   the writer can fix that.
+4. Gone: the row's own actions, Undo and "Working again", the person or
+   publication icon before each name, and "Having trouble" as a separate
+   heading.
 
-**Why.** Clear at a glance: the eye reads a list of names, not paragraphs.
-Less, but better: the page already had a home for each action, so the rows
-needn't repeat them eight times. Cohesive: the rows are made as the people
-below them are.
+**Why.** Clear at a glance: one row says how bad things are; a list of
+names with an icon each says why. Nothing pulls: eight failing feeds no
+longer take the top of the page. Less, but better: each action has one
+home, on the page of the one it's about.
 
-**What it costs.** Fixing one is a press further away (open their page,
-then Find new address), and unsubscribing two (Settings, then Unsubscribe).
-Choose… in the list below still unsubscribes many at once.
+**What it costs.** Fixing one is a press further away (open the row, open
+them). Choose… in the list below still unsubscribes many at once.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brokenSince, byReason, found, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
+import { brokenSince, byReason, explain, failingFor, fixFirst, found, reason, refusalMessage, youTubeRefusing, type Sick } from "./health";
 
 const DAY = 24 * 60 * 60;
 const NOW = 1_790_000_000;
@@ -45,6 +45,26 @@ describe("the words for who isn't working", () => {
     expect(reason(sick({ youtube: true, problem: "blocked" })).words).toBe("Blocked by the site");
     expect(youTubeRefusing(sick({ youtube: true, problem: "blocked" }))).toBe(false);
     expect(youTubeRefusing(sick({ problem: "not-found" }))).toBe(false);
+  });
+
+  it("says since when, counting a gone feed from when it went", () => {
+    const now = new Date(2026, 10, 6, 12, 0);
+    const at = (...parts: [number, number, number, number]) => new Date(...parts).getTime() / 1000;
+    expect(failingFor(sick({ failingSince: at(2026, 10, 1, 9) }), now)).toBe("since 1 Nov");
+    expect(failingFor(sick({ problem: "not-found", failingSince: at(2026, 9, 1, 9), missingSince: at(2026, 9, 20, 9) }), now)).toBe("since 20 Oct");
+    expect(failingFor(sick({ failingSince: at(2026, 10, 6, 8) }), now)).toBe("since earlier today");
+    expect(failingFor(sick({ failingSince: null }), now)).toBe("lately");
+  });
+
+  it("explains in a sentence, and offers first what's likeliest to fix it", () => {
+    expect(explain("not-found")).toMatch(/It may have moved\.$/);
+    expect(explain("not-found", true)).toMatch(/^YouTube isn't sending these videos/);
+    expect(explain("blocked")).toMatch(/Only the site can let it in\.$/);
+    // Gone or now a page: it may have moved. A site that won't answer or turns nine turtles away: only they can fix it.
+    expect(fixFirst(sick({ problem: "not-found" }))).toBe("find");
+    expect(fixFirst(sick({ problem: "not-a-feed" }))).toBe("find");
+    expect(fixFirst(sick({ problem: "unreachable" }))).toBe("write");
+    expect(fixFirst(sick({ problem: "blocked" }))).toBe("write");
   });
 
   it("gathers alike ones together, each reason where its longest failing feed was", () => {
