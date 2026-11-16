@@ -17,7 +17,10 @@ first. Far enough, the first line says "Let go for the next" (words, never
 color alone). Letting go carries the article on a whole screen, so the one
 hung beyond fills it, and opens; short of that, it slides back. A quick
 flick (the same as sideways: at least 20px, faster than 600px a second)
-counts. The phone's own stretch at an article's ends is off
+counts, measured as the finger lifts (held still first, it isn't one). A
+stroke that goes sideways first is back's, never a pull, and while pulled,
+the text stays still, so the article follows the finger back as well as
+on. The phone's own stretch at an article's ends is off
 (`overscroll-behavior-y: none` on the article's text), since the article
 itself moves there now.
 

@@ -77,7 +77,7 @@ html {
   display: block;
   font-size: var(--text-ui);
 }
-.swipe-card-by {
+.swipe-by {
   display: block;
   margin-top: 0.25rem;
   color: var(--ink-2);

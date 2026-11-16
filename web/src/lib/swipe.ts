@@ -13,7 +13,9 @@ import { HOLD_MS } from "./sidebarDrag";
 /** Pixels at each side of the screen kept for the phone's own gestures. */
 export const EDGE = 24;
 /** How far a finger moves before it counts as sideways or as a scroll. */
-const DECIDE = 10;
+export const DECIDE = 10;
+/** How recent a finger's movement counts toward its speed as it lifts. */
+export const RECENT_MS = 100;
 /** A finger lifted moving faster than this (pixels a millisecond, 600 a second) has flicked: a short swipe counts, as on every phone. */
 const FLICK = 0.6;
 
@@ -121,7 +123,7 @@ export function swipe(node: HTMLElement, hands: SwipeHands) {
       sideways = true;
       taken.add(start.id);
     }
-    lately = [...lately.filter((seen) => event.timeStamp - seen.at < 100), { x: event.clientX, at: event.timeStamp }];
+    lately = [...lately.filter((seen) => event.timeStamp - seen.at < RECENT_MS), { x: event.clientX, at: event.timeStamp }];
     // Back past where it started is no further than where it started.
     hands.moved(hands.side * Math.max(0, hands.side * dx));
   };

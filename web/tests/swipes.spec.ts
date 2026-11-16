@@ -248,6 +248,57 @@ test("in an article, a pull past its end opens the next one and past its top the
   await expect(rows(page).first()).toBeVisible();
 });
 
+test("a pull follows the finger back; held still before lifting, a quick pull isn't a flick; a touch while it glides opens nothing more; a swipe right that drifts down still goes back", async ({ page }) => {
+  await openBlog(page);
+  const titles = (await rows(page).locator(".title").allTextContents()).map((title) => title.replace(/, unread$/, "").trim());
+  await rows(page).nth(0).click();
+  const heading = (name: string | undefined) => pane(page).getByRole("heading", { level: 2, name });
+  await expect(heading(titles[0])).toBeVisible();
+  const text = pane(page).locator(".reading-scroller");
+  const box = (await text.boundingBox())!;
+  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const transform = () => pane(page).evaluate((node) => node.style.transform);
+
+  // Pulled up 150px, then back down 100px: the article follows the finger back, and the text doesn't scroll instead.
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  const back = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await back.move(0, -150);
+  await expect.poll(transform).toBe("translateY(-150px)");
+  await back.move(0, 100);
+  await expect.poll(transform).toBe("translateY(-50px)");
+  await back.move(0, 50);
+  await back.up();
+  await settled(pane(page));
+
+  // A quick short pull, then held still a moment before lifting: no flick, so it slides back.
+  const held = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await held.move(0, -40, 0, 2);
+  await page.waitForTimeout(300);
+  await held.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+
+  // Let go far enough, then touched again while it glides: only the next one opens, not the one after.
+  const up = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await up.move(0, -200);
+  await up.up();
+  const tap = await Finger.down(page, middle.x, middle.y);
+  await tap.up();
+  await expect(heading(titles[1])).toBeVisible();
+  await settled(pane(page));
+  await page.waitForTimeout(500);
+  await expect(heading(titles[1])).toBeVisible();
+
+  // At the article's top, a swipe right drifting a little down goes back, and no pull starts.
+  await text.evaluate((area) => (area.scrollTop = 0));
+  const right = await Finger.down(page, middle.x - 100, middle.y);
+  await right.move(160, 30);
+  await expect(peek(page)).toHaveCount(0);
+  await right.up();
+  await expect(pane(page)).toBeHidden();
+  await expect(rows(page).first()).toBeVisible();
+});
+
 test("a pull names who wrote the article it opens, when its feed names a writer", async ({ page }) => {
   await page.goto(new URL("/all", FEEDS_APP).href);
   await appReady(page);
@@ -261,7 +312,7 @@ test("a pull names who wrote the article it opens, when its feed names a writer"
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const up = await Finger.down(page, box.x + box.width / 2, box.y + box.height - 60);
   await up.move(0, -200);
-  await expect(peek(page).locator(".swipe-card-by")).toHaveText("Maren Holt");
+  await expect(peek(page).locator(".swipe-by")).toHaveText("Maren Holt");
   await up.move(0, 200);
   await up.up();
 });

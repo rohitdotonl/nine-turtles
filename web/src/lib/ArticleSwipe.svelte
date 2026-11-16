@@ -11,7 +11,7 @@
 -->
 <script lang="ts">
   import type { Article } from "./shapes";
-  import { flicked, leftAlone, reach, zoomed } from "./swipe";
+  import { DECIDE, RECENT_MS, flicked, leftAlone, reach, zoomed } from "./swipe";
   import { letGo, pull } from "./swipeMotion";
   import { sourceOf, writerOf } from "./people";
 
@@ -46,45 +46,60 @@
     // side of where the stroke began, so a short article, at both ends at once, never takes a pull up and back for one down.
     const atEnd = () => within.scrollTop + within.clientHeight >= within.scrollHeight - 2;
     const atTop = () => within.scrollTop <= 0;
-    let from = 0;
+    let from = { x: 0, y: 0 };
     let below: number | undefined;
     let above: number | undefined;
     let ignored = false;
+    /** Whether the stroke has gone far enough to be up and down (a pull may start) rather than sideways (back's). */
+    let decided = false;
     let pulled = 0;
     let last = { y: 0, at: 0 };
     let speed = 0;
     let settling = false;
     const start = (event: TouchEvent) => {
       pulled = speed = 0;
-      from = event.touches[0]?.clientY ?? 0;
+      decided = false;
+      const touch = event.touches[0];
+      from = { x: touch?.clientX ?? 0, y: touch?.clientY ?? 0 };
       // Already at an end, the pull counts from where the finger came down, so the article follows it exactly.
-      below = atEnd() ? from : undefined;
-      above = atTop() ? from : undefined;
-      last = { y: from, at: event.timeStamp };
+      below = atEnd() ? from.y : undefined;
+      above = atTop() ? from.y : undefined;
+      last = { y: from.y, at: event.timeStamp };
       ignored = settling || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
     };
     const move = (event: TouchEvent) => {
-      const y = event.touches[0]?.clientY;
-      if (ignored || y === undefined || event.touches.length > 1) return;
+      const touch = event.touches[0];
+      if (ignored || !touch || event.touches.length > 1) return;
+      const { clientX: x, clientY: y } = touch;
+      // Decided as the swipes are: whichever way the finger first goes DECIDE pixels. Sideways, it's back's, not a pull.
+      if (!decided) {
+        if (Math.abs(x - from.x) < DECIDE && Math.abs(y - from.y) < DECIDE) return;
+        if (Math.abs(x - from.x) > Math.abs(y - from.y)) return void (ignored = true);
+        decided = true;
+      }
       if (event.timeStamp > last.at) speed = (y - last.y) / (event.timeStamp - last.at);
       last = { y, at: event.timeStamp };
+      // While pulled, the text can't scroll (below), so it stays at its end and the pull follows the finger back as well as on.
       below = atEnd() ? Math.max(below ?? y, y) : undefined;
       above = atTop() ? Math.min(above ?? y, y) : undefined;
-      const up = below !== undefined && y < from ? below - y : 0;
-      const down = above !== undefined && y > from ? y - above : 0;
+      const up = below !== undefined && y < from.y ? below - y : 0;
+      const down = above !== undefined && y > from.y ? y - above : 0;
       const was = pulled;
       going = up > 0 ? "below" : down > 0 ? "above" : undefined;
       pulled = going === "below" ? -up : down;
       far = Math.abs(pulled) >= reach(within.clientWidth);
-      // An ordinary scroll moves nothing; only a pull (or the end of one) does.
+      // An ordinary scroll moves nothing; only a pull (or the end of one) does, and while it does, the text stays still.
       if (pulled || was) pull(screen, pulled);
+      if (pulled && event.cancelable) event.preventDefault();
     };
-    const end = () => {
+    const end = (event: TouchEvent) => {
       const way = going;
-      const quick = !!way && flicked(Math.abs(pulled), way === "below" ? -speed : speed);
-      const open = way === "above" ? (previous ? onPrevious : undefined) : way === "below" ? (next ? onNext : undefined) : undefined;
       below = above = undefined;
-      if (!way) return;
+      if (ignored || !way) return;
+      // A flick is the finger's speed as it lifts: held still a moment first, it isn't one.
+      const lifted = event.timeStamp - last.at <= RECENT_MS ? speed : 0;
+      const quick = flicked(Math.abs(pulled), way === "below" ? -lifted : lifted);
+      const open = way === "above" ? (previous ? onPrevious : undefined) : next ? onNext : undefined;
       settling = true;
       // Far enough, it carries on a whole screen, so the article hung beyond fills it, and opens; short of that, back it goes.
       const go = open && (far || quick);
@@ -97,7 +112,7 @@
     };
     const cancel = () => {
       below = above = undefined;
-      if (!going) return;
+      if (ignored || !going) return;
       settling = true;
       letGo(screen, 0, () => {
         going = undefined;
@@ -106,7 +121,8 @@
       });
     };
     within.addEventListener("touchstart", start, { passive: true });
-    within.addEventListener("touchmove", move, { passive: true });
+    // Not passive: while pulled, the text mustn't scroll under the finger.
+    within.addEventListener("touchmove", move, { passive: false });
     within.addEventListener("touchend", end);
     within.addEventListener("touchcancel", cancel);
     return () => {
@@ -126,7 +142,7 @@
         <strong>{far ? (going === "above" ? "Let go for the previous" : "Let go for the next") : going === "above" ? "Previous" : "Next"}</strong>
         <span class="swipe-peek-title">{onward.title || "Untitled"}</span>
         <!-- Who wrote it, as its row names them: the writer, or else the feed (the writer comes first). -->
-        <span class="swipe-card-by">{writerOf(onward) ?? sourceOf(onward, undefined)}</span>
+        <span class="swipe-by">{writerOf(onward) ?? sourceOf(onward, undefined)}</span>
       {:else}
         <strong>{going === "above" ? "That's the first article here." : "That's the last one so far."}</strong>
       {/if}
