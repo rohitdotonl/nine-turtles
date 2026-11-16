@@ -22,3 +22,14 @@ never in the way; less, but better).
 4. The space kept clear for the button goes too: the wordmark's line, the
    list's column and the top lines of Settings and its pages no longer leave
    64px for it.
+5. **What's given up:** with the sidebar hidden, the list's column and an
+   opened article's lined up exactly, so opening turned the page in place
+   (decision 0277). Now the list's column is centred beside the sidebar and
+   the article's in the whole window, so an article's title starts about
+   half a sidebar's width further left than the list's titles did. That's
+   accepted: the article is a new page with the window to itself, the
+   reader no longer has to hide anything to get the calm column, and the
+   list stays balanced in its own space (decision 0278).
+6. The logo's lockup keeps its size and its Exceptions-log entry in
+   DESIGN.md as they are; that entry's reason still names the button, and
+   rewording it is a Part 1 change left for the owner.

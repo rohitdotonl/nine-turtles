@@ -80,17 +80,13 @@ test.describe("on a wide window", () => {
     await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
   });
 
-  test("one layout button: the sidebar's hides and shows the sidebar; f does nothing (decision 0275)", async ({ page }) => {
+  test("no layout buttons: the sidebar and the list have none, and f does nothing (decisions 0275 and 0282)", async ({ page }) => {
     await openRoom(page);
     const list = page.locator("#list-pane");
     const nav = page.getByRole("navigation", { name: "Sidebar" });
-    // The list has no button of its own (decision 0241).
+    // The list has no button of its own (decision 0241), and nor does the sidebar (decision 0282).
     await expect(page.getByRole("button", { name: "Article list", exact: true })).toHaveCount(0);
-    const sidebarButton = page.getByRole("button", { name: "Sidebar", exact: true });
-    await sidebarButton.click();
-    await expect(nav).toBeHidden();
-    await expect(list).toBeVisible();
-    await sidebarButton.click();
+    await expect(page.getByRole("button", { name: "Sidebar", exact: true })).toHaveCount(0);
     await expect(nav).toBeVisible();
 
     // Full-screen reading is gone: an article has the window anyway.
