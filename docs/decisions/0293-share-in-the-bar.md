@@ -1,4 +1,4 @@
-# 0292: Share sits in the article's bar; Aa moves into More as "Text and page"
+# 0293: Share sits in the article's bar; Aa moves into More as "Text and page"
 
 **In one line:** An article's Share (each platform's own icon: Apple's box with an arrow on a Mac, iPhone or iPad, three linked dots elsewhere) is one press from the text where Aa was, Aa becomes **Text and page** in More, and every item in the article's More has its icon before its words.
 

@@ -248,7 +248,7 @@ test.describe("on a wide window", () => {
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
     // After the way back to the list (decision 0275), the actions are quiet icons, each named in its tooltip with its key;
-    // the way to the publisher comes first, then Share, Save, Write back (a person's, decision 0214) and More (decisions 0038, 0292).
+    // the way to the publisher comes first, then Share, Save, Write back (a person's, decision 0214) and More (decisions 0038, 0293).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
@@ -286,7 +286,7 @@ test.describe("on a wide window", () => {
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
-  test("Text and page opens with the keyboard alone, and More pressed again closes the panel before its menu opens (decision 0292)", async ({ page }) => {
+  test("Text and page opens with the keyboard alone, and More pressed again closes the panel before its menu opens (decision 0293)", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
     const more = article(page).getByRole("button", { name: "More actions" });
@@ -312,14 +312,14 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
   });
 
-  test("elsewhere than a Mac, Share is three linked dots (decision 0292)", async ({ page }) => {
+  test("elsewhere than a Mac, Share is three linked dots (decision 0293)", async ({ page }) => {
     const shareIcon = async () => article(page).getByRole("button", { name: "Copy link" }).locator("svg").evaluate((svg) => svg.querySelectorAll("circle").length);
     await openRoom(page);
     await openFirst(page);
     expect(await shareIcon()).toBe(3);
   });
 
-  test("on a Mac, Share is Apple's box with an arrow (decision 0292)", async ({ page }) => {
+  test("on a Mac, Share is Apple's box with an arrow (decision 0293)", async ({ page }) => {
     await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "platform", { get: () => "MacIntel" }));
     await openRoom(page);
     await openFirst(page);
@@ -330,7 +330,7 @@ test.describe("on a wide window", () => {
   test("the reading panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
-    // Text and page, in More (decision 0292).
+    // Text and page, in More (decision 0293).
     const aa = article(page).getByRole("button", { name: "More actions" });
     const panel = await openAppearance(page);
     // A popover under More, lined up with its right edge.

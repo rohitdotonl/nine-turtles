@@ -339,7 +339,7 @@
             </div>
           </div>
         </div>
-        <!-- Text size and font are only in Text and page, the reading panel in an article's More (decisions 0241, 0292). -->
+        <!-- Text size and font are only in Text and page, the reading panel in an article's More (decisions 0241, 0293). -->
         <p class="inset-foot">This device only. Text size and font are in Text and page, in any article’s More.</p>
       </section>
 
