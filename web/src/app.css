@@ -103,12 +103,15 @@
 
 /*
   Settings sets the font and size on <html> (SPEC section 18); one line width
-  for all (decision 0187): 57ch, about 71 letters in Literata (a "ch" is a zero).
+  for all (decisions 0187, 0288), in every font: 32.5em, about 70 letters in
+  Literata and 75 in Atkinson, so changing the font never moves the column.
+  (Not "ch", the width of a zero: Atkinson's zero is wide and its letters
+  narrow, so 57ch made its column an eighth wider and 85 letters long.)
 */
 :root {
   --reading-font: var(--font-serif);
   --reading-size: 1.25rem;
-  --reading-measure: 57ch;
+  --reading-measure: 32.5em;
 }
 
 body {
