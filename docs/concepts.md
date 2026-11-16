@@ -324,6 +324,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Touch targets
 - Responsive design (desktop and phone widths)
 - Reduced motion and other system settings
+- Slow waits (words that move on, breathing dots)
 - Design tokens (colors, fonts, spacing)
 - Brand sheet (every brand decision on one page)
 - Type scale

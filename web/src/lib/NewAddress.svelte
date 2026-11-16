@@ -17,6 +17,8 @@
 -->
 <script lang="ts">
   import Dated from "./Dated.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
   import { tick } from "svelte";
   import type { Choice } from "./feeds";
   import { MOVED, findAddress, found, moveTo, refusalMessage, type Sick } from "./health";
@@ -44,14 +46,21 @@
   let chosen = $state("");
   let box: HTMLElement | undefined = $state();
 
+  /** The look on the site under way, if any: Stop forgets it, so its answer is let go. */
+  let looking: object | undefined = $state();
+
   /** Find new address: asks the site once, then shows what it named. */
   export async function find() {
     if (busy) return;
     busy = true;
     choices = [];
     open = false;
-    said = "Looking on the site…";
-    const next = found(await findAddress(feed.id));
+    said = "";
+    const asked = (looking = {});
+    const answer = await findAddress(feed.id);
+    if (looking !== asked) return;
+    looking = undefined;
+    const next = found(answer);
     busy = false;
     said = next.said;
     if (next.kind === "none") return;
@@ -60,6 +69,13 @@
     open = true;
     await tick();
     box?.querySelector<HTMLElement>(next.kind === "one" ? "[data-focus=use]" : "input:checked")?.focus();
+  }
+
+  /** Stop: the look changes nothing, so it's simply no longer waited for, and the place's button is back. */
+  function stop() {
+    looking = undefined;
+    busy = false;
+    onClosed();
   }
 
   function cancel() {
@@ -86,7 +102,10 @@
   }
 </script>
 
-<div bind:this={box} class={["new-address", (said || choices.length > 0) && "showing"]}>
+<div bind:this={box} class={["new-address", (said || looking || choices.length > 0) && "showing"]}>
+  {#if looking}
+    <p class="break-words text-ink-2"><SlowWait words="Looking on their site" long={UP_TO_A_MINUTE} onStop={stop} /></p>
+  {/if}
   <p role="status" id={`${id}-said`} class={["break-words text-ink-2", !said && "sr-only"]}><Dated text={said} /></p>
   {#if choices.length === 1}
     <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders and articles stay, saved ones too.</p>

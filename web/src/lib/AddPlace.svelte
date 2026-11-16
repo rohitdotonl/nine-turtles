@@ -14,6 +14,8 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
   import { addFeed, explain, plainSourceName, undoRefused, unsubscribe, type Choice, type Notice } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import { join, joinedNotice, placesOf } from "./people";
@@ -42,6 +44,8 @@
   let chosen = $state("");
   let address = $state("");
   let busy = $state(false);
+  /** Looking on their site for the address pasted (decision 0286): it can take a while, so it says so as it goes. */
+  let looking = $state(false);
   let message = $state("");
   let group: HTMLDivElement | undefined = $state();
   let opener: HTMLButtonElement | undefined = $state();
@@ -137,8 +141,9 @@
       message = "Paste the address of their blog, channel or newsletter first.";
       return;
     }
-    busy = true;
+    busy = looking = true;
     const added = await addFeed(choices.length > 0 ? picked : address);
+    looking = false;
     if (added.kind === "choose" && added.choices.length > 0) {
       // A site that offers several: they show first, the first chosen, as in Add.
       choices = added.choices;
@@ -243,7 +248,7 @@
     </div>
     {/if}
     <p role="status" class={["flex items-start gap-2 text-meta", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{:else if busy}Working…{/if}
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{:else if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if busy}Joining…{/if}
     </p>
     <button type="button" class="btn-quiet self-start" onclick={hide}>Not now</button>
   </div>

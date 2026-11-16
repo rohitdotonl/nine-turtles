@@ -9,6 +9,8 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
 
   let {
     title,
@@ -73,7 +75,7 @@
   <div class="flex flex-col gap-1">
     <p id={`${id}-title`} class="text-base font-semibold text-ink">{title}</p>
     <p class="text-meta text-ink-2" aria-live="polite">
-      {#if looked === "looking"}Looking on their site…{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if say && !lead}{say}{:else}{lead}
+      {#if looked === "looking"}<SlowWait words="Looking on their site" long={UP_TO_A_MINUTE} heard={false} />{:else if showingFound}Found on their site. Check it, then press {submit}.{:else if say && !lead}{say}{:else}{lead}
         Paste it here{#if site}, or
           <!-- Left out once an address is filled in: it would only add a choice. -->
           <a class="text-link" href={site} target="_blank" rel="noopener noreferrer">look on their site<span class="sr-only">{" "}(opens in a new tab)</span></a>{/if}.{/if}

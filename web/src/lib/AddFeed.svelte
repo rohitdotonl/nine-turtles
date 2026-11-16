@@ -38,6 +38,8 @@
   import AskForFeed from "./AskForFeed.svelte";
   import ByEmail from "./ByEmail.svelte";
   import Icon from "./Icon.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
   import type { Feed, Folder } from "./shapes";
   import { onDestroy, tick } from "svelte";
   import { keepDraft, keptWords } from "./drafts";
@@ -479,7 +481,7 @@
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
-      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : "Looking…"}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
+      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : ""}{#if !asking && !progress}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{/if}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
     </p>
     {#if slip && !busy}
       <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->

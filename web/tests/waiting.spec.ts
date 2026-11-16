@@ -151,3 +151,59 @@ test("a key that needs an article says to choose one first", async ({
   await page.keyboard.press("s");
   await expect(page.getByText("Saved.", { exact: true })).toBeVisible();
 });
+
+test("a slow look on someone's site keeps saying so, its dots breathing, and Stop lets it go", async ({ page }) => {
+  // Decision 0286: half a second, then 5 and 15 seconds on, the line moves on; the dots breathe unless motion is reduced.
+  const name = `moving-slow-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
+  await page.clock.install();
+  await signedIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  expect((await page.request.get(`${FEED_SITE}/move/${name}`)).ok()).toBe(true);
+  await expect
+    .poll(async () => (await (await page.request.get(new URL("/api/health", FEEDS_APP).href)).json()).feeds.some((sick: { id: number }) => sick.id === id), { timeout: 30_000 })
+    .toBe(true);
+  let release = await hold(page, `**/api/health/${id}/find`);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
+  const box = page.getByRole("group", { name: "Not working" });
+  const find = box.getByRole("button", { name: "Find new address", exact: true });
+  await find.click();
+
+  // Nothing for half a second, so a quick answer never flickers.
+  await expect(box.getByText(/looking/i)).toHaveCount(0);
+  await page.clock.runFor(500);
+  const line = box.getByRole("status").filter({ hasText: /looking/i });
+  await expect(line).toHaveText("Looking on their site…");
+  const dots = line.locator(".dots > span");
+  await expect(dots).toHaveCount(3);
+  expect(await dots.evaluateAll((all) => all.map((dot) => dot.getAnimations().length))).toEqual([1, 1, 1]);
+
+  await page.clock.runFor(4_500);
+  await expect(line).toHaveText("Still looking… Some sites are slow to answer.");
+  await page.clock.runFor(10_000);
+  await expect(line).toHaveText("Still looking… It can take up to a minute.");
+  // Stop: a 44px target that doesn't make the line any taller.
+  const stop = box.getByRole("button", { name: "Stop" });
+  const [stopBox, lineBox] = await Promise.all([stop.boundingBox(), line.boundingBox()]);
+  expect(stopBox!.height).toBeGreaterThanOrEqual(44);
+  expect(lineBox!.height).toBeLessThan(44);
+  await stop.click();
+  await expect(box.getByText(/looking/i)).toHaveCount(0);
+  await expect(find).toBeFocused();
+  // Its answer, when it comes, is let go.
+  const answered = page.waitForResponse(`**/api/health/${id}/find`);
+  release();
+  await answered;
+  await expect(box.getByRole("button", { name: "Use it" })).toHaveCount(0);
+  await expect(find).toBeVisible();
+
+  // With reduced motion, the dots are still.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.unroute(`**/api/health/${id}/find`);
+  release = await hold(page, `**/api/health/${id}/find`);
+  await find.click();
+  await page.clock.runFor(500);
+  await expect(line).toHaveText("Looking on their site…");
+  expect(await dots.evaluateAll((all) => all.map((dot) => dot.getAnimations().length))).toEqual([0, 0, 0]);
+  release();
+  await expect(box.getByRole("button", { name: "Use it" })).toBeVisible();
+});
