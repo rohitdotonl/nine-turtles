@@ -21,7 +21,6 @@
     closeLabel,
     onBack,
     backTo,
-    besideToggle = false,
     column = "max-w-2xl",
   }: {
     title: string;
@@ -34,14 +33,12 @@
     /** A back button above the title, to the page named `backTo` (Escape does the same). */
     onBack?: () => void;
     backTo?: string;
-    /** The sidebar is hidden, so the line starts clear of its toggle. */
-    besideToggle?: boolean;
     /** The page's column width, so the title lines up with it. */
     column?: string;
   } = $props();
 </script>
 
-<div class={["pane-bar pr-5 md:pr-10", besideToggle ? "pl-16" : "pl-5 md:pl-10"]}>
+<div class="pane-bar px-5 md:px-10">
   {#if onBack}
     <!-- One top for every screen below home (DESIGN.md → "The system"): Back in the top line's own height, the title on the line under it. -->
     <div class={["mx-auto flex w-full min-w-0 flex-col items-start pb-2", column]}>

@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sidebar" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "star" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash";
   export type IconSize = "word" | "alone" | "tick" | "picture";
@@ -81,9 +81,6 @@
     <circle cx="11.33" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
     <circle cx="14" cy="8.5" r="0.9" fill="currentColor" stroke="none" />
     <path d="M7 11.75h6" />
-  {:else if name === "sidebar"}
-    <rect x="2.75" y="3.75" width="14.5" height="12.5" rx="1.5" />
-    <path d="M7.75 3.75v12.5" />
   {:else if name === "sort"}
     <!-- Sort order: an arrow down and an arrow up, side by side. -->
     <path d="M6.5 3.5v13M3.5 13.5l3 3 3-3M13.5 16.5v-13M10.5 6.5l3-3 3 3" />

@@ -126,9 +126,9 @@ or your browser's Back, and you're back in the list where you were. While readin
 <kbd>J</kbd> and <kbd>K</kbd> go to the next and previous article. A
 person's page fills the window the same way, with **×** to go back.
 
-The small button at the top of the sidebar hides it, so the list has more
-room. You can also drag the sidebar's edge to make it wider; double-click
-the edge to put it back.
+The sidebar stays beside the list, and steps away on its own whenever an
+article or a person's page opens. Drag its edge to make it wider or
+narrower; double-click the edge to put it back.
 
 On a computer, an article's buttons (View original, Aa, Star and the rest)
 sit above its title and scroll away with it, so the whole window is the

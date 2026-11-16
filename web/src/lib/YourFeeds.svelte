@@ -54,7 +54,6 @@
     onBack,
     onOpenPerson,
     onFeedsChanged,
-    besideToggle = false,
     library,
   }: {
     heading?: HTMLHeadingElement;
@@ -64,7 +63,6 @@
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
-    besideToggle?: boolean;
     /** Who's who, for Write to on a person's Not working row (decision 0212). */
     library: LoadedLibrary;
   } = $props();
@@ -296,7 +294,7 @@
 </script>
 
 <section aria-labelledby="your-feeds-heading" class="lines-up flex flex-1 flex-col bg-paper">
-  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} {library} />

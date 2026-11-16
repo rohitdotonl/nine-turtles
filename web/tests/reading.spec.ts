@@ -612,13 +612,12 @@ test.describe("on a wide window", () => {
     const bottoms = await bottomsOf("#sidebar .pane-bar, .list-pane > .pane-bar");
     expect(bottoms).toHaveLength(2);
     expect(new Set(bottoms).size).toBe(1);
-    // Their controls sit on one line: the sidebar button, the list's More, then the article's Aa.
+    // Their controls sit on one line: the list's More, then the article's Aa.
     const middle = async (selector: string) => {
       const box = (await page.locator(selector).first().boundingBox())!;
       return box.y + box.height / 2;
     };
-    const line = await middle("button[aria-label='Sidebar']");
-    expect(Math.abs((await middle(".list-pane > .pane-bar button")) - line)).toBeLessThan(1);
+    const line = await middle(".list-pane > .pane-bar button");
     await openFirst(page);
     expect(await bottomsOf(".reading-bar")).toEqual([bottoms[0]]);
     expect(Math.abs((await middle(".reading-bar button[aria-label='Reading appearance']")) - line)).toBeLessThan(1);
