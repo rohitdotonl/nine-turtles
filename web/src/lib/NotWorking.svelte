@@ -14,7 +14,7 @@
   import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import { byReason, listSick, reason, type Sick } from "./health";
-  import { pathFor } from "./router";
+  import { addressFor } from "./router";
 
   let {
     onOpen,
@@ -73,7 +73,7 @@
         {#each [...dead, ...troubled] as feed (feed.id)}
           {@const why = reason(feed)}
           <li class="contents">
-            <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpen(event, feed.id)} class="inset-row inset-action">
+            <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpen(event, feed.id)} class="inset-row inset-action">
               <span class="why"><Icon name={why.icon} /></span>
               <span class="min-w-0 flex-1 py-2 break-words">{feed.title}</span>
               <span class="said text-meta text-muted text-right">{why.words}</span>

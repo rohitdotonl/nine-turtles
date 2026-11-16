@@ -22,7 +22,7 @@ async function signedIn(page: Page): Promise<void> {
 /** Follows a blog of this test's own (three articles) and opens its list. */
 async function openBlog(page: Page, name: string): Promise<{ id: number; title: string }> {
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(at(`/people/${id}`));
+  await page.goto(at(`/${id}`));
   await appReady(page);
   await expect(page.locator("#list-pane .item-row").first()).toBeVisible();
   return { id, title: `Blog ${name}` };
@@ -56,7 +56,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(article(page)).toBeVisible();
   await expect(sidebar).toBeHidden();
   await expect(list).toBeHidden();
-  await expect(page).toHaveURL(/\/articles\/\d+$/);
+  await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
   const back = page.getByRole("button", { name: `Back to ${blog.title}`, exact: true });
   await expect(back).toBeVisible();
   const [backBox, articleBox, viewport] = await Promise.all([back.boundingBox(), article(page).boundingBox(), page.viewportSize()]);
@@ -127,7 +127,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(list).toBeVisible();
 
   // A person's page fills the window the same way; its × goes back to their list.
-  await page.goto(at(`/people/${blog.id}/about`));
+  await page.goto(at(`/${blog.id}/about`));
   await appReady(page);
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   await expect(sidebar).toBeHidden();
@@ -136,14 +136,14 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(list).toBeVisible();
   await expect(sidebar).toBeVisible();
   // Their settings too: alone in the window, and Escape goes back to their page, still alone.
-  await page.goto(at(`/people/${blog.id}/settings`));
+  await page.goto(at(`/${blog.id}/settings`));
   await appReady(page);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeVisible();
   await expect(sidebar).toBeHidden();
   await expect(list).toBeHidden();
   await page.locator("body").focus();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${blog.id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${blog.id}/about$`));
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   await expect(list).toBeHidden();
 
@@ -153,7 +153,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
 });
 
-test("Settings and Everyone you follow are centred beside the sidebar; with the sidebar hidden and large text, nothing starts under its button", async ({ page, isMobile }) => {
+test("Settings and Everyone you follow are centred beside the sidebar", async ({ page, isMobile }) => {
   test.skip(isMobile, "A phone has one edge for every screen.");
   await page.setViewportSize({ width: 1440, height: 800 });
   await signedIn(page);
@@ -169,40 +169,6 @@ test("Settings and Everyone you follow are centred beside the sidebar; with the 
   await page.getByRole("link", { name: "Everyone you follow" }).click();
   await expect(page.locator("#your-feeds-heading")).toBeVisible();
   await centred("section[aria-labelledby='your-feeds-heading']");
-
-  // A window just wide enough, the sidebar hidden and the reader's text at its largest: the reading column is
-  // nearly the window's width, yet the list's title and Settings' still start clear of the sidebar button.
-  await page.setViewportSize({ width: 896, height: 800 });
-  await page.goto(at("/starred"));
-  await appReady(page);
-  await page.evaluate(() => document.querySelector("main")!.style.setProperty("--reading-size", "1.625rem"));
-  const toggle = page.getByRole("button", { name: "Sidebar", exact: true });
-  await toggle.click();
-  await expect(page.locator("#sidebar")).toBeHidden();
-  const clear = async (heading: string) => {
-    const [button, title] = await Promise.all([toggle.boundingBox(), page.locator(heading).boundingBox()]);
-    expect(title!.x).toBeGreaterThanOrEqual(button!.x + button!.width + 8);
-  };
-  await clear("#list-heading");
-  await page.locator("#list-heading").focus();
-  await page.keyboard.press("g");
-  await page.keyboard.press(",");
-  await expect(page.locator("#settings-heading")).toBeVisible();
-  await expect(page.locator("#sidebar")).toBeHidden();
-  await clear("#settings-heading");
-});
-
-test("with the sidebar hidden, the list and an opened article start on one line, so opening turns the page in place", async ({ page, isMobile }) => {
-  test.skip(isMobile, "A phone has one edge for every screen.");
-  await signedIn(page);
-  await openBlog(page, `one-thing-line-${test.info().workerIndex}-${Date.now()}`);
-  await page.getByRole("button", { name: "Sidebar", exact: true }).click();
-  await expect(page.locator("#sidebar")).toBeHidden();
-  const listTitleX = (await rows(page).first().locator(".title").boundingBox())!.x;
-  await rows(page).first().click();
-  await expect(article(page)).toBeVisible();
-  // Within half a scroll bar, where scroll bars take room (decision 0277).
-  expect(Math.abs((await titleOf(page).boundingBox())!.x - listTitleX)).toBeLessThanOrEqual(10);
 });
 
 test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {

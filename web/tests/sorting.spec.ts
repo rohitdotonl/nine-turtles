@@ -64,7 +64,7 @@ test("Everyone you follow lists who could be either; a tick makes them a person 
 
 test("their settings say why, and with neither chosen one press settles it", async ({ page }) => {
   const blog = await openBlog(page, "page");
-  await page.goto(new URL(`/publications/${blog.id}/settings`, FEEDS_APP).href);
+  await page.goto(new URL(`/${blog.id}/settings`, FEEDS_APP).href);
   await appReady(page);
   const choice = page.getByRole("radiogroup", { name: "This is" });
   await expect(choice).toHaveAccessibleDescription(/^nine turtles couldn't tell: no name signs their articles\./);
@@ -93,7 +93,7 @@ test("Add leaves both tiles unchosen when it can't tell, and Done leaves them wi
 
 test("the end of their article asks once; Yes puts Write back in its place, with Undo", async ({ page }) => {
   const blog = await openBlog(page, "ask");
-  await page.goto(new URL(`/publications/${blog.id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${blog.id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("region", { name: blog.name }).getByRole("listitem").first().click();
   const asked = page.getByRole("group", { name: `Is ${blog.name} someone you might write back to?` });
@@ -109,7 +109,7 @@ test("the end of their article asks once; Yes puts Write back in its place, with
 
 test("with only the keyboard: No, a publication at an article's end keeps the keyboard's place, on the article's title", async ({ page }) => {
   const blog = await openBlog(page, "no");
-  await page.goto(new URL(`/publications/${blog.id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${blog.id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("region", { name: blog.name }).getByRole("listitem").first().click();
   const asked = page.getByRole("group", { name: `Is ${blog.name} someone you might write back to?` });

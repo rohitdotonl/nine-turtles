@@ -27,7 +27,7 @@ async function openPodcast(page: Page, wide = true): Promise<void> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/podcast/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: new RegExp(LONG) })).toBeVisible();
 }

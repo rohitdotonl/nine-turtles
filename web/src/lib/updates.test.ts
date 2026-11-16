@@ -41,16 +41,20 @@ describe("switching an open tab to the new version", () => {
 });
 
 describe("what a switch carries to the new version", () => {
-  const carried = { keyboard: true, sidebar: "hidden", lastPlace: "/feeds/3", sidebarScroll: 120 };
+  const carried = { keyboard: true, lastPlace: "/feeds/3", sidebarScroll: 120 };
 
   it("reads back a note it wrote", () => {
     expect(readCarried(JSON.parse(JSON.stringify(carried)))).toEqual(carried);
   });
 
+  // Decision 0282: the sidebar can't be hidden any more, so an older version's "hidden" never carries over.
+  it("drops whether an older version had the sidebar hidden", () => {
+    expect(readCarried({ ...carried, sidebar: "hidden" })).toEqual(carried);
+  });
+
   it("ignores anything else", () => {
     expect(readCarried(null)).toBeUndefined();
     expect(readCarried("keyboard")).toBeUndefined();
-    expect(readCarried({ ...carried, sidebar: "sideways" })).toBeUndefined();
     expect(readCarried({ ...carried, sidebarScroll: "far" })).toBeUndefined();
   });
 });

@@ -51,6 +51,7 @@
   import { addressFix, addressSlip, type AddressFix } from "./typos";
   import { siteName } from "./people";
   import { newslettersOn } from "./newsletters";
+  import { addressFor } from "./router";
 
   let {
     field = $bindable(),
@@ -621,7 +622,7 @@
       <!-- In the welcome; in a sheet the main button goes to them. -->
       <p class="-mt-1 mb-2">
         <a
-          href={`/people/${alreadyId}`}
+          href={addressFor({ kind: "feed", id: alreadyId })}
           onclick={(event) => {
             if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
             event.preventDefault();

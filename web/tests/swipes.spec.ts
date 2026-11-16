@@ -52,7 +52,7 @@ async function openBlog(page: Page): Promise<void> {
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(rows(page)).toHaveCount(3);
 }
@@ -304,7 +304,7 @@ test("a pull names who wrote the article it opens, when its feed names a writer"
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/shelf/field-notes/sw-${test.info().workerIndex}-${Date.now()}/feed.xml`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await rows(page).nth(0).click();
   const text = pane(page).locator(".reading-scroller");

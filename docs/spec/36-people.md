@@ -101,8 +101,8 @@ PLAN.md → V1, item 1.*
   adding gives back the feed's title; changing **This is** in their settings later
   keeps whatever name it has.
 - **Their list:** choosing the row lists everything they made, newest first
-  (or as the reader sorts), one list across all their sources (`/people/12`
-  or `/publications/7`). With two or more sources, each row says which source
+  (or as the reader sorts), one list across all their sources (`/mira-chen-12`
+  or `/ai-as-normal-technology-7`). With two or more sources, each row says which source
   it came from in place of their name: **Blog**, **Video**, **Newsletter**,
   or **Podcast**. Everywhere else (All articles, Starred, search, Notes,
   the article's own line) an article is credited by their name; in Unread
@@ -111,7 +111,7 @@ PLAN.md → V1, item 1.*
   cover every source.
 - **Their page,** the same for a person and a publication (but a
   publication has no Write to, decision 0192), with no Edit mode
-  (decision 0254) (`/people/12/about`): a page about them, with their
+  (decision 0254) (`/mira-chen-12/about`): a page about them, with their
   settings on a page of its own, one press away (decision 0267). Opened by pressing their name at
   the top of their list ("Alpha ›"), by their name under an article's title
   (underlined, faintly), by **Info about Alpha** in the list's More menu or
@@ -151,7 +151,7 @@ PLAN.md → V1, item 1.*
     and ›, which opens their settings. Screen readers and voice control
     know it as "Settings for Tomas Berg", so it isn't taken for the app's
     own Settings.
-- **Their settings** (`/people/12/settings`, decision 0267): a page of its
+- **Their settings** (`/mira-chen-12/settings`, decision 0267): a page of its
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
   above the title (a very long name there ends in "…"); the browser's tab
   says "Settings for Tomas Berg". That and Escape go back to their page as
@@ -189,9 +189,7 @@ PLAN.md → V1, item 1.*
   - apart, **Unsubscribe from Alpha** in red words, which leaves every
     source of theirs at once, with Undo.
 
-  The old addresses for Edit (`/people/12/edit`) and a source's settings
-  (`/people/12/sources/34`) open their settings, and the address bar is
-  tidied to `…/settings`; so does `e` in their list.
+  `e` in their list opens their settings too.
 - **+ Add a source** opens in place: choose someone already followed, or
   paste the address of their blog, channel or newsletter (followed as + Add
   would). If the address offers several feeds, the choices show first. If
@@ -221,9 +219,8 @@ PLAN.md → V1, item 1.*
   wait, as when a folder is deleted, section 15), and opens
   the person's list with "Alpha is one person now · Undo", which makes the
   folder again with everything in it, and its rules.
-- **Addresses:** `/people/12` and `/publications/7` for a list, `…/about`
-  for the page and `…/settings` for their settings (`…/edit` and `/people/12/sources/34` open the settings too). Old `/feeds/12` and `/feeds/12/edit` addresses still open, and
-  the address bar is tidied to the new one. An address for someone the
+- **Addresses** (decision 0281): their name and number, `/mira-chen-12` for their list, `…/about`
+  for the page and `…/settings` for their settings; only the number is read, so an old or missing name still opens them. An address for someone the
   reader doesn't follow says so plainly, on a computer and a phone alike: "Not found", and "You don't follow anyone at this address. It may have been an old one."
 - **Unsubscribing** from a person leaves every source of theirs (Undo brings
   them all back, and so does Bring back for 30 days, as one row under
@@ -264,8 +261,8 @@ PLAN.md → V1, item 1.*
    "One person with …" and the row darkens. Let go: one row, under the
    name of the one dropped on, with "… is one person now." and Undo, which
    parts them again (decision 0250).
-9. Visit an old `/feeds/N` address: the list opens and the address bar shows
-   `/people/N` or `/publications/N`.
+9. Visit `/N`, their number alone: the list opens and the address bar shows
+   their name before it, `/mira-chen-N` (decision 0281).
 10. Highlight words in an article of someone's, then open their page: under
    Write to and your note, **Your highlights** shows those words, "From" the
    article's title, and there is no Lately. Press the title: the article opens.

@@ -56,7 +56,7 @@ test("who isn't working is one quiet row, then a line each, and their page leads
   // The row opens their page, which leads with one box: what went wrong and since when, what it may mean, and
   // what can be done, the likeliest first.
   await feed.click();
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("Feed gone since earlier today");
   await expect(box).toContainText("The site says the feed isn't there any more. It may have moved.");
@@ -109,13 +109,13 @@ test("a failing feed says so above its list, and Find its new address moves it w
   await expect.poll(failingSince, { timeout: 30_000 }).not.toBeNull();
 
   // Their page offers it too, only while the feed is failing, naming what isn't working.
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("button", { name: "Find new address", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: /^About / }).getByRole("group", { name: "Not working" })).toContainText(/^\s*Feed gone since/);
   // Escape goes back to their list.
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 
   const list = page.locator("#list-pane");
   await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find its new address$/)).toBeVisible();
@@ -175,7 +175,7 @@ test("with the keyboard alone: the row, their page, Find new address and back, U
   const feed = summary.locator("xpath=ancestor::section[1]").getByRole("link", { name: new RegExp(`^${title}\\b`) });
   await tabTo(page, feed);
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
 
   // Find new address: the keyboard lands on Use it, which says what it asks; Cancel goes back to the button.
   const box = page.getByRole("group", { name: "Not working" });
@@ -223,7 +223,7 @@ async function failing(page: Page, name: string, how: "move" | "break"): Promise
 test("when the site names several feeds, the list's line offers a choice; when it names none, it says so", async ({ page }) => {
   const several = `moving-two-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, several, "move");
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   const list = page.locator("#list-pane");
   await list.getByRole("button", { name: "Find its new address" }).click();
@@ -244,7 +244,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
   // A feed whose site names nothing new: one plain sentence, on their page too.
   const none = `moving-gone-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const gone = await failing(page, none, "break");
-  await page.goto(new URL(`/people/${gone}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${gone}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: /^The site doesn't name another feed/ })).toBeVisible();
@@ -255,7 +255,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
 test("their page moves a failing feed at once, says so, and keeps what was typed", async ({ page }) => {
   const name = `moving-edit-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await failing(page, name, "move");
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   // A note half written on their page.
   await page.getByRole("button", { name: "Add a note…" }).click();
@@ -284,11 +284,11 @@ test("moving a feed to a new number (others follow the old address) keeps their 
     const feed = health.feeds.find((each: { id: number }) => each.id === other);
     await route.fulfill({ json: { feed: { ...feed, state: "working", failing_since: null } } });
   });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: "Find new address", exact: true }).click();
   await page.getByRole("button", { name: "Use it" }).click();
-  await expect(page).toHaveURL(new RegExp(`/(people|publications)/${other}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${other}/about$`));
   await expect(page.getByRole("status").filter({ hasText: "It now reads from its new address and works again." })).toBeVisible();
 });
 
@@ -307,7 +307,7 @@ test("a person whose site stopped answering may not know: their page offers Writ
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
   await seenDead(page, title, { problem: "unreachable" });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("They may not know.");
@@ -346,7 +346,7 @@ test("a publication whose feed stopped gets no Write to", async ({ page }) => {
     for (const feed of real.feeds) if (feed.id === id) Object.assign(feed, { kind: "publication", open: true });
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL(`/publications/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("Site not answering since");
@@ -364,7 +364,7 @@ test("a YouTube channel YouTube won't send says so, rather than that it may have
   await appReady(page);
   await page.locator("#health-summary").click();
   await expect(page.getByRole("link", { name: new RegExp(`^${title}\\s*YouTube not sending$`) })).toBeVisible();
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("YouTube isn't sending these videos to nine turtles at the moment.");
@@ -383,7 +383,7 @@ test("the box shows the address it writes to, with Change, so a wrong one can be
   const id = await failing(page, name, "break");
   await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "old@there.example" } });
   await seenDead(page, title, { problem: "unreachable" });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box.getByRole("link", { name: `Write to ${title}` })).toBeVisible();
@@ -406,7 +406,7 @@ test("someone with two broken sources gets a box for each, and one Write to", as
     for (const feed of real.feeds) if (ids.includes(feed.id)) Object.assign(feed, { state: "dead", problem: "unreachable" });
     await route.fulfill({ json: real });
   });
-  await page.goto(new URL(`/people/${ids[0]}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${ids[0]}/about`, FEEDS_APP).href);
   await appReady(page);
   const boxes = page.getByRole("group", { name: "Not working" });
   await expect(boxes).toHaveCount(2);
@@ -420,7 +420,7 @@ test("a feed only having trouble offers nothing first: it's usually back soon", 
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
   await seenDead(page, title, { problem: "unreachable", state: "trouble" });
-  await page.goto(new URL(`/people/${id}/about`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const box = page.getByRole("group", { name: "Not working" });
   const find = box.getByRole("button", { name: "Find new address", exact: true });

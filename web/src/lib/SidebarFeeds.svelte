@@ -53,7 +53,7 @@
   import { droppedBefore, placeWords, STEP_WORDS, stepped, stepsFor, type Step } from "./arranging";
   import type { LoadedLibrary, Removed } from "./library.svelte";
   import { UNDO_FAILED, UNDONE } from "./messages";
-  import { pathFor, type Route } from "./router";
+  import { addressFor, pathFor, type Route } from "./router";
   import { dragValue, sidebarDrag, type Dragged, type Over } from "./sidebarDrag";
 
   let {
@@ -330,7 +330,7 @@
   {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
     <a
-      href={pathFor(place)}
+      href={addressFor(place)}
       aria-current={here ? "page" : undefined}
       onclick={(event) => follow(event, place)}
       title={feed.title}
@@ -358,7 +358,7 @@
 {#snippet folderLink(folder: Folder, padded: boolean)}
   {@const place: Route = { kind: "folder", id: folder.id }}
   <a
-    href={pathFor(place)}
+    href={addressFor(place)}
     aria-current={isHere(place) ? "page" : undefined}
     aria-expanded={!phone && !searching && isHere(place) ? open.includes(folder.id) : undefined}
     onclick={(event) => {

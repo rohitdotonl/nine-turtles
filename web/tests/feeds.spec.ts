@@ -362,7 +362,7 @@ test("a, a website's address and Enter follow it, someone you might write to is 
   await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
 
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeFocused();
   await expect(page).toHaveTitle(`Blog ${name} · nine turtles`);
   const link = sidebar(page).getByRole("link", { name: `Blog ${name}` });
@@ -388,7 +388,7 @@ test("a feed's own address works, and adding it twice says it's already there", 
   await page.getByRole("radio", { name: "A publication", exact: true }).check();
   await page.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
-  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
 
   await sidebar(page).getByRole("link", { name: "Add a person or publication" }).click();
   await field(page).fill(`${FEED_SITE}/blog/${name}/`);
@@ -487,7 +487,7 @@ test("a site with several feeds offers them with tick boxes, and those followed 
   await first.check();
   await comments.check();
   await page.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(page).toHaveURL(/\/people\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   await expect(page.getByRole("button", { name: "Done" })).toHaveCount(0);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${name}`) })).toHaveCount(1);
   const together = async () => {
@@ -752,7 +752,7 @@ test("with only the keyboard: choose one of several feeds, then go back to it fr
   await expect(page.getByRole("radio", { name: "A publication", exact: true })).toBeChecked();
   await tabTo(page, page.getByRole("button", { name: "Done" }));
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   const heading = page.getByRole("heading", { level: 2, name: `Blog ${name}: comments` });
   await expect(heading).toBeFocused();
 
@@ -807,7 +807,7 @@ test("with only the keyboard: Tab reaches Show older articles, and the keyboard'
 });
 
 test("an address for a feed you don't follow says so", async ({ page }) => {
-  await openApp(page, "/feeds/999999");
+  await openApp(page, "/999999");
   await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
   await expect(page.getByText("You don't follow anyone at this address.")).toBeVisible();
 });
@@ -859,7 +859,7 @@ test("a shared page asks \"Follow <name>?\", but follows only on Follow", async 
     await page.keyboard.press("Enter");
   }
   // Its articles name no writer, so it could be either: kept with Publications (decision 0264).
-  await expect(page).toHaveURL(/\/publications\/[0-9]+$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+$/);
   expect(await followed(page)).toContain(name);
 });
 
@@ -906,7 +906,7 @@ test("Follow on someone already followed takes you to them", async ({ page, isMo
   await appReady(page);
   const sheet = page.getByRole("dialog", { name: `Follow Blog ${name}?` });
   await sheet.getByRole("button", { name: "Follow", exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/people/${id}$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 });
 
 test("Settings gives a computer a bookmark button to drag, built from this nine turtles' own address", async ({ page }) => {

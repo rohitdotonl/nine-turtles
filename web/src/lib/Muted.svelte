@@ -20,13 +20,11 @@
     heading = $bindable(),
     onClose,
     onChanged,
-    besideToggle = false,
   }: {
     heading?: HTMLHeadingElement;
     onClose: () => void;
     /** An article was unhidden or hidden again: the sidebar's counts reload. */
     onChanged: () => void;
-    besideToggle?: boolean;
   } = $props();
 
   type Row = { article: Article; unmuted: boolean; busy: boolean; message: string };
@@ -69,7 +67,7 @@
 </script>
 
 <section aria-labelledby="muted-heading" class="lines-up flex flex-1 flex-col bg-paper">
-  <PageHead title="Hidden articles" id="muted-heading" bind:heading onBack={onClose} backTo={SETTINGS_PAGES.hiding} {besideToggle} column="max-w-[35rem]" />
+  <PageHead title="Hidden articles" id="muted-heading" bind:heading onBack={onClose} backTo={SETTINGS_PAGES.hiding} column="max-w-[35rem]" />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}

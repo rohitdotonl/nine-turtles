@@ -9,7 +9,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import type { Route } from "./router";
+  import { addressFor, type Route } from "./router";
   import { examplesLeft, trying, tryExample, type Example } from "./welcomeTry.svelte";
 
   let {
@@ -51,7 +51,7 @@
       <h3 id="tried-name" tabindex="-1" class="label">{latest ? `Newest from ${feed.title}` : feed.title}</h3>
       {#if latest}
         <a
-          href={`/people/${feed.id}`}
+          href={addressFor({ kind: "feed", id: feed.id })}
           onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
           class="font-display text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
