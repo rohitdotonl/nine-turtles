@@ -2,7 +2,7 @@
 
 **In one line:** A round picture leads an article's byline (40px) and tops a person's or publication's page (72px): the one the reader chose, else the picture the feed names, else the site's own icon (a small one sits small inside the circle), else their initials; on their page, pressing it offers "Choose a picture…" and "Use the automatic picture", each with Undo.
 
-*16 November 2026. The owner asked for it from a New Yorker byline, saw initials and the site's icon side by side on his own writers, and chose the site's icon.*
+*16 November 2026. The owner asked for it from a New Yorker byline, saw initials and the site's icon side by side on his own writers, and chose the site's icon. The review found loading a site's icon wasn't among the second floor's visits; the owner said yes to adding it to the floor the same day.*
 
 **Why.** A face beside the byline makes an article feel like it comes
 from a person, which is what nine turtles is for (principle 2, the writer
