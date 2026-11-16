@@ -38,7 +38,7 @@
   --toggle-room: 4rem;
 }
 .list-pane:not(.phone) > :is(.pane-bar, .scroller) {
-  --column-start: max(var(--list-start), var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
+  --column-start: max(var(--list-start), var(--toggle-room, 0px), (100% - var(--reading-width)) / 2);
   padding-inline: var(--column-start) max(var(--list-end), 100% - var(--column-start) - var(--reading-width));
 }
 /* Settings, Everyone you follow and the pages under Settings start their column on the same line. */
