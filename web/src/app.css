@@ -47,7 +47,7 @@
   /* The sign-in pages' wordmark. */
   --text-display: 3rem;
   --text-display--line-height: 1.1;
-  /* Named exceptions (DESIGN.md → "The system"): the list's dates and Add's share line (decision 0206), and the sidebar's wordmark beside the logo (Exceptions log). */
+  /* Named exceptions (DESIGN.md → "The system"): the list's dates and Add's share line (decision 0206), and the sidebar's wordmark (Exceptions log, the name's size). */
   --text-date: 0.75rem;
   --text-wordmark: 1.375rem;
   --text-wordmark-phone: 1.75rem;

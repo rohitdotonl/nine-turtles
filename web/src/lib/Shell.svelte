@@ -9,7 +9,6 @@
   no Unread view, no dots and no "Mark all as read"; it opens on All.
 -->
 <script lang="ts">
-  import Logo from "./Logo.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
   import TextButton from "./TextButton.svelte";
@@ -816,7 +815,7 @@
     -->
     <div class={["pane-bar gap-4 pl-5", phone ? "pr-4" : "pr-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
-        <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-wordmark-phone" : "text-wordmark leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}><Logo height={phone ? 34 : 27} inline />nine turtles</h1>
+        <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-wordmark-phone" : "text-wordmark leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
     </div>
     <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto pt-1 pb-4">
       <!--

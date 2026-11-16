@@ -9,8 +9,9 @@ dropped at the owner's request (decision 0179).
 One drawing at every size. Its box ends at the turtles' edges and the
 shells' feet, so beside the name it stands on the name's baseline:
 
-- the logo beside the name, in the app (`web/src/lib/Logo.svelte`) and the
-  website's top (`website/src/_includes/base.njk`);
+- the logo beside the name, in the website's top
+  (`website/src/_includes/base.njk`); inside the app the name stands alone,
+  with no logo (decision 0290);
 - `nine-turtles-mark.svg`: the turtles alone, on nothing, in dark ink;
 - `four-in-front.svg`: "four out in front" (decision 0291), the website's
   top on every page but the front page: the name in Literata 600 at 60

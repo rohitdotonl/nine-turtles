@@ -58,17 +58,15 @@ test("sign-in is one centred column, at the phone's one 20px margin, each field 
   expect((await page.getByRole("link", { name: "Sign up" }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
 
-test("the logo stands above the name on sign-in and before it in the sidebar, hidden from screen readers", async ({ page, isMobile }) => {
+test("the name stands alone, with no logo, on sign-in and in the sidebar", async ({ page, isMobile }) => {
   await page.goto("/");
   await appReady(page);
-  // Sign-in: the nine turtles above the wordmark (decision 0067).
-  const logo = page.locator("svg.logo");
-  await expect(logo).toBeVisible();
-  await expect(logo).toHaveAttribute("aria-hidden", "true");
+  // Sign-in: the wordmark in words, nothing drawn above it (decision 0290).
   const name = page.getByRole("heading", { level: 1, name: "nine turtles" });
-  expect((await logo.boundingBox())!.y).toBeLessThan((await name.boundingBox())!.y);
+  await expect(name).toBeVisible();
+  await expect(name.locator("xpath=..").locator("svg")).toHaveCount(0);
 
-  // The sidebar: the logo inside the wordmark, before the words, which alone name it.
+  // The sidebar: the wordmark is the words alone.
   await signIn(page);
   // A phone that follows no one opens on the welcome (decision 0137); Escape goes back to the feeds, where the wordmark is.
   if (isMobile) {
@@ -77,10 +75,7 @@ test("the logo stands above the name on sign-in and before it in the sidebar, hi
   }
   const wordmark = page.getByRole("heading", { level: 1 });
   await expect(wordmark).toHaveText("nine turtles");
-  const sidebarLogo = wordmark.locator("svg.logo");
-  await expect(sidebarLogo).toBeVisible();
-  await expect(sidebarLogo).toHaveAttribute("aria-hidden", "true");
-  await expect(sidebarLogo).toHaveAttribute("focusable", "false");
+  await expect(wordmark.locator("svg")).toHaveCount(0);
 });
 
 test("a wrong password says so calmly and keeps you out", async ({ page, request }, testInfo) => {

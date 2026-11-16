@@ -49,7 +49,6 @@ const EXCEPTIONS = [
   ["web/src/lib/Shell.svelte", "pr-13", "the sidebar's top line keeps room for the sidebar button (44 + 8px)"],
   ["web/src/lib/PasswordField.svelte", "pr-[4.5rem]", "the password field keeps room for its Show button"],
   ["web/src/lib/EpisodePlayer.svelte", "ml-[2px]", "the Play triangle sits 2px right of centre, so it looks centred"],
-  ["web/src/lib/Logo.svelte", "mr-[9px]", "the drawn turtle sits 9px from the name, the owner's choice (BRAND.md, DESIGN.md's Exceptions log)"],
   ["web/src/lib/YouTubePlayer.svelte", "margin-left: 2px", "the Play triangle sits 2px right of centre, so it looks centred"],
   ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
   ["web/src/lib/WhoPage.svelte", "2.375rem", "their name on their page, set as an article's title is (decision 0254, DESIGN.md's Exceptions log)"],

@@ -11,7 +11,6 @@
 -->
 <script lang="ts">
   import { tick } from "svelte";
-  import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import { UNREACHABLE } from "./messages";
   import { answerRequest, connectRequest, shortName, type ConnectRequest } from "./assistants";
@@ -60,7 +59,6 @@
 </script>
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5 py-10">
-  <div class="mb-1"><Logo height={56} /></div>
   {#if request?.kind === "ok"}
     {@const name = shortName(request.clientName)}
     <div class="connect flex w-full flex-col gap-5">
