@@ -97,7 +97,7 @@ test.describe("on a computer", () => {
     await expect(page).toHaveURL(new RegExp(`${list}$`));
   });
 
-  test("Starred's old address opens Saved, under its new address (decision 0279)", async ({ page }) => {
+  test("Starred's old address opens Saved, under its new address (decision 0281)", async ({ page }) => {
     await openBlog(page);
     await page.goto(new URL("/starred", FEEDS_APP).href);
     await appReady(page);

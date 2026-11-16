@@ -368,7 +368,7 @@ async fn the_reader_approves_and_the_assistant_works() {
     let (saved, _) = tool(&base, &access, "list_saved", json!({})).await;
     assert_eq!(saved["articles"][0]["id"], article);
     assert_eq!(saved["articles"][0]["saved"], true);
-    // Star became Save (decision 0279): the old names and argument still work.
+    // Star became Save (decision 0281): the old names and argument still work.
     let (_, error) = tool(
         &base,
         &access,

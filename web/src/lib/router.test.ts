@@ -5,7 +5,7 @@ describe("addresses", () => {
   it("gives each fixed view and Settings its own address", () => {
     expect(parse("/unread")).toEqual({ kind: "view", view: "unread" });
     expect(parse("/saved/")).toEqual({ kind: "view", view: "starred" });
-    // Saved was Starred (decision 0279): its old address still opens it.
+    // Saved was Starred (decision 0281): its old address still opens it.
     expect(parse("/starred/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/all")).toEqual({ kind: "view", view: "all" });
     expect(parse("/settings")).toEqual({ kind: "settings" });

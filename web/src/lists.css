@@ -108,7 +108,7 @@
 }
 .row-saved {
   display: flex;
-  /* The theme's ink, as every bookmark is (decisions 0143, 0279); the filled shape says it. */
+  /* The theme's ink, as every bookmark is (decisions 0143, 0281); the filled shape says it. */
   color: var(--ink);
 }
 

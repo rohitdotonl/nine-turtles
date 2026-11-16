@@ -21,7 +21,7 @@ use crate::{
 pub(super) struct Marking {
     article_ids: Vec<i64>,
     read: Option<bool>,
-    /// `starred` was its name before Save (decision 0279).
+    /// `starred` was its name before Save (decision 0281).
     #[serde(alias = "starred")]
     saved: Option<bool>,
 }
