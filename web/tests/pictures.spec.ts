@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// SPEC section 36, "Their picture" (decision 0283): a circle beside the
+// SPEC section 36, "Their picture" (decision 0284): a circle beside the
 // byline and at the top of their page. This made-up blog's feed names no
 // picture and its site has no icon, so it shows initials; on their page the
 // picture is a button whose menu chooses one of the reader's own, or goes

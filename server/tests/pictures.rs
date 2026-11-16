@@ -1,4 +1,4 @@
-//! Pictures of people and publications (SPEC section 36, decision 0283),
+//! Pictures of people and publications (SPEC section 36, decision 0284),
 //! tested against a real running nine turtles and a made-up publisher: the
 //! feed's own picture is kept, a reader's chosen picture is kept, shown and
 //! taken off, only real pictures are kept, and other readers never see it.

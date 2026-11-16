@@ -14,7 +14,7 @@
   with its own Write to); and Write to, with the address under it (Change
   beside it). Then one card holding your note and the words you highlighted.
   Last, one row, Settings ›. Their picture above their name (decision
-  0283) is the page's only picture, and it has no color of its own.
+  0284) is the page's only picture, and it has no color of its own.
 
   Their settings (`route.settings`) are Settings' rows (WhoSettings,
   TheirPlaces), each changing as it's touched, under the title "Settings"
@@ -170,7 +170,7 @@
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->
     <header class={["flex flex-col", phone ? "pt-2" : ""]}>
-      <!-- Their picture first, as a contact card has it (decision 0283); pressed, it can be changed. -->
+      <!-- Their picture first, as a contact card has it (decision 0284); pressed, it can be changed. -->
       <div class="mb-5"><ChoosePicture {feed} {places} {name} {person} {library} /></div>
       <h2 bind:this={nameHeading} tabindex="-1" class="who-name">{name}</h2>
       <p class="who-places">

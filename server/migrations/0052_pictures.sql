@@ -1,5 +1,5 @@
 -- A picture for each person and publication (SPEC section 36, decision
--- 0283): the one the feed gives, and the one a reader chose for them.
+-- 0284): the one the feed gives, and the one a reader chose for them.
 --
 -- This only adds a column and a table, both empty for everything already
 -- followed: until a feed is next fetched with something new, or a reader

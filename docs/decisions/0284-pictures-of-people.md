@@ -1,4 +1,4 @@
-# 0283: A picture of each person and publication
+# 0284: A picture of each person and publication
 
 **In one line:** A round picture leads an article's byline (40px) and tops a person's or publication's page (72px): the one the reader chose, else the picture the feed names, else the site's own icon (a small one sits small inside the circle), else their initials; on their page, pressing it offers "Choose a picture…" and "Use the automatic picture", each with Undo.
 

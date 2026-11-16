@@ -1,6 +1,6 @@
 <!--
   A picture of someone or something followed (SPEC section 36, decision
-  0283): beside an article's byline, and at the top of their page. Each
+  0284): beside an article's byline, and at the top of their page. Each
   picture given is tried in turn (portrait.ts → picturesOf); the first one
   big enough fills the circle. A small one (a site's tab icon) sits small in
   the middle of it, if nothing bigger loads; with none, their initials. The

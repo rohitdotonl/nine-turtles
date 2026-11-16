@@ -465,7 +465,7 @@ async fn follow_elsewhere(
         .await?;
     carry_entries_over(&mut *transaction, person, old, new).await?;
     folders::take_out_of_folders(&mut *transaction, person, old).await?;
-    // The picture they chose comes along too (decision 0283).
+    // The picture they chose comes along too (decision 0284).
     sqlx::query("UPDATE OR REPLACE pictures SET feed_id = ? WHERE person_id = ? AND feed_id = ?")
         .bind(new)
         .bind(person)
