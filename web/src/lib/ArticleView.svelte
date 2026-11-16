@@ -29,6 +29,7 @@
 <script lang="ts">
   import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
   import { authorBesides } from "./byline";
+  import Portrait from "./Portrait.svelte";
   import { edge } from "./edge";
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
@@ -120,6 +121,7 @@
     }
   });
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
+  let source = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
 
@@ -547,6 +549,8 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <h2 tabindex="-1" bind:this={heading} class="article-title" dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
+      <div class="byline-row">
+      <Portrait name={article.feedTitle} siteUrl={full?.siteUrl ?? source?.siteUrl} person={(source?.kind ?? "person") === "person" || source?.person != null} />
       <p class="article-byline" lang="en">
         {#if followed}
           <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.
@@ -567,6 +571,7 @@
         {#if author}· <bdi>{author}</bdi>{/if}
         · <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
       </p>
+      </div>
 
       {#if video && connection.offline}
         <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 32). -->

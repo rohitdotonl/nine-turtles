@@ -1596,3 +1596,13 @@ dialog.dimmed::backdrop {
     border-bottom: 0;
   }
 }
+
+/* Prototype: the picture beside the byline. */
+.byline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.byline-row .article-byline {
+  min-width: 0;
+}
