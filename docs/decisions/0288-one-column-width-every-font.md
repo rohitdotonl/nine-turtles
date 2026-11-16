@@ -21,6 +21,11 @@ leaves the column, the list beside it and the article's bar where they are.
 A larger text size still makes lines shorter by itself; a phone's column is
 still the screen's width.
 
+**For a new font.** The width stays one for all. A font added or swapped
+must land at 60 to 75 characters a line (spaces counted, measured on a long
+real article at the usual size). If it can't, the one width is retuned so
+every font lands inside, never a width of its own for one font.
+
 **Why.** Cohesive and instant and still: the reader changes the letters, not
 the page. One width rather than one per font, because a font switch that
 moves the column (even by a little) reads as the page jumping, and both
