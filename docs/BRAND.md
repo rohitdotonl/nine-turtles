@@ -58,7 +58,8 @@ what's live.
 ## The logo
 
 - **The drawing:** nine small turtles seen from the side, in three rows of three, the middle row a little to the right. One ink, the page's text color, never colored, never cut off, never moving. (Live)
-- **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line in the sidebar's top line). All nine turtles stay in the sidebar. (Live)
+- **The nine** is the logo: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). On the website it stands before the name, on the name's baseline, the name in Literata 600 (in the website's top: the nine 27px tall, the name 22px, 9px apart). (Live)
+- **Inside the app the name stands alone** (the owner, 16 November 2026, decision 0290): "nine turtles" in words, with no logo, in the sidebar's top line (22px, Literata 600), on the sign-in pages and everywhere else on a page. The nine stays on the website, the app icon and the share picture. (Live)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Live)
 - **The tab icon:** the app icon's black square, always, with one light turtle filling most of it (the original turtle: a half-circle shell and a round head), so it shows on any tab, light or dark. (Live)
@@ -69,7 +70,7 @@ what's live.
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
 sleeps, celebrates or stands for a feeling. No mascot.
 
-- **May appear:** the logo (sidebar, sign-in, the website's top, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
+- **May appear:** the logo (the website's top, app icon, tab icon; never on a page inside the app, decision 0290), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 

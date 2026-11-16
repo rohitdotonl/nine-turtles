@@ -7,7 +7,6 @@
   Laid out as the other pages an emailed link opens (ConfirmEmail.svelte).
 -->
 <script lang="ts">
-  import Logo from "./Logo.svelte";
   import Icon from "./Icon.svelte";
   import { ticketFrom } from "./accounts";
   import { stopByTicket, type Pressed } from "./weekly";
@@ -36,7 +35,6 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
   <div class="flex flex-col items-center text-center">
-    <div class="mb-5"><Logo height={56} /></div>
     <h1 class="font-serif text-display">nine turtles</h1>
     <p class="mt-3 font-serif text-large text-muted">The weekly email.</p>
   </div>

@@ -77,22 +77,10 @@ test("the sidebar lists Unread, Saved, Notes (from the first day, decision 0222)
   await page.evaluate(() => (document.documentElement.dataset.keyboard = ""));
   await wordmark.focus();
   await expect(wordmark).toHaveCSS("outline-style", "none");
-  // The nine (BRAND.md → "The logo"): 27px tall beside the 22px name, 9px apart, on one line,
-  // standing on the name's baseline. An empty marker added to the line sits on that baseline.
-  const logo = wordmark.locator("svg");
-  await expect(logo).toHaveAttribute("height", "27");
+  // The name alone, with no logo (decision 0290): 22px, on one line.
+  await expect(wordmark.locator("svg")).toHaveCount(0);
   await expect(wordmark).toHaveCSS("font-size", "22px");
   expect((await wordmark.boundingBox())!.height).toBeLessThan(40);
-  await expect(logo).toHaveCSS("margin-right", "9px");
-  const feetAboveBaseline = await wordmark.evaluate((element) => {
-    const marker = document.createElement("span");
-    marker.style.display = "inline-block";
-    element.append(marker);
-    const gap = marker.getBoundingClientRect().bottom - element.querySelector("svg")!.getBoundingClientRect().bottom;
-    marker.remove();
-    return gap;
-  });
-  expect(Math.abs(feetAboveBaseline)).toBeLessThan(1);
 
   await expect(sidebar(page).getByRole("link", { name: "Unread" })).not.toHaveAttribute("aria-current", "page");
   // Where you are is the grey pill, so Saved's star stays an outline: filled only ever means starred (decision 0182).

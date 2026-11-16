@@ -158,8 +158,8 @@ a:focus-visible {
 .top a:hover {
   text-decoration: underline;
 }
-/* The logo stands on the name's baseline (BRAND.md → "The logo"), at the
-   app sidebar's sizes: the nine 27px tall beside the 22px name, 9px apart. */
+/* The logo stands on the name's baseline (BRAND.md → "The logo"): the nine
+   27px tall beside the 22px name, 9px apart. */
 .top a.wordmark {
   display: block;
   margin-right: auto;
