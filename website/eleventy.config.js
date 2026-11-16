@@ -38,6 +38,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({
     "../web/public/fonts/literata-400-latin.woff2": "fonts/literata-400-latin.woff2",
     "../web/public/fonts/literata-600-latin.woff2": "fonts/literata-600-latin.woff2",
+    "../web/public/fonts/literata-600-latin-ext.woff2": "fonts/literata-600-latin-ext.woff2",
     "../web/public/fonts/atkinson-hyperlegible-next-400-latin.woff2": "fonts/atkinson-hyperlegible-next-400-latin.woff2",
     "../web/public/fonts/atkinson-hyperlegible-next-600-latin.woff2": "fonts/atkinson-hyperlegible-next-600-latin.woff2",
     "../web/public/fonts/OFL-Literata.txt": "fonts/OFL-Literata.txt",

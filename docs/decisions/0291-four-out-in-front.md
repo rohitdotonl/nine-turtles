@@ -6,10 +6,15 @@
 
 **What changes.**
 1. **The drawing** (BRAND.md → "The logo"): today's turtle, unchanged, nine
-   times. Five on the letters (the two n's, the u, the l, and the e of
-   "turtles", which climbs its curve), a small gap off them; four on the
-   baseline after the s, walking ahead, as if on the frontier. The i keeps
-   its dot. Positions were measured from Literata 600's own outlines at 60px;
+   times. Five on the letters (the i, the second n, the u, the l, and the
+   e of "turtles", which climbs its curve), a small gap off them; four on
+   the baseline after the s, walking ahead, as if on the frontier. The i's
+   dot is a turtle: the name is drawn with a dotless ı (Literata 600's
+   latin-ext file, fetched only for that letter), and a hidden copy of the name says
+   "nine turtles" for screen readers. (First shipped with the i's own dot
+   and a turtle on the first n; the owner moved that turtle onto the i on
+   17 November 2026: "Remove the . from the top i and replace it with the
+   turtle that is on the first n.") Positions were measured from Literata 600's own outlines at 60px;
    the drawing is `docs/logo/four-in-front.svg`.
 2. **Where:** the website's top (`website/src/_includes/base.njk`) on every
    page but the front page. The front page keeps the nine before the name.

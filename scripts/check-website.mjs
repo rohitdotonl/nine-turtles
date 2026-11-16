@@ -101,7 +101,7 @@ try {
         const top = await page.evaluate(() => {
           const name = document.querySelector(".top .wordmark");
           const places = document.querySelector(".top .places");
-          return { text: name.textContent.trim(), oneLine: Math.abs(name.getBoundingClientRect().top - places.getBoundingClientRect().top) < 2 };
+          return { text: (name.querySelector(".sr-only") ?? name).textContent.trim(), oneLine: Math.abs(name.getBoundingClientRect().top - places.getBoundingClientRect().top) < 2 };
         });
         if (top.text !== "nine turtles") problems.push(`${path} (${colorScheme}, ${device}): the top's name reads "${top.text}", not "nine turtles"`);
         if (!top.oneLine) problems.push(`${path} (${colorScheme}, ${device}): the top's name and places don't fit on one line`);

@@ -15,6 +15,16 @@
   font-weight: 600;
   font-display: swap;
   src: url("/fonts/literata-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF;
+}
+/* Only for the dotless ı in the walking name (decision 0291), which wears a
+   turtle for its dot; the browser fetches it only where that letter is. */
+@font-face {
+  font-family: "Literata";
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/literata-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0131;
 }
 @font-face {
   font-family: "Atkinson Hyperlegible Next";
@@ -176,8 +186,8 @@ a:focus-visible {
 
 /* The website's other pages (decision 0291): the turtles walk on the name,
    four out in front. The drawing is in the name's own units (60 to the em,
-   baseline at 0), so 449 wide is 7.4833em and it is pulled back by the
-   name's width at 60 (349.39, so 5.8232em) to sit over the letters. The
+   baseline at 0), so 445 wide is 7.4167em and it is pulled back by the
+   name's width at 60 (344.94 with its dotless ı, so 5.7490em) to sit over the letters. The
    name is a size up on tablets and computers (28px) and today's 22px on a
    phone, so Help and Open the app stay on one line. */
 .top a.wordmark.walking {
@@ -185,9 +195,9 @@ a:focus-visible {
   white-space: nowrap;
 }
 .walkers {
-  width: 7.4833em;
+  width: 7.4167em;
   height: 0.9333em;
-  margin-left: -5.8232em;
+  margin-left: -5.749em;
   vertical-align: baseline;
 }
 @media (max-width: 760px) {
