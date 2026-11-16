@@ -36,7 +36,7 @@
   import { listSick, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { placeShownAs, placesOf } from "./people";
-  import { pathFor, type Route } from "./router";
+  import { addressFor, type Route } from "./router";
   import type { Article, Feed } from "./shapes";
 
   let {
@@ -198,7 +198,7 @@
 
     <!-- Their settings: one row that opens a page of its own, as Settings' rows do (decisions 0120, 0267), named for them so it isn't taken for the app's own Settings. -->
     <div class="inset-group mt-4">
-      <PageRow key="their-settings" href={pathFor(theirSettings)} label="Settings" icon="settings" onclick={(event) => follow(event, theirSettings)} named="Settings for {name}" />
+      <PageRow key="their-settings" href={addressFor(theirSettings)} label="Settings" icon="settings" onclick={(event) => follow(event, theirSettings)} named="Settings for {name}" />
     </div>
     </div>
   </div>

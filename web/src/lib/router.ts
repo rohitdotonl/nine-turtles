@@ -56,33 +56,94 @@ export function sidebarViews(unreadOff: boolean): View[] {
   return VIEWS.filter((view) => !(unreadOff && view === "unread"));
 }
 
+/** The names of the places in the sidebar, for their addresses: a person's or publication's by the number of their row, a folder's by its own. */
+export type Names = { who: (id: number) => string | undefined; folder: (id: number) => string | undefined };
+/** Shell gives the names once the sidebar has loaded; until then addresses carry only their numbers. */
+let names: Names = { who: () => undefined, folder: () => undefined };
+export function nameAddressesBy(known: Names) {
+  names = known;
+}
+
+/** One part of an address that names something by its number, after any words: "jim-nielsen-54", "54". */
+const NUMBERED = "(?:[a-z0-9-]*-)?([1-9][0-9]{0,15})";
+/** The number a part of an address ends with, if it's one that names something. */
+function numberIn(part: string | undefined): number | undefined {
+  const found = part?.match(new RegExp(`^${NUMBERED}$`));
+  return found ? Number(found[1]) : undefined;
+}
+
 /**
- * Whether the person or publication whose row opens at feed `id` is a publication (decision 0163):
- * their addresses start /publications/ rather than /people/. Shell answers it once the sidebar has
- * loaded; until then everyone is at /people/, and the old /feeds/ addresses still open.
+ * Words for an address (decision 0281): lowercase letters and numbers joined by hyphens,
+ * accents dropped ("Café Noël" → "cafe-noel"), cut at a whole word within `most` letters.
+ * Other scripts are left out, so a title in Hindi or Japanese adds no words: its number does the work.
  */
-let publication: (id: number) => boolean = () => false;
-export function placeAddressesBy(isPublication: (id: number) => boolean) {
-  publication = isPublication;
+export function addressWords(text: string, most: number): string {
+  const plain = text
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[ßæœøłđðþıħŋŧ]/g, (letter) => LETTERS[letter]!);
+  let words = "";
+  for (const word of plain.split(/[^a-z0-9]+/)) {
+    if (!word) continue;
+    if (words.length + word.length + 1 > most) break;
+    words = words ? `${words}-${word}` : word;
+  }
+  return words;
 }
 
-/** "/people/12" or "/publications/7": where a person's or publication's places are. */
-function whoPath(id: number): string {
-  return `/${publication(id) ? "publications" : "people"}/${id}`;
+/** Latin letters with no accent to drop, as plain ones. */
+const LETTERS: Record<string, string> = { ß: "ss", æ: "ae", œ: "oe", ø: "o", ł: "l", đ: "d", ð: "d", þ: "th", ı: "i", ħ: "h", ŋ: "ng", ŧ: "t" };
+
+/** Words with a number after them: "jim-nielsen-54", or "54" when there are none. */
+const numbered = (words: string, id: number) => (words ? `${words}-${id}` : `${id}`);
+
+/**
+ * The address the browser shows for a place (decision 0281): `pathFor`'s, with the name of the
+ * person, publication or folder before its number ("/jim-nielsen-54", "/folders/friends-4").
+ * Only the number is read back, so a renamed person's address still opens them.
+ */
+export function addressFor(route: Route): string {
+  const path = pathFor(route);
+  const id = "id" in route ? route.id : undefined;
+  const name = route.kind === "feed" || route.kind === "about" ? names.who(route.id) : route.kind === "folder" || route.kind === "edit-folder" ? names.folder(route.id) : undefined;
+  return id === undefined ? path : path.replace(`/${id}`, `/${numbered(addressWords(name ?? "", 40), id)}`);
+}
+
+/** An address without the words before its numbers, as `pathFor` gives a place: "/jim-nielsen-54" → "/54". */
+export function withoutWords(path: string): string {
+  return path
+    .split("/")
+    .map((part) => numberIn(part)?.toString() ?? part)
+    .join("/");
+}
+
+/** What an open article's address says: its number and title, and its writer where the list isn't theirs. */
+export type Addressed = { id: number; title: string; by?: string };
+
+/**
+ * An open article's address, under its list's (decisions 0233, 0281): "/jim-nielsen-54/making-a-website-in-2026-5905",
+ * "/unread/takuya-matsuyama/i-moved-39-repos-6373". With no article, the list's own.
+ */
+export function withArticle(list: string, article: Addressed | undefined): string {
+  if (!article) return list;
+  const by = addressWords(article.by ?? "", 30);
+  return `${list}${by ? `/${by}` : ""}/${numbered(addressWords(article.title, 50), article.id)}`;
 }
 
 /**
- * An open article's address, under its list's (decision 0233): "/people/5/articles/29",
- * "/unread/articles/29". With no article, the list's own.
+ * The list's address and the article an address names, if any: "/jim-nielsen-54/a-title-29" → "/jim-nielsen-54", 29;
+ * "/unread/mira-chen/a-title-29" → "/unread", 29. A list is one part of the address, a folder's two; the writer's part
+ * comes only under a list that isn't theirs.
  */
-export function withArticle(path: string, article: number | undefined): string {
-  return article ? `${path}/articles/${article}` : path;
-}
-
-/** The list's address and the article an address names, if any: "/people/5/articles/29" → "/people/5", 29. */
 export function articleIn(path: string): { list: string; article?: number } {
-  const found = path.match(/^(.*)\/articles\/([1-9][0-9]{0,15})\/?$/);
-  return found ? { list: found[1] || "/", article: Number(found[2]) } : { list: path };
+  const parts = path.split("/").filter(Boolean);
+  const folder = parts[0] === "folders";
+  const rest = parts.slice(folder ? 2 : 1);
+  const byWriter = rest.length === 2 && /^[a-z0-9-]+$/.test(rest[0]!) && (folder || (VIEWS as readonly string[]).includes(parts[0]!));
+  const article = rest.length === 1 || byWriter ? numberIn(rest.at(-1)) : undefined;
+  return article ? { list: `/${parts.slice(0, folder ? 2 : 1).join("/")}`, article } : { list: path };
 }
 
 /** A place that shows a list of articles: a view, a feed or a folder. */
@@ -107,15 +168,14 @@ export function parse(path: string): Route {
   if (page) return { kind: "settings", page };
   if (name === "add" || name === "add-feed") return { kind: "add-feed" };
   if (name === "new-to-feeds") return { kind: "new-to-feeds" };
-  // A person or publication (decision 0163): their list, their page and their settings (decision 0267). The old /feeds/
-  // addresses still open, and so do the old Edit and source-settings addresses, which open their settings (no Edit mode).
-  const who = name.match(/^(feeds|people|publications)\/([1-9][0-9]{0,15})(\/edit|\/about|\/settings|\/sources\/([1-9][0-9]{0,15}))?$/);
+  // A person or publication (decisions 0163, 0281): their list ("/jim-nielsen-54"), their page and their settings (decision 0267).
+  const who = name.match(new RegExp(`^${NUMBERED}(/about|/settings)?$`));
   if (who) {
-    const id = Number(who[2]);
-    if (who[4] || who[3] === "/edit" || who[3] === "/settings") return { kind: "about", id, settings: true };
-    return who[3] === "/about" ? { kind: "about", id } : { kind: "feed", id };
+    const id = Number(who[1]);
+    if (who[2] === "/settings") return { kind: "about", id, settings: true };
+    return who[2] ? { kind: "about", id } : { kind: "feed", id };
   }
-  const folder = name.match(/^folders\/([1-9][0-9]{0,15})(\/edit)?$/);
+  const folder = name.match(new RegExp(`^folders/${NUMBERED}(/edit)?$`));
   if (folder) return folder[2] ? { kind: "edit-folder", id: Number(folder[1]) } : { kind: "folder", id: Number(folder[1]) };
   if ((VIEWS as readonly string[]).includes(name)) return { kind: "view", view: name as View };
   return { kind: "view", view: "unread" };
@@ -124,14 +184,15 @@ export function parse(path: string): Route {
 /** Whether an address is one of nine turtles' places. Any other opens the "Wrong turn?" page (SPEC section 4). */
 export function knownPath(path: string): boolean {
   const { list, article } = articleIn(path);
-  const name = list.replace(/^\/+|\/+$/g, "");
   // An article opens only under a list of articles (decision 0233).
-  if (article && (name === "" || !isList(parse(list)))) return false;
+  if (article) return knownPath(list) && isList(parse(list));
+  const name = list.replace(/^\/+|\/+$/g, "");
   if (name === "" || name === "unread") return true;
   const place = parse(path);
   return !(place.kind === "view" && place.view === "unread");
 }
 
+/** A place's identity: its address by numbers alone ("/54", "/folders/4"), for comparing places. `addressFor` adds the names. */
 export function pathFor(route: Route): string {
   switch (route.kind) {
     case "settings":
@@ -147,9 +208,9 @@ export function pathFor(route: Route): string {
     case "new-to-feeds":
       return "/new-to-feeds";
     case "feed":
-      return whoPath(route.id);
+      return `/${route.id}`;
     case "about":
-      return `${whoPath(route.id)}/${route.settings ? "settings" : "about"}`;
+      return `/${route.id}/${route.settings ? "settings" : "about"}`;
     case "folder":
       return `/folders/${route.id}`;
     case "edit-folder":

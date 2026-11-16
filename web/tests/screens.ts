@@ -157,7 +157,7 @@ export const SCREENS: Screen[] = [
       const copy = libraryApp() === FEEDS_APP ? `marks-${Date.now()}/` : "";
       const id = await follow(page, `${FEED_SITE}/shelf/the-margins/${copy}feed.xml`);
       await unmark(page, id);
-      await page.goto(new URL(`/people/${id}`, page.url()).href);
+      await page.goto(new URL(`/${id}`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("button", { name: /On reading the same book twice/ })).toBeVisible();
       // The second article, starred: opening another would put the note away.
@@ -192,7 +192,7 @@ export const SCREENS: Screen[] = [
     library: true,
     open: async (page) => {
       const id = await follow(page, shelf("garden-letters"));
-      await page.goto(new URL(`/people/${id}/about`, page.url()).href);
+      await page.goto(new URL(`/${id}/about`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("button", { name: /^Write to / }).or(page.getByRole("link", { name: /^Write to / }))).toBeVisible();
     },
@@ -205,7 +205,7 @@ export const SCREENS: Screen[] = [
     library: true,
     open: async (page) => {
       const id = await follow(page, shelf("garden-letters"));
-      await page.goto(new URL(`/people/${id}/settings`, page.url()).href);
+      await page.goto(new URL(`/${id}/settings`, page.url()).href);
       await appReady(page);
       await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
     },
@@ -219,7 +219,7 @@ export const SCREENS: Screen[] = [
     open: async (page) => {
       const id = await follow(page, shelf("garden-letters"));
       await feedsShown(page, "**/api/feeds", couldBeEither(id));
-      await page.goto(new URL(`/publications/${id}/settings`, page.url()).href);
+      await page.goto(new URL(`/${id}/settings`, page.url()).href);
       await appReady(page);
       const hint = page.getByText(/^nine turtles couldn't tell: no name signs their articles\./);
       await hint.scrollIntoViewIfNeeded();
@@ -618,7 +618,7 @@ export async function openReadingRoom(page: Page, { unread = false, read = false
   const id = await follow(page, `${FEED_SITE}/reading/`);
   if (unread) await unmark(page, id);
   if (read) await unmark(page, id, [["read", true]]);
-  await page.goto(new URL(`/people/${id}`, page.url()).href);
+  await page.goto(new URL(`/${id}`, page.url()).href);
   await appReady(page);
   // Its row (the line "You were reading …" at the list's top can name it too, decision 0175).
   await expect(page.locator("#list-pane .item-row", { hasText: "The pleasure of a slow letter" })).toBeVisible();

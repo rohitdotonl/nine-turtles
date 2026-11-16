@@ -31,7 +31,7 @@
   import SettleList from "./SettleList.svelte";
   import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
-  import { pathFor } from "./router";
+  import { addressFor } from "./router";
   import {
     folderNames,
     listTended,
@@ -328,7 +328,7 @@
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
                   {:else}
-                    <a href={pathFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
+                    <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
                         <span class="text-meta text-muted break-words"><Dated text={line} /></span>

@@ -28,7 +28,7 @@ async function signedIn(page: Page, height = 800) {
 async function openBlog(page: Page, many = false): Promise<string> {
   const name = `${many ? "many" : "keys"}-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(page.getByRole("listitem").getByRole("button", { name: new RegExp(`Blog ${name}`) }).first()).toBeVisible();
   return name;
@@ -136,7 +136,7 @@ test.describe("on a wide window", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
     // Shift+J from an expanded folder goes to the first person in it; from a collapsed one, past them.
-    const inFolder = new RegExp(`/(people|publications)/${feed}$`);
+    const inFolder = new RegExp(`/(?:[a-z0-9-]+-)?${feed}$`);
     await page.keyboard.press("Shift+J");
     await expect(page).toHaveURL(inFolder);
     await page.keyboard.press("Shift+K");
@@ -158,18 +158,18 @@ test.describe("on a wide window", () => {
 
     // e opens their settings: in their list, a page of their own with the keyboard on its title and Name one Tab on
     // (decision 0267); in the folder's, Edit folder (the owner's core path, point 16).
-    await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
     await appReady(page);
     // Once the list knows whose it is: a key pressed before the feeds arrive has no one to edit yet.
     await expect(page.getByRole("heading", { level: 2, name: `Blog ${blog}` })).toBeVisible();
     await page.keyboard.press("e");
-    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/settings$`));
+    await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${feed}/settings$`));
     await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("textbox", { name: "Name" })).toBeFocused();
     // Escape steps back to their page, the keyboard on the row that leads here.
     await page.keyboard.press("Escape");
-    await expect(page).toHaveURL(new RegExp(`/(people|publications)/${feed}/about$`));
+    await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${feed}/about$`));
     await expect(page.getByRole("region", { name: `About Blog ${blog}` }).getByRole("link", { name: `Settings for Blog ${blog}`, exact: true })).toBeFocused();
     // Their page has the window (decision 0275): Escape goes back to their list, beside the sidebar.
     await page.keyboard.press("Escape");

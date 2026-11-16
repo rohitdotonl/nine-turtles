@@ -89,7 +89,7 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
 
   // A row opens their page, where they can be written to, noted and edited.
   await yours(page).getByRole("link", { name: new RegExp(`^${first}`) }).click();
-  await expect(page).toHaveURL(/\/(people|publications)\/\d+\/about$/);
+  await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?\d+\/about$/);
 });
 
 test("with the keyboard alone: Choose, tick, Move to… and Escape closes only the sheet", async ({ page, isMobile }) => {

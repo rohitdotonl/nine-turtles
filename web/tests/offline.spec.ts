@@ -68,7 +68,7 @@ test("articles kept on the device open, mark and star offline, and the marks are
     await navigator.serviceWorker.ready;
   });
   // Opened under the service worker, which keeps the app; nine turtles keeps the articles.
-  await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
   await appReady(page);
   await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
 
@@ -127,7 +127,7 @@ test("another reader signing in on this device never gets the last reader's copi
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
-  await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
   await appReady(page);
   await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
 
@@ -174,7 +174,7 @@ test("a tab the last reader left open never saves its waiting marks as the next 
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
   });
-  await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
   await appReady(page);
   await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
 
@@ -218,7 +218,7 @@ test("a mark the last reader's open tab leaves on the device is never sent by th
   const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
   const newest: number = listed.articles[0].id;
-  await page.goto(new URL(`/people/${feed}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: new RegExp(`${NEWEST.replace(/[()]/g, "\\$&")}.*Blog ${name}`) }).click();
   await expect(article(page).getByText("A short made-up summary for article 3.")).toBeVisible();

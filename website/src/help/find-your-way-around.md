@@ -76,7 +76,9 @@ see which one you're about to change.
 
 Each open article has its own address, so you can reload, bookmark it, or
 Command-click (Ctrl-click on Windows) an article to open it in a new tab,
-as you would a link.
+as you would a link. The address says who wrote it and what it's called, such as
+`/jim-nielsen-54/making-a-website-in-2026-5905`, and keeps
+working even if the title or name changes later.
 
 ## Reading
 

@@ -22,7 +22,7 @@ async function signedIn(page: Page): Promise<void> {
 /** Follows a blog of this test's own (three articles) and opens its list. */
 async function openBlog(page: Page, name: string): Promise<{ id: number; title: string }> {
   const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-  await page.goto(at(`/people/${id}`));
+  await page.goto(at(`/${id}`));
   await appReady(page);
   await expect(page.locator("#list-pane .item-row").first()).toBeVisible();
   return { id, title: `Blog ${name}` };
@@ -56,7 +56,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(article(page)).toBeVisible();
   await expect(sidebar).toBeHidden();
   await expect(list).toBeHidden();
-  await expect(page).toHaveURL(/\/articles\/\d+$/);
+  await expect(page).toHaveURL(/\/[a-z0-9-]+-\d+\/[a-z0-9-]+-\d+$/);
   const back = page.getByRole("button", { name: `Back to ${blog.title}`, exact: true });
   await expect(back).toBeVisible();
   const [backBox, articleBox, viewport] = await Promise.all([back.boundingBox(), article(page).boundingBox(), page.viewportSize()]);
@@ -127,7 +127,7 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(list).toBeVisible();
 
   // A person's page fills the window the same way; its × goes back to their list.
-  await page.goto(at(`/people/${blog.id}/about`));
+  await page.goto(at(`/${blog.id}/about`));
   await appReady(page);
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   await expect(sidebar).toBeHidden();
@@ -136,14 +136,14 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(list).toBeVisible();
   await expect(sidebar).toBeVisible();
   // Their settings too: alone in the window, and Escape goes back to their page, still alone.
-  await page.goto(at(`/people/${blog.id}/settings`));
+  await page.goto(at(`/${blog.id}/settings`));
   await appReady(page);
   await expect(page.getByRole("heading", { level: 2, name: "Settings" })).toBeVisible();
   await expect(sidebar).toBeHidden();
   await expect(list).toBeHidden();
   await page.locator("body").focus();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(new RegExp(`/people/${blog.id}/about$`));
+  await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${blog.id}/about$`));
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   await expect(list).toBeHidden();
 

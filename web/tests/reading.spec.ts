@@ -169,7 +169,7 @@ test.describe("on a wide window", () => {
     // a link that wraps as text does (decision 0260).
     const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
     await expect(writer).toHaveAttribute("title", "Info about Reading Room (I)");
-    await expect(writer).toHaveAttribute("href", /^\/(people|publications)\/[0-9]+\/about$/);
+    await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+\/about$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await expect(article(page).getByText("Asha Rao")).toBeVisible();
     // Marked with its language, for screen readers.
@@ -418,7 +418,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Escape");
     await expect(card).toHaveCount(0);
     await expect(one).toBeFocused();
-    await expect(page).toHaveURL(/\/people\/[0-9]+\/articles\/[0-9]+$/);
+    await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect(page.context().pages()).toHaveLength(1);
     // From the keyboard alone: Enter on the number opens it; Tab reaches its ×, and Tab past it closes it.
     await page.keyboard.press("Enter");
@@ -456,7 +456,7 @@ test.describe("on a wide window", () => {
   test("a highlight kept with straight quotes is still found in the curled text", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
-    const id = new URL(page.url()).pathname.split("/").pop();
+    const id = new URL(page.url()).pathname.match(/[0-9]+$/)?.[0];
     const made = await page.request.post(new URL(`/api/articles/${id}/highlights`, FEEDS_APP).href, {
       data: { quote: `"Don't rush it -- the words` },
       headers: { Origin: FEEDS_APP },
@@ -921,7 +921,7 @@ test.describe("on a wide window", () => {
     await signIn(page);
     // Quiet Notes has 60 articles: far more than one window holds.
     const id = await follow(page, `${FEED_SITE}/`);
-    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${id}`, FEEDS_APP).href);
     await expect(page.getByRole("button", { name: /\(\d+\)/ }).nth(30)).toBeAttached();
 
     const fillsWindow = () =>
@@ -992,7 +992,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/people/${id}`, page.url()).href);
+    await page.goto(new URL(`/${id}`, page.url()).href);
     await row(page, "A river at dawn").click();
 
     // The video's description from the feed is its text, under a quiet Play button with its title in it.
@@ -1093,7 +1093,7 @@ test.describe("on a wide window", () => {
     await appReady(page);
     await signIn(page);
     const id = await follow(page, `${FEED_SITE}/videos/`);
-    await page.goto(new URL(`/people/${id}`, page.url()).href);
+    await page.goto(new URL(`/${id}`, page.url()).href);
 
     // The first video plays at YouTube's own 1×, which isn't taken as a choice; choosing 1.5× in its menu is kept.
     await toList(page);

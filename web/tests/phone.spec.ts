@@ -43,9 +43,9 @@ async function pretendTextSize(page: Page, pixels: number) {
 test.describe("on a phone", () => {
   test.skip(({ isMobile }) => !isMobile, "the phone layout only");
 
-  test("a page, Edit or source settings address for someone not followed says so, rather than showing another list", async ({ page }) => {
+  test("a page or settings address for someone not followed says so, rather than showing another list", async ({ page }) => {
     await openHome(page);
-    for (const path of ["/people/999999/about", "/people/999999/edit", "/people/999999/sources/999998"]) {
+    for (const path of ["/999999/about", "/999999/settings"]) {
       await page.goto(new URL(path, FEEDS_APP).href);
       await appReady(page);
       await expect(page.getByRole("heading", { level: 2, name: "Not found" })).toBeVisible();
@@ -427,7 +427,7 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     const settings = (await sidebar(page).getByRole("link", { name: "Settings" }).boundingBox())!;
     expect(settings.x + settings.width).toBeLessThanOrEqual(320);
-    await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${id}`, FEEDS_APP).href);
     await appReady(page);
     // The list's title is one line that ends in "…", with the whole name as its tooltip, at every
     // place's title size even in a pane this narrow (DESIGN.md → "The system", decision 0244).
@@ -496,16 +496,16 @@ test.describe("on a phone", () => {
     expect(starBox.x + starBox.width).toBeLessThanOrEqual(rowBox.x + rowBox.width);
   });
 
-  test("an old source-settings address opens their settings, with each source and its Take out on the phone's screen", async ({ page }) => {
+  test("their settings show each source and its Take out on the phone's screen", async ({ page }) => {
     await openHome(page);
     const stamp = Date.now();
     const first = await follow(page, `${FEED_SITE}/blog/src-a-${stamp}/`);
     const second = await follow(page, `${FEED_SITE}/blog/src-b-${stamp}/`);
     const joined = await page.request.post(new URL("/api/writers/join", FEEDS_APP).href, { data: { feeds: [first, second], name: `Ana ${stamp}` } });
     expect(joined.ok()).toBe(true);
-    await page.goto(new URL(`/people/${first}/sources/${second}`, FEEDS_APP).href);
+    await page.goto(new URL(`/${first}/settings`, FEEDS_APP).href);
     await appReady(page);
-    await expect(page).toHaveURL(new RegExp(`/people/${first}/settings$`));
+    await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${first}/settings$`));
     const sources = page.getByRole("region", { name: "Sources" });
     await expect(sources.getByRole("button", { name: /^Take out / })).toHaveCount(2);
     for (const each of await sources.getByRole("button", { name: /^Take out / }).all()) {
@@ -520,7 +520,7 @@ test.describe("on a phone", () => {
     const name = `foldered-${Date.now()}`;
     const folder = `Shelf ${Date.now()}`;
     const id = await follow(page, `${FEED_SITE}/blog/${name}/`);
-    await page.goto(new URL(`/people/${id}/settings`, FEEDS_APP).href);
+    await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
     await appReady(page);
     await page.getByRole("button", { name: /^Folders/ }).click();
     await page.getByLabel("New folder").fill(folder);
@@ -549,7 +549,7 @@ test.describe("on a phone", () => {
     expect(await start(feedLink)).toBeGreaterThan(await start(folderLink));
     // Its name opens the folder's own list.
     await folderLink.click();
-    await expect(page).toHaveURL(/\/folders\/[0-9]+$/);
+    await expect(page).toHaveURL(/\/folders\/(?:[a-z0-9-]+-)?[0-9]+$/);
     await expect(page.getByRole("heading", { level: 2, name: folder })).toBeVisible();
   });
 
@@ -740,7 +740,7 @@ test("a tab left open across an update is told to reload, switches on the next m
   await signIn(page);
   // The feed's own list: in All, other tests' articles can fill the first 50.
   const id = await follow(page, `${FEED_SITE}/reading/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
 
   // A newer nine turtles that doesn't understand this tab's way of starring.

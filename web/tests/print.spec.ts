@@ -45,7 +45,7 @@ test("printed from Night, the article is black on white, and its highlights prin
   await appReady(page);
   await signIn(page);
   const id = await follow(page, `${FEED_SITE}/blog/print-${test.info().workerIndex}-${Date.now()}/`);
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.getByRole("button", { name: /On keeping a commonplace book \(3\)/ }).click();
   const article = page.getByRole("region", { name: "Article", exact: true });

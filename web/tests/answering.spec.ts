@@ -36,7 +36,7 @@ async function openBlog(page: Page): Promise<void> {
     latest ??= body.latest;
     await route.fulfill({ response, json: { ...body, latest } });
   });
-  await page.goto(new URL(`/people/${id}`, FEEDS_APP).href);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await expect(newestRow(page)).toBeVisible();
 }
