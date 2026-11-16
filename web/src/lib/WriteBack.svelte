@@ -507,8 +507,8 @@
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
       {/if}
-      <!-- Always in the page, so screen readers hear "Copied." as it arrives. -->
-      <p class={["to", copyFailed && "text-danger", !(copied && !opening) && "sr-only"]} role="status">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{/if}</p>
+      <!-- Always in the page, so screen readers hear "Copied." as it arrives: a polite live line, not a second "status" (the toolbar's line is the pane's one status). -->
+      <p class={["to", copyFailed && "text-danger", !(copied && !opening) && "sr-only"]} aria-live="polite">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{/if}</p>
       {#if unkept}<p class="to text-danger" role="alert"><span class="inline-flex items-start gap-2"><span class="mt-px shrink-0"><Icon name="alert" /></span>That choice couldn't be kept for {name}. Try again in a moment.</span></p>{/if}
       {#if address && way === "email"}
         {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}

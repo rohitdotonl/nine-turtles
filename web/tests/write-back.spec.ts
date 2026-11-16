@@ -218,14 +218,14 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
 
   // Copy: copied at once, said so, and from then on the main button copies, for this person, after a reload too.
   await ways.getByRole("menuitemradio", { name: "Copy talk@talk.example" }).click();
-  await expect(pane(page).getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
+  await expect(pane(page).locator(".write-back").getByText("Copied.", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("talk@talk.example");
   await openArticle();
   const copy = pane(page).getByRole("button", { name: `Copy address of Blog ${name}` });
   await expect(copy).toBeVisible();
   await page.evaluate(() => navigator.clipboard.writeText(""));
   await copy.click();
-  await expect(pane(page).getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
+  await expect(pane(page).locator(".write-back").getByText("Copied.", { exact: true })).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("talk@talk.example");
 
   // Comment: opens the comments the feed names in a new tab, and the main button becomes Comment.
