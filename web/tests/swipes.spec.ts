@@ -282,16 +282,14 @@ test("with Write back's ways or the Aa sheet open, the stroke that closes it nei
   const actions = pane(page).getByRole("group", { name: "Article actions" });
   const sheet = page.getByRole("dialog", { name: "Reading appearance" });
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
-  await actions.getByRole("button", { name: "Reading appearance" }).click();
-  await expect(sheet).toBeVisible();
+  await openAppearance(page, actions);
   const pull = await Finger.down(page, box.x + box.width / 2, box.y + 40);
   await pull.move(0, -200);
   await expect(peek(page)).toHaveCount(0);
   await pull.up();
   await expect(sheet).toHaveCount(0);
   await expect(heading).toHaveText(title ?? "");
-  await actions.getByRole("button", { name: "Reading appearance" }).click();
-  await expect(sheet).toBeVisible();
+  await openAppearance(page, actions);
   const right = await Finger.down(page, 80, box.y + 40);
   await right.move(160);
   await expect(card(page)).toHaveCount(0);
