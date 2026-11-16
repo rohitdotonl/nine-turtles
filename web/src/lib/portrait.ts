@@ -10,7 +10,7 @@ export function initialsOf(name: string, person: boolean): string {
     .map((word) => word.replace(/^[^\p{L}\p{N}]+/u, ""))
     .filter((word) => word.length > 0);
   const kept = words.length > 1 ? words.filter((word, index) => index > 0 || !SMALL_WORDS.has(word.toLowerCase())) : words;
-  const first = (word: string | undefined) => (word ? Array.from(word)[0].toLocaleUpperCase() : "");
+  const first = (word: string | undefined) => (word ? (Array.from(word)[0] ?? "").toLocaleUpperCase() : "");
   if (!person || kept.length < 2) return first(kept[0]) || "?";
   return first(kept[0]) + first(kept[kept.length - 1]);
 }
