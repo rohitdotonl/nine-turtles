@@ -552,7 +552,7 @@
       <!-- Under the title, as in a book or a magazine: who wrote it, where, and when. The publisher's name leads, in full ink. -->
       <!-- Their picture leads the byline (decision 0283): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="flex items-center gap-3" dir={rtl ? "rtl" : undefined}>
-        <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={(source?.kind ?? "person") === "person" || source?.person != null} />
+        <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={(source?.kind ?? "person") === "person" || source?.person != null} beside />
         <p class="article-byline min-w-0" lang="en">
           {#if followed}
             <!-- Someone followed: their name opens the page about them, as at the top of their list (decision 0214); no "›" here, where the "·" follows.

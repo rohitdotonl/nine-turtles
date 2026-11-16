@@ -13,12 +13,16 @@ describe("a person's or publication's picture (decision 0283)", () => {
     expect(initialsOf("xkcd.com", true)).toBe("X");
     expect(initialsOf("émile zola", true)).toBe("ÉZ");
     expect(initialsOf("  ", true)).toBe("?");
+    expect(initialsOf("Blog notes-2", true)).toBe("BN");
+    expect(initialsOf("2001", false)).toBe("2");
   });
 
   it("asks a site for its home-screen icon, then its tab icon, and nothing that isn't a web address", () => {
     expect(iconsOf("https://stephango.com/notes")).toEqual(["https://stephango.com/apple-touch-icon.png", "https://stephango.com/favicon.ico"]);
     expect(iconsOf("javascript:alert(1)")).toEqual([]);
     expect(iconsOf(null)).toEqual([]);
+    // Nothing loads from YouTube until Play is pressed (decision 0072), and its icon is YouTube's own anyway.
+    expect(iconsOf("https://www.youtube.com/channel/UC123")).toEqual([]);
   });
 
   it("tries the chosen picture first, then the feed's own, then the site's icons, each once", () => {

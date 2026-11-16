@@ -122,6 +122,13 @@ PLAN.md → V1, item 1.*
   bar with an **×** at its right end (and Escape) back to their list. On a
   phone it's a screen of its own, with ‹ back to their list. Either way
   there's no list beside it to choose from. Top to bottom:
+  - **Their picture** (below, "Their picture"), 72px, a button named
+    "Picture of Tomas Berg" that opens a small menu: **Choose a
+    picture…** (the device's own file picker) and, once one is chosen,
+    **Use the automatic picture**. Either says so beside the picture
+    ("Picture changed." or "Back to the automatic picture.") with **Undo**;
+    a file it can't read says "That file isn't a picture nine turtles can
+    read. Try a JPEG or PNG.";
   - **Their name**, large, as an article's title is; under it **where they
     publish**, each place a link to its own website, 44px to touch: by its
     own title when that isn't their name ("Notes from Tomas" under Tomas
@@ -151,6 +158,21 @@ PLAN.md → V1, item 1.*
     and ›, which opens their settings. Screen readers and voice control
     know it as "Settings for Tomas Berg", so it isn't taken for the app's
     own Settings.
+- **Their picture** (decision 0283): a circle beside an article's byline
+  (40px, 32px on a phone; section 7) and at the top of their page (72px), nowhere else. It
+  is the first of these that loads: the picture the reader chose for them;
+  the picture their feed names (RSS's image, a podcast's artwork, Atom's
+  logo or icon, JSON Feed's icon); their site's own icon (the one a phone's
+  home screen uses, then the browser tab's); else their initials, two for a
+  person ("TB"), one for a publication ("E"), in the titles' face and the
+  second ink. A picture too small to fill the circle sharply (under 96
+  pixels across) is used only if nothing bigger loads, small in the middle
+  of the circle. The circle is a quiet grey with a hairline edge, never a
+  color of its own. The reader's browser loads these from the publisher's
+  site, as an article's pictures; nine turtles never fetches them. A chosen
+  picture is cut to its middle square, made small on the device, and kept
+  for every source of theirs; only that reader sees it. Deleting one's
+  account or data removes it.
 - **Their settings** (`/mira-chen-12/settings`, decision 0267): a page of its
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
   above the title (a very long name there ends in "…"); the browser's tab

@@ -13,7 +13,10 @@ export function initialsOf(name: string, person: boolean): string {
     .split(/[\s\-–—_|:·]+/)
     .map((word) => word.replace(/^[^\p{L}\p{N}]+/u, ""))
     .filter((word) => word.length > 0);
-  const kept = words.length > 1 ? words.filter((word, index) => index > 0 || !SMALL_WORDS.has(word.toLowerCase())) : words;
+  // Words that start with a letter, when there are any ("Blog 2" is "B"), without a leading "The".
+  const lettered = words.filter((word) => /^\p{L}/u.test(word));
+  const named = lettered.length > 0 ? lettered : words;
+  const kept = named.length > 1 ? named.filter((word, index) => index > 0 || !SMALL_WORDS.has(word.toLowerCase())) : named;
   const first = (word: string | undefined) => (word ? (Array.from(word)[0] ?? "").toLocaleUpperCase() : "");
   if (!person || kept.length < 2) return first(kept[0]) || "?";
   return first(kept[0]) + first(kept[kept.length - 1]);
@@ -23,8 +26,10 @@ export function initialsOf(name: string, person: boolean): string {
 export function iconsOf(siteUrl: string | null | undefined): string[] {
   if (!siteUrl) return [];
   try {
-    const { origin, protocol } = new URL(siteUrl);
+    const { origin, protocol, hostname } = new URL(siteUrl);
     if (protocol !== "https:" && protocol !== "http:") return [];
+    // A YouTube channel's site is YouTube's: its icon is YouTube's own logo, and nothing loads from YouTube unasked (decision 0072).
+    if (/(^|\.)(youtube\.com|youtu\.be)$/.test(hostname)) return [];
     return [`${origin}/apple-touch-icon.png`, `${origin}/favicon.ico`];
   } catch {
     return [];

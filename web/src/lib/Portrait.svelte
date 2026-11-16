@@ -10,7 +10,20 @@
 <script lang="ts">
   import { CRISP, initialsOf } from "./portrait";
 
-  let { name, pictures, person = true, large = false }: { name: string; pictures: string[]; person?: boolean; large?: boolean } = $props();
+  let {
+    name,
+    pictures,
+    person = true,
+    large = false,
+    beside = false,
+  }: {
+    name: string;
+    pictures: string[];
+    person?: boolean;
+    large?: boolean;
+    /** Beside a line of text (the byline): it reaches into the room above and below, so the line, and all under it, stays where it was. */
+    beside?: boolean;
+  } = $props();
 
   let tried = $state(0);
   let small: string | undefined = $state();
@@ -35,7 +48,7 @@
   }
 </script>
 
-<span aria-hidden="true" class={["portrait", large && "large"]}>
+<span aria-hidden="true" class={["portrait", large && "large", beside && "beside"]}>
   {#if filled}
     <img src={filled} alt="" referrerpolicy="no-referrer" />
   {:else if trying}
@@ -62,6 +75,17 @@
     border-radius: 9999px;
     background-color: var(--group, var(--list));
     box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .portrait.beside {
+    margin-block: -0.75rem;
+  }
+  /* On a phone the title sits closer above the byline: a smaller circle keeps its room. */
+  @media (width < 48rem) {
+    .portrait.beside {
+      width: 2rem;
+      height: 2rem;
+      margin-block: -0.5rem;
+    }
   }
   .portrait.large {
     width: 4.5rem;
