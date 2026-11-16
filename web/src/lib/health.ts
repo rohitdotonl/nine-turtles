@@ -1,7 +1,8 @@
 // Who isn't working, at the top of Everyone you follow (SPEC section 15,
-// decision 0186): what went wrong in plain words, with Find new address and
-// Unsubscribe. The server sends a short problem word ("not-found"); only
-// this file turns it into sentences, and no error code is ever shown.
+// decisions 0186 and 0279): what went wrong in a few plain words, and Find
+// new address on their page. The server sends a short problem word
+// ("not-found"); only this file turns it into words, and no error code is
+// ever shown.
 
 import type { Choice } from "./feeds";
 import { dayOrToday, until } from "./times";
@@ -107,11 +108,10 @@ function since(at: number, now: Date): string {
   return day === "today" ? "since earlier today" : `since ${day}`;
 }
 
-/** The first line about a feed: "Nothing has come through since 1 Nov", or "Working again" once it has moved. */
-export function headline(feed: Sick, now: Date = new Date()): string {
-  if (feed.state === "working") return "Working again";
+/** Since when nothing has come through: "since 1 Nov", "since earlier today", or "lately" when that isn't known. */
+export function failingFor(feed: Sick, now: Date = new Date()): string {
   const from = feed.problem === "not-found" && feed.missingSince !== null ? feed.missingSince : feed.failingSince;
-  return from === null ? "Nothing has come through lately" : `Nothing has come through ${since(from, now)}`;
+  return from === null ? "lately" : since(from, now);
 }
 
 /**
@@ -123,12 +123,54 @@ export function youTubeRefusing(feed: Pick<Sick, "youtube" | "problem">): boolea
   return feed.youtube && (problem === "not-found" || problem === "unreachable" || Number(problem?.match(/^answered-(\d{3})$/)?.[1]) >= 500);
 }
 
+/** What went wrong, as a row says it: a few plain words, and the icon that stands for them. */
+export type Reason = { words: string; icon: "feed-gone" | "site-down" | "page" | "shield" | "alert" | "video" };
+
 /**
- * What went wrong, and what it may mean, in plain words. For a YouTube feed
+ * What went wrong, in a few plain words and never a code, with its icon
+ * (decision 0279). A YouTube feed that YouTube won't send says so, rather
+ * than that it's gone (decision 0272); a guard in front of the site is a
+ * site that blocks (decision 0258).
+ */
+export function reason(feed: Pick<Sick, "youtube" | "problem">): Reason {
+  if (youTubeRefusing(feed)) return { words: "YouTube not sending", icon: "video" };
+  switch (feed.problem) {
+    case "not-found":
+      return { words: "Feed gone", icon: "feed-gone" };
+    case "unreachable":
+      return { words: "Site not answering", icon: "site-down" };
+    case "not-a-feed":
+      return { words: "Not a feed any more", icon: "page" };
+    case "blocked":
+      return { words: "Blocked by the site", icon: "shield" };
+    case "not-allowed":
+      return { words: "Address not allowed", icon: "shield" };
+    case "too-big":
+      return { words: "Feed too big", icon: "alert" };
+    case "slow-down":
+      return { words: "Site asked to wait", icon: "alert" };
+    case "not-an-address":
+      return { words: "Not a web address", icon: "alert" };
+  }
+  const code = Number(feed.problem?.match(/^answered-(\d{3})$/)?.[1]);
+  if (code === 401 || code === 403) return { words: "Site won't share it", icon: "shield" };
+  if (code >= 500) return { words: "Site has a problem", icon: "alert" };
+  return { words: "Site sent something else", icon: "alert" };
+}
+
+/** Failing feeds, gathered by what went wrong so alike ones sit together, each reason where its longest failing feed was. */
+export function byReason(feeds: Sick[]): Sick[] {
+  const order = [...new Set(feeds.map((feed) => reason(feed).words))];
+  return [...feeds].sort((one, other) => order.indexOf(reason(one).words) - order.indexOf(reason(other).words));
+}
+
+/**
+ * What went wrong, and what it may mean, in a sentence, when a row is
+ * opened (decision 0279). For a YouTube feed
  * that YouTube won't send, it says so plainly instead of "it may have moved"
  * (decision 0272): YouTube turns away some servers' asks for a while.
  */
-export function reason(problem: string | null, youtube = false): string {
+export function explain(problem: string | null, youtube = false): string {
   if (youTubeRefusing({ youtube, problem }))
     return "YouTube isn't sending these videos to nine turtles at the moment. nine turtles keeps asking; if they were taken down, nothing more will come.";
   switch (problem) {
@@ -156,12 +198,25 @@ export function reason(problem: string | null, youtube = false): string {
 }
 
 /**
- * The quiet line above a failing feed's list, and on their page, naming the source (decision
- * 0106): "This feed hasn't worked since 12 Oct." (with the year when it
- * isn't this one), in the device's time zone.
+ * What to offer first (decision 0279): a feed that's gone or now a page may
+ * have moved, so Find new address; a site that has stopped answering,
+ * blocks or breaks for good can only be fixed by the person, so Write to
+ * them. Anything else, nothing first: a feed having trouble is usually back
+ * soon, and YouTube refusing is no one's to fix (decision 0272).
  */
-export function brokenSince(failingSince: number, now: Date = new Date(), subject = "This feed"): string {
-  return `${subject} hasn't worked ${since(failingSince, now)}.`;
+export function fixFirst(feed: Pick<Sick, "youtube" | "problem" | "state">): "find" | "write" | "wait" {
+  if (youTubeRefusing(feed)) return "wait";
+  if (feed.problem === "not-found" || feed.problem === "not-a-feed") return "find";
+  return feed.state === "dead" ? "write" : "wait";
+}
+
+/**
+ * The quiet line above a failing feed's list (decision 0106): "This feed
+ * hasn't worked since 12 Oct." (with the year when it isn't this one), in
+ * the device's time zone.
+ */
+export function brokenSince(failingSince: number, now: Date = new Date()): string {
+  return `This feed hasn't worked ${since(failingSince, now)}.`;
 }
 
 

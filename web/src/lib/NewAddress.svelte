@@ -136,7 +136,7 @@
     align-items: center;
     margin-top: 0.25rem;
   }
-  /* The feeds the site names: grouped rows a tone off the page (on a Not working row, the page's own color, NotWorking.svelte). Not `.choices`, the segmented control's class in app.css, which would make it one. */
+  /* The feeds the site names: grouped rows a tone off the page. Not `.choices`, the segmented control's class in app.css, which would make it one. */
   .feeds-named {
     margin-top: 0.25rem;
   }

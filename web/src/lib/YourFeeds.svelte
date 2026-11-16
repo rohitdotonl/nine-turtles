@@ -15,7 +15,6 @@
 -->
 <script lang="ts">
   import Dated from "./Dated.svelte";
-  import type { LoadedLibrary } from "./library.svelte";
   import { onMount, tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
@@ -55,18 +54,15 @@
     onOpenPerson,
     onFeedsChanged,
     besideToggle = false,
-    library,
   }: {
     heading?: HTMLHeadingElement;
     /** On a phone: back to Home. A computer shows the sidebar, where its row says where you are. */
     onBack?: () => void;
-    /** A row was chosen, out of Choose: their page opens. */
+    /** A row was chosen, out of Choose (or one at the top, that isn't working): their page opens. */
     onOpenPerson: (event: MouseEvent, id: number) => void;
     /** Feeds were moved, unsubscribed from or brought back: the sidebar reloads. */
     onFeedsChanged: () => void;
     besideToggle?: boolean;
-    /** Who's who, for Write to on a person's Not working row (decision 0212). */
-    library: LoadedLibrary;
   } = $props();
 
   let feeds: Tended[] | undefined = $state();
@@ -109,12 +105,6 @@
 
   function count(how: number, one: string, many: string): string {
     return `${how} ${how === 1 ? one : many}`;
-  }
-
-  /** Someone at the top was unsubscribed from, brought back or moved: the list below follows. */
-  function healthChanged() {
-    onFeedsChanged();
-    load();
   }
 
   async function load() {
@@ -299,7 +289,7 @@
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
-      <NotWorking bind:this={notWorking} onFeedsChanged={healthChanged} {library} />
+      <NotWorking bind:this={notWorking} onOpen={onOpenPerson} />
       {#if failed}
         <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
       {:else if feeds}
