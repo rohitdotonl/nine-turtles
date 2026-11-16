@@ -273,6 +273,16 @@
   });
 
   /**
+   * Unsubscribed from in the sidebar: their articles (`feeds`) leave this list
+   * at once, and nothing else in it moves. Saved and Notes keep what the
+   * reader chose to keep (`kept`).
+   */
+  export function letGo(feeds: number[], kept: boolean) {
+    if (kept && "view" in source && (source.view === "starred" || source.view === "notes")) return;
+    articles = articles.filter((article) => !feeds.includes(article.feedId));
+  }
+
+  /**
    * `r` and Refresh: loads the list again from the top, with what arrived in
    * the background, and the sidebar's counts with it. Articles still listed
    * keep their place in memory, so the selected one and Undo carry on. An
