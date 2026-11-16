@@ -1,6 +1,6 @@
 <!--
   A picture of someone or something followed (SPEC section 36, decision
-  0285): beside an article's byline, and at the top of their page. Each
+  0285): above an article's byline, and at the top of their page. Each
   picture given is tried in turn (portrait.ts → picturesOf); the first one
   big enough fills the circle. A small one (a site's tab icon) sits small in
   the middle of it, if nothing bigger loads; with none, their initials. The
@@ -87,7 +87,7 @@
   .portrait.beside {
     margin-block: -0.75rem;
   }
-  /* On a phone the title sits closer above the byline: a smaller circle keeps its room. */
+  /* On a phone the byline's circle is smaller. (Above the byline, article-head.css sets its margins back to none, decision 0294.) */
   @media (width < 48rem) {
     .portrait.beside {
       width: 2rem;

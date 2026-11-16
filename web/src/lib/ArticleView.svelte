@@ -545,7 +545,7 @@
         </div>
       </div>
     {/if}
-    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, title and text on one right edge (decision 0223). -->
+    <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, its text on the right edge; the title and byline stay centred (decisions 0223, 0294). -->
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
       <!-- Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>

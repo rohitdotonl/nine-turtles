@@ -173,7 +173,7 @@ PLAN.md → V1, item 1.*
     and ›, which opens their settings. Screen readers and voice control
     know it as "Settings for Tomas Berg", so it isn't taken for the app's
     own Settings.
-- **Their picture** (decision 0285): a circle beside an article's byline
+- **Their picture** (decision 0285): a circle above an article's byline
   and before their name at the top of their list (40px, 32px on a phone;
   section 7, decision 0289) and at the top of their page (72px), nowhere else. It
   is the first of these that loads: the picture the reader chose for them;

@@ -13,5 +13,8 @@ describe("titleLength", () => {
     expect(titleLength("Joy & Curiosity #106")).toBe("short");
     expect(titleLength("You learn more about writing from close reading than from writing advice")).toBe("medium");
     expect(titleLength("Why the bronze age collapsed, did Jesus rise from the dead?, indecent medieval sculpture, are smartphones destroying love?")).toBe("long");
+    // Chinese, Japanese and Korean characters are about twice as wide, so they count double.
+    expect(titleLength("ゆっくり読むことで文章の書き方を学ぶ二十の方法とその理由について")).toBe("medium");
+    expect(titleLength("ゆっくり")).toBe("short");
   });
 });
