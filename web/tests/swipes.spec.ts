@@ -1,6 +1,6 @@
 import { expect, test, type CDPSession, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, openAppearance, signIn } from "./screens";
 
 // Swipes on a touch screen (SPEC section 20, decision 0274), made with real
 // touches, so the browser's own scrolling has its say as it would on a phone.
@@ -321,9 +321,7 @@ test("the Aa sheet closes when swiped down; Settings goes back home when swiped 
   await openBlog(page);
   await rows(page).nth(0).click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
-  await pane(page).getByRole("group", { name: "Article actions" }).getByRole("button", { name: "Reading appearance" }).click();
-  const sheet = page.getByRole("dialog", { name: "Reading appearance" });
-  await expect(sheet).toBeVisible();
+  const sheet = await openAppearance(page, pane(page).getByRole("group", { name: "Article actions" }));
   // A swipe across the sheet is the sheet's: no card offers to go back under it.
   const across = (await sheet.boundingBox())!;
   const sideways = await Finger.down(page, 80, across.y + across.height / 2);

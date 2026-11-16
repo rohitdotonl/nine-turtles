@@ -11,8 +11,10 @@
 import { inSidebar, paneTo } from "./panes";
 import type { View } from "./router";
 
+import { onApple } from "./apple";
+
 /** A Mac (or iPhone, iPad) names the Command key; every other computer, Ctrl. */
-export const onMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+export const onMac = onApple;
 
 export type Action =
   | { kind: "cheat-sheet" }

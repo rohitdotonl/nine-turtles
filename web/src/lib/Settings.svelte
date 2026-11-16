@@ -340,7 +340,7 @@
           </div>
         </div>
         <!-- Text size and font are only in the Aa panel, beside the text they change (decision 0241). -->
-        <p class="inset-foot">This device only. Text size and font are in Aa, above any article.</p>
+        <p class="inset-foot">This device only. Text size and font are in Text and page, in any article’s More.</p>
       </section>
 
       <section aria-labelledby="library-heading">

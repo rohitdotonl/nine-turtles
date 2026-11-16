@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn, tabTo } from "./screens";
+import { appReady, follow, openAppearance, signIn, tabTo } from "./screens";
 
 // SPEC section 20 (phones and installing the app), and the "nine turtles was
 // updated" line of section 18, "How to check it", done by a browser.
@@ -173,20 +173,22 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    // Five icons only, each with its name for screen readers; Share and Mark unread are in More.
+    // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0292).
     const names = await toolbar(page)
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     // Two groups by job, in order of use (decision 0225): acting on the article, then a hairline, then moving through the list at the right.
-    expect(names).toEqual(["More actions", "Reading appearance", "Write back", "Save", "Previous", "Next"]);
+    expect(names).toEqual(["More actions", expect.stringMatching(/^(Share|Copy link)$/), "Write back", "Save", "Previous", "Next"]);
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
-    // More opens upwards, over the article, reading from the button outwards (decision 0243): Share (or Copy link) nearest
-    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…. The keyboard starts on the nearest.
+    // More opens upwards, over the article, reading from the button outwards (decision 0243): Text and page nearest
+    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0292).
+    // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Reading Room/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*(Share|Copy link)\s*$/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Reading Room/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*Text and page\s*$/]);
+    expect(await menu.getByRole("menuitem").evaluateAll((rows) => rows.every((row) => row.querySelector("svg")))).toBe(true);
     await expect(menu.getByRole("menuitem").last()).toBeFocused();
     // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
     // Enter opens on the nearest row, and the arrows on More open on the row nearest (up) or furthest (down).
@@ -267,15 +269,13 @@ test.describe("on a phone", () => {
     await expect(star).toHaveAttribute("aria-pressed", before ?? "false");
   });
 
-  test("Aa opens the reading panel as a sheet along the bottom; Close gives the place back to Aa", async ({ page }) => {
+  test("Text and page opens the reading panel as a sheet along the bottom; Close gives the place back to More", async ({ page }) => {
     await openHome(page);
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    const aa = toolbar(page).getByRole("button", { name: "Reading appearance" });
-    await aa.click();
-    const panel = page.getByRole("dialog", { name: "Reading appearance" });
-    await expect(panel).toBeVisible();
+    const more = toolbar(page).getByRole("button", { name: "More actions" });
+    const panel = await openAppearance(page, toolbar(page));
     // The width of the screen, along its bottom.
     const box = (await panel.boundingBox())!;
     const size = page.viewportSize()!;
@@ -297,7 +297,7 @@ test.describe("on a phone", () => {
     await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");
     await panel.getByRole("button", { name: "Close" }).click();
     await expect(panel).toHaveCount(0);
-    await expect(aa).toBeFocused();
+    await expect(more).toBeFocused();
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
   });
 

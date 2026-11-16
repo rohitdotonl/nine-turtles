@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, nothingToPickUp, openReadingRoom, signIn, tabTo } from "./screens";
+import { appReady, follow, nothingToPickUp, openAppearance, openReadingRoom, signIn, tabTo } from "./screens";
 
 // SPEC section 7 (and 19 and 21), "How to check it", done by a browser, on
 // the made-up Reading Room blog (tests/feed-server.mjs).
@@ -248,21 +248,22 @@ test.describe("on a wide window", () => {
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
     // After the way back to the list (decision 0275), the actions are quiet icons, each named in its tooltip with its key;
-    // the way to the publisher comes first, then Aa, Save, Write back (a person's, decision 0214) and More (decision 0038).
+    // the way to the publisher comes first, then Share, Save, Write back (a person's, decision 0214) and More (decisions 0038, 0292).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Back to Reading Room", "View original", "Reading appearance", "Save", "Write back", "More actions"]);
+    expect(order).toEqual(["Back to Reading Room", "View original", "Copy link", "Save", "Write back", "More actions"]);
+    await expect(article(page).getByRole("button", { name: "Copy link" }).first()).toHaveAttribute("title", "Copy link (C)");
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Copy link, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, their keys shown beside them.
+    // More holds Text and page, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, each with its icon, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Text and page/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -280,23 +281,18 @@ test.describe("on a wide window", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await openFirst(page);
-    await article(page).getByRole("button", { name: "More actions" }).click();
-    await page.getByRole("menuitem", { name: "Copy link" }).click();
+    await article(page).getByRole("button", { name: "Copy link" }).first().click();
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
 
-  test("the Aa panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
+  test("the reading panel changes text size, appearance and font at once; Escape closes it", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
-    const aa = article(page).getByRole("button", { name: "Reading appearance" });
-    await expect(aa).toHaveAttribute("aria-haspopup", "dialog");
-    await expect(aa).toHaveAttribute("aria-expanded", "false");
-    await aa.click();
-    const panel = page.getByRole("dialog", { name: "Reading appearance" });
-    await expect(panel).toBeVisible();
-    await expect(aa).toHaveAttribute("aria-expanded", "true");
-    // A popover under its button, lined up with its right edge.
+    // Text and page, in More (decision 0292).
+    const aa = article(page).getByRole("button", { name: "More actions" });
+    const panel = await openAppearance(page);
+    // A popover under More, lined up with its right edge.
     const button = (await aa.boundingBox())!;
     const box = (await panel.boundingBox())!;
     expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
@@ -380,7 +376,7 @@ test.describe("on a wide window", () => {
       .evaluate((input) => [getComputedStyle(input.closest("label")!).outlineColor, getComputedStyle(document.body).color]);
     expect(outline).toBe(ink);
 
-    // Escape closes only the panel and gives the keyboard back to the Aa button; the article stays.
+    // Escape closes only the panel and gives the keyboard back to More, where it opened; the article stays.
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
     await expect(aa).toBeFocused();
@@ -388,15 +384,14 @@ test.describe("on a wide window", () => {
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
 
     // A press outside closes it too. Settings shows the same Page; text size and font are only here (decision 0241).
-    await aa.click();
-    await expect(panel).toBeVisible();
+    await openAppearance(page);
     await title(page, "The pleasure of a slow letter").click({ position: { x: 4, y: 4 } });
     await expect(panel).toHaveCount(0);
     // To Settings by its keys: the sidebar is away while the article is open (decision 0275).
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("Text size and font are in Aa, above any article.")).toBeVisible();
+    await expect(page.getByText("Text size and font are in Text and page, in any article’s More.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
@@ -608,7 +603,7 @@ test.describe("on a wide window", () => {
     const bottoms = await bottomsOf("#sidebar .pane-bar, .list-pane > .pane-bar");
     expect(bottoms).toHaveLength(2);
     expect(new Set(bottoms).size).toBe(1);
-    // Their controls sit on one line: the list's More, then the article's Aa.
+    // Their controls sit on one line: the list's More, then the article's.
     const middle = async (selector: string) => {
       const box = (await page.locator(selector).first().boundingBox())!;
       return box.y + box.height / 2;
@@ -616,9 +611,9 @@ test.describe("on a wide window", () => {
     const line = await middle(".list-pane > .pane-bar button");
     await openFirst(page);
     expect(await bottomsOf(".reading-bar")).toEqual([bottoms[0]]);
-    expect(Math.abs((await middle(".reading-bar button[aria-label='Reading appearance']")) - line)).toBeLessThan(1);
+    expect(Math.abs((await middle(".reading-bar button[aria-label='Copy link']")) - line)).toBeLessThan(1);
     // A toolbar button's ring is drawn inside its own edge, so it never touches the window's top.
-    const aa = article(page).getByRole("button", { name: "Reading appearance" });
+    const aa = article(page).getByRole("button", { name: "Copy link" });
     await tabTo(page, aa);
     await expect(aa).toHaveCSS("outline-offset", "-2px");
     expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
@@ -967,8 +962,7 @@ test.describe("on a wide window", () => {
     await expect.poll(size).toBe("18px");
 
     // The same setting as the Aa panel's, the one place for it (decision 0241).
-    await article(page).getByRole("button", { name: "Reading appearance" }).first().click();
-    await expect(page.getByRole("dialog", { name: "Reading appearance" }).getByRole("status")).toHaveText("Small");
+    await expect((await openAppearance(page)).getByRole("status")).toHaveText("Small");
   });
 
   test("a YouTube video plays in YouTube's own player, and nothing loads from YouTube until Play is pressed", async ({ page }) => {

@@ -64,9 +64,9 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Shift+Space");
     await expect.poll(() => scrolled(page)).toBeLessThan(end - screen / 2);
 
-    // A button takes Space as its own press: Aa opens its panel, and the article stays put.
-    // (Aa is the article's first line, so reaching it brings the article's top back into view, decision 0263.)
-    const aa = article(page).getByRole("button", { name: "Reading appearance" });
+    // A button takes Space as its own press: More opens its menu, and the article stays put.
+    // (More is on the article's first line, so reaching it brings the article's top back into view, decision 0263.)
+    const aa = article(page).getByRole("button", { name: "More actions" });
     await aa.focus();
     const still = await scrolled(page);
     await page.keyboard.press(" ");
@@ -74,7 +74,7 @@ test.describe("on a wide window", () => {
     expect(await scrolled(page)).toBe(still);
   });
 
-  test("c copies the open article's link and says so, as Copy link does; the menu shows its key", async ({ page, context }) => {
+  test("c copies the open article's link and says so, as Copy link does; its button shows its key", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await signedIn(page);
     await openReadingRoom(page);
@@ -83,9 +83,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("c");
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
-    await article(page).getByRole("button", { name: "More actions" }).click();
-    await expect(page.getByRole("menuitem", { name: "Copy link" })).toHaveAttribute("aria-keyshortcuts", "c");
-    await page.keyboard.press("Escape");
+    await expect(article(page).getByRole("button", { name: "Copy link" })).toHaveAttribute("aria-keyshortcuts", "c");
   });
 
   test("Shift+O does nothing, and More marks only all as read (decision 0171)", async ({ page }) => {
