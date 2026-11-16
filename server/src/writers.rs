@@ -252,7 +252,11 @@ pub async fn join(
     .bind(writer)
     .bind(crate::notes::joined(&notes))
     .bind(before.iter().any(|place| place.write_back_off))
-    .bind(before.iter().find_map(|place| place.write_back_way.as_deref()))
+    .bind(
+        before
+            .iter()
+            .find_map(|place| place.write_back_way.as_deref()),
+    )
     .bind(person)
     .bind(ids(&places))
     .execute(&mut *connection)

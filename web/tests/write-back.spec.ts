@@ -201,7 +201,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   // The end tools stay Save and View original; the arrow beside Write back holds the other ways, Email app ticked.
   await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toHaveCount(0);
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
-  const arrow = pane(page).getByRole("button", { name: `Other ways back to Blog ${name}` });
+  const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
   await arrow.click();
   const ways = pane(page).getByRole("menu");
   await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
@@ -244,7 +244,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   // Their page keeps Copy address beside Change.
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
-  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Copy Blog ${name}'s email address` })).toBeVisible();
+  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Copy address of Blog ${name}` })).toBeVisible();
 
   // Switched off in their settings: they stay a person, but Write to, Write back, the paper plane and W all go (a row's menu too: rowMenu.test.ts).
   await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
@@ -262,7 +262,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await page.locator(".item-row").first().click();
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
   await expect(pane(page).getByText(/^Write back/)).toHaveCount(0);
-  await expect(pane(page).getByRole("button", { name: /Other ways back/ })).toHaveCount(0);
+  await expect(pane(page).getByRole("button", { name: /Other ways to reply/ })).toHaveCount(0);
   await expect(pane(page).getByRole("button", { name: "Write back" })).toHaveCount(0);
   await page.locator(".item-row").first().focus();
   await page.keyboard.press("w");

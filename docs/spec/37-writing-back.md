@@ -42,7 +42,7 @@ V1, item 2). Its look gets a refinement round.*
 - **The ways back** (decision 0286, the owner's choice): at an article's
   end Write back is a split button. Beside it, joined
   to it by a hairline, a 44px square with a downward arrow ("Other ways
-  back to Maya Chen" to screen readers) opens a small menu like More's,
+  to reply to Maya Chen" to screen readers) opens a small menu like More's,
   each row with its icon: **Email app** (a paper plane, with its key, W, on
   a computer), **Gmail**, **Outlook.com**, **Copy maya@example.com** (two
   overlapping pages; only when an address is known), then, after a
@@ -66,8 +66,8 @@ V1, item 2). Its look gets a refinement round.*
   brought is used, and that page is only ever linked to, never fetched. The
   top bar and the end's Save and View original stay as they are. On their
   page, Write to is one button with no arrow, and the line with the address
-  ends in **Change** and **Copy address** ("Copy Maya Chen's email
-  address" to screen readers).
+  ends in **Change** and **Copy address** ("Copy address of Maya Chen" to
+  screen readers).
 - **Write to, on their page** (the owner's core path, point 9): the same
   outlined button with the paper plane, **Write to Tomas Berg**, sits under
   their name on their page (section 36), with the address under it

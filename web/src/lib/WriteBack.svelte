@@ -482,7 +482,7 @@
           {:else}
             {@render email()}
           {/if}
-          <MoreMenu id={`ways-back-${article.id}`} label={`Other ways back to ${name}`} groups={menu} look="btn split-arrow">
+          <MoreMenu id={`ways-back-${article.id}`} label={`Other ways to reply to ${name}`} groups={menu} look="btn split-arrow">
             {#snippet face()}<Icon name="chevron-down" />{/snippet}
           </MoreMenu>
         </div>
@@ -497,7 +497,7 @@
         <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
-        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" aria-label="Copy {name}'s email address" onclick={() => void copyAddress()}>Copy address</button></p>
+        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
       {/if}
       {#if copied && !opening}<p class={["to", copyFailed && "text-danger"]} role="status"><span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span></p>{/if}
       {#if address && way === "email"}
@@ -585,15 +585,16 @@
     max-width: 100%;
   }
   .split > .btn {
+    flex-shrink: 1;
     min-width: 0;
     white-space: normal;
     text-align: center;
+    border-inline-end-width: 0;
     border-start-end-radius: 0;
     border-end-end-radius: 0;
   }
   .split :global(.split-arrow) {
     width: 2.75rem;
-    margin-inline-start: -1px;
     padding-inline: 0;
     border-start-start-radius: 0;
     border-end-start-radius: 0;

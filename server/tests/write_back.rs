@@ -99,14 +99,13 @@ impl Reader {
             .await
             .unwrap();
         let listed: Value = serde_json::from_str(&response.text().await.unwrap()).unwrap();
-        let place = listed["feeds"]
+        listed["feeds"]
             .as_array()
             .unwrap()
             .iter()
             .find(|place| place["id"] == feed)
             .unwrap()
-            .clone();
-        place
+            .clone()
     }
 }
 
@@ -281,14 +280,20 @@ async fn write_back_is_switched_off_and_its_way_chosen_for_the_whole_person() {
 
     // Switched off for the person: every place of theirs, and the way chosen stays for when it's back on.
     let _ = reader
-        .post(&format!("/api/feeds/{blog}"), json!({ "write_back": false }))
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back": false }),
+        )
         .await;
     for place in [blog, letters] {
         assert_eq!(reader.place(place).await["write_back_off"], json!(true));
     }
     assert_eq!(reader.place(beta).await["write_back_off"], json!(false));
     let _ = reader
-        .post(&format!("/api/feeds/{letters}"), json!({ "write_back": true }))
+        .post(
+            &format!("/api/feeds/{letters}"),
+            json!({ "write_back": true }),
+        )
         .await;
     assert_eq!(reader.place(blog).await["write_back_off"], json!(false));
     assert_eq!(way(blog).await, json!("copy"));
