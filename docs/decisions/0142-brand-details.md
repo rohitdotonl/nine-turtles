@@ -2,6 +2,8 @@
 
 **In one line:** The brand's details: one shape for empty lists ("Nothing … yet." and how to start), Unread ends "That's everything for now.", the welcome says "Hello. Who would you like to read?", "Wrong turn?" on one left edge, emails signed by Rohit, a black-tile share picture, and the tab icon always a black square
 
+> **Partly replaced by [0277](0277-one-column.md):** on a computer an empty list is centred and set large, as an article's title is; a phone keeps the left edge.
+
 *2 November 2026. Chosen by the owner from mockups (today, a safe and a bold
 option for each, with a creative director's review), in the brand work's
 "details" area.*

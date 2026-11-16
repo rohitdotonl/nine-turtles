@@ -23,6 +23,37 @@
   padding-top: var(--reading-top);
 }
 /*
+  The column's width in pixels, for what lines up with it without being set
+  in the reading face (decision 0277): the list's column, Settings' and the
+  article's bar. Worked out once on the whole screen (Shell's <main>), in the
+  reader's face and size, so it follows Aa; registered as a length, so it's
+  passed down as pixels, not as a "ch" of whatever face it lands in. Every
+  child of <main> goes back to the interface's face and size.
+*/
+@property --reading-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+.reading-width {
+  font-family: var(--reading-font);
+  font-size: var(--reading-size);
+  --reading-width: var(--reading-measure);
+}
+.reading-width > * {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+}
+/*
+  On a computer the article's bar stands over its text (decision 0277): the
+  way back starts on the text's left edge and the last tool's icon ends on its
+  right edge, not at the window's corners. The bar reaches 4rem past each
+  side of the scroller's padding, which its percentages don't count.
+*/
+.over-text {
+  padding-inline: max(0.5rem, (100% - var(--reading-width)) / 2 + 3.75rem) max(0.5rem, (100% - var(--reading-width)) / 2 + 3.25rem);
+}
+/*
   Room for a scrollbar is kept, so the column doesn't shift between pages that
   scroll and those that don't, nor between an article and their page. The track is see-through, so the gutter is the page's own color in
   every theme, and the thumb a faint tone of the text (decision 0040).

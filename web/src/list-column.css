@@ -1,4 +1,4 @@
-/* The article list's edges and its column on a computer. Moved out of app.css, which had reached its size limit. */
+/* The article list's edges, and the one column the list and Settings share with an article on a computer. Moved out of app.css, which had reached its size limit. */
 
 /*
   The list's edges (decision 0043): its title, search field, row titles and
@@ -24,11 +24,29 @@
 }
 
 /*
-  On a computer the list is alone beside the sidebar, one thing at a time
-  (decision 0275; which areas show is lib/layout.svelte.ts): its title,
-  search and rows keep to a centred column of a readable width (42rem with
-  its edges), and its scroll bar stays at the window's edge.
+  One column on a computer (decision 0277): the list's title, search and
+  titles start where an opened article's text will start, the window's
+  centred reading column (--reading-width, reading-column.css), and end on
+  its right edge, so opening an article turns the page in place instead of
+  jumping sideways. 100% is the area beside the sidebar and 100vw the
+  window, so the sidebar's width needs no reading. Where the sidebar leaves
+  too little room, the column keeps the list's own edges; with the sidebar
+  hidden it never starts under the sidebar button (--toggle-room, 64px:
+  the button ends 52px in). Its scroll bar stays at the window's edge.
 */
+.sidebar-off {
+  --toggle-room: 4rem;
+}
 .list-pane:not(.phone) > :is(.pane-bar, .scroller) {
-  padding-inline: calc(var(--list-start) + max(0px, (100% - 42rem) / 2)) calc(var(--list-end) + max(0px, (100% - 42rem) / 2));
+  --column-start: max(var(--list-start), var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
+  padding-inline: var(--column-start) max(var(--list-end), 100% - var(--column-start) - var(--reading-width));
+}
+/* Settings, Everyone you follow and the pages under Settings start their column on the same line. */
+@media (min-width: 56rem) {
+  .lines-up > :is(.pane-bar, .scroller) {
+    padding-left: max(2.5rem, var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
+  }
+  .lines-up > :is(.pane-bar, .scroller) > .mx-auto {
+    margin-left: 0;
+  }
 }

@@ -276,7 +276,7 @@
 {/if}
 {#if !(task && phone)}
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
-<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="flex min-w-0 flex-1 flex-col bg-paper">
+<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="lines-up flex min-w-0 flex-1 flex-col bg-paper">
   {#if page}
     <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} {besideToggle} column="max-w-[35rem]" />
   {:else if phone}

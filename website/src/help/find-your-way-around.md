@@ -51,9 +51,11 @@ Older articles load as you reach the bottom, and every list ends with
 "That's everything."
 
 **Unread** is arranged by person instead: each person's name once, with
-what's new from them under it, and each article's day beside its title
-(under it, when the title needs the room). The name is in bolder type, so
-the titles under it are plain, each new one with its dot.
+what's new from them under it, newest first, with no dates: it reads like a
+book's contents page, and on a computer each name is set larger, like a
+chapter's. The name carries the
+weight, so the titles under it are plain, each new one with its dot. When
+you've read everything, it says so across the page: "Nothing unread."
 The people who posted most recently come first; publications follow, under
 **Publications**. Someone with a blog and a podcast is one name. Sorted
 oldest first, the people who have waited longest come first. <kbd>J</kbd>
@@ -114,10 +116,11 @@ phone, Unread's dot catches up each time you come back to the sidebar.
 
 ## One thing at a time
 
-On a computer, the list sits in a calm column beside the sidebar. Open an
-article and it fills the whole window, with **‹** and the list's name (say,
-**‹ Unread**) at its top left. Press that, or <kbd>Esc</kbd>, or your
-browser's Back, and you're back in the list where you were. While reading,
+On a computer, the list sits in a calm column beside the sidebar, lined up
+with where an article's words start, so opening one turns the page in place.
+Open an article and it fills the whole window, with **‹** and the list's name
+(say, **‹ Unread**) above the start of its text. Press that, or <kbd>Esc</kbd>,
+or your browser's Back, and you're back in the list where you were. While reading,
 <kbd>J</kbd> and <kbd>K</kbd> go to the next and previous article. A
 person's page fills the window the same way, with **×** to go back.
 

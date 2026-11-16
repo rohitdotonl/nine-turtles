@@ -121,7 +121,7 @@
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
     <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
-    <div class="reading-bar pane-bar relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
+    <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
       <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={() => go({ kind: "feed", id: feed.id })}><Icon name="close" size="alone" /></button>
     </div>
   {/if}

@@ -522,9 +522,9 @@
       <!--
         On a computer the bar is the article's first line and scrolls away with its title (decision 0263):
         quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
-        publisher, then the reader's own tools. Its edges are the pane's, not the text column's (decision 0050).
+        publisher, then the reader's own tools. It stands over the text column, its way back on the text's left edge and its last icon on its right edge (decision 0277, replacing 0050).
       -->
-      <div class="reading-bar pane-bar relative z-10 -mx-5 gap-2 px-2 md:-mx-16">
+      <div class="reading-bar pane-bar over-text relative z-10 -mx-5 gap-2 px-2 md:-mx-16">
         {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>

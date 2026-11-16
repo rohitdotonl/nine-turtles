@@ -842,7 +842,7 @@
 <!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
 <svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
 <!-- While an episode plays, the "now playing" bar takes its own room at the foot, never covering the panes; on a phone reading, above the toolbar (SPEC 35). -->
-<main class="relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
+<main class={["reading-width relative flex h-dvh flex-col overflow-hidden", !phone && !panes.sidebar && "sidebar-off"]} style:--sidebar-w={`${layout.sidebarPx}px`}>
   {#if skipShown}
     <!-- First in the Tab order (SPEC section 19), out of sight until the keyboard reaches it: past the sidebar to the chosen article, or the first. -->
     <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>
@@ -1019,7 +1019,7 @@
           class={[
             // A container, so the list's title can step down a size when the pane is narrow (decision 0041).
             "list-pane relative @container flex-col bg-paper",
-            // On a computer its rows sit in a centred column (`app.css`, decision 0275).
+            // On a computer its rows sit in the column an article's text will (`list-column.css`, decision 0277).
             "min-w-0 flex-1", phone && "phone",
             panes.list && !welcomeWide && "flex",
           ]}
@@ -1037,10 +1037,10 @@
           {/if}
           {#if !phone}
             <!--
-              The list's top line never scrolls; with the sidebar hidden it starts after the sidebar button.
-              Its title starts 32px in, where the search field and every article title start (decision 0041).
+              The list's top line never scrolls. Its title starts with the search field and the titles, in the column
+              it shares with an article; with the sidebar hidden, after its button (list-column.css, decision 0277).
             -->
-            <div class={["pane-bar", "pr-[var(--list-end)]", panes.sidebar ? "pl-[var(--list-start)]" : "pl-16"]}>
+            <div class="pane-bar">
               {@render listHead()}
             </div>
           {/if}

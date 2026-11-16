@@ -39,13 +39,12 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   const list = page.locator("#list-pane");
   const sidebar = page.locator("#sidebar");
 
-  // Nothing open: the sidebar and the list, no reading area, the rows in a centred column of a readable width.
+  // Nothing open: the sidebar and the list, no reading area, the list in one column with the article (decision 0277).
   await expect(sidebar).toBeVisible();
   await expect(article(page)).toHaveCount(0);
   await expect(page.getByText(/^(Nothing open|Choose an article)/)).toHaveCount(0);
-  const [listBox, rowBox] = await Promise.all([list.boundingBox(), rows(page).first().boundingBox()]);
-  expect(rowBox!.width).toBeLessThanOrEqual(42 * 16);
-  expect(Math.abs(rowBox!.x + rowBox!.width / 2 - (listBox!.x + listBox!.width / 2))).toBeLessThanOrEqual(24);
+  const listTitleX = (await rows(page).first().locator(".title").boundingBox())!.x;
+  expect(Math.abs((await page.locator("#list-heading").boundingBox())!.x - listTitleX)).toBeLessThan(1);
 
   // Opening the second article: it alone fills the window, with the list's name at its top left.
   const second = rows(page).nth(1);
@@ -59,8 +58,16 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await expect(back).toBeVisible();
   const [backBox, articleBox, viewport] = await Promise.all([back.boundingBox(), article(page).boundingBox(), page.viewportSize()]);
   expect(backBox!.height).toBeGreaterThanOrEqual(44);
-  expect(backBox!.x).toBeLessThan(40);
   expect(articleBox!.width).toBeGreaterThan(viewport!.width - 2);
+  // One column (decision 0277): the article's title starts where the list's titles started, so opening it turns
+  // the page in place (within half a scroll bar, where scroll bars take room), and its bar stands over the text:
+  // the way back on its left edge, More's icon ending on its right edge.
+  const text = (await article(page).locator(".article").boundingBox())!;
+  const articleTitleX = (await titleOf(page).boundingBox())!.x;
+  expect(Math.abs(articleTitleX - listTitleX)).toBeLessThanOrEqual(10);
+  expect(Math.abs(backBox!.x + 4 - text.x)).toBeLessThan(2);
+  const more = (await page.getByRole("button", { name: "More actions" }).boundingBox())!;
+  expect(Math.abs(more.x + more.width - 12 - (text.x + text.width))).toBeLessThan(2);
   // No sidebar button over it, and full-screen reading is gone: not in More, not in the cheat sheet, and f does nothing.
   await expect(page.getByRole("button", { name: /^Sidebar/ })).toBeHidden();
   await page.getByRole("button", { name: "More actions" }).click();
@@ -144,6 +151,43 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   await page.goto(at("/settings"));
   await expect(page.getByText(/^Version /)).toBeVisible();
   await expect(page.getByRole("switch", { name: "Read one thing at a time" })).toHaveCount(0);
+});
+
+test("Settings and Everyone you follow start on the list's line; with the sidebar hidden and large text, nothing starts under its button", async ({ page, isMobile }) => {
+  test.skip(isMobile, "A phone has one edge for every screen.");
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await signedIn(page);
+  await page.goto(at("/starred"));
+  await appReady(page);
+  const listX = (await page.locator("#list-heading").boundingBox())!.x;
+  // One column (decision 0277): Settings' title and Everyone you follow's start where the list's did.
+  await page.goto(at("/settings"));
+  await appReady(page);
+  expect(Math.abs((await page.locator("#settings-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+  await page.getByRole("link", { name: "Everyone you follow" }).click();
+  await expect(page.locator("#your-feeds-heading")).toBeVisible();
+  expect(Math.abs((await page.locator("#your-feeds-heading").boundingBox())!.x - listX)).toBeLessThan(2);
+
+  // A window just wide enough, the sidebar hidden and the reader's text at its largest: the reading column is
+  // nearly the window's width, yet the list's title and Settings' still start clear of the sidebar button.
+  await page.setViewportSize({ width: 896, height: 800 });
+  await page.goto(at("/starred"));
+  await appReady(page);
+  await page.evaluate(() => document.querySelector("main")!.style.setProperty("--reading-size", "1.625rem"));
+  const toggle = page.getByRole("button", { name: "Sidebar", exact: true });
+  await toggle.click();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  const clear = async (heading: string) => {
+    const [button, title] = await Promise.all([toggle.boundingBox(), page.locator(heading).boundingBox()]);
+    expect(title!.x).toBeGreaterThanOrEqual(button!.x + button!.width + 8);
+  };
+  await clear("#list-heading");
+  await page.locator("#list-heading").focus();
+  await page.keyboard.press("g");
+  await page.keyboard.press(",");
+  await expect(page.locator("#settings-heading")).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await clear("#settings-heading");
 });
 
 test("a row chosen with j, then their page opened over it, is still unread: only an opened article is read", async ({ page, isMobile }) => {

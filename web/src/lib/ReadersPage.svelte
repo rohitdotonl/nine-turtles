@@ -59,7 +59,7 @@
 
 </script>
 
-<section aria-labelledby="readers-page-heading" class="flex flex-1 flex-col bg-paper">
+<section aria-labelledby="readers-page-heading" class="lines-up flex flex-1 flex-col bg-paper">
   <PageHead title="All readers" id="readers-page-heading" bind:heading onBack={onClose} backTo={SETTINGS_PAGES.readers} {besideToggle} column="max-w-[35rem]" />
   <!-- A Tab stop of its own, so the page scrolls with the keyboard though it has nothing to press (axe: scrollable-region-focusable). -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->

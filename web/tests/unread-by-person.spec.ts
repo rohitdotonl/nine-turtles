@@ -53,16 +53,14 @@ test("each person is named once, as a heading over their titles, people before p
   const heads = await names(page).allTextContents();
   expect(heads.slice(0, 2).sort()).toEqual([...people].sort());
   expect(heads.slice(2)).toEqual(["Publications", publication]);
-  // Under each name, that person's three titles, each with its day beside the title, not under it.
+  // Under each name, that person's three titles, with no day shown (decision 0277), though a screen reader still hears it.
   for (const name of [...people, publication]) {
     const items = list(page).locator("li").filter({ has: page.getByRole("heading", { name, exact: true }) });
     await expect(items).toHaveCount(1);
   }
   const first = rows(page).first();
-  const title = await first.locator(".title").boundingBox();
-  const day = await first.locator(".row-date").boundingBox();
-  expect(day!.x).toBeGreaterThan(title!.x + 40);
-  expect(Math.abs(day!.y - title!.y)).toBeLessThan(16);
+  await expect(first.locator(".row-date")).toHaveClass(/sr-only/);
+  await expect(first.locator(".row-date")).not.toHaveText("");
   // The name isn't repeated in the row's small line, though a screen reader still hears whose it is.
   const shown = await rows(page).evaluateAll((all) => all.map((row) => row.querySelector(".row-feed:not(.sr-only)") === null));
   expect(shown.every(Boolean)).toBe(true);
@@ -71,10 +69,16 @@ test("each person is named once, as a heading over their titles, people before p
   await expect(list(page).locator("h3 a, h3 button")).toHaveCount(0);
 });
 
-test("the name carries the weight: an unread title under it is regular, still with its dot and still said to be unread", async ({ page }) => {
+test("the name carries the weight: an unread title under it is regular, still with its dot and still said to be unread", async ({ page, isMobile }) => {
   await openUnread(page);
-  await expect(names(page).first()).toHaveCSS("font-weight", "600");
   const first = rows(page).first();
+  if (isMobile) await expect(names(page).first()).toHaveCSS("font-weight", "600");
+  else {
+    // On a computer, a book's contents page (decision 0277): the name set as a chapter's title, larger.
+    await expect(names(page).first()).toHaveCSS("font-family", /Literata Display/);
+    await expect(names(page).first()).toHaveCSS("font-size", "24px");
+    await expect(names(page).first()).toHaveCSS("font-weight", "400");
+  }
   await expect(first.locator(".title")).toHaveCSS("font-weight", "400");
   await expect(first.locator(".title")).toHaveCSS("color", await names(page).first().evaluate((name) => getComputedStyle(name).color));
   await expect(first.locator(".unread-dot")).toHaveCount(1);
@@ -134,20 +138,21 @@ for (const [what, width, text] of [
     const title = (await row.locator(".title").boundingBox())!;
     const meta = (await row.locator(".row-meta").boundingBox())!;
     const box = (await row.boundingBox())!;
-    // The title keeps most of the row; the writer and day sit under it, inside the row.
+    // The title keeps most of the row; the writer sits under it, inside the row (with no day, decision 0277).
     expect(title.width).toBeGreaterThanOrEqual(box.width * 0.6);
     expect(meta.y).toBeGreaterThanOrEqual(title.y + title.height - 1);
     expect(meta.x + meta.width).toBeLessThanOrEqual(box.x + box.width + 1);
+    // With no day, no "·" is left dangling at either end of the small line: the writer stands alone (screen readers
+    // still hear a pause after them, and the publication's name and the day).
+    const shown = await row.locator(".row-meta").evaluate((meta) => {
+      const walker = document.createTreeWalker(meta, NodeFilter.SHOW_TEXT);
+      let text = "";
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) if (!node.parentElement!.closest(".sr-only")) text += node.textContent;
+      return text.replace(/\s+/g, " ").trim();
+    });
+    expect(shown).toBe("Margarethe Vandenberghe-Okonkwo and Friends");
     // Nothing runs off the side.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(await list(page).evaluate((pane) => [...pane.querySelectorAll(".item-row")].every((each) => each.scrollWidth <= each.clientWidth + 1))).toBe(true);
-    // A person's short day still sits beside the title's first line, at its right, when there's room.
-    if (!text) {
-      const person = rows(page).first();
-      const day = (await person.locator(".row-date").boundingBox())!;
-      const words = (await person.locator(".title").boundingBox())!;
-      expect(day.x).toBeGreaterThan(words.x + words.width - 1);
-      expect(Math.abs(day.y - words.y)).toBeLessThan(16);
-    }
   });
 }

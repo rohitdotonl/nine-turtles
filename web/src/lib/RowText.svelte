@@ -12,7 +12,7 @@
   import { exactly, when } from "./times";
   import { hugEllipsis } from "./hug";
   import { boldParts } from "./search";
-  import RowKind from "./RowKind.svelte";
+  import RowKind, { kindShown } from "./RowKind.svelte";
   import RowPlace from "./RowPlace.svelte";
 
   let {
@@ -34,6 +34,11 @@
   } = $props();
 
   let opening = $derived(untitledOpening(article));
+  /** Unread, by person, shows no day: its titles are listed under who wrote them, the newest first (decision 0277). Screen readers still hear it. */
+  let undated = $derived(article.whose !== undefined);
+  /** With no day shown, the kind of article opens the line unless a publication's writer comes before it. */
+  let kindFirst = $derived(undated && !writerOf(article));
+  let placeFirst = $derived(kindFirst && !kindShown(article));
 </script>
 
   <!-- Unread: full ink, semibold (regular under a name in Unread, where the name carries the weight: lists.css .by-person). Read: the second ink, regular. The selected row is never the quietest. With Unread off every title is full ink, regular. -->
@@ -67,13 +72,13 @@
   -->
   <span class={["row-meta mt-2 text-date tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
     <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
-    {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span>&nbsp;·</span>{/if}
+    {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span><span class={[undated && "sr-only"]}>&nbsp;·</span></span>{/if}
     <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
-    <time datetime={new Date(article.at * 1000).toISOString()} class="row-date" title={exactly(article.at)}>{when(article.at)}</time>
+    <time datetime={new Date(article.at * 1000).toISOString()} class={["row-date", undated && "sr-only"]} title={exactly(article.at)}>{when(article.at)}</time>
     <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
-    <RowKind {article} />
+    <RowKind {article} first={kindFirst} />
     <!-- Your place, while one is kept: "· Half read" (decision 0224). -->
-    <RowPlace article={article.id} />
+    <RowPlace article={article.id} first={placeFirst} />
     {#if article.muted}
       <!-- Only search (and Starred) list a muted article; the word says why it waits in no other list (SPEC section 27). -->
       <span class="row-muted">· Hidden</span>

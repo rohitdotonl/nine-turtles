@@ -295,7 +295,7 @@
 
 </script>
 
-<section aria-labelledby="your-feeds-heading" class="flex flex-1 flex-col bg-paper">
+<section aria-labelledby="your-feeds-heading" class="lines-up flex flex-1 flex-col bg-paper">
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" {besideToggle} column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
