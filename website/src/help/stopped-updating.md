@@ -32,7 +32,9 @@ likeliest first:
 
 - **Find new address**: nine turtles looks once at the website for a feed
   under a new address. If it finds one, press **Use it**. Their name,
-  folders and articles all stay, saved ones too.
+  folders and articles all stay, saved ones too. Some sites are slow to
+  answer: the line says so as it goes, and **Stop** lets you give up
+  waiting.
 - **Write to** them, for a person: they may not know their feed broke, and
   a short email is often all it takes. It opens your own email app, or
   first asks for their address if nine turtles doesn't know it yet. Once

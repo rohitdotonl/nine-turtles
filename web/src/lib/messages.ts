@@ -11,6 +11,13 @@ export const UNDONE = "Undone.";
 /** How long a wait goes unsaid: a quicker answer never flickers a word (decision 0229). */
 export const SAY_AFTER_MS = 500;
 
+/** When a slow wait says it's still going, and when it says how long it can take (decision 0287). */
+export const STILL_AFTER_MS = 5000;
+export const LONG_AFTER_MS = 15_000;
+
+/** A slow wait's line after 15 seconds: every lookup on someone else's site ends within a minute. */
+export const UP_TO_A_MINUTE = "It can take up to a minute.";
+
 /** `s`, `m`, `w` or `n` with no article chosen says what to do (decision 0230). */
 export const CHOOSE_FIRST = "Choose an article first. j chooses the first one.";
 

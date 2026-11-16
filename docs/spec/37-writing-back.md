@@ -170,7 +170,8 @@ V1, item 2). Its look gets a refinement round.*
 - **When nine turtles doesn't know it,** Write back opens a quiet bordered
   box in place, as + Add a source does: "Write back to Alpha", and one
   short line. While nine turtles looks on their site (below) it says
-  "Looking on their site…", in plain words with nothing moving. When it
+  "Looking on their site…", in plain words that move on if it takes a
+  while, its dots breathing (a slow wait, section 25, decision 0287). When it
   finds an address, it fills it into the field and says "Found on their
   site. Check it, then press Write back."; the reader checks it and presses
   Write back to keep it (a page can show someone else's address too). When

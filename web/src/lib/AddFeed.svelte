@@ -38,6 +38,8 @@
   import AskForFeed from "./AskForFeed.svelte";
   import ByEmail from "./ByEmail.svelte";
   import Icon from "./Icon.svelte";
+  import SlowWait from "./SlowWait.svelte";
+  import { UP_TO_A_MINUTE } from "./messages";
   import type { Feed, Folder } from "./shapes";
   import { onDestroy, tick } from "svelte";
   import { keepDraft, keptWords } from "./drafts";
@@ -256,6 +258,7 @@
   /** Clears what was said before a new try. */
   function begin() {
     busy = true;
+    progress = undefined;
     message = "";
     problem = false;
     badAddress = false;
@@ -324,7 +327,7 @@
       results.push(await addFeed(url));
       progress = { done: results.length, of: urls.length };
     }
-    progress = undefined;
+    // The count stays up while they're joined into one (nine turtles' own work, never a slow wait); the next begin() clears it.
     const together = followedTogether(urls, results, choices);
     note = together.note;
     const [first] = together.added;
@@ -479,7 +482,7 @@
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
-      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : "Looking…"}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
+      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : ""}{#if !asking && !progress}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{/if}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
     </p>
     {#if slip && !busy}
       <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->

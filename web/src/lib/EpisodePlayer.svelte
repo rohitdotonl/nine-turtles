@@ -22,6 +22,7 @@
 <script lang="ts">
   import { untrack } from "svelte";
   import type { Article } from "./shapes";
+  import SlowWait from "./SlowWait.svelte";
   import { BACK_SECONDS, FORWARD_SECONDS, clock, devicePlace, left, length, nextSpeed, resumeFrom, serverPlace, speedLabel, spoken, type Episode } from "./podcasts";
   import { isLoaded, load, play, player, seek, setRate, toggle } from "./player.svelte";
 
@@ -145,7 +146,7 @@
     <span>{clock(position)}</span>
     <span>{duration ? left(position, duration) : ""}</span>
   </div>
-  <p class="episode-note empty:hidden" role="status">{mine && player.waiting ? "Loading from the publisher…" : ""}</p>
+  <p class="episode-note empty:hidden" role="status">{#if mine && player.waiting}<SlowWait words="Loading from the publisher" again="Still loading" heard={false} />{/if}</p>
   {#if mine && !player.waiting && player.said}
     <!-- Seen here; screen readers hear it once, from the Now playing bar's own line. -->
     <p class="episode-note">{player.said}</p>
