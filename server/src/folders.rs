@@ -143,6 +143,13 @@ struct EditFeed {
     /// ("reader"); given, Undo is putting back the reason it had, one of
     /// `writers::kind::WHYS`, so one the reader hadn't settled is open again.
     why: Option<String>,
+    /// Write back for the person (decision 0286): off takes it away from
+    /// every place of theirs, as the address typed for them is kept on each.
+    write_back: Option<bool>,
+    /// How the reader answered them, which the button at their articles'
+    /// end then offers (decision 0286): "email", "copy" or "comment", kept
+    /// on every place of theirs too.
+    write_back_way: Option<String>,
 }
 
 /// How many of the articles a feed brought while it was paused go back to
@@ -181,6 +188,12 @@ async fn edit_feed(
     {
         return problem(StatusCode::BAD_REQUEST, "why");
     }
+    let way = match form.write_back_way.as_deref() {
+        None => None,
+        Some("email") => Some(None),
+        Some(way @ ("copy" | "comment")) => Some(Some(way)),
+        Some(_) => return problem(StatusCode::BAD_REQUEST, "way"),
+    };
     let saved: Result<Option<()>, sqlx::Error> = async {
         let mut transaction = state.db.begin_with("BEGIN IMMEDIATE").await?;
         if !follows(&mut transaction, person, id).await? {
@@ -212,6 +225,7 @@ async fn edit_feed(
             crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
                 .await?;
         }
+        crate::write_back::choose(&mut transaction, person, id, form.write_back, way).await?;
         // Switched on: that kind's videos stored since the reader followed
         // the channel join its list, as read, so nothing piles up in
         // Unread (an entry they already had, or one the clean-up removed

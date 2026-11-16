@@ -20,6 +20,10 @@ whether someone is a person or a publication, the end of their articles
 asks once instead: "Is … someone you might write back to?" Press **Yes, a
 person**, and Write back takes its place.
 
+Write back is private: an email between you and them. To answer in public,
+where the writer's other readers can see it, comment on their site instead
+(see "Other ways back", below).
+
 ## Write back
 
 1. Read to the end of the article and press **Write back** (under it,
@@ -46,9 +50,25 @@ new draft there, in a new tab. nine turtles remembers this on that
 computer, so from then on Write back goes straight to Gmail. To go back,
 press **Use your email app** under the button.
 
-If neither works for you, press **Didn't open?**, then **Copy their
-address**, and paste it into a new email. On a phone, Copy their address is
-already there under the button.
+The arrow beside Write back does the same in one press: choose **Gmail**
+or **Outlook.com** there.
+
+## Other ways back
+
+Press the arrow beside **Write back** at the end of an article. Its menu
+has every way to answer them:
+
+- **Email app**, **Gmail** or **Outlook.com**: writes an email there.
+- **Copy** and their address: copies it, to paste into any email. nine
+  turtles says "Copied." under the button.
+- **Comment on their site**: opens the article's comments on their site, in
+  a new tab, so you can answer in public. When their feed says where the
+  comments are, it goes straight there; otherwise to the article's page.
+
+Whatever you choose becomes the button for that person, on every device:
+**Write back**, **Copy address** or **Comment**. The paper plane at the top
+and <kbd>W</kbd> always write an email. To change it, choose another way
+from the arrow.
 
 ## Write back about a line
 
@@ -78,7 +98,15 @@ about page, while the box says "Looking on their site…".
 nine turtles remembers it for that person, so you're asked only once. Their
 page shows it under **Write to Tomas Berg**, which opens your email app to
 write to them about anything, with no subject. To change it, press
-**Change** beside the address.
+**Change** beside the address; **Copy address** copies it.
+
+## Turn Write back off for someone
+
+Some people you read you'll never write to. Open their page, press
+**Settings**, and switch **Write back** off. The button at the end of their
+articles, the paper plane, <kbd>W</kbd> and **Write to** on their page all
+go; they stay with your people, and any address nine turtles knows is kept
+for if you switch it on again.
 
 ## Good to know
 

@@ -51,6 +51,7 @@ fn video(fingerprint: &str, id: &str, kind: Option<VideoKind>) -> ParsedArticle 
         published_at: None,
         episode: None,
         video_kind: kind,
+        comments: None,
     }
 }
 

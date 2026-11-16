@@ -49,6 +49,9 @@ pub struct ParsedArticle {
     /// A YouTube Short or live stream, once `youtube::sorting` has found it
     /// in YouTube's lists; none for any other video or article.
     pub video_kind: Option<VideoKind>,
+    /// Where its comments are, as the feed says (`comments_link`): only ever
+    /// linked to, never fetched (decision 0286).
+    pub comments: Option<String>,
 }
 
 /// A YouTube video that isn't an ordinary one (decision 0144): each reader
@@ -212,7 +215,8 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .links
                 .iter()
                 .find(|link| {
-                    link.rel.as_deref().is_none_or(|rel| rel == "alternate")
+                    link.target.is_none()
+                        && link.rel.as_deref().is_none_or(|rel| rel == "alternate")
                         && link
                             .media_type
                             .as_deref()
@@ -254,6 +258,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 both => both,
             };
             let episode = episode(&entry, base, feed_artwork.as_deref());
+            let comments = comments_link(&entry.links, base, link.as_ref());
             ParsedArticle {
                 // The fingerprint comes from the link as the feed wrote it,
                 // so it stays what it always was (`normalize` ignores the
@@ -275,6 +280,7 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 published_at: published,
                 episode,
                 video_kind: None,
+                comments,
             }
         })
         .collect();
@@ -288,6 +294,32 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
         email,
         picture,
     })
+}
+
+/// Where an article's comments are, as its feed says (decision 0286): RSS's
+/// `<comments>`, or Atom's `rel="replies"` link to a web page (not to a feed
+/// of them). A web address only, and never the article's own (feed-rs
+/// already drops a `<comments>` that is just the article's link).
+fn comments_link(
+    links: &[feed_rs::model::Link],
+    base: &Url,
+    article: Option<&Url>,
+) -> Option<String> {
+    links
+        .iter()
+        .find(|link| {
+            link.target == Some(feed_rs::model::LinkTarget::Comments)
+                || (link.rel.as_deref() == Some("replies")
+                    && link
+                        .media_type
+                        .as_deref()
+                        .is_some_and(|kind| kind.contains("html")))
+        })
+        .and_then(|link| base.join(link.href.trim()).ok())
+        .filter(|url| matches!(url.scheme(), "http" | "https"))
+        .filter(|url| Some(url) != article)
+        .map(String::from)
+        .filter(|address| address.len() <= LONGEST_ADDRESS)
 }
 
 /// What stands before each episode's `itunes:duration` and `itunes:image`,
@@ -511,6 +543,50 @@ mod tests {
 
     fn url(text: &str) -> Url {
         Url::parse(text).unwrap()
+    }
+
+    #[test]
+    fn where_an_articles_comments_are_comes_from_its_feed() {
+        // RSS's <comments> (decision 0286), even before the article's own link, which stays the link.
+        let rss = br#"<?xml version="1.0"?><rss version="2.0"><channel><title>A</title>
+<link>https://a.example/</link>
+<item><title>One</title><comments>https://a.example/one#respond</comments><link>https://a.example/one</link></item>
+<item><title>Two</title><link>https://a.example/two</link><comments>https://a.example/two</comments></item>
+<item><title>Three</title><link>https://a.example/three</link><comments>javascript:alert(1)</comments></item>
+</channel></rss>"#;
+        let feed = parse(rss, &url("https://a.example/feed")).unwrap();
+        let found: Vec<(Option<&str>, Option<&str>)> = feed
+            .articles
+            .iter()
+            .map(|article| (article.link.as_deref(), article.comments.as_deref()))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (
+                    Some("https://a.example/one"),
+                    Some("https://a.example/one#respond")
+                ),
+                // Only the article's own address: no Comments.
+                (Some("https://a.example/two"), None),
+                (Some("https://a.example/three"), None),
+            ]
+        );
+        // Atom's rel="replies" to a web page counts; to a feed of comments, it doesn't.
+        let atom = br#"<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom"><title>B</title><id>b</id>
+<entry><title>One</title><id>b1</id><link href="https://b.example/one"/>
+<link rel="replies" type="application/atom+xml" href="https://b.example/one/comments.xml"/>
+<link rel="replies" type="text/html" href="https://b.example/one#comments"/></entry>
+<entry><title>Two</title><id>b2</id><link href="https://b.example/two"/>
+<link rel="replies" type="application/atom+xml" href="https://b.example/two/comments.xml"/></entry>
+</feed>"#;
+        let feed = parse(atom, &url("https://b.example/feed")).unwrap();
+        let found: Vec<Option<&str>> = feed
+            .articles
+            .iter()
+            .map(|article| article.comments.as_deref())
+            .collect();
+        assert_eq!(found, [Some("https://b.example/one#comments"), None]);
     }
 
     #[test]

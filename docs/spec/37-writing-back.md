@@ -8,7 +8,8 @@ V1, item 2). Its look gets a refinement round.*
 - **Write back on every article** of a person you follow (never a
   publication's, decision 0192): at the article's
   end, under its closing rule (and under "Read the rest on …" for a summary), one
-  centred button, **Write back**: an outlined button with a
+  centred button, **Write back** (with an arrow beside it for the other
+  ways back, below): an outlined button with a
   paper-plane icon, as Mark all as read ends a list, so it's quieter than
   the writing (decision 0242; solid ink before). Under it, in small muted
   type, who it goes to, named in full by the name in the sidebar, and the
@@ -27,6 +28,48 @@ V1, item 2). Its look gets a refinement round.*
   no Write back, no paper plane and no Write back in a row's menu, `w` does nothing there, its page
   has no Write to, and so no address on its page. Making it **A person**
   in its settings brings them back, with any address kept from before.
+- **Off for one person** (decision 0286, the owner's choice): their
+  settings (section 36) have a **Write back** switch, on unless the reader
+  switches it off ("Off takes Write back away from their articles and their
+  page."), kept on every source of theirs. Off, it's as for a publication:
+  no Write back at their articles' end, no paper plane, `w` does nothing,
+  no Write back in a row's menu or beside chosen words, and no Write to or
+  address on their page; but they stay a person, under People, and any
+  address is kept for when it's switched on again. Joining people keeps it
+  off if it was off for any of them; separating a source puts it back on
+  for that source. A publication, or someone who could be either, has no
+  switch: there's nothing to switch.
+- **The ways back** (decision 0286, the owner's choice): at an article's
+  end Write back is a split button. Beside it, joined
+  to it by a hairline, a 44px square with a downward arrow ("Other ways
+  to reply to Maya Chen" to screen readers) opens a small menu like More's,
+  each row with its icon: **Email app**, **Gmail** and **Outlook.com** (a
+  paper plane each; on a computer the one this device writes in shows W,
+  its key), **Copy maya@example.com** (two
+  overlapping pages; only when an address is known), then, after a
+  hairline, **Comment on their site** (a speech bubble). The way the main
+  button does is ticked. Choosing one does it at once: an email opens
+  where chosen (kept on this device, as Write in Gmail is, below), the
+  address is copied ("Copied." under it), or their comments open in a new
+  tab. A choice that can't be kept (offline, say) is said in oxblood under
+  it, with the alert icon, and the button stays as it was. From then on, the main button does that way for this person, on
+  every article of theirs and every device: **Write back**, **Copy
+  address** (two overlapping pages; "Copy address of Maya Chen" to screen
+  readers) or **Comment** (a speech bubble; "Comment on Maya Chen's site"),
+  kept by nine turtles on every source of theirs. Under Copy address the
+  line still says who and which address; under Comment, "on
+  example.com", the site the comments are on. The paper plane, `w`, a
+  row's menu and Write back about this always write an email, whatever the
+  main button does. Comments are where the feed says they are (RSS's
+  `<comments>`, or an Atom `rel="replies"` link to a web page, as WordPress,
+  Blogger and many others write; not a feed of comments, and not the
+  article's own address), else the article's own page, where comments
+  usually are. No platform is named in nine turtles: only what the feed
+  brought is used, and that page is only ever linked to, never fetched. The
+  top bar and the end's Save and View original stay as they are. On their
+  page, Write to is one button with no arrow, and the line with the address
+  ends in **Change** and **Copy address** ("Copy address of Maya Chen" to
+  screen readers).
 - **Write to, on their page** (the owner's core path, point 9): the same
   outlined button with the paper plane, **Write to Tomas Berg**, sits under
   their name on their page (section 36), with the address under it
@@ -218,3 +261,15 @@ V1, item 2). Its look gets a refinement round.*
    Gmail draft opens in a new tab with the address, "Re: " and the title.
    Open another article and press Write back: Gmail again, straight away.
    Press **Write in your email app** under it to go back.
+11. Open an article of someone whose address is known and press the
+   arrow beside Write back: Email app (ticked), Gmail, Outlook.com, Copy
+   their address, and Comment on their site. Choose Copy: "Copied." under
+   it, and the address pastes into a new email. The button now says Copy
+   address, on their next article too, and after a reload.
+12. Follow a WordPress blog (its feed names each post's comments). From the
+   arrow, choose Comment on their site: its comments open in a new tab, and
+   the button says Comment, with "on" and the site under it. Choose Email
+   app from the arrow to go back to Write back.
+13. On their page, press Settings and switch **Write back** off: their page
+   has no Write to, and their articles end with no Write back, no paper
+   plane, and `w` does nothing. Switch it on: all back, with the address.

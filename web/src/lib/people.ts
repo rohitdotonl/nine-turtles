@@ -14,8 +14,17 @@ import type { Article, Feed, Person, PlaceKind } from "./shapes";
 
 export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter", podcast: "Podcast" };
 
-/** A place before a join or a separation, as the server answers it, for Undo. */
-type Before = { feed: number; writer: number | null; name: string | null; folders: number[]; write_to: string | null };
+/** A place before a join or a separation, as the server answers it, for Undo: everything the join or separation changed, so Undo gives each back (the note on them, Write back's switch and way too). */
+type Before = {
+  feed: number;
+  writer: number | null;
+  name: string | null;
+  folders: number[];
+  write_to: string | null;
+  write_back_off: boolean;
+  write_back_way: string | null;
+  note: string | null;
+};
 
 /** A place's person, if the reader joined it to others. */
 export function personOf(feed: Feed, people: Person[]): Person | undefined {
@@ -179,7 +188,7 @@ export async function folderToPerson(folder: number): Promise<{ refusal?: string
   return { before: befores(answer?.before) };
 }
 
-function befores(list: unknown): Before[] {
+export function befores(list: unknown): Before[] {
   if (!Array.isArray(list)) return [];
   return list
     .filter((each): each is Record<string, unknown> => typeof each === "object" && each !== null)
@@ -189,6 +198,9 @@ function befores(list: unknown): Before[] {
       name: typeof each.name === "string" ? each.name : null,
       folders: Array.isArray(each.folders) ? each.folders.map(Number) : [],
       write_to: typeof each.write_to === "string" ? each.write_to : null,
+      write_back_off: each.write_back_off === true,
+      write_back_way: typeof each.write_back_way === "string" ? each.write_back_way : null,
+      note: typeof each.note === "string" ? each.note : null,
     }));
 }
 

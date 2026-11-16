@@ -388,6 +388,21 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         )
         .await;
     assert!(status.is_success(), "{status}");
+    // Write back's address, switch and way are the reader's too (decisions 0147 and 0286).
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{old}"),
+            json!({ "write_back": false, "write_back_way": "comment" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{old}/write-to"),
+            json!({ "address": "me@old.example" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
     reader.change(|site| site.old_gone = true);
     let now = nine_turtles::now();
     reader.check(old, now).await;
@@ -441,6 +456,9 @@ async fn find_new_address_offers_the_sites_feeds_and_moving_keeps_everything() {
         .unwrap()
         .clone();
     assert_eq!(moved_feed["folders"].as_array().unwrap().len(), 1);
+    assert_eq!(moved_feed["write_to"], "me@old.example");
+    assert_eq!(moved_feed["write_back_off"], true);
+    assert_eq!(moved_feed["write_back_way"], "comment");
     assert!(reader.listed().await.is_empty());
 
     // An address that's already followed, or that isn't a feed, is refused.

@@ -26,6 +26,14 @@
   Where it opens is this device's choice (decision 0259): the email app (`mailto:`), or, once
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
+  At an article's end the button is split (decision 0286): beside Write back, an arrow opens the
+  other ways back, each with its icon: Email app (with its key), Gmail, Outlook.com, Copy their
+  address, and, after a rule, Comment on their site (the comments the feed names, else the article
+  itself). Choosing one does it at once, and the main button then does that for this person
+  ("Copy address", "Comment"), kept for them by the server; where email opens stays this device's
+  choice. On their page, Copy address follows Change beside the address; "Copied." takes a line
+  of its own.
+
   Once pressed, one line under it says "Opening your email app…". On a computer the other ways
   to write (Gmail, Outlook.com, copying the address) wait behind two words on that line, "Didn't
   open?", so a press that worked leaves one line and no more (decision 0265).
@@ -39,25 +47,28 @@
   Change, and what follows a press, the line or the box, each take a line of their own straight
   after it.
 
-  A publication has none of this (decision 0192): nothing shows, and `start` does nothing. For
+  A publication has none of this (decision 0192), nor a person the reader switched Write back off
+  for (decision 0286): nothing shows, and `start` does nothing. For
   someone nine turtles couldn't sort, at an article's end, the question stands in its place
   instead (SettleAsk, decision 0264).
 -->
 <script lang="ts">
-  import { tip } from "./keyboard";
+  import { keyFor, tip } from "./keyboard";
   import { tick } from "svelte";
   import AddressBox from "./AddressBox.svelte";
   import Icon from "./Icon.svelte";
+  import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import TextButton from "./TextButton.svelte";
   import SettleAsk from "./SettleAsk.svelte";
-  import { plainSourceName } from "./feeds";
+  import { editFeed, plainSourceName } from "./feeds";
   import type { LoadedLibrary } from "./library.svelte";
   import type { ListNote } from "./listNote";
   import type { Article } from "./shapes";
-  import { aboutLine, addressFor, composeLink, keepAddress, keepMailPlace, lookOnTheirSite, looksLikeAddress, MAIL_NAMES, mailPlace, quotedBody, siteOf, writesBack, type MailPlace } from "./writeBack";
+  import { aboutLine, addressFor, commentsOf, composeLink, keepAddress, keepMailPlace, lookOnTheirSite, looksLikeAddress, MAIL_NAMES, mailPlace, quotedBody, siteOf, wayOf, writesBack, type MailPlace, type WriteBackWay } from "./writeBack";
 
   let {
     article,
+    comments,
     feedId,
     library,
     quotes = () => [],
@@ -67,6 +78,8 @@
   }: {
     /** The article it writes back about; none on their page, where it writes to them. */
     article?: Article;
+    /** Where the article's feed says its comments are, if it says. */
+    comments?: string | null;
     /** On their page: their row's place. */
     feedId?: number;
     library: LoadedLibrary;
@@ -86,6 +99,18 @@
   let name = $derived(plainSourceName(library.shownAs(place)?.title ?? article?.feedTitle ?? ""));
   let address = $derived(place && addressFor(place, library.feeds ?? []));
   let site = $derived(siteOf(place, article?.link));
+  /** Where to comment on this article: the comments its feed names, else the article on their site. */
+  let talk = $derived(article ? commentsOf(comments, article.link) : undefined);
+  /** Its site, said under Comment: "on example.com". */
+  let talkSite = $derived(talk ? new URL(talk).host.replace(/^www\./, "") : "");
+  /** The way just chosen from the arrow's menu, until the server's copy of it comes back. */
+  let picked: { id: number; way: WriteBackWay } | undefined = $state();
+  /** What the main button does for this person (decision 0286): only at an article's end, and only a way that can be done here. */
+  let way: WriteBackWay = $derived.by(() => {
+    if (!article || quiet || !place) return "email";
+    const chosen = picked?.id === place.id ? picked.way : wayOf(place, library.feeds ?? [], address);
+    return (chosen === "copy" && !address) || (chosen === "comment" && !talk) ? "email" : chosen;
+  });
   /** On their page: "Write to", an empty subject, under their name on the page's left edge. */
   let verb = $derived(article ? "Write back to" : "Write to");
   let subject = $derived(article ? aboutLine(article) : "");
@@ -200,6 +225,62 @@
     written?.focus();
   }
 
+  /** Kept for this person on the server, so their articles open with it next time; said here at once. */
+  async function keepWay(next: WriteBackWay) {
+    if (!place) return;
+    const id = place.id;
+    const before = wayOf(place, library.feeds ?? [], address);
+    picked = { id, way: next };
+    unkept = false;
+    if (next === before) return;
+    if (!(await editFeed(id, { writeBackWay: next }))) return void (await library.loadFeeds());
+    // Not kept: the button goes back to what's kept, and says so.
+    if (picked?.id === id) picked = undefined;
+    unkept = true;
+  }
+  /** The way chosen couldn't be kept for them (offline, say): said under the button, which stays as it was. */
+  let unkept = $state(false);
+
+  /** The arrow's ways (decision 0286), the one the main button does ticked. On a computer, the email app's row shows its key. */
+  let menu: MenuGroup[] = $derived([
+    {
+      items: [
+        ...(["app", "gmail", "outlook"] as const).map((other) => ({
+          label: other === "app" ? "Email app" : MAIL_NAMES[other],
+          icon: "send" as const,
+          shortcut: other === writesIn && computer ? keyFor("write-back") : undefined,
+          checked: way === "email" && writesIn === other,
+          onSelect: () => void emailIn(other),
+        })),
+        ...(address ? [{ label: `Copy ${address}`, icon: "copy" as const, checked: way === "copy", onSelect: () => void copyWay() }] : []),
+      ],
+    },
+    ...(talk ? [{ items: [{ label: "Comment on their site", icon: "comments" as const, checked: way === "comment", onSelect: () => void commentWay() }] }] : []),
+  ]);
+
+  /** An email, from here on written in `other` on this device. */
+  async function emailIn(other: MailPlace) {
+    keepMailPlace(other);
+    writesIn = other;
+    void keepWay("email");
+    await start();
+  }
+
+  async function copyWay() {
+    void keepWay("copy");
+    opening = false;
+    away = undefined;
+    await copyAddress();
+  }
+
+  function commentWay() {
+    void keepWay("comment");
+    opening = false;
+    copied = "";
+    away = undefined;
+    if (talk) window.open(talk, "_blank", "noopener,noreferrer");
+  }
+
   /** Whether all of this, and so the line under the button, is on screen in the article's scroller. */
   let root: HTMLDivElement | undefined = $state();
   function shown(): boolean {
@@ -224,6 +305,7 @@
     away = undefined;
     copied = "";
     copyFailed = false;
+    unkept = false;
   });
 
   /** Write back: the email app, or the box asking for their address. `about`: the words to quote, else every highlight. */
@@ -390,42 +472,73 @@
         onNotNow={() => void notNow()}
         onEscape={() => void notNow()}
       />
-    {:else if address}
-      <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
-      {#if article}
+    {:else}
+      {#snippet email()}
+        {#if address}
+          <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
+        {:else}
+          <button type="button" class={quiet ? "text-link text-ui" : "btn"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</button>
+        {/if}
+      {/snippet}
+      {#if article && !quiet}
+        <!-- The split button (decision 0286): the way chosen for this person, and the arrow with every way. -->
+        <div class="split">
+          {#if way === "comment"}
+            <a class="btn" href={talk} target="_blank" rel="noopener noreferrer"><Icon name="comments" /><span>Comment<span class="sr-only">{" "}on <bdi>{name}</bdi>'s site</span></span></a>
+          {:else if way === "copy"}
+            <button type="button" class="btn" onclick={() => void copyWay()}><Icon name="copy" /><span>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></span></button>
+          {:else}
+            {@render email()}
+          {/if}
+          <MoreMenu id={`ways-back-${article.id}`} label={`Other ways to reply to ${name}`} groups={menu} look="btn split-arrow">
+            {#snippet face()}<Icon name="chevron-down" />{/snippet}
+          </MoreMenu>
+        </div>
+      {:else}
+        {@render email()}
+      {/if}
+      {#if way === "comment"}
+        <p class="to" aria-hidden="true">on {talkSite}</p>
+      {:else if !address}
+        {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
+      {:else if article}
         <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
       {:else}
-        <!-- On their page the address is theirs to correct, where it's shown. -->
-        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
+        <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
+        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
       {/if}
-      {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}
-      {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
-      {#snippet ways()}
-        <span class="ways"
-          >{#each others as other (other)}<button type="button" class="text-link" onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</button>{/each}<button
-            type="button"
-            class="text-link"
-            onclick={() => void copyAddress(true)}>Copy their address</button
-          ></span
-        >
-      {/snippet}
-      <p class={["opening-line", !opening && "sr-only"]} aria-live="polite">
-        {#if opening}
-          {#if !returned}Opening {where}…{" "}{/if}
-          {#if copied}
-            {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>
-          {:else if computer}
-            <!-- One line when the press worked: the other ways wait behind the question (decision 0265). -->
-            <button type="button" class={["text-link more", !returned && "after-words"]} aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>
-            {#if asked}{@render ways()}{/if}
-          {:else}
-            {#if !returned}<br />{/if}{question}{@render ways()}
+      <!-- Always in the page, so screen readers hear "Copied." as it arrives: a polite live line, not a second "status" (the toolbar's line is the pane's one status). -->
+      <p class={[copied && !opening ? "to" : "sr-only", copyFailed && "text-danger"]} aria-live="polite">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{/if}</p>
+      {#if unkept}<p class="to text-danger" role="alert"><span class="inline-flex items-start gap-2"><span class="mt-px shrink-0"><Icon name="alert" /></span>That choice couldn't be kept for {name}. Try again in a moment.</span></p>{/if}
+      {#if address && way === "email"}
+        {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}
+        {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
+      {/if}
+      {#if address}
+        {#snippet ways()}
+          <span class="ways"
+            >{#each others as other (other)}<button type="button" class="text-link" onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</button>{/each}<button
+              type="button"
+              class="text-link"
+              onclick={() => void copyAddress(true)}>Copy their address</button
+            ></span
+          >
+        {/snippet}
+        <p class={["opening-line", !opening && "sr-only"]} aria-live="polite">
+          {#if opening}
+            {#if !returned}Opening {where}…{" "}{/if}
+            {#if copied}
+              {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>
+            {:else if computer}
+              <!-- One line when the press worked: the other ways wait behind the question (decision 0265). -->
+              <button type="button" class={["text-link more", !returned && "after-words"]} aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>
+              {#if asked}{@render ways()}{/if}
+            {:else}
+              {#if !returned}<br />{/if}{question}{@render ways()}
+            {/if}
           {/if}
-        {/if}
-      </p>
-    {:else}
-      <button type="button" class={quiet ? "text-link text-ui" : "btn"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</button>
-      {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
+        </p>
+      {/if}
     {/if}
   </div>
 {:else if article && source?.open}
@@ -471,6 +584,35 @@
     max-width: 100%;
     white-space: normal;
     text-align: center;
+  }
+  /*
+    The split button (decision 0286): the way and its arrow, one outlined shape with a hairline
+    between them. The arrow is a full 44px square; whichever half has the keyboard sits on top,
+    so its outline shows whole.
+  */
+  .split {
+    display: flex;
+    max-width: 100%;
+  }
+  .split > .btn {
+    flex-shrink: 1;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    border-inline-end-width: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+  .split :global(.split-arrow) {
+    width: 2.75rem;
+    padding-inline: 0;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+  .split > .btn:focus-visible,
+  .split :global(.split-arrow:focus-visible) {
+    position: relative;
+    z-index: 1;
   }
   /* Once pressed: the email app is opening, and the way out if it didn't (decision 0229). Not ".opening": that's the app's own first line (opening.css), whose serif and 64px of room would land here too. */
   .opening-line {

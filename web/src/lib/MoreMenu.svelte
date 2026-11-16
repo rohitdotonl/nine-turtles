@@ -20,6 +20,8 @@
     onSelect: () => void;
     /** For one-of-several choices: whether this one is the current one. */
     checked?: boolean;
+    /** An icon of its own before the words (Write back's ways, decision 0286). */
+    icon?: IconName;
     /** The key that does the same, shown at the end of the row (e.g. "Shift+A"). */
     shortcut?: string;
   };
@@ -39,6 +41,7 @@
     start = false,
     icon = "more",
     face,
+    look,
   }: {
     id: string;
     label?: string;
@@ -51,6 +54,8 @@
     start?: boolean;
     /** What the button shows instead of an icon: a person's picture, on their page (decision 0285). */
     face?: Snippet;
+    /** The button's own classes with `face`, instead of a round picture's: the arrow half of Write back's split button (decision 0286). */
+    look?: string;
   } = $props();
 
   let open = $state(false);
@@ -98,7 +103,7 @@
     title={label}
     onclick={() => (open ? close(false) : show())}
     onkeydown={onButtonKey}
-    class={face ? "face" : ["btn-quiet btn-icon", open && "text-ink"]}
+    class={face ? (look ?? "face") : ["btn-quiet btn-icon", open && "text-ink"]}
   >
     {#if face}
       {@render face()}
