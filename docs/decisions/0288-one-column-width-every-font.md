@@ -1,6 +1,6 @@
 # 0288: One column width in every font
 
-**In one line:** The reading column is 32.5em wide (about 70 letters in Literata, 75 in Atkinson) instead of 57ch, so changing the reading font no longer moves the column; refines decision 0187.
+**In one line:** The reading column is 32.5em wide (about 70 letters a line in Literata and Atkinson alike) instead of 57ch, so changing the reading font no longer moves the column; refines decision 0187.
 
 *16 November 2026. The owner noticed that switching the reading font from Literata to Atkinson made the column much wider, and asked to see it steady.*
 
@@ -13,8 +13,10 @@ about 85 letters a line, past the 45 to 75 that reads best and past WCAG
 1.4.8's 80.
 
 **Decision.** The column is measured in the text's size (em), not in its
-zero: 32.5em for every font. Literata gets about 70 letters a line (71
-before), Atkinson about 75 (85 before). Switching fonts in the Aa panel
+zero: 32.5em for every font, 650px at the usual size. Measured on a long
+essay, Literata holds about 66 characters a line (67 before), Atkinson about
+69 (80 before, in a column 739px wide); by a font's own average letter, 70
+and 75. Georgia, System serif in Chrome, lands with Atkinson. Switching fonts in the Aa panel
 leaves the column, the list beside it and the article's bar where they are.
 A larger text size still makes lines shorter by itself; a phone's column is
 still the screen's width.
