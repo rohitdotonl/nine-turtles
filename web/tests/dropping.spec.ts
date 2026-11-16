@@ -80,6 +80,24 @@ test("dropped on Unsubscribe, they're gone at once; Undo brings them back", asyn
   await expect(row(page, name)).toBeVisible();
 });
 
+test("dropped on Unsubscribe, their articles leave the open list at once; Undo brings them back", async ({ page }) => {
+  const folder = unique("Leaving");
+  const { name } = await aBlog(page, "drop-list", folder);
+  const { name: stays } = await aBlog(page, "drop-stays", folder, true);
+  await sidebar(page).getByRole("link", { name: new RegExp(`^${folder}`) }).click();
+  const articlesOf = (who: string) => page.getByRole("button", { name: new RegExp(`${who} ·`) });
+  await expect(articlesOf(name)).toHaveCount(3);
+  await expect(articlesOf(stays)).toHaveCount(3);
+  await dragTo(page, row(page, name), act(page, "unsubscribe"));
+  await expect(note(page)).toContainText(`Unsubscribed from ${name}.`);
+  // No reload: the list itself lets go of them, and keeps everyone else.
+  await expect(articlesOf(name)).toHaveCount(0);
+  await expect(articlesOf(stays)).toHaveCount(3);
+  await sidebar(page).getByRole("button", { name: "Undo" }).click();
+  await expect(note(page)).toContainText("Undone.");
+  await expect(articlesOf(name)).toHaveCount(3);
+});
+
 test("dropped on Unsubscribe with a starred article of theirs, the foot asks first; Keep them keeps it", async ({ page }) => {
   const { name, id } = await aBlog(page, "drop-kept");
   const listed = await (await page.request.get(new URL(`/api/articles?feed=${id}`, FEEDS_APP).href)).json();

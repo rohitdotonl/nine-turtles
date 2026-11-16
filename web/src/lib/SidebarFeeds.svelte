@@ -65,6 +65,7 @@
     unreadOff = false,
     searchArticles,
     onLeft,
+    onBack,
     onLink,
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
@@ -79,8 +80,10 @@
     unreadOff?: boolean;
     /** Searches every article for what's typed in the sidebar search (decision 0231). */
     searchArticles: (words: string) => void;
-    /** Unsubscribed from by a drop: if their list or page is open, it closes. */
+    /** Unsubscribed from by a drop: if their list or page is open, it closes; any other list drops their articles at once. */
     onLeft: (row: Feed) => void;
+    /** Undo brought them back after a drop: the list shows their articles again. */
+    onBack: () => void;
     /** A web address was dropped on nine turtles: "Follow <name>?" opens for it. */
     onLink: (address: string) => void;
   } = $props();
@@ -210,7 +213,7 @@
     leaving = false;
     asking = undefined;
     if (typeof done !== "string") onLeft(row);
-    note = done;
+    note = typeof done !== "string" && done.undo ? { ...done, undo: () => done.undo!().finally(onBack) } : done;
     where = "";
     // The question's buttons are gone: the keyboard goes to the note's Undo (or Close).
     await tick();
