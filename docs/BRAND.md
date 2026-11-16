@@ -59,6 +59,7 @@ what's live.
 
 - **The drawing:** nine small turtles seen from the side, in three rows of three, the middle row a little to the right. One ink, the page's text color, never colored, never cut off, never moving. (Live)
 - **The nine** is the logo wherever the name is: the original drawing, half-circle shells and round heads, brought back on 4 November 2026 at the owner's request in place of the heavier redrawn nine (D2). Beside the name it sits on the name's baseline, the name in Literata 600 (in the sidebar: the nine 27px tall, the name 22px, 9px apart, so the lockup fits on one line in the sidebar's top line). All nine turtles stay in the sidebar. (Live)
+- **Four out in front** (decision 0291): on the website's pages other than the front page, the name's top is the name with the nine walking on it instead of the nine before it. The same turtle, unchanged, nine times: five on the letters (the two n's, the u, the l, and the e of "turtles", which climbs its curve), a small gap off the letters and never touching them, and four on the baseline after the s, walking ahead of the name; the i keeps its dot. The name in Literata 600, 28px on tablets and computers, 22px on a phone so Help and Open the app stay on one line. The name stays real text and screen readers hear only "nine turtles". The front page, the app and the app icon keep the nine. Drawing: `docs/logo/four-in-front.svg`. (Live)
 - **A single turtle** appears only in the browser-tab icon. (Live)
 - **The app icon:** a black tile `#141414` with the nine in light `#EFEFF1`, the same by day and by night. (Live)
 - **The tab icon:** the app icon's black square, always, with one light turtle filling most of it (the original turtle: a half-circle shell and a round head), so it shows on any tab, light or dark. (Live)
@@ -67,11 +68,12 @@ what's live.
 ## The turtles' only job
 
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
-sleeps, celebrates or stands for a feeling. No mascot.
+sleeps, celebrates or stands for a feeling. No mascot. The one exception
+is "four out in front" (decision 0291), where the nine walk on the name.
 
 - **May appear:** the logo (sidebar, sign-in, the website's top, app icon, tab icon), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
-- **When it appears:** the logo's own drawing, at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
+- **When it appears:** the logo's own drawing (or, on the website's other pages, four out in front), at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 
 ## Icons (Live, decision 0181)
 
