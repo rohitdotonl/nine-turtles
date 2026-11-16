@@ -6,7 +6,7 @@
   to screen readers, together at the right (decision 0050), and on a computer it scrolls
   away with the title, Save and View original waiting again at the end (decision 0263): View original, Aa (the reading panel), Save,
   Write back (a paper plane, for a person only, decision 0214) and More (…).
-  More holds Copy link (Share on phones), Mark unread, Add a note and Hide
+  More holds Copy link (Share on phones), Mark unread, Add a note, Hide and, on a phone, Open comments (decision 0286)
   (SPEC sections 7, 8, 9, 21, 33 and 37); on a phone it opens upwards, Copy
   link or Share nearest the button (decision 0243). Write back also ends the article.
   The writer's name under the title opens the page about them (decision
@@ -186,7 +186,7 @@
         : undefined,
   );
 
-  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, and hiding others like it. */
+  /** The article's less frequent actions, behind More (…): sharing its link, marking it unread, a note, hiding others like it, and, on a phone, its comments. */
   let more: MenuGroup[] = $derived([
     {
       items: [
@@ -194,6 +194,8 @@
         { label: "Mark unread", shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
         ...(followed ? [{ label: "Hide articles about…", onSelect: () => onHide(article.feedId) }] : []),
+        // A phone has no row of words at the article's end, so its comments, when the feed says where, wait here (decision 0286).
+        ...(phone && full?.commentsUrl ? [{ label: "Open comments", onSelect: () => void window.open(full?.commentsUrl ?? "", "_blank", "noopener,noreferrer") }] : []),
       ],
     },
   ]);
@@ -662,7 +664,7 @@
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
         {/key}
-        {#if !phone}<EndTools starred={article.starred} {onStar} original={(full.content || !full.summary) && article.link ? article.link : undefined} />{/if}
+        {#if !phone}<EndTools starred={article.starred} {onStar} original={(full.content || !full.summary) && article.link ? article.link : undefined} comments={full.commentsUrl} />{/if}
         <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, the question in its place (WriteBack, decision 0264). -->
         <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} {library} quotes={() => marks?.quotes() ?? []} />
       {/if}

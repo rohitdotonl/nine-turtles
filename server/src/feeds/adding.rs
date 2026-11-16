@@ -416,6 +416,7 @@ async fn follow(
         added_at: now,
         write_to: None,
         email: parsed.email,
+        write_back_off: false,
         note: None,
         picture_url: parsed.picture,
         picture_chosen: None,

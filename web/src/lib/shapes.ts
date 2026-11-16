@@ -44,6 +44,8 @@ export type Feed = {
   /** Where to write back (decision 0147): the address the reader typed for the person, and the one this place gives. */
   writeTo?: string | null;
   email?: string | null;
+  /** The reader switched Write back off for the person (decision 0286), kept on each of their places. */
+  writeBackOff?: boolean;
   /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
   note?: string | null;
   /** The picture the feed names (decision 0285), on the publisher's site. */
@@ -125,6 +127,8 @@ export type FullArticle = Article & {
   audio?: Episode | null;
   /** A YouTube Short plays in a tall box (decision 0144); a live stream or any other video in a wide one. */
   videoKind?: "short" | "live" | null;
+  /** Where its comments are, as its feed says (decision 0286): the publisher's own page, linked as Comments at its end. */
+  commentsUrl?: string | null;
   /** The reader's highlights on it and their note on the whole of it (SPEC section 42), oldest first; none in copies kept before them. */
   notes?: Note[];
 };
@@ -227,8 +231,14 @@ export function toFullArticle(article: Record<string, unknown>): FullArticle {
     language: text(article.language),
     audio: episodeFrom(article),
     videoKind: article.video_kind === "short" || article.video_kind === "live" ? article.video_kind : null,
+    commentsUrl: webAddress(article.comments_url),
     notes: Array.isArray(article.notes) ? article.notes.filter(isRecord).map(toNote) : [],
   };
+}
+
+/** A web address (http or https) only: anything else would not be a page to open. */
+function webAddress(value: unknown): string | null {
+  return typeof value === "string" && /^https?:\/\//i.test(value) ? value : null;
 }
 
 function text(value: unknown): string | null {
@@ -255,6 +265,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     addedAt: typeof feed.added_at === "number" ? feed.added_at : undefined,
     writeTo: text(feed.write_to),
     email: text(feed.email),
+    writeBackOff: feed.write_back_off === true,
     note: text(feed.note),
     pictureUrl: text(feed.picture_url),
     pictureChosen: typeof feed.picture_chosen === "number" ? feed.picture_chosen : null,

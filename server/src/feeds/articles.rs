@@ -51,6 +51,9 @@ pub struct FullArticle {
     /// A YouTube Short ("short") or live stream ("live"), for the shape of
     /// its player (decision 0144); null for anything else.
     pub video_kind: Option<String>,
+    /// Where its comments are, as its feed says (decision 0286): the
+    /// publisher's own page, which the article's end links to as Comments.
+    pub comments_url: Option<String>,
     /// The reader's highlights and note on it (SPEC section 42), in the order made.
     #[sqlx(skip)]
     pub notes: Vec<crate::notes::Note>,
@@ -166,7 +169,8 @@ pub(crate) async fn full_articles(
                  COALESCE(articles.language, feeds.language) AS language,
                  entries.sort_at AS at, entries.read, entries.starred,
                  articles.episode_url, articles.episode_type, articles.episode_bytes,
-                 articles.episode_seconds, articles.episode_artwork, articles.video_kind",
+                 articles.episode_seconds, articles.episode_artwork, articles.video_kind,
+                 articles.comments_url",
         from_entries!(),
         "? AND entries.article_id IN (SELECT value FROM json_each(?))"
     ))

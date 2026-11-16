@@ -111,6 +111,8 @@ struct FeedRow {
     /// for this person, and the one the feed or newsletter gives.
     write_to: Option<String>,
     email: Option<String>,
+    /// The reader switched Write back off for this person (decision 0286).
+    write_back_off: bool,
     /// The reader's note on the person (decision 0164).
     note: Option<String>,
     /// The picture the feed names (decision 0285), an address on the publisher's site.
@@ -137,7 +139,7 @@ pub const FEEDS: &str = concat!(
         (feeds.fetched_at IS NULL AND feeds.failures = 0
              AND feeds.url NOT LIKE 'newsletter:%') AS waiting,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
-        subscriptions.note, feeds.email, feeds.picture_url,
+        subscriptions.write_back_off, subscriptions.note, feeds.email, feeds.picture_url,
         (SELECT chosen_at FROM pictures WHERE pictures.person_id = subscriptions.person_id
              AND pictures.feed_id = subscriptions.feed_id) AS picture_chosen, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,

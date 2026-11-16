@@ -27,7 +27,9 @@
 //                      their address; /writer/NAME/feed.xml names none
 //   /blog/NAME/        a home page for a blog called NAME, naming its feed
 //                      (and its comments feed too, if NAME starts with
-//                      "two-"); tests that add a feed use their own NAME,
+//                      "two-"; each post names its comments page, RSS's
+//                      <comments>, if NAME starts with "talk-"); tests
+//                      that add a feed use their own NAME,
 //                      so they never meet each other's feeds. A NAME that
 //                      starts with "many-" has 55 articles from the start,
 //                      all dated in the past, so its list has more than
@@ -86,13 +88,13 @@ const TITLES = [
 
 // Article `number` keeps its title and date as later ones arrive: `first`
 // is how many the feed had to begin with.
-function rss(title, link, count, first = count) {
+function rss(title, link, count, first = count, comments = false) {
   const items = Array.from({ length: count }, (_, index) => {
     const number = count - index;
     const place = (((first - number) % TITLES.length) + TITLES.length) % TITLES.length;
     const date = new Date(NEWEST - (first - number) * DAY).toUTCString();
     return `<item><title>${TITLES[place]} (${number})</title>
-<link>${link}${number}</link><guid>${link}${number}</guid><pubDate>${date}</pubDate>
+<link>${link}${number}</link><guid>${link}${number}</guid><pubDate>${date}</pubDate>${comments ? `<comments>${link}${number}#comments</comments>` : ""}
 <description>&lt;p&gt;A short made-up summary for article ${number}.&lt;/p&gt;</description></item>`;
   });
   return `<?xml version="1.0"?><rss version="2.0"><channel><title>${title}</title>
@@ -521,7 +523,7 @@ createServer((request, response) => {
         return response.end("Not found");
       }
       if (name.startsWith("many-")) return xml(rss(`Blog ${name}`, home, 55));
-      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3));
+      return xml(rss(`Blog ${name}`, home, 3 + (grown.get(name) ?? 0), 3, name.startsWith("talk-")));
     }
     if (blog[2] === "comments.xml") return xml(rss(`Blog ${name}: comments`, `https://${name}.example/comments/`, 1));
     const feeds = [[`Blog ${name}`, `/blog/${name}/${file}`]];

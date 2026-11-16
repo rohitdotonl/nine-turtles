@@ -26,6 +26,9 @@
   Where it opens is this device's choice (decision 0259): the email app (`mailto:`), or, once
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
+  The address line ends in Copy address (decision 0286), for writing from somewhere nine turtles
+  can't open; "Copied." follows on a line of its own.
+
   Once pressed, one line under it says "Opening your email app…". On a computer the other ways
   to write (Gmail, Outlook.com, copying the address) wait behind two words on that line, "Didn't
   open?", so a press that worked leaves one line and no more (decision 0265).
@@ -39,7 +42,8 @@
   Change, and what follows a press, the line or the box, each take a line of their own straight
   after it.
 
-  A publication has none of this (decision 0192): nothing shows, and `start` does nothing. For
+  A publication has none of this (decision 0192), nor a person the reader switched Write back off
+  for (decision 0286): nothing shows, and `start` does nothing. For
   someone nine turtles couldn't sort, at an article's end, the question stands in its place
   instead (SettleAsk, decision 0264).
 -->
@@ -392,12 +396,15 @@
       />
     {:else if address}
       <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
+      <!-- Copy address, in the line that shows it (decision 0286): for writing from somewhere nine turtles can't open. The keyboard stays on it; the line under says how it went. -->
+      {#snippet copy()}<button type="button" class="text-link change" aria-label="Copy {name}'s email address" onclick={() => void copyAddress()}>Copy address</button>{/snippet}
       {#if article}
-        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
+        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}{@render copy()}</p>
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown. -->
-        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button></p>
+        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button>{@render copy()}</p>
       {/if}
+      {#if copied && !opening}<p class={["to", copyFailed && "text-danger"]} role="status"><span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span></p>{/if}
       {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}
       {#if quotedBody(quoted)}<p class="to">Your email starts with the words you {chosen ? "chose" : "highlighted"}.</p>{/if}
       {#snippet ways()}

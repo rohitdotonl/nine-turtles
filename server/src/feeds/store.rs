@@ -106,6 +106,7 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, paused_at = NULL, writer_id = NULL, kind = NULL, kind_why = NULL, place = NULL, write_to = NULL,
+             write_back_off = 0,
              shorts = 0, live_streams = 0, drop_kept = 0, removed_at = NULL, kept_until = NULL,
              by_assistant = 0",
     )
@@ -458,18 +459,19 @@ pub async fn store_articles(
             "INSERT INTO articles (id, feed_id, fingerprint, title, link, author, content,
                  summary, language, published_at, received_at, sort_at,
                  episode_url, episode_type, episode_bytes, episode_seconds, episode_artwork,
-                 video_kind)
+                 video_kind, comments_url)
              VALUES (1 + MAX(COALESCE((SELECT MAX(id) FROM articles), 0),
                      COALESCE((SELECT CAST(value AS INTEGER) FROM settings
                                WHERE name = 'articles_high_water'), 0)),
-                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT (feed_id, fingerprint) DO UPDATE SET
                  title = excluded.title, link = excluded.link, author = excluded.author,
                  content = excluded.content, summary = excluded.summary,
                  language = excluded.language, episode_url = excluded.episode_url,
                  episode_type = excluded.episode_type, episode_bytes = excluded.episode_bytes,
                  episode_seconds = excluded.episode_seconds,
-                 episode_artwork = excluded.episode_artwork
+                 episode_artwork = excluded.episode_artwork,
+                 comments_url = excluded.comments_url
              WHERE articles.title IS NOT excluded.title OR articles.link IS NOT excluded.link
                  OR articles.author IS NOT excluded.author
                  OR articles.content IS NOT excluded.content
@@ -480,6 +482,7 @@ pub async fn store_articles(
                  OR articles.episode_bytes IS NOT excluded.episode_bytes
                  OR articles.episode_seconds IS NOT excluded.episode_seconds
                  OR articles.episode_artwork IS NOT excluded.episode_artwork
+                 OR articles.comments_url IS NOT excluded.comments_url
              RETURNING id",
         )
         .bind(feed_id)
@@ -499,6 +502,7 @@ pub async fn store_articles(
         .bind(episode.and_then(|episode| episode.seconds))
         .bind(episode.and_then(|episode| episode.artwork.as_ref()))
         .bind(article.video_kind.map(feed::VideoKind::as_str))
+        .bind(&article.comments)
         .fetch_optional(&mut *connection)
         .await?;
         // New, or edited since: the search index gets its words.

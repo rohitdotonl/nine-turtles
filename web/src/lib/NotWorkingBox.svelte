@@ -36,7 +36,7 @@
     sick: Sick | undefined;
     /** The source's name, when they have more than one: "Garden Letters: Feed gone since 24 Oct". */
     subject?: string;
-    /** A person, not a publication: someone to write to (decision 0192). */
+    /** A person, not a publication, with Write back on: someone to write to (decisions 0192, 0286). */
     person: boolean;
     /** The one box that offers Write to them: one way to write, not two. */
     write: boolean;

@@ -16,9 +16,12 @@ import type { Article, Feed } from "./shapes";
 import { deviceText, setDeviceText } from "./device";
 import { date } from "./times";
 
-/** Write back is offered for a person only, never a publication (decision 0192). */
-export function writesBack(feed: Pick<Feed, "kind"> | undefined): boolean {
-  return feed !== undefined && feed.kind !== "publication";
+/**
+ * Write back is offered for a person only, never a publication (decision 0192), and not for one
+ * the reader switched it off for (decision 0286: kept on each of their places).
+ */
+export function writesBack(feed: Pick<Feed, "kind" | "writeBackOff"> | undefined): boolean {
+  return feed !== undefined && feed.kind !== "publication" && feed.writeBackOff !== true;
 }
 
 /** Where to write to the person `feed` is a place of, or undefined while nine turtles doesn't know. */

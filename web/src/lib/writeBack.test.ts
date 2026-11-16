@@ -14,6 +14,11 @@ describe("writing back", () => {
     expect(writesBack(undefined)).toBe(false);
   });
 
+  it("is not for a person the reader switched it off for (decision 0286)", () => {
+    expect(writesBack(place(4, { writeBackOff: true }))).toBe(false);
+    expect(writesBack(place(5, { writeBackOff: false }))).toBe(true);
+  });
+
   it("writes to the reader's own address first, then this place's, then another place's", () => {
     const blog = place(1, { person: 7, addedAt: 1, email: "blog@alpha.example" });
     const letters = place(2, { person: 7, addedAt: 2, email: "letters@alpha.example" });

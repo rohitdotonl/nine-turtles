@@ -143,6 +143,9 @@ struct EditFeed {
     /// ("reader"); given, Undo is putting back the reason it had, one of
     /// `writers::kind::WHYS`, so one the reader hadn't settled is open again.
     why: Option<String>,
+    /// Write back for the person (decision 0286): off takes it away from
+    /// every place of theirs, as the address typed for them is kept on each.
+    write_back: Option<bool>,
 }
 
 /// How many of the articles a feed brought while it was paused go back to
@@ -211,6 +214,19 @@ async fn edit_feed(
         if let Some(kind) = form.kind {
             crate::writers::kind::settle(&mut transaction, person, id, kind, form.why.as_deref())
                 .await?;
+        }
+        if let Some(on) = form.write_back {
+            sqlx::query(
+                "UPDATE subscriptions SET write_back_off = ?1
+                 WHERE person_id = ?2 AND unsubscribed_at IS NULL
+                     AND (feed_id = ?3 OR writer_id = (SELECT writer_id FROM subscriptions
+                              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL))",
+            )
+            .bind(!on)
+            .bind(person)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await?;
         }
         // Switched on: that kind's videos stored since the reader followed
         // the channel join its list, as read, so nothing piles up in

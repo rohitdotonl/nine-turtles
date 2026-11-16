@@ -179,6 +179,69 @@ test("A publication has no Write back and no Write to; A person brings them back
   await expect(who().getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:pub@pub\.example/);
 });
 
+test("Copy address sits on the address line, Comments opens what the feed names, and Write back switches off per person", async ({ page }) => {
+  // Each post of a "talk-" blog names its comments page (RSS's <comments>, decision 0286).
+  const name = `talk-wb-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "talk@talk.example" } });
+  expect(kept.ok()).toBe(true);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
+
+  // The article's end: Comments beside View original, to the page the feed names, in a new tab.
+  const comments = pane(page).locator(".end-tools").getByRole("link", { name: "Comments (opens in a new tab)" });
+  await expect(comments).toHaveAttribute("href", new RegExp(`^https://${name}\\.example/\\d+#comments$`));
+  await expect(comments).toHaveAttribute("target", "_blank");
+
+  // Copy address, on the line that shows the address: copied, said so, and the keyboard stays on it.
+  const copy = pane(page).getByRole("button", { name: `Copy Blog ${name}'s email address` });
+  await copy.click();
+  await expect(pane(page).getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
+  await expect(copy).toBeFocused();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("talk@talk.example");
+
+  // Their page has it too, beside Change.
+  await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await expect(whoPage(page, `Blog ${name}`).getByRole("button", { name: `Copy Blog ${name}'s email address` })).toBeVisible();
+
+  // Switched off in their settings: they stay a person, but Write to, Write back, the paper plane and W all go (a row's menu too: rowMenu.test.ts).
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
+  await appReady(page);
+  const toggle = page.getByRole("switch", { name: "Write back" });
+  await expect(toggle).toBeChecked();
+  await toggle.uncheck();
+  await expect(page.getByRole("radio", { name: "A person" })).toBeChecked();
+  await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
+  await expect(whoPage(page, `Blog ${name}`).getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+  await expect(whoPage(page, `Blog ${name}`).getByText(`Write to Blog ${name}`)).toHaveCount(0);
+  await expect(whoPage(page, `Blog ${name}`)).not.toContainText("talk@talk.example");
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  await expect(pane(page).getByRole("heading", { level: 2 })).toBeVisible();
+  await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toBeVisible();
+  await expect(pane(page).getByText(/^Write back/)).toHaveCount(0);
+  await expect(pane(page).getByRole("button", { name: "Write back" })).toHaveCount(0);
+  await page.locator(".item-row").first().focus();
+  await page.keyboard.press("w");
+  await expect(pane(page).getByRole("textbox", { name: "Their email address" })).toHaveCount(0);
+
+  // On again: Write back comes back, with the address kept.
+  await page.goto(new URL(`/${id}/settings`, FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("switch", { name: "Write back" }).check();
+  await page.getByRole("button", { name: `Back to Blog ${name}` }).click();
+  await expect(whoPage(page, `Blog ${name}`).getByRole("link", { name: `Write to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
+});
+
 test("Write back answers where it was pressed, names a post with no title, and Escape puts its box away", async ({ page }) => {
   const name = `wbnote${test.info().workerIndex}x${Date.now()}`;
   // Short enough that a note's end, and the line under its Write back, is below the screen.
