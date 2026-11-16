@@ -9,7 +9,7 @@
   Pressing Play swaps the box for YouTube's privacy-enhanced player, in the
   same place and size (nothing else moves); until that player has loaded, the
   box stays over it, saying "Starting the video…" once that takes half a second (decision 0230), and
-  "Still starting… YouTube can be slow to answer." after five, its dots breathing (decision 0286). The player
+  "Still starting… YouTube can be slow to answer." after five, its dots breathing (decision 0287). The player
   starts at once and takes the keyboard, so Space and its own keys work straight away. Tab leaves it.
 
   It picks up where you stopped, on any device: while it plays the player

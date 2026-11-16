@@ -1,7 +1,8 @@
 <!--
   A menu's list of choices (SPEC sections 6, 7 and 6's row menu): rows of
   buttons in groups, each row with its key at its end when it has one, a
-  one-of-several choice ticked so it shows without color. The arrow keys,
+  one-of-several choice ticked so it shows without color (at its end when the row
+  has an icon of its own, as Write back's ways do, decision 0286). The arrow keys,
   Home and End move between rows; Escape closes it and gives the keyboard
   back to whatever opened it; Tab closes it too. `MoreMenu.svelte` opens it
   from a More (…) button, `RowMenu.svelte` from a row in the article list.
@@ -118,15 +119,18 @@
             onclick={() => choose(item)}
             class={["menu-item", item.checked && "font-semibold"]}
           >
-            {#if item.checked !== undefined}
+            {#if item.checked !== undefined && !item.icon}
               <!-- The tick shows the current choice without color; the weight says it too. -->
               <span class="flex w-5 shrink-0 justify-center">{#if item.checked}<Icon name="check" />{/if}</span>
             {/if}
+            {#if item.icon}<span class="flex w-5 shrink-0 justify-center text-ink-2"><Icon name={item.icon} /></span>{/if}
             <span class="min-w-0 flex-1">{item.label}</span>
             {#if item.shortcut}
               <!-- Printed the same on every computer (Shift A, M); screen readers hear the key from aria-keyshortcuts instead (decision 0180). -->
               <kbd aria-hidden="true" class="text-meta text-muted">{keyCap(item.shortcut)}</kbd>
             {/if}
+            <!-- A row with its own icon (Write back's ways) shows its tick at the end instead. -->
+            {#if item.icon && item.checked}<span class="flex w-5 shrink-0 justify-center"><Icon name="check" /></span>{/if}
           </button>
         {/each}
       </div>

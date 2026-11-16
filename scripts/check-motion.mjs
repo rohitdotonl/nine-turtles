@@ -4,7 +4,7 @@
 // exceptions (DESIGN.md → Exceptions log): a swipe's short glide once the
 // finger lets go, set only in `web/src/lib/swipeMotion.ts` (decision 0274),
 // and a slow wait's breathing dots, set only in `web/src/lib/breathe.ts`
-// (decision 0286); each must leave it out for a reader who asks for reduced
+// (decision 0287); each must leave it out for a reader who asks for reduced
 // motion.
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -53,7 +53,7 @@ const sourceRules = [
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
   [/\.style\.(transition|animation)\b|\b(transition|animation)\s*:\s*[\w"'`$]|style:(transition|animation)\b|setProperty\(\s*["'`](transition|animation)/g, "motion set by a script"],
 ];
-/** The two places allowed to move (Exceptions log): the swipe's glide, and a slow wait's breathing dots (decision 0286). */
+/** The two places allowed to move (Exceptions log): the swipe's glide, and a slow wait's breathing dots (decision 0287). */
 const allowed = [join(root, "web/src/lib/swipeMotion.ts"), join(root, "web/src/lib/breathe.ts")];
 for (const file of websiteOnly ? [] : allowed) {
   if (!readFileSync(file, "utf8").includes("prefers-reduced-motion: reduce")) {

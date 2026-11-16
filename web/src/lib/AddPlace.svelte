@@ -44,7 +44,7 @@
   let chosen = $state("");
   let address = $state("");
   let busy = $state(false);
-  /** Looking on their site for the address pasted (decision 0286): it can take a while, so it says so as it goes. */
+  /** Looking on their site for the address pasted (decision 0287): it can take a while, so it says so as it goes. */
   let looking = $state(false);
   let message = $state("");
   let group: HTMLDivElement | undefined = $state();

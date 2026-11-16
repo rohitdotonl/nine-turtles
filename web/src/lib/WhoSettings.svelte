@@ -6,7 +6,8 @@
   screen itself shows it: their row in the sidebar, the list's title, the
   switch. Built as Settings' rows (an inset group), top to bottom: Name
   (saved on Enter or on leaving the field; Escape puts it back), This is
-  (for one source on its own), Folders (the folders they're in, opening in
+  (for one source on its own), Write back (for a person: off takes it
+  away from them, decision 0286), Folders (the folders they're in, opening in
   place to the tick list Add and Edit folder use, with New folder… as its
   first row), Pause for a while (every source of theirs at once), and Hide
   articles about… ›. Under the group, the sources' own settings (TheirPlaces,
@@ -73,6 +74,8 @@
   let ticked: number[] | undefined = $state();
   let chosen = $derived(ticked ?? saved);
   let paused = $derived(places.length > 0 && places.every((place) => place.pausedAt != null));
+  /** A person, settled as one: only someone to write to has the switch (a publication, or one that could be either, has no Write back). */
+  let person = $derived(feed.person != null || (who === "person" && !open));
 
   let message = $state("");
   let busy = $state(false);
@@ -242,6 +245,11 @@
         </div>
         {#if why}<span id="{id}-who-why" class="setting-hint">{why}</span>{/if}
       </div>
+    {/if}
+
+    {#if person}
+      <!-- Write back, on unless the reader switches it off for them (decision 0286); kept on every place of theirs by the server. -->
+      <SettingSwitch name="Write back" hint="Off takes Write back away from their articles and their page." checked={feed.writeBackOff !== true} onchange={(on) => void save({ writeBack: on })} />
     {/if}
 
     <!-- The folders they're in, in words; pressed, the tick list opens in place (decision 0045's square tick boxes). -->

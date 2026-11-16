@@ -86,6 +86,12 @@ impl Reader {
 
     /// Each followed place's (address the reader typed, address the feed gives).
     async fn addresses(&self, feed: i64) -> (Value, Value) {
+        let place = self.place(feed).await;
+        (place["write_to"].clone(), place["email"].clone())
+    }
+
+    /// A followed place, as the sidebar gets it.
+    async fn place(&self, feed: i64) -> Value {
         let response = Client::new()
             .get(format!("{}/api/feeds", self.base))
             .header("cookie", &self.cookie)
@@ -93,14 +99,13 @@ impl Reader {
             .await
             .unwrap();
         let listed: Value = serde_json::from_str(&response.text().await.unwrap()).unwrap();
-        let place = listed["feeds"]
+        listed["feeds"]
             .as_array()
             .unwrap()
             .iter()
             .find(|place| place["id"] == feed)
             .unwrap()
-            .clone();
-        (place["write_to"].clone(), place["email"].clone())
+            .clone()
     }
 }
 
@@ -226,4 +231,106 @@ async fn a_place_that_leaves_its_person_leaves_their_address_until_undo() {
         reader.addresses(letters).await.0,
         json!("alpha@home.example")
     );
+}
+
+#[tokio::test]
+async fn write_back_is_switched_off_and_its_way_chosen_for_the_whole_person() {
+    let (base, _state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+        publisher: publisher().await,
+    };
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let beta = reader.follow("beta.xml").await;
+    let _ = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    let way = async |feed| reader.place(feed).await["write_back_way"].clone();
+
+    // The way chosen on one place is the person's: every place of theirs has it, no one else.
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{letters}"),
+            json!({ "write_back_way": "comment" }),
+        )
+        .await;
+    assert!(status.is_success(), "{status}");
+    assert_eq!(way(blog).await, json!("comment"));
+    assert_eq!(way(letters).await, json!("comment"));
+    assert_eq!(way(beta).await, Value::Null);
+
+    // A way nine turtles doesn't know is refused, and nothing changes; email is the plain one.
+    let (status, _) = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back_way": "fax" }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert_eq!(way(blog).await, json!("comment"));
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back_way": "copy" }),
+        )
+        .await;
+    assert_eq!(way(letters).await, json!("copy"));
+
+    // Switched off for the person: every place of theirs, and the way chosen stays for when it's back on.
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back": false }),
+        )
+        .await;
+    for place in [blog, letters] {
+        assert_eq!(reader.place(place).await["write_back_off"], json!(true));
+    }
+    assert_eq!(reader.place(beta).await["write_back_off"], json!(false));
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{letters}"),
+            json!({ "write_back": true }),
+        )
+        .await;
+    assert_eq!(reader.place(blog).await["write_back_off"], json!(false));
+    assert_eq!(way(blog).await, json!("copy"));
+
+    // A source that leaves the person starts afresh; Undo gives it back the person's switch and way.
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back": false }),
+        )
+        .await;
+    let (status, separated) = reader
+        .post("/api/writers/separate", json!({ "feed": letters }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{separated}");
+    assert_eq!(way(letters).await, Value::Null);
+    assert_eq!(reader.place(letters).await["write_back_off"], json!(false));
+    assert_eq!(way(blog).await, json!("copy"));
+    let (status, _) = reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": separated["before"] }),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(way(letters).await, json!("copy"));
+    assert_eq!(reader.place(letters).await["write_back_off"], json!(true));
+    let _ = reader
+        .post(&format!("/api/feeds/{blog}"), json!({ "write_back": true }))
+        .await;
+
+    // Back to email: nothing kept.
+    let _ = reader
+        .post(
+            &format!("/api/feeds/{blog}"),
+            json!({ "write_back_way": "email" }),
+        )
+        .await;
+    assert_eq!(way(letters).await, Value::Null);
 }

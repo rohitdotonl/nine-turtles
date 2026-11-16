@@ -76,7 +76,7 @@ test("a video that takes a while to start says so", async ({ page }) => {
   await page.clock.runFor(500);
   await expect(article(page).getByText("Starting the video…")).toBeVisible();
   await expect(article(page).locator("iframe")).toBeFocused();
-  // A slow wait (decision 0286): five seconds on, it says so.
+  // A slow wait (decision 0287): five seconds on, it says so.
   await page.clock.runFor(4_500);
   await expect(article(page).getByText("Still starting… YouTube can be slow to answer.")).toBeVisible();
   release();
@@ -159,7 +159,7 @@ test("a key that needs an article says to choose one first", async ({
 });
 
 test("a slow look on someone's site keeps saying so, its dots breathing, and Stop lets it go", async ({ page }) => {
-  // Decision 0286: half a second, then 5 and 15 seconds on, the line moves on; the dots breathe unless motion is reduced.
+  // Decision 0287: half a second, then 5 and 15 seconds on, the line moves on; the dots breathe unless motion is reduced.
   const name = `moving-slow-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   await page.clock.install();
   await signedIn(page);

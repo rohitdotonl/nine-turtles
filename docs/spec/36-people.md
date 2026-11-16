@@ -204,6 +204,9 @@ PLAN.md → V1, item 1.*
       couldn't be saved stays as typed, with why under the settings;
     - for one source, **This is: A person / A publication**; A publication
       takes Write to and its address away at once (decision 0192);
+    - for a person, **Write back**, a switch, on unless switched off (decision
+      0286): off takes Write back, the paper plane and Write to away from
+      them at once, every source of theirs (section 37);
     - **Folders**, the folders they're in, in words ("1 and Friends",
       "None"); pressed, every folder opens under it in place as a tick
       list, each tick counting at once, with **New folder…** as its first

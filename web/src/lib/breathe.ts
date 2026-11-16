@@ -1,5 +1,5 @@
 // The second place nine turtles moves by itself (DESIGN.md → Exceptions log,
-// decision 0286): while a slow wait goes on (someone else's site, YouTube or
+// decision 0287): while a slow wait goes on (someone else's site, YouTube or
 // a publisher's audio, `SlowWait.svelte`), the three dots of its "…"
 // brighten one after another, slowly, as a sign it's still going. Nothing
 // else moves, and the dots never go below a quarter of the text's ink. A

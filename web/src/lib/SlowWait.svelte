@@ -1,5 +1,5 @@
 <!--
-  A slow wait that says so, and keeps saying so (decision 0286): for waits on
+  A slow wait that says so, and keeps saying so (decision 0287): for waits on
   someone else's site, YouTube or a publisher's audio, which can take from a
   few seconds to a minute. Like every wait (`LateLine.svelte`, decision 0230)
   it says nothing for half a second, then what it's doing, "Looking on their

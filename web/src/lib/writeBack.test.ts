@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Feed } from "./shapes";
-import { aboutLine, addressFor, askForFeedLink, composeLink, looksLikeAddress, quotedBody, replySubject, siteOf, writeBackLink, writesBack } from "./writeBack";
+import { aboutLine, addressFor, askForFeedLink, commentsOf, composeLink, looksLikeAddress, quotedBody, replySubject, siteOf, wayOf, writeBackLink, writesBack } from "./writeBack";
 
 function place(id: number, changes: Partial<Feed> = {}): Feed {
   return { id, title: `Place ${id}`, siteUrl: null, unread: 0, folders: [], ...changes };
@@ -12,6 +12,28 @@ describe("writing back", () => {
     expect(writesBack(place(2))).toBe(true);
     expect(writesBack(place(3, { kind: "publication" }))).toBe(false);
     expect(writesBack(undefined)).toBe(false);
+  });
+
+  it("is not for a person the reader switched it off for (decision 0286)", () => {
+    expect(writesBack(place(4, { writeBackOff: true }))).toBe(false);
+    expect(writesBack(place(5, { writeBackOff: false }))).toBe(true);
+  });
+
+  it("keeps the way chosen for a person on any of their places, and copies only with an address (decision 0286)", () => {
+    const blog = place(1, { person: 7, addedAt: 1 });
+    const letters = place(2, { person: 7, addedAt: 2, writeBackWay: "comment" });
+    expect(wayOf(blog, [blog, letters], "a@alpha.example")).toBe("comment");
+    expect(wayOf(place(3), [place(3)], "a@alpha.example")).toBe("email");
+    const copying = place(4, { writeBackWay: "copy" });
+    expect(wayOf(copying, [copying], "a@alpha.example")).toBe("copy");
+    expect(wayOf(copying, [copying], undefined)).toBe("email");
+  });
+
+  it("comments where the feed says, else on the article itself, and only on a web page", () => {
+    expect(commentsOf("https://alpha.example/1#comments", "https://alpha.example/1")).toBe("https://alpha.example/1#comments");
+    expect(commentsOf(null, "https://alpha.example/1")).toBe("https://alpha.example/1");
+    expect(commentsOf("javascript:alert(1)", "https://alpha.example/1")).toBe("https://alpha.example/1");
+    expect(commentsOf(undefined, null)).toBeUndefined();
   });
 
   it("writes to the reader's own address first, then this place's, then another place's", () => {

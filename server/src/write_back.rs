@@ -308,6 +308,37 @@ async fn set_address(
     }
 }
 
+/// Write back switched on or off for a person, and how the reader answers
+/// them (decision 0286: `Some(None)` is email, the plain way), each left as
+/// it is when not given. Set on every place of the person, those unsubscribed
+/// within Bring back's 30 days too, so one brought back agrees.
+pub async fn choose(
+    transaction: &mut sqlx::SqliteConnection,
+    person: i64,
+    feed: i64,
+    on: Option<bool>,
+    way: Option<Option<&str>>,
+) -> Result<(), sqlx::Error> {
+    if on.is_none() && way.is_none() {
+        return Ok(());
+    }
+    sqlx::query(
+        "UPDATE subscriptions SET write_back_off = COALESCE(?1, write_back_off),
+             write_back_way = CASE WHEN ?2 THEN ?3 ELSE write_back_way END
+         WHERE person_id = ?4
+             AND (feed_id = ?5 OR writer_id = (SELECT writer_id FROM subscriptions
+                      WHERE person_id = ?4 AND feed_id = ?5 AND unsubscribed_at IS NULL))",
+    )
+    .bind(on.map(|on| !on))
+    .bind(way.is_some())
+    .bind(way.flatten())
+    .bind(person)
+    .bind(feed)
+    .execute(&mut *transaction)
+    .await?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

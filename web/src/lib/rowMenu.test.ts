@@ -56,6 +56,11 @@ describe("writerItems", () => {
     expect(items.map((item) => item.label)).toEqual(["Info about Tomas Berg"]);
   });
 
+  it("never offers Write back to someone the reader switched it off for", () => {
+    const items = writerItems(article(), library([feed({ writeBackOff: true })]), { go: () => {}, writeBack: () => {} });
+    expect(items.map((item) => item.label)).toEqual(["Info about Tomas Berg"]);
+  });
+
   it("offers nothing for a writer no longer followed", () => {
     expect(writerItems(article(), library([]), { go: () => {}, writeBack: () => {} })).toEqual([]);
   });

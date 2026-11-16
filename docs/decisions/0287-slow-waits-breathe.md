@@ -1,4 +1,4 @@
-# 0286: A slow wait keeps saying so, its dots breathing
+# 0287: A slow wait keeps saying so, its dots breathing
 
 **In one line:** A wait on someone else's site, YouTube or a publisher's audio says what it's doing after half a second, "Still looking… Some sites are slow to answer." after 5, and "It can take up to a minute." after 15 (with Stop where stopping changes nothing); the three dots of its "…" brighten in turn, slowly, and are still with reduced motion: the second exception to "no motion".
 
