@@ -5,12 +5,8 @@
 // `ScreenLayout` (below) holds the signed-in screen's arrangement.
 
 import { deviceText, setDeviceText } from "./device";
-import type { Carried } from "./updates.svelte";
 
 export type Width = "wide" | "medium" | "narrow";
-
-/** The reader's last use of the sidebar toggle. "auto" until they use it. */
-export type SidebarChoice = "auto" | "shown" | "hidden";
 
 export const WIDE_REM = 75; // 1200px at normal size
 export const MEDIUM_REM = 56; // 896px at normal size
@@ -25,16 +21,15 @@ export type Panes = { sidebar: boolean; list: boolean; article: boolean };
 
 /**
  * One thing at a time (decision 0275). On a computer (wide and medium
- * windows): the list alone beside the sidebar, as the reader has it, then
- * what opened (`reading`: an article, or a person's page) alone in the whole
- * window. On a phone-narrow window (Milestone 13): one area at a time, and
- * the sidebar is the home screen; an opened article takes the list's place.
- * Settings fills the list's area.
+ * windows): the list alone beside the sidebar, which always shows (decision
+ * 0282), then what opened (`reading`: an article, or a person's page) alone
+ * in the whole window. On a phone-narrow window (Milestone 13): one area at a
+ * time, and the sidebar is the home screen (`home`); an opened article takes
+ * the list's place. Settings fills the list's area.
  */
-export function panesFor(width: Width, sidebar: SidebarChoice, reading = false): Panes {
-  const sidebarShown = sidebar !== "hidden";
-  if (width === "narrow") return { sidebar: sidebarShown, list: !sidebarShown && !reading, article: !sidebarShown && reading };
-  return reading ? { sidebar: false, list: false, article: true } : { sidebar: sidebarShown, list: true, article: false };
+export function panesFor(width: Width, home: boolean, reading = false): Panes {
+  if (width === "narrow") return { sidebar: home, list: !home && !reading, article: !home && reading };
+  return reading ? { sidebar: false, list: false, article: true } : { sidebar: true, list: true, article: false };
 }
 
 /** The window's width step now, from the same rem breakpoints as `widthFor`. */
@@ -58,8 +53,8 @@ const SIDEBAR_USUAL = 256;
 
 /**
  * The signed-in screen's arrangement: the window's width step, which areas
- * show, the reader's sidebar toggle, and the width they dragged the sidebar
- * to (kept on this device). It only decides; where the keyboard goes when an
+ * show, whether a phone shows its home screen, and the width the reader
+ * dragged the sidebar to (kept on this device). It only decides; where the keyboard goes when an
  * area hides is Shell.svelte's.
  *
  * One is made for each signed-in screen (Shell.svelte).
@@ -67,8 +62,8 @@ const SIDEBAR_USUAL = 256;
 export class ScreenLayout {
   /** The window's width step (wide, medium or narrow). */
   width: Width = $state("wide");
-  /** The reader's last use of the sidebar toggle; on a phone, whether the feeds (the home screen) show. */
-  sidebarChoice: SidebarChoice = $state("auto");
+  /** On a phone, whether the feeds (the home screen) show. A computer's sidebar always shows beside the list. */
+  home: boolean = $state(true);
   /** The width the reader dragged the sidebar to, on this device; undefined is the usual width. */
   sidebarWidth: number | undefined = $state(storedWidth());
 
@@ -76,7 +71,7 @@ export class ScreenLayout {
   #aside: () => boolean = () => false;
 
   /** Which areas show now: on a computer a person's page, or their settings, fills the window as an article does. */
-  readonly panes: Panes = $derived(panesFor(this.width, this.sidebarChoice, this.#reading() || (this.width !== "narrow" && this.#aside())));
+  readonly panes: Panes = $derived(panesFor(this.width, this.home, this.#reading() || (this.width !== "narrow" && this.#aside())));
   /** A phone-narrow window: one screen at a time, with a top bar and, while reading, a bottom toolbar. */
   readonly phone: boolean = $derived(this.width === "narrow");
 
@@ -91,13 +86,13 @@ export class ScreenLayout {
     this.width = width;
     this.#reading = reading;
     if (aside) this.#aside = aside;
-    if (width === "narrow" && !openingHome) this.sidebarChoice = "hidden";
+    if (width === "narrow" && !openingHome) this.home = false;
   }
 
-  /** The window crossed a breakpoint: the sidebar goes back to what suits the new width. */
+  /** The window crossed a breakpoint: the sidebar shows, as it does at every width when nothing is chosen. */
   resized(next: Width) {
     this.width = next;
-    this.sidebarChoice = "auto";
+    this.home = true;
   }
 
   /** The sidebar's width in pixels: dragged, or usual. */
@@ -109,30 +104,13 @@ export class ScreenLayout {
     setDeviceText(SIDEBAR_WIDTH_KEY, this.sidebarWidth === undefined ? null : String(this.sidebarWidth));
   }
 
-  /** On a computer, hides the sidebar or shows it again; answers whether it hid. */
-  toggleSidebar(): boolean {
-    const hiding = this.panes.sidebar;
-    this.sidebarChoice = hiding ? "hidden" : "shown";
-    return hiding;
-  }
-
   /** The reader has gone somewhere since the screen opened (every move passes through `showHome`). */
   moved = false;
 
   /** On a phone, shows the feeds (the home screen) or whatever was chosen in their place. Elsewhere nothing changes. */
   showHome(home: boolean) {
     this.moved = true;
-    if (this.phone) this.sidebarChoice = home ? "shown" : "hidden";
-  }
-
-  /** Whether the reader hid the sidebar, for the new version to open the same way (decision 0085). */
-  carried(): Pick<Carried, "sidebar"> {
-    return { sidebar: this.sidebarChoice };
-  }
-
-  /** Puts back what the page before a version switch carried; a phone starts as it always does. */
-  putBack(was: Pick<Carried, "sidebar">) {
-    if (!this.phone) this.sidebarChoice = was.sidebar;
+    if (this.phone) this.home = home;
   }
 }
 

@@ -30,7 +30,6 @@
   let {
     folder,
     heading = $bindable(),
-    besideToggle = false,
     sheet = false,
     onSaved,
     onCancel,
@@ -39,8 +38,6 @@
   }: {
     folder: Folder;
     heading?: HTMLHeadingElement;
-    /** The sidebar is hidden, so the top line starts clear of its toggle. */
-    besideToggle?: boolean;
     /** Shown as a sheet over the list, not as a page. */
     sheet?: boolean;
     onSaved: () => void;
@@ -177,7 +174,7 @@
     first group does, and Save sits at the screen's foot.
   -->
   <div class="page-sheet-card">
-    <PageHead title="Edit folder" bind:heading {besideToggle} onClose={cancel} closeLabel="Close" />
+    <PageHead title="Edit folder" bind:heading onClose={cancel} closeLabel="Close" />
     <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
       <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
         {@render form()}
