@@ -43,16 +43,19 @@
 .scroller {
   overscroll-behavior-y: contain;
 }
+/* An article's own text shows no stretch of the phone's at an end either: there, the pull moves the article itself. */
+.reading-scroller.scroller {
+  overscroll-behavior-y: none;
+}
 html {
   overscroll-behavior-y: none;
 }
 
 /*
-  Once a swipe or pull is far enough, a quiet card says where letting go
-  takes you, where the screen under the one being dragged doesn't: back
-  within one place ("‹ Settings", at the left), or the next or previous
-  article (its title, above or below the text), or that there's none. It's
-  only seen; the back button, Next and Previous say the same in words.
+  Once a swipe back is far enough, a quiet card says where letting go takes
+  you, where the screen under the one being dragged doesn't: back within one
+  place ("‹ Settings", at the left). It's only seen; the back button says
+  the same in words.
 */
 .swipe-card {
   position: fixed;
@@ -74,21 +77,52 @@ html {
   display: block;
   font-size: var(--text-ui);
 }
-.swipe-card-by {
+.swipe-by {
   display: block;
   margin-top: 0.25rem;
   color: var(--ink-2);
 }
-.swipe-card:is([data-side="below"], [data-side="above"]) {
-  left: 50%;
-  translate: -50% 0;
-  border-radius: var(--radius-hold);
+/*
+  An article's pull (decision 0280): the next article hangs just past the
+  end of the one being read (the previous one just past its top), on the
+  same paper, and comes into view with it as the finger pulls: what it is
+  and who wrote it, nearest the edge that shows first.
+*/
+.swipe-peek {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1.25rem;
+  background-color: var(--color-paper);
+  color: var(--ink);
   text-align: center;
 }
-.swipe-card[data-side="above"] {
-  top: 20%;
+.swipe-peek[data-side="below"] {
+  top: 100%;
+  border-top: 1px solid var(--line);
 }
-.swipe-card[data-side="below"] {
-  top: auto;
-  bottom: 20%;
+.swipe-peek[data-side="above"] {
+  bottom: 100%;
+  justify-content: flex-end;
+  border-bottom: 1px solid var(--line);
+}
+.swipe-peek-text {
+  max-width: 32rem;
+  font-size: var(--text-meta);
+  line-height: var(--text-meta--line-height);
+}
+.swipe-peek strong {
+  display: block;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.swipe-peek-title {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--text-ui);
+  font-weight: 600;
 }
