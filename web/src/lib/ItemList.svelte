@@ -1,8 +1,9 @@
 <!--
   The item list (SPEC sections 6, 8 and 9): each article's title, with its
   source and time in quiet small text below. No images, no site icons.
-  Unread names each person once, their titles under them, people first,
-  then "Publications" (decision 0271, `people.ts` → `headsOf`).
+  Unread names each person once, with the day they last posted, their
+  titles under them, under "People", then "Publications" (decisions 0271
+  and 0278, `people.ts` → `headsOf`).
   Unread titles are full strength and semibold (regular under a name), read
   ones muted and regular, starred ones a small star: each shows without color. With
   Unread off (SPEC section 10) every title looks the same, read or not.
@@ -59,7 +60,7 @@
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, notSavedSignedOut, couldNotLoad, resultCount } from "./lists";
   import { markRead, markStarred, signedOut } from "./saving";
   import { prefetch } from "./articles";
-  import { nothingNewSince } from "./times";
+  import { exactly, nothingNewSince, when } from "./times";
   import ItemRow from "./ItemRow.svelte";
   import RowMenu from "./RowMenu.svelte";
   import { rowMenu, rowSwipes } from "./rowMenu";
@@ -217,7 +218,7 @@
   });
 
 
-  /** Unread, by person (decision 0271): each name once, above their first article, and "Publications" where they begin. */
+  /** Unread, by person (decisions 0271 and 0278): each name once, above their first article, and "People" and "Publications" where they begin. */
   let heads = $derived(headsOf(articles));
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
@@ -673,9 +674,9 @@
       {@const current = index === selectedIndex}
       {@const head = heads[index]}
       <li>
-        <!-- Real headings, so a screen reader goes name to name: a person's name and "Publications" under the list's title, a publication's under "Publications". None can be pressed, as a row's name can't be today. -->
-        {#if head?.publications}<h3 class="label list-label">Publications</h3>{/if}
-        {#if head}<svelte:element this={article.publication ? "h4" : "h3"} class="list-name"><bdi>{head.name}</bdi></svelte:element>{/if}
+        <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). None can be pressed, as a row's name can't be today. -->
+        {#if head?.people || head?.publications}<h3 class="list-label">{head.people ? "People" : "Publications"}</h3>{/if}
+        {#if head}<h4 class="list-name"><bdi>{head.name}</bdi> <time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time></h4>{/if}
         <ItemRow
           bind:row={rows[index]}
           {article} {current} {bold} {unreadOff} {addressOf}

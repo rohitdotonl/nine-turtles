@@ -2,6 +2,8 @@
 
 **In one line:** On a computer the list's title, search and titles start where an opened article's text starts (the window's centred reading column, its width in the reader's Aa) and end on its right edge, Settings and Everyone you follow start on that line too, and the article's (and a person's page's) bar stands over the text; an empty list has the page to itself ("Nothing unread." large and centred, "New writing will show up here."); and Unread reads as a book's contents page: each name larger, as a chapter's, and no day beside its titles.
 
+> **Partly replaced by [0278](0278-unread-shows-its-order.md):** with the sidebar showing, the list's column and Settings are centred beside the sidebar instead of starting where the article's text starts; with the sidebar hidden they still line up.
+
 *16 November 2026. The owner, after reading one thing at a time (decision 0275): "nothing's changed except moving the article pane behind a click. We must optimise other things for the two-pane structure." He chose these three from now-vs-after pictures ("Implement both of these suggestions. Just shorten the copy of Nothing unread. And implement … One column for both screens"), and said to implement and merge without a local trial.*
 
 **What changes (on a computer, unless said; a phone keeps its layout).**

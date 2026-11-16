@@ -24,12 +24,11 @@
 }
 
 /*
-  One column on a computer (decision 0277): the list's title, search and
-  titles start where an opened article's text will start, the window's
-  centred reading column (--reading-width, reading-column.css), and end on
-  its right edge, so opening an article turns the page in place instead of
-  jumping sideways. 100% is the area beside the sidebar and 100vw the
-  window, so the sidebar's width needs no reading. Where the sidebar leaves
+  One column on a computer (decisions 0277 and 0278): the list's title,
+  search and titles sit in a column as wide as an opened article's text
+  (--reading-width, reading-column.css), centred in the area beside the
+  sidebar (100%), so the page is balanced; with the sidebar hidden that area
+  is the window, and the list lines up with the article exactly. Where the sidebar leaves
   too little room, the column keeps the list's own edges; with the sidebar
   hidden it never starts under the sidebar button (--toggle-room, 64px:
   the button ends 52px in). Its scroll bar stays at the window's edge.
@@ -38,15 +37,17 @@
   --toggle-room: 4rem;
 }
 .list-pane:not(.phone) > :is(.pane-bar, .scroller) {
-  --column-start: max(var(--list-start), var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
+  --column-start: max(var(--list-start), var(--toggle-room, 0px), (100% - var(--reading-width)) / 2);
   padding-inline: var(--column-start) max(var(--list-end), 100% - var(--column-start) - var(--reading-width));
 }
-/* Settings, Everyone you follow and the pages under Settings start their column on the same line. */
+/*
+  Settings, Everyone you follow and the pages under Settings: their own
+  column (centred by .mx-auto) sits in the middle of the area beside the
+  sidebar too (decision 0278), and with the sidebar hidden never starts
+  under the sidebar button.
+*/
 @media (min-width: 56rem) {
   .lines-up > :is(.pane-bar, .scroller) {
-    padding-left: max(2.5rem, var(--toggle-room, 0px), 100% - (100vw + var(--reading-width)) / 2);
-  }
-  .lines-up > :is(.pane-bar, .scroller) > .mx-auto {
-    margin-left: 0;
+    padding-inline: max(2.5rem, var(--toggle-room, 0px));
   }
 }

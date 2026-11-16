@@ -87,23 +87,23 @@ describe("a publication's writer in a list", () => {
   });
 });
 
-describe("Unread, by person (decision 0271)", () => {
-  const by = (id: number, whose: number, feedTitle: string, publication = false) => article(id, { id, whose, feedTitle, publication });
+describe("Unread, by person (decisions 0271 and 0278)", () => {
+  const by = (id: number, whose: number, feedTitle: string, publication = false) => article(id, { id, whose, feedTitle, publication, at: 1000 - id });
 
-  it("names each person once, above their first article, and says where publications begin", () => {
+  it("names each person once, above their first article, with its day, and says where people and publications begin", () => {
     const listed = [by(1, -7, "Alpha"), by(2, -7, "Alpha"), by(3, 4, "Beta (beta@example.com)"), by(4, 5, "Garden Letters", true), by(5, 5, "Garden Letters", true), by(6, 6, "Open Field", true)];
     expect(headsOf(listed)).toEqual([
-      { name: "Alpha", publications: false },
+      { name: "Alpha", at: 999, people: true, publications: false },
       undefined,
-      { name: "Beta", publications: false },
-      { name: "Garden Letters", publications: true },
+      { name: "Beta", at: 997, people: false, publications: false },
+      { name: "Garden Letters", at: 996, people: false, publications: true },
       undefined,
-      { name: "Open Field", publications: false },
+      { name: "Open Field", at: 994, people: false, publications: false },
     ]);
   });
 
-  it("starts with Publications when there are no people", () => {
-    expect(headsOf([by(1, 5, "Garden Letters", true)])).toEqual([{ name: "Garden Letters", publications: true }]);
+  it("starts with Publications, not People, when there are no people", () => {
+    expect(headsOf([by(1, 5, "Garden Letters", true)])).toEqual([{ name: "Garden Letters", at: 999, people: false, publications: true }]);
   });
 
   it("doesn't name again a person carried on from the page before", () => {

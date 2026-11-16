@@ -4,6 +4,8 @@
 
 > **Partly replaced by [0277](0277-one-column.md):** Unread shows no day beside its titles, and on a computer each name is set larger, regular, as a chapter.
 
+> **Partly replaced by [0278](0278-unread-shows-its-order.md):** each name has its day beside it; "People" and "Publications" are quiet `h3` labels with each name an `h4`; titles have more room.
+
 *14 November 2026. Flow 1 of the owner's design critique, "Unread: the person first, no extra presses", which the owner approved with its pictures.*
 
 **What the owner saw.** Unread listed titles, each with the writer in small

@@ -110,21 +110,32 @@ export function writerOf(article: Article): string | undefined {
   return writer && writer.toLowerCase() !== plainSourceName(article.feedTitle).toLowerCase() ? writer : undefined;
 }
 
-/** What Unread, by person, says above an article that starts someone's run: their name, and "Publications" before the first publication's. */
-export type ListHead = { name: string; publications: boolean };
+/**
+ * What Unread, by person, says above an article that starts someone's run: their name, the day
+ * that placed them (`at`: their newest unread article's, or their oldest's when sorting oldest
+ * first, which is always this first article's), and "People" or "Publications" where those begin.
+ */
+export type ListHead = { name: string; at: number; people: boolean; publications: boolean };
 
 /**
- * Unread, by person (SPEC section 6, decision 0271): above each article
- * that starts someone's run, their name, as a row names them today; above
- * the first publication's, "Publications" too. Nothing above an article
- * that carries on its person (from the page before, too), nor in a list
- * that isn't by person.
+ * Unread, by person (SPEC section 6, decisions 0271 and 0278): above each
+ * article that starts someone's run, their name, as a row names them today,
+ * and the day that placed them; above the first person's, "People", and above
+ * the first publication's, "Publications". Nothing above an article that
+ * carries on its person (from the page before, too), nor in a list that isn't
+ * by person.
  */
 export function headsOf(articles: Article[]): (ListHead | undefined)[] {
   return articles.map((article, index) => {
     const before = articles[index - 1];
     if (article.whose === undefined || before?.whose === article.whose) return undefined;
-    return { name: sourceOf(article, false), publications: article.publication === true && before?.publication !== true };
+    const publication = article.publication === true;
+    return {
+      name: sourceOf(article, false),
+      at: article.at,
+      people: !publication && before === undefined,
+      publications: publication && before?.publication !== true,
+    };
   });
 }
 

@@ -91,12 +91,14 @@
 <style>
   /*
     Unread's dot (decision 0242): the list's unread dot (app.css
-    .unread-dot: the accent, round, CanvasText in forced colors), a step
-    smaller (6px) as the sidebar's names are smaller than the list's titles,
-    and in the row's flow at its end rather than in a gutter.
+    .unread-dot: 6px, round, CanvasText in forced colors) in the full
+    accent, as the list's softened one would be too faint on the sidebar's
+    selected pill (decision 0278), and in the row's flow at its end rather
+    than in a gutter.
   */
   .sidebar-dot {
     position: static;
+    background-color: var(--accent);
     flex-shrink: 0;
     width: 6px;
     height: 6px;

@@ -56,9 +56,11 @@ book's contents page, and on a computer each name is set larger, like a
 chapter's. The name carries the
 weight, so the titles under it are plain, each new one with its dot. When
 you've read everything, it says so across the page: "Nothing unread."
-The people who posted most recently come first; publications follow, under
+Beside each name is the day of their newest unread article, so the people
+whose newest is most recent come first, under **People**; publications follow, under
 **Publications**. Someone with a blog and a podcast is one name. Sorted
-oldest first, the people who have waited longest come first. <kbd>J</kbd>
+oldest first, the day is their oldest unread one's, and the people who have
+waited longest come first. <kbd>J</kbd>
 and <kbd>K</kbd> still go from article to article, past the names, and with
 a screen reader you can jump from name to name by heading.
 
@@ -116,8 +118,8 @@ phone, Unread's dot catches up each time you come back to the sidebar.
 
 ## One thing at a time
 
-On a computer, the list sits in a calm column beside the sidebar, lined up
-with where an article's words start, so opening one turns the page in place.
+On a computer, the list sits in a calm column in the middle of the space
+beside the sidebar, as wide as an article's words.
 Open an article and it fills the whole window, with **‹** and the list's name
 (say, **‹ Unread**) above the start of its text. Press that, or <kbd>Esc</kbd>,
 or your browser's Back, and you're back in the list where you were. While reading,

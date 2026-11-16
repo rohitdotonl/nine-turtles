@@ -2,15 +2,18 @@ import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, signIn } from "./screens";
 
-// Unread, by person (SPEC section 6, decision 0271): each name once, as a
-// heading, with their titles under it; people first, then "Publications".
+// Unread, by person (SPEC section 6, decisions 0271 and 0278): each name once,
+// as a heading, with the day that placed them beside it and their titles under
+// it; "People" first, then "Publications".
 // Every test shares one reader, so each follows blogs of its own and Unread
 // is shown with only theirs, in the order the server sent it.
 
 const list = (page: Page) => page.locator("#list-pane");
 const rows = (page: Page) => list(page).locator(".item-row");
-/** The names and "Publications": people's names and the label under the list's title, publications' names under the label. */
-const names = (page: Page) => list(page).locator(".item-list :is(h3, h4)");
+/** "People", "Publications" and the names under them, as they read on screen, without the day beside each name. */
+const names = (page: Page) => list(page).locator(".item-list :is(h3, h4 bdi)");
+/** A name's heading, found by the name alone (it goes on with the day that placed it). */
+const named = (page: Page, name: string) => page.getByRole("heading", { name: new RegExp(`^${name} `) });
 
 /** Follows two people and a publication, three unread articles each, and opens Unread with only theirs. */
 async function openUnread(page: Page, writer?: string): Promise<{ people: string[]; publication: string }> {
@@ -51,11 +54,23 @@ test("each person is named once, as a heading over their titles, people before p
   const { people, publication } = await openUnread(page);
   // The two people in either order (their articles share their dates), then the publication.
   const heads = await names(page).allTextContents();
-  expect(heads.slice(0, 2).sort()).toEqual([...people].sort());
-  expect(heads.slice(2)).toEqual(["Publications", publication]);
+  expect(heads[0]).toBe("People");
+  expect(heads.slice(1, 3).sort()).toEqual([...people].sort());
+  expect(heads.slice(3)).toEqual(["Publications", publication]);
+  // Each name says, right beside it in the dates' quiet type, the day of the first title under it (decision 0278).
+  const when = list(page).locator(".list-name time").first();
+  await expect(when).toHaveCSS("font-weight", "400");
+  expect(await when.textContent()).toBe(await rows(page).first().locator(".row-date").textContent());
+  const nameBox = (await list(page).locator(".list-name bdi").first().boundingBox())!;
+  const whenBox = (await when.boundingBox())!;
+  expect(whenBox.x - (nameBox.x + nameBox.width)).toBeLessThan(24);
+  // The labels are quiet: regular, not the ink.
+  const label = list(page).locator(".list-label").first();
+  await expect(label).toHaveCSS("font-weight", "400");
+  expect(await label.evaluate((each) => getComputedStyle(each).color)).not.toBe(await list(page).locator(".list-name").first().evaluate((each) => getComputedStyle(each).color));
   // Under each name, that person's three titles, with no day shown (decision 0277), though a screen reader still hears it.
   for (const name of [...people, publication]) {
-    const items = list(page).locator("li").filter({ has: page.getByRole("heading", { name, exact: true }) });
+    const items = list(page).locator("li").filter({ has: named(page, name) });
     await expect(items).toHaveCount(1);
   }
   const first = rows(page).first();
@@ -64,24 +79,27 @@ test("each person is named once, as a heading over their titles, people before p
   // The name isn't repeated in the row's small line, though a screen reader still hears whose it is.
   const shown = await rows(page).evaluateAll((all) => all.map((row) => row.querySelector(".row-feed:not(.sr-only)") === null));
   expect(shown.every(Boolean)).toBe(true);
-  await expect(first).toContainText(heads[0]!);
+  await expect(first).toContainText(heads[1]!);
   // The name can't be pressed: it's a heading, not a button or a link.
-  await expect(list(page).locator("h3 a, h3 button")).toHaveCount(0);
+  await expect(list(page).locator(":is(h3, h4) :is(a, button)")).toHaveCount(0);
 });
 
 test("the name carries the weight: an unread title under it is regular, still with its dot and still said to be unread", async ({ page, isMobile }) => {
   await openUnread(page);
   const first = rows(page).first();
-  if (isMobile) await expect(names(page).first()).toHaveCSS("font-weight", "600");
+  const name = list(page).locator(".list-name").first();
+  if (isMobile) await expect(name).toHaveCSS("font-weight", "600");
   else {
     // On a computer, a book's contents page (decision 0277): the name set as a chapter's title, larger.
-    await expect(names(page).first()).toHaveCSS("font-family", /Literata Display/);
-    await expect(names(page).first()).toHaveCSS("font-size", "24px");
-    await expect(names(page).first()).toHaveCSS("font-weight", "400");
+    await expect(name).toHaveCSS("font-family", /Literata Display/);
+    await expect(name).toHaveCSS("font-size", "24px");
+    await expect(name).toHaveCSS("font-weight", "400");
   }
   await expect(first.locator(".title")).toHaveCSS("font-weight", "400");
-  await expect(first.locator(".title")).toHaveCSS("color", await names(page).first().evaluate((name) => getComputedStyle(name).color));
+  await expect(first.locator(".title")).toHaveCSS("color", await name.evaluate((each) => getComputedStyle(each).color));
   await expect(first.locator(".unread-dot")).toHaveCount(1);
+  // The dot is smaller and softer than the accent (decision 0278), still a clear mark.
+  await expect(first.locator(".unread-dot")).toHaveCSS("width", "6px");
   await expect(first).toHaveAccessibleName(/, unread/);
   // Everywhere else an unread title stays semibold: in All articles, by time, with no names.
   await page.unrouteAll({ behavior: "ignoreErrors" });
@@ -121,9 +139,9 @@ test("by keyboard alone: one Tab stop, the arrows go title to title across names
   await page.keyboard.press("j");
   await page.keyboard.press("j");
   await expect(rows(page).nth(6)).toHaveAttribute("aria-current", "true");
-  // Screen readers list the names as headings, in order: people's and "Publications" under the list's title, a publication's under that.
-  await expect(list(page).getByRole("heading", { level: 3 })).toHaveCount(3);
-  await expect(list(page).getByRole("heading", { level: 4 })).toHaveCount(1);
+  // Screen readers list the names as headings, in order: "People" and "Publications" under the list's title, each name under its group.
+  await expect(list(page).getByRole("heading", { level: 3 })).toHaveCount(2);
+  await expect(list(page).getByRole("heading", { level: 4 })).toHaveCount(3);
 });
 
 for (const [what, width, text] of [
@@ -134,7 +152,7 @@ for (const [what, width, text] of [
     await page.setViewportSize({ width, height: 700 });
     const { publication } = await openUnread(page, "Margarethe Vandenberghe-Okonkwo and Friends");
     if (text) await page.evaluate((size) => (document.documentElement.style.fontSize = size), text);
-    const row = list(page).locator("li").filter({ has: page.getByRole("heading", { name: publication, exact: true }) }).locator(".item-row");
+    const row = list(page).locator("li").filter({ has: named(page, publication) }).locator(".item-row");
     const title = (await row.locator(".title").boundingBox())!;
     const meta = (await row.locator(".row-meta").boundingBox())!;
     const box = (await row.boundingBox())!;
