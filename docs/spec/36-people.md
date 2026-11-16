@@ -129,9 +129,9 @@ PLAN.md → V1, item 1.*
     channel or newsletter by its own name; one called just what they are by
     what it is, "Website" or "YouTube channel";
   - while a source is paused, the line saying so with Resume (section 15,
-    decision 0239); while one isn't working, the line naming it with Find
-    new address (section 15);
-  - for a person, **Write to Tomas Berg**, an outlined button with the
+    decision 0239); while one isn't working, the box saying what went wrong, with Find
+    new address, Write to (a person) and Unsubscribe (section 15, decision 0279);
+  - for a person, unless a box above offers it, **Write to Tomas Berg**, an outlined button with the
     paper plane (their name leads the page, decision 0267), with the address under it once nine turtles knows it
     (section 37), and **Change** beside the address, which opens the same
     box as Write back's, filled with it, to correct it (Save, Not now);
