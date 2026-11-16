@@ -102,11 +102,8 @@
 }
 
 /*
-  Settings sets the font and size on <html> (SPEC section 18); one line width
-  for all (decisions 0187, 0288), in every font: 32.5em, about 70 letters in
-  Literata and 75 in Atkinson, so changing the font never moves the column.
-  (Not "ch", the width of a zero: Atkinson's zero is wide and its letters
-  narrow, so 57ch made its column an eighth wider and 85 letters long.)
+  Settings sets the font and size on <html> (SPEC section 18); one line width in
+  every font, in em, not ch (a zero's width differs by font; decision 0288).
 */
 :root {
   --reading-font: var(--font-serif);
