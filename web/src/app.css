@@ -86,6 +86,7 @@
   --faint: #98989c;
     --danger: #e39aa4;
     --accent: #94b2e6;
+    --unread-dot: #667ca2;
     --tint-list: #2c2c2c;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
@@ -374,24 +375,22 @@ body {
 }
 
 /*
-  Unread: a drawn 8px dot in the theme's accent, centred in the row's own
-  24px gutter (8px from the pill's edge, 8px clear of the title), level with
-  the middle of the title's first line, so it reads as a mark in a margin,
-  not a bullet. On a phone it sits in the list's 28px gutter, 10px from the
-  screen's edge and 10px clear of the title, so the keyboard's ring (2px
-  inside the pill, which sits 6px in) passes 2px clear of it, never touching
-  it (decisions 0049, 0054). The semibold title says it too, so it
-  never rests on color.
+  Unread: a drawn 6px dot, the accent softened (--unread-dot, 3 : 1 on all
+  it sits on; decision 0278), in the row's 24px gutter (8px from the pill's
+  edge), level with the title's first line's middle: a mark in a margin, not
+  a bullet. On a phone, in the list's 28px gutter 10px from the screen's
+  edge, so the keyboard's ring (2px inside the pill, 6px in) passes 2px
+  clear of it (decisions 0049, 0054). The semibold title says it too.
 */
 .unread-dot {
   position: absolute;
   /* Centred on the title's first line: the row's top room, then half the title's line. */
-  top: calc(var(--row-top) + var(--row-title-size) * var(--row-title-line) / 2 - 4px);
+  top: calc(var(--row-top) + var(--row-title-size) * var(--row-title-line) / 2 - 3px);
   left: var(--dot-left, 8px);
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 9999px;
-  background-color: var(--accent);
+  background-color: var(--unread-dot);
 }
 @media (forced-colors: active) {
   .unread-dot {

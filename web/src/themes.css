@@ -41,6 +41,8 @@
   --faint: #6b6b70;
   --danger: #8c2f39;
   --accent: #2c4f8c;
+  /* The unread dot: the accent, softened (decision 0278), held to 3 : 1 on the page, the list and the selected row. */
+  --unread-dot: #6d86b6;
   --tint-list: #ececec;
   --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
@@ -58,6 +60,7 @@
   --faint: #5c5345;
   --danger: #8c2f39;
   --accent: #8c5500;
+  --unread-dot: #9e6e2e;
   --tint-list: #e6e2d9;
   --tint-sidebar: #d5cfc3;
   --surface-raised: #f7f3ea;
@@ -75,6 +78,7 @@
   --faint: #98989c;
   --danger: #e39aa4;
   --accent: #94b2e6;
+  --unread-dot: #667ca2;
   --tint-list: #2c2c2c;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;

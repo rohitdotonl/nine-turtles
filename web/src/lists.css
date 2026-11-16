@@ -113,24 +113,33 @@
 }
 
 /*
-  Unread, by person (SPEC section 6, decision 0271): each name once, a
-  heading in the reading serif (20px, semibold, full ink) on the row titles'
-  edge, 24px above it; under it their titles, 12px above and below, so a
-  person with one article takes two lines. The name carries the weight, so
+  Unread, by person (SPEC section 6, decisions 0271 and 0278): each name
+  once, a heading in the reading serif (20px, semibold, full ink) on the row
+  titles' edge, 40px under the group before, with the day that placed it
+  right after it (12px on), in the rows' date type, so the eye never crosses
+  the page; under it their titles, 8px under the name and 16px above and
+  below each other, so each title reads on its own and each person as one
+  block. The name carries the weight, so
   an unread title under it is regular, in full ink; the dot still marks it. Each row's small line (the day,
   and a publication's writer, an episode's length, "Half read", the star)
   sits at its right end beside the title's first line while the title
   keeps at least 12rem and three fifths of the row; otherwise it goes
   under the title, 8px down, as in every other list: on a narrow phone, at
-  large text, in a narrow list. Where publications begin, the one label,
-  "Publications", 40px above, 8px over the first one's name.
+  large text, in a narrow list. "People" over the first person's name and
+  "Publications" over the first publication's, quiet: the meta size,
+  regular, in the dates' grey; 16px under the list's top or 48px under the
+  group before, 8px over the name.
 */
 .by-person .list-name,
 .by-person .list-label {
   padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem);
 }
 .by-person .list-name {
-  padding-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.75rem;
+  padding-top: 2.5rem;
   font-family: var(--font-serif);
   font-size: var(--text-large);
   line-height: 1.35;
@@ -138,18 +147,37 @@
   color: var(--ink);
 }
 .by-person .list-label {
-  padding-top: 2.5rem;
+  padding-top: 3rem;
+  font-size: var(--text-meta);
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--faint);
+}
+.by-person li:first-child .list-label {
+  padding-top: 1rem;
 }
 .by-person .list-label + .list-name {
   padding-top: 0.5rem;
 }
+.by-person .list-when {
+  font-family: var(--font-dates);
+  font-size: var(--text-date);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: var(--faint);
+  white-space: nowrap;
+}
 .by-person .item-row {
-  --row-top: 0.75rem;
+  --row-top: 1rem;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.5rem 1rem;
-  padding-bottom: 0.75rem;
+  padding-bottom: 1rem;
+}
+.by-person li:has(.list-name) .item-row {
+  --row-top: 0.5rem;
 }
 .by-person .item-row > .title {
   flex: 1 1 max(12rem, 60%);
@@ -169,7 +197,7 @@
   titles (RowText.svelte).
 */
 .list-pane:not(.phone) .by-person .list-name {
-  padding-top: 2rem;
+  padding-top: 2.5rem;
   font-family: var(--font-display);
   font-size: var(--text-heading);
   font-weight: 400;
