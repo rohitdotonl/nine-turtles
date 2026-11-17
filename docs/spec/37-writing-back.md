@@ -11,15 +11,17 @@ V1, item 2). Its look gets a refinement round.*
   centred button, **Write back** (with an arrow beside it for the other
   ways back, below): an outlined button with a
   paper-plane icon, as Mark all as read ends a list, so it's quieter than
-  the writing (decision 0242; solid ink before). Under it, in small muted
-  type, who it goes to, named in full by the name in the sidebar, and the
-  address it writes to: "to Maya Chen, maya@example.com" (the owner's core
-  path, points 6 and 7, decision 0183). The button stays one short word
+  the writing (decision 0242; solid ink before), and at an article's end
+  small and soft, a faint edge and the second ink, still 44px tall
+  (decision 0298). Nothing under it names who it goes to or their address:
+  an address is never printed on the article's page, where a screenshot or
+  a shared screen would carry it (decision 0298, replacing 0183's "to Maya
+  Chen, maya@example.com"); their page still shows it. The button stays one short word
   whatever the name's length, so a long name never swells it into a block
   (decision 0260; it said "Write back to Maya Chen" before); screen readers
-  still hear "Write back to Maya Chen" as the button's name. It's also one press from the
-  text, a paper plane beside Save in the article's top bar (on a phone, in
-  its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
+  still hear "Write back to Maya Chen" as the button's name. It's never in
+  a bar (decision 0298, replacing 0214's paper plane there); it's on the
+  keyboard, **`w`** (section 19), and in a row's
   own menu in the list, which opens the article and starts it (section 6;
   decision 0214). An article of a place you no longer follow (one kept only
   in Saved) has none: there's no person to write to.
@@ -60,9 +62,9 @@ V1, item 2). Its look gets a refinement round.*
   every article of theirs and every device: **Write back**, **Copy
   address** (two overlapping pages; "Copy address of Maya Chen" to screen
   readers) or **Comment** (a speech bubble; "Comment on Maya Chen's site"),
-  kept by nine turtles on every source of theirs. Under Copy address the
-  line still says who and which address; under Comment, "on
-  example.com", the site the comments are on. The paper plane, `w`, a
+  kept by nine turtles on every source of theirs. At an article's end
+  no line under it names the address (decision 0298); under Comment, "on
+  example.com", the site the comments are on. `w`, a
   row's menu and Write back about this always write an email, whatever the
   main button does. Comments are where the feed says they are (RSS's
   `<comments>`, or an Atom `rel="replies"` link to a web page, as WordPress,
@@ -128,7 +130,7 @@ V1, item 2). Its look gets a refinement round.*
   article's text loads), a new tab may be blocked by the browser, so then
   nothing opens and the keyboard goes to Write back for one more press. nine turtles still never sends or sees the email: it
   only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question stays (with its ways, if they were open), for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
-  Pressed away from the article's end (the paper plane, `w`, a row's menu,
+  Pressed away from the article's end (`w`, a row's menu,
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's
   foot, as the list's note is shown there (section 8), "Opening your email

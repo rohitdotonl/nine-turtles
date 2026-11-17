@@ -6,6 +6,15 @@ describe("authorBesides", () => {
     expect(authorBesides("Hal Brennan", "Garden Letters")).toBe("Hal Brennan");
     expect(authorBesides("garden letters ", "Garden Letters")).toBeUndefined();
   });
+
+  it("says a name spelled a letter or two differently once (decision 0298)", () => {
+    expect(authorBesides("Ana Rodrigues", "Ana Rodriguez")).toBeUndefined();
+    expect(authorBesides("Zoë O'Hara", "Zoe OHara")).toBeUndefined();
+    // Different people, and short names that differ by a letter, stay apart.
+    expect(authorBesides("Ana Rodrigues", "Small Kitchen")).toBe("Ana Rodrigues");
+    expect(authorBesides("Jon", "Jan")).toBe("Jon");
+    expect(authorBesides("Mike Taylor", "Every")).toBe("Mike Taylor");
+  });
 });
 
 describe("titleLength", () => {

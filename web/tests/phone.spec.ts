@@ -173,12 +173,12 @@ test.describe("on a phone", () => {
     await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
-    // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0293).
+    // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0293); Write back ends the article instead (decision 0298).
     const names = await toolbar(page)
       .getByRole("button")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
     // Two groups by job, in order of use (decision 0225): acting on the article, then a hairline, then moving through the list at the right.
-    expect(names).toEqual(["More actions", expect.stringMatching(/^(Share|Copy link)$/), "Write back", "Save", "Previous", "Next"]);
+    expect(names).toEqual(["More actions", expect.stringMatching(/^(Share|Copy link)$/), "Save", "Previous", "Next"]);
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");

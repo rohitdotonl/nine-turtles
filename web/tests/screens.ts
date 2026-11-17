@@ -699,6 +699,22 @@ export async function openScreen(page: Page, screen: Screen, theme: Theme): Prom
   }
   await screen.open?.(page);
   await page.evaluate(() => document.fonts.ready);
+  // A fade (the running title's, decision 0298) is checked once it has finished, never
+  // half-faded. One can start a frame or two after a scroll, so look again until two quiet
+  // frames pass with none running. The breathing dots never finish, so they're left out.
+  await expect
+    .poll(() =>
+      page.evaluate(async () => {
+        await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+        const running = document
+          .getAnimations()
+          .filter((animation) => animation.playState === "running")
+          .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity);
+        await Promise.all(running.map((animation) => animation.finished));
+        return running.length;
+      }),
+    )
+    .toBe(0);
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).backgroundColor))
     .toBe(background(theme));

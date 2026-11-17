@@ -68,8 +68,10 @@ you paste.
 - **Chapters you can press:** when the description lists at least two times,
   each at the start or end of a line and each later than the one before
   ("0:00 First light", "The heron – 4:00"), they're listed under the box as
-  **Chapters**, each a 44px row with its time (underlined, in figures of one
-  width) and name. Pressing one plays the video from there, or moves the
+  **Chapters**, in the reading face, in two columns where there's room, each
+  a 44px row with its time (small, muted, in figures of one width with a plain
+  zero, not underlined) and its name, which underlines under the pointer
+  (decision 0298). Pressing one plays the video from there, or moves the
   playing video there. Each is named by what it shows ("4:00 The heron"), so
   voice control finds it.
 - **A long description is folded:** when it has more than one paragraph and

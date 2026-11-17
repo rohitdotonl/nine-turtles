@@ -1,8 +1,8 @@
 <!--
-  The article's end, on a computer (SPEC section 7, decision 0263): the top
-  bar scrolls away with the title, so what's wanted on finishing waits under
-  the closing rule, above Write back: Save and View original, as quiet
-  buttons with their words. View original is left out when the note above
+  The article's end, on a computer (SPEC section 7, decisions 0263, 0298):
+  what's wanted on finishing waits under the closing rule, close to the last
+  words, above Write back: Save and View original, as quiet
+  buttons with their words, in the muted grey (decision 0298). View original is left out when the note above
   already links the rest on the publisher's site. A phone keeps its toolbar
   in reach instead, so this is a computer's only.
 -->
@@ -31,7 +31,11 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.25rem;
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     font-family: var(--font-sans);
+  }
+  /* A step quieter than Write back under them (decision 0298): the muted grey, which keeps 4.5 : 1 on the page in every theme; a saved bookmark stays in full ink. */
+  .end-tools > :global(:not(.text-ink)) {
+    color: var(--muted);
   }
 </style>

@@ -67,8 +67,11 @@ const AFTER: &[&str] = &[
 /// A feed's own name without the words around it that only say it's a feed.
 /// "Blog – Pete's Site » Latest Posts" is "Pete's Site", "Posts on Small
 /// Kitchen" is "Small Kitchen", "Maren Holt's Blog RSS Feed" is "Maren Holt".
-/// A name that is all such words stays as it is.
+/// A name that is all such words stays as it is. An email address in brackets
+/// after the name goes too: some paid newsletters put the subscriber's own
+/// address there ("Every (reader@example.com)"), and it's never part of a name.
 pub fn tidy_name(name: &str) -> String {
+    let name = without_address(name);
     let kept: Vec<(&str, &str)> = parts(name)
         .into_iter()
         .filter(|(_, part)| !FILLER.contains(&part.trim().to_lowercase().as_str()))
@@ -99,6 +102,29 @@ pub fn tidy_name(name: &str) -> String {
         return joined;
     }
     tidy.to_owned()
+}
+
+/// The name without an email address in brackets at its end: "Every
+/// (reader@example.com)" or "Every <reader@example.com>" is "Every". A name
+/// that is only an address stays as it is.
+fn without_address(name: &str) -> &str {
+    let trimmed = name.trim_end();
+    for (open, close) in [('(', ')'), ('<', '>'), ('[', ']')] {
+        let Some((before, address)) = trimmed.strip_suffix(close).and_then(|inside| {
+            inside
+                .rfind(open)
+                .map(|at| (inside[..at].trim_end(), &inside[at + 1..]))
+        }) else {
+            continue;
+        };
+        let looks_like_address = address.contains('@')
+            && !address.contains(char::is_whitespace)
+            && address.split('@').all(|part| !part.is_empty());
+        if looks_like_address && before.chars().any(char::is_alphanumeric) {
+            return before;
+        }
+    }
+    name
 }
 
 /// The name's parts, each with the separator before it ("" for the first).
@@ -239,6 +265,23 @@ mod tests {
         assert_eq!(
             tidy_name("Blog – Field Notes | Walks and weather"),
             "Field Notes | Walks and weather"
+        );
+    }
+
+    #[test]
+    fn an_address_in_brackets_after_the_name_goes() {
+        assert_eq!(tidy_name("Every (reader@example.com)"), "Every");
+        assert_eq!(tidy_name("Every <reader@example.com>"), "Every");
+        assert_eq!(tidy_name("Morning Notes [me@example.org]"), "Morning Notes");
+        // Words in brackets that aren't an address stay, and so does an address alone.
+        assert_eq!(
+            tidy_name("Pete's Site (the old one)"),
+            "Pete's Site (the old one)"
+        );
+        assert_eq!(tidy_name("(reader@example.com)"), "(reader@example.com)");
+        assert_eq!(
+            tidy_name("Notes (@pete on Mastodon)"),
+            "Notes (@pete on Mastodon)"
         );
     }
 

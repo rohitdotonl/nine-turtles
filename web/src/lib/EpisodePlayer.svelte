@@ -154,13 +154,14 @@
 </div>
 
 <style>
-  /* A still panel in a faint tone of the text, like the video's box, 12px corners. */
+  /* A still panel in a faint tone of the text, with a fine edge so it reads as one thing, 12px corners (decision 0298). Times with a plain zero. */
   .episode {
     margin-top: 1.5em;
     padding: 0.75rem 1rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius-hold);
     background-color: var(--fill);
-    font-family: var(--font-sans);
+    font-family: var(--font-dates);
     font-size: var(--text-meta);
     color: var(--ink-2);
   }
