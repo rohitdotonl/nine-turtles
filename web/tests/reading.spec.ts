@@ -874,6 +874,25 @@ test.describe("on a wide window", () => {
     expect(scroller!.x + scroller!.width - (text!.x + text!.width)).toBeGreaterThanOrEqual(56);
   });
 
+  test("with reduced motion, the bar's title doesn't rise: it's simply there once the title has gone (decision 0302)", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await openRoom(page);
+    await page.setViewportSize({ width: 1280, height: 420 });
+    await openFirst(page);
+    const bar = article(page).locator(".reading-bar");
+    const scroller = article(page).locator(".reading-scroller");
+    const heading = article(page).locator(".article-title");
+    const running = bar.locator(".running-title");
+    // Just after the title's foot has gone under the bar: no copy on its way up.
+    const [barBox, box] = [(await bar.boundingBox())!, (await heading.boundingBox())!];
+    await scroller.evaluate((element, foot) => element.scrollBy(0, foot + 6), box.y + box.height - barBox.y - barBox.height);
+    await expect(running).toHaveCount(1);
+    await expect(running.locator(".running-words")).toHaveCSS("transform", "none");
+    // A little short of that, nothing at all.
+    await scroller.evaluate((element) => element.scrollBy(0, -12));
+    await expect(running).toHaveCount(0);
+  });
+
   test("a summary-only article ends with a small centred note under the closing rule, and the page's one main button to read it on the publisher's site", async ({ page }) => {
     await openRoom(page);
     await row(page, "Only the first page").click();
@@ -908,7 +927,7 @@ test.describe("on a wide window", () => {
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {
     await openRoom(page);
     await row(page, "The pleasure of a slow letter").click();
-    const ending = article(page).locator(".article-text .ends");
+    const ending = article(page).locator(".article-text.ends");
     await expect(ending).toHaveCount(1);
     expect(await ending.evaluate((element) => getComputedStyle(element, "::after").content)).toContain("◆");
     expect(await ending.evaluate((element) => getComputedStyle(element, "::after").display)).toBe("block");
@@ -918,7 +937,7 @@ test.describe("on a wide window", () => {
     await toList(page);
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
-    await expect(article(page).locator(".article-text .ends")).toHaveCount(0);
+    await expect(article(page).locator(".article-text.ends")).toHaveCount(0);
   });
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {

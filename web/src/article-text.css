@@ -362,7 +362,7 @@
   the writer's last words (or last picture), centred, as a book ends a
   chapter. Drawn, not written: it's never copied, highlighted or read aloud.
 */
-.article-text .ends::after {
+.article-text.ends::after {
   content: "◆" / "";
   display: block;
   margin-top: 1.5rem;
@@ -375,6 +375,6 @@
 }
 
 /* Where the ◆ ends the writer's words, it is the end: no second mark under it (decision 0300). */
-.article-text:has(.ends) ~ .article-end {
+.article-text.ends ~ .article-end {
   display: none;
 }

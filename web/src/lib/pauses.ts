@@ -37,7 +37,7 @@ function lastBlock(body: Element): Element | undefined {
 /**
  * Marks the article's pauses: typed section breaks (drawn as the short rule),
  * picture-only paragraphs (given a picture's room) and, when `ending`, the
- * block the writer ends on, for the end mark (◆).
+ * text, when the writer ends on words or a picture, for the end mark (◆).
  */
 export function markPauses(body: Element, ending: boolean) {
   for (const paragraph of body.querySelectorAll("p")) {
@@ -49,6 +49,7 @@ export function markPauses(body: Element, ending: boolean) {
   if (!ending) return;
   const last = lastBlock(body);
   if (!last) return;
-  // The mark takes a line of its own under the last block (decision 0302); code and tables scroll sideways inside themselves, so they take no mark.
-  if (!/^(PRE|TABLE)$/.test(last.tagName)) last.classList.add("ends");
+  // The mark takes a line of its own under the text, centred on the column even when the last words are a list's or a
+  // quotation's (decision 0302); after code or a table, which scroll sideways inside themselves, there's no mark.
+  if (!/^(PRE|TABLE)$/.test(last.tagName)) body.classList.add("ends");
 }

@@ -72,7 +72,7 @@ V1, item 2). Its look gets a refinement round.*
   article's own address), else the article's own page, where comments
   usually are. No platform is named in nine turtles: only what the feed
   brought is used, and that page is only ever linked to, never fetched. The
-  top bar and the end's Save and View original stay as they are. On their
+  top bar stays as it is. On their
   page, Write to is one button with no arrow, and the line with the address
   ends in **Change** and **Copy address** ("Copy address of Maya Chen" to
   screen readers).

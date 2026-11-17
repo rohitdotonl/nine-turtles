@@ -2,6 +2,8 @@
 
 **In one line:** Where the ◆ ends the writer's words, the closing rule under it steps aside; Save and View original under it keep their icons, their words in the reading face's spaced capitals at the meta size; and the podcast player's 15 and 30 are redrawn with room inside their arrows.
 
+> **Partly replaced by [0302](0302-article-top-and-end.md):** Save and View original no longer wait at the end, so their spaced capitals went with them.
+
 *17 November 2026. Tracker item 11 ("why the New Yorker feels posh"). The owner asked for a posh, New Yorker-like reading page, turned down the magazine version ("Don't make it a magazine") and asked for something that serves short notes, YouTube videos and podcasts as well as long essays. He saw ten versions, then close-ups of five suggested changes, and chose number 5 only, the ending. He also asked for the podcast player's 15 and 30, which touched their arrows, to be fixed.*
 
 **What changes.**

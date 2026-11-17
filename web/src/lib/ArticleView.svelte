@@ -6,9 +6,8 @@
   left, Save and More on the right (…, holding Share or Copy link, Text and
   page, Mark unread, Add a note and Hide, each with its icon; decision 0293);
   once the title has scrolled away it names the article in the middle
-  (RunningTitle). Write back is
-  never in a bar: it ends the article. The writer's name under the title opens their list (decision
-  0289). What was just done ("Link copied.") floats at the pane's foot. A
+  (RunningTitle). Write back is never in a bar: it ends the article. The
+  writer's name under the title opens their list (decision 0289). What was just done ("Link copied.") floats at the pane's foot. A
   summary-only feed shows the summary, then a note under the closing rule with
   "Read the rest on …" as the page's main button; nine turtles never fetches
   the rest. A YouTube video plays in YouTube's own player, loaded only once
@@ -535,7 +534,7 @@
           {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet btn-icon nav-back text-ink-2"><Icon name="back" size="alone" /></button>{/if}
           {#if article.link}{@render original()}{/if}
         </div>
-        <!-- The middle, the text's true middle: once the title has scrolled away it names the article (decision 0299), fading in over 0.15 seconds (at once with reduced motion); a copy, so hidden from screen readers. -->
+        <!-- The middle, the text's true middle: once the title has scrolled away it names the article (decision 0299), rising into place as the title scrolls under the bar (decision 0302); a copy, so hidden from screen readers. -->
         <div class="bar-middle">
           {#if !article.link && !titleGone}
             <p class="truncate px-2 text-meta text-muted">This article has no link to its original.</p>
@@ -553,7 +552,7 @@
     {/if}
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, its text on the right edge; the title and byline stay centred (decisions 0223, 0294). -->
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
-      <!-- With room above it (32px, 48px on a computer, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
+      <!-- With room above it (32px, 48px from 48rem wide, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, centred, as on a book's title page: their picture, "by" and their name, then the day, small and faint (decision 0294). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
