@@ -1112,6 +1112,8 @@ test.describe("on a wide window", () => {
     const play = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
     await expect(play).toBeVisible();
     await expect(play).toContainText("A river at dawn, for an hour");
+    // It waits on a dark screen that says what Play does (decision 0298).
+    await expect(play).toContainText("Nothing loads from YouTube until you press Play.");
     await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
     // Its chapters are buttons; its long description is folded after the first paragraph.
     const chapters = article(page).getByRole("list", { name: "Chapters" });

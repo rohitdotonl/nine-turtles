@@ -63,9 +63,9 @@ test("on a computer: the list alone, then the article alone, and back to the sam
   expect(backBox!.height).toBeGreaterThanOrEqual(44);
   expect(articleBox!.width).toBeGreaterThan(viewport!.width - 2);
   // The article's column is as wide as the list's was (decision 0277), centred in the window, and its bar stands
-  // over the text: the way back on its left edge, More's icon ending on its right edge.
+  // over the text, its first and last icons mirroring each other over the text's edges (decision 0299).
   const text = (await article(page).locator(".article").boundingBox())!;
-  expect(Math.abs(backBox!.x + 4 - text.x)).toBeLessThan(2);
+  expect(Math.abs(backBox!.x + 12 - text.x)).toBeLessThan(2);
   const more = (await page.getByRole("button", { name: "More actions" }).boundingBox())!;
   expect(Math.abs(more.x + more.width - 12 - (text.x + text.width))).toBeLessThan(2);
   // No sidebar button over it, and full-screen reading is gone: not in More, not in the cheat sheet, and f does nothing.

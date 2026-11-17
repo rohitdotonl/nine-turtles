@@ -62,9 +62,9 @@ V1, item 2). Its look gets a refinement round.*
   every article of theirs and every device: **Write back**, **Copy
   address** (two overlapping pages; "Copy address of Maya Chen" to screen
   readers) or **Comment** (a speech bubble; "Comment on Maya Chen's site"),
-  kept by nine turtles on every source of theirs. Under Copy address the
-  line still says who and which address; under Comment, "on
-  example.com", the site the comments are on. The paper plane, `w`, a
+  kept by nine turtles on every source of theirs. At an article's end
+  no line under it names the address (decision 0298); under Comment, "on
+  example.com", the site the comments are on. `w`, a
   row's menu and Write back about this always write an email, whatever the
   main button does. Comments are where the feed says they are (RSS's
   `<comments>`, or an Atom `rel="replies"` link to a web page, as WordPress,
@@ -130,7 +130,7 @@ V1, item 2). Its look gets a refinement round.*
   article's text loads), a new tab may be blocked by the browser, so then
   nothing opens and the keyboard goes to Write back for one more press. nine turtles still never sends or sees the email: it
   only opens Gmail's or Outlook.com's own page for a new email, filled in. Once you come back from the email app (the page was hidden while it opened), "Opening your email app…" goes and the question stays (with its ways, if they were open), for an app that opened wrong; the line goes when another article opens. A copy that fails says so in oxblood with the alert icon.
-  Pressed away from the article's end (the paper plane, `w`, a row's menu,
+  Pressed away from the article's end (`w`, a row's menu,
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's
   foot, as the list's note is shown there (section 8), "Opening your email

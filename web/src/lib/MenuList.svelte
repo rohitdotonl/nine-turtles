@@ -38,11 +38,13 @@
     return [...(menu?.querySelectorAll<HTMLButtonElement>("[role^='menuitem']") ?? [])];
   }
 
-  /** Puts the keyboard on the first or last row. */
+  /** Puts the keyboard on the first or last row. The first row is already in view, so
+   *  the page never moves for it: under a computer's article bar, its room for the keyboard
+   *  (scroll-padding) would otherwise nudge the article as the menu opens (decision 0299). */
   export async function focus(which: "first" | "last" = "first") {
     await tick();
     const all = items();
-    (which === "first" ? all[0] : all.at(-1))?.focus();
+    (which === "first" ? all[0] : all.at(-1))?.focus({ preventScroll: which === "first" });
   }
 
   /** Whether a press landed inside the menu. */

@@ -52,8 +52,11 @@ test.describe("on a wide window", () => {
     await page.keyboard.press(" ");
     await expect.poll(() => scrolled(page)).toBeGreaterThan(screen / 2);
     const once = await scrolled(page);
-    // Not more than a screen: a few lines of the last one stay in view.
-    expect(once).toBeLessThanOrEqual(screen);
+    // Not more than a screen: a few lines of the last one stay in view, under a computer's bar, which stays (decision 0298).
+    const bar = await article(page).locator(".article-bar").evaluate((element) => element.getBoundingClientRect().height);
+    expect(once).toBeLessThanOrEqual(screen - bar - 40);
+    // What the keyboard moves to (a link, a footnote's way back) stops 1rem below the bar, never under it.
+    await expect(scroller(page)).toHaveCSS("scroll-padding-top", `${bar + 16}px`);
 
     // At the end it stops: the same article stays open, never the next.
     for (let press = 0; press < 20; press++) await page.keyboard.press(" ");
@@ -65,7 +68,7 @@ test.describe("on a wide window", () => {
     await expect.poll(() => scrolled(page)).toBeLessThan(end - screen / 2);
 
     // A button takes Space as its own press: More opens its menu, and the article stays put.
-    // (More is on the article's first line, so reaching it brings the article's top back into view, decision 0263.)
+    // (More stays at the top on a computer, decision 0298.)
     const aa = article(page).getByRole("button", { name: "More actions" });
     await aa.focus();
     const still = await scrolled(page);

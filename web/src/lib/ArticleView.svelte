@@ -456,15 +456,16 @@
 
   /**
    * Space and Shift+Space: the article moves on (1) or back (-1) by a screen,
-   * keeping a few lines of the last one in view so the eye finds its place,
+   * keeping a few lines of the last one in view (under a computer's bar, which stays) so the eye finds its place,
    * at once, never gliding. At the end (or the top) it simply stops.
    */
   export function page(step: 1 | -1) {
     const area = scroller;
     if (!area) return;
     moved = true;
+    const bar = phone ? 0 : (area.querySelector<HTMLElement>(".article-bar")?.offsetHeight ?? 0);
     const overlap = Math.min(64, area.clientHeight * 0.15);
-    area.scrollBy({ top: step * Math.max(area.clientHeight - overlap, 40), behavior: "instant" });
+    area.scrollBy({ top: step * Math.max(area.clientHeight - bar - overlap, 40), behavior: "instant" });
   }
 </script>
 
@@ -523,7 +524,7 @@
     onscroll={scrolled}
     style:padding-top={bars.away ? `${bars.room.above}px` : undefined}
     style:padding-bottom={bars.away ? `${bars.room.below}px` : undefined}
-    class={["reading-scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", phone && "scroller", listNote || writeBackNote || said ? "pb-24" : "pb-8" /* room under the article's end for the floating note (decision 0229) */]}>
+    class={["reading-scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", phone ? "scroller" : "under-bar", listNote || writeBackNote || said ? "pb-24" : "pb-8" /* room under the article's end for the floating note (decision 0229) */]}>
     {#if !phone}
       <!--
         On a computer the bar is the article's first line and stays at the top (decision 0298): quiet icons, each named
@@ -712,9 +713,12 @@
 </section>
 
 <style>
-  /* A footnote or heading the keyboard moves to stops a little below the window's top. */
+  /* A footnote, link or heading the keyboard moves to stops a little below the window's top, and on a computer below the bar that stays there (decision 0298). */
   .reading-scroller {
     scroll-padding-top: 1rem;
+  }
+  .reading-scroller.under-bar {
+    scroll-padding-top: calc(var(--bar-h) + 1rem);
   }
   /* The top bar (decision 0040): solid, in the page's own color, never see-through or blurred. On a phone its hairline is the scroller's top edge (app.css → .scroller). */
   .reading-bar {
@@ -725,13 +729,13 @@
       background-color: Canvas;
     }
   }
-  /* Once the title is gone: a hairline under the bar, and the title and source in the middle, one line each, cut short with … (decision 0298). */
+  /* Once the title is gone: a hairline under the bar, and the title in its middle (decisions 0298, 0299). */
   .reading-bar.scrolled {
     border-bottom: 1px solid var(--line);
   }
   /*
-    The phone's bottom toolbar: five equal places of quiet icons (six with
-    Write back, for a person), each at
+    The phone's bottom toolbar: five equal places of quiet icons (Write
+    back is never in a bar, decision 0298), each at
     least 44px square, in the second ink (a saved article's bookmark in full ink).
   */
   .toolbar {

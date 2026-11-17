@@ -58,6 +58,9 @@
 //                      (two seconds), whose audio files are silence made here
 //                      (/podcast/audio/long.wav, short.wav), served in parts
 //                      as browsers ask for audio (Range requests)
+//   /pauses/NAME/      a blog whose one article has a section break typed
+//                      by hand ("* * *"), a line of code too long for the
+//                      column, and ends on a picture alone (decision 0298)
 //   /messy/NAME/       a blog sending things messily (decision 0260): its
 //                      name wrapped as "Blog – Messy NAME » Latest Posts",
 //                      a title with its symbols coded twice, and an article
@@ -160,6 +163,19 @@ function messyFeed(name, host) {
   return `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
 <title>Blog – Messy ${name} » Latest Posts</title><link>${home}</link>
 <item><title>Tom &amp;amp; Jerry&amp;#8217;s guide</title><link>${home}guide</link><guid>${home}guide</guid>
+<pubDate>${new Date(NEWEST).toUTCString()}</pubDate><content:encoded><![CDATA[${body}]]></content:encoded></item>
+</channel></rss>`;
+}
+
+/** A blog whose article pauses (decision 0298): a typed break, a long line of code, and a last picture alone. */
+function pausesFeed(name, host) {
+  const home = `https://pauses-${name}.example/`;
+  const body = `<p>The first part, before the break.</p><p>* * *</p><p>The second part, after it.</p>
+<pre><code>shelf = [book for book in library if book.read_slowly and book.kept_for_a_long_time and book.lent_to_a_friend]</code></pre>
+<p><img src="${host}/reading/river.svg" width="640" height="240" alt="A river drawn as three blue lines"></p>`;
+  return `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
+<title>Pauses ${name}</title><link>${home}</link>
+<item><title>A walk in two parts</title><link>${home}walk</link><guid>${home}walk</guid>
 <pubDate>${new Date(NEWEST).toUTCString()}</pubDate><content:encoded><![CDATA[${body}]]></content:encoded></item>
 </channel></rss>`;
 }
@@ -505,6 +521,9 @@ createServer((request, response) => {
     if (writer[2] === "contact") return html(`<!doctype html><title>Contact</title><p>Write to me: <a href="mailto:${name}@${name}.example">${name}@${name}.example</a></p>`);
     return html(`<!doctype html><title>Writer ${name}</title><a href="/writer/${name}/contact">Contact</a>`);
   }
+
+  const pauses = path.match(/^\/pauses\/([a-z0-9-]+)\/feed\.xml$/);
+  if (pauses) return xml(pausesFeed(pauses[1], `http://${request.headers.host}`));
 
   const messy = path.match(/^\/messy\/([a-z0-9-]+)\/(feed\.xml)?$/);
   if (messy) {

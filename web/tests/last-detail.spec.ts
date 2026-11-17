@@ -80,3 +80,30 @@ test.describe("a messy feed", () => {
     await expect(pane(page).locator(".write-back .to")).toHaveCount(0);
   });
 });
+
+test("an article's pauses: a typed break drawn as the short rule and hidden from screen readers, code that keeps its line, a last picture with the ◆ after it (decision 0298)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same marks on a phone");
+  const name = `pauses-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/pauses/${name}/feed.xml`);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  const text = pane(page).locator(".article-text");
+  // "* * *" stays in the text as the writer typed it, drawn as the break and not read out.
+  const typed = text.locator("p", { hasText: "* * *" });
+  await expect(typed).toHaveClass(/section-break/);
+  await expect(typed).toHaveAttribute("aria-hidden", "true");
+  // The code keeps its one long line and scrolls sideways instead.
+  const code = text.locator("pre");
+  await expect(code).toHaveCSS("white-space", "pre");
+  expect(await code.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+  // The article ends on a picture alone: it's given a picture's room, and the ◆ follows it on a line of its own.
+  const last = text.locator("p").last();
+  await expect(last).toHaveClass(/\bpicture\b/);
+  await expect(last).toHaveClass(/ends-after/);
+  expect(await last.evaluate((element) => getComputedStyle(element, "::after").content)).toContain("◆");
+});

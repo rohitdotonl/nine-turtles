@@ -499,8 +499,8 @@
       {/if}
       {#if way === "comment"}
         <p class="to" aria-hidden="true">on {talkSite}</p>
-      {:else if article}
-        <!-- At an article's end, no line under the button (decision 0298): its name says who it goes to to screen readers, and the address is never printed on the page. -->
+      {:else if article || !address}
+        <!-- At an article's end, no line under the button (decision 0298): its name says who it goes to to screen readers, and the address is never printed on the page. On their page with no address yet, nothing to correct or copy. -->
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
