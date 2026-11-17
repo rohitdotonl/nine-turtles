@@ -61,6 +61,9 @@
 //   /pauses/NAME/      a blog whose one article has a section break typed
 //                      by hand ("* * *"), a line of code too long for the
 //                      column, and ends on a picture alone (decision 0298)
+//   /teasers/NAME/     a blog whose descriptions are bare words with no
+//                      paragraph: one a short subtitle (a teaser), one a
+//                      whole note too long to be one (decision 0306)
 //   /messy/NAME/       a blog sending things messily (decision 0260): its
 //                      name wrapped as "Blog – Messy NAME » Latest Posts",
 //                      a title with its symbols coded twice, and an article
@@ -177,6 +180,20 @@ function pausesFeed(name, host) {
 <title>Pauses ${name}</title><link>${home}</link>
 <item><title>A walk in two parts</title><link>${home}walk</link><guid>${home}walk</guid>
 <pubDate>${new Date(NEWEST).toUTCString()}</pubDate><content:encoded><![CDATA[${body}]]></content:encoded></item>
+</channel></rss>`;
+}
+
+/** A blog whose descriptions are bare words (decision 0306): a subtitle standing for the post, and a whole plain note. */
+function teasersFeed(name) {
+  const home = `https://teasers-${name}.example/`;
+  const note =
+    "I walked to the river this morning and sat on the bench by the bridge for an hour, watching the water go by. A heron stood in the shallows the whole time and never caught a thing. Neither did I. Two dogs came by, then a man with a flask of tea who nodded and kept walking. I came home with nothing to show for it, which was the point.";
+  const item = (slug, title, text, days) =>
+    `<item><title>${title}</title><link>${home}${slug}</link><guid>${home}${slug}</guid><pubDate>${new Date(NEWEST - days * DAY).toUTCString()}</pubDate><description>${text}</description></item>`;
+  return `<?xml version="1.0"?><rss version="2.0"><channel>
+<title>Teasers ${name}</title><link>${home}</link>
+${item("slow", "On keeping a slower pace", "Going slowly", 0)}
+${item("river", "A morning by the river", note, 1)}
 </channel></rss>`;
 }
 
@@ -524,6 +541,9 @@ createServer((request, response) => {
 
   const pauses = path.match(/^\/pauses\/([a-z0-9-]+)\/feed\.xml$/);
   if (pauses) return xml(pausesFeed(pauses[1], `http://${request.headers.host}`));
+
+  const teasers = path.match(/^\/teasers\/([a-z0-9-]+)\/feed\.xml$/);
+  if (teasers) return xml(teasersFeed(teasers[1]));
 
   const messy = path.match(/^\/messy\/([a-z0-9-]+)\/(feed\.xml)?$/);
   if (messy) {

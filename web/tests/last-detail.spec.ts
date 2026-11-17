@@ -109,3 +109,27 @@ test("an article's pauses: a typed break drawn as the short rule and hidden from
   // On a line of its own, centred on the column (decision 0302).
   expect(await text.evaluate((element) => getComputedStyle(element, "::after").display)).toBe("block");
 });
+
+test("bare words from a feed: a short subtitle is only the beginning, a whole plain note ends on the ◆ (decision 0306)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on a phone");
+  const name = `teasers-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/teasers/${name}/feed.xml`);
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  // "Going slowly" stands for the post: it says so and points to the rest, with no ◆.
+  await page.locator(".item-row", { hasText: "On keeping a slower pace" }).click();
+  await expect(pane(page).getByText("Only the beginning is shared here.")).toBeVisible();
+  await expect(pane(page).getByRole("link", { name: /Read the rest on/ })).toBeVisible();
+  await expect(pane(page).locator(".article-text")).not.toHaveClass(/\bends\b/);
+  // A note too long to be a subtitle is the whole piece: no paragraph around it, and still the ◆.
+  await pane(page).getByRole("button", { name: /^Back to/ }).click();
+  await page.locator(".item-row", { hasText: "A morning by the river" }).click();
+  const text = pane(page).locator(".article-text");
+  await expect(text).toContainText("which was the point.");
+  await expect(text).toHaveClass(/\bends\b/);
+  await expect(pane(page).getByText("Only the beginning is shared here.")).toHaveCount(0);
+});

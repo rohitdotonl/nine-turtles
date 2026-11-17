@@ -17,21 +17,24 @@ function picturesOnly(block: Element): boolean {
   return block.querySelector("img, picture, video") !== null && !block.textContent?.trim();
 }
 
+/** Whether there are words here: fewer than two letters (a "🔗" permalink, a lone "#") isn't where the writing ends. */
+function hasWords(node: Node): boolean {
+  return (node.textContent?.match(/\p{L}/gu) ?? []).length >= 2;
+}
+
 /** The article's last block worth ending on: skips empty paragraphs and typed breaks. */
 function lastBlock(body: Element): Element | undefined {
-  // A block with fewer than two letters (a "🔗" permalink, a lone "#") isn't where the writing ends.
   const blocks = [...body.children].filter(
     (block) =>
-      block.tagName !== "HR" &&
-      !block.classList.contains("section-break") &&
-      ((block.textContent?.match(/\p{L}/gu) ?? []).length >= 2 || picturesOnly(block)),
+      block.tagName !== "HR" && !block.classList.contains("section-break") && (hasWords(block) || picturesOnly(block)),
   );
   let last = blocks.at(-1);
   // A wrapper's last block, so the mark follows the words rather than closing a box.
   while (last && last.tagName === "DIV" && last.lastElementChild) last = last.lastElementChild;
   if (last && /^(UL|OL)$/.test(last.tagName)) last = last.lastElementChild ?? last;
   if (last?.tagName === "BLOCKQUOTE") last = last.lastElementChild ?? last;
-  return last ?? undefined;
+  // Words with no paragraph around them (only line breaks or a few inline marks), as some feeds send them, end on the text itself.
+  return last ?? (hasWords(body) ? body : undefined);
 }
 
 /**

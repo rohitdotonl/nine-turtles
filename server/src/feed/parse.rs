@@ -253,11 +253,13 @@ pub fn parse(body: &[u8], feed_url: &Url) -> Option<ParsedFeed> {
                 .filter(|html| !html.trim().is_empty());
             // An RSS post sent whole in its one text field is the article's
             // text, not a summary (decision 0218).
+            let episode = episode(&entry, base, feed_artwork.as_deref());
             let (content, summary) = match (content, summary) {
-                (None, Some(text)) if summary_is_whole(&kind, &text) => (Some(text), None),
+                (None, Some(text)) if summary_is_whole(&kind, &text, &title, episode.is_some()) => {
+                    (Some(text), None)
+                }
                 both => both,
             };
-            let episode = episode(&entry, base, feed_artwork.as_deref());
             let comments = comments_link(&entry.links, base, link.as_ref());
             ParsedArticle {
                 // The fingerprint comes from the link as the feed wrote it,
