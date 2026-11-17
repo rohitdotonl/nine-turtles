@@ -115,7 +115,7 @@
     <div class="flex w-full flex-col items-stretch gap-3 text-center sm:max-w-xs">
       <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
       <p role="status" class="break-words">
-        A link is on its way to <span class="font-semibold">{sent}</span>. Open it in this browser to finish signing up with one press (anywhere else, it asks your password). It works once, within 24 hours.
+        A link is on its way to <span class="font-semibold">{sent}</span>. Open it within 24 hours to finish signing up.
       </p>
       <SendAgain to={sent} onSend={signUpAgain} />
       <a href="/sign-up" class="btn" onclick={back}>Use another email</a>

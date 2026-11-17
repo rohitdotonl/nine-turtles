@@ -66,9 +66,8 @@
     </div>
     <div role="status" class={["inset-foot text-ink", !message && "sr-only"]}>{message}</div>
     <p class="inset-foot">
-      Payments are handled by Dodo Payments, which takes your card, adds any sales tax and sends your receipts. nine
-      turtles never sees your card. You can cancel whenever you like under Billing and cancelling. If you've just paid,
-      it can take a minute to show here.
+      Dodo Payments takes your card, adds any tax and sends receipts; nine turtles never sees your card. Cancel any
+      time under Billing and cancelling. A new payment can take a minute to show.
     </p>
     {#if status.testMode}
       <p class="inset-foot">Test mode: no real money is taken. Pay with Dodo's test card, 4242 4242 4242 4242.</p>

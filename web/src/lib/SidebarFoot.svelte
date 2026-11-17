@@ -50,12 +50,12 @@
     <button
       type="button"
       onclick={() => (keysOpen = true)}
-      aria-label="Keys (keyboard shortcuts)"
+      aria-label="Keyboard shortcuts"
       title="Keyboard shortcuts (?)"
       aria-haspopup="dialog"
       aria-expanded={keysOpen}
-      class={["btn-quiet gap-3 px-3 text-meta text-ink-2 @max-[15rem]:w-11 @max-[15rem]:px-0", keysOpen && "bg-[var(--line)] text-ink"]}
-      ><Icon name="keyboard" /><span class="@max-[15rem]:hidden">Keys</span></button
+      class={["btn-quiet btn-icon", keysOpen && "bg-[var(--line)] text-ink"]}
+      ><Icon name="keyboard" size="alone" /></button
     >
   {/if}
   <a

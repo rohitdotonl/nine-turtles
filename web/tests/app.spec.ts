@@ -316,7 +316,7 @@ test("Settings: appearance, font and size apply at once and are remembered on th
   const look = page.getByRole("region", { name: "Look and feel" });
   for (const name of ["Sort order", "Font"]) await expect(page.getByRole("group", { name, exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Larger text" })).toHaveCount(0);
-  await expect(look).toContainText("Text size and font are in Text and page, in any article’s More.");
+  await expect(look).toContainText("This device only. Text size is in any article’s More.");
 
   await page.reload();
   await appReady(page);
@@ -505,7 +505,7 @@ test("on a computer a 1px line parts the sidebar and the list (decision 0054)", 
   await expect(page.locator(".list-pane")).toHaveCSS("border-right-width", "0px");
 });
 
-test("the sidebar ends with Add, then Keys (icon and word) and Settings as an icon", async ({ page, isMobile }) => {
+test("the sidebar ends with Add, then Keys and Settings as icons", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has its own screens.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await openApp(page);
@@ -524,9 +524,10 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
     expect(Math.min(each.width, each.height)).toBeGreaterThanOrEqual(44);
   }
   expect(add.x + add.width).toBeLessThanOrEqual(k.x + 1);
-  // Keys says what it is in a word beside its icon, as Add does, and both show whole (decisions 0062, 0064).
-  await expect(keys).toContainText("Keys");
+  // Keys is its icon alone, its name heard and in its tooltip (decision 0305); Add shows whole.
+  await expect(keys).toHaveText("");
   await expect(keys.locator("svg")).toHaveCount(1);
+  await expect(keys).toHaveAttribute("title", "Keyboard shortcuts (?)");
   for (const each of [sidebar(page).getByRole("link", { name: "Add a person or publication" }), keys]) {
     expect(await each.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   }
@@ -536,7 +537,7 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   await expect(settings).toHaveAttribute("title", "Settings");
   // While the shortcut list is open its button is filled and says its dialog is open (decision 0054).
   // (Found by its label, not its role: the open list's dialog leaves the page behind it inert.)
-  const keysBehind = page.locator('#sidebar button[aria-label="Keys (keyboard shortcuts)"]');
+  const keysBehind = page.locator('#sidebar button[aria-label="Keyboard shortcuts"]');
   await expect(keysBehind).toHaveAttribute("aria-haspopup", "dialog");
   await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
   const restingFill = await keysBehind.evaluate((element) => getComputedStyle(element).backgroundColor);
@@ -548,14 +549,13 @@ test("the sidebar ends with Add, then Keys (icon and word) and Settings as an ic
   await expect(keysBehind).toHaveAttribute("aria-expanded", "false");
 });
 
-test("in a sidebar narrowed below 15rem, Keys keeps only its icon and stays a full-size button", async ({ page, isMobile }) => {
+test("in a sidebar narrowed below 15rem, Keys stays a full-size icon button", async ({ page, isMobile }) => {
   test.skip(isMobile, "The phone has no sidebar to narrow.");
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => localStorage.setItem("nine-turtles.sidebar-width", "200"));
   await openApp(page);
-  const keys = sidebar(page).getByRole("button", { name: "Keys (keyboard shortcuts)" });
+  const keys = sidebar(page).getByRole("button", { name: "Keyboard shortcuts" });
   await expect(keys.locator("svg")).toBeVisible();
-  await expect(keys.getByText("Keys")).toBeHidden();
   const box = (await keys.boundingBox())!;
   expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
   const add = sidebar(page).getByRole("link", { name: "Add a person or publication" });

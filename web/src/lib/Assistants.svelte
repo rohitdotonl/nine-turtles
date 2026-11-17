@@ -13,6 +13,7 @@
 -->
 <script lang="ts">
   import Dated from "./Dated.svelte";
+  import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import NoteLine from "./NoteLine.svelte";
   import { tick } from "svelte";
@@ -156,8 +157,8 @@
       <p class="min-w-0">
         Server address<br /><span class="value text-muted" translate="no">{address}</span>
       </p>
-      <button type="button" class="btn btn-small" onclick={() => copy(address, "Server address")}
-        >Copy<span class="sr-only">{" "}server address</span></button
+      <button type="button" class="btn btn-small btn-icon" aria-label="Copy server address" title="Copy server address" onclick={() => copy(address, "Server address")}
+        ><Icon name="copy" size="alone" /></button
       >
     </div>
     {#if key}
@@ -165,8 +166,8 @@
         <p class="min-w-0">
           Assistant key<br /><span class="value text-muted" translate="no">{key}</span>
         </p>
-        <button bind:this={copyKey} type="button" class="btn btn-small" onclick={() => copy(key, "Assistant key")}
-          >Copy<span class="sr-only">{" "}assistant key</span></button
+        <button bind:this={copyKey} type="button" class="btn btn-small btn-icon" aria-label="Copy assistant key" title="Copy assistant key" onclick={() => copy(key, "Assistant key")}
+          ><Icon name="copy" size="alone" /></button
         >
       </div>
     {/if}
@@ -220,13 +221,12 @@
     <LoadFailed class="inset-foot" words="The connected assistants couldn't be loaded." heading="assistants-heading" onRetry={() => ((failed = false), load())} />
   {/if}
   <p class="inset-foot">
-    Connect an AI assistant such as Claude or ChatGPT to your nine turtles, so it can find, sort and tidy things for
-    you. nine turtles runs no AI itself. To connect, add the server address as a connector (MCP server) in your
-    assistant. An assistant that can't show nine turtles' connect page can use an assistant key instead.
+    Let an assistant like Claude or ChatGPT find, sort and tidy for you: add the server address above as a connector
+    (MCP server) in it, or, if it can't connect that way, make an assistant key. nine turtles runs no AI itself.
   </p>
 
   <p class="inset-foot">
-    What an assistant unsubscribes from is kept for 30 days, under Recently unsubscribed in Everyone you follow.
+    Anything it unsubscribes from can be brought back for 30 days.
   </p>
 </section>
 

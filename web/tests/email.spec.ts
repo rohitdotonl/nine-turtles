@@ -151,7 +151,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.getByLabel("Email")).toHaveValue(email);
   await expect(page.getByLabel("Email")).toHaveAttribute("autocomplete", "email");
   await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("We'll email you a link that signs you in. You can choose a new password after.")).toBeVisible();
+  await expect(page.getByText("An emailed link signs you in. Then you can choose a new password.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Email me a link" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to sign in" })).toBeVisible();
   await page.keyboard.press("Enter");
@@ -162,7 +162,7 @@ test("Forgot? emails a link that signs in, then a new password can be chosen, si
   await expect(page.locator("#link-sent")).toHaveText(
     `If ${email} has an account here, a link is on its way. It works once, within 15 minutes.`,
   );
-  await expect(page.getByText("We'll email you a link")).toHaveCount(0);
+  await expect(page.getByText("An emailed link signs you in")).toHaveCount(0);
   // Send again is there from the start, by keyboard too; within the minute it sends nothing.
   await page.keyboard.press("Tab");
   await expect(page.getByRole("button", { name: "Send again" })).toBeFocused();
@@ -282,7 +282,7 @@ test("a reader changes their email by a link to the new one, then deletes their 
   // Deleting: the downloads first, then the one "Are you sure?".
   await page.goto("/settings");
   // Told what the owner's Readers page shows of them (decision 0093).
-  await expect(page.getByText(/^Whoever runs this nine turtles can see your email/)).toBeVisible();
+  await expect(page.getByText(/^The owner of this nine turtles sees your email/)).toBeVisible();
   await page.getByRole("button", { name: "Delete account…" }).click();
   const sure = page.getByRole("dialog", { name: "Delete your account?" });
   await expect(sure.getByRole("heading", { name: "Delete your account?" })).toBeFocused();
@@ -329,7 +329,7 @@ test("the owner's own account has no Delete account", async ({ browser }) => {
   await expect(leaving.getByText("It says exactly what goes before anything is removed.")).toBeVisible();
   await expect(page.getByRole("region", { name: "Account" }).getByRole("button", { name: "Sign out" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Account" }).getByRole("button", { name: "Delete data…" })).toHaveCount(0);
-  await expect(page.getByText(/^Whoever runs this nine turtles can see/)).toHaveCount(0);
+  await expect(page.getByText(/^The owner of this nine turtles sees/)).toHaveCount(0);
   await context.close();
 });
 
@@ -480,7 +480,7 @@ test("the weekly email is off until switched on in Settings, and its stop page i
   await expect(page).toHaveURL(/\/weekly-email$/);
   await expect(page.getByRole("button", { name: "Stop the weekly email" })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("This link no longer works")).toBeVisible();
+  await expect(page.getByText("This link has expired.")).toBeVisible();
   await page.getByRole("link", { name: "Open nine turtles" }).click();
   await expect(page.locator("#sidebar")).toBeAttached();
 

@@ -25,6 +25,7 @@
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import HighlightMenu from "./HighlightMenu.svelte";
+  import Icon from "./Icon.svelte";
   import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
   import { keepDraft, keptDraft, keptDrafts, keptWords, worthKeeping } from "./drafts";
@@ -491,8 +492,8 @@
               <button type="button" class="btn-quiet" aria-label="{each.note ? 'Edit note' : 'Add a note'} on “{each.quote}”" onclick={(event) => (menu = { anchor: event.currentTarget.getBoundingClientRect(), highlight: each, writing: true, from: event.currentTarget })}
                 >{each.note ? "Edit note" : "Add a note…"}</button
               >
-              <button type="button" class="btn-quiet" aria-label="Copy “{each.quote}”" onclick={() => copy(each)}>Copy</button>
-              <button type="button" class="btn-quiet" aria-label="Remove highlight “{each.quote}”" onclick={() => remove(each)}>Remove</button>
+              <button type="button" class="btn-quiet btn-icon" aria-label="Copy “{each.quote}”" title="Copy" onclick={() => copy(each)}><Icon name="copy" size="alone" /></button>
+              <button type="button" class="btn-quiet btn-icon" aria-label="Remove highlight “{each.quote}”" title="Remove highlight" onclick={() => remove(each)}><Icon name="trash" size="alone" /></button>
             </div>
             {/if}
           </li>

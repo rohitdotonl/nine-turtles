@@ -631,7 +631,8 @@
         {:else if video || episode}
           <hr aria-hidden="true" class="article-end" />
         {:else}
-          <p class="mt-6" lang="en">This article has no text in its feed. View original to read it on the publisher's site.</p>
+          <hr aria-hidden="true" class="article-end" />
+          <p class="article-note" lang="en"><span>Only the title is in the feed.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-primary">Read it on {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a>{/if}</p>
         {/if}
       {:else if problem}
         <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">

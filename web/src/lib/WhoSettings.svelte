@@ -249,7 +249,7 @@
 
     {#if person}
       <!-- Write back, on unless the reader switches it off for them (decision 0286); kept on every place of theirs by the server. -->
-      <SettingSwitch name="Write back" hint="Off takes Write back away from their articles and their page." checked={feed.writeBackOff !== true} onchange={(on) => void save({ writeBack: on })} />
+      <SettingSwitch name="Write back" hint="Off hides Write back for them." checked={feed.writeBackOff !== true} onchange={(on) => void save({ writeBack: on })} />
     {/if}
 
     <!-- The folders they're in, in words; pressed, the tick list opens in place (decision 0045's square tick boxes). -->
@@ -279,7 +279,7 @@
       </div>
     {/if}
 
-    <SettingSwitch name="Pause for a while" hint="Their new articles arrive already read while this is on." checked={paused} onchange={(on) => void pause(on)} />
+    <SettingSwitch name="Pause for a while" hint="New articles arrive already read." checked={paused} onchange={(on) => void pause(on)} />
 
     {#if one && feed.sortsVideos}
       <!-- A YouTube channel on its own (decision 0144): both off by default, changed the moment they're switched. -->
@@ -308,13 +308,13 @@
           bind:this={leaveButton}
           aria-disabled={busy}
           aria-describedby="{id}-leave"
-          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards."
+          title="Stops following {one ? 'them' : 'every source of theirs'} and removes the articles; saved, highlighted and noted ones can stay. You can undo it."
           onclick={() => leave()}
           class="inset-row inset-action font-semibold text-danger">Unsubscribe from {name}</button
         >
       </div>
     {/if}
-    <span id="{id}-leave" class="sr-only">Removes their articles; what you saved, highlighted or noted can stay. You can undo it straight afterwards.</span>
+    <span id="{id}-leave" class="sr-only">Their articles go; saved, highlighted and noted ones can stay. You can undo it.</span>
   </div>
 </div>
 

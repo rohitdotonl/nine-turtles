@@ -451,7 +451,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("Text size and font are in Text and page, in any article’s More.")).toBeVisible();
+    await expect(page.getByText("This device only. Text size is in any article’s More.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
@@ -1166,13 +1166,13 @@ test.describe("on a wide window", () => {
     expect(asked[0]).toMatch(PLAYER);
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
 
-    // A video with no description is just the video, never "no text in its feed".
+    // A video with no description is just the video, never "Only the title is in the feed".
     await toList(page);
     await row(page, "Rain on a tin roof").click();
     const rain = article(page).getByRole("button", { name: "Play video: Rain on a tin roof" });
     await expect(rain).toBeVisible();
     await expect(article(page).locator("iframe")).toHaveCount(0);
-    await expect(article(page).getByText("no text in its feed")).toHaveCount(0);
+    await expect(article(page).getByText("Only the title is in the feed")).toHaveCount(0);
 
     // Space plays it too. (Tab out of the player is the browser's own frame
     // handling, which differs between runs, so it isn't asserted here.)

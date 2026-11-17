@@ -32,8 +32,7 @@ V1, item 2). Its look gets a refinement round.*
   in its settings brings them back, with any address kept from before.
 - **Off for one person** (decision 0286, the owner's choice): their
   settings (section 36) have a **Write back** switch, on unless the reader
-  switches it off ("Off takes Write back away from their articles and their
-  page."), kept on every source of theirs. Off, it's as for a publication:
+  switches it off ("Off hides Write back for them."), kept on every source of theirs. Off, it's as for a publication:
   no Write back at their articles' end, no paper plane, `w` does nothing,
   no Write back in a row's menu or beside chosen words, and no Write to or
   address on their page; but they stay a person, under People, and any

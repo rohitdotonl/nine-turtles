@@ -220,7 +220,7 @@
           <span class="break-words">{wordShown(rule)}</span>
           <span class="text-meta text-muted">{line}</span>
         </span>
-        <button type="button" data-remove class="btn btn-small" aria-label={`Remove ${wordShown(rule)}, ${line}`} onclick={() => remove(rule, index)}>Remove</button>
+        <button type="button" data-remove class="btn btn-small btn-icon" aria-label={`Remove ${wordShown(rule)}, ${line}`} title="Remove" onclick={() => remove(rule, index)}><Icon name="trash" size="alone" /></button>
       </div>
     {/each}
     {#if muted > 0}

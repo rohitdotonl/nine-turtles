@@ -258,8 +258,8 @@ PLAN.md → V1, item 1.*
 - **nine turtles never joins sources by itself, and never asks.** Only the
   reader joins them (decision 0163 removed "Is this the same person?").
 - **A folder can become a person:** Edit folder has a tick box row, **This
-  is one person** ("Everything in it becomes one row, "Alpha", with one page.
-  The folder goes; you can undo it straight afterwards."). Saving with it
+  is one person** ("Joins its feeds into one person, "Alpha", with one page. You
+  can undo it."). Saving with it
   ticked joins everything in the folder into one person named as the folder
   (renamed first, if the name changed), deletes the folder (its rules
   wait, as when a folder is deleted, section 15), and opens

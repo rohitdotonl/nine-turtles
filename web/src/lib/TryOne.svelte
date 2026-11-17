@@ -56,7 +56,7 @@
           class="font-display text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
       {/if}
-      <p class="text-meta text-ink-2">You're following {feed.title}. What they write next will be waiting for you here.</p>
+      <p class="text-meta text-ink-2">You're following {feed.title}. New writing will show up here.</p>
     </article>
     <a href="/unread" onclick={(event) => follow(event, { kind: "view", view: "unread" })} class="btn self-start">Start reading</a>
   {/if}

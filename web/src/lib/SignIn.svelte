@@ -260,7 +260,7 @@
         class="field"
       />
       {#if asking}
-        <p id="link-help" class="field-help mt-0">We'll email you a link that signs you in. You can choose a new password after.</p>
+        <p id="link-help" class="field-help mt-0">An emailed link signs you in. Then you can choose a new password.</p>
       {/if}
     </div>
     {#if !asking}

@@ -123,7 +123,7 @@
           <button
             type="button"
             class="text-link text-ui text-danger"
-            title="Stops following them and removes their articles; saved ones stay. You can undo it straight afterwards."
+            title="Stops following them and removes their articles; saved ones stay. You can undo it."
             aria-disabled={busy}
             onclick={leave}>Unsubscribe</button
           >

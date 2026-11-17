@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the article you read, one thi
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-17
+updated: 2026-11-18
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -31,7 +31,7 @@ From the top:
   them. Who isn't working comes first, then everyone A to Z.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
-- At the foot: **+ Add**, **Keys** and **Settings**.
+- At the foot: **+ Add**, then the keyboard (every key) and the cog (**Settings**).
 
 A small dot beside **Unread** means something new has arrived. The people
 and folders below it carry no dots and no numbers: you never have a pile to
