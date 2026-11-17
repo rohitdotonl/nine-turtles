@@ -273,7 +273,7 @@ export const SCREENS: Screen[] = [
       );
       await page.reload();
       await appReady(page);
-      const kept = page.getByText(/kept for 30 days, under Recently unsubscribed/);
+      const kept = page.getByText(/brought back for 30 days/);
       await kept.scrollIntoViewIfNeeded();
       await expect(kept).toBeVisible();
     },

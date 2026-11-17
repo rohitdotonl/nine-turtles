@@ -451,7 +451,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("This device only. Text size is in any article’s More.")).toBeVisible();
+    await expect(page.getByText("This device only. Text size and font are in any article’s More.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
@@ -922,6 +922,23 @@ test.describe("on a wide window", () => {
     // Then only the credit line that shows on paper alone (decision 0236).
     expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
     await expect(article(page).locator(".print-credit")).toBeHidden();
+  });
+
+  test("an article whose feed has only its title says so, with the publisher's site as the way on (decision 0305)", async ({ page }) => {
+    // The feed's text answered as empty, as a feed that shares only titles would.
+    await page.route("**/api/articles/*", async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (body?.article?.title === "Only the first page") Object.assign(body.article, { content: null, summary: null });
+      await route.fulfill({ response, json: body });
+    });
+    await openRoom(page);
+    await row(page, "Only the first page").click();
+    const note = article(page).locator(".article-note");
+    await expect(note).toContainText("Only the title is in the feed. Read it on Reading Room");
+    await expect(note.getByRole("link", { name: "Read it on Reading Room" })).toHaveAttribute("href", "https://reading-room.example/first-page");
+    expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
+    await expect(article(page).getByText("View original")).toHaveCount(0);
   });
 
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {

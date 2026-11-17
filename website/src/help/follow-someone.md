@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-15
+updated: 2026-11-18
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -75,7 +75,7 @@ address, or the address of one of their videos. More in
 
 Many newsletters, such as those on Substack, have a feed too: paste their
 address like any other. One that only comes by email has none, so when nine
-turtles finds no feed it shows your own nine turtles address, with **Copy**:
+turtles finds no feed it shows your own nine turtles address, with a copy button:
 sign up with it and each issue arrives here. See
 <a href="/help/newsletters/">Read your newsletters here</a>.
 

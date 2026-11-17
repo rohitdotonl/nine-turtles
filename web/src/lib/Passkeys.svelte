@@ -238,7 +238,7 @@
               <button id={`rename-passkey-${passkey.id}`} type="button" class="btn btn-small btn-icon" aria-label="Rename {passkeyName(passkey)}" title="Rename" onclick={() => startRename(passkey)}
                 ><Icon name="edit" size="alone" /></button
               >
-              <!-- Red words: this removes something. What it removes is in its tooltip and its name, and Undo follows. -->
+              <!-- Red words: this removes something, so it stays a word (decision 0305). What it removes is in its name, and Undo follows. -->
               <button
                 type="button"
                 class="btn btn-small text-danger"

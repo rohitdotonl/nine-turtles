@@ -4,7 +4,7 @@
 
 *25 October 2026. The owner chose the line and asked for the keys to match.*
 
-*Partly replaced by [0275](0275-one-thing-at-a-time.md): with no empty reading area any more, "Time to read something beautiful." is gone; the capital keys and Keys stay.*
+*Partly replaced by [0275](0275-one-thing-at-a-time.md): with no empty reading area any more, "Time to read something beautiful." is gone; the capital keys and Keys stay.* *Partly replaced by [0305](0305-fewer-words.md): Keys is the keyboard icon alone.*
 
 **Why.** "No article open" was accurate but cold: the empty reading area is
 the first thing seen each time, and it should invite deep reading, not

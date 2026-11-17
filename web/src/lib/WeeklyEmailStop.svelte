@@ -43,7 +43,7 @@
       <p role="status">
         {result === "done"
           ? "The weekly email is off. Turn it back on in Settings."
-          : "This link has expired. If weekly emails still come, turn them off in Settings."}
+          : "This link no longer works. If weekly emails still come, turn them off in Settings."}
       </p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
       <a href="/" onclick={leave} autofocus class="btn">Open nine turtles</a>
