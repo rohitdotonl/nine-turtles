@@ -201,8 +201,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   };
   await openArticle();
 
-  // The end tools stay Save and View original; the arrow beside Write back holds the other ways, Email app ticked.
-  await expect(pane(page).locator(".end-tools").getByRole("link", { name: /Comments/ })).toHaveCount(0);
+  // The arrow beside Write back holds the other ways, Email app ticked.
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
   const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
   const ways = pane(page).getByRole("menu");

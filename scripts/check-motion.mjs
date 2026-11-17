@@ -1,12 +1,11 @@
 // "No motion" (DESIGN.md): fails if any animation or transition appears in
 // the built styles, or if the frontend code uses Svelte's or the browser's
-// animation tools or sets motion itself. Views switch instantly. The three
+// animation tools or sets motion itself. Views switch instantly. The two
 // exceptions (DESIGN.md → Exceptions log): a swipe's short glide once the
 // finger lets go, set only in `web/src/lib/swipeMotion.ts` (decision 0274),
 // and a slow wait's breathing dots, set only in `web/src/lib/breathe.ts`
-// (decision 0287), and the running title's short fade, set only in
-// `web/src/lib/fadeIn.ts` (decision 0298); each must leave it out for a reader who asks for reduced
-// motion.
+// (decision 0287); each must leave it out for a reader who asks for reduced
+// motion. (The running title moves only as the reader scrolls, decision 0302.)
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -54,8 +53,8 @@ const sourceRules = [
   [/\b(animate|transition)-[a-z0-9-[\]]+/g, "a Tailwind animation or transition class"],
   [/\.style\.(transition|animation)\b|\b(transition|animation)\s*:\s*[\w"'`$]|style:(transition|animation)\b|setProperty\(\s*["'`](transition|animation)/g, "motion set by a script"],
 ];
-/** The three places allowed to move (Exceptions log): the swipe's glide, a slow wait's breathing dots (decision 0287), and the running title's fade (decision 0298). */
-const allowed = [join(root, "web/src/lib/swipeMotion.ts"), join(root, "web/src/lib/breathe.ts"), join(root, "web/src/lib/fadeIn.ts")];
+/** The two places allowed to move by themselves (Exceptions log): the swipe's glide and a slow wait's breathing dots (decision 0287). */
+const allowed = [join(root, "web/src/lib/swipeMotion.ts"), join(root, "web/src/lib/breathe.ts")];
 for (const file of websiteOnly ? [] : allowed) {
   if (!readFileSync(file, "utf8").includes("prefers-reduced-motion: reduce")) {
     problems.push(`${relative(root, file)}: its motion must stop for a reader who asks for reduced motion`);
@@ -69,7 +68,7 @@ for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", "
 }
 
 if (problems.length > 0) {
-  console.error("No-motion check failed. nine turtles never animates (but for a swipe's glide, swipeMotion.ts, a slow wait's dots, breathe.ts, and the running title's fade, fadeIn.ts):\n" + problems.map((p) => `  - ${p}`).join("\n"));
+  console.error("No-motion check failed. nine turtles never animates (but for a swipe's glide, swipeMotion.ts, and a slow wait's dots, breathe.ts):\n" + problems.map((p) => `  - ${p}`).join("\n"));
   process.exit(1);
 }
 console.log("No-motion check passed.");

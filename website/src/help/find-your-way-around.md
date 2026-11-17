@@ -136,10 +136,8 @@ The sidebar stays beside the list, and steps away on its own whenever an
 article or a person's page opens. Drag its edge to make it wider or
 narrower; double-click the edge to put it back.
 
-On a computer, an article's buttons (View original, Share, Save and the rest)
-sit above its title and scroll away with it, so the whole window is the
-writing. Most have a key that works all the way down, and at the end of the article
-**Save** and **View original** are there again.
+On a computer, an article's buttons (View original, Save and More) stay in its
+top bar all the way down, and most have a key too.
 
 On a phone, tap the words of an article once to put its top and bottom bars
 away, so only the writing shows. Tap again, or read to the end, and they're

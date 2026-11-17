@@ -157,7 +157,7 @@
     </div>
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
-  <div class={phone ? "contents" : "reading-column pt-3"}>
+  <div class={phone ? "contents" : "reading-column pt-8 md:pt-12"}>
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if route.settings}
       <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
