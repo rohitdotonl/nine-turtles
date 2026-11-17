@@ -110,17 +110,18 @@ pub fn tidy_name(name: &str) -> String {
 fn without_address(name: &str) -> &str {
     let trimmed = name.trim_end();
     for (open, close) in [('(', ')'), ('<', '>'), ('[', ']')] {
-        if let Some(inside) = trimmed.strip_suffix(close) {
-            if let Some(at) = inside.rfind(open) {
-                let address = &inside[at + 1..];
-                let before = inside[..at].trim_end();
-                let looks_like_address = address.contains('@')
-                    && !address.contains(char::is_whitespace)
-                    && address.split('@').all(|part| !part.is_empty());
-                if looks_like_address && before.chars().any(char::is_alphanumeric) {
-                    return before;
-                }
-            }
+        let Some((before, address)) = trimmed.strip_suffix(close).and_then(|inside| {
+            inside
+                .rfind(open)
+                .map(|at| (inside[..at].trim_end(), &inside[at + 1..]))
+        }) else {
+            continue;
+        };
+        let looks_like_address = address.contains('@')
+            && !address.contains(char::is_whitespace)
+            && address.split('@').all(|part| !part.is_empty());
+        if looks_like_address && before.chars().any(char::is_alphanumeric) {
+            return before;
         }
     }
     name
@@ -273,9 +274,15 @@ mod tests {
         assert_eq!(tidy_name("Every <reader@example.com>"), "Every");
         assert_eq!(tidy_name("Morning Notes [me@example.org]"), "Morning Notes");
         // Words in brackets that aren't an address stay, and so does an address alone.
-        assert_eq!(tidy_name("Pete's Site (the old one)"), "Pete's Site (the old one)");
+        assert_eq!(
+            tidy_name("Pete's Site (the old one)"),
+            "Pete's Site (the old one)"
+        );
         assert_eq!(tidy_name("(reader@example.com)"), "(reader@example.com)");
-        assert_eq!(tidy_name("Notes (@pete on Mastodon)"), "Notes (@pete on Mastodon)");
+        assert_eq!(
+            tidy_name("Notes (@pete on Mastodon)"),
+            "Notes (@pete on Mastodon)"
+        );
     }
 
     #[test]
