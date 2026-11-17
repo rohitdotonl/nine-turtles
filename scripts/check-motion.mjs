@@ -36,7 +36,10 @@ const cssRules = [
   [/(?<![\w-])(-webkit-)?(animation|transition)(-[a-z-]+)?\s*:/g, "an animation or transition"],
   [/scroll-behavior\s*:\s*smooth/g, "smooth scrolling"],
 ];
-const snapRules = [[/scroll-snap-type\s*:/g, "scroll snapping (only in rows-land.css, decision 0303)"]];
+const snapRules = [
+  [/scroll-snap-type\s*:/g, "scroll snapping (only in rows-land.css, decision 0303)"],
+  [/\bsnap-(x|y|both|mandatory|proximity)\b/g, "a Tailwind snapping class (only rows-land.css may snap, decision 0303)"],
+];
 /** The one place rows may snap (decision 0303): only for a reader who hasn't asked for reduced motion. */
 const snaps = join(root, "web/src/rows-land.css");
 // `node scripts/check-motion.mjs website` checks only the website, for the
@@ -64,8 +67,14 @@ for (const file of websiteOnly ? [] : allowed) {
     problems.push(`${relative(root, file)}: its motion must stop for a reader who asks for reduced motion`);
   }
 }
-if (!websiteOnly && !readFileSync(snaps, "utf8").includes("@media (prefers-reduced-motion: no-preference)")) {
-  problems.push(`${relative(root, snaps)}: rows may snap only for a reader who hasn't asked for reduced motion`);
+// Every snap there sits inside the one block for a finger without reduced motion.
+if (!websiteOnly) {
+  const text = readFileSync(snaps, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const opening = "@media (prefers-reduced-motion: no-preference) and (pointer: coarse) {";
+  const at = text.indexOf(opening);
+  if (at < 0 || /scroll-snap/.test(text.slice(0, at)) || /scroll-snap/.test(text.slice(text.lastIndexOf("}\n}") + 2))) {
+    problems.push(`${relative(root, snaps)}: rows may snap only inside "${opening}"`);
+  }
 }
 for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
   if (file.endsWith(".test.ts") || allowed.includes(file)) continue;
@@ -75,7 +84,7 @@ for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", "
 }
 
 if (problems.length > 0) {
-  console.error("No-motion check failed. nine turtles never animates (but for a swipe's glide, swipeMotion.ts, and a slow wait's dots, breathe.ts):\n" + problems.map((p) => `  - ${p}`).join("\n"));
+  console.error("No-motion check failed. nine turtles never animates (but for a swipe's glide, swipeMotion.ts, a slow wait's dots, breathe.ts, and rows landing, rows-land.css):\n" + problems.map((p) => `  - ${p}`).join("\n"));
   process.exit(1);
 }
 console.log("No-motion check passed.");

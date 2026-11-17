@@ -166,8 +166,8 @@ once instead.
 ## Good to know
 
 - On a smaller window, the parts take turns: <kbd>Esc</kbd> goes back one.
-- A list you flick settles with a row at the top, never half a title (not
-  with reduce motion on).
+- On a phone or tablet, a list always comes to rest with a whole row at
+  the top, never half a title (not with reduce motion on).
 - People and publications are in A to Z order. Folders are in your own
   order: drag one up or down, or use **Edit** beside **Folders**
   ([Put people in folders](/help/put-people-in-folders/)).
