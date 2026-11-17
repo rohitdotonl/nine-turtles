@@ -119,21 +119,16 @@
   text, hidden (pauses.ts).
 */
 .article-text hr,
-.article-text .section-break::after {
+.article-text .section-break {
   width: 2.5rem;
   margin: 2.5em auto;
   border: 0;
   border-top: 1px solid var(--strong);
 }
+/* A typed break's marks stay in the text but take no room: the paragraph is only its rule. */
 .article-text .section-break {
-  font-size: 0;
-  line-height: 0;
-  color: transparent;
-}
-.article-text .section-break::after {
-  content: "";
-  display: block;
-  font-size: var(--reading-size);
+  height: 0;
+  overflow: hidden;
 }
 
 .article-text :where(sup, sub) {
@@ -331,8 +326,8 @@
   while there is more that way.
 */
 .article-text pre {
-  --code-tint: color-mix(in srgb, var(--ink) 4%, var(--paper));
-  --code-edge: color-mix(in srgb, var(--ink) 14%, transparent);
+  --code-tint: var(--list);
+  --code-edge: var(--strong);
   white-space: pre;
   padding: 1.1em 1.4em;
   border-radius: var(--radius-press);

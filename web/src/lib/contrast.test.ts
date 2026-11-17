@@ -461,8 +461,9 @@ it("each page's color and words' color in themes.ts match themes.css, and the br
   expect(html).toContain(`content="${LOOKS.night.page.toUpperCase()}" media="(prefers-color-scheme: dark)"`);
 });
 
-describe("the summary-only note's link underline", () => {
-  const found = css.match(/\.article-note a \{[^}]*text-decoration-color: color-mix\(in srgb, currentColor (\d+)%, transparent\)/);
+describe("the summary-only note's other links' underline", () => {
+  // Its way on is the page's main button now (decision 0298); any other link in the note keeps the soft underline.
+  const found = css.match(/\.article-note a:not\(\.btn-primary\) \{[^}]*text-decoration-color: color-mix\(in srgb, currentColor (\d+)%, transparent\)/);
   const share = Number(found?.[1]) / 100;
 
   it("is set as a share of the note's own color", () => {

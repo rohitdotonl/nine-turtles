@@ -671,7 +671,8 @@ test.describe("on a wide window", () => {
     const aa = article(page).getByRole("button", { name: "Copy link" });
     await tabTo(page, aa);
     await expect(aa).toHaveCSS("outline-offset", "-2px");
-    expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
+    // (5, not 6: the bar now stays at the top, decision 0298, and a sticky bar may sit half a pixel off the whole.)
+    expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(5);
   });
 
   test("the top bar is solid in the page's color, stays, and names the article once its title has gone; Star and View original wait at the end", async ({ page, context }) => {

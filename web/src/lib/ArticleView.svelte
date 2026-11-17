@@ -1,30 +1,25 @@
 <!--
   The reading area (SPEC section 7): the article exactly as the publisher's
   feed gives it, cleaned by nine turtles and restyled in the reader's font and
-  size. A quiet bar of icons sits at the top of the pane, anchored
-  to its edges (decision 0038), each named in its tooltip (with its key) and
-  to screen readers, together at the right (decision 0050), and on a computer it scrolls
-  away with the title, Save and View original waiting again at the end (decision 0263): View original, Share (Copy link
-  on a computer), Save, Write back (a paper plane, for a person only, decision 0214) and More (…).
-  More holds Text and page (the reading panel), Mark unread, Add a note and Hide, each with its icon
-  (SPEC sections 7, 8, 9, 21, 33 and 37; decision 0293); on a phone it opens upwards, Text
-  and page nearest the button (decision 0243). Write back also ends the article.
-  The writer's name under the title opens the page about them (decision
-  0214), as their name at the top of the list does. What was just done ("Link copied.")
-  floats at the pane's foot on a computer, as the list's note does. The source is always credited and linked. A feed that gives only a summary
-  shows the summary, then a small centred note under the closing rule that
-  links the whole article on the publisher's site; nine turtles never fetches
-  the rest. A YouTube video plays above its text in YouTube's own player,
-  loaded only once you press Play (decision 0072). A podcast episode has its
-  player there instead, playing the publisher's own file (decision 0113). A
-  picture shown clearly smaller than it really is opens larger on a sheet of
-  its own (decision 0107).
+  size. On a computer a quiet bar stands over the text column and stays at the
+  top (decision 0298): back to the list, then View original ↗ in words, Share
+  (Copy link on a computer), Save and More (…, holding Text and page, Mark
+  unread, Add a note and Hide, each with its icon; decision 0293); once the
+  title has scrolled away it names the article (RunningTitle). Write back is
+  never in a bar: it ends the article, with Save and View original above it
+  (EndTools). The writer's name under the title opens their list (decision
+  0289). What was just done ("Link copied.") floats at the pane's foot. A
+  summary-only feed shows the summary, then a note under the closing rule with
+  "Read the rest on …" as the page's main button; nine turtles never fetches
+  the rest. A YouTube video plays in YouTube's own player, loaded only once
+  you press Play (decision 0072); a podcast episode has its player instead,
+  playing the publisher's own file (decision 0113). A picture shown clearly
+  smaller than it really is opens larger on a sheet of its own (decision 0107).
 
-  On a phone (SPEC section 20) the article is a screen of its own: the top
-  bar has the back button, labeled with the list's name, and View original;
-  Previous, Next, Share, Save, Write back (for a person) and More sit as icons in a toolbar at the bottom,
-  within thumb reach, above a hairline; one that can't act is faded in place.
-  A tap on the text puts both bars away, and another brings them back (bars.svelte.ts).
+  On a phone (SPEC section 20) the article is a screen of its own: the top bar
+  has the back button and View original; Previous, Next, Share, Save and More
+  sit as icons in a toolbar at the bottom, within thumb reach. A tap on the
+  text puts both bars away, and another brings them back (bars.svelte.ts).
 -->
 <script lang="ts">
   import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
@@ -66,7 +61,7 @@
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { markPauses } from "./pauses";
-  import { fadeIn } from "./fadeIn";
+  import RunningTitle from "./RunningTitle.svelte";
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
@@ -131,24 +126,8 @@
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
 
-  /** On a computer, whether the title has scrolled out from under the bar: the bar names the article then (decision 0298). */
+  /** Whether the title has scrolled up under the computer's bar (RunningTitle): the bar shows a hairline then. */
   let titleGone = $state(false);
-  $effect(() => {
-    const title = heading;
-    const area = scroller;
-    titleGone = false;
-    if (phone || !title || !area) return;
-    const bar = area.querySelector<HTMLElement>(".reading-bar");
-    // Gone only once it's above the bar, not when it's below the window (a long scroll back up).
-    const watch = new IntersectionObserver(([entry]) => {
-      if (entry) titleGone = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1;
-    }, {
-      root: area,
-      rootMargin: `-${bar?.offsetHeight ?? 0}px 0px 0px 0px`,
-    });
-    watch.observe(title);
-    return () => watch.disconnect();
-  });
 
   // Bumped when an article arrives from the server, so the page looks again.
   let arrivals = $state(0);
@@ -361,10 +340,7 @@
     if (text && setsEnglishPunctuation(full?.language)) setPunctuation(text);
   });
 
-  // Its pauses given room (decision 0298): a typed break drawn as the short
-  // rule, a picture on its own given a picture's room, and the ◆ after the
-  // writer's last words, only when the whole article is here (never on a
-  // summary, nor a video's description).
+  // Its pauses given room and its end marked (pauses.ts, decision 0298): the ◆ only on a whole article, never a summary or a video's description.
   $effect(() => {
     void full?.content;
     if (text) markPauses(text, Boolean(full?.content) && !video);
@@ -509,7 +485,7 @@
 
 {#snippet originalWords()}
   <!-- On a computer the way to the publisher says so in words, with its arrow (decision 0298). -->
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-1.5 px-3 text-ink-2"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-2 px-3 text-ink-2"
     >View original<Icon name="open" /></a
   >
 {/snippet}
@@ -561,7 +537,7 @@
       <div class={["reading-bar pane-bar over-text sticky top-0 z-10 -mx-5 gap-2 px-2 md:-mx-16", titleGone && "scrolled"]}>
         {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink-0 text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
         <!-- Once the title has scrolled away, the bar names what you're reading and whose it is (decision 0298): it fades in over 0.15 seconds (at once with reduced motion), never slides; a copy, so hidden from screen readers. -->
-        {#if titleGone}<p class="running-title" aria-hidden="true"><span class="running-words" use:fadeIn><span>{article.title || "Untitled"}</span><small>{article.feedTitle}</small></span></p>{/if}
+        <RunningTitle title={heading} area={scroller} words={article.title || "Untitled"} source={article.feedTitle} bind:gone={titleGone} />
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
         {/if}
@@ -650,13 +626,7 @@
             <div bind:this={text} class="article-text" dir={rtl ? "rtl" : "auto"}>{@html full.summary}</div>
           {/key}
           <hr aria-hidden="true" class="article-end" />
-          <!--
-            End matter, under the closing rule as in a book: where the rest of it is. The sentence, then the
-            link to the publisher on a row of its own, as the page's one main button (decision 0298): "Read the rest on {publisher} ↗", or for a
-            podcast's episode "Read the episode page on {publisher} ↗" (SPEC sections 7 and 35; decision 0218). The sentence
-            and the link each stay whole wherever they fit on a line, so a narrow column never strands a word
-            (decision 0044).
-          -->
+          <!-- End matter, under the closing rule: where the rest is, then "Read the rest on {publisher} ↗" (or the episode page) as the page's one main button (SPEC sections 7 and 35; decisions 0218, 0298). -->
           <p class="article-note" lang="en">
             <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-primary"
                 >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a
@@ -760,36 +730,6 @@
   /* Once the title is gone: a hairline under the bar, and the title and source in the middle, one line each, cut short with … (decision 0298). */
   .reading-bar.scrolled {
     border-bottom: 1px solid var(--line);
-  }
-  .running-title {
-    display: flex;
-    min-width: 0;
-    flex: 1 1 0;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.25;
-    text-align: center;
-  }
-  .running-words {
-    display: flex;
-    max-width: 100%;
-    flex-direction: column;
-    align-items: center;
-  }
-  .running-words > * {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .running-words > span {
-    font-family: var(--reading-title-font, var(--font-display));
-    font-size: var(--text-ui);
-    color: var(--ink);
-  }
-  .running-words > small {
-    font-size: var(--text-date);
-    color: var(--muted);
   }
   /*
     The phone's bottom toolbar: five equal places of quiet icons (six with

@@ -281,7 +281,7 @@
   .video-title {
     max-width: 22ch;
     font-family: var(--reading-title-font, var(--font-display));
-    font-size: clamp(var(--text-large), 3.5vw, 1.75rem);
+    font-size: var(--text-heading);
     font-weight: 400;
     line-height: 1.2;
     text-align: center;
@@ -339,7 +339,7 @@
   .chapter {
     display: flex;
     align-items: baseline;
-    gap: 0.875rem;
+    gap: 1rem;
     min-height: 2.75rem;
     width: 100%;
     padding-block: 0.5rem;
