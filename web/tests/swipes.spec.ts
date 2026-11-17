@@ -433,3 +433,35 @@ test("after a swipe a key still presses; zoomed in, a stroke moves the page; bes
   await expect(back).toBeVisible();
   await expect(home(page)).toBeVisible();
 });
+
+test("a list pulled down past its top shows the nine waiting above it, one more the further it goes, then when nine turtles last looked; letting go puts it back and nothing else happens", async ({ page }) => {
+  await openBlog(page);
+  const list = page.locator("#list-pane .scroller");
+  const nine = page.locator(".nine-above");
+  const box = (await list.boundingBox())!;
+  const middle = box.x + box.width / 2;
+  await expect(nine).toHaveCount(0);
+
+  // A little way: the list follows the finger at half its pace, and the first turtles come out.
+  const finger = await Finger.down(page, middle, box.y + 60);
+  await finger.move(0, 60);
+  await expect.poll(() => list.evaluate((node: HTMLElement) => node.style.transform)).toBe("translateY(30px)");
+  await expect(nine).toHaveAttribute("aria-hidden", "true");
+  await expect(nine.locator("g")).toHaveCount(2);
+  await expect(nine.getByText(/^Last checked today at /)).toBeHidden();
+  // Far enough: all nine, and when nine turtles last looked.
+  await finger.move(0, 240);
+  await expect(nine.locator("g")).toHaveCount(9);
+  await expect(nine.getByText(/^Last checked today at /)).toBeVisible();
+  await finger.up();
+  await settled(list);
+  await expect(nine).toHaveCount(0);
+  await expect(rows(page)).toHaveCount(3);
+
+  // Scrolled down, a pull down is only a scroll; sideways is the row's swipe, never a pull.
+  const row = (await rows(page).nth(1).boundingBox())!;
+  const sideways = await Finger.down(page, row.x + row.width - 60, row.y + row.height / 2);
+  await sideways.move(-60, 20);
+  await expect(nine).toHaveCount(0);
+  await sideways.up();
+});

@@ -8,15 +8,19 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import Icon from "./Icon.svelte";
+  import NineAbove from "./NineAbove.svelte";
 
   let {
     phone,
+    feeds,
     titleHidden,
     toArticle,
     onHome,
     children,
   }: {
     phone: boolean;
+    /** The reader's feeds, for the nine above the list (`NineAbove`). */
+    feeds?: { checkedAt?: number | null }[];
     /** On a phone, the welcome's own heading shows instead (screen readers still hear the title). */
     titleHidden: boolean;
     /** Opened from an article's byline: back to it. */
@@ -25,6 +29,8 @@
     /** The title line. */
     children: Snippet;
   } = $props();
+
+  let titleLine: HTMLElement | undefined = $state();
 </script>
 
 {#if phone || toArticle}
@@ -39,7 +45,11 @@
   </div>
 {/if}
 {#if phone}
-  <div class={titleHidden ? "sr-only" : "pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>{@render children()}</div>
+  <!-- The list's scrolling area comes next: a pull down at its top shows the nine just under the title (decision 0302). -->
+  <div bind:this={titleLine} class={titleHidden ? "sr-only" : "relative pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>
+    {@render children()}
+    {#if !titleHidden}<NineAbove area={titleLine?.nextElementSibling as HTMLElement | undefined} {feeds} />{/if}
+  </div>
 {:else}
   <div class="pane-bar">{@render children()}</div>
 {/if}

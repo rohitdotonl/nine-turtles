@@ -69,10 +69,12 @@ what's live.
 ## The turtles' only job
 
 The turtle is the logo's drawing, nothing else. It never acts, speaks,
-sleeps, celebrates or stands for a feeling. No mascot. The one exception
-is "four out in front" (decision 0291), where the nine walk on the name.
+sleeps, celebrates or stands for a feeling. No mascot. The two exceptions
+are "four out in front" (decision 0291), where the nine walk on the name,
+and "the nine above a list" (decision 0302).
 
-- **May appear:** the logo (the website's top, app icon, tab icon; never on a page inside the app, decision 0290), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
+- **The nine above a list** (Rohit, 17 November 2026, decision 0302): on a phone, pull a list down past its top and the nine are waiting above it in one row, the same turtle unchanged nine times, coming out one by one as the finger goes further; once all nine are there, the line under them says when nine turtles last looked ("Last checked today at 20:56."). Still, in the page's ink, never moving by itself; only seen by the reader who pulls, and nothing refreshes. The one place a turtle is inside the app. (Live)
+- **May appear:** the logo (the website's top, app icon, tab icon; never on a page inside the app, decision 0290, except the nine above a list), the share picture, and the two drawings that already exist, unchanged: "Wrong turn?" (the 404 page) and the end of the About page.
 - **Never:** empty lists, the end of a list, the reading pane, emails, buttons, loading, errors, confirmations, settings, or any new drawing that tells a story.
 - **When it appears:** the logo's own drawing (on the website, four out in front), at most once per screen, still, in the page's ink, and skipped by screen readers, because the words beside it say it.
 

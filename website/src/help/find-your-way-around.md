@@ -160,6 +160,9 @@ once instead.
 - **Keep pulling up past the end** of an article: it moves with your finger,
   and the next one comes up under it. When it says "Let go for the next",
   let go and you're in it. **Pull down past its top** for the previous one.
+- **Pull down at the top of a list** and you'll find nine turtles waiting
+  above it, with when nine turtles last looked for new writing. That's all
+  it does.
 - **Swipe down** on the Text and page sheet or an opened picture to close it.
 - A quick flick counts too, even a short one.
 

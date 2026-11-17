@@ -952,7 +952,7 @@
             panes.list && !welcomeWide && "flex",
           ]}
         >
-          <ListTop {phone} titleHidden={welcomeAlone} toArticle={listFrom && (() => backToArticle())} onHome={() => steps.back("home")}>
+          <ListTop {phone} feeds={library.feeds} titleHidden={welcomeAlone} toArticle={listFrom && (() => backToArticle())} onHome={() => steps.back("home")}>
             <ListHead text={headingText} actions={!!itemList && !missing} searchOpen={searching.open} onSearch={toggleSearch} menu={() => listMenu(menuScene(), menuHands)} bind:heading={headings.list}
               onAbout={currentFeed && under.kind === "feed" && !searching.shown && !missing ? () => go({ kind: "about", id: currentFeed!.id }) : undefined} face={currentFeed && faceOf(currentFeed, currentPlaces)} />
           </ListTop>
