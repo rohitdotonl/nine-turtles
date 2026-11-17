@@ -2,7 +2,7 @@
 // decisions 0274 and 0276): when a finger lets go of a swipe, the screen it
 // was dragging finishes the stroke. Gone far enough, it slides the rest of
 // the way off; not far enough, it springs back. A pull past an article's end
-// or top drags it, and the next or previous one hangs just beyond. While the finger is
+// or top drags it, with an arrow just beyond (decision 0304). While the finger is
 // down, everything follows it exactly, as the reader moves it. A phone set
 // to reduce motion gets no glide: everything lands at once, as every other
 // part of the app does. `scripts/check-motion.mjs` allows motion in this
@@ -76,13 +76,13 @@ export function settle(panes: Panes, to: number, done: () => void) {
   );
 }
 
-/** Where a pull drags the article's screen to `dy` (up is negative): the next or previous one, hung just past its end or top, comes with it. */
+/** Where a pull drags the article's screen to `dy` (up is negative): the arrow just past its end or top comes with it. */
 export function pull(screen: HTMLElement, dy: number) {
   if (!dy) return clear(screen);
   Object.assign(screen.style, { transition: "", position: "relative", zIndex: "2", transform: `translateY(${dy}px)` });
 }
 
-/** Lets go of a pull: the screen glides to `to` (0 is back where it was; a whole screen's height carries on into the article hung beyond), then `done` runs and it's put back as it was. */
+/** Lets go of a pull: the screen glides to `to` (0 is back where it was; a whole screen's height carries on, and the next article opens), then `done` runs and it's put back as it was. */
 export function letGo(screen: HTMLElement, to: number, done: () => void) {
   glide([screen], () => (screen.style.transform = `translateY(${to}px)`), () => {
     done();
