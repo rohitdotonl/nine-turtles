@@ -77,7 +77,7 @@
   the title, with the pause under it a third of the title's.
 */
 .article-plate {
-  margin: 0.75rem 0 1rem;
+  margin: 0 0 1rem;
   font-family: var(--reading-font);
   font-size: var(--text-meta);
   line-height: 1.5;
