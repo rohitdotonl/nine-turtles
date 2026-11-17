@@ -9,7 +9,7 @@
 **What changes.**
 1. **No Save or View original at the end.** Write back alone follows the ◆ (or the closing rule). The spaced capitals that came with them (decision 0300's named exception) go too.
 2. **The ◆ on a line of its own, centred,** under the last words or picture, as a book ends a chapter; never after code or a table, as before.
-3. **Room above the title:** 32px on a narrow screen, 48px from 48rem (768px) wide, from 12px.
+3. **Room above the title:** 32px on a narrow screen, 48px from 48rem (768px) wide, from 12px; a person's page keeps the same room, so their picture still starts as high as an article's title (decision 0285).
 4. **The running title** in the title's face at 17px, regular, muted grey. Once the title's foot has gone under the bar, its copy rises from the bar's bottom edge into the middle, step for step with the scroll, and sinks back the same way. Nothing moves unless the reader scrolls, so it's not motion in principle 8's sense, and the fade (decision 0298's exception, `fadeIn.ts`) is removed. With reduced motion the copy is simply there once the title has gone.
 
 **Revisit if** readers look for Save at the end, or the rising title catches the eye while reading.
