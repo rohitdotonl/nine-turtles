@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorBesides, titleLength } from "./byline";
+import { authorBesides, siteBesides, titleLength } from "./byline";
 
 describe("authorBesides", () => {
   it("names the author only when they aren't the source", () => {
@@ -14,6 +14,20 @@ describe("authorBesides", () => {
     expect(authorBesides("Ana Rodrigues", "Small Kitchen")).toBe("Ana Rodrigues");
     expect(authorBesides("Jon", "Jan")).toBe("Jon");
     expect(authorBesides("Mike Taylor", "Every")).toBe("Mike Taylor");
+  });
+});
+
+describe("siteBesides", () => {
+  it("names the site when the feed is named for the person", () => {
+    expect(siteBesides("Mr. and Mrs. Psmith’s Bookshelf", "John Psmith", undefined)).toBe("Mr. and Mrs. Psmith’s Bookshelf");
+  });
+  it("leaves it out when it's the feed's own name, give or take case and marks", () => {
+    expect(siteBesides("Jim Nielsen's Notes", "Jim Nielsen’s Notes", undefined)).toBeUndefined();
+    expect(siteBesides("  ", "Reading Room", undefined)).toBeUndefined();
+    expect(siteBesides(null, "Reading Room", undefined)).toBeUndefined();
+  });
+  it("leaves it out when there's an author besides: the plate names the feed, the byline the author", () => {
+    expect(siteBesides("Reading Room Press", "Reading Room", "Asha Rao")).toBeUndefined();
   });
 });
 

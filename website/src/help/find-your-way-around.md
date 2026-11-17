@@ -84,9 +84,10 @@ working even if the title or name changes later.
 
 Choose an article and it opens, with the whole window to itself. Across its top are **‹** (back to the list) and **View
 original ↗** (the publisher's own page) on the left, and **Save** and **More** on the right; More holds **Copy link** (on a phone, **Share** is in the bar at the bottom) and **Text and page** (how the text looks). On a computer the bar stays, its buttons in the same places all the way down, and once you've scrolled past the title it shows the title in its middle. **Write back**, for a person, waits at the end of the article (or press <kbd>W</kbd>). The title is
-centred, large when it's short and smaller when it's long, and under it is who
-wrote it ("by Asha Rao") with the day, small, beneath. The writer's name
-opens everything they've written, with **‹ Article** to come
+centred, large when it's short and smaller when it's long. Above it, in small
+capitals, is where it's from (and "Video" or "Episode" when it's one); under it
+is who wrote it ("by Asha Rao") with the day, small, beneath. The name of the
+person or place you follow opens everything they've written, with **‹ Article** to come
 back; their picture and name at the top of that list open the page about
 them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Share
 and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".

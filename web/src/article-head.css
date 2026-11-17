@@ -61,6 +61,38 @@
   color: var(--faint);
 }
 
+/* The title first for the keyboard and screen readers, the plate drawn above it. */
+.article-head {
+  display: flex;
+  flex-direction: column;
+}
+.article-head > .article-plate {
+  order: -1;
+}
+
+/*
+  The nameplate above the title (decision 0300): what it is and where it's
+  from, in the reading face's spaced capitals, small and in the second ink,
+  as a book's running head names it. One line where it can, centred over
+  the title, with the pause under it a third of the title's.
+*/
+.article-plate {
+  margin: 0.75rem 0 1rem;
+  font-family: var(--reading-font);
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--ink-2);
+}
+
+/* A byline with no name, the plate naming the feed: the day alone, without the gap a name would leave. */
+.article-byline time:only-child {
+  margin-top: 0;
+}
+
 /*
   The one large thing on the screen, in Literata's display cut at regular
   weight, centred as a book opens a chapter, its lines balanced so a long
@@ -113,5 +145,22 @@
 @media (min-width: 48rem) {
   .article-title {
     margin-inline: calc(-1 * min(4rem, 7vw));
+  }
+}
+
+/* The feed's name in the nameplate or the writer's in the byline: a 44px target to touch, taller than its line without moving it
+   (an inline link's padding above and below never moves the line, on each line a long name wraps onto). */
+/* Underlined at rest, as every link is (the 65% edge), so it reads as a way in; the line comes up to the ink under the pointer. */
+.writer-link {
+  padding-block: calc((2.75rem - 1em) / 2);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+}
+@media (hover: hover) {
+  .writer-link:hover {
+    text-decoration-color: currentColor;
   }
 }

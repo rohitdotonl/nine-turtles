@@ -153,7 +153,8 @@ test.describe("on a wide window", () => {
     // The title comes first, then the byline under it; the article ends with a short line.
     const byline = (await article(page).locator(".article-byline").boundingBox())!;
     expect(byline.y).toBeGreaterThan((await title(page, "The pleasure of a slow letter").boundingBox())!.y);
-    await expect(article(page).locator("hr.article-end")).toBeAttached();
+    // The ◆ ends the writer's words, so the closing line under them steps aside (decision 0300).
+    await expect(article(page).locator("hr.article-end")).toBeHidden();
 
     // Headings, quotes, tables, code and the publisher's image, in place.
     const text = article(page).locator(".article-text");
@@ -181,7 +182,7 @@ test.describe("on a wide window", () => {
 
     // Credit: the source, with the author and time. Someone followed: their name opens their list (decision 0289),
     // a link that wraps as text does (decision 0260).
-    const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
+    const writer = article(page).locator(".article-plate").getByRole("link", { name: "Reading Room" });
     await expect(writer).toHaveAttribute("title", "Everything by Reading Room");
     await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
@@ -616,13 +617,13 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("u");
     // Opening an article gives its title the keyboard's place for screen
     // readers, but no ring: a title can't be pressed (decision 0047). The
-    // next Tab lands on the writer's name in the byline, which rings.
+    // next Tab lands on the feed's name in the nameplate (drawn above the title, read after it), which rings.
     await page.keyboard.press("Enter");
     const heading = title(page, "The pleasure of a slow letter");
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
     await page.keyboard.press("Tab");
-    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
+    const publisher = article(page).locator(".article-plate").getByRole("link", { name: "Reading Room" });
     await expect(publisher).toBeFocused();
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
@@ -772,7 +773,13 @@ test.describe("on a wide window", () => {
     await expect(byline).toHaveCSS("font-size", /^(15|17)px$/);
     await expect(byline).toHaveCSS("text-align", "center");
     await expect(byline).toHaveCSS("font-family", /Literata/);
-    const publisher = byline.getByRole("link", { name: "Reading Room" });
+    // The feed's name is the nameplate above the title, small spaced capitals in the second ink; the byline names the writer (decision 0300).
+    const plate = article(page).locator(".article-plate");
+    await expect(plate).toHaveCSS("text-transform", "uppercase");
+    expect((await plate.boundingBox())!.y).toBeLessThan((await heading.boundingBox())!.y);
+    await expect(byline).toContainText("by Asha Rao");
+    await expect(byline).not.toContainText("Reading Room");
+    const publisher = plate.getByRole("link", { name: "Reading Room" });
     await expect(publisher).toHaveCSS("font-weight", "400");
     await expect(byline.locator(".by").first()).toHaveText("by");
     await expect(byline.locator(".by").first()).toHaveCSS("font-style", "italic");
@@ -792,7 +799,9 @@ test.describe("on a wide window", () => {
         return color;
       }),
     ]);
-    expect(publisherColor).toBe(inkColor);
+    // The feed's name takes the plate's second ink, a step under the title; the day stays faint.
+    expect(publisherColor).toBe(await plate.evaluate((element) => getComputedStyle(element).color));
+    expect(publisherColor).not.toBe(inkColor);
     expect(timeColor).toBe(faint);
     // Headings inside the article speak in the title's voice, stepping down by size alone: 31px, then 24px, regular (decision 0295).
     const h2 = article(page).locator(".article-text h2").first();
@@ -1299,7 +1308,7 @@ test.describe("your place in an article (decision 0060)", () => {
 
     await scroller(page).hover();
     // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 556);
+    await page.mouse.wheel(0, 604);
     await expect.poll(() => top(page)).toBeGreaterThan(450);
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
@@ -1358,7 +1367,7 @@ test.describe("your place in an article (decision 0060)", () => {
     const kept = page.waitForResponse((answer) => answer.url().endsWith("/api/resume") && answer.request().method() === "PUT");
     await scroller(page).hover();
     // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 556);
+    await page.mouse.wheel(0, 604);
     await expect.poll(() => top(page)).toBeGreaterThan(450);
     await kept;
     const stopped = await top(page);

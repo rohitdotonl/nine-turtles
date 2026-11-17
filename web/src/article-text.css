@@ -382,3 +382,13 @@
   text-align: center;
   font-size: calc(var(--reading-size) * 0.6);
 }
+
+/* A video's description is its notes (decision 0300): a step smaller than an article's text, so the video leads. */
+.article-text.video-notes {
+  font-size: 0.9em;
+}
+
+/* Where the ◆ already ends the writer's words, it is the end: no second mark under it (decision 0300). */
+.article-text:has(.ends, .ends-after) ~ .article-end {
+  display: none;
+}

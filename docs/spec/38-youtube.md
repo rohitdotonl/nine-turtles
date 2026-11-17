@@ -71,7 +71,8 @@ you paste.
   **Chapters**, in the reading face, in two columns where there's room, each
   a 44px row with its time (small, muted, in figures of one width with a plain
   zero, not underlined) and its name, which underlines under the pointer
-  (decision 0298). Pressing one plays the video from there, or moves the
+  (decision 0298); a step smaller than the text, under a fine line, as the
+  video's notes (decision 0300). Pressing one plays the video from there, or moves the
   playing video there. Each is named by what it shows ("4:00 The heron"), so
   voice control finds it.
 - **A long description is folded:** when it has more than one paragraph and

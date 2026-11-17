@@ -15,6 +15,17 @@ export function authorBesides(author: string | null | undefined, source: string)
   return Math.min(a.length, b.length) >= 6 && apart(a, b) <= 2 ? undefined : name;
 }
 
+/**
+ * The site's own name for the nameplate above the title (decision 0300), when the feed is named for a
+ * person and its site is called something else ("Mr. and Mrs. Psmith's Bookshelf" for "John Psmith"):
+ * the plate names the site and the byline the person. Undefined when there's an author besides (the plate
+ * names the feed, the byline the author) or the site's name is the feed's.
+ */
+export function siteBesides(site: string | null | undefined, source: string, author: string | undefined): string | undefined {
+  const name = site?.trim();
+  return author || !name || letters(name) === letters(source) ? undefined : name;
+}
+
 /** A name's letters and digits only, lowercase, accents dropped: "Zoë O'Hara" is "zoeohara". */
 function letters(name: string): string {
   return name.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");

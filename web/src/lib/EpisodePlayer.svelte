@@ -99,8 +99,8 @@
 <div class="episode" lang="en" role="group" aria-label="Episode player" use:watch={article.id}>
   <div class="episode-controls">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
-      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M4.25 10a5.75 5.75 0 1 0 1.7-4.08" /><path d="M4 3.5v3h3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">15</text></svg
+      <svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+        ><path d="M3.5 12.5a8.5 8.5 0 1 0 2.5-6" /><path d="M5.75 2.75v3.75h3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">15</text></svg
       >
     </button>
     <!-- The one round, filled mark, in the text color: Play or Pause, by its shape and its name. -->
@@ -112,8 +112,8 @@
       {/if}
     </button>
     <button type="button" class="episode-button" aria-label="Forward {FORWARD_SECONDS} seconds" title="Forward {FORWARD_SECONDS} seconds" onclick={() => goTo(position + FORWARD_SECONDS)}>
-      <svg aria-hidden="true" width="30" height="30" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M15.75 10a5.75 5.75 0 1 1-1.7-4.08" /><path d="M16 3.5v3h-3" /><text x="10" y="12.9" text-anchor="middle" font-size="7.5" font-weight="600" stroke="none" fill="currentColor" font-family="system-ui, sans-serif">30</text></svg
+      <svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+        ><path d="M20.5 12.5a8.5 8.5 0 1 1-2.5-6" /><path d="M18.25 2.75v3.75h-3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">30</text></svg
       >
     </button>
     <!-- How long it is, until it starts: then the times under the slider say it, so the length steps aside. -->
@@ -154,16 +154,25 @@
 </div>
 
 <style>
-  /* A still panel in a faint tone of the text, with a fine edge so it reads as one thing, 12px corners (decision 0298). Times with a plain zero. */
+  /*
+    Between two fine lines, on the page itself, no panel (decision 0300, replacing 0298's tinted panel): as wide
+    as a video, taking the spare width pictures do on a computer. Times with a plain zero.
+  */
   .episode {
     margin-top: 1.5em;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-hold);
-    background-color: var(--fill);
+    margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
+    padding: 0.75rem 0;
+    border-block: 1px solid var(--line);
     font-family: var(--font-dates);
     font-size: var(--text-meta);
     color: var(--ink-2);
+  }
+  /* The 15 and 30 sit inside their circle with room to spare, in the interface's face (decision 0300). */
+  .skip text {
+    stroke: none;
+    fill: currentColor;
+    font-family: var(--font-dates);
+    font-weight: 600;
   }
   .episode-controls {
     display: flex;
