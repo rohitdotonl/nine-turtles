@@ -54,7 +54,7 @@ const EXCEPTIONS = [
   ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
   ["web/src/lib/WhoPage.svelte", "2.375rem", "their name on their page, set as an article's title is (decision 0254, DESIGN.md's Exceptions log)"],
   ["web/src/lib/WhoPage.svelte", "2rem", "their name on their page on a phone, as an article's title (decision 0254)"],
-  ["web/src/lib/EndTools.svelte", "uppercase", "an article's end, Save and View original, in the reading face's spaced capitals, as a book's last page (decision 0300)"],
+  ["web/src/lib/RunningTitle.svelte", "1.0625rem", "the article's name in a computer's bar, in the title's own face (decision 0302)"],
 ];
 const excepted = (file, value) => EXCEPTIONS.some(([f, v]) => f === file && v === value);
 
