@@ -765,6 +765,7 @@ test.describe("on a wide window", () => {
       await expect(h).toHaveCSS("font-family", /^"Literata Display"/);
       await expect(h).toHaveCSS("text-align", "start");
     }
+
   });
 
   test("an article's parts are set as a book sets them: real bold italics, plain zeros in dates, spacing that follows the size (decision 0246)", async ({ page }) => {
@@ -1188,6 +1189,8 @@ test("on a phone, an article fills the screen and the back button returns to the
   await row(page, "The pleasure of a slow letter").click();
   await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(page.getByRole("region", { name: "Reading Room" })).toBeHidden();
+  // A heading's first step is smaller on a phone, so it stays clearly under even a long title (1.6 times): 1.35 times 18px (decision 0295).
+  await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "24.3px");
 
   await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();

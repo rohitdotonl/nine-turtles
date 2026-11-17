@@ -8,7 +8,8 @@
 1. `h1` and `h2` inside an article: the title's face (Literata's display cut for Literata; the chosen font for Atkinson and the device's serif), regular weight, 1.55 times the text (31px by default), line height 1.15, 2.4em above and 0.4em below.
 2. `h3`: the same face and weight, 1.2 times (24px), line height 1.25, 1.9em above and 0.35em below.
 3. `h4` to `h6`: the text's own size and face, semibold (weight is their only sign), 1.6em above and 0.3em below.
-4. All stay on the text's left edge with balanced lines. Replaces decision 0246's semibold 26px and 22px steps.
+4. On a phone (up to 40rem) the first step is 1.35 times (about 24px), so it stays clearly under a long title (1.6 times) even in Arabic, whose text is set a tenth larger. Italics inside a heading use the text face's own italic, the display cut having none. Scripts that loosen the title's lines and tracking (decision 0223) loosen the headings' the same way.
+5. All stay on the text's left edge with balanced lines. Replaces decision 0246's semibold 26px and 22px steps.
 
 **Why.** Once the title became regular and centred (decision 0294), semibold headings were the heaviest type on the page, louder than the title over them. Best practice (Butterick, Bringhurst) is one signal per step and no heading heavier than the title; books set their headings in the title's voice. The web's standard (bold, left) exists for skimming, so the headings keep the left edge, where a skimming eye looks, and gain size instead of weight.
 

@@ -47,6 +47,22 @@
 }
 
 /*
+  On a phone a long title is only 1.6 times the text, so the first step is
+  smaller there (1.35 times, about 24px), keeping the title clearly the
+  largest even where a script sets the text a tenth larger (decision 0038).
+*/
+@media (max-width: 40rem) {
+  .article-text :where(h1, h2) {
+    font-size: 1.35em;
+  }
+}
+
+/* The display cut has no italics: a writer's italics in a heading come from the text face's own, never slanted by the browser. */
+.article-text :where(h1, h2, h3) :where(em, i, cite) {
+  font-family: var(--reading-font);
+}
+
+/*
   A link in a note (a picture that didn't load, an embedded frame, decision
   0260): a 44px target to press, taller than its line without moving it,
   and the open arrow after its words, as every link out of nine turtles has.
