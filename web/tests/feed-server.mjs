@@ -114,6 +114,7 @@ A <a href="/letters">letter</a> can wait a week; a good essay can wait a year.</
 <p>Three things, mostly: a notebook, a pencil and an afternoon with nothing in it.</p>
 <ol><li>A notebook</li><li>A pencil</li><li>An afternoon</li></ol>
 <blockquote><p>Reading is a conversation that never interrupts.</p></blockquote>
+<div class="pullquote"><p>A slow letter is worth the wait.</p></div>
 <p>Press <kbd>j</kbd> for the next one; the <mark>slow</mark> ones are best.</p>
 <dl><dt>Letter</dt><dd>Something written to one person.</dd></dl>
 <figure><img src="http://127.0.0.1:${port}/reading/river.svg" width="640" height="240" alt="A river drawn as three blue lines">

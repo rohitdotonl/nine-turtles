@@ -175,7 +175,7 @@
 }
 
 /*
-  Footnotes. The cleaning keeps no class names, so they're known by their
+  Footnotes. The cleaning keeps no class names on them, so they're known by their
   shape: a number linking to a place in the article, and a numbered list
   whose items link back. Their numbers have room to be pressed; the notes are
   a step smaller in the second ink, as a book sets them; and the way back
@@ -212,4 +212,61 @@
 
 .article-text blockquote > :last-child {
   margin-bottom: 0;
+}
+
+/*
+  A pull quote (decision 0297): a line the writer chose to repeat big. The
+  cleaning keeps its mark as `pull-quote` (on a div, a figure, or a quote).
+  Set in the title's face at regular weight, centred, half again the text's
+  size, between two short rules like the byline's, so it reads as the
+  writer's own display line and never as a second ordinary quote.
+*/
+.article-text .pull-quote {
+  margin-block: 2em;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+  font-family: var(--reading-title-font, var(--reading-font));
+  font-size: 1.5em;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.article-text .pull-quote::before,
+.article-text .pull-quote::after {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  margin-inline: auto;
+  border-top: 1px solid var(--strong);
+}
+
+.article-text .pull-quote::before {
+  margin-bottom: 0.8em;
+}
+
+.article-text .pull-quote::after {
+  margin-top: 0.8em;
+}
+
+/* WordPress wraps its pull quote's words in a quotation of their own. */
+.article-text .pull-quote blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.article-text .pull-quote p {
+  margin: 0;
+}
+
+/* A named source under it: the interface's size and the second ink. */
+.article-text .pull-quote cite {
+  display: block;
+  margin-top: 0.6em;
+  font-family: var(--reading-font);
+  font-size: var(--text-ui);
+  font-style: normal;
+  color: var(--ink-2);
 }

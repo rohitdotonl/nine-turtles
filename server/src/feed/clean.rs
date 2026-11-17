@@ -13,7 +13,9 @@ use super::*;
 /// site where the reader came from; relative addresses made whole. Plain
 /// text is escaped. Footnotes keep working inside nine turtles: the article's
 /// own anchors (`id`, `#note-1`) are kept, renamed with `article-` in front
-/// so they can never clash with nine turtles' own page.
+/// so they can never clash with nine turtles' own page. A writer's pull quote
+/// keeps one mark, `pull-quote`, whichever blog tool made it (`pull_quote`,
+/// decision 0297); every other class name is dropped.
 pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
     if !content_type.contains("html") {
         return ammonia::clean_text(body);
@@ -36,13 +38,40 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
         // so a refetched article would always look edited.)
         .add_tag_attributes("img", ["loading", "decoding"])
         .add_allowed_classes("a", [super::embeds::EMBED_CLASS])
+        .add_allowed_classes("div", [PULL_QUOTE])
+        .add_allowed_classes("figure", [PULL_QUOTE])
+        .add_allowed_classes("blockquote", [PULL_QUOTE])
         .attribute_filter(|element, attribute, value| match (element, attribute) {
             ("img", "loading") => Some(Cow::Borrowed(LAZY.0)),
             ("img", "decoding") => Some(Cow::Borrowed(LAZY.1)),
+            ("div" | "figure" | "blockquote", "class") => pull_quote(element, value),
             _ => Some(Cow::Borrowed(value)),
         })
         .clean(&body)
         .to_string()
+}
+
+/// The one class name an article keeps on a block: the writer's pull quote,
+/// a line of their own repeated big to catch the eye (decision 0297).
+pub(super) const PULL_QUOTE: &str = "pull-quote";
+
+/// `pull-quote` when a block carries a known blog tool's pull-quote mark:
+/// Substack's `pullquote` (a `div`), WordPress's `wp-block-pullquote` (a
+/// `figure`, or a `blockquote` in older posts) and Ghost's alternative quote,
+/// `kg-blockquote-alt`. Any other class is dropped, the attribute with it, so
+/// the rest of an article is cleaned exactly as before.
+fn pull_quote<'a>(element: &str, value: &str) -> Option<Cow<'a, str>> {
+    value
+        .split_ascii_whitespace()
+        .any(|class| {
+            matches!(
+                (element, class),
+                ("div", "pullquote")
+                    | ("figure" | "blockquote", "wp-block-pullquote")
+                    | ("blockquote", "kg-blockquote-alt")
+            )
+        })
+        .then_some(Cow::Borrowed(PULL_QUOTE))
 }
 
 /// The video a YouTube address shows, as its 11-character ID: a watch page
@@ -643,6 +672,31 @@ mod tests {
             "<p>Watch this:</p><a href=\"https://www.youtube.com/watch?v=dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\">Watch the video on YouTube</a>\
              <a class=\"embed-note\" href=\"https://evil.example/embed/dQw4w9WgXcQ\" target=\"_blank\" rel=\"noopener noreferrer\"></a>\
              <a class=\"embed-note\" href=\"https://www.youtube.com/embed/videoseries?list=PL1\" target=\"_blank\" rel=\"noopener noreferrer\"></a>"
+        );
+    }
+
+    #[test]
+    fn a_writers_pull_quote_keeps_one_mark_and_every_other_class_goes() {
+        let html = clean(
+            "<div class=\"pullquote align-center\"><p>Substack</p></div>\
+             <figure class=\"wp-block-pullquote has-text-color\"><blockquote><p>WordPress</p><cite>Ann</cite></blockquote></figure>\
+             <blockquote class=\"wp-block-pullquote\"><p>Old WordPress</p></blockquote>\
+             <blockquote class=\"kg-blockquote-alt\"><p>Ghost</p></blockquote>\
+             <div class=\"subscribe\"><p>Plain</p></div>\
+             <p class=\"pullquote\">Not a block we know</p>\
+             <blockquote class=\"pullquote\"><p>A quote</p></blockquote>",
+            "html",
+            &url("https://example.com/post"),
+        );
+        assert_eq!(
+            html,
+            "<div class=\"pull-quote\"><p>Substack</p></div>\
+             <figure class=\"pull-quote\"><blockquote><p>WordPress</p><cite>Ann</cite></blockquote></figure>\
+             <blockquote class=\"pull-quote\"><p>Old WordPress</p></blockquote>\
+             <blockquote class=\"pull-quote\"><p>Ghost</p></blockquote>\
+             <div><p>Plain</p></div>\
+             <p>Not a block we know</p>\
+             <blockquote><p>A quote</p></blockquote>"
         );
     }
 
