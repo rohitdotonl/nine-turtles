@@ -1,0 +1,117 @@
+/*
+  An article's head: its title and the byline under it (SPEC section 7,
+  decisions 0246 and 0294). Split from app.css.
+*/
+
+/*
+  Under the title, centred, as on a book's title page (decision 0294): the
+  writer's picture, then "by" and their name in the reading face, a little
+  at the interface's size, in full ink and regular weight, the "by" in
+  italic and the second ink; then the day on a line of its own, small and in
+  the list's faint grey, so the name leads and the day is there when looked
+  for. A short centred rule closes the block before the text.
+*/
+.article-credit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.article-credit::after {
+  content: "";
+  width: 2.5rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--strong);
+}
+
+/* The picture sits in the column's flow here, not beside a line. */
+.article-credit > .portrait {
+  margin-block: 0 !important;
+}
+
+.article-byline {
+  margin-top: 0;
+  font-family: var(--reading-font);
+  font-size: var(--text-ui);
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.article-byline .by {
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.article-byline .publisher {
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.article-byline time {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: var(--font-dates);
+  font-size: var(--text-date);
+  font-style: normal;
+  letter-spacing: 0.01em;
+  color: var(--faint);
+}
+
+/*
+  The one large thing on the screen, in Literata's display cut at regular
+  weight, centred as a book opens a chapter, its lines balanced so a long
+  title reads as even lines (decisions 0044, 0246, 0294). Sized by its
+  length: a short title large and tight, a long one smaller with looser
+  lines, so a title of a hundred letters never fills the first screen. On a
+  computer it reaches a little past the text column on each side. A clear
+  pause, seven-tenths of its own size, comes before the byline (decision 0047).
+*/
+.article-title {
+  font-family: var(--reading-title-font, var(--reading-font));
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-block-end: 0.7em;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.article-title.short {
+  font-size: 3.2em;
+  line-height: 1;
+}
+
+.article-title.medium {
+  font-size: 2.5em;
+  line-height: 1.08;
+}
+
+.article-title.long {
+  font-size: 2em;
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+}
+
+@media (max-width: 40rem) {
+  .article-title.short {
+    font-size: 2.5em;
+  }
+  .article-title.medium {
+    font-size: 2em;
+  }
+  .article-title.long {
+    font-size: 1.6em;
+    line-height: 1.18;
+  }
+}
+
+/* Never past the scroller's own padding (4rem from 48rem up), so nothing scrolls sideways. */
+@media (min-width: 48rem) {
+  .article-title {
+    margin-inline: calc(-1 * min(4rem, 7vw));
+  }
+}

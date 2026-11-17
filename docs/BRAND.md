@@ -30,7 +30,7 @@ what's live.
 
 ## Typefaces (Live, decisions 0141 and 0246)
 
-- **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600). Titles of 24px and more in the app use its **display cut**, the optical size drawn for big type; an article's own title is regular weight (decision 0246, approved by the owner on 10 November 2026).
+- **Literata** for everything written: reading, the article list's titles, page titles and the wordmark (weight 600). Titles of 24px and more in the app use its **display cut**, the optical size drawn for big type; an article's own title is regular weight (decision 0246, approved by the owner on 10 November 2026), centred and sized by its length, with "by" and the writer's name under it in Literata and the day small in the faint grey (decision 0294, approved by the owner on 17 November 2026).
 - **Atkinson Hyperlegible Next** (400 and 600, each upright and italic) for the whole interface, on every device. It replaced the device's own font and Inter. Every date in the interface uses a copy of it whose zero has no slash ("20 Oct", not "2Ø Oct"), on its own or inside a sentence such as "kept until 10 Dec"; addresses and codes keep the crossed zero (decision 0246).
 - **Atkinson Hyperlegible Mono** for code in articles. It replaced JetBrains Mono.
 - **Noto Serif Devanagari** and **Noto Naskh Arabic** carry Literata into Hindi (and the other Devanagari languages) and Arabic (and Persian, Urdu…): a serif Devanagari and the book style of Arabic, wherever Literata is used. Each is downloaded only when a page shows its letters. Chinese, Japanese, Korean and other scripts use the device's own fonts (decision 0227, approved by the owner on 9 November 2026).

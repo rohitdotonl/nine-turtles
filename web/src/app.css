@@ -1263,49 +1263,6 @@ input {
 }
 
 /*
-  The source line: quiet, at 14px whatever the text size, in the second
-  ink, with the publisher's name leading in full ink and semibold (the
-  interface fonts ship only regular and semibold), so it holds its own
-  under the title (decision 0050).
-*/
-.article-byline {
-  margin-top: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-meta);
-  line-height: 1.45;
-  letter-spacing: 0.01em;
-  color: var(--ink-2);
-  text-wrap: balance;
-}
-
-.article-byline .publisher {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-/*
-  The one large thing on the screen, about 38px at the default text size:
-  regular weight in Literata's display cut, as a book sets a chapter's title
-  (decision 0246), clearly above the article's own headings. It sits in the
-  same column as the text, and its lines are balanced, so a two-line title
-  reads as two even lines rather than a long one over a stub (decision 0044,
-  replacing 0040's lone-word rule). Tracked in only a little, so its letters
-  never touch, with a clear pause before the byline: five-eighths of the
-  title's own size, so the pause keeps its proportion at every text size and
-  on a phone (decision 0047).
-*/
-.article-title {
-  font-family: var(--reading-title-font, var(--reading-font));
-  font-size: 1.9em;
-  line-height: 1.1;
-  font-weight: 400;
-  letter-spacing: -0.012em;
-  margin-block-end: 0.625em;
-  text-wrap: balance;
-  overflow-wrap: break-word;
-}
-
-/*
   A summary-only article's end matter, under the closing rule as in a book:
   small upright interface type, centred, in the second ink, saying where the
   rest of it is. Only the link to the publisher's site is underlined, with a
@@ -1377,7 +1334,7 @@ input {
   0246). Others ignore it.
 */
 .article-text {
-  margin-top: 1.75em;
+  margin-top: 2em;
   overflow-wrap: break-word;
   font-weight: 400;
   hanging-punctuation: first;

@@ -712,33 +712,49 @@ test.describe("on a wide window", () => {
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
 
-  test("the title is about 38px in the display cut, set tight and balanced; the byline is quiet with the publisher in full ink", async ({ page }) => {
+  test("the title is centred, in the display cut, sized by its length; under it, by and the name lead and the day is small and faint", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
     const heading = article(page).locator(".article-title");
-    await expect(heading).toHaveCSS("font-size", "38px");
-    // Regular weight, in Literata's display cut, as a book sets a chapter's title (decision 0246).
+    // A short title is set large: 3.2 times the text (decision 0294).
+    await expect(heading).toHaveClass(/\bshort\b/);
+    await expect(heading).toHaveCSS("font-size", "64px");
+    // Regular weight, in Literata's display cut, centred as a book opens a chapter (decisions 0246, 0294).
     await expect(heading).toHaveCSS("font-weight", "400");
     await expect(heading).toHaveCSS("font-family", /^"Literata Display"/);
+    await expect(heading).toHaveCSS("text-align", "center");
     // Its lines are balanced, so a two-line title reads as two even lines (decision 0044).
     await expect(heading).toHaveCSS("text-wrap", /balance/);
-    expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 38).toBeCloseTo(1.1, 2);
-    // Tracked in only a little, with a clear pause before the byline, five-eighths of its size (decision 0047).
-    await expect(heading).toHaveCSS("letter-spacing", "-0.456px");
-    await expect(heading).toHaveCSS("margin-bottom", "23.75px");
+    expect(parseFloat(await heading.evaluate((element) => getComputedStyle(element).lineHeight)) / 64).toBeCloseTo(1, 2);
+    // A clear pause before the byline, seven-tenths of its size (decision 0047).
+    await expect(heading).toHaveCSS("margin-bottom", "44.8px");
     const byline = article(page).locator(".article-byline");
-    // The meta size: 13px, or its touch screen twin, 15px (DESIGN.md → "The system").
-    await expect(byline).toHaveCSS("font-size", /^(13|15)px$/);
-    await expect(byline).toHaveCSS("margin-top", "0px");
+    // In the reading face at the interface size, centred (decision 0294).
+    await expect(byline).toHaveCSS("font-size", /^(15|17)px$/);
+    await expect(byline).toHaveCSS("text-align", "center");
+    await expect(byline).toHaveCSS("font-family", /Literata/);
     const publisher = byline.getByRole("link", { name: "Reading Room" });
-    await expect(publisher).toHaveCSS("font-weight", "600");
-    const [inkColor, bylineColor, publisherColor] = await Promise.all([
+    await expect(publisher).toHaveCSS("font-weight", "400");
+    await expect(byline.locator(".by").first()).toHaveText("by");
+    await expect(byline.locator(".by").first()).toHaveCSS("font-style", "italic");
+    const time = byline.locator("time");
+    await expect(time).toHaveCSS("display", "block");
+    await expect(time).toHaveCSS("font-size", "12px");
+    const [inkColor, publisherColor, timeColor, faint] = await Promise.all([
       page.evaluate(() => getComputedStyle(document.body).color),
-      byline.evaluate((element) => getComputedStyle(element).color),
       publisher.evaluate((element) => getComputedStyle(element).color),
+      time.evaluate((element) => getComputedStyle(element).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--faint)";
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }),
     ]);
     expect(publisherColor).toBe(inkColor);
-    expect(bylineColor).not.toBe(inkColor);
+    expect(timeColor).toBe(faint);
     // Headings inside the article step down clearly: 26px, then 22px (decision 0246).
     await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "26px");
     await expect(article(page).locator(".article-text h3").first()).toHaveCSS("font-size", "22px");
@@ -1216,9 +1232,9 @@ test.describe("your place in an article (decision 0060)", () => {
     expect(await top(page)).toBe(0);
 
     await scroller(page).hover();
-    // Past the top bar, which scrolls with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 356);
-    await expect.poll(() => top(page)).toBeGreaterThan(250);
+    // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
+    await page.mouse.wheel(0, 556);
+    await expect.poll(() => top(page)).toBeGreaterThan(450);
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
     const stopped = await top(page);
@@ -1275,9 +1291,9 @@ test.describe("your place in an article (decision 0060)", () => {
     // test nothing (a busy computer can take longer than any fixed wait).
     const kept = page.waitForResponse((answer) => answer.url().endsWith("/api/resume") && answer.request().method() === "PUT");
     await scroller(page).hover();
-    // Past the top bar, which scrolls with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 356);
-    await expect.poll(() => top(page)).toBeGreaterThan(250);
+    // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
+    await page.mouse.wheel(0, 556);
+    await expect.poll(() => top(page)).toBeGreaterThan(450);
     await kept;
     const stopped = await top(page);
     // Coming back after half an hour away (decision 0292). Leaving a page writes down the time as it goes, so the
