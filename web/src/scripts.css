@@ -51,12 +51,8 @@
   letter-spacing: 0;
 }
 
-/* No slanted letters where a script has no italics: a quotation is upright,
-   and emphasis is a step heavier, or dots beside the characters as in
-   Chinese and Japanese print. */
-.article[data-script] .article-text blockquote {
-  font-style: normal;
-}
+/* No slanted letters where a script has no italics: emphasis is a step
+   heavier, or dots beside the characters as in Chinese and Japanese print. */
 .article[data-script] .article-text :where(em, i) {
   font-style: normal;
   font-weight: 600;

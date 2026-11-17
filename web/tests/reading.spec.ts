@@ -159,6 +159,12 @@ test.describe("on a wide window", () => {
     const text = article(page).locator(".article-text");
     await expect(text.getByRole("heading", { name: "What a slow reader keeps" })).toBeVisible();
     await expect(text.locator("blockquote")).toContainText("Reading is a conversation");
+    // A quotation is upright, in the text's own ink, with a 2px line at its start (decision 0296).
+    const quote = await text.locator("blockquote").first().evaluate((q) => {
+      const style = getComputedStyle(q);
+      return { slant: style.fontStyle, ink: style.color, text: getComputedStyle(q.closest(".article-text")!).color, line: style.borderInlineStartWidth };
+    });
+    expect(quote).toEqual({ slant: "normal", ink: quote.text, text: quote.text, line: "2px" });
     await expect(text.getByRole("table")).toBeVisible();
     await expect(text.locator("pre")).toContainText("read(book, slowly=True)");
     const image = article(page).locator('img[alt="A river drawn as three blue lines"]');

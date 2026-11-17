@@ -193,3 +193,23 @@
 .article-text a[href^="#article-"] {
   font-variant-emoji: text;
 }
+
+/*
+  A quotation (decision 0296): upright, in the text's full ink, set off by a
+  2px line in the strong tone at its start, the line "Your highlights" uses,
+  so a quote looks the same everywhere in nine turtles. A little more room
+  around it than between paragraphs; none inside it at its ends.
+*/
+.article-text blockquote {
+  margin-block: 1.4em;
+  padding-inline-start: 1.1em;
+  border-inline-start: 2px solid var(--strong);
+}
+
+.article-text blockquote > :first-child {
+  margin-top: 0;
+}
+
+.article-text blockquote > :last-child {
+  margin-bottom: 0;
+}
