@@ -19,11 +19,12 @@ export function authorBesides(author: string | null | undefined, source: string)
  * The site's own name for the nameplate above the title (decision 0300), when the feed is named for a
  * person and its site is called something else ("Mr. and Mrs. Psmith's Bookshelf" for "John Psmith"):
  * the plate names the site and the byline the person. Undefined when there's an author besides (the plate
- * names the feed, the byline the author) or the site's name is the feed's.
+ * names the feed, the byline the author), the site's name is the feed's, or the feed is a publication's
+ * (a publication the reader renamed "HN" is still credited as itself, never "by HN").
  */
-export function siteBesides(site: string | null | undefined, source: string, author: string | undefined): string | undefined {
+export function siteBesides(site: string | null | undefined, source: string, author: string | undefined, person: boolean): string | undefined {
   const name = site?.trim();
-  return author || !name || letters(name) === letters(source) ? undefined : name;
+  return !person || author || !name || letters(name) === letters(source) ? undefined : name;
 }
 
 /** A name's letters and digits only, lowercase, accents dropped: "Zoë O'Hara" is "zoeohara". */

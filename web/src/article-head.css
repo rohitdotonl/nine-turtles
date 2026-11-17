@@ -85,7 +85,18 @@
   text-transform: uppercase;
   text-align: center;
   text-wrap: balance;
+  overflow-wrap: anywhere;
   color: var(--ink-2);
+}
+
+/* A name in a joined script (Arabic and the like) keeps its letters joined: spacing would pull them apart. */
+.article[data-script="arabic"] .article-plate :where(bdi) {
+  letter-spacing: normal;
+}
+
+/* A site's name in the plate, as the writer's link, is a 44px target to touch without moving its line. */
+.article-plate a {
+  padding-block: calc((2.75rem - 1em) / 2);
 }
 
 /* A byline with no name, the plate naming the feed: the day alone, without the gap a name would leave. */

@@ -180,7 +180,7 @@
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
   /** The nameplate above the title (decision 0300): a video's or an episode's kind, then the feed's name, or its site's. */
-  let plate = $derived({ kind: video ? "Video" : episode ? "Episode" : undefined, own: siteBesides(source?.siteTitle, article.feedTitle, author) });
+  let plate = $derived({ kind: video ? "Video" : episode ? "Episode" : undefined, own: siteBesides(source?.siteTitle, article.feedTitle, author, isSomeone(source)) });
   /** The reader's highlights and note (SPEC section 42), and the video's player, whose time a note can start with. */
   let marks: ArticleMarks | undefined = $state();
   let youtube: YouTubePlayer | undefined = $state();
