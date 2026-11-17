@@ -1379,13 +1379,6 @@ input {
   text-underline-offset: 0.2em;
 }
 
-.article-text blockquote {
-  padding-inline-start: 1em;
-  border-inline-start: 1px solid var(--strong);
-  color: var(--ink-2);
-  font-style: italic;
-}
-
 .article-text :where(code, kbd, samp, pre) {
   font-family: var(--font-mono);
   font-size: 0.85em;
