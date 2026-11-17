@@ -167,7 +167,7 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await expect(home(page)).toBeVisible();
 });
 
-test("in an article, a pull past its end opens the next one and past its top the previous one: the article follows the finger with the next hung beyond, and letting go carries on; a flick counts; a swipe left does nothing; a swipe right goes back", async ({ page }) => {
+test("in an article, a pull past its end opens the next one and past its top the previous one: the article follows the finger with the next hung beyond, and letting go carries on; a flick doesn't count; a swipe left does nothing; a swipe right goes back", async ({ page }) => {
   await openBlog(page);
   const titles = (await rows(page).locator(".title").allTextContents()).map((title) => title.replace(/, unread$/, "").trim());
   await rows(page).nth(0).click();
@@ -234,11 +234,41 @@ test("in an article, a pull past its end opens the next one and past its top the
   await settled(pane(page));
   await expect(heading(titles[0])).toBeVisible();
 
-  // A quick flick up past the end counts, short as it is.
+  // A pull is firm (decision 0303): a quick flick up past the end doesn't count, short as it is; it slides back.
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const flick = await Finger.down(page, middle.x, box.y + box.height - 60);
   await flick.move(0, -60, 0, 2);
   await flick.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+  // A quick pull of 140px, far enough before, isn't now: it slides back.
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  const quick = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await quick.move(0, -140, 0, 3);
+  await expect(peek(page)).toHaveText(named("Next", titles[1]));
+  await quick.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+  // Nor does a scroll that reaches the end on its way: only a stroke that starts there pulls. (The article is
+  // made long enough to scroll first, so the stroke starts away from its end.)
+  await text.evaluate((area) => {
+    const room = document.createElement("div");
+    room.style.height = `${2 * area.clientHeight}px`;
+    area.prepend(room);
+    area.scrollTop = 0;
+  });
+  expect(await text.evaluate((area) => area.scrollTop + area.clientHeight < area.scrollHeight - 2)).toBe(true);
+  const reading = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  await reading.move(0, -200);
+  await expect(peek(page)).toHaveCount(0);
+  await reading.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+  // A new stroke from the end pulls, and far enough, opens the next.
+  const again = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await again.move(0, -200);
+  await again.up();
   await expect(heading(titles[1])).toBeVisible();
   await settled(pane(page));
 
@@ -432,4 +462,39 @@ test("after a swipe a key still presses; zoomed in, a stroke moves the page; bes
   await swipe(page, home(page), 160, 40);
   await expect(back).toBeVisible();
   await expect(home(page)).toBeVisible();
+});
+
+test("on a touch screen a list's rows land wherever it comes to rest, and with reduced motion they don't (decision 0303); an article's text never snaps", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openBlog(page);
+  const list = page.locator(".scroller").filter({ has: page.locator(".item-list") });
+  const snap = () => list.evaluate((pane) => getComputedStyle(pane).scrollSnapType);
+  const align = () => rows(page).first().evaluate((row) => getComputedStyle(row.closest("li")!).scrollSnapAlign);
+  // "y proximity", as the browser writes it.
+  expect(await snap()).toBe("y");
+  expect(await align()).toBe("start");
+  // Left between rows, the list comes to rest with a row's top at its top. (A long list, so it can scroll.)
+  await list.evaluate((pane) => {
+    const room = document.createElement("div");
+    room.style.height = `${3 * pane.clientHeight}px`;
+    room.style.flexShrink = "0";
+    pane.append(room);
+  });
+  const second = rows(page).nth(1);
+  const rowTop = await second.evaluate((row) => {
+    const pane = row.closest(".scroller")!;
+    return row.closest("li")!.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
+  });
+  await list.evaluate((pane, at) => (pane.scrollTop = at + 30), rowTop);
+  await expect.poll(async () => Math.abs((await list.evaluate((pane) => pane.scrollTop)) - rowTop)).toBeLessThan(2);
+  // This phone's screen is a touch screen: only there do rows land (a mouse or trackpad scrolls as it always did).
+  expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
+  await rows(page).nth(0).click();
+  const text = pane(page).locator(".reading-scroller");
+  expect(await text.evaluate((area) => getComputedStyle(area).scrollSnapType)).toBe("none");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goBack();
+  await expect(rows(page).first()).toBeVisible();
+  expect(await snap()).toBe("none");
+  expect(await align()).toBe("none");
 });

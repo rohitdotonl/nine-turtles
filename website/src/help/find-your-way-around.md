@@ -158,12 +158,16 @@ once instead.
 - **Keep pulling up past the end** of an article: it moves with your finger,
   and the next one comes up under it. When it says "Let go for the next",
   let go and you're in it. **Pull down past its top** for the previous one.
+  A pull starts only once you've stopped at the end (or top): scrolling
+  there doesn't carry on into the next article, and a flick doesn't count.
 - **Swipe down** on the Text and page sheet or an opened picture to close it.
-- A quick flick counts too, even a short one.
+- On a row or going back, a quick flick counts too, even a short one.
 
 ## Good to know
 
 - On a smaller window, the parts take turns: <kbd>Esc</kbd> goes back one.
+- On a phone or tablet, a list always comes to rest with a whole row at
+  the top, never half a title (not with reduce motion on).
 - People and publications are in A to Z order. Folders are in your own
   order: drag one up or down, or use **Edit** beside **Folders**
   ([Put people in folders](/help/put-people-in-folders/)).

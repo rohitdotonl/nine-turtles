@@ -11,6 +11,7 @@ import "./pressed.css";
 import "./print.css";
 import "./opening.css";
 import "./swipes.css";
+import "./rows-land.css";
 import "./list-column.css";
 import { mount } from "svelte";
 import App from "./App.svelte";

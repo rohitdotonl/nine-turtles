@@ -6,14 +6,17 @@
   As sideways, the screen follows the finger: the article moves with it, and
   the one letting go opens hangs just beyond its end (or top), its title and
   who wrote it showing as it comes into view, or saying there's none. Once
-  the pull is far enough (or a quick flick), it says "Let go", and letting go
-  carries straight on into it; short of that, it slides back. While a menu or
+  the pull is far enough, it says "Let go", and letting go carries straight
+  on into it; short of that, it slides back. A pull is firm on purpose
+  (decision 0303): only a stroke that starts at the end (or top) pulls, never
+  a scroll that reaches it on the way, and no flick counts, so reading on
+  never opens another article by itself. While a menu or
   sheet is open (Write back's ways, the Aa sheet), the stroke that closes it
   only scrolls.
 -->
 <script lang="ts">
   import type { Article } from "./shapes";
-  import { DECIDE, RECENT_MS, flicked, leftAlone, reach, somethingOpen, zoomed } from "./swipe";
+  import { DECIDE, leftAlone, somethingOpen, zoomed } from "./swipe";
   import { letGo, pull } from "./swipeMotion";
   import { sourceOf, writerOf } from "./people";
 
@@ -37,15 +40,18 @@
   /** Whether letting go now opens it. */
   let far = $state(false);
   const onward = $derived(going === "above" ? previous : next);
+  /** How far a pull goes before letting go opens it: further than a row's swipe, so it's always meant. */
+  const PULL = 160;
 
   $effect(() => {
     if (!area) return;
     const within = area;
     const screen = within.closest("section") ?? within;
 
-    // A pull past the end or the top, measured from where the finger was when the text could go no further that way
-    // (the furthest it's been since, so turning back into the text only ever takes the pull away), and only on its own
-    // side of where the stroke began, so a short article, at both ends at once, never takes a pull up and back for one down.
+    // A pull past the end or the top, only from a stroke that began there (a scroll that reaches an end on its way
+    // stops there, and a new stroke pulls), measured from the furthest the finger has been since, so turning back
+    // into the text only ever takes the pull away, and only on its own side of where the stroke began, so a short
+    // article, at both ends at once, never takes a pull up and back for one down.
     const atEnd = () => within.scrollTop + within.clientHeight >= within.scrollHeight - 2;
     const atTop = () => within.scrollTop <= 0;
     let from = { x: 0, y: 0 };
@@ -55,21 +61,18 @@
     /** Whether the stroke has gone far enough to be up and down (a pull may start) rather than sideways (back's). */
     let decided = false;
     let pulled = 0;
-    let last = { y: 0, at: 0 };
-    let speed = 0;
     let settling = false;
     /** A menu or sheet was open as the finger came down: the touch closes it, and does nothing more. */
     let closing = false;
     const landed = () => (closing = somethingOpen());
     const start = (event: TouchEvent) => {
-      pulled = speed = 0;
+      pulled = 0;
       decided = false;
       const touch = event.touches[0];
       from = { x: touch?.clientX ?? 0, y: touch?.clientY ?? 0 };
       // Already at an end, the pull counts from where the finger came down, so the article follows it exactly.
       below = atEnd() ? from.y : undefined;
       above = atTop() ? from.y : undefined;
-      last = { y: from.y, at: event.timeStamp };
       ignored = settling || closing || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
     };
     const move = (event: TouchEvent) => {
@@ -82,32 +85,27 @@
         if (Math.abs(x - from.x) > Math.abs(y - from.y)) return void (ignored = true);
         decided = true;
       }
-      if (event.timeStamp > last.at) speed = (y - last.y) / (event.timeStamp - last.at);
-      last = { y, at: event.timeStamp };
       // While pulled, the text can't scroll (below), so it stays at its end and the pull follows the finger back as well as on.
-      below = atEnd() ? Math.max(below ?? y, y) : undefined;
-      above = atTop() ? Math.min(above ?? y, y) : undefined;
+      below = below !== undefined && atEnd() ? Math.max(below, y) : undefined;
+      above = above !== undefined && atTop() ? Math.min(above, y) : undefined;
       const up = below !== undefined && y < from.y ? below - y : 0;
       const down = above !== undefined && y > from.y ? y - above : 0;
       const was = pulled;
       going = up > 0 ? "below" : down > 0 ? "above" : undefined;
       pulled = going === "below" ? -up : down;
-      far = Math.abs(pulled) >= reach(within.clientWidth);
+      far = Math.abs(pulled) >= PULL;
       // An ordinary scroll moves nothing; only a pull (or the end of one) does, and while it does, the text stays still.
       if (pulled || was) pull(screen, pulled);
       if (pulled && event.cancelable) event.preventDefault();
     };
-    const end = (event: TouchEvent) => {
+    const end = () => {
       const way = going;
       below = above = undefined;
       if (ignored || !way) return;
-      // A flick is the finger's speed as it lifts: held still a moment first, it isn't one.
-      const lifted = event.timeStamp - last.at <= RECENT_MS ? speed : 0;
-      const quick = flicked(Math.abs(pulled), way === "below" ? -lifted : lifted);
       const open = way === "above" ? (previous ? onPrevious : undefined) : next ? onNext : undefined;
       settling = true;
       // Far enough, it carries on a whole screen, so the article hung beyond fills it, and opens; short of that, back it goes.
-      const go = open && (far || quick);
+      const go = open && far;
       letGo(screen, go ? (way === "below" ? -screen.clientHeight : screen.clientHeight) : 0, () => {
         going = undefined;
         far = false;

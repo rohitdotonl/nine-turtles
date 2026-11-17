@@ -1,0 +1,18 @@
+/*
+  Rows that land (decision 0303): on a touch screen, a list settles with a
+  row's top at the pane's top whenever it comes to rest, after a flick or a
+  drag, never half a title, as a notched dial does. The list's own top is a
+  place to land too. The settle is the browser's own and short. Only with a
+  finger: a mouse wheel or trackpad scrolls as it always did. With reduced
+  motion, rows don't snap at all (DESIGN.md → Exceptions log). Only here may
+  anything snap (`scripts/check-motion.mjs`).
+*/
+@media (prefers-reduced-motion: no-preference) and (pointer: coarse) {
+  .scroller:has(.item-list) {
+    scroll-snap-type: y proximity;
+  }
+  .scroller:has(.item-list) > :first-child,
+  .item-list > li {
+    scroll-snap-align: start;
+  }
+}
