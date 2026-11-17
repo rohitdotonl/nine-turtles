@@ -45,7 +45,7 @@
   </div>
 {/if}
 {#if phone}
-  <!-- The list's scrolling area comes next: a pull down at its top shows the nine just under the title (decision 0302). -->
+  <!-- The list's scrolling area comes next: a pull down at its top shows the nine just under the title (decision 0303). -->
   <div bind:this={titleLine} class={titleHidden ? "sr-only" : "relative pr-[var(--list-end)] pb-2 pl-[var(--list-start)]"}>
     {@render children()}
     {#if !titleHidden}<NineAbove area={titleLine?.nextElementSibling as HTMLElement | undefined} {feeds} />{/if}

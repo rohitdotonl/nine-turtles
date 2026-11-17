@@ -1,5 +1,5 @@
 <!--
-  The nine above a list (decision 0302): on a phone, a list pulled down past
+  The nine above a list (decision 0303): on a phone, a list pulled down past
   its top shows the nine turtles waiting above it, one more for every bit
   further the finger goes, and once all nine are there, when nine turtles last
   looked for new writing. Nothing refreshes and nothing else happens: it's
@@ -107,7 +107,7 @@
 </script>
 
 {#if pulled > 0}
-  <!-- Only seen: it's a small surprise for the reader who pulls, and the line says nothing a list doesn't (decision 0302). -->
+  <!-- Only seen: it's a small surprise for the reader who pulls, and the line says nothing a list doesn't (decision 0303). -->
   <div aria-hidden="true" class="nine-above" style:height="{pulled}px">
     <svg viewBox="0 0 300 20" width="300" height="20" fill="currentColor">
       {#each { length: shown } as _, i (i)}

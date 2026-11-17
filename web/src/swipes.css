@@ -43,7 +43,7 @@
 .scroller {
   overscroll-behavior-y: contain;
 }
-/* An article's own text shows no stretch of the phone's at an end either: there, the pull moves the article itself. Nor does a phone's list at its top, where a pull shows the nine (decision 0302). */
+/* An article's own text shows no stretch of the phone's at an end either: there, the pull moves the article itself. Nor does a phone's list at its top, where a pull shows the nine (decision 0303). */
 .reading-scroller.scroller,
 .list-pane.phone .scroller {
   overscroll-behavior-y: none;
