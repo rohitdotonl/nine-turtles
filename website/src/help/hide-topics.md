@@ -4,7 +4,7 @@ description: A list of words keeps articles about them out of your lists, from e
 groupId: keeping-things-tidy
 order: 4
 spec: 27
-updated: 2026-11-14
+updated: 2026-11-18
 related: [put-people-in-folders, search-everything, newsletters]
 ---
 
@@ -50,5 +50,5 @@ their sources: their blog, their newsletter, their videos.
 - Each word's row says whose articles it hides and for how long, such as
   "Everyone · 5 days left".
 - When a week or a month is up, the word stops hiding and leaves the list.
-- **Remove** takes a word away, with **Undo**. Neither brings back what it
+- The bin beside a word (**Remove**) takes it away, with **Undo**. Neither brings back what it
   already hid; use Hidden articles for that.

@@ -47,15 +47,14 @@ V1, item 5; decision 0140). Once a week or off since 5 November 2026
 - **Off in one press:** the email ends "You turned this email on in
   Settings. To stop it, open this link and press Stop:" with a link to a
   page that says "Press Stop to turn the weekly email off." and one button,
-  **Stop the weekly email**. Pressed, "The weekly email is off. No more will
-  come. You can turn it on again in Settings." It works signed in or not, on
+  **Stop the weekly email**. Pressed, "The weekly email is off. Turn it back on
+  in Settings." It works signed in or not, on
   any device, and shows "Stopping…" while it works. Nothing happens until
   Stop is pressed, so a mail program that opens links to check them can't
   stop it. The link of each of the last ten emails works; turning the email
   off makes all of them spent. Switching it off in Settings does the same. A
-  link that no longer works says so ("This link no longer works: the email
-  is already off, or the link is from an older email. If weekly emails still
-  come, turn them off in Settings."), never that it stopped something.
+  link that no longer works says so ("This link no longer works. If weekly
+  emails still come, turn them off in Settings."), never that it stopped something.
 - **Each reader's own:** what it lists is only theirs. It's sent at most
   once for each morning, even if nine turtles restarts.
 

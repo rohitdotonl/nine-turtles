@@ -6,6 +6,8 @@
 
 > **Partly replaced by [0275](0275-one-thing-at-a-time.md):** with no empty reading area any more, the welcome tip is gone.
 
+> **Partly replaced by [0305](0305-fewer-words.md):** Keys at the sidebar's foot is the keyboard icon alone, no longer in words.
+
 *25 October 2026. The owner asked for these after a fresh-eyes review: "A
 label, not just an icon", grouping, a welcome tip and searching the list.
 Changes 0041's rule that nothing on screen mentions shortcuts.*

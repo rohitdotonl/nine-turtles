@@ -65,7 +65,7 @@ anywhere or counted.
 **At the article's end**
 - Under the closing rule, above Write back (section 37): **Your
   highlights**, each quote with its note, **Edit note** (or **Add a
-  note…**), **Copy** and **Remove**; pressing a quote shows it in the text.
+  note…**), **Copy** and **Remove** (the copy and bin icons alone, decision 0305); pressing a quote shows it in the text.
   Remove puts the keyboard on Undo. Then
   **Your note**, the reader's note on the whole article, with **Edit note**.
 - The More menu's **Add a note…** (and `n`) opens the note box there:

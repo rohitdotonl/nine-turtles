@@ -451,7 +451,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("Text size and font are in Text and page, in any article’s More.")).toBeVisible();
+    await expect(page.getByText("This device only. Text size and font are in any article’s More.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 
@@ -924,6 +924,23 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator(".print-credit")).toBeHidden();
   });
 
+  test("an article whose feed has only its title says so, with the publisher's site as the way on (decision 0305)", async ({ page }) => {
+    // The feed's text answered as empty, as a feed that shares only titles would.
+    await page.route("**/api/articles/*", async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (body?.article?.title === "Only the first page") Object.assign(body.article, { content: null, summary: null });
+      await route.fulfill({ response, json: body });
+    });
+    await openRoom(page);
+    await row(page, "Only the first page").click();
+    const note = article(page).locator(".article-note");
+    await expect(note).toContainText("Only the title is in the feed. Read it on Reading Room");
+    await expect(note.getByRole("link", { name: "Read it on Reading Room" })).toHaveAttribute("href", "https://reading-room.example/first-page");
+    expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
+    await expect(article(page).getByText("View original")).toHaveCount(0);
+  });
+
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {
     await openRoom(page);
     await row(page, "The pleasure of a slow letter").click();
@@ -1166,13 +1183,13 @@ test.describe("on a wide window", () => {
     expect(asked[0]).toMatch(PLAYER);
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
 
-    // A video with no description is just the video, never "no text in its feed".
+    // A video with no description is just the video, never "Only the title is in the feed".
     await toList(page);
     await row(page, "Rain on a tin roof").click();
     const rain = article(page).getByRole("button", { name: "Play video: Rain on a tin roof" });
     await expect(rain).toBeVisible();
     await expect(article(page).locator("iframe")).toHaveCount(0);
-    await expect(article(page).getByText("no text in its feed")).toHaveCount(0);
+    await expect(article(page).getByText("Only the title is in the feed")).toHaveCount(0);
 
     // Space plays it too. (Tab out of the player is the browser's own frame
     // handling, which differs between runs, so it isn't asserted here.)

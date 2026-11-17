@@ -291,7 +291,7 @@ test.describe("on a phone", () => {
       expect((await choice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     }
     // The one place a phone tells of the tap that puts both bars away (decision 0263).
-    await expect(panel.getByText("Tap the text to hide the bars. Tap again to bring them back.")).toBeVisible();
+    await expect(panel.getByText("Tap the text to hide or show the bars.")).toBeVisible();
 
     await panel.getByRole("radio", { name: "Night", exact: true }).check();
     await expect(page.locator("html")).toHaveAttribute("data-mode", "dark");

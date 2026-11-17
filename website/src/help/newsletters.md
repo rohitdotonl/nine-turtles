@@ -4,7 +4,7 @@ description: nine turtles gives you a private email address. Sign up to newslett
 groupId: bringing-more-in
 order: 1
 spec: 28
-updated: 2026-11-11
+updated: 2026-11-18
 related: [hide-topics, unfollow-someone, write-back]
 ---
 
@@ -18,7 +18,7 @@ related: [hide-topics, unfollow-someone, write-back]
 
 1. Open **Settings › Newsletters**. (Or press **+ Add**, then **Use your
    nine turtles address** under the field.)
-2. Press **Copy** beside **Your address**. It looks like
+2. Press the copy button (two pages) beside **Your address**. It looks like
    <code>turtle-7k2xab3c@in.nineturtles.app</code>.
 3. Paste it into a newsletter's sign-up form, as you would your own email.
 

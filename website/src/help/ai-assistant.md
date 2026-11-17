@@ -4,7 +4,7 @@ description: Connect your own AI assistant, such as Claude or ChatGPT, so it can
 groupId: bringing-more-in
 order: 3
 spec: 33
-updated: 2026-11-16
+updated: 2026-11-18
 related: [search-everything, unfollow-someone, questions]
 ---
 
@@ -17,7 +17,7 @@ related: [search-everything, unfollow-someone, questions]
 ## Connect Claude
 
 1. In nine turtles, open **Settings › Connected assistants** and press
-   **Copy** beside **Server address**.
+   the copy button (two pages) beside **Server address**.
 2. In Claude, open **Settings › Connectors**, choose **Add custom
    connector**, and paste the address.
 3. Claude opens a nine turtles page that lists what it will and won't be able

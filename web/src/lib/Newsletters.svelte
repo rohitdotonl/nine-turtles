@@ -108,7 +108,7 @@
         <p class="min-w-0">
           Your address<br /><span class="value text-muted" translate="no">{address}</span>
         </p>
-        <button type="button" class="btn btn-small" onclick={copy}>Copy<span class="sr-only">{" "}address</span></button>
+        <button type="button" class="btn btn-small btn-icon" aria-label="Copy address" title="Copy address" onclick={copy}><Icon name="copy" size="alone" /></button>
       </div>
       {#each labels as label (label.label)}
         <div class="inset-row">
@@ -136,14 +136,13 @@
       <NoteLine announce {message} {refusal} {busy} onUndo={previous ? undo : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
-      Sign up to newsletters with this address and each one arrives as its own feed. Unsubscribing from a feed also
-      tells the newsletter to stop sending, when it lets nine turtles do that.
+      Sign up with this address and each newsletter becomes a feed. Unsubscribe here and the newsletter is told too,
+      where it allows.
     </p>
     <p class="inset-foot">
-      For a label, add a word after a plus sign when you sign up, like <span translate="no">turtle-…+cooking@…</span>.
-      Once email arrives there, the label shows up here with a switch to turn its email away. The catch: anyone with a
-      labelled address can find your plain one by taking the label off, and a few sign-up forms don't accept a plus
-      sign. New address stops all email to the old one, labels included, for when spam arrives.
+      Add a label after a plus sign, like <span translate="no">turtle-…+cooking@…</span>, to turn one sender away
+      later. Some forms refuse the plus, and anyone can remove a label to find your plain address. New address stops
+      all email to this one, for when spam arrives.
     </p>
   </section>
 {/if}

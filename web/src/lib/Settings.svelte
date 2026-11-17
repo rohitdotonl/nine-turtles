@@ -222,8 +222,10 @@
 
   /** Your plan's row shows only while nine turtles takes payments, never to the owner (SPEC section 29): what it says now. */
   let planStanding: string | undefined = $state();
+  /** Whether nine turtles takes payments, so the privacy line names the plan only then. */
+  let paymentsOn = $state(false);
   loadPlan().then(
-    (status) => (planStanding = status.on && status.plan.standing !== "free" ? describe(status.plan).title : undefined),
+    (status) => ((paymentsOn = status.on), (planStanding = status.on && status.plan.standing !== "free" ? describe(status.plan).title : undefined)),
     () => {
       // Hidden until the server answers.
     },
@@ -297,7 +299,7 @@
               <div class="setting-words">
                 <p id="unread-name" class="setting-name" aria-hidden="true">Unread</p>
                 <p id="unread-hint" class="setting-hint">
-                  {unread ? "An Unread list, and a dot where something is new." : "No Unread list and no dots. What you've read is still remembered."}
+                  {unread ? "An Unread list and dots on what's new." : "No Unread list. What you've read is still kept."}
                 </p>
               </div>
             </div>
@@ -340,7 +342,7 @@
           </div>
         </div>
         <!-- Text size and font are only in Text and page, the reading panel in an article's More (decisions 0241, 0293). -->
-        <p class="inset-foot">This device only. Text size and font are in Text and page, in any article’s More.</p>
+        <p class="inset-foot">This device only. Text size and font are in any article’s More.</p>
       </section>
 
       <section aria-labelledby="library-heading">
@@ -421,13 +423,13 @@
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
         <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
         {#if email && !emailSending}
-          <p class="inset-foot">Changing your email needs nine turtles to send email; whoever runs it can set that up.</p>
+          <p class="inset-foot">Changing your email needs the app's owner to set up email first.</p>
         {/if}
         {#if !owner}
           <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
           <p class="inset-foot">
-            Whoever runs this nine turtles can see your email, when you joined, how many feeds you follow, the day
-            you were last here and, once there are plans, which plan you're on. Never which feeds or what you read.
+            The app's owner sees your email, join date, feed count{paymentsOn ? ", last visit and plan" : " and last visit"}.
+            Never what you follow or read.
           </p>
         {/if}
       </section>
@@ -476,10 +478,9 @@
         </div>
 
         <p class="inset-foot">
-          Download everything gives you one folder: open its index.html in any browser, with or without nine turtles, to
-          find who you follow, every article you saved or highlighted, and your notes. It also holds an OPML file and a
-          JSON Feed file for other feed apps. To bring your saved (or starred) articles over from Inoreader, Feedly, Feedbin or another
-          feed reader, import the JSON file it exports them in.
+          One folder that opens in any browser: who you follow, what you saved and highlighted, and your notes, plus
+          files other feed apps can read. Saved articles in another reader? Download them there, then use Import saved
+          articles above.
         </p>
       </section>
       {:else if page === "install"}

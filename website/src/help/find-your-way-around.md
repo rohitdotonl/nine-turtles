@@ -31,7 +31,7 @@ From the top:
   them. Who isn't working comes first, then everyone A to Z.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
   a folder, A to Z. Someone with a blog and a channel has one row.
-- At the foot: **+ Add**, **Keys** and **Settings**.
+- At the foot: **+ Add**, then the keyboard (every key) and the cog (**Settings**).
 
 A small dot beside **Unread** means something new has arrived. The people
 and folders below it carry no dots and no numbers: you never have a pile to

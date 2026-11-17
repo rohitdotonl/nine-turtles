@@ -109,7 +109,7 @@
       passwordRefused = false;
       asking = false;
       await reload();
-      say("Passkey added. Next time, choose Sign in with a passkey on the sign-in page.");
+      say("Passkey added. Use it next time you sign in.");
       await tick();
       addButton?.focus();
       return;
@@ -235,14 +235,14 @@
               {passkeyName(passkey)}<br /><span class="value text-muted"><Dated text={passkeyDates(passkey)} /></span>
             </p>
             <span class="flex shrink-0 items-center gap-2">
-              <button id={`rename-passkey-${passkey.id}`} type="button" class="btn btn-small" onclick={() => startRename(passkey)}
-                >Rename<span class="sr-only">{" "}{passkeyName(passkey)}</span></button
+              <button id={`rename-passkey-${passkey.id}`} type="button" class="btn btn-small btn-icon" aria-label="Rename {passkeyName(passkey)}" title="Rename" onclick={() => startRename(passkey)}
+                ><Icon name="edit" size="alone" /></button
               >
-              <!-- Red words: this removes something. What it removes is in its tooltip and its name, and Undo follows. -->
+              <!-- Red words: this removes something, so it stays a word (decision 0305). What it removes is in its name, and Undo follows. -->
               <button
                 type="button"
                 class="btn btn-small text-danger"
-                title="Removes this passkey from nine turtles. Your password still works."
+                title="Your password still works."
                 aria-disabled={busy}
                 onclick={() => remove(passkey)}>Remove<span class="sr-only">{" "}{passkeyName(passkey)}</span></button
               >
@@ -290,8 +290,7 @@
       <NoteLine announce {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onRetry={loadFailed ? retry : undefined} onClose={closeNote} />
     </div>
     <p class="inset-foot">
-      Sign in with your fingerprint, face or device PIN instead of a password. Adding a passkey asks for your password.
-      Your password keeps working, so removing a passkey never locks you out.
+      Sign in with your fingerprint, face or device PIN. Your password keeps working.
     </p>
   </section>
 {/if}

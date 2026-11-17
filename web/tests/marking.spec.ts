@@ -779,11 +779,11 @@ test("Settings: no unread counts to show or hide, and no letting unread go", asy
   await expect(reading.getByRole("radio", { name: "Hide" })).toHaveCount(0);
   await expect(reading.getByText("Let unread go after", { exact: true })).toHaveCount(0);
   await expect(reading.getByRole("radio", { name: "1 week" })).toHaveCount(0);
-  await expect(reading).toContainText("An Unread list, and a dot where something is new.");
+  await expect(reading).toContainText("An Unread list and dots on what's new.");
 
   // Unread off: the sidebar has no dots.
   await reading.getByRole("switch", { name: "Unread" }).click();
-  await expect(reading).toContainText("No Unread list and no dots. What you've read is still remembered.");
+  await expect(reading).toContainText("No Unread list. What you've read is still kept.");
   await expect(sidebar(page).getByRole("link", { name: "Unread" })).toHaveCount(0);
   await expect(sidebar(page).locator(".sidebar-dot")).toHaveCount(0);
 });

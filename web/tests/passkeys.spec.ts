@@ -109,7 +109,7 @@ test("a passkey added in Settings signs in from the sign-in page, and the passwo
 
   const group = page.getByRole("region", { name: "Passkeys" });
   await expect(group).toContainText(
-    "Sign in with your fingerprint, face or device PIN instead of a password.",
+    "Sign in with your fingerprint, face or device PIN. Your password keeps working.",
   );
   await group.getByRole("button", { name: "Add a passkey" }).click();
   // The password first; the keyboard is already in its box.

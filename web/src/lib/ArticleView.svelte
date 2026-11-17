@@ -617,21 +617,21 @@
           {/if}
           <!-- The last page: a short rule, so the article ends rather than stops. -->
           <hr aria-hidden="true" class="article-end" />
-        {:else if full.summary}
-          {#key full.id}
-            <div bind:this={text} class="article-text" dir={rtl ? "rtl" : "auto"}>{@html full.summary}</div>
-          {/key}
+        {:else if full.summary || !(video || episode)}
+          {#if full.summary}
+            {#key full.id}
+              <div bind:this={text} class="article-text" dir={rtl ? "rtl" : "auto"}>{@html full.summary}</div>
+            {/key}
+          {/if}
           <hr aria-hidden="true" class="article-end" />
-          <!-- End matter, under the closing rule: where the rest is, then "Read the rest on {publisher} ↗" (or the episode page) as the page's one main button (SPEC sections 7 and 35; decisions 0218, 0298). -->
+          <!-- End matter, under the closing rule: where the rest is (only the beginning, or only the title, decision 0305), then "Read the rest on {publisher} ↗" (or the episode page) as the page's one main button (SPEC sections 7 and 35; decisions 0218, 0298). -->
           <p class="article-note" lang="en">
-            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-primary"
-                >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a
+            <span>{full.summary ? "Only the beginning is shared here." : "Only the title is in the feed."}</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-primary"
+                >{episode ? "Read the episode page on" : full.summary ? "Read the rest on" : "Read it on"} {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a
               >{/if}
           </p>
-        {:else if video || episode}
-          <hr aria-hidden="true" class="article-end" />
         {:else}
-          <p class="mt-6" lang="en">This article has no text in its feed. View original to read it on the publisher's site.</p>
+          <hr aria-hidden="true" class="article-end" />
         {/if}
       {:else if problem}
         <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">

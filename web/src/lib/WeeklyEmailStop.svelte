@@ -42,8 +42,8 @@
     {#if result === "done" || result === "unknown" || ticket === ""}
       <p role="status">
         {result === "done"
-          ? "The weekly email is off. No more will come. You can turn it on again in Settings."
-          : "This link no longer works: the email is already off, or the link is from an older email. If weekly emails still come, turn them off in Settings."}
+          ? "The weekly email is off. Turn it back on in Settings."
+          : "This link no longer works. If weekly emails still come, turn them off in Settings."}
       </p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
       <a href="/" onclick={leave} autofocus class="btn">Open nine turtles</a>

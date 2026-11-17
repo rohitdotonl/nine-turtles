@@ -109,11 +109,11 @@
     aria-disabled={busy}
     aria-label="Delete {folder.name}"
     aria-describedby="delete-folder-help"
-    title="Its feeds stay; they just leave this folder. You can undo it straight afterwards."
+    title="Its feeds stay; they just leave this folder. You can undo it."
     onclick={remove}
     class={look}>Delete</button
   >
-  <span id="delete-folder-help" class="sr-only">Its feeds stay; they just leave this folder. You can undo it straight afterwards.</span>
+  <span id="delete-folder-help" class="sr-only">Its feeds stay; they just leave this folder. You can undo it.</span>
 {/snippet}
 
 {#snippet form()}
@@ -131,7 +131,7 @@
           <span class="setting-words">
             <span class="setting-name">This is one person</span>
             <span id="one-person-hint" class="setting-hint"
-              >Everything in it becomes one row, "{name.trim() || folder.name}", with one page. The folder goes; you can undo it straight afterwards.</span
+              >Joins its feeds into one person, "{name.trim() || folder.name}", with one page. You can undo it.</span
             >
           </span>
           <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>

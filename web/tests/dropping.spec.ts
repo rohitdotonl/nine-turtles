@@ -213,7 +213,7 @@ test("a link held over a text field, or while a sheet is open, or one of nine tu
   await expect(html).not.toHaveAttribute("data-dragging");
   await page.keyboard.press("Escape");
   // While the shortcut list is open.
-  await page.getByRole("button", { name: "Keys (keyboard shortcuts)" }).click();
+  await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
   await expect(page.locator("dialog[open]")).toHaveCount(1);
   await page.locator("main").first().dispatchEvent("dragover", { dataTransfer: data });
   await expect(html).not.toHaveAttribute("data-dragging");
