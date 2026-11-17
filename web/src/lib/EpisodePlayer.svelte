@@ -1,8 +1,9 @@
 <!--
   A podcast episode's player, under the article's byline (SPEC section 35,
   decision 0113). A calm, still panel in a faint tone of the text: back 15
-  seconds, Play or Pause, forward 30, the speed (1×, 1.25×, 1.5×, 2×, one
-  press each), then the position as a slider with the time played and the
+  seconds, Play or Pause, forward 30 in the middle, the episode's length on
+  their left until it starts and the speed (1×, 1.25×, 1.5×, 2×, one press
+  each) on their right, then the position as a slider with the time played and the
   time left under it, in figures that keep their width. Nothing moves but the
   slider's own mark and the times; no waveform, no animation. The episode's
   show notes follow as the article's text.
@@ -98,6 +99,12 @@
 
 <div class="episode" lang="en" role="group" aria-label="Episode player" use:watch={article.id}>
   <div class="episode-controls">
+    <!-- How long it is, until it starts: then the times under the slider say it, so the length steps aside. -->
+    <span class="episode-length">
+      {#if episode.seconds && !mine}{length(episode.seconds)}<span class="sr-only">{" "}long</span>{/if}
+    </span>
+    <!-- Back, Play and Forward in the middle, under the title and byline, as every player centres them (decision 0301). -->
+    <div class="episode-middle">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
       <svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
         ><path d="M3.5 12.5a8.5 8.5 0 1 0 2.5-6" /><path d="M5.75 2.75v3.75h3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">15</text></svg
@@ -116,10 +123,7 @@
         ><path d="M20.5 12.5a8.5 8.5 0 1 1-2.5-6" /><path d="M18.25 2.75v3.75h-3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">30</text></svg
       >
     </button>
-    <!-- How long it is, until it starts: then the times under the slider say it, so the length steps aside. -->
-    <span class="episode-length">
-      {#if episode.seconds && !mine}{length(episode.seconds)}<span class="sr-only">{" "}long</span>{/if}
-    </span>
+    </div>
     <button
       type="button"
       class="episode-speed"
@@ -172,10 +176,17 @@
     font-family: var(--font-dates);
     font-weight: 600;
   }
+  /* Three columns: the length on the left, Back, Play and Forward truly in the middle, the speed on the right (decision 0301). */
   .episode-controls {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 0.5rem;
+  }
+  .episode-middle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
   .episode-button,
   .episode-speed {
@@ -193,6 +204,7 @@
     background-color: var(--fill);
   }
   .episode-speed {
+    justify-self: end;
     padding-inline: 0.5rem;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
@@ -210,7 +222,6 @@
     cursor: pointer;
   }
   .episode-length {
-    margin-left: auto;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }

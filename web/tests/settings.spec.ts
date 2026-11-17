@@ -29,8 +29,10 @@ test("Settings' first page keeps the everyday settings, and the rest are rows th
   await expect(page.getByRole("group", { name: "Line width" })).toHaveCount(0);
   const rows = page.locator("[data-settings-row]");
   const expected = ["data", "install", "hiding", "newsletters", "assistants", "readers"];
-  const shown = await rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow));
-  expect(shown).toEqual(expected);
+  // Newsletters' row waits for its status from the server, so this asks again until it's there.
+  await expect
+    .poll(() => rows.evaluateAll((all) => all.filter((row) => (row as HTMLElement).offsetParent !== null).map((row) => (row as HTMLElement).dataset.settingsRow)))
+    .toEqual(expected);
   // No Everyone you follow row: it has a row of its own in the sidebar (decision 0266).
   await expect(page.locator('section[aria-labelledby="settings-heading"]').getByRole("link", { name: "Everyone you follow" })).toHaveCount(0);
   // No Sign-up row: sign-up is always open (decision 0115).
