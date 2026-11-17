@@ -112,13 +112,13 @@ html {
   font-weight: 600;
   line-height: var(--text-meta--line-height);
 }
-/* The arrow alone, in the second ink while pulling; far enough, in a filled circle of the ink. */
+/* The arrow alone, in the second ink in a thin circle of the strong tone while pulling; far enough, in a filled circle of the ink. */
 .swipe-peek-arrow {
   display: grid;
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--strong);
   border-radius: 50%;
   color: var(--ink-2);
 }

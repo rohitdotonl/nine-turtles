@@ -35,7 +35,7 @@
     onNext: () => void;
   } = $props();
 
-  /** Which way the pull goes: on past the end (the next hangs below), back past the top (the previous hangs above). */
+  /** Which way the pull goes: on past the end (its arrow shows below), back past the top (its arrow shows above). */
   let going: "below" | "above" | undefined = $state();
   /** Whether letting go now opens it. */
   let far = $state(false);
@@ -104,7 +104,7 @@
       if (ignored || !way) return;
       const open = way === "above" ? (previous ? onPrevious : undefined) : next ? onNext : undefined;
       settling = true;
-      // Far enough, it carries on a whole screen, so the article hung beyond fills it, and opens; short of that, back it goes.
+      // Far enough, it carries on a whole screen and the next (or previous) one opens; short of that, back it goes.
       const go = open && far;
       letGo(screen, go ? (way === "below" ? -screen.clientHeight : screen.clientHeight) : 0, () => {
         going = undefined;

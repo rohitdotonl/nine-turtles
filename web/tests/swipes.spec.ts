@@ -64,9 +64,8 @@ const watchGlide = (element: ReturnType<Page["locator"]>) =>
     // A glide shows in the row's style as its length ("320ms").
     new MutationObserver(() => /\dms\b/.test(node.getAttribute("style") ?? "") && (node.dataset.glided = "yes")).observe(node, { attributeFilter: ["style"] });
   });
-/** The article a pull would open, hung past the end (or top) of the one being read. */
+/** What a pull shows past the end (or top) of the article being read. */
 const peek = (page: Page) => page.locator(".swipe-peek");
-/** What it says: where, the article's title, and who wrote it (the made-up blogs name no writer, so their feed's name). */
 /** Checks the pull shows only its arrow (no words, no title, decision 0304), in a filled circle once letting go opens it. */
 async function arrow(page: Page, far: boolean): Promise<void> {
   const shown = peek(page).locator(".swipe-peek-arrow");
@@ -196,7 +195,7 @@ test("in an article, a pull past its end opens the next one and past its top the
   await expect(heading(titles[0])).toBeVisible();
 
   // Pulled up past its end, the article follows the finger and an arrow comes into view below it;
-  // far enough, it says to let go; moving back takes it all away, and nothing opens.
+  // far enough, its circle fills in; moving back takes it all away, and nothing opens.
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const back = await Finger.down(page, middle.x, box.y + box.height - 60);
   await back.move(0, -60);
