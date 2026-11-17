@@ -57,8 +57,8 @@
   }
 }
 
-/* The display cut has no italics: a writer's italics in a heading come from the text face's own, never slanted by the browser. */
-.article-text :where(h1, h2, h3) :where(em, i, cite) {
+/* The display cut has no italics: a writer's italics in a heading or a pull quote come from the text face's own, never slanted by the browser. */
+.article-text :where(h1, h2, h3, .pull-quote) :where(em, i, cite) {
   font-family: var(--reading-font);
 }
 
@@ -217,9 +217,10 @@
 /*
   A pull quote (decision 0297): a line the writer chose to repeat big. The
   cleaning keeps its mark as `pull-quote` (on a div, a figure, or a quote).
-  Set in the title's face at regular weight, centred, half again the text's
-  size, between two short rules like the byline's, so it reads as the
-  writer's own display line and never as a second ordinary quote.
+  Set in the title's face at regular weight, centred, between two short
+  rules like the byline's, so it reads as the writer's own display line and
+  never as a second ordinary quote. A step under the first heading's size
+  (1.4 times the text, 1.25 on a phone), so a heading still leads.
 */
 .article-text .pull-quote {
   margin-block: 2em;
@@ -227,7 +228,7 @@
   padding: 0;
   border: 0;
   font-family: var(--reading-title-font, var(--reading-font));
-  font-size: 1.5em;
+  font-size: 1.4em;
   line-height: 1.25;
   text-align: center;
   text-wrap: balance;
@@ -250,6 +251,12 @@
   margin-top: 0.8em;
 }
 
+@media (max-width: 40rem) {
+  .article-text .pull-quote {
+    font-size: 1.25em;
+  }
+}
+
 /* WordPress wraps its pull quote's words in a quotation of their own. */
 .article-text .pull-quote blockquote {
   margin: 0;
@@ -261,12 +268,12 @@
   margin: 0;
 }
 
-/* A named source under it: the interface's size and the second ink. */
+/* A named source under it: a caption's size (it follows Aa) and the second ink. */
 .article-text .pull-quote cite {
   display: block;
   margin-top: 0.6em;
   font-family: var(--reading-font);
-  font-size: var(--text-ui);
+  font-size: 0.58em; /* about a caption's 13/16 of the text */
   font-style: normal;
   color: var(--ink-2);
 }

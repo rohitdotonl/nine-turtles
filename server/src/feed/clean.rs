@@ -53,7 +53,7 @@ pub(crate) fn clean(body: &str, content_type: &str, base: &Url) -> String {
 
 /// The one class name an article keeps on a block: the writer's pull quote,
 /// a line of their own repeated big to catch the eye (decision 0297).
-pub(super) const PULL_QUOTE: &str = "pull-quote";
+const PULL_QUOTE: &str = "pull-quote";
 
 /// `pull-quote` when a block carries a known blog tool's pull-quote mark:
 /// Substack's `pullquote` (a `div`), WordPress's `wp-block-pullquote` (a
