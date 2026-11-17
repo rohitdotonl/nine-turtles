@@ -156,8 +156,8 @@ once instead.
 - **Swipe a row left** in a list: a little way marks it read, all the way
   saves it. **Undo** puts it back.
 - **Keep pulling up past the end** of an article: it moves with your finger,
-  and the next one comes up under it. When it says "Let go for the next",
-  let go and you're in it. **Pull down past its top** for the previous one.
+  and an arrow comes up under it. When the arrow's circle fills in, let go
+  and you're in the next one. **Pull down past its top** for the previous one.
   A pull starts only once you've stopped at the end (or top): scrolling
   there doesn't carry on into the next article, and a flick doesn't count.
 - **Swipe down** on the Text and page sheet or an opened picture to close it.
@@ -166,8 +166,6 @@ once instead.
 ## Good to know
 
 - On a smaller window, the parts take turns: <kbd>Esc</kbd> goes back one.
-- On a phone or tablet, a list always comes to rest with a whole row at
-  the top, never half a title (not with reduce motion on).
 - People and publications are in A to Z order. Folders are in your own
   order: drag one up or down, or use **Edit** beside **Folders**
   ([Put people in folders](/help/put-people-in-folders/)).

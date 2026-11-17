@@ -4,10 +4,10 @@
   the next article; pulled on down past its top, the previous one. Sideways
   is only for going back (`SwipeBack.svelte`), so each way means one thing.
   As sideways, the screen follows the finger: the article moves with it, and
-  the one letting go opens hangs just beyond its end (or top), its title and
-  who wrote it showing as it comes into view, or saying there's none. Once
-  the pull is far enough, it says "Let go", and letting go carries straight
-  on into it; short of that, it slides back. A pull is firm on purpose
+  just beyond its end (or top) an arrow comes into view, the toolbar's own ↓
+  (or ↑), or words saying there's none. Once the pull is far enough, the
+  arrow sits in a filled circle (decision 0304), and letting go carries
+  straight on into the next article; short of that, it slides back. A pull is firm on purpose
   (decision 0303): only a stroke that starts at the end (or top) pulls, never
   a scroll that reaches it on the way, and no flick counts, so reading on
   never opens another article by itself. While a menu or
@@ -18,7 +18,7 @@
   import type { Article } from "./shapes";
   import { DECIDE, leftAlone, somethingOpen, zoomed } from "./swipe";
   import { letGo, pull } from "./swipeMotion";
-  import { sourceOf, writerOf } from "./people";
+  import Icon from "./Icon.svelte";
 
   let {
     area,
@@ -35,7 +35,7 @@
     onNext: () => void;
   } = $props();
 
-  /** Which way the pull goes: on past the end (the next hangs below), back past the top (the previous hangs above). */
+  /** Which way the pull goes: on past the end (its arrow shows below), back past the top (its arrow shows above). */
   let going: "below" | "above" | undefined = $state();
   /** Whether letting go now opens it. */
   let far = $state(false);
@@ -104,7 +104,7 @@
       if (ignored || !way) return;
       const open = way === "above" ? (previous ? onPrevious : undefined) : next ? onNext : undefined;
       settling = true;
-      // Far enough, it carries on a whole screen, so the article hung beyond fills it, and opens; short of that, back it goes.
+      // Far enough, it carries on a whole screen and the next (or previous) one opens; short of that, back it goes.
       const go = open && far;
       letGo(screen, go ? (way === "below" ? -screen.clientHeight : screen.clientHeight) : 0, () => {
         going = undefined;
@@ -142,15 +142,11 @@
 {#if going}
   <!-- Hung just past the article's end or top, it moves with it; only seen, as the toolbar's Next and Previous say the same. -->
   <div aria-hidden="true" class="swipe-peek" data-side={going}>
-    <div class="swipe-peek-text">
-      {#if onward}
-        <strong>{far ? (going === "above" ? "Let go for the previous" : "Let go for the next") : going === "above" ? "Previous" : "Next"}</strong>
-        <span class="swipe-peek-title">{onward.title || "Untitled"}</span>
-        <!-- Who wrote it, as its row names them: the writer, or else the feed (the writer comes first). -->
-        <span class="swipe-by">{writerOf(onward) ?? sourceOf(onward, undefined)}</span>
-      {:else}
-        <strong>{going === "above" ? "That's the first article here." : "That's the last one so far."}</strong>
-      {/if}
-    </div>
+    {#if onward}
+      <!-- The toolbar's own arrow; far enough, it sits in a filled circle, so letting go is shown by shape as well as tone. -->
+      <span class="swipe-peek-arrow" data-far={far || undefined}><Icon name={going === "above" ? "chevron-up" : "chevron-down"} size="alone" /></span>
+    {:else}
+      <p class="swipe-peek-text">{going === "above" ? "That's the first article here." : "That's the last one so far."}</p>
+    {/if}
   </div>
 {/if}

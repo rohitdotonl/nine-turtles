@@ -64,10 +64,16 @@ const watchGlide = (element: ReturnType<Page["locator"]>) =>
     // A glide shows in the row's style as its length ("320ms").
     new MutationObserver(() => /\dms\b/.test(node.getAttribute("style") ?? "") && (node.dataset.glided = "yes")).observe(node, { attributeFilter: ["style"] });
   });
-/** The article a pull would open, hung past the end (or top) of the one being read. */
+/** What a pull shows past the end (or top) of the article being read. */
 const peek = (page: Page) => page.locator(".swipe-peek");
-/** What it says: where, the article's title, and who wrote it (the made-up blogs name no writer, so their feed's name). */
-const named = (where: string, title = "") => new RegExp(`^\\s*${where}\\s*${title.replace(/[()]/g, "\\$&")}\\s*Blog sw-[\\d-]+\\s*$`);
+/** Checks the pull shows only its arrow (no words, no title, decision 0304), in a filled circle once letting go opens it. */
+async function arrow(page: Page, far: boolean): Promise<void> {
+  const shown = peek(page).locator(".swipe-peek-arrow");
+  await expect(shown).toBeVisible();
+  await expect(peek(page)).toHaveText("");
+  if (far) await expect(shown).toHaveAttribute("data-far");
+  else await expect(shown).not.toHaveAttribute("data-far");
+}
 /** Marks the element with where it was first moved to (`data-slid`), until it's watched again. */
 const watchSlide = (element: ReturnType<Page["locator"]>) =>
   element.evaluate((node: HTMLElement) => {
@@ -188,15 +194,15 @@ test("in an article, a pull past its end opens the next one and past its top the
   await left.up();
   await expect(heading(titles[0])).toBeVisible();
 
-  // Pulled up past its end, the article follows the finger and the next one comes into view below it, named;
-  // far enough, it says to let go; moving back takes it all away, and nothing opens.
+  // Pulled up past its end, the article follows the finger and an arrow comes into view below it;
+  // far enough, its circle fills in; moving back takes it all away, and nothing opens.
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const back = await Finger.down(page, middle.x, box.y + box.height - 60);
   await back.move(0, -60);
-  await expect(peek(page)).toHaveText(named("Next", titles[1]));
+  await arrow(page, false);
   await expect.poll(() => pane(page).evaluate((node) => node.style.transform)).toBe("translateY(-60px)");
   await back.move(0, -140);
-  await expect(peek(page)).toHaveText(named("Let go for the next", titles[1]));
+  await arrow(page, true);
   await back.move(0, 200);
   await expect(peek(page)).toHaveCount(0);
   await back.up();
@@ -221,7 +227,7 @@ test("in an article, a pull past its end opens the next one and past its top the
   await watchSlide(pane(page));
   const down = await Finger.down(page, middle.x, box.y + 80);
   await down.move(0, 200);
-  await expect(peek(page)).toHaveText(named("Let go for the previous", titles[0]));
+  await arrow(page, true);
   await down.up();
   await expect(heading(titles[0])).toBeVisible();
   await expect(pane(page)).toHaveAttribute("data-slid", /^translateY\(\d/);
@@ -245,7 +251,7 @@ test("in an article, a pull past its end opens the next one and past its top the
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const quick = await Finger.down(page, middle.x, box.y + box.height - 60);
   await quick.move(0, -140, 0, 3);
-  await expect(peek(page)).toHaveText(named("Next", titles[1]));
+  await arrow(page, false);
   await quick.up();
   await settled(pane(page));
   await expect(heading(titles[0])).toBeVisible();
@@ -381,24 +387,6 @@ test("a pull follows the finger back; held still before lifting, a quick pull is
   await expect(rows(page).first()).toBeVisible();
 });
 
-test("a pull names who wrote the article it opens, when its feed names a writer", async ({ page }) => {
-  await page.goto(new URL("/all", FEEDS_APP).href);
-  await appReady(page);
-  await signIn(page);
-  const id = await follow(page, `${FEED_SITE}/shelf/field-notes/sw-${test.info().workerIndex}-${Date.now()}/feed.xml`);
-  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
-  await appReady(page);
-  await rows(page).nth(0).click();
-  const text = pane(page).locator(".reading-scroller");
-  const box = (await text.boundingBox())!;
-  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
-  const up = await Finger.down(page, box.x + box.width / 2, box.y + box.height - 60);
-  await up.move(0, -200);
-  await expect(peek(page).locator(".swipe-by")).toHaveText("Maren Holt");
-  await up.move(0, 200);
-  await up.up();
-});
-
 test("the Aa sheet closes when swiped down; Settings goes back home when swiped right", async ({ page }) => {
   await openBlog(page);
   await rows(page).nth(0).click();
@@ -462,39 +450,4 @@ test("after a swipe a key still presses; zoomed in, a stroke moves the page; bes
   await swipe(page, home(page), 160, 40);
   await expect(back).toBeVisible();
   await expect(home(page)).toBeVisible();
-});
-
-test("on a touch screen a list's rows land wherever it comes to rest, and with reduced motion they don't (decision 0303); an article's text never snaps", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await openBlog(page);
-  const list = page.locator(".scroller").filter({ has: page.locator(".item-list") });
-  const snap = () => list.evaluate((pane) => getComputedStyle(pane).scrollSnapType);
-  const align = () => rows(page).first().evaluate((row) => getComputedStyle(row.closest("li")!).scrollSnapAlign);
-  // "y proximity", as the browser writes it.
-  expect(await snap()).toBe("y");
-  expect(await align()).toBe("start");
-  // Left between rows, the list comes to rest with a row's top at its top. (A long list, so it can scroll.)
-  await list.evaluate((pane) => {
-    const room = document.createElement("div");
-    room.style.height = `${3 * pane.clientHeight}px`;
-    room.style.flexShrink = "0";
-    pane.append(room);
-  });
-  const second = rows(page).nth(1);
-  const rowTop = await second.evaluate((row) => {
-    const pane = row.closest(".scroller")!;
-    return row.closest("li")!.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop;
-  });
-  await list.evaluate((pane, at) => (pane.scrollTop = at + 30), rowTop);
-  await expect.poll(async () => Math.abs((await list.evaluate((pane) => pane.scrollTop)) - rowTop)).toBeLessThan(2);
-  // This phone's screen is a touch screen: only there do rows land (a mouse or trackpad scrolls as it always did).
-  expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
-  await rows(page).nth(0).click();
-  const text = pane(page).locator(".reading-scroller");
-  expect(await text.evaluate((area) => getComputedStyle(area).scrollSnapType)).toBe("none");
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goBack();
-  await expect(rows(page).first()).toBeVisible();
-  expect(await snap()).toBe("none");
-  expect(await align()).toBe("none");
 });

@@ -12,6 +12,8 @@
 3. Row swipes and going back keep their flick; they never ride on a scroll.
 4. **A list's rows land, on a touch screen.** Wherever a flicked or dragged list comes to rest, it settles with a row's top (or the list's own top) at the top of its pane, like a notched dial, so it feels as if it clicks into place. It's CSS `scroll-snap-type: y proximity`, but the browser counts a third of the pane as "near", and rows are about 100 to 130px tall, so in practice every stop lands on a row. That's why it's only for a finger (`pointer: coarse`): with a mouse wheel or trackpad it would undo small scrolls and turn each wheel notch into a whole row. The owner chose it as the bold option; the settle is the browser's own short movement after a stroke the reader made, so it's in DESIGN.md's Exceptions log (principle 8), and off with reduced motion. Articles never snap: in long text it would fight the reader.
 
+*Point 4 (rows that land) was taken out the next day: decision 0304.*
+
 **Considered and not taken.** Changing the scroll's own speed or friction: never, for the reason above.
 
 **Revisit if** readers find the pull too hard to start, or still land in the next article by accident.
