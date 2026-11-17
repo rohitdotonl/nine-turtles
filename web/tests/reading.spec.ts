@@ -160,11 +160,19 @@ test.describe("on a wide window", () => {
     await expect(text.getByRole("heading", { name: "What a slow reader keeps" })).toBeVisible();
     await expect(text.locator("blockquote")).toContainText("Reading is a conversation");
     // A quotation is upright, in the text's own ink, with a 2px line at its start (decision 0296).
+    const textInk = await text.evaluate((t) => getComputedStyle(t).color);
     const quote = await text.locator("blockquote").first().evaluate((q) => {
       const style = getComputedStyle(q);
-      return { slant: style.fontStyle, ink: style.color, text: getComputedStyle(q.closest(".article-text")!).color, line: style.borderInlineStartWidth };
+      return { slant: style.fontStyle, ink: style.color, line: style.borderInlineStartWidth };
     });
-    expect(quote).toEqual({ slant: "normal", ink: quote.text, text: quote.text, line: "2px" });
+    expect(quote).toEqual({ slant: "normal", ink: textInk, line: "2px" });
+    // The writer's pull quote keeps its mark: centred, bigger than the text but under a heading, with no quotation line (decision 0297).
+    const pull = await text.locator(".pull-quote").evaluate((q) => {
+      const style = getComputedStyle(q);
+      const size = (e: Element) => parseFloat(getComputedStyle(e).fontSize);
+      return { align: style.textAlign, line: style.borderInlineStartWidth, bigger: size(q) > size(q.parentElement!), underHeading: size(q) < size(q.parentElement!.querySelector("h2")!) };
+    });
+    expect(pull).toEqual({ align: "center", line: "0px", bigger: true, underHeading: true });
     await expect(text.getByRole("table")).toBeVisible();
     await expect(text.locator("pre")).toContainText("read(book, slowly=True)");
     const image = article(page).locator('img[alt="A river drawn as three blue lines"]');
