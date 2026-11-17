@@ -5,7 +5,8 @@
 // finger lets go, set only in `web/src/lib/swipeMotion.ts` (decision 0274),
 // and a slow wait's breathing dots, set only in `web/src/lib/breathe.ts`
 // (decision 0287); each must leave it out for a reader who asks for reduced
-// motion. (The running title moves only as the reader scrolls, decision 0302.)
+// motion. A list's rows landing after a flick (decision 0303) snaps only in
+// `web/src/rows-land.css`, and only without reduced motion. (The running title moves only as the reader scrolls, decision 0302.)
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -35,6 +36,9 @@ const cssRules = [
   [/(?<![\w-])(-webkit-)?(animation|transition)(-[a-z-]+)?\s*:/g, "an animation or transition"],
   [/scroll-behavior\s*:\s*smooth/g, "smooth scrolling"],
 ];
+const snapRules = [[/scroll-snap-type\s*:/g, "scroll snapping (only in rows-land.css, decision 0303)"]];
+/** The one place rows may snap (decision 0303): only for a reader who hasn't asked for reduced motion. */
+const snaps = join(root, "web/src/rows-land.css");
 // `node scripts/check-motion.mjs website` checks only the website, for the
 // website's own part of scripts/check.sh (decision 0066).
 const websiteOnly = process.argv[2] === "website";
@@ -60,11 +64,14 @@ for (const file of websiteOnly ? [] : allowed) {
     problems.push(`${relative(root, file)}: its motion must stop for a reader who asks for reduced motion`);
   }
 }
+if (!websiteOnly && !readFileSync(snaps, "utf8").includes("@media (prefers-reduced-motion: no-preference)")) {
+  problems.push(`${relative(root, snaps)}: rows may snap only for a reader who hasn't asked for reduced motion`);
+}
 for (const file of websiteOnly ? [] : files(join(root, "web/src"), [".svelte", ".ts", ".js", ".css", ".html"])) {
   if (file.endsWith(".test.ts") || allowed.includes(file)) continue;
   scan(file, sourceRules);
-  // Also name the source file a built style came from, so it's easy to find.
-  if (file.endsWith(".css") || file.endsWith(".svelte")) scan(file, cssRules);
+  // Also name the source file a built style came from, so it's easy to find (rows-land.css may snap).
+  if (file.endsWith(".css") || file.endsWith(".svelte")) scan(file, file === snaps ? cssRules : [...cssRules, ...snapRules]);
 }
 
 if (problems.length > 0) {

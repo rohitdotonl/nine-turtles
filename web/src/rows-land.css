@@ -1,0 +1,17 @@
+/*
+  Rows that land (decision 0303): a list flicked up or down settles with a
+  row's top at the pane's top, never half a title, as a notched dial does.
+  Only near a row ("proximity"), so a slow drag stops where the finger does,
+  and the list's own top stays a place to land. The settle is the browser's
+  own and short; with reduced motion, rows don't snap at all (DESIGN.md →
+  Exceptions log). Only here may anything snap (`scripts/check-motion.mjs`).
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .scroller:has(.item-list) {
+    scroll-snap-type: y proximity;
+  }
+  .scroller:has(.item-list) > :first-child,
+  .item-list > li {
+    scroll-snap-align: start;
+  }
+}

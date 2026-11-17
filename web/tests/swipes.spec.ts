@@ -167,7 +167,7 @@ test("a short swipe, or an up-and-down stroke, changes nothing; swiped right, a 
   await expect(home(page)).toBeVisible();
 });
 
-test("in an article, a pull past its end opens the next one and past its top the previous one: the article follows the finger with the next hung beyond, and letting go carries on; a flick counts; a swipe left does nothing; a swipe right goes back", async ({ page }) => {
+test("in an article, a pull past its end opens the next one and past its top the previous one: the article follows the finger with the next hung beyond, and letting go carries on; a flick doesn't count; a swipe left does nothing; a swipe right goes back", async ({ page }) => {
   await openBlog(page);
   const titles = (await rows(page).locator(".title").allTextContents()).map((title) => title.replace(/, unread$/, "").trim());
   await rows(page).nth(0).click();
@@ -234,11 +234,33 @@ test("in an article, a pull past its end opens the next one and past its top the
   await settled(pane(page));
   await expect(heading(titles[0])).toBeVisible();
 
-  // A quick flick up past the end counts, short as it is.
+  // A pull is firm (decision 0303): a quick flick up past the end doesn't count, short as it is; it slides back.
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   const flick = await Finger.down(page, middle.x, box.y + box.height - 60);
   await flick.move(0, -60, 0, 2);
   await flick.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+  // Nor does a scroll that reaches the end on its way: only a stroke that starts there pulls. (The article is
+  // made long enough to scroll first, so the stroke starts away from its end.)
+  await text.evaluate((area) => {
+    const room = document.createElement("div");
+    room.style.height = `${2 * area.clientHeight}px`;
+    area.prepend(room);
+    area.scrollTop = 0;
+  });
+  expect(await text.evaluate((area) => area.scrollTop + area.clientHeight < area.scrollHeight - 2)).toBe(true);
+  const reading = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
+  await reading.move(0, -200);
+  await expect(peek(page)).toHaveCount(0);
+  await reading.up();
+  await settled(pane(page));
+  await expect(heading(titles[0])).toBeVisible();
+  // A new stroke from the end pulls, and far enough, opens the next.
+  const again = await Finger.down(page, middle.x, box.y + box.height - 60);
+  await again.move(0, -200);
+  await again.up();
   await expect(heading(titles[1])).toBeVisible();
   await settled(pane(page));
 
@@ -432,4 +454,23 @@ test("after a swipe a key still presses; zoomed in, a stroke moves the page; bes
   await swipe(page, home(page), 160, 40);
   await expect(back).toBeVisible();
   await expect(home(page)).toBeVisible();
+});
+
+test("a list's rows land after a flick, and with reduced motion they don't (decision 0303); an article's text never snaps", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openBlog(page);
+  const list = page.locator(".scroller").filter({ has: page.locator(".item-list") });
+  const snap = () => list.evaluate((pane) => getComputedStyle(pane).scrollSnapType);
+  const align = () => rows(page).first().evaluate((row) => getComputedStyle(row.closest("li")!).scrollSnapAlign);
+  // "y proximity", as the browser writes it.
+  expect(await snap()).toBe("y");
+  expect(await align()).toBe("start");
+  await rows(page).nth(0).click();
+  const text = pane(page).locator(".reading-scroller");
+  expect(await text.evaluate((area) => getComputedStyle(area).scrollSnapType)).toBe("none");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goBack();
+  await expect(rows(page).first()).toBeVisible();
+  expect(await snap()).toBe("none");
+  expect(await align()).toBe("none");
 });
