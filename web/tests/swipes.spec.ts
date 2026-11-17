@@ -458,7 +458,16 @@ test("a list pulled down past its top shows the nine waiting above it, one more 
   await expect(nine).toHaveCount(0);
   await expect(rows(page)).toHaveCount(3);
 
-  // Scrolled down, a pull down is only a scroll; sideways is the row's swipe, never a pull.
+  // Scrolled down, a stroke down is only a scroll, even one that reaches the top: no pull.
+  await list.evaluate((node: HTMLElement) => ((node.style.paddingBottom = "3000px"), (node.scrollTop = 200)));
+  const scrolled = await Finger.down(page, middle, box.y + 60);
+  await scrolled.move(0, 300);
+  await expect(nine).toHaveCount(0);
+  expect(await list.evaluate((node: HTMLElement) => node.style.transform)).toBe("");
+  await scrolled.up();
+  await list.evaluate((node: HTMLElement) => ((node.style.paddingBottom = ""), (node.scrollTop = 0)));
+
+  // Sideways is the row's swipe, never a pull.
   const row = (await rows(page).nth(1).boundingBox())!;
   const sideways = await Finger.down(page, row.x + row.width - 60, row.y + row.height / 2);
   await sideways.move(-60, 20);

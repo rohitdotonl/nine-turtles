@@ -10,6 +10,7 @@
   swipes'.
 -->
 <script lang="ts">
+  import { HOLD_MS } from "./sidebarDrag";
   import { DECIDE, leftAlone, somethingOpen, zoomed } from "./swipe";
   import { letGo, pull } from "./swipeMotion";
   import { lastChecked } from "./times";
@@ -41,6 +42,7 @@
     if (!area) return;
     const within = area;
     let from = { x: 0, y: 0 };
+    let startedAt = 0;
     let above: number | undefined;
     let ignored = false;
     let decided = false;
@@ -50,9 +52,11 @@
     const start = (event: TouchEvent) => {
       const touch = event.touches[0];
       from = { x: touch?.clientX ?? 0, y: touch?.clientY ?? 0 };
+      startedAt = event.timeStamp;
       decided = false;
+      // Only a stroke that starts with the list at its top can pull: one that starts scrolled down only scrolls.
       above = within.scrollTop <= 0 ? from.y : undefined;
-      ignored = settling || closing || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
+      ignored = above === undefined || settling || closing || event.touches.length > 1 || zoomed() || leftAlone(event.target, within);
     };
     const move = (event: TouchEvent) => {
       const touch = event.touches[0];
@@ -60,11 +64,12 @@
       const { clientX: x, clientY: y } = touch;
       if (!decided) {
         if (Math.abs(x - from.x) < DECIDE && Math.abs(y - from.y) < DECIDE) return;
-        if (Math.abs(x - from.x) > Math.abs(y - from.y)) return void (ignored = true);
+        // Sideways is the swipes'; held long enough, the row's menu opened, and the stroke is the menu's.
+        if (Math.abs(x - from.x) > Math.abs(y - from.y) || somethingOpen() || event.timeStamp - startedAt > HOLD_MS) return void (ignored = true);
         decided = true;
       }
-      // Counted from where the finger was once the list could go no higher, so the list follows it exactly.
-      above = within.scrollTop <= 0 ? Math.min(above ?? y, y) : undefined;
+      // Counted from the furthest up the finger has been, so turning back only ever takes the pull away; scrolled down, no pull.
+      if (above !== undefined) above = within.scrollTop <= 0 ? Math.min(above, y) : undefined;
       const was = pulled;
       const down = above !== undefined && y > above ? y - above : 0;
       pulled = Math.min(ROOM, down * GIVE);
