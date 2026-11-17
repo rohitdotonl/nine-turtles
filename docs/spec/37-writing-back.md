@@ -11,15 +11,17 @@ V1, item 2). Its look gets a refinement round.*
   centred button, **Write back** (with an arrow beside it for the other
   ways back, below): an outlined button with a
   paper-plane icon, as Mark all as read ends a list, so it's quieter than
-  the writing (decision 0242; solid ink before). Under it, in small muted
-  type, who it goes to, named in full by the name in the sidebar, and the
-  address it writes to: "to Maya Chen, maya@example.com" (the owner's core
-  path, points 6 and 7, decision 0183). The button stays one short word
+  the writing (decision 0242; solid ink before), and at an article's end
+  small and soft, a faint edge and the second ink, still 44px tall
+  (decision 0298). Nothing under it names who it goes to or their address:
+  an address is never printed on the article's page, where a screenshot or
+  a shared screen would carry it (decision 0298, replacing 0183's "to Maya
+  Chen, maya@example.com"); their page still shows it. The button stays one short word
   whatever the name's length, so a long name never swells it into a block
   (decision 0260; it said "Write back to Maya Chen" before); screen readers
-  still hear "Write back to Maya Chen" as the button's name. It's also one press from the
-  text, a paper plane beside Save in the article's top bar (on a phone, in
-  its bottom toolbar), on the keyboard, **`w`** (section 19), and in a row's
+  still hear "Write back to Maya Chen" as the button's name. It's never in
+  a bar (decision 0298, replacing 0214's paper plane there); it's on the
+  keyboard, **`w`** (section 19), and in a row's
   own menu in the list, which opens the article and starts it (section 6;
   decision 0214). An article of a place you no longer follow (one kept only
   in Saved) has none: there's no person to write to.

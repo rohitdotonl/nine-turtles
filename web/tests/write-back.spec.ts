@@ -70,10 +70,11 @@ test("Write back asks once for an address, keeps it on their page, then opens th
   await expect(link).toHaveAttribute("href", /^mailto:ivy@ivy\.example\?subject=Re%3A%20/);
   // The keyboard stays on Write back, now a link to the email app.
   await expect(link).toBeFocused();
-  await expect(pane(page)).toContainText("ivy@ivy.example");
+  // Their address is never printed on the article's page (decision 0298): it's on their page, below.
+  await expect(pane(page)).not.toContainText("ivy@ivy.example");
 
-  // The paper plane beside Save has it too, one press from the text (decision 0214); More doesn't any more.
-  await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toHaveAttribute("title", "Write back (W)");
+  // Write back is never in a bar (decision 0298), nor in More.
+  await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "More actions" }).click();
   await expect(page.getByRole("menuitem", { name: /Write back/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
@@ -256,8 +257,6 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(comment).toHaveAttribute("target", "_blank");
   await expect(pane(page).getByText(`on ${name}.example`, { exact: true })).toBeVisible();
 
-  // The paper plane still writes an email, whatever the main button does.
-  await expect(pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true })).toBeVisible();
 
   // Back to email from the arrow: Email app opens it, and Write back is the main button again.
   await arrow.click();
@@ -313,9 +312,10 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   await page.locator(".item-row").first().click();
-  const plane = pane(page).locator(".reading-bar").getByRole("button", { name: "Write back", exact: true });
+  /** W, from anywhere in the article: Write back is never in a bar (decision 0298). */
+  const plane = { click: async () => { await pane(page).locator(".article-title").focus(); await page.keyboard.press("w"); } };
 
-  // With no address known, the paper plane opens the box; Escape puts it away, as Not now does, and the keyboard goes back to Write back.
+  // With no address known, W opens the box; Escape puts it away, as Not now does, and the keyboard goes back to Write back.
   await plane.click();
   const field = pane(page).getByRole("textbox", { name: "Their email address" });
   await expect(field).toBeFocused();
@@ -333,7 +333,7 @@ test("Write back answers where it was pressed, names a post with no title, and E
     "mailto:notes@notes.example?subject=Re%3A%20Walked%20to%20the%20river%20before%20breakfast%20and%20watched%20the%20herons%E2%80%A6",
   );
 
-  // The paper plane at the top, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229), in one line (decision 0265).
+  // W, with the line under Write back below the screen: the reading area's foot says the email app is opening (decision 0229), in one line (decision 0265).
   await plane.click();
   const note = pane(page).locator(".away");
   await expect(note).toContainText("Opening your email app…");

@@ -261,15 +261,15 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
-    // After the way back to the list (decision 0275), the actions are quiet icons, each named in its tooltip with its key;
-    // the way to the publisher comes first, then Share, Save, Write back (a person's, decision 0214) and More (decisions 0038, 0293).
+    // After the way back to the list (decision 0275), the way to the publisher in words, then quiet icons, each named in its tooltip
+    // with its key: Share, Save and More (decisions 0038, 0293); Write back is never in the bar (decision 0298).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Back to Reading Room", "View original", "Copy link", "Save", "Write back", "More actions"]);
+    expect(order).toEqual(["Back to Reading Room", "View original", "Copy link", "Save", "More actions"]);
     await expect(article(page).getByRole("button", { name: "Copy link" }).first()).toHaveAttribute("title", "Copy link (C)");
-    expect((await original.innerText()).trim()).toBe("");
+    expect((await original.innerText()).trim()).toBe("View original");
     await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
     // More holds Text and page, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, each with its icon, their keys shown beside them.
@@ -674,9 +674,11 @@ test.describe("on a wide window", () => {
     expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(6);
   });
 
-  test("the top bar is solid in the page's color and scrolls away with the title; Star and View original wait at the end", async ({ page, context }) => {
+  test("the top bar is solid in the page's color, stays, and names the article once its title has gone; Star and View original wait at the end", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
+    // A short window, so even a short article scrolls its title away.
+    await page.setViewportSize({ width: 1280, height: 420 });
     await openFirst(page);
     const bar = article(page).locator(".reading-bar");
     const scroller = article(page).locator(".reading-scroller");
@@ -689,13 +691,24 @@ test.describe("on a wide window", () => {
     expect(barColor).toBe(paperColor);
     expect(barColor).not.toMatch(/0\.\d+\)$/);
     expect(blur).toBe("none");
-    // The bar is the article's first line, its edges the pane's (bar the scrollbar), and it scrolls away with the title (decision 0263).
+    // The bar is the article's first line, its edges the pane's (bar the scrollbar), and it stays at the top (decision 0298, replacing 0263).
     const [barBox, scrollerBox] = [(await bar.boundingBox())!, (await scroller.boundingBox())!];
     expect(Math.abs(barBox.x - scrollerBox.x)).toBeLessThan(1);
     expect(Math.abs(barBox.y - scrollerBox.y)).toBeLessThan(1);
-    await scroller.evaluate((element) => element.scrollBy(0, 120));
-    expect((await bar.boundingBox())!.y).toBeLessThan(scrollerBox.y - 100);
-    // No hairline at the window's top: nothing stays above the text for it to part from.
+    // At the top it names nothing and has no hairline: the title is right there.
+    const running = bar.locator(".running-title");
+    await expect(running).toHaveCount(0);
+    await expect(bar).toHaveCSS("border-bottom-width", "0px");
+    await scroller.evaluate((element) => element.scrollBy(0, 300));
+    expect(Math.abs((await bar.boundingBox())!.y - scrollerBox.y)).toBeLessThan(1);
+    // Once the title has gone up under it, the bar names the article and who it's from, over a hairline; screen readers don't hear it twice.
+    await expect(running).toContainText(await article(page).locator(".article-title").innerText());
+    await expect(running).toHaveAttribute("aria-hidden", "true");
+    await expect(bar).toHaveCSS("border-bottom-width", "1px");
+    // Back at the top, it goes at once.
+    await scroller.evaluate((element) => element.scrollTo(0, 0));
+    await expect(running).toHaveCount(0);
+    // No hairline at the window's top: nothing stays above the bar for it to part from.
     await expect(scroller).toHaveCSS("border-top-width", "0px");
     // At the end, Save and View original wait under the closing rule, Save the same toggle as the bar's.
     await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
@@ -842,7 +855,7 @@ test.describe("on a wide window", () => {
     expect(scroller!.x + scroller!.width - (text!.x + text!.width)).toBeGreaterThanOrEqual(56);
   });
 
-  test("a summary-only article ends with a small centred note under the closing rule, and a 44px row to read it on the publisher's site", async ({ page }) => {
+  test("a summary-only article ends with a small centred note under the closing rule, and the page's one main button to read it on the publisher's site", async ({ page }) => {
     await openRoom(page);
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
@@ -852,10 +865,11 @@ test.describe("on a wide window", () => {
     await expect(note).toHaveCSS("font-style", "normal");
     await expect(note).toHaveCSS("text-align", "center");
     await expect(note).toHaveCSS("font-size", /^(13|15)px$/);
-    // Only the link is underlined.
+    // The way on is the page's one main button, filled in a deep tone of the ink (decision 0298).
     expect(await note.evaluate((element) => getComputedStyle(element).textDecorationLine)).toBe("none");
     const link = note.getByRole("link", { name: "Read the rest on Reading Room" });
-    await expect(link).toHaveCSS("text-decoration-line", "underline");
+    await expect(link).toHaveClass(/btn-primary/);
+    await expect(link).toHaveCSS("text-decoration-line", "none");
     // A row of its own under the sentence, centred, at least 44px tall to press, its words on one line where they fit.
     await expect(link).toHaveCSS("display", "flex");
     const [box, sentence] = await Promise.all([link.boundingBox(), note.locator("span").first().boundingBox()]);
@@ -875,6 +889,20 @@ test.describe("on a wide window", () => {
     // Then only the credit line that shows on paper alone (decision 0236).
     expect(await tools.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
     await expect(article(page).locator(".print-credit")).toBeHidden();
+  });
+
+  test("a whole article ends with a small ◆ after its last words, never copied; a summary has none (decision 0298)", async ({ page }) => {
+    await openRoom(page);
+    await row(page, "The pleasure of a slow letter").click();
+    const ending = article(page).locator(".article-text .ends");
+    await expect(ending).toHaveCount(1);
+    expect(await ending.evaluate((element) => getComputedStyle(element, "::after").content)).toContain("◆");
+    // Drawn, not written: it's not in the text, so it's never copied, highlighted or read aloud.
+    expect(await article(page).locator(".article-text").innerText()).not.toContain("◆");
+    await toList(page);
+    await row(page, "Only the first page").click();
+    await expect(title(page, "Only the first page")).toBeVisible();
+    await expect(article(page).locator(".article-text .ends, .article-text .ends-after")).toHaveCount(0);
   });
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {

@@ -82,14 +82,13 @@ working even if the title or name changes later.
 
 ## Reading
 
-Choose an article and it opens, with the whole window to itself. Across its top are **Open
-original** (the publisher's own page), **Share**, **Save**,
-**Write back** (a paper plane, for a person) and **More**, which holds **Text and page** (how the text looks). The title is
+Choose an article and it opens, with the whole window to itself. Across its top are **View
+original ↗** (the publisher's own page), **Share**, **Save** and **More**, which holds **Text and page** (how the text looks). On a computer the bar stays, and once you've scrolled past the title it shows the title and who it's from. **Write back**, for a person, waits at the end of the article (or press <kbd>W</kbd>). The title is
 centred, large when it's short and smaller when it's long, and under it is who
 wrote it ("by Asha Rao") with the day, small, beneath. The writer's name
 opens everything they've written, with **‹ Article** to come
 back; their picture and name at the top of that list open the page about
-them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Share, Write back
+them, as does **Info about** in More. On a phone they're in the bar at the bottom: More, Share
 and Save on the left, then Previous and Next on the right, where your thumb rests. A long article opens where you stopped last time, and until you finish it, its row in the list says how far you got, such as "Half read".
 
 A footnote's number opens its note in a small card just under the line, so

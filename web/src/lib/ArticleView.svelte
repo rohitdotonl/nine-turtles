@@ -66,6 +66,7 @@
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { markPauses } from "./pauses";
+  import { fadeIn } from "./fadeIn";
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
@@ -138,7 +139,10 @@
     titleGone = false;
     if (phone || !title || !area) return;
     const bar = area.querySelector<HTMLElement>(".reading-bar");
-    const watch = new IntersectionObserver(([entry]) => (titleGone = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1), {
+    // Gone only once it's above the bar, not when it's below the window (a long scroll back up).
+    const watch = new IntersectionObserver(([entry]) => {
+      if (entry) titleGone = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1;
+    }, {
       root: area,
       rootMargin: `-${bar?.offsetHeight ?? 0}px 0px 0px 0px`,
     });
@@ -505,7 +509,7 @@
 
 {#snippet originalWords()}
   <!-- On a computer the way to the publisher says so in words, with its arrow (decision 0298). -->
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-1.5 px-3 text-ink-2"
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-1.5 px-3 text-ink-2"
     >View original<Icon name="open" /></a
   >
 {/snippet}
@@ -556,8 +560,8 @@
       -->
       <div class={["reading-bar pane-bar over-text sticky top-0 z-10 -mx-5 gap-2 px-2 md:-mx-16", titleGone && "scrolled"]}>
         {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink-0 text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
-        <!-- Once the title has scrolled away, the bar names what you're reading and whose it is (decision 0298): it appears at once, never slides; a copy, so hidden from screen readers. -->
-        <p class="running-title" aria-hidden="true">{#if titleGone}<span>{article.title || "Untitled"}</span><small>{article.feedTitle}</small>{/if}</p>
+        <!-- Once the title has scrolled away, the bar names what you're reading and whose it is (decision 0298): it fades in over 0.15 seconds (at once with reduced motion), never slides; a copy, so hidden from screen readers. -->
+        {#if titleGone}<p class="running-title" aria-hidden="true"><span class="running-words" use:fadeIn><span>{article.title || "Untitled"}</span><small>{article.feedTitle}</small></span></p>{/if}
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
         {/if}
@@ -766,18 +770,24 @@
     line-height: 1.25;
     text-align: center;
   }
-  .running-title > * {
+  .running-words {
+    display: flex;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+  .running-words > * {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .running-title > span {
+  .running-words > span {
     font-family: var(--reading-title-font, var(--font-display));
     font-size: var(--text-ui);
     color: var(--ink);
   }
-  .running-title > small {
+  .running-words > small {
     font-size: var(--text-date);
     color: var(--muted);
   }

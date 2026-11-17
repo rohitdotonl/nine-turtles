@@ -500,8 +500,7 @@
       {#if way === "comment"}
         <p class="to" aria-hidden="true">on {talkSite}</p>
       {:else if article}
-        <!-- The name only: their address is never printed on the article's page, where a screenshot or a shared screen would carry it (decision 0298). -->
-        <p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>
+        <!-- At an article's end, no line under the button (decision 0298): its name says who it goes to to screen readers, and the address is never printed on the page. -->
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
@@ -577,6 +576,19 @@
   /* Its 44px "Didn't open?" already holds it apart from the links around it. */
   .in-row > .opening-line:not(.sr-only) {
     margin: 0;
+  }
+  /*
+    At an article's end (decision 0298): small and soft, a faint edge and the
+    second ink, still a 44px target, so it's the way on without being the
+    loudest thing under the writing.
+  */
+  .write-back:not(.on-page, .in-row) {
+    margin-top: 0.75rem;
+  }
+  .write-back:not(.on-page, .in-row) :is(.split > .btn, .split :global(.split-arrow)) {
+    border-color: var(--line);
+    color: var(--ink-2);
+    font-size: var(--text-meta);
   }
   /* A long name wraps rather than running off a phone. */
   .write-back > .btn {

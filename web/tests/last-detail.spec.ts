@@ -70,14 +70,13 @@ test.describe("a messy feed", () => {
     await expect(text).toContainText("Scroll the table sideways to see all 12 columns.");
     await expect(text.getByRole("table")).toHaveAttribute("tabindex", "0");
 
-    // Write back says who it's to, under the button.
-    // The button says "Write back"; who it's to is said aloud with it, and shown under it.
+    // The button says "Write back"; who it's to is said aloud with it, and nothing under it names them or their address (decision 0298).
     const button = pane(page).getByRole("button", { name: `Write back to Messy ${name}` });
     expect(await button.evaluate((element) => {
       const shown = element.cloneNode(true) as HTMLElement;
       shown.querySelectorAll(".sr-only").forEach((hidden) => hidden.remove());
       return shown.textContent?.trim();
     })).toBe("Write back");
-    await expect(pane(page).locator(".write-back .to")).toHaveText(`to Messy ${name}`);
+    await expect(pane(page).locator(".write-back .to")).toHaveCount(0);
   });
 });

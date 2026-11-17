@@ -27,12 +27,13 @@ function apart(a: string, b: string): number {
   for (let i = 1; i <= a.length; i++) {
     const row = [i];
     for (let j = 1; j <= b.length; j++) {
-      row[j] = Math.min(previous[j] + 1, row[j - 1] + 1, previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      const same = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min((previous[j] ?? 0) + 1, (row[j - 1] ?? 0) + 1, (previous[j - 1] ?? 0) + same);
     }
     if (Math.min(...row) > 2) return 3;
     previous = row;
   }
-  return previous[b.length];
+  return previous[b.length] ?? 3;
 }
 
 /**

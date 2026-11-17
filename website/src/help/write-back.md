@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-16
+updated: 2026-11-17
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -26,17 +26,15 @@ where the writer's other readers can see it, comment on their site instead
 
 ## Write back
 
-1. Read to the end of the article and press **Write back** (under it,
-   nine turtles says who it goes to: their name as it is in your sidebar). You don't have to scroll there:
-   the paper plane beside **Save** at the top of the article (on a phone,
-   in the bar at the bottom) does the same, and so does <kbd>W</kbd>. In a
+1. Read to the end of the article and press **Write back**. You don't have to scroll there:
+   <kbd>W</kbd> does the same from anywhere in the article. In a
    list, right-click an article (or press and hold it on a phone) and
    choose **Write back**.
 2. Your own email app opens with their address, and a subject line of
    "Re:" and the article's title (for a short post with no title, its
    first words). nine turtles says "Opening your email app…" under the
    button, or at the bottom of the screen if that button is out of sight
-   (when you pressed the paper plane or <kbd>W</kbd>, say). If nothing
+   (when you pressed <kbd>W</kbd>, say). If nothing
    opens, or the wrong app does, see below.
 3. Write what you'd like to say, and send it as you send any email.
 
@@ -66,8 +64,7 @@ has every way to answer them:
   comments are, it goes straight there; otherwise to the article's page.
 
 Whatever you choose becomes the button for that person, on every device:
-**Write back**, **Copy address** or **Comment**. The paper plane at the top
-and <kbd>W</kbd> always write an email. To change it, choose another way
+**Write back**, **Copy address** or **Comment**. <kbd>W</kbd> always writes an email. To change it, choose another way
 from the arrow.
 
 ## Write back about a line
@@ -104,7 +101,7 @@ write to them about anything, with no subject. To change it, press
 
 Some people you read you'll never write to. Open their page, press
 **Settings**, and switch **Write back** off. The button at the end of their
-articles, the paper plane, <kbd>W</kbd> and **Write to** on their page all
+articles, <kbd>W</kbd> and **Write to** on their page all
 go; they stay with your people, and any address nine turtles knows is kept
 for if you switch it on again.
 
