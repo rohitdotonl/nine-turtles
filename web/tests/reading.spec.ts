@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
 import { appReady, follow, nothingToPickUp, openAppearance, openReadingRoom, signIn, tabTo } from "./screens";
 
@@ -261,23 +261,22 @@ test.describe("on a wide window", () => {
     await expect(title(page, "Only the first page")).toBeVisible();
 
     const original = article(page).getByRole("link", { name: "View original" }).first();
-    // After the way back to the list (decision 0275), the way to the publisher in words, then quiet icons, each named in its tooltip
-    // with its key: Share, Save and More (decisions 0038, 0293); Write back is never in the bar (decision 0298).
+    // Two and two, quiet icons each named in its tooltip with its key (decision 0299): the way back to the list (decision 0275)
+    // and the way to the publisher on the left, Save and More on the right; Write back is never in the bar (decision 0298).
     const order = await article(page)
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Back to Reading Room", "View original", "Copy link", "Save", "More actions"]);
-    await expect(article(page).getByRole("button", { name: "Copy link" }).first()).toHaveAttribute("title", "Copy link (C)");
-    expect((await original.innerText()).trim()).toBe("View original");
+    expect(order).toEqual(["Back to Reading Room", "View original", "Save", "More actions"]);
+    expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
-    // More holds Text and page, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, each with its icon, their keys shown beside them.
+    // More holds Copy link (Share where there's a share menu), Text and page, Mark unread, Add a note, then, apart, Info about them and Hide articles about…, each with its icon, their keys shown beside them.
     const more = article(page).getByRole("button", { name: "More actions" });
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Text and page/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -295,7 +294,8 @@ test.describe("on a wide window", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     await openFirst(page);
-    await article(page).getByRole("button", { name: "Copy link" }).first().click();
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menu", { name: "More actions" }).getByRole("menuitem", { name: /Copy link/ }).click();
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
   });
@@ -306,11 +306,14 @@ test.describe("on a wide window", () => {
     const more = article(page).getByRole("button", { name: "More actions" });
     const panel = page.getByRole("dialog", { name: "Reading appearance" });
     const menu = page.getByRole("menu", { name: "More actions" });
-    // With only a keyboard: Enter on More, the first row is Text and page, Enter opens the panel on its first control.
+    // With only a keyboard: Enter on More, the first row is Copy link, the next Text and page, and Enter opens the panel on its first control.
     await more.focus();
     await page.keyboard.press("Enter");
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
-    await expect(menu.getByRole("menuitem").first()).toHaveText(/Text and page/);
+    await expect(menu.getByRole("menuitem").first()).toHaveText(/Copy link/);
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem").nth(1)).toHaveText(/Text and page/);
+    await expect(menu.getByRole("menuitem").nth(1)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(panel).toBeVisible();
     await expect(panel.getByRole("button", { name: "Smaller text" })).toBeFocused();
@@ -327,17 +330,19 @@ test.describe("on a wide window", () => {
   });
 
   test("elsewhere than a Mac, Share is three linked dots (decision 0293)", async ({ page }) => {
-    const shareIcon = async () => article(page).getByRole("button", { name: "Copy link" }).locator("svg").evaluate((svg) => svg.querySelectorAll("circle").length);
     await openRoom(page);
     await openFirst(page);
-    expect(await shareIcon()).toBe(3);
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    const icon = page.getByRole("menu", { name: "More actions" }).getByRole("menuitem", { name: /Copy link/ }).locator("svg");
+    expect(await icon.evaluate((svg) => svg.querySelectorAll("circle").length)).toBe(3);
   });
 
   test("on a Mac, Share is Apple's box with an arrow (decision 0293)", async ({ page }) => {
     await page.addInitScript(() => Object.defineProperty(Navigator.prototype, "platform", { get: () => "MacIntel" }));
     await openRoom(page);
     await openFirst(page);
-    const icon = article(page).getByRole("button", { name: "Copy link" }).locator("svg");
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    const icon = page.getByRole("menu", { name: "More actions" }).getByRole("menuitem", { name: /Copy link/ }).locator("svg");
     expect(await icon.evaluate((svg) => [svg.querySelectorAll("circle").length, svg.querySelectorAll("path").length])).toEqual([0, 3]);
   });
 
@@ -637,16 +642,19 @@ test.describe("on a wide window", () => {
         return { left: own.left - box.left, right: box.left + area.clientWidth - own.right };
       });
     expect(Math.abs(room.left - room.right)).toBeLessThan(4);
-    // The bar stands over the text column (decision 0277, replacing the pane's edges of 0050): its tools sit
-    // together at the right, View original first, More's icon ending on the text's right edge, so on a very
-    // wide window they stay within reach of the words; the way back starts on its left edge.
-    const first = (await article(page).getByRole("link", { name: "View original" }).first().boundingBox())!;
-    const last = (await article(page).getByRole("button", { name: "More actions" }).boundingBox())!;
-    const back = (await article(page).getByRole("button", { name: /^Back to / }).boundingBox())!;
-    expect(last.x - (first.x + first.width)).toBeLessThan(3 * 44 + 4 * 8 + 1);
+    // The bar stands over the text column (decision 0277, replacing the pane's edges of 0050), two and two (decision 0299):
+    // the way back on the text's left edge with View original beside it, Save beside More, More's icon ending on the
+    // text's right edge, so on a very wide window they stay within reach of the words.
+    const bar = article(page).locator(".reading-bar");
+    const original = (await bar.getByRole("link", { name: "View original" }).boundingBox())!;
+    const save = (await bar.getByRole("button", { name: "Save", exact: true }).boundingBox())!;
+    const last = (await bar.getByRole("button", { name: "More actions" }).boundingBox())!;
+    const back = (await bar.getByRole("button", { name: /^Back to / }).boundingBox())!;
+    expect(original.x - (back.x + back.width)).toBeLessThan(9);
+    expect(last.x - (save.x + save.width)).toBeLessThan(9);
     expect(Math.abs(last.x + last.width - 12 - (text.x + text.width))).toBeLessThan(2);
-    expect(Math.abs(back.x + 4 - text.x)).toBeLessThan(2);
-    expect(Math.abs(first.y - last.y)).toBeLessThan(2);
+    expect(Math.abs(back.x + 12 - text.x)).toBeLessThan(2);
+    expect(Math.abs(original.y - last.y)).toBeLessThan(2);
   });
 
   test("every pane shares one top line, and a toolbar's focus ring stays clear of the window's top", async ({ page }) => {
@@ -666,9 +674,9 @@ test.describe("on a wide window", () => {
     const line = await middle(".list-pane > .pane-bar button");
     await openFirst(page);
     expect(await bottomsOf(".reading-bar")).toEqual([bottoms[0]]);
-    expect(Math.abs((await middle(".reading-bar button[aria-label='Copy link']")) - line)).toBeLessThan(1);
+    expect(Math.abs((await middle(".reading-bar button[aria-label='Save']")) - line)).toBeLessThan(1);
     // A toolbar button's ring is drawn inside its own edge, so it never touches the window's top.
-    const aa = article(page).getByRole("button", { name: "Copy link" });
+    const aa = article(page).locator(".reading-bar").getByRole("button", { name: "Save", exact: true });
     await tabTo(page, aa);
     await expect(aa).toHaveCSS("outline-offset", "-2px");
     // (5, not 6: the bar now stays at the top, decision 0298, and a sticky bar may sit half a pixel off the whole.)
@@ -702,9 +710,12 @@ test.describe("on a wide window", () => {
     await expect(bar).toHaveCSS("border-bottom-width", "0px");
     await scroller.evaluate((element) => element.scrollBy(0, 300));
     expect(Math.abs((await bar.boundingBox())!.y - scrollerBox.y)).toBeLessThan(1);
-    // Once the title has gone up under it, the bar names the article and who it's from, over a hairline; screen readers don't hear it twice.
-    await expect(running).toContainText(await article(page).locator(".article-title").innerText());
+    // Once the title has gone up under it, the bar names the article over a hairline, in the text's true middle
+    // (decision 0299); screen readers don't hear it twice.
+    await expect(running).toHaveText((await article(page).locator(".article-title").textContent())!.trim());
     await expect(running).toHaveAttribute("aria-hidden", "true");
+    const centre = async (locator: Locator) => { const box = (await locator.boundingBox())!; return box.x + box.width / 2; };
+    expect(Math.abs((await centre(running.locator(".running-words"))) - (await centre(article(page).locator(".article-text"))))).toBeLessThan(1.5);
     await expect(bar).toHaveCSS("border-bottom-width", "1px");
     // Back at the top, it goes at once.
     await scroller.evaluate((element) => element.scrollTo(0, 0));

@@ -74,7 +74,7 @@ test.describe("on a wide window", () => {
     expect(await scrolled(page)).toBe(still);
   });
 
-  test("c copies the open article's link and says so, as Copy link does; its button shows its key", async ({ page, context }) => {
+  test("c copies the open article's link and says so, as Copy link does; its menu row shows its key", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await signedIn(page);
     await openReadingRoom(page);
@@ -83,7 +83,9 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("c");
     await expect(article(page).getByRole("status")).toHaveText("Link copied.");
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("https://reading-room.example/slow-letter");
-    await expect(article(page).getByRole("button", { name: "Copy link" })).toHaveAttribute("aria-keyshortcuts", "c");
+    // Copy link, in More (decision 0299), shows its key beside it.
+    await article(page).getByRole("button", { name: "More actions" }).click();
+    await expect(page.getByRole("menu", { name: "More actions" }).getByRole("menuitem", { name: /Copy link/ })).toContainText("C");
   });
 
   test("Shift+O does nothing, and More marks only all as read (decision 0171)", async ({ page }) => {

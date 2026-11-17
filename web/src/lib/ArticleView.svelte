@@ -2,10 +2,11 @@
   The reading area (SPEC section 7): the article exactly as the publisher's
   feed gives it, cleaned by nine turtles and restyled in the reader's font and
   size. On a computer a quiet bar stands over the text column and stays at the
-  top (decision 0298): back to the list, then View original ↗ in words, Share
-  (Copy link on a computer), Save and More (…, holding Text and page, Mark
-  unread, Add a note and Hide, each with its icon; decision 0293); once the
-  title has scrolled away it names the article (RunningTitle). Write back is
+  top (decisions 0298, 0299): back to the list and View original ↗ on the
+  left, Save and More on the right (…, holding Share or Copy link, Text and
+  page, Mark unread, Add a note and Hide, each with its icon; decision 0293);
+  once the title has scrolled away it names the article in the middle
+  (RunningTitle). Write back is
   never in a bar: it ends the article, with Save and View original above it
   (EndTools). The writer's name under the title opens their list (decision
   0289). What was just done ("Link copied.") floats at the pane's foot. A
@@ -196,6 +197,8 @@
   let more: MenuGroup[] = $derived([
     {
       items: [
+        // On a computer Share (Copy link where there's no share menu) waits here, first (decision 0299); a phone has it in its bottom bar.
+        ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: "share" as const, shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
         { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
         { label: "Mark unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
@@ -483,13 +486,6 @@
   <Icon name="bookmark" size="alone" filled={article.starred} />
 {/snippet}
 
-{#snippet originalWords()}
-  <!-- On a computer the way to the publisher says so in words, with its arrow (decision 0298). -->
-  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-2 px-3 text-ink-2"
-    >View original<Icon name="open" /></a
-  >
-{/snippet}
-
 {#snippet original()}
   <a href={article.link} target="_blank" rel="noopener noreferrer" aria-label="View original" aria-describedby="new-tab-note" title={phone ? "View original" : tip("View original", "open-original")} class="btn-quiet btn-icon"
     ><Icon name="open" size="alone" /></a
@@ -530,22 +526,24 @@
     class={["reading-scroller scroll-gutter relative min-h-0 flex-1 overflow-y-auto bg-paper px-5 md:px-16", phone && "scroller", listNote || writeBackNote || said ? "pb-24" : "pb-8" /* room under the article's end for the floating note (decision 0229) */]}>
     {#if !phone}
       <!--
-        On a computer the bar is the article's first line and scrolls away with its title (decision 0263):
-        quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
-        publisher, then the reader's own tools. It stands over the text column, its way back on the text's left edge and its last icon on its right edge (decision 0277, replacing 0050).
+        On a computer the bar is the article's first line and stays at the top (decision 0298): quiet icons, each named
+        in its tooltip with its key, two and two (decision 0299): the ways out (back, the publisher) on the left, the
+        reader's own (Save, More) on the right. They never move or go as you read. It stands over the text column, its
+        way back on the text's left edge and its last icon on its right edge (decision 0277, replacing 0050).
       -->
-      <div class={["reading-bar pane-bar over-text sticky top-0 z-10 -mx-5 gap-2 px-2 md:-mx-16", titleGone && "scrolled"]}>
-        {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink-0 text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
-        <!-- Once the title has scrolled away, the bar names what you're reading and whose it is (decision 0298): it fades in over 0.15 seconds (at once with reduced motion), never slides; a copy, so hidden from screen readers. -->
-        <RunningTitle title={heading} area={scroller} words={article.title || "Untitled"} source={article.feedTitle} bind:gone={titleGone} />
-        {#if !article.link}
-          <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
-        {/if}
-        <div class="ml-auto flex shrink-0 items-center gap-1">
-          {#if article.link}
-            {@render originalWords()}
-            {@render shareButton("btn-quiet btn-icon")}
+      <div class={["reading-bar article-bar pane-bar over-text sticky top-0 z-10 -mx-5 px-2 md:-mx-16", titleGone && "scrolled"]}>
+        <div class="bar-side">
+          {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet btn-icon nav-back text-ink-2"><Icon name="back" size="alone" /></button>{/if}
+          {#if article.link}{@render original()}{/if}
+        </div>
+        <!-- The middle, the text's true middle: once the title has scrolled away it names the article (decision 0299), fading in over 0.15 seconds (at once with reduced motion); a copy, so hidden from screen readers. -->
+        <div class="bar-middle">
+          {#if !article.link && !titleGone}
+            <p class="truncate px-2 text-meta text-muted">This article has no link to its original.</p>
           {/if}
+          <RunningTitle title={heading} area={scroller} words={article.title || "Untitled"} bind:gone={titleGone} />
+        </div>
+        <div class="bar-side justify-end">
           <!-- A toggle keeps one name for screen readers ("Save", pressed or not); the filled bookmark shows its state. -->
           <button type="button" aria-label="Save" aria-pressed={article.starred} title={tip(article.starred ? "Remove from Saved" : "Save", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
             {@render saveIcon()}

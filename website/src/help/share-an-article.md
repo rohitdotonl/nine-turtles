@@ -16,11 +16,12 @@ related: [write-back, save-an-article]
 ## Share it
 
 1. Open the article.
-2. Press **Share**, beside Save (a box with an arrow on a Mac, iPhone or iPad; three linked dots elsewhere):
-   - on a phone or tablet, it opens your device's share menu, to send it
-     with the apps you have;
-   - anywhere else it copies the link (or press <kbd>C</kbd>). nine turtles
-     says **Link copied.** Paste it wherever you like.
+2. On a phone or tablet, press **Share** in the bar at the bottom (a box
+   with an arrow on an iPhone or iPad; three linked dots elsewhere): it opens
+   your device's share menu, to send it with the apps you have.
+3. On a computer, open **More** (…) at the top and choose **Copy link**, or
+   press <kbd>C</kbd>. nine turtles says **Link copied.** Paste it wherever
+   you like.
 
 You can do the same without opening it: right-click its row in the list
 (or press and hold it on a phone) and choose **Copy link** (**Share** on a

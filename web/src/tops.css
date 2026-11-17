@@ -74,3 +74,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/*
+  A computer's bar in three parts (decision 0299): the way back and the way to the publisher on the left, Save
+  and More on the right, two and two, each side as wide as the other, so the middle, where the title appears,
+  is the text's true middle.
+*/
+.article-bar {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  column-gap: 1.5rem;
+}
+.bar-side {
+  display: flex;
+  min-width: calc(2 * 2.75rem + 0.25rem);
+  align-items: center;
+  gap: 0.25rem;
+}
+.bar-middle {
+  display: flex;
+  min-width: 0;
+  justify-content: center;
+}

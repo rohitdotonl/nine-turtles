@@ -1,8 +1,8 @@
 <!--
-  The article's name in a computer's top bar (SPEC section 7, decision 0298):
-  once the title has scrolled up under the bar, the bar's middle names it,
-  the title in the title's face and the source under it, small and muted,
-  each one line cut short with …. It fades in over 0.15 seconds (fadeIn.ts;
+  The article's name in a computer's top bar (SPEC section 7, decisions 0298
+  and 0299): once the title has scrolled up under the bar, the bar's middle,
+  the text's true middle, names it, one line in the muted grey cut short with
+  …, as the writer wrote it. It fades in over 0.15 seconds (fadeIn.ts;
   at once with reduced motion) and goes at once when the title is back. A
   copy of what's on the page, so screen readers don't hear it twice.
 -->
@@ -13,7 +13,6 @@
     title,
     area,
     words,
-    source,
     gone = $bindable(false),
   }: {
     /** The article's title on the page. */
@@ -21,7 +20,6 @@
     /** What scrolls the article, the bar standing at its top. */
     area?: HTMLElement;
     words: string;
-    source: string;
     gone?: boolean;
   } = $props();
 
@@ -45,7 +43,7 @@
 
 {#if gone}
   <p class="running-title" aria-hidden="true">
-    <span class="running-words" use:fadeIn><span>{words}</span><small>{source}</small></span>
+    <span class="running-words" use:fadeIn>{words}</span>
   </p>
 {/if}
 
@@ -53,31 +51,18 @@
   .running-title {
     display: flex;
     min-width: 0;
-    flex: 1 1 0;
-    flex-direction: column;
-    align-items: center;
-    line-height: 1.25;
-    text-align: center;
+    justify-content: center;
+    margin: 0;
   }
+  /* One line in the interface's face, in the muted grey, cut short with … (decision 0299). */
   .running-words {
-    display: flex;
-    max-width: 100%;
-    flex-direction: column;
-    align-items: center;
-  }
-  .running-words > * {
     max-width: 100%;
     overflow: hidden;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    line-height: var(--text-ui--line-height);
+    color: var(--muted);
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .running-words > span {
-    font-family: var(--reading-title-font, var(--font-display));
-    font-size: var(--text-ui);
-    color: var(--ink);
-  }
-  .running-words > small {
-    font-size: var(--text-date);
-    color: var(--muted);
   }
 </style>

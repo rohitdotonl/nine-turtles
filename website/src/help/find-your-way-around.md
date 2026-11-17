@@ -82,8 +82,8 @@ working even if the title or name changes later.
 
 ## Reading
 
-Choose an article and it opens, with the whole window to itself. Across its top are **View
-original ↗** (the publisher's own page), **Share**, **Save** and **More**, which holds **Text and page** (how the text looks). On a computer the bar stays, and once you've scrolled past the title it shows the title and who it's from. **Write back**, for a person, waits at the end of the article (or press <kbd>W</kbd>). The title is
+Choose an article and it opens, with the whole window to itself. Across its top are **‹** (back to the list) and **View
+original ↗** (the publisher's own page) on the left, and **Save** and **More** on the right; More holds **Copy link** (on a phone, **Share** is in the bar at the bottom) and **Text and page** (how the text looks). On a computer the bar stays, its buttons in the same places all the way down, and once you've scrolled past the title it shows the title in its middle. **Write back**, for a person, waits at the end of the article (or press <kbd>W</kbd>). The title is
 centred, large when it's short and smaller when it's long, and under it is who
 wrote it ("by Asha Rao") with the day, small, beneath. The writer's name
 opens everything they've written, with **‹ Article** to come

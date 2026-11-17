@@ -43,13 +43,13 @@
   font-size: var(--text-base);
 }
 /*
-  On a computer the article's bar stands over its text (decision 0277): the
-  way back starts on the text's left edge and the last tool's icon ends on its
-  right edge, not at the window's corners. The bar reaches 4rem past each
+  On a computer the article's bar stands over its text (decision 0277): its
+  first and last icons mirror each other over the text's two edges (decision
+  0299), the last one's mark ending on the right edge, not at the window's corners. The bar reaches 4rem past each
   side of the scroller's padding, which its percentages don't count.
 */
 .over-text {
-  padding-inline: max(0.5rem, (100% - var(--reading-width)) / 2 + 3.75rem) max(0.5rem, (100% - var(--reading-width)) / 2 + 3.25rem);
+  padding-inline: max(0.5rem, (100% - var(--reading-width)) / 2 + 3.25rem);
 }
 /*
   Room for a scrollbar is kept, so the column doesn't shift between pages that
