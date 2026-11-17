@@ -208,6 +208,8 @@
         </span>
         {resume > 0 ? `Resume from ${clock(resume)}` : "Play video"}
       </span>
+      <!-- Said once, quietly: the privacy floor made visible (decision 0072). -->
+      <span class="video-promise">Nothing loads from YouTube until you press Play.</span>
     </button>
   {/if}
 </div>
@@ -246,9 +248,11 @@
     border-radius: var(--radius-hold);
   }
   /*
-    The box before Play: the page's own faint tone, the title set large in
-    the reading face, then a round mark in the text color and the word, so
-    it reads as a button by its shape and its word, never by color.
+    The box before Play (decision 0298, replacing the faint tone of 0072): a
+    dark screen in every theme, as a switched-off screen is, the title in the
+    title's face, then a round light mark and the word, so it reads as a
+    button by its shape and its word, never by color. Its light words keep at
+    least 7 : 1 on the dark.
   */
   .video-play {
     display: flex;
@@ -257,8 +261,10 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    background-color: var(--fill);
-    color: var(--ink);
+    --screen: #1b1b1a;
+    --screen-ink: #f2f2ee;
+    background-color: var(--screen);
+    color: var(--screen-ink);
     font-family: var(--font-sans);
     font-size: var(--text-ui);
     cursor: pointer;
@@ -270,13 +276,13 @@
     cursor: default;
   }
   button.video-play:hover {
-    background-color: var(--line);
+    background-color: #2a2a28;
   }
   .video-title {
     max-width: 22ch;
-    font-family: var(--font-serif);
-    font-size: var(--text-large);
-    font-weight: 600;
+    font-family: var(--reading-title-font, var(--font-display));
+    font-size: clamp(var(--text-large), 3.5vw, 1.75rem);
+    font-weight: 400;
     line-height: 1.2;
     text-align: center;
     text-wrap: balance;
@@ -299,40 +305,61 @@
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 999px;
-    background-color: var(--ink);
-    color: var(--paper);
+    background-color: var(--screen-ink);
+    color: var(--screen);
+  }
+  .video-promise {
+    max-width: 30ch;
+    color: #bdbdb7;
+    font-size: var(--text-meta);
+    text-align: center;
+    text-wrap: balance;
   }
   /* The triangle looks centred a little right of the middle, as a play mark does. */
   .video-mark svg {
     margin-left: 2px;
   }
+  /*
+    The chapters (decision 0298): in the reading face, like the description
+    under them, two columns where there's room, each time quiet and plain
+    (a plain zero) at its start; the chapter's name underlines under the pointer.
+  */
   .chapters {
-    margin: 1rem 0 0;
+    margin: 1.5rem 0 0;
     padding: 0;
     list-style: none;
-    font-family: var(--font-sans);
-    font-size: var(--text-ui);
+    columns: 2 16rem;
+    column-gap: 2.5rem;
+    font-family: var(--reading-font);
+    font-size: 0.85em;
+  }
+  .chapters li {
+    break-inside: avoid;
   }
   .chapter {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: baseline;
+    gap: 0.875rem;
     min-height: 2.75rem;
     width: 100%;
+    padding-block: 0.5rem;
     text-align: left;
     color: var(--ink);
     cursor: pointer;
   }
   .chapter-time {
-    min-width: 3.5em;
+    flex: none;
+    min-width: 3.25rem;
+    text-align: right;
+    font-family: var(--font-dates);
+    font-size: var(--text-meta);
     font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    color: var(--muted);
+  }
+  .chapter:hover > :last-child {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
-  }
-  .chapter:hover .chapter-time {
-    text-decoration-thickness: 2px;
   }
   @media (forced-colors: active) {
     .video-play {

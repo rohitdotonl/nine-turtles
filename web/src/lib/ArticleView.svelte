@@ -65,6 +65,7 @@
   import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
+  import { markPauses } from "./pauses";
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
   import { keyFor, tip } from "./keyboard";
@@ -128,6 +129,22 @@
   let source = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
+
+  /** On a computer, whether the title has scrolled out from under the bar: the bar names the article then (decision 0298). */
+  let titleGone = $state(false);
+  $effect(() => {
+    const title = heading;
+    const area = scroller;
+    titleGone = false;
+    if (phone || !title || !area) return;
+    const bar = area.querySelector<HTMLElement>(".reading-bar");
+    const watch = new IntersectionObserver(([entry]) => (titleGone = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0) + 1), {
+      root: area,
+      rootMargin: `-${bar?.offsetHeight ?? 0}px 0px 0px 0px`,
+    });
+    watch.observe(title);
+    return () => watch.disconnect();
+  });
 
   // Bumped when an article arrives from the server, so the page looks again.
   let arrivals = $state(0);
@@ -340,6 +357,15 @@
     if (text && setsEnglishPunctuation(full?.language)) setPunctuation(text);
   });
 
+  // Its pauses given room (decision 0298): a typed break drawn as the short
+  // rule, a picture on its own given a picture's room, and the ◆ after the
+  // writer's last words, only when the whole article is here (never on a
+  // summary, nor a video's description).
+  $effect(() => {
+    void full?.content;
+    if (text) markPauses(text, Boolean(full?.content) && !video);
+  });
+
   // The article's own links open in a new tab (cleaned so by nine turtles);
   // each tells a screen reader so, as every link out of nine turtles does.
   $effect(() => {
@@ -477,9 +503,11 @@
   <Icon name="bookmark" size="alone" filled={article.starred} />
 {/snippet}
 
-{#snippet writeBackButton(style: string)}
-  <!-- Write back, one press from the text (decision 0214): a paper plane, for a person only. -->
-  <button type="button" aria-label="Write back" title={phone ? "Write back" : tip("Write back", "write-back")} onclick={() => act("write-back")} class={style}><Icon name="send" size="alone" /></button>
+{#snippet originalWords()}
+  <!-- On a computer the way to the publisher says so in words, with its arrow (decision 0298). -->
+  <a href={article.link} target="_blank" rel="noopener noreferrer" aria-describedby="new-tab-note" title={tip("View original", "open-original")} class="btn-quiet gap-1.5 px-3 text-ink-2"
+    >View original<Icon name="open" /></a
+  >
 {/snippet}
 
 {#snippet original()}
@@ -526,21 +554,22 @@
         quiet icons, each named in its tooltip with its key, in one cluster at the right, 4px apart: the way to the
         publisher, then the reader's own tools. It stands over the text column, its way back on the text's left edge and its last icon on its right edge (decision 0277, replacing 0050).
       -->
-      <div class="reading-bar pane-bar over-text relative z-10 -mx-5 gap-2 px-2 md:-mx-16">
-        {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
+      <div class={["reading-bar pane-bar over-text sticky top-0 z-10 -mx-5 gap-2 px-2 md:-mx-16", titleGone && "scrolled"]}>
+        {#if back}<button type="button" onclick={back.onBack} aria-label="Back to {back.name}" title="Back to {back.name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink-0 text-ink-2"><Icon name="back" size="alone" /><span class="truncate">{back.name}</span></button>{/if}
+        <!-- Once the title has scrolled away, the bar names what you're reading and whose it is (decision 0298): it appears at once, never slides; a copy, so hidden from screen readers. -->
+        <p class="running-title" aria-hidden="true">{#if titleGone}<span>{article.title || "Untitled"}</span><small>{article.feedTitle}</small>{/if}</p>
         {#if !article.link}
           <p class="px-2 text-meta text-muted">This article has no link to its original.</p>
         {/if}
-        <div class="ml-auto flex items-center gap-1">
+        <div class="ml-auto flex shrink-0 items-center gap-1">
           {#if article.link}
-            {@render original()}
+            {@render originalWords()}
+            {@render shareButton("btn-quiet btn-icon")}
           {/if}
-          {#if article.link}{@render shareButton("btn-quiet btn-icon")}{/if}
           <!-- A toggle keeps one name for screen readers ("Save", pressed or not); the filled bookmark shows its state. -->
           <button type="button" aria-label="Save" aria-pressed={article.starred} title={tip(article.starred ? "Remove from Saved" : "Save", "star")} onclick={onStar} class={["btn-quiet btn-icon", article.starred && "text-ink"]}>
             {@render saveIcon()}
           </button>
-          {#if writable}{@render writeBackButton("btn-quiet btn-icon")}{/if}
           <span bind:this={moreAnchor} class="inline-flex"><MoreMenu id="article-menu" label="More actions" groups={more} /></span>
         </div>
       </div>
@@ -619,13 +648,13 @@
           <hr aria-hidden="true" class="article-end" />
           <!--
             End matter, under the closing rule as in a book: where the rest of it is. The sentence, then the
-            link to the publisher on a row of its own, 44px tall to press: "Read the rest on {publisher} ↗", or for a
+            link to the publisher on a row of its own, as the page's one main button (decision 0298): "Read the rest on {publisher} ↗", or for a
             podcast's episode "Read the episode page on {publisher} ↗" (SPEC sections 7 and 35; decision 0218). The sentence
             and the link each stay whole wherever they fit on a line, so a narrow column never strands a word
             (decision 0044).
           -->
           <p class="article-note" lang="en">
-            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="gap-[0.25em]"
+            <span>Only the beginning is shared here.</span>{#if article.link}{" "}<a href={article.link} target="_blank" rel="noopener noreferrer" class="btn-primary"
                 >{episode ? "Read the episode page on" : "Read the rest on"} {site}<Icon name="open" /><span class="sr-only">{" "}(opens in a new tab)</span></a
               >{/if}
           </p>
@@ -688,7 +717,6 @@
       <!-- Text and page and the rest, in a menu that opens upwards, nearest the button first (decision 0243). -->
       <MoreMenu id="article-menu" label="More actions" groups={more} up start />
       {@render shareButton("")}
-      {#if writable}{@render writeBackButton("")}{/if}
       <button type="button" aria-label="Save" aria-pressed={article.starred} onclick={onStar} class:text-ink={article.starred}>
         {@render saveIcon()}
       </button>
@@ -724,6 +752,34 @@
     .reading-bar {
       background-color: Canvas;
     }
+  }
+  /* Once the title is gone: a hairline under the bar, and the title and source in the middle, one line each, cut short with … (decision 0298). */
+  .reading-bar.scrolled {
+    border-bottom: 1px solid var(--line);
+  }
+  .running-title {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.25;
+    text-align: center;
+  }
+  .running-title > * {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .running-title > span {
+    font-family: var(--reading-title-font, var(--font-display));
+    font-size: var(--text-ui);
+    color: var(--ink);
+  }
+  .running-title > small {
+    font-size: var(--text-date);
+    color: var(--muted);
   }
   /*
     The phone's bottom toolbar: five equal places of quiet icons (six with

@@ -499,10 +499,9 @@
       {/if}
       {#if way === "comment"}
         <p class="to" aria-hidden="true">on {talkSite}</p>
-      {:else if !address}
-        {#if article}<p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>{/if}
       {:else if article}
-        <p class="to"><span aria-hidden="true">to <bdi>{name}</bdi>,{" "}</span>{address}</p>
+        <!-- The name only: their address is never printed on the article's page, where a screenshot or a shared screen would carry it (decision 0298). -->
+        <p class="to" aria-hidden="true">to <bdi>{name}</bdi></p>
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
         <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>

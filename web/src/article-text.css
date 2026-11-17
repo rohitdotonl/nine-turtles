@@ -112,9 +112,28 @@
   border-bottom-color: var(--strong);
 }
 
-.article-text hr {
+/*
+  A section break (decision 0298): the short centred rule the byline and the
+  end use, with a section's room around it, never a full-width line. A break
+  typed by hand ("------", "* * *") is drawn the same; its marks stay in the
+  text, hidden (pauses.ts).
+*/
+.article-text hr,
+.article-text .section-break::after {
+  width: 2.5rem;
+  margin: 2.5em auto;
   border: 0;
-  border-top: 1px solid var(--muted);
+  border-top: 1px solid var(--strong);
+}
+.article-text .section-break {
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+}
+.article-text .section-break::after {
+  content: "";
+  display: block;
+  font-size: var(--reading-size);
 }
 
 .article-text :where(sup, sub) {
@@ -201,7 +220,7 @@
   around it than between paragraphs; none inside it at its ends.
 */
 .article-text blockquote {
-  margin-block: 1.4em;
+  margin-block: 1.75em;
   padding-inline-start: 1.1em;
   border-inline-start: 2px solid var(--strong);
 }
@@ -276,4 +295,95 @@
   font-size: 0.58em; /* about a caption's 13/16 of the text */
   font-style: normal;
   color: var(--ink-2);
+}
+
+/*
+  Room in three steps (decision 0298): paragraphs 0.8em apart, a picture, a
+  quotation, code or a table 1.75em, a section break 2.5em, so a pause reads as
+  a pause.
+*/
+.article-text :where(figure, pre, table, .picture) {
+  margin-block: 1.75em;
+}
+
+/*
+  Pictures and code given the computer's spare width (decision 0298): up to
+  5rem past the text on each side, never past what the reading pane has
+  free, so a narrow pane or a phone keeps them in the column. A picture never
+  grows past its own size (img's max-width), so nothing goes soft.
+*/
+.reading-scroller {
+  container-type: inline-size;
+}
+.article-text :where(figure, .picture, pre) {
+  margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
+}
+.article-text :where(figure, .picture) :where(img, video) {
+  display: block;
+  margin-inline: auto;
+}
+
+/*
+  Code keeps each line whole (decision 0298): where a line starts carries its
+  meaning, so it never wraps. On a soft tint, and where a line runs on past
+  the edge a faint shadow at that edge says there's more to scroll; the
+  shadows stay put while the tint scrolls over them, so each shows only
+  while there is more that way.
+*/
+.article-text pre {
+  --code-tint: color-mix(in srgb, var(--ink) 4%, var(--paper));
+  --code-edge: color-mix(in srgb, var(--ink) 14%, transparent);
+  white-space: pre;
+  padding: 1.1em 1.4em;
+  border-radius: var(--radius-press);
+  line-height: 1.65;
+  background:
+    linear-gradient(to right, var(--code-tint) 30%, transparent) left / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--code-tint) 30%, transparent) right / 2.5rem 100% no-repeat local,
+    linear-gradient(to right, var(--code-edge), transparent) left / 0.75rem 100% no-repeat scroll,
+    linear-gradient(to left, var(--code-edge), transparent) right / 0.75rem 100% no-repeat scroll,
+    var(--code-tint);
+}
+
+/*
+  A caption (decision 0298, replacing 0053's serif): the interface's small
+  type, centred under its picture, in the second ink, which keeps 7 : 1 on the
+  page in every theme, so it stays at AAA like the text. No wider than the text.
+*/
+.article-text figcaption {
+  max-width: var(--reading-measure);
+  margin: 0.75rem auto 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-meta);
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+  font-style: normal;
+  color: var(--ink-2);
+}
+
+/*
+  The end mark (decision 0298): a small ◆ after the writer's last words, as a
+  magazine ends a piece, or on a line of its own after a last picture or code.
+  Drawn, not written: it's never copied, highlighted or read aloud.
+*/
+.article-text .ends::after,
+.article-text .ends-after::after {
+  content: "◆" / "";
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 0.6em;
+  font-style: normal;
+  font-weight: 400;
+}
+.article-text .ends::after {
+  margin-inline-start: 0.5em;
+  vertical-align: 0.15em;
+  white-space: nowrap;
+}
+.article-text .ends-after::after {
+  display: block;
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: calc(var(--reading-size) * 0.6);
 }

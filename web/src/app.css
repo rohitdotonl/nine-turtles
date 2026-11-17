@@ -1293,19 +1293,21 @@ input {
 }
 
 /*
-  The link to the publisher is a row of its own under the sentence, at
-  least 44px tall to press, its words centred and underlined.
+  The link to the publisher is a row of its own under the sentence: the
+  page's one main button (decision 0298), at least 44px tall, its words
+  wrapping on a narrow phone rather than running off it.
 */
 .article-note > a {
   display: flex;
   width: fit-content;
-  min-height: 2.75rem;
-  align-items: center;
-  justify-content: center;
-  margin-inline: auto;
+  max-width: 100%;
+  margin: 0.75rem auto 0;
+  white-space: normal;
+  text-align: center;
+  font-size: var(--text-ui);
 }
 
-.article-note a {
+.article-note a:not(.btn-primary) {
   color: inherit;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -1314,7 +1316,7 @@ input {
   text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
 }
 
-.article-note a:hover {
+.article-note a:not(.btn-primary):hover {
   text-decoration-color: currentColor;
 }
 
@@ -1385,10 +1387,7 @@ input {
 }
 
 .article-text pre {
-  padding: 1em;
   overflow-x: auto;
-  background-color: var(--list);
-  line-height: 1.5;
 }
 
 .article-text :where(img, video) {
@@ -1415,19 +1414,6 @@ input {
 /* A picture shown smaller than it really is opens larger with a press (decision 0107, pictures.ts). */
 .article-text img.openable {
   cursor: pointer;
-}
-
-/*
-  A caption is clearly smaller than the text (13/16 of it, as Apple Books sets
-  captions apart from paragraphs) and in the second ink, 8px under its picture
-  (decision 0053). The second ink keeps 7 : 1 on the page in every theme
-  (contrast.test.ts), so a caption stays at AAA like the text (decision 0050).
-*/
-.article-text figcaption {
-  margin-top: 8px;
-  font-size: 0.8125em;
-  line-height: 1.4;
-  color: var(--ink-2);
 }
 
 /*
