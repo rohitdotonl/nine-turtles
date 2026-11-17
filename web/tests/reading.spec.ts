@@ -153,7 +153,7 @@ test.describe("on a wide window", () => {
     // The title comes first, then the byline under it; the article ends with a short line.
     const byline = (await article(page).locator(".article-byline").boundingBox())!;
     expect(byline.y).toBeGreaterThan((await title(page, "The pleasure of a slow letter").boundingBox())!.y);
-    await expect(article(page).locator("hr.article-end")).toBeAttached();
+    await expect(article(page).locator("hr.article-end")).toBeHidden();
 
     // Headings, quotes, tables, code and the publisher's image, in place.
     const text = article(page).locator(".article-text");

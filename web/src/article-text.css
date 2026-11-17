@@ -382,3 +382,8 @@
   text-align: center;
   font-size: calc(var(--reading-size) * 0.6);
 }
+
+/* Where the ◆ already ends the writer's words, it is the end: no second mark under it (decision 0300). */
+.article-text:has(.ends, .ends-after) ~ .article-end {
+  display: none;
+}

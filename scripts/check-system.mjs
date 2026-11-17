@@ -11,6 +11,7 @@
 // 3. Text sizes: a size that isn't one of the named ones. Sizes in `em`
 //    follow the reader's own text size (Aa), so they pass.
 // 4. Labels: small spaced capitals; a group's name is the one label (.label).
+//    One named exception in the reading face: an article's end (decision 0300).
 // 5. Icons: an icon size other than "word" (16px) or "alone" (20px), and the
 //    two named exceptions.
 // 6. Spacing: a padding, margin or gap off the scale (4, 8, 12, 16, 20, 24,
@@ -53,6 +54,7 @@ const EXCEPTIONS = [
   ["web/src/app.css", "88%", "the main button, a step softer than the text (decision 0045)"],
   ["web/src/lib/WhoPage.svelte", "2.375rem", "their name on their page, set as an article's title is (decision 0254, DESIGN.md's Exceptions log)"],
   ["web/src/lib/WhoPage.svelte", "2rem", "their name on their page on a phone, as an article's title (decision 0254)"],
+  ["web/src/lib/EndTools.svelte", "uppercase", "an article's end, Save and View original, in the reading face's spaced capitals, as a book's last page (decision 0300)"],
 ];
 const excepted = (file, value) => EXCEPTIONS.some(([f, v]) => f === file && v === value);
 
@@ -137,7 +139,7 @@ for (const file of files(src, [".svelte", ".css", ".ts"])) {
   }
 
   for (const m of text.matchAll(/text-transform\s*:\s*uppercase|(?<![\w-])uppercase(?![\w-])(?=[^"'`]*["'`])/g)) {
-    say(m.index, "small capitals; a group's name is the one label (.label)");
+    if (!excepted(name, "uppercase")) say(m.index, "small capitals; a group's name is the one label (.label)");
   }
 
   if (file.endsWith(".svelte")) {

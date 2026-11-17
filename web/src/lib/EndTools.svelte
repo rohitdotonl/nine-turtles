@@ -26,13 +26,19 @@
 </div>
 
 <style>
+  /* In the reading face's small spaced capitals, as a book's last page names its maker (decision 0300). */
   .end-tools {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 0.25rem;
-    margin-top: 1.5rem;
-    font-family: var(--font-sans);
+    gap: 1rem;
+    margin-top: 2rem;
+    font-family: var(--reading-font);
+  }
+  .end-tools > :global(*) {
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
   /* A step quieter than Write back under them (decision 0298): the muted grey, which keeps 4.5 : 1 on the page in every theme; a saved bookmark stays in full ink. */
   .end-tools > :global(:not(.text-ink)) {
