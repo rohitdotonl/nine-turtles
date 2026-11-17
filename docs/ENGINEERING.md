@@ -329,7 +329,7 @@ Wherever a principle can be checked by a computer, it is. These run on every pul
 | Owner can see the change | Screenshots of every screen on White and Night (Paper on the list, article, Settings and Edit screens), at desktop and phone width, attached to each pull request |
 | Libraries stay safe | A weekly report of known security problems in our libraries. It only reports; nothing is updated automatically. |
 | First floor (accessibility) | Automated accessibility and contrast tests on every screen, on every page (White, Paper and Night) |
-| No motion (DESIGN.md) | Fails if animations or transitions appear in the styles or the code, but for a swipe's glide in `swipeMotion.ts`, a slow wait's breathing dots in `breathe.ts` and the running title's fade in `fadeIn.ts` (Exceptions log) |
+| No motion (DESIGN.md) | Fails if animations or transitions appear in the styles or the code, but for a swipe's glide in `swipeMotion.ts` and a slow wait's breathing dots in `breathe.ts` (Exceptions log) |
 | One system (DESIGN.md → "The system") | Fails if the web app uses a corner, shadow, text size, icon size or label outside the table, a gap off the spacing scale, or a grey other than the four tones (decisions 0244, 0245) |
 | Written for the next agent | Fails if a file of the app's own code grows past 800 lines (a few older, longer files may only shrink), or if a file, an export or a server `pub` item is unused (decision 0126) |
 | Fast by design | Fails if the frontend download grows past its size budget |

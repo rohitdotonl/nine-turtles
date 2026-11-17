@@ -104,6 +104,6 @@ test("an article's pauses: a typed break drawn as the short rule and hidden from
   // The article ends on a picture alone: it's given a picture's room, and the ◆ follows it on a line of its own.
   const last = text.locator("p").last();
   await expect(last).toHaveClass(/\bpicture\b/);
-  await expect(last).toHaveClass(/ends-after/);
+  await expect(last).toHaveClass(/\bends\b/);
   expect(await last.evaluate((element) => getComputedStyle(element, "::after").content)).toContain("◆");
 });

@@ -49,9 +49,6 @@ export function markPauses(body: Element, ending: boolean) {
   if (!ending) return;
   const last = lastBlock(body);
   if (!last) return;
-  // Words take the mark at their end; a picture or a heading takes it on a line of its own after it.
-  const words = /^(P|LI|DD|BLOCKQUOTE)$/.test(last.tagName) && !picturesOnly(last);
-  // Code and tables scroll sideways inside themselves, so they take no mark.
-  if (words) last.classList.add("ends");
-  else if (!/^(PRE|TABLE)$/.test(last.tagName)) last.classList.add("ends-after");
+  // The mark takes a line of its own under the last block (decision 0302); code and tables scroll sideways inside themselves, so they take no mark.
+  if (!/^(PRE|TABLE)$/.test(last.tagName)) last.classList.add("ends");
 }

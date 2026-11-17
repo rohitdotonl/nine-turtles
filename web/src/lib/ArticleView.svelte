@@ -7,8 +7,7 @@
   page, Mark unread, Add a note and Hide, each with its icon; decision 0293);
   once the title has scrolled away it names the article in the middle
   (RunningTitle). Write back is
-  never in a bar: it ends the article, with Save and View original above it
-  (EndTools). The writer's name under the title opens their list (decision
+  never in a bar: it ends the article. The writer's name under the title opens their list (decision
   0289). What was just done ("Link copied.") floats at the pane's foot. A
   summary-only feed shows the summary, then a note under the closing rule with
   "Read the rest on …" as the page's main button; nine turtles never fetches
@@ -34,7 +33,6 @@
   import TextButton from "./TextButton.svelte";
   import LateLine from "./LateLine.svelte";
   import AwayNote from "./AwayNote.svelte";
-  import EndTools from "./EndTools.svelte";
   import type { ListNote } from "./listNote";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
   import ReadingPanel from "./ReadingPanel.svelte";
@@ -554,8 +552,8 @@
       </div>
     {/if}
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, its text on the right edge; the title and byline stay centred (decisions 0223, 0294). -->
-    <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
-      <!-- Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
+    <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
+      <!-- With room above it (32px, 48px on a computer, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
       <!-- Under the title, centred, as on a book's title page: their picture, "by" and their name, then the day, small and faint (decision 0294). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
@@ -659,7 +657,6 @@
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
         {/key}
-        {#if !phone}<EndTools starred={article.starred} {onStar} original={(full.content || !full.summary) && article.link ? article.link : undefined} />{/if}
         <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, the question in its place (WriteBack, decision 0264). -->
         <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} comments={full?.commentsUrl} {library} quotes={() => marks?.quotes() ?? []} />
       {/if}

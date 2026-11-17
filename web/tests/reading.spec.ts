@@ -683,7 +683,7 @@ test.describe("on a wide window", () => {
     expect((await aa.boundingBox())!.y).toBeGreaterThanOrEqual(5);
   });
 
-  test("the top bar is solid in the page's color, stays, and names the article once its title has gone; Star and View original wait at the end", async ({ page, context }) => {
+  test("the top bar is solid in the page's color, stays, and names the article once its title has gone; Save and View original are only there, never again at the end (decision 0302)", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
     await openRoom(page);
     // A short window, so even a short article scrolls its title away.
@@ -704,11 +704,23 @@ test.describe("on a wide window", () => {
     const [barBox, scrollerBox] = [(await bar.boundingBox())!, (await scroller.boundingBox())!];
     expect(Math.abs(barBox.x - scrollerBox.x)).toBeLessThan(1);
     expect(Math.abs(barBox.y - scrollerBox.y)).toBeLessThan(1);
+    // Room above the title: 48px of the column's own over the bar (decision 0302).
+    expect((await article(page).locator(".article-title").boundingBox())!.y - (barBox.y + barBox.height)).toBeGreaterThanOrEqual(48);
     // At the top it names nothing and has no hairline: the title is right there.
     const running = bar.locator(".running-title");
     await expect(running).toHaveCount(0);
     await expect(bar).toHaveCSS("border-bottom-width", "0px");
+    // Just after the title's foot has gone under the bar, its copy is on its way up, still partly below the bar's middle,
+    // moving only as far as the page scrolls (decision 0302).
+    const heading = article(page).locator(".article-title");
+    await scroller.evaluate((element, foot) => element.scrollBy(0, foot + 6), (await heading.boundingBox())!.y + (await heading.boundingBox())!.height - barBox.y - barBox.height);
+    await expect(running).toHaveCount(1);
+    const rising = await running.locator(".running-words").evaluate((element) => new DOMMatrix(getComputedStyle(element).transform).m42);
+    expect(rising).toBeGreaterThan(0);
+    // In the title's own face, never the interface's.
+    expect(await running.locator(".running-words").evaluate((element) => getComputedStyle(element).fontFamily)).toBe(await heading.evaluate((element) => getComputedStyle(element).fontFamily));
     await scroller.evaluate((element) => element.scrollBy(0, 300));
+    await expect(running.locator(".running-words")).toHaveCSS("transform", "none");
     expect(Math.abs((await bar.boundingBox())!.y - scrollerBox.y)).toBeLessThan(1);
     // Once the title has gone up under it, the bar names the article over a hairline, in the text's true middle
     // (decision 0299); screen readers don't hear it twice.
@@ -722,17 +734,12 @@ test.describe("on a wide window", () => {
     await expect(running).toHaveCount(0);
     // No hairline at the window's top: nothing stays above the bar for it to part from.
     await expect(scroller).toHaveCSS("border-top-width", "0px");
-    // At the end, Save and View original wait under the closing rule, Save the same toggle as the bar's.
+    // At the end, the bar's Save and View original are still in view, and nowhere else (decision 0302).
     await scroller.evaluate((element) => element.scrollTo(0, element.scrollHeight));
-    const end = article(page).locator(".end-tools");
-    await expect(end.getByRole("button", { name: "Save", exact: true })).toBeInViewport();
-    await expect(end.getByRole("link", { name: "View original" })).toHaveAttribute("target", "_blank");
-    // From the keyboard alone: Tab reaches the end's Star, and Enter or Space presses it.
-    const endStar = end.getByRole("button", { name: "Save", exact: true });
-    await tabTo(page, endStar);
-    await page.keyboard.press("Enter");
-    await expect(bar.getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "true");
-    await page.keyboard.press(" ");
+    await expect(bar.getByRole("button", { name: "Save", exact: true })).toBeInViewport();
+    await expect(bar.getByRole("link", { name: "View original" })).toBeInViewport();
+    await expect(article(page).getByRole("button", { name: "Save", exact: true })).toHaveCount(1);
+    await expect(article(page).getByRole("link", { name: "View original" })).toHaveCount(1);
     await expect(bar.getByRole("button", { name: "Save", exact: true })).toHaveAttribute("aria-pressed", "false");
     // What was just done floats at the pane's foot, wherever the bar is, with its ×.
     await article(page).locator(".article-title").focus();
@@ -890,31 +897,28 @@ test.describe("on a wide window", () => {
     expect(await link.evaluate((element) => element.getClientRects().length)).toBe(1);
     await expect(link).toHaveAttribute("href", "https://reading-room.example/first-page");
     await expect(link).toHaveAttribute("target", "_blank");
-    // It comes after the short closing line; then Save alone, since the note is already the way to the original (decision 0263),
-    // and Write back, the article's last word (SPEC section 37).
+    // It comes after the short closing line; then Write back, the article's last word (SPEC section 37).
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
-    const tools = article(page).locator(".end-tools");
-    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("end-tools"))).toBe(true);
-    await expect(tools.getByRole("button", { name: "Save", exact: true })).toBeVisible();
-    await expect(tools.getByRole("link")).toHaveCount(0);
-    expect(await tools.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
+    expect(await note.evaluate((element) => element.nextElementSibling?.classList.contains("write-back"))).toBe(true);
     // Then only the credit line that shows on paper alone (decision 0236).
-    expect(await tools.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
+    expect(await note.evaluate((element) => element.nextElementSibling?.nextElementSibling?.className)).toBe("print-credit");
     await expect(article(page).locator(".print-credit")).toBeHidden();
   });
 
-  test("a whole article ends with a small ◆ after its last words, never copied; a summary has none (decision 0298)", async ({ page }) => {
+  test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {
     await openRoom(page);
     await row(page, "The pleasure of a slow letter").click();
     const ending = article(page).locator(".article-text .ends");
     await expect(ending).toHaveCount(1);
     expect(await ending.evaluate((element) => getComputedStyle(element, "::after").content)).toContain("◆");
+    expect(await ending.evaluate((element) => getComputedStyle(element, "::after").display)).toBe("block");
+    expect(await ending.evaluate((element) => getComputedStyle(element, "::after").textAlign)).toBe("center");
     // Drawn, not written: it's not in the text, so it's never copied, highlighted or read aloud.
     expect(await article(page).locator(".article-text").innerText()).not.toContain("◆");
     await toList(page);
     await row(page, "Only the first page").click();
     await expect(title(page, "Only the first page")).toBeVisible();
-    await expect(article(page).locator(".article-text .ends, .article-text .ends-after")).toHaveCount(0);
+    await expect(article(page).locator(".article-text .ends")).toHaveCount(0);
   });
 
   test("a big picture opens larger, alone on a dimmed sheet; Escape closes it and the keyboard is back on the picture (decision 0107)", async ({ page }) => {
@@ -1298,8 +1302,8 @@ test.describe("your place in an article (decision 0060)", () => {
     expect(await top(page)).toBe(0);
 
     await scroller(page).hover();
-    // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 556);
+    // Past the title and the room above it (decision 0302), into the middle of a paragraph.
+    await page.mouse.wheel(0, 592);
     await expect.poll(() => top(page)).toBeGreaterThan(450);
     // Written down a moment after scrolling stops.
     await page.waitForTimeout(600);
@@ -1357,8 +1361,8 @@ test.describe("your place in an article (decision 0060)", () => {
     // test nothing (a busy computer can take longer than any fixed wait).
     const kept = page.waitForResponse((answer) => answer.url().endsWith("/api/resume") && answer.request().method() === "PUT");
     await scroller(page).hover();
-    // Past the top bar and the title, which scroll with the text (decision 0263), into the middle of a paragraph.
-    await page.mouse.wheel(0, 556);
+    // Past the title and the room above it (decision 0302), into the middle of a paragraph.
+    await page.mouse.wheel(0, 592);
     await expect.poll(() => top(page)).toBeGreaterThan(450);
     await kept;
     const stopped = await top(page);
