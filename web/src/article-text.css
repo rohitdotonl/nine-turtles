@@ -6,27 +6,40 @@
 */
 
 /*
-  Headings inside an article, in three clear steps under the title (decision
-  0246): about 26px, 22px, then the text's own size, all semibold, with more
-  room above than below, so each starts a new part.
+  Headings inside an article speak in the title's voice (decision 0295): the
+  title's face (Literata's display cut, or the chosen font's own), regular
+  weight, so size alone sets the steps, never weight, and a heading is never
+  heavier than the title above it. About 31px, then 24px, then the text's own
+  size, which alone keeps semibold, being no bigger than the text. Twice and
+  more the room above as below, so each belongs to what follows. Left, on
+  the text's edge, where a skimming eye looks for them.
 */
 .article-text :where(h1, h2, h3, h4, h5, h6) {
-  margin-top: 1.4em;
-  margin-bottom: 0.5em;
+  margin-top: 1.6em;
+  margin-bottom: 0.3em;
   line-height: 1.3;
   font-weight: 600;
   text-wrap: balance;
 }
 
+.article-text :where(h1, h2, h3) {
+  font-family: var(--reading-title-font, var(--reading-font));
+  font-weight: 400;
+}
+
 .article-text :where(h1, h2) {
-  margin-top: 1.9em;
-  font-size: 1.3em;
-  line-height: 1.25;
+  margin-top: 2.4em;
+  margin-bottom: 0.4em;
+  font-size: 1.55em;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
 }
 
 .article-text h3 {
-  margin-top: 1.6em;
-  font-size: 1.1em;
+  margin-top: 1.9em;
+  margin-bottom: 0.35em;
+  font-size: 1.2em;
+  line-height: 1.25;
 }
 
 .article-text :where(h4, h5, h6) {
