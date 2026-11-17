@@ -699,6 +699,16 @@ export async function openScreen(page: Page, screen: Screen, theme: Theme): Prom
   }
   await screen.open?.(page);
   await page.evaluate(() => document.fonts.ready);
+  // A fade that's still under way (the running title's, decision 0298) is checked once it has
+  // finished, never half-faded. The breathing dots never finish, so they're left out.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .map((animation) => animation.finished),
+    ),
+  );
   await expect
     .poll(() => page.evaluate(() => getComputedStyle(document.body).backgroundColor))
     .toBe(background(theme));
