@@ -582,7 +582,15 @@
     second ink, still a 44px target, so it's the way on without being the
     loudest thing under the writing.
   */
+  /*
+    The same room above it as under it, where the page ends (decision 0301):
+    a little closer only on a computer, under Save and View original, which
+    it finishes as one group.
+  */
   .write-back:not(.on-page, .in-row) {
+    margin-top: 2rem;
+  }
+  :global(.end-tools) + .write-back:not(.on-page, .in-row) {
     margin-top: 0.75rem;
   }
   .write-back:not(.on-page, .in-row) :is(.split > .btn, .split :global(.split-arrow)) {
