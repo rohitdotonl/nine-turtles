@@ -755,9 +755,17 @@ test.describe("on a wide window", () => {
     ]);
     expect(publisherColor).toBe(inkColor);
     expect(timeColor).toBe(faint);
-    // Headings inside the article step down clearly: 26px, then 22px (decision 0246).
-    await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "26px");
-    await expect(article(page).locator(".article-text h3").first()).toHaveCSS("font-size", "22px");
+    // Headings inside the article speak in the title's voice, stepping down by size alone: 31px, then 24px, regular (decision 0295).
+    const h2 = article(page).locator(".article-text h2").first();
+    const h3 = article(page).locator(".article-text h3").first();
+    await expect(h2).toHaveCSS("font-size", "31px");
+    await expect(h3).toHaveCSS("font-size", "24px");
+    for (const h of [h2, h3]) {
+      await expect(h).toHaveCSS("font-weight", "400");
+      await expect(h).toHaveCSS("font-family", /^"Literata Display"/);
+      await expect(h).toHaveCSS("text-align", "start");
+    }
+
   });
 
   test("an article's parts are set as a book sets them: real bold italics, plain zeros in dates, spacing that follows the size (decision 0246)", async ({ page }) => {
@@ -1181,6 +1189,8 @@ test("on a phone, an article fills the screen and the back button returns to the
   await row(page, "The pleasure of a slow letter").click();
   await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(page.getByRole("region", { name: "Reading Room" })).toBeHidden();
+  // A heading's first step is smaller on a phone, so it stays clearly under even a long title (1.6 times): 1.35 times 18px (decision 0295).
+  await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "24.3px");
 
   await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
