@@ -24,7 +24,7 @@
 -->
 <script lang="ts">
   import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
-  import { authorBesides, siteBesides, titleLength } from "./byline";
+  import { authorBesides, titleLength } from "./byline";
   import Portrait from "./Portrait.svelte";
   import { picturesOf } from "./portrait";
   import { edge } from "./edge";
@@ -179,8 +179,6 @@
 
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
-  /** The nameplate above the title (decision 0300): a video's or an episode's kind, then the feed's name, or its site's. */
-  let plate = $derived({ kind: video ? "Video" : episode ? "Episode" : undefined, own: siteBesides(source?.siteTitle, article.feedTitle, author, isSomeone(source)) });
   /** The reader's highlights and note (SPEC section 42), and the video's player, whose time a note can start with. */
   let marks: ArticleMarks | undefined = $state();
   let youtube: YouTubePlayer | undefined = $state();
@@ -471,19 +469,6 @@
   }
 </script>
 
-{#snippet feedName()}
-  {#if followed}
-    <!-- Someone followed: their name opens their list (decision 0289); a link, so a long name wraps as words do (decision 0260). -->
-    <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
-      onclick={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}><bdi>{article.feedTitle}</bdi></a
-    ><span id="byline-about" aria-hidden="true" class="sr-only">Opens everything of theirs.</span>
-  {:else if full?.siteUrl}
-    <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
-  {:else}
-    <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
-  {/if}
-{/snippet}
-
 {#snippet shareButton(style: string)}
   <!-- Share, one press from the text (decision 0293): the phone's own share menu, or Copy link where there's none. -->
   <button
@@ -570,20 +555,25 @@
     {/if}
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, its text on the right edge; the title and byline stay centred (decisions 0223, 0294). -->
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-3", rtl && "rtl"]}>
-      <!-- The title, then the nameplate drawn above it (decision 0300), so it's read and tabbed after the title, which takes the keyboard on opening. -->
-      <header class="article-head">
-        <!-- Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
-        <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
-        <p class="article-plate" lang="en" dir="ltr">
-          {#if plate.kind}{plate.kind}<span aria-hidden="true">{" · "}</span><span class="sr-only">{" from "}</span>{/if}{#if plate.own}<bdi>{plate.own}</bdi>{:else}{@render feedName()}{/if}
-        </p>
-      </header>
-      <!-- Under the title, centred, as on a book's title page: their picture (decision 0285), "by" and their name, then the day, small and faint (decisions 0294, 0300). -->
+      <!-- Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
+      <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
+      <!-- Under the title, centred, as on a book's title page: their picture, "by" and their name, then the day, small and faint (decision 0294). -->
+      <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="article-credit">
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
-        <!-- Left to right whatever the script. The plate names the feed, the byline the writer: the author, or the person the feed is named for. -->
+        <!-- Left to right whatever the article's script, as the byline always was. -->
         <p class="article-byline min-w-0" lang="en" dir="ltr">
-          {#if author}<span class="by">by</span>{" "}<bdi>{author}</bdi><span class="sr-only">,</span>{" "}{:else if plate.own}<span class="by">by</span>{" "}{@render feedName()}<span class="sr-only">,</span>{" "}{/if}
+          <span class="by">by</span>{" "}{#if author}<bdi>{author}</bdi>{" "}<span class="by">in</span>{" "}{/if}{#if followed}
+            <!-- Someone followed: their name opens their list, everything of theirs (decision 0289); the page about them is a press on from there, or More's "Info about …". No "›" here.
+                 A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
+            <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
+              onclick={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}><bdi>{article.feedTitle}</bdi></a
+            ><span id="byline-about" aria-hidden="true" class="sr-only">Opens everything of theirs.</span>
+          {:else if full?.siteUrl}
+            <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
+          {:else}
+            <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
+          {/if}<span class="sr-only">,</span>
           <!-- The day on a line of its own, small and faint, so the name leads (decision 0294). -->
           <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
         </p>
@@ -618,7 +608,7 @@
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
           <!-- Made anew for each article: highlights are drawn into it (ArticleMarks). -->
           {#key full.id}
-            <div bind:this={text} id="article-text" class={["article-text", folded && "folded", video && "video-notes"]} dir={rtl ? "rtl" : "auto"}>{@html full.content}</div>
+            <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir={rtl ? "rtl" : "auto"}>{@html full.content}</div>
           {/key}
           {#if video && foldable(full.content)}
             <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
@@ -786,6 +776,22 @@
   /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
   .toolbar > [aria-disabled="true"] > :global(svg) {
     opacity: 0.35;
+  }
+  /* The writer's name under the title: a 44px target to touch, taller than its line without moving it
+     (an inline link's padding above and below never moves the line, on each line a long name wraps onto). */
+  /* Underlined at rest, as every link is (the 65% edge), so it reads as a way in; the line comes up to the ink under the pointer. */
+  .writer-link {
+    padding-block: calc((2.75rem - 1em) / 2);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
+  }
+  @media (hover: hover) {
+    .writer-link:hover {
+      text-decoration-color: currentColor;
+    }
   }
   /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */
   .folded > :global(:not(:first-child)) {

@@ -106,14 +106,13 @@ test("the name opens their page beside the list, with only the keyboard; Escape 
   await page.getByRole("menuitem", { name: `Info about Blog ${ana}` }).click();
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   // On a computer their page keeps the article's column: an article's text has the same left edge as their name
-  // and their picture (decision 0219; the title is centred and reaches past it, decision 0294), and the article's
-  // head (its nameplate, decision 0300) starts as high as their picture does (decision 0285).
+  // and their picture (decision 0219; the title is centred and reaches past it, decision 0294), and the title
+  // starts as high as their picture does (decision 0285).
   if (desktop) {
     await page.keyboard.press("Escape");
     await page.locator(".item-row").first().click();
     const region = page.getByRole("region", { name: "Article", exact: true });
-    // An article's head now starts with its nameplate, over the title (decision 0300).
-    const title = await region.locator(".article-plate").boundingBox();
+    const title = await region.locator(".article-title").boundingBox();
     const text = await region.locator(".article-text").boundingBox();
     expect(Math.abs(heading!.x - text!.x)).toBeLessThan(1);
     expect(Math.abs(picture!.x - text!.x)).toBeLessThan(1);

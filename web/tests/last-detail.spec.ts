@@ -40,8 +40,8 @@ test.describe("a messy feed", () => {
     await page.locator(".item-row").first().click();
     await expect(pane(page).getByRole("heading", { level: 2, name: "Tom & Jerry’s guide" })).toBeVisible();
 
-    // The feed's name in the nameplate above the title is a link to their list (decision 0289).
-    await expect(pane(page).locator(".article-plate").getByRole("link", { name: `Messy ${name}` })).toHaveAttribute(
+    // The writer's name in the byline is a link to their list (decision 0289).
+    await expect(pane(page).locator(".article-byline").getByRole("link", { name: `Messy ${name}` })).toHaveAttribute(
       "href",
       new RegExp(`^/(?:[a-z0-9-]+-)?${id}$`),
     );

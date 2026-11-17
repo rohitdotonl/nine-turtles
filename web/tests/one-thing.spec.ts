@@ -265,8 +265,8 @@ test("their name in an article opens their list, and ‹ Article goes back to it
   const toAll = page.getByRole("button", { name: "Back to All articles" });
   await expect(toAll).toBeVisible();
 
-  // By the keyboard: their name in the nameplate, Enter. Their list, their picture leading its title, with ‹ Article.
-  await article(page).locator(".article-plate").getByRole("link", { name: blog.title, exact: true }).focus();
+  // By the keyboard: the name under the title, Enter. Their list, their picture leading its title, with ‹ Article.
+  await article(page).locator(".article-byline").getByRole("link", { name: blog.title, exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page.locator("#list-heading")).toContainText(blog.title);
   await expect(page.locator("#list-heading .portrait")).toBeVisible();
@@ -280,7 +280,7 @@ test("their name in an article opens their list, and ‹ Article goes back to it
   await expect(toAll).toBeVisible();
 
   // Through their page and back: ‹ Article still goes back to the article, in All, never round and round.
-  await article(page).locator(".article-plate").getByRole("link", { name: blog.title, exact: true }).click();
+  await article(page).locator(".article-byline").getByRole("link", { name: blog.title, exact: true }).click();
   await page.locator("#list-heading").getByRole("button", { name: blog.title }).click();
   await expect(page.getByRole("heading", { level: 2, name: blog.title })).toBeVisible();
   if (isMobile) await page.getByRole("button", { name: blog.title, exact: true }).first().click();

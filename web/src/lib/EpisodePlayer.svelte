@@ -154,20 +154,18 @@
 </div>
 
 <style>
-  /*
-    Between two fine lines, on the page itself, no panel (decision 0300, replacing 0298's tinted panel): as wide
-    as a video, taking the spare width pictures do on a computer. Times with a plain zero.
-  */
+  /* A still panel in a faint tone of the text, with a fine edge so it reads as one thing, 12px corners (decision 0298). Times with a plain zero. */
   .episode {
     margin-top: 1.5em;
-    margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
-    padding: 0.75rem 0;
-    border-block: 1px solid var(--line);
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-hold);
+    background-color: var(--fill);
     font-family: var(--font-dates);
     font-size: var(--text-meta);
     color: var(--ink-2);
   }
-  /* The 15 and 30 sit inside their circle with room to spare, in the interface's face (decision 0300). */
+  /* The 15 and 30 sit inside their circle with room to spare, in the interface's face (decision 0300, the owner's fix: they touched their arrows). */
   .skip text {
     stroke: none;
     fill: currentColor;

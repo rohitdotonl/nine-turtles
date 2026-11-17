@@ -240,11 +240,6 @@
     width: min(100%, 20rem);
     --shape: 9 / 16;
   }
-  /* On a computer a video takes the spare width pictures do, up to 5rem past the text each side (decision 0300). */
-  .video:not(.tall) {
-    width: auto;
-    margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
-  }
   .video > :global(*) {
     display: block;
     width: 100%;
@@ -328,17 +323,15 @@
     The chapters (decision 0298): in the reading face, like the description
     under them, two columns where there's room, each time quiet and plain
     (a plain zero) at its start; the chapter's name underlines under the pointer.
-    A step smaller than the text, under a fine line, as the video's notes (decision 0300).
   */
   .chapters {
     margin: 1.5rem 0 0;
-    padding: 0.5rem 0 0;
-    border-top: 1px solid var(--line);
+    padding: 0;
     list-style: none;
     columns: 2 16rem;
     column-gap: 2.5rem;
     font-family: var(--reading-font);
-    font-size: 0.8em;
+    font-size: 0.85em;
   }
   .chapters li {
     break-inside: avoid;
