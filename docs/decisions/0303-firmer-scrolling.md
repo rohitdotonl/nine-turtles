@@ -1,5 +1,7 @@
 # 0303: Firmer scrolling: an article's pull starts only at the end, and a list's rows land
 
+*Point 4 (rows that land) was taken out the next day, decision 0304.*
+
 **In one line:** a pull to the next (or previous) article starts only with a stroke that begins at the article's end (or top), counts only once it's gone 160px, and a quick flick no longer counts, so reading on never opens another article by itself; and on a touch screen a list comes to rest with a row's top at the pane's top (scroll snapping), never half a title.
 
 *17 November 2026. The owner said scrolling felt too smooth and slippery: up and down, the screen moved when they didn't mean it to, and asked for some resistance.*

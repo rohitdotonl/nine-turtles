@@ -77,16 +77,11 @@ html {
   display: block;
   font-size: var(--text-ui);
 }
-.swipe-by {
-  display: block;
-  margin-top: 0.25rem;
-  color: var(--ink-2);
-}
 /*
-  An article's pull (decision 0280): the next article hangs just past the
-  end of the one being read (the previous one just past its top), on the
-  same paper, and comes into view with it as the finger pulls: what it is
-  and who wrote it, nearest the edge that shows first.
+  An article's pull (decisions 0280, 0304): just past the end of the one
+  being read (or its top), on the same paper, an arrow comes into view with
+  it as the finger pulls, nearest the edge that shows first: no words, no
+  title.
 */
 .swipe-peek {
   position: absolute;
@@ -112,17 +107,23 @@ html {
 }
 .swipe-peek-text {
   max-width: 32rem;
+  color: var(--ink-2);
   font-size: var(--text-meta);
+  font-weight: 600;
   line-height: var(--text-meta--line-height);
 }
-.swipe-peek strong {
-  display: block;
+/* The arrow alone, in the second ink while pulling; far enough, in a filled circle of the ink. */
+.swipe-peek-arrow {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
   color: var(--ink-2);
-  font-weight: 600;
 }
-.swipe-peek-title {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: var(--text-ui);
-  font-weight: 600;
+.swipe-peek-arrow[data-far] {
+  border-color: var(--ink);
+  background-color: var(--ink);
+  color: var(--color-paper);
 }
