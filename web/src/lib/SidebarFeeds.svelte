@@ -103,6 +103,8 @@
   let L = $derived(LOOKS[redesign]);
   /** No headings to see: space or lines part the groups. */
   let bold = $derived(L?.headings === "hidden");
+  /** A sign before every heading. */
+  let signs = $derived(L?.headIcons === "all" || L?.cardNames === "signs");
 
   let feeds: Feed[] = $derived(library.rows ?? []);
   let folders: Folder[] = $derived(library.folders);
@@ -439,7 +441,7 @@
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
   <div data-drop-loose={who} class={["drop-area mx-2 rounded-press home-group", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
-    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", L?.headIcons === "all" && "flex items-center gap-3"]}>{#if L?.headIcons === "all"}<span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{/if}{heading}</h2>
+    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", signs && "flex items-center gap-3"]}>{#if signs}<span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{/if}{heading}</h2>
     {@render refused(who)}
     {#if rows.length > 0 && L?.looseFaces}
       <div class="-mx-2">{@render faceGrid(rows)}</div>
@@ -488,7 +490,7 @@
     ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
-  {#if pinned.length > 0}
+  {#if pinned.length > 0 || L?.pinAlways}
     <!-- Home redesign: the people the reader pinned, up to nine, never filled by the app; each with a dot while something of theirs is new. -->
     <div class={["home-group", bold && "bold-group"]}>
       <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{#if L?.headings !== "quiet"}<span class="text-ink"><Icon name="pin" /></span>{/if}Pinned</h2>
@@ -498,6 +500,9 @@
       <ul>
         {#each pinned as feed (feed.id)}
           {@render feedRow(feed, null, true)}
+        {:else}
+          <!-- Shown with no one pinned, so pinning is found (Rohit, round five). -->
+          <li class="pin-empty">Pin someone from their page, with <span class="pin-sign"><Icon name="pin" /></span> at its top.</li>
         {/each}
       </ul>
       {/if}
@@ -654,6 +659,17 @@
   /* Bold: a publication's face is a rounded square, a person's a circle. */
   .mark-square :global(.portrait) {
     border-radius: 4px;
+  }
+  /* Pinned, empty: one quiet line on how to pin, in the second ink. */
+  .pin-empty {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-meta);
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+  .pin-sign {
+    display: inline-flex;
+    vertical-align: -0.2em;
   }
   /* v9: headings as small quiet words, as a contents page names its parts. */
   .quiet-heading {

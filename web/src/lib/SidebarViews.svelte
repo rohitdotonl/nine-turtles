@@ -54,11 +54,59 @@
   const ICONS = { unread: "dot", starred: "bookmark", notes: "note", all: "layers" } as const;
 
   const PARTS = { every: ["unread", "starred", "notes", "all"], top: ["unread", "all"], yours: ["starred", "notes"], everyone: [] } as const;
+  let look = $derived(LOOKS[home.style]);
+  const CARD_NAMES = {
+    top: { name: "Reading", sign: "page" },
+    yours: { name: "Yours", sign: "bookmark" },
+    everyone: { name: "Following", sign: "feed" },
+    every: { name: "", sign: "page" },
+  } as const;
   let views = $derived(sidebarViews(unreadOff).filter((view) => (PARTS[part] as readonly string[]).includes(view)).sort((a, b) => (PARTS[part] as readonly string[]).indexOf(a) - (PARTS[part] as readonly string[]).indexOf(b)));
   const everyone: Route = { kind: "your-feeds" };
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
+{#if look && look.cardNames !== "no" && part !== "every"}
+  <!-- Home redesign, round five: every card named, with its sign. -->
+  <div class={["home-group", part === "top" && "first-card", part === "yours" && "sidebar-gap", part === "everyone" && "sidebar-last"]}>
+    <h2 class={["sidebar-section label", look.cardNames === "signs" && "flex items-center gap-3"]}>{#if look.cardNames === "signs"}<span class="text-ink"><Icon name={CARD_NAMES[part].sign} /></span>{/if}{CARD_NAMES[part].name}</h2>
+    <ul class={[((part === "yours" && LOOKS[home.style]?.pair) || (part === "top" && LOOKS[home.style]?.topPair)) && "pair", "named"]}>
+  {#each views as view (view)}
+    {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
+    <li>
+      <a
+        href={pathFor({ kind: "view", view })}
+        aria-current={current ? "page" : undefined}
+        aria-describedby={view === "unread" && waiting ? "unread-waiting" : undefined}
+        data-drop-star={view === "starred" ? "" : undefined /* an article dragged from the list is saved here (decision 0250, articleDrag.ts) */}
+        onclick={(event) => follow(event, { kind: "view", view })}
+        class={[
+          "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-ui",
+          current ? "font-semibold text-ink" : "text-ink-2",
+        ]}
+        ><span class={current ? "text-ink" : "text-muted"}><Icon name={ICONS[view]} /></span
+        ><span class="min-w-0 flex-1">{VIEW_NAMES[view]}</span
+        >{#if view === "unread" && waiting}<span aria-hidden="true" class="unread-dot sidebar-dot"></span>{/if}{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}</a
+      >
+      <!-- Its description, outside the link so the link's name stays "Unread". -->
+      {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}
+    </li>
+  {/each}
+  {#if part === "everyone"}
+  <li>
+    <a
+      href={pathFor(everyone)}
+      aria-current={onEveryone ? "page" : undefined}
+      onclick={(event) => follow(event, everyone)}
+      class={["place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-ui", onEveryone ? "font-semibold text-ink" : "text-ink-2"]}
+      ><span class={onEveryone ? "text-ink" : "text-muted"}><Icon name="feed" /></span><span class="min-w-0 flex-1">{nameFor(everyone)}</span
+      >{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}</a
+    >
+  </li>
+  {/if}
+</ul>
+  </div>
+{:else}
 <ul class={["home-group", part === "yours" && "sidebar-gap", ((part === "yours" && LOOKS[home.style]?.pair) || (part === "top" && LOOKS[home.style]?.topPair)) && "pair", part === "everyone" && "sidebar-last"]}>
   {#each views as view (view)}
     {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
@@ -94,6 +142,7 @@
   </li>
   {/if}
 </ul>
+{/if}
 
 <style>
   /* Home redesign: Saved and Notes, a group with no heading, parted from the folders above by space alone. */

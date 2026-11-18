@@ -120,7 +120,11 @@
     const root = document.documentElement;
     const look = LOOKS[homeDesign.style];
     root.dataset.home = homeDesign.style;
-    root.dataset.parts = look?.parts ?? "";
+    root.dataset.parts = look?.parts === "outline" ? "cards-out" : (look?.parts ?? "");
+    for (const [key, on] of [["outline", look?.parts === "outline"], ["polish", look?.polish], ["plain", look?.plainPlaces]] as const) {
+      if (on) root.dataset[key] = "";
+      else delete root.dataset[key];
+    }
     root.dataset.mark = look?.mark ?? "";
     root.dataset.folders = look?.folderCards ?? "";
     if (look?.folderBold) root.dataset.fbold = "";

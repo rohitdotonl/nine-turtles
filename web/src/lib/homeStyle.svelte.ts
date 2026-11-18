@@ -11,7 +11,7 @@ export type Look = {
   /** A person's or publication's mark in the icon column. */
   mark: "blank" | "initial" | "glyph" | "none" | "bare";
   /** How one group is parted from the next. */
-  parts: "space" | "hairline" | "cards" | "cards-out" | "row-cards";
+  parts: "space" | "hairline" | "cards" | "cards-out" | "row-cards" | "outline";
   /** Hairlines between the rows inside a card. */
   sep: boolean;
   /** Unread and All articles as two tiles side by side. */
@@ -30,6 +30,14 @@ export type Look = {
   headIcons: "no" | "folders" | "all";
   /** Folder names in semibold, so they read as the names of groups. */
   folderBold: boolean;
+  /** Every card named, with a sign before its name (Reading, Pinned, Folders, Yours, Not in a folder, Following). */
+  cardNames: "no" | "names" | "signs";
+  /** Pinned shows even with no one pinned, saying how to pin. */
+  pinAlways: boolean;
+  /** With the card's sign in its heading, Unread, All, Saved and Notes drop their own icons. */
+  plainPlaces: boolean;
+  /** Round five's tidier spacing and nesting inside cards. */
+  polish: boolean;
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -44,7 +52,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false, cardNames: "no", pinAlways: false, plainPlaces: false, polish: false };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -88,8 +96,22 @@ export const LOOKS: Record<string, Look> = {
   e8: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderCards: "under", bigHeads: true, editTop: false },
   e9: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "all", folderCards: "under", sep: true, bigHeads: true, editTop: false },
   e10: { ...base, headings: "shown", parts: "row-cards", mark: "bare", headIcons: "all", folderBold: true, editTop: false },
+  // Round five (Rohit: e1; no lines between rows; Pinned always there; try naming every card; tidy the nesting).
+  f1: { ...e1(), },
+  f2: { ...e1(), cardNames: "names" },
+  f3: { ...e1(), cardNames: "signs" },
+  f4: { ...e1(), cardNames: "signs", plainPlaces: true },
+  f5: { ...e1(), cardNames: "signs", folderCards: "under" },
+  f6: { ...e1(), cardNames: "signs", plainPlaces: true, folderCards: "under" },
+  f7: { ...e1(), cardNames: "signs", parts: "cards" },
+  f8: { ...e1(), cardNames: "signs", parts: "cards", bigHeads: true },
+  f9: { ...e1(), cardNames: "signs", plainPlaces: true, bigHeads: true, folderCards: "under" },
+  f10: { ...e1(), cardNames: "signs", plainPlaces: true, parts: "outline", folderCards: "under" },
   d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
+function e1(): Look {
+  return { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", editTop: false, pinAlways: true, polish: true };
+}
 const ALIASES: Record<string, string> = { safe: "v1", bold: "v2" };
 
 function valid(style: string | null): HomeStyle | undefined {
