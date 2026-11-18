@@ -325,3 +325,12 @@ html[data-tree="tick"] #sidebar li[data-folder-item] > ul.folder-feeds > li:last
 html:not([data-tree=""], [data-tree="none"]) #sidebar li[data-folder-item] > ul.folder-feeds {
   margin-top: -0.25rem;
 }
+
+/* Settings suggestion (round six): Settings in Home's look, white groups on the sidebar's grey. */
+html[data-home="final"] section:is([aria-labelledby="settings-heading"], [aria-label="Settings"]),
+html[data-home="final"] section:is([aria-labelledby="settings-heading"], [aria-label="Settings"]) .bg-paper {
+  background-color: var(--color-sidebar);
+}
+html[data-home="final"] section:is([aria-labelledby="settings-heading"], [aria-label="Settings"]) .inset-group {
+  background-color: var(--paper);
+}
