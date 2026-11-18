@@ -86,7 +86,13 @@ test("highlights and a note stay with the article, and Notes and search find the
   await expect(row).toContainText(/Your note: Ask about the hedgerow survey\. +Highlighted: for article\. +Highlighted: made-up summary\. +In On keeping/);
   await expect(row.locator("time")).toHaveCount(0);
   await expect(page.locator(".item-list .list-name time")).toHaveCount(0);
-  await expect(page.locator(".item-list li").filter({ hasText: "Ask about the hedgerow survey" }).getByRole("heading", { level: 4 })).toBeVisible();
+  // Each name is a heading right under the list's title, with no group label between them.
+  await expect(page.locator(".item-list li").filter({ hasText: "Ask about the hedgerow survey" }).getByRole("heading", { level: 3 })).toBeVisible();
+  // From the keyboard: the row takes the keyboard's place, and Enter opens the article.
+  await row.focus();
+  await page.keyboard.press("Enter");
+  await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // Search finds the article by its note's words.
   await page.keyboard.press("/");
