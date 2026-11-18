@@ -1,5 +1,5 @@
 <!--
-  "One person?" (SPEC section 36, decision 0308): two follows that share one
+  "One person?" (SPEC section 36, decision 0309): two follows that share one
   website, asked about once, at the top of Everyone you follow and in Add when
   the second is followed. One box a tone off the page (`.tone-box`), as who
   isn't working: the question, the two names in full ink and the website,

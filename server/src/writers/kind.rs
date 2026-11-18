@@ -23,7 +23,7 @@
 //! 6. A folder it came in says which ("Friends", "News"): that.
 //! 7. Anything else: could be either.
 //!
-//! A person is called by their name (owner's plan, step 2, decision 0308):
+//! A person is called by their name (owner's plan, step 2, decision 0309):
 //! when the articles that carry a name all carry the same one, that's what
 //! the person is called, not the blog's title ("Tomas Berg", not "Notes from
 //! Tomas"). A name the reader gave them stays.
@@ -531,7 +531,7 @@ pub async fn fill(
 /// every follower still waiting for a name since structure change 35
 /// (`name_pending`), at the feed's check, once its title is fresh.
 /// Named when the articles that carry a name all carry the same one, even if
-/// some carry none (decision 0308): a blog that signs only some posts is
+/// some carry none (decision 0309): a blog that signs only some posts is
 /// still one person's.
 pub async fn name_by_author(
     connection: &mut SqliteConnection,

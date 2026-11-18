@@ -185,7 +185,7 @@ test.describe("on a wide window", () => {
     await expect(writer).toHaveAttribute("title", "Everything by Asha Rao");
     await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    // The author is who the source is called by, so their name is said once (decision 0308).
+    // The author is who the source is called by, so their name is said once (decision 0309).
     await expect(article(page).locator(".article-byline").getByText("Asha Rao")).toHaveCount(1);
     // Marked with its language, for screen readers.
     await expect(article(page).locator("article")).toHaveAttribute("lang", "en-gb");

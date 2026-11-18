@@ -2352,7 +2352,7 @@ async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
     assert_eq!(kept, (7, 14));
 
     // At the check: only the person still called by their blog's own title takes the author's name,
-    // a half-signed blog's too since decision 0308 (the articles that carry a name all carry hers).
+    // a half-signed blog's too since decision 0309 (the articles that carry a name all carry hers).
     let mut connection = db.acquire().await.unwrap();
     for feed in 1..=7 {
         nine_turtles::writers::kind::name_by_author(&mut connection, feed, None)

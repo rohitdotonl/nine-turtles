@@ -109,10 +109,15 @@ export type Article = {
   writer?: string;
   /** An untitled article's first words, as plain text, which a list shows instead of a title (SPEC section 6). */
   opening?: string;
-  /** Only in Unread, listed by person (decision 0271): who it's listed under, and whether they're a publication. */
+  /** Only in Unread and Notes, listed by person (decisions 0271 and 0308): who it's listed under, and (Unread) whether they're a publication. */
   whose?: number;
   publication?: boolean;
+  /** Only in Notes (SPEC section 42, decision 0308): the reader's highlights and notes on it, newest first, shown in place of its date. */
+  marks?: Mark[];
 };
+
+/** A mark in the Notes list: words highlighted, with the reader's note on them; or, with no words, their note on the whole article. */
+export type Mark = { quote: string | null; note: string | null };
 
 /** A piece of a search result's excerpt: plain text, never HTML. */
 export type ExcerptPiece = { text: string; match: boolean };
@@ -190,6 +195,7 @@ export function toArticle(article: Record<string, unknown>): Article {
     ...(typeof article.opening === "string" && article.opening.trim() ? { opening: article.opening.trim() } : {}),
     ...excerptOf(article),
     ...(typeof article.whose === "number" ? { whose: article.whose, publication: article.publication === true } : {}),
+    ...(Array.isArray(article.marks) ? { marks: article.marks.filter(isRecord).map(toMark).filter((mark) => mark.quote !== null || mark.note !== null) } : {}),
     ...(article.episode === true || typeof article.episode_url === "string"
       ? { episode: true, episodeSeconds: typeof article.episode_seconds === "number" ? article.episode_seconds : null }
       : {}),
@@ -198,15 +204,18 @@ export function toArticle(article: Record<string, unknown>): Article {
 
 /**
  * A row's line of text: a search result's excerpt, said to come from the
- * reader's highlight or note when it does; in the Notes list, the reader's
- * first highlight, else their note (SPEC section 42).
+ * reader's highlight or note when it does (SPEC section 42).
  */
 function excerptOf(article: Record<string, unknown>): { excerpt?: ExcerptPiece[] } {
   const from = article.excerpt_from === "highlight" ? "Highlighted · " : article.excerpt_from === "note" ? "Your note · " : "";
   if (Array.isArray(article.excerpt)) return { excerpt: [...(from ? [{ text: from, match: false }] : []), ...toExcerpt(article.excerpt)] };
-  if (typeof article.highlighted === "string") return { excerpt: [{ text: `Highlighted · ${article.highlighted}`, match: false }] };
-  if (typeof article.noted === "string") return { excerpt: [{ text: `Your note · ${article.noted}`, match: false }] };
   return {};
+}
+
+/** A mark in the Notes list, its words and note each kept only as text. */
+function toMark(mark: Record<string, unknown>): Mark {
+  const words = (value: unknown) => (typeof value === "string" && value.trim() ? value : null);
+  return { quote: words(mark.quote), note: words(mark.note) };
 }
 
 /**

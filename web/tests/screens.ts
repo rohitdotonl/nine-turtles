@@ -93,6 +93,30 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    // Notes, by person (decision 0308): three people's marks, a highlight with a note on it and a note on a whole article among them.
+    name: "notes",
+    path: "/notes",
+    signedIn: true,
+    library: true,
+    open: async (page) => {
+      await page.route(/\/api\/articles\?view=notes/, async (route) => {
+        const answer = await page.request.get(new URL("/api/articles?view=all", page.url()).href);
+        const all = (await answer.json()) as { articles: Record<string, unknown>[]; latest: number };
+        const firsts = [...new Map(all.articles.map((article) => [article.feed_id, article])).values()].slice(0, 3);
+        const marks = [
+          [{ quote: null, note: "Write to her about the second half." }, { quote: "a good essay can wait a year.", note: "the reason I started this app" }],
+          [{ quote: "An unread library isn't a failure. It's a promise.", note: null }],
+          [{ quote: "I can name more birds by their song than by their feathers now.", note: null }],
+        ];
+        const articles = firsts.map((article, index) => ({ ...article, whose: article.feed_id, marks: marks[index] }));
+        await route.fulfill({ json: { articles, next: null, latest: all.latest } }).catch(() => undefined);
+      });
+      await page.reload();
+      await appReady(page);
+      await expect(page.getByText("Write to her about the second half.")).toBeVisible();
+    },
+  },
+  {
     name: "add-feed-choice",
     path: "/add",
     signedIn: true,

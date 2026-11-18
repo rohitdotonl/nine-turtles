@@ -1,4 +1,4 @@
-# 0308: People by their own names, and "One person?"
+# 0309: People by their own names, and "One person?"
 
 **In one line:** a person is called by their own name when the articles that carry a name all carry the same one (unsigned ones no longer stop it), and when two follows share one website nine turtles asks once, "One person?", with Join them and Keep apart, which is remembered.
 

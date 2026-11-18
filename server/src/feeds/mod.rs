@@ -13,12 +13,14 @@ mod articles;
 mod by_person;
 mod language;
 mod lists;
+mod notes_list;
 mod store;
 
 pub use adding::*;
 pub use articles::*;
 pub use by_person::*;
 pub use lists::*;
+pub use notes_list::*;
 pub use store::*;
 
 use axum::{

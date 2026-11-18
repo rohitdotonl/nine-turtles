@@ -3,7 +3,7 @@
   row in the sidebar, under All articles (decision 0266): a place of its
   own, so on a computer it has no way back to draw (its row shows where
   you are) and on a phone "‹ Home". Who isn't working comes first (NotWorking.svelte), then
-  "One person?" for two follows that share a website (OnePerson.svelte, decision 0308), then who
+  "One person?" for two follows that share a website (OnePerson.svelte, decision 0309), then who
   could be either, to settle with a tick (SettleList.svelte, decision 0264).
   Then everyone, A to Z, People and Publications apart as in the sidebar, each
   row saying the title of their newest piece and when it came, or "Quiet
@@ -90,7 +90,7 @@
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
   let notWorking: NotWorking | undefined = $state();
-  /** Follows that share one website, still to ask about: one at a time, at the top (decision 0308). */
+  /** Follows that share one website, still to ask about: one at a time, at the top (decision 0309). */
   let alike: Alike[] = $state([]);
 
   let listed = $derived(feeds ?? []);

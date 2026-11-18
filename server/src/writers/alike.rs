@@ -1,4 +1,4 @@
-//! "One person?" (SPEC section 36, decision 0308): when two of the reader's
+//! "One person?" (SPEC section 36, decision 0309): when two of the reader's
 //! follows share one website, nine turtles asks once whether they're one
 //! person, at the top of Everyone you follow and in Add when the second is
 //! followed. **Join them** joins them as "+ Add a source" does

@@ -83,7 +83,7 @@ PLAN.md → V1, item 1.*
   title whose symbols a blog coded twice ("Tom &amp;amp; Jerry",
   "&amp;#8217;") shows them as themselves ("Tom & Jerry", "’"), for
   articles arriving from now on.
-- **Called by their name** (owner's plan, step 2; decision 0308). When a source on its
+- **Called by their name** (owner's plan, step 2; decision 0309). When a source on its
   own is first sorted a person by its one name, and the articles that carry a name all
   carry the same one (in any capitalisation; some may carry none), the person is called by that
   name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
@@ -94,7 +94,7 @@ PLAN.md → V1, item 1.*
   their feed's own title (as the publisher last gave it, never a name brought
   from another app), once, when it first guesses them; people followed
   before this change are renamed the same way, once, at their feed's next
-  check, and once more after decision 0308 for anyone a half-signed blog had
+  check, and once more after decision 0309 for anyone a half-signed blog had
   left under its title. In lists their name stands alone, never the blog's
   title after it (their page says where they publish). An Atom feed that names its author once, for all its entries, signs
   each of them, so it counts as one author for sorting too (an
@@ -267,7 +267,7 @@ PLAN.md → V1, item 1.*
   sidebar's foot says "Maya Chen is one person now." with Undo, which puts
   each source back as + Add a source's Undo does. For the pointer only; the
   keyboard joins them with + Add a source.
-- **"One person?"** (decision 0308; decision 0163 had removed an earlier
+- **"One person?"** (decision 0309; decision 0163 had removed an earlier
   "Is this the same person?"). nine turtles never joins sources by itself,
   but when two of the reader's follows share one website (one address
   without "www.": alpha.example and www.alpha.example/news; on a site many

@@ -23,7 +23,7 @@ async fn publisher(name: &'static str) -> String {
 fn feed(name: &str) -> impl IntoResponse {
     let mut items = String::new();
     for number in (1..=5).rev() {
-        // Two writers, so the blog keeps its own name (a lone writer's would name it, decision 0308).
+        // Two writers, so the blog keeps its own name (a lone writer's would name it, decision 0309).
         let author = match number {
             3 => "<author>ada@quiet.example (Ada Lovelace)</author>",
             1 => "<author>grace@quiet.example (Grace Hopper)</author>",

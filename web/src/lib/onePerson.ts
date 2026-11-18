@@ -1,4 +1,4 @@
-// "One person?" (SPEC section 36, decision 0308): two follows that share one
+// "One person?" (SPEC section 36, decision 0309): two follows that share one
 // website, asked about once. The server finds them (`writers/alike.rs`);
 // Join them is "+ Add a source"'s join, and Keep apart is remembered there.
 

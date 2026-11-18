@@ -9,7 +9,9 @@ use std::time::{Duration, Instant};
 
 use nine_turtles::{
     checking::DUE,
-    feeds::{Cursor, FEEDS, LATEST, List, Order, by_person_sql, list_sql, new_sql, page},
+    feeds::{
+        Cursor, FEEDS, LATEST, List, NOTES_SQL, Order, by_person_sql, list_sql, new_sql, page,
+    },
     marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
     starred::{self, AT_ONCE, PAGE},
@@ -219,6 +221,14 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             assert!(!plan.contains("TEMP B-TREE"), "{list:?} {order:?}: {plan}");
         }
     }
+    // Notes (decision 0308) reads only the reader's marks, through their
+    // index, and each one's entry by its key: never every note or entry.
+    let notes = plan(&db, NOTES_SQL, &[READER]).await;
+    assert!(notes.contains("SEARCH notes USING"), "{notes}");
+    assert!(
+        !notes.contains("SCAN notes") && !notes.contains("SCAN entries"),
+        "{notes}"
+    );
     // The sidebar's unread counts come from their own small index.
     let counts = plan(&db, FEEDS, &[READER]).await;
     assert!(counts.contains("INDEX entries_unread_by_feed"), "{counts}");

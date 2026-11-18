@@ -1,4 +1,4 @@
--- "One person?" and people's own names (SPEC section 36, decision 0308).
+-- "One person?" and people's own names (SPEC section 36, decision 0309).
 --
 -- 1. A new table, empty to begin with: two places the reader said to keep
 --    apart, when nine turtles asked whether two follows sharing one website

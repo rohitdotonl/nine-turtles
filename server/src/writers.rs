@@ -14,7 +14,7 @@
 //! A person's list is any of their places' lists: `GET /api/articles?feed=3`
 //! for a place of a person with two or more places lists all of them
 //! (`widen`). nine turtles never joins places by itself; it asks once when
-//! two share a website (`alike`, decision 0308).
+//! two share a website (`alike`, decision 0309).
 
 use axum::{
     Json, Router,

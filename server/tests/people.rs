@@ -919,7 +919,7 @@ async fn an_import_says_how_it_was_sorted_and_who_could_be_either() {
 #[tokio::test]
 async fn a_person_who_signs_only_some_articles_is_called_by_that_name() {
     let (reader, _state) = Reader::new().await;
-    // Decision 0308: the articles that carry a name all carry Asha's, so it's hers.
+    // Decision 0309: the articles that carry a name all carry Asha's, so it's hers.
     let asha = reader.follow("asha.xml").await;
     let listed = reader.feed(asha).await;
     assert_eq!(listed["kind"], "person");

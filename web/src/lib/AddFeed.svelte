@@ -134,7 +134,7 @@
   let pausedFor = "";
   /** Just added: "{title} is…" a person or a publication, with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
-  /** Someone already followed on the same website: "One person?" above the question (decision 0308). */
+  /** Someone already followed on the same website: "One person?" above the question (decision 0309). */
   let alike: Alike | undefined = $state();
   let onePerson: OnePerson | undefined = $state();
   /** Their newest title, shown with their site above the question. */
@@ -308,7 +308,7 @@
     latest = newest;
     who = feed.open ? undefined : (feed.kind ?? "person");
     await tick();
-    // "One person?" comes first, so the keyboard meets it first (decision 0308). Else, with neither
+    // "One person?" comes first, so the keyboard meets it first (decision 0309). Else, with neither
     // chosen, the question itself: a tile with the keyboard on it would look chosen.
     if (onePerson) onePerson.focus();
     else (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();

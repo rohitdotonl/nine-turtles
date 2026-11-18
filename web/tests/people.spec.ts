@@ -355,7 +355,7 @@ test("two follows on one website are asked about once at the top of Everyone you
   await openPlaces(page, [`/blog/${kai}/feed.xml`, `/blog/${kai}/comments.xml`]);
   await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);
-  // The newest pair is asked about first (decision 0308).
+  // The newest pair is asked about first (decision 0309).
   const asked = page.getByRole("group", { name: "One person?" });
   await expect(asked).toContainText(`share one website, ${kai}.example.`);
   await tabTo(page, asked.getByRole("button", { name: "Join them" }));
