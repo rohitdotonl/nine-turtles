@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, follow, signIn, tabTo } from "./screens";
 
 // SPEC section 36 (people and publications), "How to check it", done by a
 // browser: the page opened by the name at the top of the list (its settings
@@ -350,7 +350,7 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   await expect(rowsNamed(page, `Blog ${kit}`)).toHaveCount(0);
 });
 
-test("two follows on one website are asked about once at the top of Everyone you follow: Join them with Undo, then Keep apart", async ({ page }) => {
+test("two follows on one website are asked about once at the top of Everyone you follow: Join them with Undo, then Keep apart, by keyboard", async ({ page }) => {
   const kai = unique("pp-kai");
   await openPlaces(page, [`/blog/${kai}/feed.xml`, `/blog/${kai}/comments.xml`]);
   await page.goto(new URL("/following", FEEDS_APP).href);
@@ -358,14 +358,18 @@ test("two follows on one website are asked about once at the top of Everyone you
   // The newest pair is asked about first (decision 0308).
   const asked = page.getByRole("group", { name: "One person?" });
   await expect(asked).toContainText(`share one website, ${kai}.example.`);
-  await asked.getByRole("button", { name: "Join them" }).click();
+  await tabTo(page, asked.getByRole("button", { name: "Join them" }));
+  await page.keyboard.press("Enter");
   await expect(line(page)).toContainText("is one person now");
+  await expect(page.getByRole("button", { name: "Undo" })).toBeFocused();
   await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
   // Undo puts them apart again, and asks again.
-  await page.getByRole("button", { name: "Undo" }).click();
+  await page.keyboard.press("Enter");
   await expect(asked).toContainText(`${kai}.example`);
-  // Keep apart: never asked about those two again, after a reload too.
-  await asked.getByRole("button", { name: "Keep apart" }).click();
+  // Keep apart: never asked about those two again, after a reload too; the keyboard goes to the title.
+  await tabTo(page, asked.getByRole("button", { name: "Keep apart" }));
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeFocused();
   await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
   await page.reload();
   await appReady(page);
@@ -373,16 +377,35 @@ test("two follows on one website are asked about once at the top of Everyone you
   await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
 });
 
-test("following someone on a website already followed asks One person? in Add, and Join them opens them as one", async ({ page }) => {
+test("following someone on a website already followed asks One person? first in Add; Keep apart goes on to the question, Join them opens them as one", async ({ page }) => {
   const lena = unique("pp-lena");
-  await openPlaces(page, [`/blog/${lena}/feed.xml`]);
-  await page.keyboard.press("a");
+  const mia = unique("pp-mia");
+  await openPlaces(page, [`/blog/${lena}/feed.xml`, `/blog/${mia}/feed.xml`]);
   const sheet = page.getByRole("dialog");
+  const asked = sheet.getByRole("group", { name: "One person?" });
+  // Keep apart: the keyboard is on the box first, then goes on to "… is…".
+  await page.keyboard.press("a");
+  await sheet.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${mia}/comments.xml`);
+  await page.keyboard.press("Enter");
+  await expect(asked).toBeFocused();
+  await expect(asked).toContainText(`share one website, ${mia}.example.`);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(asked.getByRole("button", { name: "Keep apart" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(asked).toHaveCount(0);
+  await expect(sheet.getByRole("group", { name: /is…$/ })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  // Join them: one person at once, and they open.
+  await page.keyboard.press("a");
   await sheet.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${lena}/comments.xml`);
   await page.keyboard.press("Enter");
-  const asked = sheet.getByRole("group", { name: "One person?" });
+  await expect(asked).toBeFocused();
   await expect(asked).toContainText(`share one website, ${lena}.example.`);
-  await asked.getByRole("button", { name: "Join them" }).click();
+  await page.keyboard.press("Tab");
+  await expect(asked.getByRole("button", { name: "Join them" })).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(sheet).toHaveCount(0);
   // One row for them in the sidebar, holding both.
   await expect(rowsNamed(page, `Blog ${lena}`)).toHaveCount(1);

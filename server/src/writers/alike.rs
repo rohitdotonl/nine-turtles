@@ -66,6 +66,15 @@ const SHARED_HOSTS: &[&str] = &[
     "goodreads.com",
     "feedburner.com",
     "feeds.feedburner.com",
+    "anchor.fm",
+    "podcasters.spotify.com",
+    "rsshub.app",
+    "mastodon.online",
+    "mas.to",
+    "hachyderm.io",
+    "fosstodon.org",
+    "threads.net",
+    "linkedin.com",
 ];
 
 /// The website a place belongs to, as it's compared and as the question
@@ -81,12 +90,18 @@ pub fn website_of(address: &str) -> Option<String> {
     if !SHARED_HOSTS.contains(&host.as_str()) {
         return Some(host);
     }
+    // The query too: a YouTube feed with no site of its own is told apart only by it.
     let path = url.path().trim_end_matches('/');
-    (!path.is_empty()).then(|| format!("{host}{path}"))
+    let query = url
+        .query()
+        .map(|query| format!("?{query}"))
+        .unwrap_or_default();
+    (!path.is_empty()).then(|| format!("{host}{path}{query}"))
 }
 
-/// Two follows the reader might call one person, the one to keep the name
-/// first (a person before a publication, then the one followed first).
+/// Two follows the reader might call one person, the one whose name a join
+/// keeps first (someone already joined, then a person, then the one
+/// followed first).
 #[derive(Debug, Serialize, PartialEq, Eq)]
 pub struct Alike {
     /// One place of each, to join (`/api/writers/join`) or keep apart.
@@ -99,6 +114,8 @@ pub struct Alike {
 
 /// Someone or something the reader follows: one row, as the sidebar has it.
 struct Row {
+    /// Already joined from several places: their name is the one a join keeps.
+    joined: bool,
     feeds: Vec<i64>,
     name: String,
     person: bool,
@@ -142,6 +159,7 @@ pub async fn alike(
                 rows.push((
                     writer,
                     Row {
+                        joined: writer.is_some(),
                         feeds: Vec::new(),
                         name,
                         person: is_person,
@@ -173,7 +191,10 @@ pub async fn alike(
             if !(one.person || other.person) || kept_apart(one, other) {
                 continue;
             }
-            let (first, second) = if other.person && !one.person {
+            // First the one whose name a join keeps (`writers::join`): someone already joined, else a
+            // person, else the one followed first, so the question names who they'll be.
+            let rank = |row: &Row| (row.joined, row.person);
+            let (first, second) = if rank(other) > rank(one) {
                 (other, one)
             } else {
                 (one, other)
@@ -276,5 +297,9 @@ mod tests {
         );
         assert_eq!(website_of("https://medium.com/"), None);
         assert_eq!(website_of("newsletter:1:kai"), None);
+        assert_ne!(
+            website_of("https://www.youtube.com/feeds/videos.xml?channel_id=UC1"),
+            website_of("https://www.youtube.com/feeds/videos.xml?channel_id=UC2")
+        );
     }
 }

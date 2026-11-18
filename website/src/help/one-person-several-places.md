@@ -112,8 +112,8 @@ keep. Their list now holds everything, newest first, each article marked
 **Blog**, **Video**, **Newsletter** or **Podcast**. Changed your mind?
 Press **Undo**.
 
-nine turtles never joins anyone by itself. When two people you follow
-share one website, it asks you once, **One person?**, at the top of
+nine turtles never joins anyone by itself. When two you follow share
+one website, and at least one is a person, it asks you once, **One person?**, at the top of
 Everyone you follow (and in Add, when you follow the second). **Join them**
 makes them one person; **Keep apart** means it never asks about those two
 again.

@@ -31,8 +31,8 @@
   import NoteLine from "./NoteLine.svelte";
   import SettleList from "./SettleList.svelte";
   import OnePerson from "./OnePerson.svelte";
-  import { keepApart, listAlike, type Alike } from "./onePerson";
-  import { join, putBack } from "./people";
+  import { listAlike, type Alike } from "./onePerson";
+  import { putBack, type Before } from "./people";
   import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
   import { addressFor } from "./router";
@@ -92,8 +92,6 @@
   let notWorking: NotWorking | undefined = $state();
   /** Follows that share one website, still to ask about: one at a time, at the top (decision 0308). */
   let alike: Alike[] = $state([]);
-  /** Why the last answer to "One person?" couldn't be kept. */
-  let alikeProblem = $state("");
 
   let listed = $derived(feeds ?? []);
   /** Ticked as a person in the list to settle: they stay in it, ticked, until the page is left. */
@@ -262,33 +260,16 @@
     });
   }
 
-  /** "One person?": Join them makes them one, under the first one's name, with Undo. */
-  async function joinAlike(pair: Alike) {
-    if (busy) return;
-    busy = true;
-    const { refusal: why, before } = await join(pair.feeds);
-    busy = false;
-    if (why) {
-      alikeProblem = why;
-      return;
-    }
-    alikeProblem = "";
+  /** "One person?" answered Join them: one person now, under the first one's name, with Undo. */
+  async function joined(pair: Alike, before: Before[]) {
     await done(`${pair.names[0]} is one person now.`, async () => {
       if (await putBack(before)) throw "trouble";
     });
   }
 
-  /** Keep apart: never asked about again, and the next pair (if any) is asked. */
-  async function keepAlikeApart(pair: Alike) {
-    if (busy) return;
-    busy = true;
-    const why = await keepApart(pair);
-    busy = false;
-    if (why) {
-      alikeProblem = why;
-      return;
-    }
-    [alikeProblem, alike] = ["", alike.filter((each) => each !== pair)];
+  /** Keep apart: never asked about again; the next pair, if any, is asked, and the keyboard goes to the title. */
+  async function keptApart(pair: Alike) {
+    alike = alike.filter((each) => each !== pair);
     await tick();
     heading?.focus();
   }
@@ -355,7 +336,7 @@
         {/if}
         {#if alike[0] && !editing}
           {@const pair = alike[0]}
-          <OnePerson {pair} {busy} problem={alikeProblem} onJoin={() => void joinAlike(pair)} onApart={() => void keepAlikeApart(pair)} />
+          {#key pair}<OnePerson {pair} onJoined={(before) => void joined(pair, before)} onKeptApart={() => void keptApart(pair)} />{/key}
         {/if}
         {#if settling.length > 0}
           <SettleList rows={settling} {busy} onTick={tick1} onRest={settleRest} />

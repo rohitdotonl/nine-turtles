@@ -279,7 +279,8 @@ PLAN.md → V1, item 1.*
   outlined button) and **Keep apart** (words). It asks at the top of
   Everyone you follow (section 15), one pair at a time, and in Add's
   question when the second is followed (section 3). Join them joins them as
-  + Add a source does, under the person's name (or the one followed first),
+  + Add a source does, under the name of someone already joined, else the person's, else the
+  one followed first (the question names them first),
   in every folder either was in: on Everyone you follow with "Kai Ostrander
   is one person now · Undo", in Add by opening them, the note saying so
   (Take out undoes it). Keep apart is remembered, and those two are never

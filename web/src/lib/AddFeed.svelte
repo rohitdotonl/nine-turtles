@@ -48,7 +48,7 @@
   import { runningInstalled } from "./installing.svelte";
   import { join } from "./people";
   import OnePerson from "./OnePerson.svelte";
-  import { keepApart, listAlike, pairWith, type Alike } from "./onePerson";
+  import { listAlike, pairWith, type Alike } from "./onePerson";
   import type { WhoKind } from "./shapes";
   import { addedLine } from "./sorting";
   import { question } from "./youtube";
@@ -136,7 +136,7 @@
   let asking: Feed | undefined = $state();
   /** Someone already followed on the same website: "One person?" above the question (decision 0308). */
   let alike: Alike | undefined = $state();
-  let alikeProblem = $state("");
+  let onePerson: OnePerson | undefined = $state();
   /** Their newest title, shown with their site above the question. */
   let latest: string | undefined = $state();
   /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
@@ -301,7 +301,6 @@
       return;
     }
     alike = pairWith(await listAlike(), feed.id);
-    alikeProblem = "";
     address = "";
     choices = [];
     asking = feed;
@@ -309,8 +308,10 @@
     latest = newest;
     who = feed.open ? undefined : (feed.kind ?? "person");
     await tick();
-    // With neither chosen, the question itself: a tile with the keyboard on it would look chosen.
-    (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
+    // "One person?" comes first, so the keyboard meets it first (decision 0308). Else, with neither
+    // chosen, the question itself: a tile with the keyboard on it would look chosen.
+    if (onePerson) onePerson.focus();
+    else (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
   }
 
   /**
@@ -361,25 +362,17 @@
     onAdded({ ...first.feed, kind: "person" }, [refusal, note].filter(Boolean).join(" ") || undefined);
   }
 
-  /** "One person?" answered Join them: they're one person at once, with no question left, and they open. */
-  async function joinAlike(pair: Alike) {
+  /** "One person?" answered Join them: they're one person at once, nothing more to ask, and their list opens. */
+  function joined(pair: Alike) {
     const feed = asking;
-    if (!feed || busy) return;
-    busy = true;
-    const { refusal } = await join(pair.feeds);
-    busy = false;
-    if (refusal) return void (alikeProblem = refusal);
+    if (!feed) return;
     [answering, asking, asked] = [true, undefined, ""];
+    // A joined place is always a person, never one that could be either (SPEC section 36).
     onAdded({ ...feed, kind: "person", open: false }, [note, `${pair.names[0]} is one person now.`].filter(Boolean).join(" "));
   }
 
-  /** Keep apart: never asked again, and the question about them carries on. */
-  async function keepAlikeApart(pair: Alike) {
-    if (busy) return;
-    busy = true;
-    const refusal = await keepApart(pair);
-    busy = false;
-    if (refusal) return void (alikeProblem = refusal);
+  /** Keep apart: the question about them carries on, with the keyboard on it. */
+  async function keptApart() {
     alike = undefined;
     await tick();
     (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
@@ -598,7 +591,7 @@
       <div class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
         {#if alike}
           {@const pair = alike}
-          <OnePerson {pair} {busy} problem={alikeProblem} onJoin={() => void joinAlike(pair)} onApart={() => void keepAlikeApart(pair)} />
+          <OnePerson bind:this={onePerson} {pair} onJoined={() => joined(pair)} onKeptApart={() => void keptApart()} />
         {/if}
         <fieldset bind:this={whoGroup} tabindex="-1" class="flex flex-col gap-4 outline-none">
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
