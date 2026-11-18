@@ -89,11 +89,24 @@ test("Home opens on Saved, and the pin on someone's page pins them to Home and b
     await appReady(page);
     const pin = page.getByRole("button", { name: /^Pin .* to Home$/ });
     await expect(pin).toHaveAttribute("aria-pressed", pressed === "true" ? "false" : "true");
-    await pin.click();
+    // With the keyboard alone: a plain button, pressed with Enter.
+    await pin.focus();
+    await page.keyboard.press("Enter");
     await expect(pin).toHaveAttribute("aria-pressed", pressed);
     await page.goto(new URL("/", FEEDS_APP).href);
     await appReady(page);
   };
+  // Nine pinned already: refused under their name, in words, and nothing changes.
+  await page.goto(new URL(`/x-${id}/about`, FEEDS_APP).href);
+  await appReady(page);
+  await page.route("**/api/feeds/*/pin", (route) => route.fulfill({ status: 409, json: { error: "full" } }));
+  const pin = page.getByRole("button", { name: /^Pin .* to Home$/ });
+  await pin.focus();
+  await page.keyboard.press(" ");
+  await expect(page.getByRole("status").filter({ hasText: "9 are pinned already. Unpin someone first." })).toBeVisible();
+  await expect(pin).toHaveAttribute("aria-pressed", "false");
+  await page.unroute("**/api/feeds/*/pin");
+
   await pinFromTheirPage("true");
   await expect(pinnedCard.locator(`a[href$="-${id}"]`)).toBeVisible();
   await expect(nav.locator(`[data-drop-loose='person'] a[href$="-${id}"]`)).toHaveCount(0);

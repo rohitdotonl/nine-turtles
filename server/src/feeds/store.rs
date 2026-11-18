@@ -44,6 +44,7 @@ pub async fn follow_again(
         .execute(&mut *connection)
         .await?;
     refresh_shared(connection, feed_id).await?;
+    crate::pins::keep_to_most(connection, person, feed_id).await?;
     Ok(true)
 }
 

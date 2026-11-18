@@ -129,8 +129,8 @@ describe("Unread, by person (decisions 0271 and 0278)", () => {
 
 describe("Undo of a join or a separation", () => {
   it("keeps everything the server gave back, so the note on them and Write back's switch and way come back too", () => {
-    const given = [{ feed: 3, writer: 9, name: "Alpha", folders: [1], write_to: "a@alpha.example", write_back_off: true, write_back_way: "comment", note: "Met at the fair." }];
+    const given = [{ feed: 3, writer: 9, name: "Alpha", folders: [1], write_to: "a@alpha.example", write_back_off: true, write_back_way: "comment", note: "Met at the fair.", pinned_at: 1700000000 }];
     expect(befores(given)).toEqual(given);
-    expect(befores([{ feed: 4 }])).toEqual([{ feed: 4, writer: null, name: null, folders: [], write_to: null, write_back_off: false, write_back_way: null, note: null }]);
+    expect(befores([{ feed: 4 }])).toEqual([{ feed: 4, writer: null, name: null, folders: [], write_to: null, write_back_off: false, write_back_way: null, note: null, pinned_at: null }]);
   });
 });

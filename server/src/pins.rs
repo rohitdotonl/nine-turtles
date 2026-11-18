@@ -56,6 +56,39 @@ async fn pin(
     }
 }
 
+/// How many rows the reader has pinned: people, not places.
+async fn pinned_rows(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        "SELECT COUNT(DISTINCT COALESCE('w' || writer_id, 'f' || feed_id)) FROM subscriptions
+         WHERE person_id = ? AND unsubscribed_at IS NULL AND pinned_at IS NOT NULL",
+    )
+    .bind(person)
+    .fetch_one(connection)
+    .await
+}
+
+/// A place brought back (Undo, Bring back) keeps its pin only while Pinned
+/// has room: past `MOST`, it comes back unpinned.
+pub async fn keep_to_most(
+    connection: &mut sqlx::SqliteConnection,
+    person: i64,
+    feed: i64,
+) -> Result<(), sqlx::Error> {
+    if pinned_rows(connection, person).await? > MOST {
+        sqlx::query(
+            "UPDATE subscriptions SET pinned_at = NULL WHERE person_id = ? AND feed_id = ?",
+        )
+        .bind(person)
+        .bind(feed)
+        .execute(connection)
+        .await?;
+    }
+    Ok(())
+}
+
 /// Pins or unpins the person place `feed` belongs to, for reader `person`.
 /// Pinning someone already pinned keeps their place in the order.
 pub async fn set(
@@ -64,7 +97,8 @@ pub async fn set(
     feed: i64,
     pinned: bool,
 ) -> Result<Pinned, sqlx::Error> {
-    let mut transaction = db.begin().await?;
+    // It reads, then writes: the write lock first, so two pins at once can't both pass the count.
+    let mut transaction = db.begin_with("BEGIN IMMEDIATE").await?;
     let followed: Option<(Option<i64>, Option<i64>)> = sqlx::query_as(
         "SELECT writer_id, pinned_at FROM subscriptions
          WHERE person_id = ? AND feed_id = ? AND unsubscribed_at IS NULL",

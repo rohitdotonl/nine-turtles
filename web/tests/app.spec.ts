@@ -761,14 +761,15 @@ test("on a phone, Back after an update opens the new version one step back", asy
   // Notes, not Saved: home is Saved's own address now (decision 0310), so Back to it is no move at all.
   await sidebar(page).getByRole("link", { name: /^Notes/ }).click();
   await expect(page).toHaveURL(/\/notes$/);
-  await expect(list(page)).toBeVisible();
+  const notes = page.getByRole("region", { name: "Notes" });
+  await expect(notes).toBeVisible();
   const samePage = await markPage(page);
   await newerVersionLive(page);
   await page.goBack();
   await expect.poll(samePage).toBe(false);
   // One step back from a list on a phone is the feeds, the home screen.
   await expect(sidebar(page)).toBeVisible();
-  await expect(list(page)).toBeHidden();
+  await expect(notes).toBeHidden();
 });
 
 test("an address that leads nowhere shows Wrong turn?, and Back to your reading goes home, by keyboard", async ({ page }) => {

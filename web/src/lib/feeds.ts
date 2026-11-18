@@ -92,10 +92,11 @@ export type SidebarRow = { kind: "view"; view: View } | { kind: "feed" | "folder
 /**
  * Shift+J and Shift+K (decisions 0110, 0180): the row after (1) or before (-1)
  * the place you're in, top to bottom as the sidebar shows them: its lists
- * (Unread, Saved, Notes, All), then folders A to Z, each with its feeds while
- * it's open, then the people and then the publications in no folder. A folded folder's feeds are passed
+ * (Saved, Notes, All, Unread), then Pinned (decision 0310), then folders in
+ * the reader's order, each with its feeds while it's open, then the people
+ * and then the publications in no folder or pin. A folded folder's feeds are passed
  * over, as you can't see them, so the next press goes on to the next folder. A
- * feed in two folders counts once, where it's first listed. At either end
+ * feed in two places (two folders, or Pinned and a folder) counts once, where it's first listed. At either end
  * nothing happens: the list ends.
  */
 export function sidebarRowNextTo(library: Library, views: readonly View[], open: number[], here: Route, step: 1 | -1): SidebarRow | undefined {
@@ -103,7 +104,7 @@ export function sidebarRowNextTo(library: Library, views: readonly View[], open:
   // Pinned, under the fixed lists (decision 0310): they leave People and Publications, and stay in their folders.
   const pinned = pinnedRows(library.feeds);
   for (const feed of pinned) rows.push({ kind: "feed", id: feed.id });
-  const seen = new Set<number>();
+  const seen = new Set<number>(pinned.map((feed) => feed.id));
   for (const folder of library.folders) {
     rows.push({ kind: "folder", id: folder.id });
     if (!open.includes(folder.id)) continue;

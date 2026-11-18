@@ -167,3 +167,72 @@ async fn a_pin_is_on_every_place_of_the_person_and_nine_is_the_most() {
     );
     assert!(other.pinned().await.is_empty());
 }
+
+#[tokio::test]
+async fn a_pin_follows_the_person_through_join_take_out_and_undo() {
+    let (base, _state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+        publisher: publisher().await,
+    };
+    let blog = reader.follow("alpha").await;
+    let letters = reader.follow("alpha-letters").await;
+    assert_eq!(reader.pin(letters, true).await.0, StatusCode::NO_CONTENT);
+    let first = reader.pinned().await[0].1;
+
+    // Joined, the person is pinned on both places, from the first pin.
+    let (status, joined) = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{joined}");
+    assert_eq!(reader.pinned().await, [(blog, first), (letters, first)]);
+
+    // Undo puts each place back as it was: only the letters pinned.
+    let (status, _) = reader
+        .post(
+            "/api/writers/put-back",
+            json!({ "before": joined["before"] }),
+        )
+        .await;
+    assert!(status.is_success(), "{status}");
+    assert_eq!(reader.pinned().await, [(letters, first)]);
+
+    // Taken out of a pinned person, a place leaves the pin with them.
+    let (status, joined) = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    assert_eq!(status, StatusCode::OK, "{joined}");
+    let (status, _) = reader
+        .post("/api/writers/separate", json!({ "feed": blog }))
+        .await;
+    assert!(status.is_success(), "{status}");
+    assert_eq!(reader.pinned().await, [(letters, first)]);
+}
+
+#[tokio::test]
+async fn brought_back_into_a_full_pinned_it_comes_back_unpinned() {
+    let (base, _state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base,
+        publisher: publisher().await,
+    };
+    let leaving = reader.follow("leaving").await;
+    assert_eq!(reader.pin(leaving, true).await.0, StatusCode::NO_CONTENT);
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{leaving}/unsubscribe"), json!({}))
+        .await;
+    assert!(status.is_success(), "{status}");
+    for name in ["b", "c", "d", "e", "f", "g", "h", "i", "j"] {
+        let feed = reader.follow(name).await;
+        assert_eq!(reader.pin(feed, true).await.0, StatusCode::NO_CONTENT);
+    }
+    let (status, _) = reader
+        .post(&format!("/api/feeds/{leaving}/resubscribe"), json!({}))
+        .await;
+    assert!(status.is_success(), "{status}");
+    let pinned = reader.pinned().await;
+    assert_eq!(pinned.len(), 9);
+    assert!(!pinned.iter().any(|(place, _)| *place == leaving));
+}
