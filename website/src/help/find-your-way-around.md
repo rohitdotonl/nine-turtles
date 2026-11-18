@@ -4,7 +4,7 @@ description: The sidebar, the list of articles and the article you read, one thi
 groupId: getting-started
 order: 5
 spec: 4, 5, 6, 7, 13 and 20
-updated: 2026-11-18
+updated: 2026-11-19
 related: [mark-read-or-unread, unread-on-or-off, every-keyboard-key]
 ---
 
@@ -20,21 +20,25 @@ back to the top of the list or article you're in.
 
 ## The sidebar
 
-From the top:
+From the top, each group on a card of its own:
 
 - **Find a person or folder**: type a few letters of a name to narrow the
   sidebar. Under what it finds, **Search articles for “…”** (or
   <kbd>Enter</kbd>) looks for the same words in every article instead.
   <kbd>Esc</kbd> empties it.
-- **Unread**, **Saved**, **Notes** and **All articles**.
-- **Everyone you follow**: one page with everyone on it, for looking after
-  them. Who isn't working comes first, then everyone A to Z.
+- **Saved**, **Notes**, **All articles** and **Unread**, then **Everyone
+  you follow**: one page with everyone on it, for looking after them. Who
+  isn't working comes first, then everyone A to Z. nine turtles opens on
+  **Saved**, what you chose to read.
+- **Pinned**: up to nine people you want at hand. To pin someone, open their
+  page and press the pin beside the cog at its top; press it again to unpin.
 - **Folders**, then **People** and **Publications**: everyone who isn't in
-  a folder, A to Z. Someone with a blog and a channel has one row.
+  a folder or pinned, A to Z. Someone with a blog and a channel has one row.
 - At the foot: **+ Add**, then the keyboard (every key) and the cog (**Settings**).
 
-A small dot beside **Unread** means something new has arrived. The people
-and folders below it carry no dots and no numbers: you never have a pile to
+A small dot beside **Unread** means something new has arrived, and one
+beside someone pinned means something new from them. The other people and
+folders carry no dots, and nothing carries a number: you never have a pile to
 clear, and nothing calls to you from every row.
 
 ## The list of articles

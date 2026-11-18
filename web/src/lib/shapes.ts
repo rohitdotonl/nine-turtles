@@ -50,6 +50,8 @@ export type Feed = {
   writeBackWay?: "copy" | "comment" | null;
   /** The reader's private note on the person (SPEC section 42), the same on each of their places. */
   note?: string | null;
+  /** When the reader pinned the person to Home (decision 0310), kept on each of their places; none when not pinned. */
+  pinnedAt?: number | null;
   /** The picture the feed names (decision 0285), on the publisher's site. */
   pictureUrl?: string | null;
   /** When the reader chose a picture for them (its version); none while it's the automatic one. */
@@ -279,6 +281,7 @@ export function toFeed(feed: Record<string, unknown>): Feed {
     writeBackOff: feed.write_back_off === true,
     writeBackWay: feed.write_back_way === "copy" || feed.write_back_way === "comment" ? feed.write_back_way : null,
     note: text(feed.note),
+    pinnedAt: typeof feed.pinned_at === "number" ? feed.pinned_at : null,
     pictureUrl: text(feed.picture_url),
     pictureChosen: typeof feed.picture_chosen === "number" ? feed.picture_chosen : null,
     sortsVideos: feed.sorts_videos === true,

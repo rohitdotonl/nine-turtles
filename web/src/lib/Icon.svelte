@@ -245,11 +245,11 @@
     <path d="m11.75 3.75 4.5 4.5-6.5 6.5H5.25v-4.5z" />
     <path d="M3 17.25h8" />
   {:else if name === "pin"}
-    <!-- Pinned (Home redesign, design round): a push pin, its head, its collar and its point. -->
+    <!-- Pinned (decision 0310): a push pin, its head, its collar and its point. -->
     <path d="M7.75 2.75h4.5v4.5l2.5 3.5h-9.5l2.5-3.5z" fill={filled ? "currentColor" : "none"} />
     <path d="M10 10.75v6.5" />
   {:else if name === "folder"}
-    <!-- A folder (Home redesign, design round): a tab on its top left edge. -->
+    <!-- Home's Folders (decision 0310): a folder, a tab on its top left edge. -->
     <path d="M2.75 5.25a1 1 0 0 1 1-1h3.5l1.75 2h7.25a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3.75a1 1 0 0 1-1-1z" />
   {:else if name === "person"}
     <!-- A person (Add's question, the owner's core path, point 1): one head and shoulders, the Readers icon's single figure. -->

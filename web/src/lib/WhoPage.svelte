@@ -27,7 +27,6 @@
   import ChoosePicture from "./ChoosePicture.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
-  import { home as homeDesign, PIN_LIMIT, togglePin } from "./homeStyle.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
@@ -40,7 +39,7 @@
   import { listSick, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
   import { tip } from "./keyboard";
-  import { isSomeone, placeShownAs, placesOf } from "./people";
+  import { isSomeone, placeShownAs, placesOf, rowFor } from "./people";
   import { addressFor, type Route } from "./router";
   import type { Article, Feed } from "./shapes";
 
@@ -139,8 +138,6 @@
   let repliesReady = $state(false);
 
   /** Their settings, a page of its own (decision 0267). */
-  /** Home redesign, design round: nine are pinned already. */
-  let alertFull = $state(false);
   let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
 
   /*
@@ -156,6 +153,14 @@
   // The heading the keyboard lands on is the one showing.
   let nameHeading: HTMLHeadingElement | undefined = $state();
   let settingsHeading: HTMLHeadingElement | undefined = $state();
+  /** Their row in the sidebar, and whether it's pinned to Home (decision 0310). */
+  let row = $derived(rowFor(feed.id, library.rows ?? []) ?? feed);
+  let pinned = $derived(row.pinnedAt != null);
+  /** Why pinning or unpinning couldn't be done, said under their name. */
+  let pinProblem = $state("");
+  async function pin() {
+    pinProblem = (await library.pin(row, !pinned)) ?? "";
+  }
   $effect.pre(() => {
     heading = route.settings ? settingsHeading : nameHeading;
   });
@@ -164,11 +169,8 @@
 <!-- Their settings: the cog at the top right, across from ‹ (decision 0307), named for them so it isn't taken for the app's own Settings; the keyboard comes back to it from their settings. -->
 {#snippet cog()}
   <span class="flex shrink-0 items-center">
-  {#if homeDesign.style !== "now"}
-    {@const on = homeDesign.pins.includes(feed.id)}
-    <!-- Home redesign, design round: pin them to the top of Home (up to nine). -->
-    <button type="button" aria-pressed={on} onclick={() => { if (!togglePin(feed.id)) alertFull = true; }} class={["btn-quiet btn-icon shrink-0", on ? "text-ink" : "text-ink-2"]} aria-label="Pin {name} to Home" title={on ? "Pinned to Home: press to unpin" : alertFull ? `${PIN_LIMIT} are pinned already: unpin someone first` : "Pin to Home"}><Icon name="pin" size="alone" filled={on} /></button>
-  {/if}
+  <!-- Pin (decision 0310): keeps them at the top of Home, the pin filled while they're there. -->
+  <button type="button" aria-pressed={pinned} onclick={pin} class={["btn-quiet btn-icon shrink-0", pinned ? "text-ink" : "text-ink-2"]} aria-label="Pin {name} to Home" title={pinned ? "Pinned to Home" : "Pin to Home"}><Icon name="pin" size="alone" filled={pinned} /></button>
   <a href={addressFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" class="btn-quiet btn-icon -mr-2 shrink-0 md:mr-0" aria-label="Settings for {name}" title={tip("Settings", "edit")}><Icon name="settings" size="alone" /></a>
   </span>
 {/snippet}
@@ -210,6 +212,7 @@
       <!-- Their picture first, as a contact card has it (decision 0285); pressed, it can be changed. -->
       <div class="mb-5"><ChoosePicture {feed} {places} {name} {person} {library} /></div>
       <h2 bind:this={nameHeading} tabindex="-1" class="who-name">{name}</h2>
+      <p role="status" class="text-meta text-ink-2 empty:hidden">{pinProblem}</p>
       <p class="who-places">
         {#each places as place, index (place.id)}{#if index > 0}<span aria-hidden="true" class="dot">·</span>{/if}{#if place.siteUrl}<a href={place.siteUrl} target="_blank" rel="noopener noreferrer">{placeWords(place)}<span class="sr-only">{" "}(opens in a new tab)</span></a>{:else}<span>{placeWords(place)}</span>{/if}{/each}
       </p>

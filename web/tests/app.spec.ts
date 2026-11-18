@@ -46,29 +46,29 @@ test("on a computer the sidebar always shows beside the list: there's no button 
 });
 
 
-test("the sidebar lists Unread, Saved, Notes (from the first day, decision 0222) and All articles, then Everyone you follow, with a grey pill marking where you are", async ({ page }) => {
+test("the sidebar's first card lists Saved, Notes (from the first day, decision 0222), All articles and Unread, then Everyone you follow (decision 0310), with a grey pill marking where you are", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   // Saved: its list shows even with no feeds, where the welcome would stand in for Unread's (decision 0191).
   await openApp(page, "/saved");
   const links = sidebar(page).getByRole("list").getByRole("link");
   // Under the lists, built as they are: Everyone you follow, the page that looks after the people themselves (decision 0266).
-  await expect(links).toHaveText(["Unread", "Saved", "Notes", "All articles", "Everyone you follow"]);
+  await expect(links).toHaveText(["Saved", "Notes", "All articles", "Unread", "Everyone you follow"]);
 
   const here = sidebar(page).getByRole("link", { name: "Saved" });
   await expect(here).toHaveAttribute("aria-current", "page");
   const accent = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim());
   expect(accent).toBe("#2c4f8c");
-  // One pill, as in the list: a neutral grey, the text color at 8% over the sidebar
-  // (--tint-sidebar), 8px corners, 8px in from the pane's edge, with no color and
-  // no bar (decision 0057).
-  await expect(here).toHaveCSS("background-color", "rgb(221, 221, 223)");
+  // One pill, as in the list: a neutral grey, the line tone (the text color at 10%) on Home's white
+  // card (decision 0310), 8px corners, 12px in from the pane's edge (the card's 8px and the row's 4px),
+  // with no color and no bar (decision 0057).
+  await expect(here).toHaveCSS("background-color", "color(srgb 0.0784314 0.0784314 0.0784314 / 0.1)");
   expect(await here.evaluate((element) => getComputedStyle(element, "::before").content)).toBe("none");
   await expect(here).toHaveCSS("border-top-left-radius", "8px");
   // The place you're in has its icon in full ink, beside the pill and the semibold name; never the accent (decision 0057).
   await expect(here.locator("svg")).toHaveCSS("color", "rgb(20, 20, 20)");
   await expect(sidebar(page).getByRole("link", { name: "Unread" }).locator("svg")).not.toHaveCSS("color", "rgb(20, 20, 20)");
   const inset = await here.evaluate((element) => element.getBoundingClientRect().left - element.closest("nav")!.getBoundingClientRect().left);
-  expect(Math.abs(inset - 8)).toBeLessThan(1);
+  expect(Math.abs(inset - 12)).toBeLessThan(1);
   // The wordmark is a name, never a Tab stop (decision 0041).
   await expect(sidebar(page).getByRole("heading", { level: 1, name: "nine turtles" })).toHaveAttribute("tabindex", "-1");
   // A name can't be pressed, so even with the keyboard on it, it draws no ring.
@@ -324,9 +324,9 @@ test("Settings: appearance, font and size apply at once and are remembered on th
   await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
   await expect(page.getByLabel("White", { exact: true })).toBeChecked();
 
-  // Escape closes Settings and returns to where you were.
+  // Escape closes Settings and returns to where you were: home, Saved (decision 0310).
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page).toHaveURL(/\/saved$/);
 });
 
 test("a chosen page stays, whatever the device's light or dark setting", async ({ page }) => {
@@ -758,8 +758,9 @@ test("on a phone, Back after an update opens the new version one step back", asy
   test.skip(!isMobile, "the phone layout only");
   // A phone opens on the feeds, its home screen (on a nine turtles that follows some: with none, it opens on the welcome).
   await openApp(page, new URL("/", FEEDS_APP).href);
-  await sidebar(page).getByRole("link", { name: /^Saved/ }).click();
-  await expect(page).toHaveURL(/\/saved$/);
+  // Notes, not Saved: home is Saved's own address now (decision 0310), so Back to it is no move at all.
+  await sidebar(page).getByRole("link", { name: /^Notes/ }).click();
+  await expect(page).toHaveURL(/\/notes$/);
   await expect(list(page)).toBeVisible();
   const samePage = await markPage(page);
   await newerVersionLive(page);
@@ -784,7 +785,7 @@ test("an address that leads nowhere shows Wrong turn?, and Back to your reading 
   await expect(page.getByRole("button", { name: "Back to your reading" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#sidebar")).toBeAttached();
-  await expect(page).toHaveURL(/\/(unread)?$/);
+  await expect(page).toHaveURL(/\/(saved)?$/);
 });
 
 test("Wrong turn?'s email never carries what follows a # in the address", async ({ page }) => {

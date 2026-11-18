@@ -106,7 +106,7 @@ pub async fn subscribe(
          ON CONFLICT (person_id, feed_id) DO UPDATE SET
              title = excluded.title, added_at = excluded.added_at, unsubscribed_at = NULL,
              cleared = 0, paused_at = NULL, writer_id = NULL, kind = NULL, kind_why = NULL, place = NULL, write_to = NULL,
-             write_back_off = 0, write_back_way = NULL,
+             write_back_off = 0, write_back_way = NULL, pinned_at = NULL,
              shorts = 0, live_streams = 0, drop_kept = 0, removed_at = NULL, kept_until = NULL,
              by_assistant = 0",
     )

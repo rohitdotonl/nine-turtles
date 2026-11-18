@@ -71,8 +71,8 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Home");
     await expect(row(page, 3)).toHaveAttribute("aria-current", "true");
 
-    // From All, Shift+J goes to the first row in the sidebar, again to the next, and Shift+K back.
-    await page.goto(new URL("/all", FEEDS_APP).href);
+    // From Unread, the last of the lists (decision 0310), Shift+J goes to the first row in the sidebar, again to the next, and Shift+K back.
+    await page.goto(new URL("/unread", FEEDS_APP).href);
     await appReady(page);
     // Once the sidebar has the feeds (the blog, in no folder, among them).
     await expect(page.getByRole("navigation", { name: "Sidebar" }).locator(`a[href$="-${blog}"]`)).toBeVisible();

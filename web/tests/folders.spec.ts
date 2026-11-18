@@ -225,7 +225,7 @@ test("rename a folder; delete it, its feeds stay, and Undo brings it back", asyn
 
   await openEdit(page, "Edit folder");
   await page.getByRole("button", { name: `Delete Aa-${folder}` }).click();
-  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page).toHaveURL(/\/saved$/);
   await expect(line(page)).toHaveText(`Deleted the folder Aa-${folder}.`);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Aa-${folder}`) })).toHaveCount(0);
   // The feed stays, now in no folder.
@@ -261,7 +261,7 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   expect(leaveBox!.y).toBeGreaterThan(settingsBox!.y);
   expect(leaveBox!.height).toBeGreaterThanOrEqual(44);
   await leave.click();
-  await expect(page).toHaveURL(/\/unread$/);
+  await expect(page).toHaveURL(/\/saved$/);
   await expect(line(page)).toHaveText(`Unsubscribed from Blog ${blog}.`);
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toHaveCount(0);
   await expect(page.getByRole("button", { name: new RegExp(`Blog ${blog} ·`) })).toHaveCount(0);

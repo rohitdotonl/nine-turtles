@@ -120,6 +120,8 @@ struct FeedRow {
     write_back_way: Option<String>,
     /// The reader's note on the person (decision 0164).
     note: Option<String>,
+    /// When the reader pinned the person to Home (decision 0310); none when not pinned.
+    pinned_at: Option<i64>,
     /// The picture the feed names (decision 0285), an address on the publisher's site.
     picture_url: Option<String>,
     /// When the reader chose a picture for them, kept on this place (`pictures`); its version.
@@ -144,7 +146,7 @@ pub const FEEDS: &str = concat!(
         (feeds.fetched_at IS NULL AND feeds.failures = 0
              AND feeds.url NOT LIKE 'newsletter:%') AS waiting,
         subscriptions.writer_id AS person, subscriptions.added_at, subscriptions.write_to,
-        subscriptions.write_back_off, subscriptions.write_back_way, subscriptions.note, feeds.email, feeds.picture_url,
+        subscriptions.write_back_off, subscriptions.write_back_way, subscriptions.note, subscriptions.pinned_at, feeds.email, feeds.picture_url,
         (SELECT chosen_at FROM pictures WHERE pictures.person_id = subscriptions.person_id
              AND pictures.feed_id = subscriptions.feed_id) AS picture_chosen, subscriptions.shorts, subscriptions.live_streams,
         feeds.url LIKE '%youtube.com/feeds/videos.xml?channel_id=%' AS sorts_videos,

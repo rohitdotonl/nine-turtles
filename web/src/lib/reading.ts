@@ -9,8 +9,8 @@ import { send } from "./saving";
 /** The reader's sort order, shared across their devices (SPEC section 18). */
 export type Order = "newest" | "oldest";
 
-/** Where the app opens, and where "/" leads: Unread, or All with Unread off (SPEC section 10). */
-export function homeView(unread: boolean): "unread" | "all" {
+/** Where new writing is: Unread, or All with Unread off (SPEC section 10). The app opens on Saved (decision 0310). */
+export function newestView(unread: boolean): "unread" | "all" {
   return unread ? "unread" : "all";
 }
 

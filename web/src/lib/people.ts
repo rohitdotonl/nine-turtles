@@ -67,6 +67,7 @@ export function rowsOf(feeds: Feed[], people: Person[]): Feed[] {
       unread: places.reduce((sum, place) => sum + place.unread, 0),
       waiting: places.some((place) => place.waiting),
       folders: [...new Set(places.flatMap((place) => place.folders))],
+      pinnedAt: places.reduce<number | null>((first, place) => (place.pinnedAt != null && (first == null || place.pinnedAt < first) ? place.pinnedAt : first), null),
       places: places.map((place) => place.id),
     });
   }

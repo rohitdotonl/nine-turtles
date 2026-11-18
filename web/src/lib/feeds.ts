@@ -12,6 +12,7 @@ import { fold } from "./search";
 import { NOT_AN_ADDRESS, UNDO_FAILED } from "./messages";
 import { toSorted, type Why } from "./sorting";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
+import { pinnedRows } from "./pins";
 
 /**
  * One of a site's feeds (SPEC section 3): its name and address, and, when nine turtles looked inside it, its
@@ -99,6 +100,9 @@ export type SidebarRow = { kind: "view"; view: View } | { kind: "feed" | "folder
  */
 export function sidebarRowNextTo(library: Library, views: readonly View[], open: number[], here: Route, step: 1 | -1): SidebarRow | undefined {
   const rows: SidebarRow[] = views.map((view) => ({ kind: "view", view }));
+  // Pinned, under the fixed lists (decision 0310): they leave People and Publications, and stay in their folders.
+  const pinned = pinnedRows(library.feeds);
+  for (const feed of pinned) rows.push({ kind: "feed", id: feed.id });
   const seen = new Set<number>();
   for (const folder of library.folders) {
     rows.push({ kind: "folder", id: folder.id });
@@ -109,7 +113,7 @@ export function sidebarRowNextTo(library: Library, views: readonly View[], open:
       rows.push({ kind: "feed", id: feed.id });
     }
   }
-  const loose = library.feeds.filter((feed) => feed.folders.length === 0 && !seen.has(feed.id));
+  const loose = library.feeds.filter((feed) => feed.folders.length === 0 && !seen.has(feed.id) && !pinned.includes(feed));
   for (const feed of [...loose.filter((each) => each.kind !== "publication"), ...loose.filter((each) => each.kind === "publication")]) rows.push({ kind: "feed", id: feed.id });
 
   let at = -1;

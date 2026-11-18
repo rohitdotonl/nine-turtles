@@ -17,7 +17,7 @@
 
 import { placesOf } from "./people";
 import type { Article, FullArticle, Library, Page, Source } from "./shapes";
-import { homeView, type Order } from "./reading";
+import { newestView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { whenBack } from "./connection.svelte";
 
@@ -611,7 +611,7 @@ async function round(
     await sendWaiting();
     const first = await firstOf(
       using.list,
-      { view: homeView(unread) },
+      { view: newestView(unread) },
       order,
       KEEP_UNREAD,
     );

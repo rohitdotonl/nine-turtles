@@ -435,12 +435,12 @@ async fn follow_elsewhere(
     // A YouTube channel's Shorts and live streams ticks go along too (decision
     // 0144), why it's a person or publication (decision 0264), the address
     // typed for them and the note on them (decisions 0147 and 0164), and Write
-    // back's switch and way (decision 0286).
+    // back's switch and way (decision 0286), and its pin (decision 0310).
     sqlx::query(
         "UPDATE subscriptions SET (shorts, live_streams, kind_why, write_to, note,
-                 write_back_off, write_back_way) =
+                 write_back_off, write_back_way, pinned_at) =
              (SELECT shorts, live_streams, kind_why, write_to, note,
-                 write_back_off, write_back_way FROM subscriptions
+                 write_back_off, write_back_way, pinned_at FROM subscriptions
               WHERE person_id = ?1 AND feed_id = ?2)
          WHERE person_id = ?1 AND feed_id = ?3",
     )

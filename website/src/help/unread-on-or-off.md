@@ -4,7 +4,7 @@ description: Keep an Unread list to work through, or switch it off and let every
 groupId: reading
 order: 1
 spec: 10
-updated: 2026-11-18
+updated: 2026-11-19
 related: [mark-read-or-unread, find-your-way-around]
 ---
 
@@ -20,7 +20,7 @@ it. While anything is new, **Unread** in the sidebar has a small dot too.
 
 ## Unread off
 
-There's no Unread list and no dots. The app opens on **All articles**, and every
+There's no Unread list and no dots. New people you follow open on **All articles**, and every
 title looks the same. You read what catches your eye, and nothing piles up.
 
 ## Switch it

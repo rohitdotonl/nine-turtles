@@ -1,19 +1,18 @@
 <!--
-  The sidebar's folders and feeds (SPEC section 5): folders in the reader's
-  own order (decision 0207), each
-  with a button that
-  shows or hides the people and publications in it, then those in no
-  folder, A to Z, under two headings: People, then Publications (decision
+  The sidebar's people and folders (SPEC section 5), each section a white
+  card under its heading and sign (home.css, decision 0310): Pinned, the
+  people and publications the reader pinned from their page, the first
+  pinned first, shown even when empty so pinning is found; then Folders, in
+  the reader's own order (decision 0207), each with a button that shows or
+  hides the people and publications in it; then those in no folder and not
+  pinned, A to Z, under two headings: People, then Publications (decision
   0163). One in two folders is listed under both. Which folders are open is
   remembered on this device.
 
-  As in a Mac source list (decision 0041), a folder's show-or-hide arrow
-  sits before its name. No row here says what's unread (decision 0242):
-  Unread's own dot does, above them. Unread, Saved and All start their names 46px
-  into the sidebar, after their icons; folders, and the people and
-  publications in no folder, start at the 20px margin; a folder's feeds
-  start one step in, on the 46px edge, so an indent always means "inside a
-  folder" (decisions 0043, 0225).
+  Only a pinned row says something of theirs is new, with Unread's dot at
+  its end (decision 0310); no other row here does (decision 0242). A
+  folder's open people hang from it on lines, a step in, so an indent
+  always means "inside a folder" (decisions 0043, 0225).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
   selected there, and every row ends in a chevron, because
@@ -42,10 +41,6 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import Portrait from "./Portrait.svelte";
-  import { home as homeDesign, LOOKS } from "./homeStyle.svelte";
-  import { chosenPicture } from "./portrait";
-  import type { Snippet } from "svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
   import { keptAny, keptFrom, type Kept } from "./keeping";
   import { droppedOn, listenForDrops } from "./linkDrop.svelte";
@@ -71,8 +66,6 @@
     onLeft,
     onBack,
     onLink,
-    yours,
-    editing = $bindable(false),
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
     library: LoadedLibrary;
@@ -92,19 +85,7 @@
     onBack: () => void;
     /** A web address was dropped on nine turtles: "Follow <name>?" opens for it. */
     onLink: (address: string) => void;
-    /** Home redesign, design round: Saved and Notes, drawn after the folders. Given, Home is in the new order. */
-    yours?: Snippet;
-    /** Edit: every row has a handle, for moving without dragging. */
-    editing?: boolean;
   } = $props();
-
-  /** Home redesign, design round: which version, and what it changes (homeStyle.svelte.ts → LOOKS). */
-  let redesign = $derived(yours ? homeDesign.style : "now");
-  let L = $derived(LOOKS[redesign]);
-  /** No headings to see: space or lines part the groups. */
-  let bold = $derived(L?.headings === "hidden");
-  /** A sign before every heading. */
-  let signs = $derived(L?.headIcons === "all" || L?.cardNames === "signs");
 
   let feeds: Feed[] = $derived(library.rows ?? []);
   let folders: Folder[] = $derived(library.folders);
@@ -112,7 +93,7 @@
   /** Which folders are open: the library keeps it, so a folder Undo makes again opens as it was. */
   let open: number[] = $derived(library.openFolders);
   /** Edit: every row has a handle, for moving without dragging. */
-  // (Home redesign, design round: bindable, so bold's Edit can sit beside the wordmark.)
+  let editing = $state(false);
   /** Someone whose handle opened "Move to a folder". */
   let moving: Feed | undefined = $state();
   /** What the last arranging did (with Undo), or a sentence saying why it didn't. */
@@ -304,10 +285,11 @@
 
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
-  let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
+  /** Pinned (decision 0310): they leave People and Publications, and stay in their folders. */
+  let pinned = $derived(library.pinned);
+  let loose = $derived(feeds.filter((feed) => feed.folders.length === 0 && !pinned.includes(feed)));
   /** Someone or something (decision 0163): the rows in no folder, under two headings. */
-  let pinned = $derived(redesign === "now" ? [] : homeDesign.pins.map((id) => feeds.find((feed) => feed.id === id)).filter((feed): feed is Feed => !!feed));
-  let people = $derived(loose.filter((feed) => feed.kind !== "publication" && !pinned.includes(feed)));
+  let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
   function isHere(place: Route): boolean {
@@ -347,40 +329,6 @@
 {/snippet}
 
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
-{#snippet mark(feed: Feed)}
-  {#if redesign !== "now"}
-    <!-- Home redesign: every row has the same icon column. Safe leaves a person's empty; bold shows their face (only a picture the reader chose, never one fetched from their site). -->
-    {#if L?.mark === "none" || L?.mark === "bare"}
-    {:else if L?.mark === "glyph"}
-      <span class="mark text-muted"><Icon name={feed.kind === "publication" ? "newspaper" : "person"} /></span>
-    {:else if L?.mark === "initial"}
-      <span class={["mark", feed.kind === "publication" && "mark-square"]}><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>
-    {:else}
-      <span class="mark" aria-hidden="true"></span>
-    {/if}
-  {/if}
-{/snippet}
-
-{#snippet faceItem(feed: Feed)}
-            {@const place: Route = { kind: "feed", id: feed.id }}
-            {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
-            <li>
-              <a href={addressFor(place)} aria-current={here ? "page" : undefined} onclick={(event) => follow(event, place)} class={["face place", here && "font-semibold"]}>
-                <span class="face-picture"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} />{#if !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot face-dot" aria-hidden="true"></span>{/if}</span>
-                <span class="face-name"><bdi>{plainSourceName(feed.title)}</bdi>{#if !unreadOff && feed.unread > 0}<span class="sr-only">, something new</span>{/if}</span>
-              </a>
-            </li>
-{/snippet}
-
-{#snippet faceGrid(rows: Feed[])}
-        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
-        <ul class="faces">
-          {#each rows as feed (feed.id)}
-            {@render faceItem(feed)}
-          {/each}
-        </ul>
-{/snippet}
-
 {#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
@@ -396,11 +344,11 @@
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui",
         // Indent means inside (decision 0225): a folder's people start a step in, on the names' edge;
         // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
-        redesign !== "now" ? (from === null || searching ? "pl-3" : "pl-10") : from === null && !searching ? "pl-3" : "pl-10",
+        from === null && !searching ? "pl-3" : "pl-10",
         editing ? "pr-12" : "pr-3",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render mark(feed)}{@render name(plainSourceName(feed.title))}{#if dot && !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot" aria-hidden="true"></span><span class="sr-only">, something new</span>{/if}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{#if dot && !unreadOff && feed.unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span><span class="sr-only">, something new</span>{/if}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
     >
     {@render personHandle(feed)}
   </li>
@@ -428,7 +376,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{#if redesign !== "now" && L?.mark !== "none" && (L?.headIcons ?? "no") === "no"}<span class={[L?.tiles && "flex w-full items-center", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" />{#if L?.folderFaces}<span class="tile-faces">{#each feeds.filter((feed) => feed.folders.includes(folder.id)).slice(0, 3) as feed (feed.id)}<span class="mark mark-small"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>{/each}</span>{/if}</span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
+    >{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -440,20 +388,16 @@
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press home-group", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
-    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", signs && "flex items-center gap-3"]}>{#if signs}<span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{/if}{heading}</h2>
+  <div data-drop-loose={who} class={["drop-area rounded-press", rows.length === 0 && "drop-empty"]}>
+    <h2 class="home-heading label"><span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{heading}</h2>
     {@render refused(who)}
-    {#if rows.length > 0 && L?.looseFaces}
-      <div class="-mx-2">{@render faceGrid(rows)}</div>
-    {:else if rows.length > 0}
-      <ul class="-mx-2">
-        {#each rows as feed (feed.id)}
-          {@render feedRow(feed, null)}
-        {/each}
-      </ul>
-    {:else}
-      <p class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</p>
-    {/if}
+    <ul class="home-card">
+      {#each rows as feed (feed.id)}
+        {@render feedRow(feed, null)}
+      {:else}
+        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
+      {/each}
+    </ul>
   </div>
 {/snippet}
 
@@ -490,35 +434,26 @@
     ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
-  {#if pinned.length > 0 || L?.pinAlways}
-    <!-- Home redesign: the people the reader pinned, up to nine, never filled by the app; each with a dot while something of theirs is new. -->
-    <div class={["home-group", bold && "bold-group"]}>
-      <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{#if L?.headings !== "quiet"}<span class="text-ink"><Icon name="pin" /></span>{/if}Pinned</h2>
-      {#if L?.faces}
-        {@render faceGrid(pinned)}
-      {:else}
-      <ul>
-        {#each pinned as feed (feed.id)}
-          {@render feedRow(feed, null, true)}
-        {:else}
-          <!-- Shown with no one pinned, so pinning is found (Rohit, round five). -->
-          <li class="pin-empty">Pin someone from their page, with <span class="pin-sign"><Icon name="pin" /></span> at its top.</li>
-        {/each}
-      </ul>
-      {/if}
-    </div>
-  {/if}
+  <!-- Pinned (decision 0310): always there, so pinning is found; empty, one quiet line says how. -->
+  <h2 class="home-heading label"><span class="text-ink"><Icon name="pin" /></span>Pinned</h2>
+  <ul class="home-card">
+    {#each pinned as feed (feed.id)}
+      {@render feedRow(feed, null, true)}
+    {:else}
+      <li class="px-3 py-2 text-meta text-ink-2">Pin someone from their page, with <span class="pin-sign"><Icon name="pin" /></span><span class="sr-only">Pin</span> at its top.</li>
+    {/each}
+  </ul>
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
-    <div class={["sidebar-section-row", bold && "bold-edit"]}>
-      <h2 class={["sidebar-section label", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", (L?.headIcons ?? "no") !== "no" && "flex items-center gap-3"]}>{#if (L?.headIcons ?? "no") !== "no"}<span class="text-ink"><Icon name="folder" /></span>{/if}Folders</h2>
-      {#if !L?.editTop}<button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>{/if}
+    <div class="sidebar-section-row">
+      <h2 class="home-heading label"><span class="text-ink"><Icon name="folder" /></span>Folders</h2>
+      <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
     </div>
-    <ul data-folder-list class={["relative home-group", L?.tiles && "tiles"]}>
+    <ul data-folder-list class="home-card relative">
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
-        {@const shown = !L?.shut && !L?.tiles && (phone || open.includes(folder.id) || (L?.folderCards ?? "no") !== "no")}
+        {@const shown = phone || open.includes(folder.id)}
         {@const steps = stepsFor(order, folder.id)}
         <li data-folder-item={folder.id}>
           <div class="place folder-row relative mx-2 flex" data-here={here || undefined} data-drag={dragValue({ kind: "folder", id: folder.id })} data-drop-folder={folder.id}>
@@ -535,7 +470,7 @@
                   />
                 </span>
               {/if}
-            {:else if !phone && !L?.shut && !L?.tiles && (L?.folderCards ?? "no") === "no"}
+            {:else if !phone}
               <!--
                 The show-or-hide arrow at the row's right end, shown when the
                 pointer is on the row, the keyboard is on it, or on a touch screen, so the
@@ -555,24 +490,19 @@
             {/if}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`} class={["mb-1", (!phone || (L?.tree ?? "none") !== "none") && (L?.folderCards ?? "no") === "no" && "folder-feeds", L?.folderGrid && "faces"]}>
-              {#if L?.folderGrid}
-                {#each inside as feed (feed.id)}{@render faceItem(feed)}{/each}
-              {:else}
+            <ul id={`folder-${folder.id}`} class="folder-feeds">
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
               {:else}
                 <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
               {/each}
-              {/if}
             </ul>
           {/if}
         </li>
       {/each}
     </ul>
   {/if}
-  {@render yours?.()}
-  {@render looseList("person", people, redesign === "now" ? "People" : (L?.looseName ?? "Not in a folder"))}
+  {@render looseList("person", people, "People")}
   {@render looseList("publication", publications, "Publications")}
 {/if}
 
@@ -610,160 +540,10 @@
 {/if}
 
 <style>
-  /*
-    The sidebar's section names (Folders, People, Publications): the one
-    label (app.css → .label; decision 0207 made it the app's), with more room
-    above on a touch screen, where the rows are.
-  */
-  .sidebar-section {
-    padding: 1.5rem 1.25rem 0.5rem;
-  }
-  @media (pointer: coarse) {
-    .sidebar-section {
-      padding-top: 2rem;
-    }
-  }
-  /*
-    A faint line down the left of an open folder's feeds, under the folder's
-    name, so the feeds read as its contents at a glance (decision 0123).
-  */
-  .folder-feeds {
-    position: relative;
-  }
-  .folder-feeds::before {
-    content: "";
-    position: absolute;
-    inset-block: 0.25rem;
-    left: 21px;
-    border-left: 1px solid var(--line);
-  }
-  /* Home redesign: the line falls from the middle of the folder's icon. */
-  :global(html:not([data-home="now"])) .folder-feeds::before {
-    left: 28px;
-  }
-  /* Home redesign: the icon column, the same 16px on every row, so every name starts on one edge. */
-  .mark {
-    display: inline-flex;
-    flex: none;
-    width: 1rem;
-    height: 1rem;
-    align-items: center;
-    justify-content: center;
-  }
-  @media (pointer: coarse) {
-    .mark {
-      width: 1.125rem;
-      height: 1.125rem;
-    }
-  }
-  /* Bold: a publication's face is a rounded square, a person's a circle. */
-  .mark-square :global(.portrait) {
-    border-radius: 4px;
-  }
-  /* Pinned, empty: one quiet line on how to pin, in the second ink. */
-  .pin-empty {
-    padding: 0.5rem 0.75rem;
-    font-size: var(--text-meta);
-    color: var(--ink-2);
-    line-height: 1.4;
-  }
+  /* The pin in Pinned's empty line, level with its words. */
   .pin-sign {
     display: inline-flex;
     vertical-align: -0.2em;
-  }
-  /* v9: headings as small quiet words, as a contents page names its parts. */
-  .quiet-heading {
-    font-weight: 400;
-    color: var(--muted);
-  }
-  /* v7, v8, v10: pinned people as faces, three to a line. */
-  .faces {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin: 0 0.5rem;
-  }
-  .face {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.25rem;
-    min-height: 2.75rem;
-    border-radius: var(--radius-press);
-    text-align: center;
-  }
-  .face-picture {
-    position: relative;
-    display: inline-flex;
-  }
-  .face-dot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    box-shadow: 0 0 0 2px var(--color-sidebar);
-  }
-  .face-name {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: var(--text-meta);
-    color: var(--ink);
-  }
-  /* c10: a folder tile's first faces, overlapping a little, at its top right. */
-  .tile-faces {
-    display: inline-flex;
-    margin-left: auto;
-  }
-  .tile-faces .mark + .mark {
-    margin-left: -4px;
-  }
-  .tile-faces :global(.portrait) {
-    box-shadow: 0 0 0 2px var(--paper);
-  }
-  /* v10: folders as tiles, two to a line: the icon over the name. */
-  .tiles {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin: 0 0.5rem;
-  }
-  .tiles .folder-row {
-    margin: 0;
-    border-radius: 12px;
-    background-color: var(--paper);
-  }
-  .tiles .folder-row > :global(a) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    min-height: 4.5rem;
-  }
-  .tiles .folder-row > :global(a > span:last-child:not(.min-w-0)) {
-    display: none;
-  }
-  .tiles .folder-row > :global(a > .min-w-0) {
-    width: 100%;
-    flex: none;
-  }
-  /* Bold: no headings; space alone parts one kind of row from the next. */
-  .bold-group {
-    margin-top: 1rem;
-  }
-  .bold-edit {
-    margin-top: 1rem;
-  }
-  /* A pinned person's dot: Unread's own, in the same place at the row's end. */
-  .sidebar-dot {
-    position: static;
-    background-color: var(--accent);
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
   }
   /* With a mouse or keyboard the arrow hides until it's wanted: made see-through rather than hidden. On a touch screen it always shows. */
   @media not (pointer: coarse) {
@@ -787,7 +567,7 @@
     align-items: flex-end;
     justify-content: space-between;
   }
-  .sidebar-section-row .sidebar-section {
+  .sidebar-section-row .home-heading {
     flex: 1;
   }
   /*
