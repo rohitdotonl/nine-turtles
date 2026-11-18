@@ -128,8 +128,9 @@ export function writerOf(article: Article): string | undefined {
  * What Unread, by person, says above an article that starts someone's run: their name, the day
  * that placed them (`at`: their newest unread article's, or their oldest's when sorting oldest
  * first, which is always this first article's), and "People" or "Publications" where those begin.
+ * Notes says only the name (decision 0308).
  */
-export type ListHead = { name: string; at: number; people: boolean; publications: boolean };
+export type ListHead = { name: string; at?: number; people: boolean; publications: boolean };
 
 /**
  * Unread, by person (SPEC section 6, decisions 0271 and 0278): above each
@@ -137,15 +138,18 @@ export type ListHead = { name: string; at: number; people: boolean; publications
  * and the day that placed them; above the first person's, "People", and above
  * the first publication's, "Publications". Nothing above an article that
  * carries on its person (from the page before, too), nor in a list that isn't
- * by person.
+ * by person. Notes is by person too, each name alone (decision 0308).
  */
 export function headsOf(articles: Article[]): (ListHead | undefined)[] {
   return articles.map((article, index) => {
     const before = articles[index - 1];
     if (article.whose === undefined || before?.whose === article.whose) return undefined;
+    const name = sourceOf(article, false);
+    // Notes: each person by name alone, with no day and no groups (decision 0308).
+    if (article.marks) return { name, people: false, publications: false };
     const publication = article.publication === true;
     return {
-      name: sourceOf(article, false),
+      name,
       at: article.at,
       people: !publication && before === undefined,
       publications: publication && before?.publication !== true,

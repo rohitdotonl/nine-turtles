@@ -274,8 +274,11 @@ test("unsubscribe, then Undo: the feed is back with its read history; a star out
   await sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${other}`) }).click();
   await expect(page.getByRole("region", { name: `Blog ${other}` }).getByRole("listitem")).toHaveCount(3);
   await page.keyboard.press("j");
+  // The star shows at once and is saved behind: wait until the server has it, or Unsubscribe could ask before it counts.
+  const starred = page.waitForResponse((answer) => answer.url().endsWith("/api/articles/starred") && answer.request().method() === "POST");
   await page.keyboard.press("s");
   await expect(line(page)).toHaveText("Saved.");
+  expect((await starred).ok()).toBe(true);
   await editWho(page, `Blog ${other}`);
   await page.getByRole("button", { name: `Unsubscribe from Blog ${other}` }).click();
   // With a star there, it asks first whether to keep it (SPEC section 42).

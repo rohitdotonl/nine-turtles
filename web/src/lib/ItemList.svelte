@@ -684,9 +684,9 @@
       {@const current = index === selectedIndex}
       {@const head = heads[index]}
       <li>
-        <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). None can be pressed, as a row's name can't be today. -->
+        <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). In Notes, no groups and no day (decision 0308): each name is a heading right under the list's title. None can be pressed, as a row's name can't be today. -->
         {#if head?.people || head?.publications}<h3 class="list-label">{head.people ? "People" : "Publications"}</h3>{/if}
-        {#if head}<h4 class="list-name"><bdi>{head.name}</bdi> <time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time></h4>{/if}
+        {#if head}<svelte:element this={head.at === undefined ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
         <ItemRow
           bind:row={rows[index]}
           {article} {current} {bold} {unreadOff} {addressOf}
@@ -722,8 +722,8 @@
   {:else if articles.length > 0}
     <!-- A finite list says when it's finished (SPEC.md section 6): a quiet caption on the row titles' edge, with room under it so the list visibly stops (decision 0142). -->
     <p class="list-end">{fromDevice ? END_OF_KEPT : endOfList(source)}</p>
-    <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0214). -->
-    {#if !unreadOff && !results && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={() => (markAllRead(), keepPlaceNearby())}>Mark all as read</button>{/if}
+    <!-- At the end of a list with unread articles: marking them all, where the reader has just finished (decision 0214); not Notes, which shows no unread (decision 0308). -->
+    {#if !unreadOff && !results && !articles.some((article) => article.marks) && articles.some((article) => !article.read)}<button type="button" class="btn list-end-action" onclick={() => (markAllRead(), keepPlaceNearby())}>Mark all as read</button>{/if}
   {/if}
 {:else if !loaded && !problem}
   <LateLine class="list-end" words={loading} />

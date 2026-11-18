@@ -13,6 +13,7 @@
   import type { Article } from "./shapes";
   import type { OneSource } from "./people";
   import RowText from "./RowText.svelte";
+  import RowMarks from "./RowMarks.svelte";
   import { longPress } from "./longPress";
   import { opensElsewhere } from "./articleLinks";
   import { carriesArticle } from "./articleDrag";
@@ -121,10 +122,10 @@
   style:transform={pulled ? `translateX(${pulled}px)` : undefined}
   class="item-row place block cursor-pointer pr-4 text-left"
 >
-  <!-- Unread: an accent dot in the gutter beside the title, and a semibold title (regular under a name in Unread, lists.css), so it shows without color. -->
-  {#if !article.read && !unreadOff}<span aria-hidden="true" class="unread-dot"></span>{/if}
-  <!-- Its title (or opening), a search result's text, and the one-line meta under them. -->
-  <RowText {article} {bold} {current} {unreadOff} {oneFeed} />
+  <!-- Unread: an accent dot in the gutter beside the title, and a semibold title (regular under a name in Unread, lists.css), so it shows without color. Not in Notes, which is about the reader's own words, not what's left to read (decision 0308). -->
+  {#if !article.read && !unreadOff && !article.marks}<span aria-hidden="true" class="unread-dot"></span>{/if}
+  <!-- In Notes, the reader's marks and the title under them (decision 0308); elsewhere its title (or opening), a search result's text, and the one-line meta under them. -->
+  {#if article.marks}<RowMarks {article} marks={article.marks} {current} />{:else}<RowText {article} {bold} {current} {unreadOff} {oneFeed} />{/if}
 </button>
 {#if (pulled || closing) && row}
   {@const shown = closing?.shown ?? armed ?? swipes[0]}
