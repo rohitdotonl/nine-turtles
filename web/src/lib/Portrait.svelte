@@ -137,7 +137,7 @@
   }
   .tiny .initials {
     font-family: var(--font-ui, inherit);
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     letter-spacing: 0;
   }

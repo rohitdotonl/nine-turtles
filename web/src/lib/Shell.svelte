@@ -175,6 +175,8 @@
   let itemList: ItemList | undefined = $state();
   let articleView: ArticleView | undefined = $state();
   let sidebarFeeds: SidebarFeeds | undefined = $state();
+  /** Home redesign, design round: the sidebar's Edit, which bold shows beside the wordmark. */
+  let homeEditing = $state(false);
   /** Edit put someone in folders just made or chosen: they open in the sidebar, or stay open for when it shows (point 14). */
   const showFolders = (ids: number[]) => library.setOpen([...new Set([...library.openFolders, ...ids])]);
   /** The list's note, drawn in the reading area while the list isn't on screen (decision 0229). */
@@ -821,6 +823,10 @@
     <div class={["pane-bar gap-4 pl-5", phone ? "pr-4" : "pr-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
         <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-wordmark-phone" : "text-wordmark leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
+        {#if homeDesign.style === "bold" && library.folders.length > 0 && !search.trim()}
+          <!-- Home redesign, bold: no headings, so Edit (arranging Home) sits at the top, as iOS puts a list's Edit. -->
+          <button type="button" class="btn-quiet shrink-0 rounded-press px-3 text-meta text-ink-2 min-h-8 pointer-coarse:min-h-11" aria-pressed={homeEditing} onclick={() => (homeEditing = !homeEditing)}>{homeEditing ? "Done" : "Edit"}</button>
+        {/if}
     </div>
     <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto pt-1 pb-4">
       <!--
@@ -856,6 +862,7 @@
         <SidebarFeeds
           yours={homeDesign.style === "now" ? undefined : yours}
           bind:this={sidebarFeeds}
+          bind:editing={homeEditing}
           {library}
           {route}
           {search}

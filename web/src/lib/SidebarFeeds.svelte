@@ -72,6 +72,7 @@
     onBack,
     onLink,
     yours,
+    editing = $bindable(false),
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
     library: LoadedLibrary;
@@ -93,6 +94,8 @@
     onLink: (address: string) => void;
     /** Home redesign, design round: Saved and Notes, drawn after the folders. Given, Home is in the new order. */
     yours?: Snippet;
+    /** Edit: every row has a handle, for moving without dragging. */
+    editing?: boolean;
   } = $props();
 
   /** Home redesign, design round: "safe" keeps the headings, "bold" lets each row's mark say what it is. */
@@ -105,7 +108,7 @@
   /** Which folders are open: the library keeps it, so a folder Undo makes again opens as it was. */
   let open: number[] = $derived(library.openFolders);
   /** Edit: every row has a handle, for moving without dragging. */
-  let editing = $state(false);
+  // (Home redesign, design round: bindable, so bold's Edit can sit beside the wordmark.)
   /** Someone whose handle opened "Move to a folder". */
   let moving: Feed | undefined = $state();
   /** What the last arranging did (with Undo), or a sentence saying why it didn't. */
@@ -344,7 +347,7 @@
   {#if redesign !== "now"}
     <!-- Home redesign: every row has the same icon column. Safe leaves a person's empty; bold shows their face (only a picture the reader chose, never one fetched from their site). -->
     {#if bold}
-      <span class={["mark", feed.kind === "publication" && "mark-square"]}><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} tiny /></span>
+      <span class={["mark", feed.kind === "publication" && "mark-square"]}><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>
     {:else}
       <span class="mark" aria-hidden="true"></span>
     {/if}
@@ -473,7 +476,7 @@
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
     <div class={["sidebar-section-row", bold && "bold-edit"]}>
       <h2 class={["sidebar-section label", bold && "sr-only"]}>Folders</h2>
-      <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
+      {#if !bold}<button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>{/if}
     </div>
     <ul data-folder-list class="relative">
       {#each folders as folder (folder.id)}
@@ -622,10 +625,7 @@
     margin-top: 1rem;
   }
   .bold-edit {
-    margin-top: 0.5rem;
-  }
-  .bold-edit .sidebar-edit {
-    margin-left: auto;
+    margin-top: 1rem;
   }
   /* A pinned person's dot: Unread's own, in the same place at the row's end. */
   .sidebar-dot {
