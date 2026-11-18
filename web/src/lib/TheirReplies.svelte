@@ -14,12 +14,25 @@
   import { toArticle, untitledOpening, type Article } from "./shapes";
   import { exactly, when } from "./times";
 
-  let { feed, onOpen, onShown }: { feed: number; onOpen: (article: Article) => void; onShown?: (shown: boolean) => void } = $props();
+  let {
+    feed,
+    onOpen,
+    onState,
+  }: {
+    feed: number;
+    onOpen: (article: Article) => void;
+    /** Whether it has answered (or waited long enough), so their page can show the card whole, with nothing arriving in it later to push the rest down; and whether it shows anything. */
+    onState?: (ready: boolean, shown: boolean) => void;
+  } = $props();
 
   type Reply = { at: number; article: Article; removed?: boolean };
 
   let replies: Reply[] = $state([]);
   let problem = $state("");
+  /** The list has answered, or the page has waited for it long enough. */
+  let ready = $state(false);
+  /** It couldn't be loaded: one quiet line says so, rather than letting the replies seem gone. */
+  let failed = $state(false);
   let undoButtons: Record<number, HTMLButtonElement | undefined> = $state({});
   let removers: Record<number, HTMLButtonElement | undefined> = $state({});
 
@@ -27,13 +40,26 @@
     const id = feed;
     replies = [];
     problem = "";
+    failed = false;
+    ready = false;
+    // A slow answer doesn't keep the card hidden for long: past this it shows, and the list joins it when it comes.
+    const late = setTimeout(() => (ready = true), 2000);
     getJson(`/api/feeds/${id}/replies`).then(
-      (body) => id === feed && (replies = toReplies(body)),
-      () => undefined,
+      (body) => {
+        if (id !== feed) return;
+        replies = toReplies(body);
+        ready = true;
+      },
+      () => {
+        if (id !== feed) return;
+        failed = true;
+        ready = true;
+      },
     );
+    return () => clearTimeout(late);
   });
 
-  $effect(() => onShown?.(replies.length > 0));
+  $effect(() => onState?.(ready, failed || replies.length > 0));
 
   /** Its title, or an untitled piece's opening words. */
   const titleOf = (article: Article) => untitledOpening(article) ?? article.title;
@@ -60,7 +86,9 @@
   }
 </script>
 
-{#if replies.length > 0}
+{#if failed}
+  <p class="text-meta text-ink-2">Replies you started couldn't be loaded. Open the page again to try once more.</p>
+{:else if replies.length > 0}
   <section class="flex flex-col gap-3" aria-labelledby="their-replies">
     <h3 id="their-replies" class="label">Replies you started</h3>
     <ul class="flex flex-col gap-1">

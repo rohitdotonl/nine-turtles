@@ -2,8 +2,8 @@
   A person's or publication's page (SPEC section 36), the same for both, with
   no Edit mode: a page about them, and their settings on a page of its own,
   one press away (decision 0267). On a computer both have the window to
-  themselves, as an open article does (decision 0275); on a phone, a screen of
-  its own, with "‹" back. Opened by their name at the top of the list, "Info
+  themselves, as an open article does (decision 0275), with ‹ back on the
+  bar's left (decision 0307); on a phone, a screen of its own, with "‹" back. Opened by their name at the top of the list, "Info
   about …" in the list's More menu, or the i key; `e` (and the old Edit
   addresses) open their settings.
 
@@ -13,8 +13,8 @@
   source's line, and a box for a source that isn't working (NotWorkingBox,
   with its own Write to); and Write to, with the address under it (Change
   beside it). Then one card holding the replies you started, your note and the
-  words you highlighted. Their settings are the cog at the top right (beside
-  Close on a computer, decision 0307). Their picture above their name (decision
+  words you highlighted. Their settings are the cog at the top right, across
+  from ‹ (decision 0307). Their picture above their name (decision
   0285) is the page's only picture, and it has no color of its own.
 
   Their settings (`route.settings`) are Settings' rows (WhoSettings,
@@ -130,14 +130,20 @@
 
   /** Replies you started shows (decision 0307): there are some, so the hairline under them does too. */
   let replied = $state(false);
+  /**
+   * Replies you started has answered. It leads the card, so the card waits for it (briefly) rather
+   * than have it arrive later and push your note and highlights down: nothing below the card moves,
+   * as the card is the page's last thing.
+   */
+  let repliesReady = $state(false);
 
   /** Their settings, a page of its own (decision 0267). */
   let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
 
   /*
     Their page stays drawn, hidden, while their settings show, so going back finds it as it was:
-    Your highlights already loaded, nothing arriving above the Settings row a moment later to push
-    it off the screen. Their settings open at their top; going back doesn't scroll, so the row the
+    Your highlights and Replies you started already loaded, nothing arriving a moment later to push
+    the page about. Their settings open at their top; going back doesn't scroll, so the cog the
     keyboard returns to is scrolled into view as it lands, and nothing moves after.
   */
   let scroller: HTMLDivElement | undefined = $state();
@@ -216,8 +222,8 @@
     </header>
 
     <!-- What's yours of them, held together in one card: where the eye rests. -->
-    <div class="yours">
-      {#if onOpen}<div class={["replies", !replied && "hidden"]}><TheirReplies feed={feed.id} {onOpen} onShown={(shown) => (replied = shown)} /></div>{/if}
+    <div class={["yours", onOpen && !repliesReady && "invisible"]}>
+      {#if onOpen}<div class={["replies", !replied && "hidden"]}><TheirReplies feed={feed.id} {onOpen} onState={(ready, shown) => ((repliesReady = ready), (replied = shown))} /></div>{/if}
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
       {#if onOpen}<div class="theirs"><TheirReading feed={feed.id} {onOpen} /></div>{/if}
     </div>

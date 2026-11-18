@@ -585,6 +585,11 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
         )
         .await;
     assert!(status.is_success(), "{status}");
+    // A reply started to it (decision 0307).
+    let (status, _) = reader
+        .post(&format!("/api/articles/{two}/reply-started"), json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
     // As if stored before tracking tags were taken off on arrival (decision 0112).
     sqlx::query("UPDATE articles SET link = link || '?utm_source=rss' WHERE feed_id = ?")
         .bind(old)
@@ -614,6 +619,11 @@ async fn moving_matches_posts_by_their_link_without_tracking_tags() {
     assert_eq!(starred[0]["title"], "two");
     assert_ne!(starred[0]["id"], two);
     assert_eq!(starred[0]["link"], "https://blog.example/two");
+    // The reply started to it goes with it, to its new copy.
+    let replies = reader.get(&format!("/api/feeds/{new}/replies")).await;
+    let replies = replies["replies"].as_array().unwrap();
+    assert_eq!(replies.len(), 1, "{replies:?}");
+    assert_eq!(replies[0]["article"]["id"], starred[0]["id"]);
     // The times of its marks go with it, so a late offline mark made
     // before the move can't undo the star (survey A9.3).
     let copy = starred[0]["id"].as_i64().unwrap();

@@ -25,7 +25,7 @@ pub fn routes() -> Router<AppState> {
 }
 
 #[derive(Serialize)]
-struct Settings {
+pub struct Settings {
     /// Newest or oldest first.
     sort: Order,
     /// Unread on (the Unread list, read styling and dots, the default) or
@@ -34,7 +34,7 @@ struct Settings {
     unread: bool,
     /// Replies you started on a person's page (on, the default) or off (no
     /// new lines, and the list hidden). Nothing stored means on.
-    replies: bool,
+    pub replies: bool,
 }
 
 /// A change: only the settings named are saved, so a tab that changes the
@@ -46,7 +46,7 @@ struct Change {
     replies: Option<bool>,
 }
 
-async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
+pub async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
          WHERE person_id = ? AND name IN ('sort', 'unread', 'replies')",

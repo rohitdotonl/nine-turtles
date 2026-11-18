@@ -585,6 +585,18 @@ async fn carry_entries_over(
             .bind(copy)
             .execute(&mut *connection)
             .await?;
+            // So does the reply they started to it, keeping the later day (decision 0307).
+            sqlx::query(
+                "INSERT INTO replies (person_id, article_id, started_at)
+                     SELECT person_id, ?3, started_at FROM replies WHERE person_id = ?1 AND article_id = ?2
+                 ON CONFLICT (person_id, article_id) DO UPDATE
+                     SET started_at = MAX(started_at, excluded.started_at)",
+            )
+            .bind(person)
+            .bind(article)
+            .bind(copy)
+            .execute(&mut *connection)
+            .await?;
             // Where they stopped in an episode goes with it too (decision 0113).
             sqlx::query(
                 "UPDATE OR IGNORE episode_progress SET article_id = ?3

@@ -33,7 +33,7 @@ Choose them in the sidebar, then press their name at the top of their list
 ("Alpha ›") or their name under one of their articles' titles, or choose
 **More › Info about Alpha**, or press <kbd>I</kbd> (in any list, it opens the
 page of whoever wrote the chosen article). On a
-computer their page fills the window, with **×** back to their list; on a
+computer their page fills the window, with **‹** back to their list; on a
 phone, it's a screen of its own.
 
 Their page starts with their picture, then their name and, under it, where they publish, each

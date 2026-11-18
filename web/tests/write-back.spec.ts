@@ -483,7 +483,11 @@ test("A way back pressed is listed on their page under Replies you started, remo
     await appReady(page);
     await expect(who.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
   };
-  // Nothing started yet: no list at all, not an empty one.
+  // Nothing started yet: no list at all, not an empty one. Write to on their page, about no article, records nothing.
+  await theirPage();
+  await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
+  await who.getByRole("link", { name: `Write to Blog ${name}` }).evaluate((link) => link.addEventListener("click", (event) => event.preventDefault()));
+  await who.getByRole("link", { name: `Write to Blog ${name}` }).click();
   await theirPage();
   await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
 
@@ -514,11 +518,12 @@ test("A way back pressed is listed on their page under Replies you started, remo
   await expect(page.locator(".reading-bar").getByRole("link", { name: `Settings for Blog ${name}`, exact: true })).toBeVisible();
   await expect(page.locator(".reading-bar").getByRole("button", { name: `Back to Blog ${name}`, exact: true })).toBeVisible();
 
-  // Removed, with Undo in its place, which brings it back.
-  await replies.getByRole("button", { name: `Remove ${title} from Replies you started` }).click();
+  // Removed by the keyboard alone, with Undo in its place, which brings it back.
+  await replies.getByRole("button", { name: `Remove ${title} from Replies you started` }).focus();
+  await page.keyboard.press("Enter");
   const undo = replies.getByRole("button", { name: "Undo", exact: true });
   await expect(undo).toBeFocused();
-  await undo.click();
+  await page.keyboard.press("Enter");
   await expect(replies.getByRole("button", { name: title, exact: true })).toBeVisible();
   await expect(replies.getByRole("button", { name: `Remove ${title} from Replies you started` })).toBeFocused();
   // The title opens the article.
@@ -542,4 +547,11 @@ test("A way back pressed is listed on their page under Replies you started, remo
   await expect(settingsSwitch).toBeChecked();
   await theirPage();
   await expect(who.getByRole("region", { name: "Replies you started" }).getByRole("listitem")).toHaveCount(1);
+
+  // When the list can't be loaded, one quiet line says so, rather than letting it seem gone.
+  await page.route("**/api/feeds/*/replies", (route) => route.fulfill({ status: 500, body: "{}" }));
+  await theirPage();
+  await expect(who).toContainText("Replies you started couldn't be loaded. Open the page again to try once more.");
+  await expect(who.getByRole("button", { name: "Add a note…" })).toBeVisible();
+  await page.unrouteAll({ behavior: "ignoreErrors" });
 });

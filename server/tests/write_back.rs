@@ -428,6 +428,29 @@ async fn replies_started_are_listed_on_the_persons_page_and_are_the_readers_alon
     };
     let their_blog = theirs.follow("alpha.xml").await;
     assert!(listed(&other, their_blog).await.is_empty());
+    let (status, _) = theirs
+        .post(
+            &format!("/api/articles/{on_letters}/reply-started"),
+            json!({}),
+        )
+        .await;
+    assert_eq!(
+        status,
+        StatusCode::NOT_FOUND,
+        "they don't follow Alpha's letters"
+    );
+    // Nor can they remove the first reader's line.
+    let _ = theirs
+        .post(
+            &format!("/api/articles/{on_blog}/reply-started/delete"),
+            json!({}),
+        )
+        .await;
+    assert!(
+        listed(&reader.cookie, blog)
+            .await
+            .contains(&(on_blog, day - 86_400))
+    );
 
     // Switched off in Settings: the list is hidden and nothing new is noted; back on, what was kept is back.
     let _ = reader

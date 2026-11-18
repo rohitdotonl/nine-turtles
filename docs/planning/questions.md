@@ -15,7 +15,9 @@ October 2026; it is in the repository's history.*
   where Render keeps the data, the business details and the law that
   applies, the minimum age, and how long backups keep deleted data. Sign-up
   is now open to anyone (decisions 0115 and 0154), so someone qualified should read
-  both soon.
+  both soon. Its table of what's kept doesn't yet name notes, highlights or
+  the replies you started (decision 0307); the owner chose to add them with
+  this work (18 November 2026).
 
 - **A warning for assistants that send you back to your own computer**
   (11 November 2026, decision 0257). The MCP standard suggests the

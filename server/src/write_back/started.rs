@@ -35,15 +35,9 @@ pub fn routes() -> Router<AppState> {
 /// The most lines their page lists: a page, not an archive.
 pub const THEIR_REPLIES: i64 = 20;
 
-/// Whether the reader keeps the list (on unless they switched it off).
-pub async fn keeping(db: &sqlx::SqlitePool, person: i64) -> Result<bool, sqlx::Error> {
-    let off: Option<(String,)> = sqlx::query_as(
-        "SELECT value FROM person_settings WHERE person_id = ? AND name = 'replies' AND value = 'off'",
-    )
-    .bind(person)
-    .fetch_optional(db)
-    .await?;
-    Ok(off.is_none())
+/// Whether the reader keeps the list (Record replies, on unless they switched it off).
+async fn keeping(db: &sqlx::SqlitePool, person: i64) -> Result<bool, sqlx::Error> {
+    Ok(crate::settings::load(db, person).await?.replies)
 }
 
 #[derive(Deserialize, Default)]

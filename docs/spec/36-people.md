@@ -164,7 +164,11 @@ PLAN.md → V1, item 1.*
   - **Replies you started** (section 37, decision 0307), only once there's
     one: a paper plane, the article's title (it opens the article) and the
     day after it, the latest first, at most 20, each with a quiet bin to
-    remove it (Undo in its place);
+    remove it (Undo in its place). The card waits for it a moment (at
+    most 2 seconds) and then shows whole, so it never arrives later and
+    pushes your note and highlights down; if it can't be loaded, one quiet
+    line says "Replies you started couldn't be loaded. Open the page again
+    to try once more.";
   - **Your note** (section 42), "Add a note…" while there's none; once
     written, with the page that is a note everywhere beside it;
   - **Your highlights**, the words you highlighted in their writing (the

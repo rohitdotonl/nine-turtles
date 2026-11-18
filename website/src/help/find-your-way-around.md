@@ -130,7 +130,7 @@ Open an article and it fills the whole window, with **‹** and the list's name
 (say, **‹ Unread**) above the start of its text. Press that, or <kbd>Esc</kbd>,
 or your browser's Back, and you're back in the list where you were. While reading,
 <kbd>J</kbd> and <kbd>K</kbd> go to the next and previous article. A
-person's page fills the window the same way, with **×** to go back.
+person's page fills the window the same way, with **‹** to go back.
 
 The sidebar stays beside the list, and steps away on its own whenever an
 article or a person's page opens. Drag its edge to make it wider or

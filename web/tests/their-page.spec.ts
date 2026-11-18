@@ -293,7 +293,7 @@ test("by keyboard alone: Change corrects the address in place, Escape closes the
   await expect(who.getByRole("button", { name: `Write to Blog ${name}` })).toBeFocused();
 });
 
-test("with nothing yet, their page says so; the × and Escape go back to their list, and Hiding opened there leads back to it", async ({ page, isMobile }) => {
+test("with nothing yet, their page says so; ‹ and Escape go back to their list, and Hiding opened there leads back to it", async ({ page, isMobile }) => {
   test.skip(isMobile, "the × is a computer's; a phone has ‹ back");
   const name = `their-empty-${test.info().workerIndex}-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 900 });
