@@ -26,6 +26,7 @@
 -->
 <script lang="ts">
   import Icon from "./Icon.svelte";
+  import { home, LOOKS } from "./homeStyle.svelte";
   import { nameFor, sidebarViews, VIEW_NAMES, pathFor, type Route } from "./router";
 
   let {
@@ -58,7 +59,7 @@
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
-<ul class={part === "yours" ? "sidebar-gap" : part === "everyone" ? "sidebar-last" : undefined}>
+<ul class={["home-group", part === "yours" && "sidebar-gap", part === "yours" && LOOKS[home.style]?.pair && "pair", part === "everyone" && "sidebar-last"]}>
   {#each views as view (view)}
     {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
     <li>
@@ -98,6 +99,26 @@
   /* Home redesign: Saved and Notes, a group with no heading, parted from the folders above by space alone. */
   .sidebar-gap {
     margin-top: 1rem;
+  }
+  /* v8, v10: Saved and Notes as two tiles side by side, the icon over the name. */
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-inline: 0.5rem;
+  }
+  .pair :global(a.place) {
+    margin: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    min-height: 4.5rem;
+    border-radius: 12px;
+    background-color: var(--paper);
+  }
+  .pair :global(a.place > span:last-child:not(.min-w-0)) {
+    display: none;
   }
   /* Everyone you follow, the last row on Home: housekeeping, under one hairline. */
   .sidebar-last {

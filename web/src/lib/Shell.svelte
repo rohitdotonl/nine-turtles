@@ -40,7 +40,7 @@
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import SidebarFoot from "./SidebarFoot.svelte";
   import SidebarViews from "./SidebarViews.svelte";
-  import { home as homeDesign } from "./homeStyle.svelte";
+  import { home as homeDesign, LOOKS } from "./homeStyle.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import { untitledOpening, type Article, type Feed, type Folder, type Source } from "./shapes";
@@ -117,7 +117,13 @@
   let sharedName = $state("");
   // Home redesign, design round: which version shows, for the sidebar's styles.
   $effect(() => {
-    document.documentElement.dataset.home = homeDesign.style;
+    const root = document.documentElement;
+    const look = LOOKS[homeDesign.style];
+    root.dataset.home = homeDesign.style;
+    root.dataset.parts = look?.parts ?? "";
+    root.dataset.mark = look?.mark ?? "";
+    if (look?.serif) root.dataset.serif = "";
+    else delete root.dataset.serif;
   });
   $effect(() => {
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
@@ -823,7 +829,7 @@
     <div class={["pane-bar gap-4 pl-5", phone ? "pr-4" : "pr-5"]}>
         <!-- A name, not a control: never a Tab stop; the keyboard lands here only when the screen opens (decision 0041). -->
         <h1 class={["wordmark mr-auto font-serif font-semibold tracking-[-0.01em]", phone ? "text-wordmark-phone" : "text-wordmark leading-[1.35] text-ink-2"]} tabindex="-1" bind:this={wordmark}>nine turtles</h1>
-        {#if homeDesign.style === "bold" && library.folders.length > 0 && !search.trim()}
+        {#if LOOKS[homeDesign.style]?.editTop && library.folders.length > 0 && !search.trim()}
           <!-- Home redesign, bold: no headings, so Edit (arranging Home) sits at the top, as iOS puts a list's Edit. -->
           <button type="button" class="btn-quiet shrink-0 rounded-press px-3 text-meta text-ink-2 min-h-8 pointer-coarse:min-h-11" aria-pressed={homeEditing} onclick={() => (homeEditing = !homeEditing)}>{homeEditing ? "Done" : "Edit"}</button>
         {/if}

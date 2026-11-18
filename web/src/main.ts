@@ -8,6 +8,7 @@ import "./arranging.css";
 import "./reading-column.css";
 import "./scripts.css";
 import "./pressed.css";
+import "./home-design.css";
 import "./print.css";
 import "./opening.css";
 import "./swipes.css";

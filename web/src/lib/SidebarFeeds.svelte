@@ -43,7 +43,7 @@
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
   import Portrait from "./Portrait.svelte";
-  import { home as homeDesign } from "./homeStyle.svelte";
+  import { home as homeDesign, LOOKS } from "./homeStyle.svelte";
   import { chosenPicture } from "./portrait";
   import type { Snippet } from "svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
@@ -98,9 +98,11 @@
     editing?: boolean;
   } = $props();
 
-  /** Home redesign, design round: "safe" keeps the headings, "bold" lets each row's mark say what it is. */
+  /** Home redesign, design round: which version, and what it changes (homeStyle.svelte.ts → LOOKS). */
   let redesign = $derived(yours ? homeDesign.style : "now");
-  let bold = $derived(redesign === "bold");
+  let L = $derived(LOOKS[redesign]);
+  /** No headings to see: space or lines part the groups. */
+  let bold = $derived(L?.headings === "hidden");
 
   let feeds: Feed[] = $derived(library.rows ?? []);
   let folders: Folder[] = $derived(library.folders);
@@ -346,7 +348,10 @@
 {#snippet mark(feed: Feed)}
   {#if redesign !== "now"}
     <!-- Home redesign: every row has the same icon column. Safe leaves a person's empty; bold shows their face (only a picture the reader chose, never one fetched from their site). -->
-    {#if bold}
+    {#if L?.mark === "none"}
+    {:else if L?.mark === "glyph"}
+      <span class="mark text-muted"><Icon name={feed.kind === "publication" ? "newspaper" : "person"} /></span>
+    {:else if L?.mark === "initial"}
       <span class={["mark", feed.kind === "publication" && "mark-square"]}><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>
     {:else}
       <span class="mark" aria-hidden="true"></span>
@@ -401,7 +406,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{#if redesign !== "now"}<span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="folder" /></span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
+    >{#if redesign !== "now" && L?.mark !== "none"}<span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="folder" /></span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -413,8 +418,8 @@
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
-    <h2 class={["sidebar-section label -mx-2", bold && "sr-only"]}>{heading}</h2>
+  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press home-group", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
+    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{heading}</h2>
     {@render refused(who)}
     {#if rows.length > 0}
       <ul class="-mx-2">
@@ -463,26 +468,42 @@
 {:else}
   {#if pinned.length > 0}
     <!-- Home redesign: the people the reader pinned, up to nine, never filled by the app; each with a dot while something of theirs is new. -->
-    <div class={[bold && "bold-group"]}>
-      <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only"]}><span class="text-ink"><Icon name="pin" /></span>Pinned</h2>
+    <div class={["home-group", bold && "bold-group"]}>
+      <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{#if L?.headings !== "quiet"}<span class="text-ink"><Icon name="pin" /></span>{/if}Pinned</h2>
+      {#if L?.faces}
+        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
+        <ul class="faces">
+          {#each pinned as feed (feed.id)}
+            {@const place: Route = { kind: "feed", id: feed.id }}
+            {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
+            <li>
+              <a href={addressFor(place)} aria-current={here ? "page" : undefined} onclick={(event) => follow(event, place)} class={["face place", here && "font-semibold"]}>
+                <span class="face-picture"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} />{#if !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot face-dot" aria-hidden="true"></span>{/if}</span>
+                <span class="face-name"><bdi>{plainSourceName(feed.title)}</bdi>{#if !unreadOff && feed.unread > 0}<span class="sr-only">, something new</span>{/if}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      {:else}
       <ul>
         {#each pinned as feed (feed.id)}
           {@render feedRow(feed, null, true)}
         {/each}
       </ul>
+      {/if}
     </div>
   {/if}
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
     <div class={["sidebar-section-row", bold && "bold-edit"]}>
-      <h2 class={["sidebar-section label", bold && "sr-only"]}>Folders</h2>
-      {#if !bold}<button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>{/if}
+      <h2 class={["sidebar-section label", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>Folders</h2>
+      {#if !L?.editTop}<button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>{/if}
     </div>
-    <ul data-folder-list class="relative">
+    <ul data-folder-list class={["relative home-group", L?.tiles && "tiles"]}>
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
-        {@const shown = phone || open.includes(folder.id)}
+        {@const shown = !L?.shut && !L?.tiles && (phone || open.includes(folder.id))}
         {@const steps = stepsFor(order, folder.id)}
         <li data-folder-item={folder.id}>
           <div class="place folder-row relative mx-2 flex" data-here={here || undefined} data-drag={dragValue({ kind: "folder", id: folder.id })} data-drop-folder={folder.id}>
@@ -499,7 +520,7 @@
                   />
                 </span>
               {/if}
-            {:else if !phone}
+            {:else if !phone && !L?.shut && !L?.tiles}
               <!--
                 The show-or-hide arrow at the row's right end, shown when the
                 pointer is on the row, the keyboard is on it, or on a touch screen, so the
@@ -619,6 +640,74 @@
   /* Bold: a publication's face is a rounded square, a person's a circle. */
   .mark-square :global(.portrait) {
     border-radius: 4px;
+  }
+  /* v9: headings as small quiet words, as a contents page names its parts. */
+  .quiet-heading {
+    font-weight: 400;
+    color: var(--muted);
+  }
+  /* v7, v8, v10: pinned people as faces, three to a line. */
+  .faces {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0 0.5rem;
+  }
+  .face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem;
+    min-height: 2.75rem;
+    border-radius: var(--radius-press);
+    text-align: center;
+  }
+  .face-picture {
+    position: relative;
+    display: inline-flex;
+  }
+  .face-dot {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 0 2px var(--color-sidebar);
+  }
+  .face-name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-meta);
+    color: var(--ink);
+  }
+  /* v10: folders as tiles, two to a line: the icon over the name. */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0 0.5rem;
+  }
+  .tiles .folder-row {
+    margin: 0;
+    border-radius: 12px;
+    background-color: var(--paper);
+  }
+  .tiles .folder-row > :global(a) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    min-height: 4.5rem;
+  }
+  .tiles .folder-row > :global(a > span:last-child:not(.min-w-0)) {
+    display: none;
+  }
+  .tiles .folder-row > :global(a > .min-w-0) {
+    width: 100%;
+    flex: none;
   }
   /* Bold: no headings; space alone parts one kind of row from the next. */
   .bold-group {

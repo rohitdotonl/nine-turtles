@@ -1,0 +1,44 @@
+/*
+  Home redesign, design round only (thread "Redesign Home for clarity"): how the ten versions part
+  their groups and set their names, keyed by what Shell writes on <html> (homeStyle.svelte.ts → LOOKS).
+  The chosen version is built properly, and this file goes, before anything ships.
+*/
+
+/* v3: a hairline between groups instead of headings. */
+html[data-parts="hairline"] #sidebar .home-group + .home-group,
+html[data-parts="hairline"] #sidebar .home-group:not(:first-child) {
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+}
+
+/* v4, v5, v8: each group on a card of the page's color, as Settings' grouped lists. */
+html[data-parts="cards"] #sidebar .home-group:not(.pair, .tiles, .faces) {
+  margin-inline: 0.5rem;
+  padding-block: 0.25rem;
+  border-radius: 12px;
+  background-color: var(--paper);
+}
+html[data-parts="cards"] #sidebar .home-group:not(.pair, .tiles) :is(.place, .folder-row) {
+  margin-inline: 0.25rem;
+}
+html[data-parts="cards"] #sidebar .home-group > :is(h2, .sidebar-section-row) {
+  margin-inline: -0.5rem;
+}
+html[data-parts="cards"] #sidebar .drop-area.home-group {
+  padding-top: 0;
+}
+html[data-parts="cards"] #sidebar .home-group .sidebar-section {
+  padding-top: 0.75rem;
+}
+html[data-parts="cards"] #sidebar .sidebar-last {
+  border-top: 0;
+}
+
+/* v9: no icons at all; names in the reading serif, a little larger, as a book's contents. */
+html[data-mark="none"] #sidebar a.place > span:first-child:has(svg) {
+  display: none;
+}
+html[data-serif] #sidebar :is(a.place, .folder-row > a) {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+}
