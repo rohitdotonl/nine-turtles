@@ -359,6 +359,22 @@
   {/if}
 {/snippet}
 
+{#snippet faceGrid(rows: Feed[])}
+        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
+        <ul class="faces">
+          {#each rows as feed (feed.id)}
+            {@const place: Route = { kind: "feed", id: feed.id }}
+            {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
+            <li>
+              <a href={addressFor(place)} aria-current={here ? "page" : undefined} onclick={(event) => follow(event, place)} class={["face place", here && "font-semibold"]}>
+                <span class="face-picture"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} />{#if !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot face-dot" aria-hidden="true"></span>{/if}</span>
+                <span class="face-name"><bdi>{plainSourceName(feed.title)}</bdi>{#if !unreadOff && feed.unread > 0}<span class="sr-only">, something new</span>{/if}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+{/snippet}
+
 {#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
@@ -406,7 +422,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{#if redesign !== "now" && L?.mark !== "none"}<span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="folder" /></span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
+    >{#if redesign !== "now" && L?.mark !== "none"}<span class={[L?.tiles && "flex w-full items-center", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" />{#if L?.folderFaces}<span class="tile-faces">{#each feeds.filter((feed) => feed.folders.includes(folder.id)).slice(0, 3) as feed (feed.id)}<span class="mark mark-small"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>{/each}</span>{/if}</span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -421,7 +437,9 @@
   <div data-drop-loose={who} class={["drop-area mx-2 rounded-press home-group", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
     <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{heading}</h2>
     {@render refused(who)}
-    {#if rows.length > 0}
+    {#if rows.length > 0 && L?.looseFaces}
+      <div class="-mx-2">{@render faceGrid(rows)}</div>
+    {:else if rows.length > 0}
       <ul class="-mx-2">
         {#each rows as feed (feed.id)}
           {@render feedRow(feed, null)}
@@ -471,19 +489,7 @@
     <div class={["home-group", bold && "bold-group"]}>
       <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{#if L?.headings !== "quiet"}<span class="text-ink"><Icon name="pin" /></span>{/if}Pinned</h2>
       {#if L?.faces}
-        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
-        <ul class="faces">
-          {#each pinned as feed (feed.id)}
-            {@const place: Route = { kind: "feed", id: feed.id }}
-            {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
-            <li>
-              <a href={addressFor(place)} aria-current={here ? "page" : undefined} onclick={(event) => follow(event, place)} class={["face place", here && "font-semibold"]}>
-                <span class="face-picture"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} />{#if !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot face-dot" aria-hidden="true"></span>{/if}</span>
-                <span class="face-name"><bdi>{plainSourceName(feed.title)}</bdi>{#if !unreadOff && feed.unread > 0}<span class="sr-only">, something new</span>{/if}</span>
-              </a>
-            </li>
-          {/each}
-        </ul>
+        {@render faceGrid(pinned)}
       {:else}
       <ul>
         {#each pinned as feed (feed.id)}
@@ -682,6 +688,17 @@
     white-space: nowrap;
     font-size: var(--text-meta);
     color: var(--ink);
+  }
+  /* c10: a folder tile's first faces, overlapping a little, at its top right. */
+  .tile-faces {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  .tile-faces .mark + .mark {
+    margin-left: -4px;
+  }
+  .tile-faces :global(.portrait) {
+    box-shadow: 0 0 0 2px var(--paper);
   }
   /* v10: folders as tiles, two to a line: the icon over the name. */
   .tiles {

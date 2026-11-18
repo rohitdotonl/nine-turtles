@@ -11,7 +11,15 @@ export type Look = {
   /** A person's or publication's mark in the icon column. */
   mark: "blank" | "initial" | "glyph" | "none";
   /** How one group is parted from the next. */
-  parts: "space" | "hairline" | "cards";
+  parts: "space" | "hairline" | "cards" | "cards-out" | "row-cards";
+  /** Hairlines between the rows inside a card. */
+  sep: boolean;
+  /** Unread and All articles as two tiles side by side. */
+  topPair: boolean;
+  /** A folder tile shows the first few faces of who's in it. */
+  folderFaces: boolean;
+  /** The people in no folder as faces too. */
+  looseFaces: boolean;
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -26,7 +34,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -38,6 +46,17 @@ export const LOOKS: Record<string, Look> = {
   v8: { ...base, shut: true, faces: true, pair: true, parts: "cards" },
   v9: { ...base, headings: "quiet", mark: "none", shut: true, serif: true, editTop: false },
   v10: { ...base, shut: true, faces: true, pair: true, tiles: true },
+  // Round two (Rohit: "4, 5 and 8 are quite easy to my eyes"): ten around cards.
+  c1: { ...base, headings: "shown", parts: "cards-out", editTop: false },
+  c2: { ...base, parts: "cards-out" },
+  c3: { ...base, parts: "cards-out", shut: true },
+  c4: { ...base, headings: "shown", parts: "cards-out", sep: true, editTop: false },
+  c5: { ...base, parts: "cards-out", sep: true, shut: true },
+  c6: { ...base, parts: "cards-out", sep: true, shut: true, faces: true, pair: true },
+  c7: { ...base, parts: "cards-out", sep: true, shut: true, faces: true, pair: true, tiles: true },
+  c8: { ...base, parts: "row-cards", shut: true, faces: true },
+  c9: { ...base, parts: "cards-out", sep: true, shut: true, faces: true, pair: true, tiles: true, topPair: true },
+  c10: { ...base, parts: "cards-out", shut: true, faces: true, pair: true, tiles: true, topPair: true, folderFaces: true, looseFaces: true },
 };
 const ALIASES: Record<string, string> = { safe: "v1", bold: "v2" };
 

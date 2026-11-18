@@ -42,3 +42,75 @@ html[data-serif] #sidebar :is(a.place, .folder-row > a) {
   font-family: var(--font-serif);
   font-size: 1.0625rem;
 }
+
+/* Round two (c1–c10): the card sits under its heading, as Settings' groups do, the heading outside it. */
+html[data-parts="cards-out"] #sidebar :is(ul.home-group, .home-group > ul, .home-group > div > ul):not(.pair, .tiles) {
+  margin-inline: 0.5rem;
+  padding-block: 0.25rem;
+  border-radius: 12px;
+  background-color: var(--paper);
+}
+html[data-parts="cards-out"] #sidebar :is(ul.home-group, .home-group > ul, .home-group > div > ul):not(.pair, .tiles) :is(.place, .folder-row) {
+  margin-inline: 0.25rem;
+}
+html[data-parts="cards-out"] #sidebar .home-group.drop-area > ul,
+html[data-parts="cards-out"] #sidebar .home-group.drop-area > div > ul {
+  margin-inline: 0;
+}
+html[data-parts="cards-out"] #sidebar :is(.sidebar-gap, .bold-group, .bold-edit, .sidebar-last) {
+  margin-top: 1rem;
+}
+html[data-parts="cards-out"] #sidebar .sidebar-last {
+  border-top: 0;
+  padding-top: 0;
+}
+html[data-parts="cards-out"] #sidebar ul.faces {
+  padding: 0.5rem 0.25rem;
+}
+
+/* c4–c7, c9: a hairline between the rows in a card, starting where the names start. */
+html[data-sep] #sidebar :is(ul.home-group, .home-group > ul, .home-group > div > ul):not(.pair, .tiles, .faces) > li + li {
+  position: relative;
+}
+html[data-sep] #sidebar :is(ul.home-group, .home-group > ul, .home-group > div > ul):not(.pair, .tiles, .faces) > li + li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 2.75rem;
+  right: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* c8: every row its own small card. */
+html[data-parts="row-cards"] #sidebar :is(a.place, .folder-row) {
+  margin-block: 0.25rem;
+  border-radius: 8px;
+  background-color: var(--paper);
+}
+html[data-parts="row-cards"] #sidebar :is(.sidebar-gap, .bold-group, .bold-edit, .sidebar-last) {
+  margin-top: 1rem;
+}
+html[data-parts="row-cards"] #sidebar .sidebar-last {
+  border-top: 0;
+}
+html[data-parts="row-cards"] #sidebar .faces .face {
+  background-color: var(--paper);
+}
+html[data-parts="cards-out"] #sidebar .drop-area.home-group {
+  margin-inline: 0;
+}
+/* A tile's dot at its top right, where a tile's corner badge would be, the same dot. */
+#sidebar .pair a.place {
+  position: relative;
+}
+#sidebar .pair .sidebar-dot {
+  position: absolute;
+  top: 0.875rem;
+  right: 0.875rem;
+}
+#sidebar .pair .sidebar-dot {
+  left: auto;
+}
+html[data-parts="cards-out"] #sidebar .drop-area.home-group > div {
+  margin-inline: 0;
+}

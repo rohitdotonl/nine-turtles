@@ -59,7 +59,7 @@
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
-<ul class={["home-group", part === "yours" && "sidebar-gap", part === "yours" && LOOKS[home.style]?.pair && "pair", part === "everyone" && "sidebar-last"]}>
+<ul class={["home-group", part === "yours" && "sidebar-gap", ((part === "yours" && LOOKS[home.style]?.pair) || (part === "top" && LOOKS[home.style]?.topPair)) && "pair", part === "everyone" && "sidebar-last"]}>
   {#each views as view (view)}
     {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
     <li>

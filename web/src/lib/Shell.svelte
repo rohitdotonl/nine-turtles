@@ -122,6 +122,8 @@
     root.dataset.home = homeDesign.style;
     root.dataset.parts = look?.parts ?? "";
     root.dataset.mark = look?.mark ?? "";
+    if (look?.sep) root.dataset.sep = "";
+    else delete root.dataset.sep;
     if (look?.serif) root.dataset.serif = "";
     else delete root.dataset.serif;
   });
