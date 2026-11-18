@@ -231,7 +231,7 @@ test("their page opened from Everyone you follow closes back there, even after a
   await expect(page.locator("#health-summary")).toHaveAttribute("aria-expanded", "true");
 });
 
-test("their page opened any other way: Unsubscribe there still goes to Unread", async ({ page }) => {
+test("their page opened any other way: Unsubscribe there goes home, to Saved (decision 0310)", async ({ page }) => {
   const name = `close-list-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
   const id = await failing(page, name, "break");
@@ -239,7 +239,7 @@ test("their page opened any other way: Unsubscribe there still goes to Unread", 
   await appReady(page);
   await page.getByRole("group", { name: "Not working" }).getByRole("button", { name: "Unsubscribe" }).click();
   await expect(page.getByText(`Unsubscribed from ${title}.`)).toBeVisible();
-  await expect(page).toHaveURL(/\/(unread|all)$/);
+  await expect(page).toHaveURL(/\/saved$/);
 });
 
 /** Follows a new blog of its own, makes it fail (`/move` or `/break`), and waits until Everyone you follow would list it. */

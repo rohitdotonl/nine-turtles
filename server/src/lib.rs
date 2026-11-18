@@ -52,6 +52,7 @@ pub mod password;
 pub mod payments;
 pub mod people;
 pub mod pictures;
+pub mod pins;
 pub mod podcasts;
 pub mod resume;
 pub mod rules;
@@ -244,6 +245,7 @@ pub fn router(state: AppState) -> Router {
         .merge(podcasts::routes())
         .merge(people::routes())
         .merge(pictures::routes())
+        .merge(pins::routes())
         .merge(sign_up::routes())
         .merge(confirm_email::routes())
         .merge(payments::routes())

@@ -2,7 +2,8 @@
 // were and the browser's Back button works. No library: the browser's own
 // history does the work.
 
-export const VIEWS = ["unread", "starred", "notes", "all"] as const;
+/** In Home's order (decision 0310): what you chose to keep first, then everything, then what's new. */
+export const VIEWS = ["starred", "notes", "all", "unread"] as const;
 export type View = (typeof VIEWS)[number];
 
 export type Route =
@@ -159,9 +160,10 @@ export function isList(place: Route): boolean {
   return place.kind === "view" || place.kind === "feed" || place.kind === "folder";
 }
 
-/** The place an address points to (an article in it aside). Anything unknown opens Unread. */
+/** The place an address points to (an article in it aside). "/" opens Saved (decision 0310); anything unknown, Unread (`knownPath` tells them apart). */
 export function parse(path: string): Route {
   const name = articleIn(path).list.replace(/^\/+|\/+$/g, "");
+  if (name === "") return { kind: "view", view: "starred" };
   if (name === "settings") return { kind: "settings" };
   // Everyone you follow has a row of its own in the sidebar (decision 0266); its old address under Settings still opens it,
   // and so does the old Feed health page's, which is part of it (decision 0186).

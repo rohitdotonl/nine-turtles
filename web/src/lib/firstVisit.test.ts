@@ -21,6 +21,8 @@ describe("welcomeFor", () => {
 
   it("leaves Saved its own list", () => {
     expect(welcomeFor(scene({ under: { kind: "view", view: "starred" } })).shown).toBe(false);
+    // Opened as home ("/", decision 0310), Saved welcomes a new reader too.
+    expect(welcomeFor(scene({ under: { kind: "view", view: "starred" }, front: true })).shown).toBe(true);
     expect(welcomeFor(scene({ under: { kind: "view", view: "all" } })).shown).toBe(true);
   });
 

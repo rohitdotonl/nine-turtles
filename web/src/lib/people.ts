@@ -24,6 +24,8 @@ export type Before = {
   write_back_off: boolean;
   write_back_way: string | null;
   note: string | null;
+  /** When the reader pinned them to Home (decision 0310), so Undo brings that back too. */
+  pinned_at: number | null;
 };
 
 /** Someone rather than something (decision 0264): a person, or a source joined to others, which is always one. Could be either acts as a publication. */
@@ -67,6 +69,7 @@ export function rowsOf(feeds: Feed[], people: Person[]): Feed[] {
       unread: places.reduce((sum, place) => sum + place.unread, 0),
       waiting: places.some((place) => place.waiting),
       folders: [...new Set(places.flatMap((place) => place.folders))],
+      pinnedAt: places.reduce<number | null>((first, place) => (place.pinnedAt != null && (first == null || place.pinnedAt < first) ? place.pinnedAt : first), null),
       places: places.map((place) => place.id),
     });
   }
@@ -210,6 +213,7 @@ export function befores(list: unknown): Before[] {
       write_back_off: each.write_back_off === true,
       write_back_way: typeof each.write_back_way === "string" ? each.write_back_way : null,
       note: typeof each.note === "string" ? each.note : null,
+      pinned_at: typeof each.pinned_at === "number" ? each.pinned_at : null,
     }));
 }
 

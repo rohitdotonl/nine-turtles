@@ -324,6 +324,19 @@ describe("moving down the sidebar with Shift+J and Shift+K (decisions 0110, 0180
     expect(sidebarRowNextTo(library, views, [], row("feed", 10), 1)).toEqual(row("folder", 2));
   });
 
+  it("goes through Pinned after the lists (decision 0310), and a pinned person in an open folder only once", () => {
+    const pinnedLibrary = { ...library, feeds: [{ ...feed(11, [1, 2]), pinnedAt: 5 } as Feed, feed(10, [1]), feed(12, [2]), feed(13), { ...feed(14), pinnedAt: 9 } as Feed] };
+    const order: string[] = [];
+    let here: Parameters<typeof sidebarRowNextTo>[3] = unread;
+    for (;;) {
+      const next = sidebarRowNextTo(pinnedLibrary, views, [1, 2], here, 1);
+      if (next === undefined) break;
+      order.push(next.kind === "view" ? next.view : `${next.kind} ${next.id}`);
+      here = next;
+    }
+    expect(order).toEqual(["starred", "all", "feed 11", "feed 14", "folder 1", "feed 10", "folder 2", "feed 12", "feed 13"]);
+  });
+
   it("goes through the people in no folder before the publications, as the sidebar shows them", () => {
     const paper = { id: 15, folders: [], kind: "publication" } as unknown as Feed;
     const mixed = { folders: [], feeds: [paper, feed(16)] };

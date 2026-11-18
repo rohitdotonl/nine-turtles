@@ -46,8 +46,8 @@ describe("addresses", () => {
     expect(parse("/feeds/12")).toEqual({ kind: "view", view: "unread" });
   });
 
-  it("opens Unread for the front page or an unknown address", () => {
-    expect(parse("/")).toEqual({ kind: "view", view: "unread" });
+  it("opens Saved for the front page (decision 0310), and Unread for an unknown address", () => {
+    expect(parse("/")).toEqual({ kind: "view", view: "starred" });
     expect(parse("/nowhere")).toEqual({ kind: "view", view: "unread" });
   });
 
@@ -170,7 +170,7 @@ describe("the Help pages' addresses (decision 0157)", () => {
 
 describe("the sidebar's lists", () => {
   it("shows Notes from the first day, so its empty list can say how to fill it (decision 0222)", () => {
-    expect(sidebarViews(false)).toEqual(["unread", "starred", "notes", "all"]);
+    expect(sidebarViews(false)).toEqual(["starred", "notes", "all", "unread"]);
     expect(sidebarViews(true)).toEqual(["starred", "notes", "all"]);
   });
 });

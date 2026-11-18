@@ -1,19 +1,18 @@
 <!--
-  The sidebar's folders and feeds (SPEC section 5): folders in the reader's
-  own order (decision 0207), each
-  with a button that
-  shows or hides the people and publications in it, then those in no
-  folder, A to Z, under two headings: People, then Publications (decision
+  The sidebar's people and folders (SPEC section 5), each section a white
+  card under its heading and sign (home.css, decision 0310): Pinned, the
+  people and publications the reader pinned from their page, the first
+  pinned first, shown even when empty so pinning is found; then Folders, in
+  the reader's own order (decision 0207), each with a button that shows or
+  hides the people and publications in it; then those in no folder and not
+  pinned, A to Z, under two headings: People, then Publications (decision
   0163). One in two folders is listed under both. Which folders are open is
   remembered on this device.
 
-  As in a Mac source list (decision 0041), a folder's show-or-hide arrow
-  sits before its name. No row here says what's unread (decision 0242):
-  Unread's own dot does, above them. Unread, Saved and All start their names 46px
-  into the sidebar, after their icons; folders, and the people and
-  publications in no folder, start at the 20px margin; a folder's feeds
-  start one step in, on the 46px edge, so an indent always means "inside a
-  folder" (decisions 0043, 0225).
+  Only a pinned row says something of theirs is new, with Unread's dot at
+  its end (decision 0310); no other row here does (decision 0242). A
+  folder's open people hang from it on lines, a step in, so an indent
+  always means "inside a folder" (decisions 0043, 0225).
 
   On a phone the feeds screen is the root of a stack: nothing is marked as
   selected there, and every row ends in a chevron, because
@@ -286,7 +285,9 @@
 
   let searching = $derived(search.trim() !== "");
   let found = $derived(findByName({ feeds, folders }, search));
-  let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
+  /** Pinned (decision 0310): they leave People and Publications, and stay in their folders. */
+  let pinned = $derived(library.pinned);
+  let loose = $derived(feeds.filter((feed) => feed.folders.length === 0 && !pinned.includes(feed)));
   /** Someone or something (decision 0163): the rows in no folder, under two headings. */
   let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
@@ -328,7 +329,7 @@
 {/snippet}
 
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
-{#snippet feedRow(feed: Feed, from: number | null)}
+{#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
@@ -347,7 +348,7 @@
         editing ? "pr-12" : "pr-3",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title))}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
+      >{@render name(plainSourceName(feed.title))}{#if dot && !unreadOff && feed.unread > 0}<span aria-hidden="true" class="unread-dot sidebar-dot"></span><span class="sr-only">, something new</span>{/if}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
     >
     {@render personHandle(feed)}
   </li>
@@ -387,18 +388,16 @@
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press", rows.length === 0 && "drop-empty"]}>
-    <h2 class="sidebar-section label -mx-2">{heading}</h2>
+  <div data-drop-loose={who} class={["drop-area rounded-press", rows.length === 0 && "drop-empty"]}>
+    <h2 class="home-heading label"><span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{heading}</h2>
     {@render refused(who)}
-    {#if rows.length > 0}
-      <ul class="-mx-2">
-        {#each rows as feed (feed.id)}
-          {@render feedRow(feed, null)}
-        {/each}
-      </ul>
-    {:else}
-      <p class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</p>
-    {/if}
+    <ul class="home-card">
+      {#each rows as feed (feed.id)}
+        {@render feedRow(feed, null)}
+      {:else}
+        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
+      {/each}
+    </ul>
   </div>
 {/snippet}
 
@@ -435,13 +434,22 @@
     ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
+  <!-- Pinned (decision 0310): always there, so pinning is found; empty, one quiet line says how. -->
+  <h2 class="home-heading label"><span class="text-ink"><Icon name="pin" /></span>Pinned</h2>
+  <ul class="home-card">
+    {#each pinned as feed (feed.id)}
+      {@render feedRow(feed, null, true)}
+    {:else}
+      <li class="px-3 py-2 text-meta text-ink-2">Pin someone from their page, with <span class="pin-sign"><Icon name="pin" /></span><span class="sr-only">Pin</span> at its top.</li>
+    {/each}
+  </ul>
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
     <div class="sidebar-section-row">
-      <h2 class="sidebar-section label">Folders</h2>
+      <h2 class="home-heading label"><span class="text-ink"><Icon name="folder" /></span>Folders</h2>
       <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
     </div>
-    <ul data-folder-list class="relative">
+    <ul data-folder-list class="home-card relative">
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
@@ -482,7 +490,7 @@
             {/if}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
+            <ul id={`folder-${folder.id}`} class="folder-feeds">
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
               {:else}
@@ -532,32 +540,10 @@
 {/if}
 
 <style>
-  /*
-    The sidebar's section names (Folders, People, Publications): the one
-    label (app.css → .label; decision 0207 made it the app's), with more room
-    above on a touch screen, where the rows are.
-  */
-  .sidebar-section {
-    padding: 1.5rem 1.25rem 0.5rem;
-  }
-  @media (pointer: coarse) {
-    .sidebar-section {
-      padding-top: 2rem;
-    }
-  }
-  /*
-    A faint line down the left of an open folder's feeds, under the folder's
-    name, so the feeds read as its contents at a glance (decision 0123).
-  */
-  .folder-feeds {
-    position: relative;
-  }
-  .folder-feeds::before {
-    content: "";
-    position: absolute;
-    inset-block: 0.25rem;
-    left: 21px;
-    border-left: 1px solid var(--line);
+  /* The pin in Pinned's empty line, level with its words. */
+  .pin-sign {
+    display: inline-flex;
+    vertical-align: -0.2em;
   }
   /* With a mouse or keyboard the arrow hides until it's wanted: made see-through rather than hidden. On a touch screen it always shows. */
   @media not (pointer: coarse) {
@@ -581,7 +567,7 @@
     align-items: flex-end;
     justify-content: space-between;
   }
-  .sidebar-section-row .sidebar-section {
+  .sidebar-section-row .home-heading {
     flex: 1;
   }
   /*

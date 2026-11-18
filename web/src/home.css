@@ -1,0 +1,96 @@
+/*
+  Home (SPEC section 5, decision 0310): the sidebar's lists on white cards on
+  the sidebar's grey, each card under its heading, as Settings' groups are
+  (Settings' groups take the same look). No lines between rows.
+
+  The cards: the top one (Saved, Notes, All articles, Unread, Everyone you
+  follow) with no heading, then Pinned, Folders, People and Publications,
+  each heading with its sign. Where you are inside a card is the line grey,
+  so the pill shows on the white.
+*/
+#sidebar .home-card {
+  margin-inline: 0.5rem;
+  padding-block: 0.25rem;
+  border-radius: var(--radius-hold);
+  background-color: var(--paper);
+  --place-tint: var(--line);
+}
+#sidebar .home-card :is(.place, .folder-row) {
+  margin-inline: 0.25rem;
+}
+
+/* A section's name, its sign before it in full ink, 8px above its card. */
+#sidebar .home-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1.25rem 0.5rem;
+}
+@media (pointer: coarse) {
+  #sidebar .home-heading {
+    padding-top: 2rem;
+  }
+}
+
+/*
+  Unread's dot (decision 0242), and a pinned person's while something of
+  theirs is new: the list's unread dot (app.css .unread-dot: 6px, round,
+  CanvasText in forced colors) in the full accent, as the list's softened one
+  would be too faint on the selected pill (decision 0278), in the row's flow
+  at its end rather than in a gutter.
+*/
+#sidebar .sidebar-dot {
+  position: static;
+  background-color: var(--accent);
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+}
+
+/*
+  An open folder's people hang from it: a line falls from under the folder
+  name's first letter, with a square-cornered branch to each person, and ends
+  at the last. They start a step in, in the second ink, so "inside" shows
+  without the lines too (decision 0225).
+*/
+#sidebar .folder-feeds {
+  position: relative;
+  margin-top: -0.25rem;
+  margin-bottom: 0.25rem;
+  --tree-x: 1.375rem;
+}
+#sidebar .folder-feeds > li {
+  position: relative;
+}
+#sidebar .folder-feeds a.place:not([aria-current]) {
+  color: var(--ink-2);
+}
+#sidebar .folder-feeds > li:has(a.place)::before {
+  content: "";
+  position: absolute;
+  left: var(--tree-x);
+  width: 0.875rem;
+  top: 0;
+  height: 50%;
+  border-left: 1px solid var(--strong);
+  border-bottom: 1px solid var(--strong);
+  pointer-events: none;
+}
+#sidebar .folder-feeds > li:has(a.place):not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: var(--tree-x);
+  top: 50%;
+  bottom: 0;
+  border-left: 1px solid var(--strong);
+  pointer-events: none;
+}
+#sidebar li[data-folder-item] + li[data-folder-item] {
+  margin-top: 0.25rem;
+}
+@media (forced-colors: active) {
+  #sidebar .folder-feeds > li::before,
+  #sidebar .folder-feeds > li::after {
+    border-color: CanvasText;
+  }
+}

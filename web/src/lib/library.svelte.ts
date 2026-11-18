@@ -11,6 +11,7 @@ import { filedAfter, saveOrder } from "./arranging";
 import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, saveOpenFolders, savedOpenFolders, undoRefused, type Notice, type Refusal } from "./feeds";
 import { importMessage, importOpml, undoImport } from "./importing";
 import { newestAnswer } from "./inorder";
+import { PIN_LIMIT, pinnedRows, sendPin } from "./pins";
 import { folderToPerson, join, joinedNotice, personOf, putBack, rowFor, rowsOf, unsubscribeAll } from "./people";
 import type { Feed, Folder, Library, Person, WhoKind } from "./shapes";
 import { moveAll, movedMessage, restoreFolders } from "./tidy";
@@ -35,6 +36,8 @@ export class LoadedLibrary {
   people: Person[] = $state([]);
   /** The sidebar's rows, A to Z: one per person, a person's places as one (`people.ts` → `rowsOf`). */
   rows: Feed[] | undefined = $derived(this.feeds && rowsOf(this.feeds, this.people));
+  /** The rows pinned to the top of Home, the first pinned first (decision 0310). */
+  pinned: Feed[] = $derived(pinnedRows(this.rows ?? []));
   /** How the reader's last import was sorted, once it's all checked, until they close the line (decision 0264). */
   sorted: Sorted | undefined = $state();
   /** Ends the import's closing line for good: closed, or the list to settle opened. */
@@ -105,6 +108,18 @@ export class LoadedLibrary {
     this.#countChanges++;
     const feed = this.feeds?.find((each) => each.id === feedId);
     if (feed) feed.unread = Math.max(0, feed.unread + change);
+  }
+
+  /** Pins a person or publication to Home, or unpins them, on every place of theirs; a sentence when it couldn't be done. */
+  async pin(row: Feed, on: boolean): Promise<string | undefined> {
+    if (on && row.pinnedAt == null && this.pinned.length >= PIN_LIMIT) return `${PIN_LIMIT} are pinned already. Unpin someone first.`;
+    const places = this.feeds?.filter((feed) => (row.places ?? [row.id]).includes(feed.id)) ?? [];
+    const before = places.map((place) => place.pinnedAt);
+    const now = Math.floor(Date.now() / 1000);
+    for (const place of places) place.pinnedAt = on ? (place.pinnedAt ?? now) : null;
+    const problem = await sendPin(row.id, on);
+    if (problem) places.forEach((place, index) => (place.pinnedAt = before[index]));
+    return problem;
   }
 
   /** Unsubscribes from a person or publication: every source of theirs at once, with Undo bringing them all back. */

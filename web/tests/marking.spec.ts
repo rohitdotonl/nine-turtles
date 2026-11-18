@@ -664,7 +664,7 @@ test("the list's More menu sets the sort order, saved for every device", async (
   await page.keyboard.press("Escape");
 });
 
-test("Unread off: no Unread view, no dots, no read styling, and it opens on All articles", async ({ page, isMobile }) => {
+test("Unread off: no Unread view, no dots, no read styling, and the Unread address opens All articles", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   // The setting is shared by every test using this nine turtles, so this
   // page alone is told Unread is off, and its changes aren't saved.
@@ -693,7 +693,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await row(page, name, NEWEST).click();
   await expect(article(page).getByRole("heading", { name: NEWEST })).toBeVisible();
 
-  // Shift+A marks nothing; g u does nothing; "/" and the Unread address open All.
+  // Shift+A marks nothing; g u does nothing; "/" opens Saved, as always (decision 0310), and the Unread address All.
   await page.keyboard.press("Escape");
   await page.keyboard.press("Shift+A");
   await expect(page.getByText(/Marked \d+ items? as read/)).toHaveCount(0);
@@ -703,7 +703,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?\d+$/);
   await page.goto(new URL("/", FEEDS_APP).href);
   await appReady(page);
-  await expect(page).toHaveURL(/\/all$/);
+  await expect(page).toHaveURL(/\/saved$/);
   await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);
@@ -726,7 +726,7 @@ test("Unread off: no Unread view, no dots, no read styling, and it opens on All 
   await expect(row(page, name, NEWEST)).not.toContainText("unread");
 });
 
-test("the server's Unread switch decides where the app opens", async ({ page, isMobile }) => {
+test("the server's Unread switch decides where Unread's address opens", async ({ page, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   await page.setViewportSize({ width: 1280, height: 800 });
   // This device last saw Unread on; the server says off (changed on another device).
@@ -740,9 +740,9 @@ test("the server's Unread switch decides where the app opens", async ({ page, is
   await appReady(page);
   await expect(page).toHaveURL(/\/all$/);
 
-  // Now it remembers off; the server says on again: "/" opens Unread after all.
+  // Now it remembers off; the server says on again: Unread's address opens Unread after all.
   unread = true;
-  await page.goto(new URL("/", FEEDS_APP).href);
+  await page.goto(new URL("/unread", FEEDS_APP).href);
   await appReady(page);
   await expect(page).toHaveURL(/\/unread$/);
   await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true })).toBeVisible();

@@ -419,6 +419,7 @@ async fn follow(
         write_back_off: false,
         write_back_way: None,
         note: None,
+        pinned_at: None,
         picture_url: parsed.picture,
         picture_chosen: None,
         folders: Vec::new(),

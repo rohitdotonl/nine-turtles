@@ -1,10 +1,11 @@
 <!--
-  The sidebar's fixed lists: Unread, Saved, Notes and All (SPEC
-  section 5), each with a small sign in the icon column, the same for
-  everyone (decision 0187). With Unread off there's no Unread, and All is
-  home.
+  The sidebar's fixed lists: Saved, Notes, All articles and Unread (SPEC
+  section 5), in that order (decision 0310), each with a small sign in the
+  icon column, the same for everyone (decision 0187), on Home's first card
+  (home.css), which has no heading. With Unread off there's no Unread, and
+  All is home.
 
-  Under them, one more row built the same way: Everyone you follow (SPEC
+  Under them, on the same card, one more row built the same way: Everyone you follow (SPEC
   section 15), the page that looks after the people themselves, one press
   from home instead of inside Settings (decision 0266).
 
@@ -19,9 +20,9 @@
   (decision 0250).
 
   Unread alone carries a dot while something waits in it, the list's unread
-  dot a step smaller (decision 0242): the one sign in the sidebar that
-  anything is new. Folders and people carry none, so nothing calls from
-  every row. Screen readers hear "Unread", described as "Something new", so
+  dot a step smaller (decision 0242). Of the rows below, only the people
+  the reader pinned carry one (decision 0310), so nothing calls from every
+  row. Screen readers hear "Unread", described as "Something new", so
   its name, which voice control uses, never changes.
 -->
 <script lang="ts">
@@ -54,7 +55,7 @@
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
-<ul>
+<ul class="home-card">
   {#each views as view (view)}
     {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
     <li>
@@ -88,19 +89,3 @@
   </li>
 </ul>
 
-<style>
-  /*
-    Unread's dot (decision 0242): the list's unread dot (app.css
-    .unread-dot: 6px, round, CanvasText in forced colors) in the full
-    accent, as the list's softened one would be too faint on the sidebar's
-    selected pill (decision 0278), and in the row's flow at its end rather
-    than in a gutter.
-  */
-  .sidebar-dot {
-    position: static;
-    background-color: var(--accent);
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-  }
-</style>

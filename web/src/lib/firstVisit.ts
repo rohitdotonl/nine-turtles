@@ -1,5 +1,6 @@
 // The first visit: before the reader follows anything, Unread and All show the
-// welcome instead of a list (SPEC section 2), and "New to feeds?" opens from it
+// welcome instead of a list (SPEC section 2), and so does Saved when the app
+// opened on it as home (decision 0310), and "New to feeds?" opens from it
 // (decision 0079). The screen (`Shell.svelte`) hands over what it knows, and
 // every rule about where the welcome shows is here, so it can be tested without
 // drawing anything. The welcome itself is drawn by `Welcome.svelte`.
@@ -18,6 +19,8 @@ export type WelcomeScene = {
   phone: boolean;
   /** The address names a feed or folder the reader doesn't have. */
   missing: boolean;
+  /** The app opened on its home ("/") and the reader hasn't gone anywhere since. */
+  front?: boolean;
 };
 
 /** Where the welcome shows. */
@@ -34,8 +37,8 @@ export type Welcome = {
 };
 
 export function welcomeFor(scene: WelcomeScene): Welcome {
-  // Saved keeps its own list even with no feeds: it is where its More menu and sort live.
-  const starred = scene.under.kind === "view" && scene.under.view === "starred";
+  // Saved keeps its own list even with no feeds, once chosen: it is where its More menu and sort live.
+  const starred = scene.under.kind === "view" && scene.under.view === "starred" && !scene.front;
   const shown = scene.firstVisit && !starred;
   return {
     shown,

@@ -84,6 +84,9 @@ pub struct Before {
     /// The reader's note on them (decision 0164), so Undo brings it back too.
     #[serde(default)]
     pub note: Option<String>,
+    /// When the reader pinned them to Home (decision 0310), so Undo brings that back too.
+    #[serde(default)]
+    pub pinned_at: Option<i64>,
 }
 
 /// A place's list becomes its person's when they have two or more places
@@ -119,7 +122,7 @@ async fn before_of(
     feeds: &[i64],
 ) -> Result<Vec<Before>, sqlx::Error> {
     // Each place: its feed, person, that person's name, the address typed for it, Write back
-    // switched off, how they were answered, and the note.
+    // switched off, how they were answered, the note, and when it was pinned.
     type Place = (
         i64,
         Option<i64>,
@@ -128,11 +131,12 @@ async fn before_of(
         bool,
         Option<String>,
         Option<String>,
+        Option<i64>,
     );
     let places: Vec<Place> = sqlx::query_as(
         "SELECT subscriptions.feed_id, subscriptions.writer_id, writers.name,
              subscriptions.write_to, subscriptions.write_back_off, subscriptions.write_back_way,
-             subscriptions.note FROM subscriptions
+             subscriptions.note, subscriptions.pinned_at FROM subscriptions
          LEFT JOIN writers ON writers.id = subscriptions.writer_id
          WHERE subscriptions.person_id = ? AND subscriptions.unsubscribed_at IS NULL
              AND subscriptions.feed_id IN (SELECT value FROM json_each(?))
@@ -143,7 +147,7 @@ async fn before_of(
     .fetch_all(&mut *connection)
     .await?;
     let mut before = Vec::with_capacity(places.len());
-    for (feed, writer, name, write_to, write_back_off, write_back_way, note) in places {
+    for (feed, writer, name, write_to, write_back_off, write_back_way, note, pinned_at) in places {
         let folders: Vec<i64> = sqlx::query_scalar(
             "SELECT feed_folders.folder_id FROM feed_folders
              JOIN folders ON folders.id = feed_folders.folder_id
@@ -163,6 +167,7 @@ async fn before_of(
             write_back_off,
             write_back_way,
             note,
+            pinned_at,
         });
     }
     Ok(before)
@@ -246,10 +251,12 @@ pub async fn join(
     };
     // Their notes become one, on every place (decision 0164); Write back is
     // off for the person if the reader switched it off for any of them, and
-    // answered the way the first of them was (decision 0286).
+    // answered the way the first of them was (decision 0286); they're pinned
+    // if any of them was, from the first pin (decision 0310).
     let notes: Vec<Option<String>> = before.iter().map(|place| place.note.clone()).collect();
     sqlx::query(
-        "UPDATE subscriptions SET writer_id = ?, note = ?, write_back_off = ?, write_back_way = ?
+        "UPDATE subscriptions SET writer_id = ?, note = ?, write_back_off = ?, write_back_way = ?,
+             pinned_at = ?
          WHERE person_id = ? AND feed_id IN (SELECT value FROM json_each(?))",
     )
     .bind(writer)
@@ -260,6 +267,7 @@ pub async fn join(
             .iter()
             .find_map(|place| place.write_back_way.as_deref()),
     )
+    .bind(before.iter().filter_map(|place| place.pinned_at).min())
     .bind(person)
     .bind(ids(&places))
     .execute(&mut *connection)
@@ -318,7 +326,7 @@ pub async fn put_back(
             "UPDATE subscriptions SET writer_id =
                  (SELECT id FROM writers WHERE id = ?1 AND person_id = ?2), write_to = ?4, note = ?5,
                  write_back_off = ?6,
-                 write_back_way = CASE WHEN ?7 IN ('copy', 'comment') THEN ?7 END
+                 write_back_way = CASE WHEN ?7 IN ('copy', 'comment') THEN ?7 END, pinned_at = ?8
              WHERE person_id = ?2 AND feed_id = ?3 AND unsubscribed_at IS NULL",
         )
         .bind(place.writer)
@@ -339,6 +347,7 @@ pub async fn put_back(
         )
         .bind(place.write_back_off)
         .bind(&place.write_back_way)
+        .bind(place.pinned_at)
         .execute(&mut *connection)
         .await?;
         if changed.rows_affected() > 0 {
@@ -522,12 +531,12 @@ async fn separate_place(
         let Some(writer) = before.first().and_then(|place| place.writer) else {
             return Ok(None);
         };
-        // The address typed for the person (decision 0147) and Write back
-        // switched off (decision 0286) were theirs, not this place's; Undo
-        // brings them back.
+        // The address typed for the person (decision 0147), Write back
+        // switched off (decision 0286) and their pin (decision 0310) were
+        // theirs, not this place's; Undo brings them back.
         sqlx::query(
             "UPDATE subscriptions SET writer_id = NULL, kind = NULL, kind_why = NULL, write_to = NULL,
-                 write_back_off = 0, write_back_way = NULL
+                 write_back_off = 0, write_back_way = NULL, pinned_at = NULL
              WHERE person_id = ? AND feed_id = ?",
         )
         .bind(person)

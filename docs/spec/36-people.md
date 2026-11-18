@@ -182,6 +182,10 @@ PLAN.md → V1, item 1.*
     quiet line says "Your highlights from their writing couldn't be loaded.
     Open the page again to try once more." (decision 0211). There is no
     Lately: their list already shows their newest (decision 0215).
+  - **Pin** (decision 0310): just before the cog, a pin button pins them to
+    the top of Home, or unpins them (section 5): "Pin Tomas Berg to Home",
+    pressed while pinned, the pin filled. A tenth is refused under their
+    name: "9 are pinned already. Unpin someone first."
   - **Their settings** are the cog at the top right (decision 0307,
     replacing 0267's row at the page's end): on a computer at the bar's right end, across from ‹, on
     a phone at the right end of the line with ‹ Back. Screen readers and

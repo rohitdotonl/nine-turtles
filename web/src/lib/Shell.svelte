@@ -43,7 +43,7 @@
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import { untitledOpening, type Article, type Feed, type Folder, type Source } from "./shapes";
-  import { homeView } from "./reading";
+  import { newestView } from "./reading";
   import { ReadingSettings } from "./reading-settings.svelte";
   import { type Notice } from "./feeds";
   import { marksUnsaved } from "./saving";
@@ -100,16 +100,17 @@
   /** Whether Unread is on, and the sort order (reading-settings.svelte.ts). */
   const settings = new ReadingSettings();
   let unreadOff = $derived(!settings.unread);
-  /** Where the app opens: Unread, or All with Unread off. */
-  let home: Route = $derived({ kind: "view", view: homeView(settings.unread) });
+  /** Where the app opens and "/" leads: Saved, what the reader chose, not what arrived (decision 0310); new follows open on what's new (`newest`, SPEC section 10). */
+  const home: Route = { kind: "view", view: "starred" };
+  let newest: Route = $derived({ kind: "view", view: newestView(settings.unread) });
   const parsed = parse(location.pathname);
   const asked: Route = parsed;
-  /** The address was "/", Unread or unknown: the app's home, which depends on whether Unread is on. */
-  const openedHome = asked.kind === "view" && asked.view === "unread";
+  const openedHome = asked.kind === "view" && asked.view === "unread"; // Unread's address, which depends on whether Unread is on.
+  const front = articleIn(location.pathname).list.replace(/\/+/g, "") === ""; // "/": Saved, or the welcome while you follow no one.
   const start = homeFor(asked, untrack(() => settings.unread));
   let route: Route = $state(start);
   /** Where Escape and "Close settings" go back to: the last list you were on. */
-  let lastPlace: Route = $state(isList(start) ? start : { kind: "view", view: homeView(untrack(() => settings.unread)) });
+  let lastPlace: Route = $state(isList(start) ? start : home);
   /** A page shared here (/add-feed?url=…, decisions 0104, 0138), read before the address is tidied, for
    * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
   let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
@@ -195,10 +196,8 @@
       ? { feed: under.id }
       : under.kind === "folder"
         ? { folder: under.id }
-        : { view: under.kind === "view" ? under.view : homeView(settings.unread) },
+        : { view: under.kind === "view" ? under.view : "starred" },
   );
-  /** The list's identity: a new one is loaded when it changes. */
-
   let currentFeed = $derived.by(() => {
     const place = isWho(route) ? route : under;
     return place.kind === "feed" || isWho(place) ? library.feeds?.find((feed) => feed.id === place.id) : undefined;
@@ -241,18 +240,18 @@
   let listInstead = $derived(insteadOfList(under, found));
   /** No feeds yet: Unread and All show the welcome instead (`firstVisit.ts`). */
   let firstVisit = $derived(isFirstVisit(library.feeds));
-  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, phone, missing: missing !== undefined }));
+  let whereWelcome = $derived(welcomeFor({ firstVisit: firstVisit || !!trying.current, under, phone, missing: missing !== undefined, front: front && pathFor(route) === pathFor(start) }));
   let welcoming = $derived(whereWelcome.shown);
   let welcomeWide = $derived(whereWelcome.wide);
   let welcomeAlone = $derived(whereWelcome.alone);
-  /** "New to feeds?" is for the first visit only: once anything is followed, it becomes the home view. */
+  /** "New to feeds?" is for the first visit only: once anything is followed, it gives way to what's new. */
   $effect(() => {
     if (!newToFeedsGivesWay(route, library.feeds)) return;
     untrack(() => {
-      history.replaceState({ screen: "list" }, "", pathFor(home));
-      route = home;
-      lastPlace = home;
-      queueMicrotask(() => placeFocus(home)?.focus());
+      history.replaceState({ screen: "list" }, "", pathFor(newest));
+      route = newest;
+      lastPlace = newest;
+      queueMicrotask(() => placeFocus(newest)?.focus());
     });
   });
   /** Add a feed or "New to feeds?" is open (the `task` snippet draws them), and its title. */
@@ -516,7 +515,7 @@
 
   /**
    * Starters chosen in the welcome's "New to feeds?" (decision 0079): one opens as a feed added by
-   * hand does; several open the home view, where they're all together. Any that couldn't be added
+   * hand does; several open what's new (Unread, or All), where they're all together. Any that couldn't be added
    * are named in the list's note.
    */
   async function startersAdded(feeds: Feed[], failed: Starter[]) {
@@ -524,7 +523,7 @@
     const note = failed.length > 0 ? { message: partlyAdded(failed) } : undefined;
     const [only] = feeds;
     if (feeds.length === 1 && only) go({ kind: "feed", id: only.id }, note);
-    else go(home, note);
+    else go(newest, note);
   }
 
   /** Back from Edit folder, saved or not, to the folder. */
@@ -778,7 +777,7 @@
 </script>
 
 {#snippet welcome(start: boolean)}
-  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(home, { message }), loadFeeds())} onTried={loadFeeds} />
+  <Welcome {start} covered={sheet && route.kind === "add-feed"} bind:heading={headings.welcome} bind:field={headings.add} {follow} onAdded={added} onOpen={openFeed} onImported={(message) => (go(newest, { message }), loadFeeds())} onTried={loadFeeds} />
 {/snippet}
 
 <!--
