@@ -12,8 +12,9 @@
   where they publish, each place a link to the publisher's own site; a paused
   source's line, and a box for a source that isn't working (NotWorkingBox,
   with its own Write to); and Write to, with the address under it (Change
-  beside it). Then one card holding your note and the words you highlighted.
-  Last, one row, Settings ›. Their picture above their name (decision
+  beside it). Then one card holding the replies you started, your note and the
+  words you highlighted. Their settings are the cog at the top right (beside
+  Close on a computer, decision 0307). Their picture above their name (decision
   0285) is the page's only picture, and it has no color of its own.
 
   Their settings (`route.settings`) are Settings' rows (WhoSettings,
@@ -26,17 +27,18 @@
   import ChoosePicture from "./ChoosePicture.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
-  import PageRow from "./PageRow.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
   import NotWorkingBox from "./NotWorkingBox.svelte";
   import TheirPlaces from "./TheirPlaces.svelte";
   import TheirReading from "./TheirReading.svelte";
+  import TheirReplies from "./TheirReplies.svelte";
   import WhoSettings from "./WhoSettings.svelte";
   import type { Notice } from "./feeds";
   import { listSick, youTubeRefusing, type Sick } from "./health";
   import type { LoadedLibrary } from "./library.svelte";
+  import { tip } from "./keyboard";
   import { isSomeone, placeShownAs, placesOf } from "./people";
   import { addressFor, type Route } from "./router";
   import type { Article, Feed } from "./shapes";
@@ -126,6 +128,9 @@
   }
   const joined = (done: Notice, lead: number) => go({ kind: "feed", id: lead }, done);
 
+  /** Replies you started shows (decision 0307): there are some, so the hairline under them does too. */
+  let replied = $state(false);
+
   /** Their settings, a page of its own (decision 0267). */
   let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
 
@@ -147,12 +152,18 @@
   });
 </script>
 
+<!-- Their settings: the cog at the top right, beside Close on a computer (decision 0307), named for them so it isn't taken for the app's own Settings; the keyboard comes back to it from their settings. -->
+{#snippet cog()}
+  <a href={addressFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" class="btn-quiet btn-icon -mr-2 shrink-0 md:mr-0" aria-label="Settings for {name}" title={tip("Settings", "edit")}><Icon name="settings" size="alone" /></a>
+{/snippet}
+
 <section aria-label={route.settings ? `Settings for ${name}` : `About ${name}`} class="who-page flex min-w-0 flex-1 flex-col bg-paper">
   <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
     <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
     <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
+      {#if !route.settings}{@render cog()}{/if}
       <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={onClose}><Icon name="close" size="alone" /></button>
     </div>
   {/if}
@@ -173,7 +184,7 @@
     <div class={route.settings ? "hidden" : "contents"}>
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
-      <div class="top-back"><button type="button" onclick={onClose} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{closeTo ?? name}</bdi></button></div>
+      <div class="top-back justify-between gap-2"><button type="button" onclick={onClose} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{closeTo ?? name}</bdi></button>{@render cog()}</div>
     {/if}
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->
@@ -204,14 +215,11 @@
 
     <!-- What's yours of them, held together in one card: where the eye rests. -->
     <div class="yours">
+      {#if onOpen}<div class={["replies", !replied && "hidden"]}><TheirReplies feed={feed.id} {onOpen} onShown={(shown) => (replied = shown)} /></div>{/if}
       <PersonNote place={feed.id} note={places.find((each) => each.note)?.note ?? null} {name} {library} />
       {#if onOpen}<div class="theirs"><TheirReading feed={feed.id} {onOpen} /></div>{/if}
     </div>
 
-    <!-- Their settings: one row that opens a page of its own, as Settings' rows do (decisions 0120, 0267), named for them so it isn't taken for the app's own Settings. -->
-    <div class="inset-group mt-4">
-      <PageRow key="their-settings" href={addressFor(theirSettings)} label="Settings" icon="settings" onclick={(event) => follow(event, theirSettings)} named="Settings for {name}" />
-    </div>
     </div>
   </div>
   </div>
@@ -295,6 +303,10 @@
   .theirs {
     padding-top: 1.25rem;
     border-top: 1px solid var(--line);
+  }
+  .replies {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line);
   }
   /* The box a note is written in has a frame of its own elsewhere (NoteBox); here the card already holds it, so it has none: never a box in a box. */
   .yours :global(form.note-form) {

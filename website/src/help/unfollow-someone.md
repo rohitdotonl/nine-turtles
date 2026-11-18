@@ -4,7 +4,7 @@ description: Stop following a person or a publication, and what's kept when you 
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-16
+updated: 2026-11-18
 related: [put-people-in-folders, save-an-article, highlight-and-take-notes]
 ---
 
@@ -16,7 +16,7 @@ related: [put-people-in-folders, save-an-article, highlight-and-take-notes]
 ## Unfollow
 
 1. Choose them in the sidebar, and open their settings: press their name
-   at the top of their list, then **Settings** at the foot of their page.
+   at the top of their list, then the cog at the top right of their page.
    Or press <kbd>E</kbd> in their list.
 2. Press **Unsubscribe from …** at the foot of their settings.
 3. If you saved, highlighted or wrote notes on any of their articles, or

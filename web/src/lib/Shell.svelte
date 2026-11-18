@@ -885,7 +885,7 @@
           bind:preferences
           loaded={settings.sort !== undefined}
           unread={settings.unread}
-          onUnread={(next) => settings.changeUnread(next)}
+          onUnread={(next) => settings.changeUnread(next)} replies={settings.replies} onReplies={(next) => settings.changeReplies(next)}
           bind:heading={headings.settings}
           {version}
           {owner}

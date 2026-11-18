@@ -30,7 +30,7 @@ under the list says how many. **Undo** puts them back.
 ## Hide one person's articles about something
 
 In an article, open **More** (…) and choose **Hide articles about…**. Or
-open someone's page, press **Settings** at its foot, then **Hide articles about…**.
+open someone's page, press the cog at its top right, then **Hide articles about…**.
 Settings › Hiding opens with "Only from" that person. Type the word and
 press **Add**. Press **Everyone instead** to hide it from everyone.
 

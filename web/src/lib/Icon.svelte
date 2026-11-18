@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments" | "copy"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments" | "copy" | "highlight"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash"
     // What went wrong with a feed that isn't working (decision 0279).
@@ -240,6 +240,10 @@
     <!-- Notes (SPEC section 42): a page with a folded corner and two lines of writing. -->
     <path d="M4.75 3.25h7.5l3 3v10.5h-10.5z" />
     <path d="M7.5 10h5M7.5 13h3.5" />
+  {:else if name === "highlight"}
+    <!-- A highlight (decision 0307): a marker's tip over the line it leaves, so it's never taken for Rename's pencil. -->
+    <path d="m11.75 3.75 4.5 4.5-6.5 6.5H5.25v-4.5z" />
+    <path d="M3 17.25h8" />
   {:else if name === "person"}
     <!-- A person (Add's question, the owner's core path, point 1): one head and shoulders, the Readers icon's single figure. -->
     <circle cx="10" cy="6.75" r="3" />

@@ -64,6 +64,7 @@
   import type { LoadedLibrary } from "./library.svelte";
   import type { ListNote } from "./listNote";
   import type { Article } from "./shapes";
+  import { replyStarted } from "./replies";
   import { aboutLine, addressFor, commentsOf, composeLink, keepAddress, keepMailPlace, lookOnTheirSite, looksLikeAddress, MAIL_NAMES, mailPlace, quotedBody, siteOf, wayOf, writesBack, type MailPlace, type WriteBackWay } from "./writeBack";
 
   let {
@@ -159,8 +160,14 @@
   /** What the line asks: on a computer, the two words that open the other ways; on a touch screen, plain words over its one way. */
   let question = $derived(writesIn !== "app" ? "Wrong place?" : computer ? "Didn't open?" : "Nothing opened?");
 
+  /** A way back was pressed at an article's end: their page lists it under Replies you started (decision 0307). */
+  function started() {
+    if (article) replyStarted(article.id);
+  }
+
   /** The email is opening: the line under the button says so, afresh. */
   function pressed(quotes: string[]) {
+    started();
     lastQuotes = quotes;
     copied = "";
     copyFailed = false;
@@ -203,6 +210,7 @@
 
   /** Copy their address, saying how it went here, or in the note at the reading area's foot when that's where it was pressed. */
   async function copyAddress(fromLine = false) {
+    started();
     const done = await navigator.clipboard.writeText(address ?? "").then(
       () => true,
       () => false,
@@ -278,6 +286,7 @@
     opening = false;
     copied = "";
     away = undefined;
+    started();
     if (talk) window.open(talk, "_blank", "noopener,noreferrer");
   }
 
@@ -484,7 +493,7 @@
         <!-- The split button (decision 0286): the way chosen for this person, and the arrow with every way. -->
         <div class="split">
           {#if way === "comment"}
-            <a class="btn" href={talk} target="_blank" rel="noopener noreferrer"><Icon name="comments" /><span>Comment<span class="sr-only">{" "}on <bdi>{name}</bdi>'s site</span></span></a>
+            <a class="btn" href={talk} target="_blank" rel="noopener noreferrer" onclick={started}><Icon name="comments" /><span>Comment<span class="sr-only">{" "}on <bdi>{name}</bdi>'s site</span></span></a>
           {:else if way === "copy"}
             <button type="button" class="btn" onclick={() => void copyWay()}><Icon name="copy" /><span>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></span></button>
           {:else}
@@ -578,18 +587,13 @@
     margin: 0;
   }
   /*
-    At an article's end (decision 0298): small and soft, a faint edge and the
-    second ink, still a 44px target, so it's the way on without being the
-    loudest thing under the writing.
+    At an article's end it's the button it is everywhere, in the full ink at
+    the usual size, as Write to is on their page (decision 0307, replacing
+    0298's small and soft one): replying is what nine turtles is for.
   */
   /* The same room above it as under it, where the page ends (decision 0301). */
   .write-back:not(.on-page, .in-row) {
     margin-top: 2rem;
-  }
-  .write-back:not(.on-page, .in-row) :is(.split > .btn, .split :global(.split-arrow)) {
-    border-color: var(--line);
-    color: var(--ink-2);
-    font-size: var(--text-meta);
   }
   /* A long name wraps rather than running off a phone. */
   .write-back > .btn {

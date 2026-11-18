@@ -11,9 +11,9 @@ V1, item 2). Its look gets a refinement round.*
   centred button, **Write back** (with an arrow beside it for the other
   ways back, below): an outlined button with a
   paper-plane icon, as Mark all as read ends a list, so it's quieter than
-  the writing (decision 0242; solid ink before), and at an article's end
-  small and soft, a faint edge and the second ink, still 44px tall
-  (decision 0298). Nothing under it names who it goes to or their address:
+  the writing (decision 0242; solid ink before), in the full ink at the
+  usual size, as Write to is on their page (decision 0307, replacing 0298's
+  small and soft one: replying is what nine turtles is for). Nothing under it names who it goes to or their address:
   an address is never printed on the article's page, where a screenshot or
   a shared screen would carry it (decision 0298, replacing 0183's "to Maya
   Chen, maya@example.com"); their page still shows it. The button stays one short word
@@ -223,6 +223,23 @@ V1, item 2). Its look gets a refinement round.*
   as Write back's opens in place, filled with it ("Correct it, or paste a new
   one."), with Save and Not now; change it and press Save to write somewhere
   else; empty it to go back to what their feed gives, if anything.
+- **Replies you started** (decision 0307, the owner's choice): pressing any
+  way back at an article's end (Write back, Gmail, Outlook.com, Copy
+  address, Comment) notes the article and the day, so the person's page
+  can list it (section 36). One line per article, with the latest day;
+  never what was written, and never whether it was sent, which nine
+  turtles can't know: the line under the list says so ("Noted when you
+  start a reply. nine turtles can't see whether you sent it."). Write to on
+  their page, with no article, notes nothing. The list shows only once
+  there's a line in it. Each line has a quiet **Remove** (the bin), and
+  **Undo** in its place brings it back with its day. **Settings › Reading ›
+  Replies you started** (on unless switched off; "Their page lists what you
+  started a reply to, never what you wrote.") switched off notes nothing
+  new and hides the list on every page ("Nothing is noted, and their pages
+  show no list."); what was noted is kept for when it's switched on again.
+  A line goes with its article when the article leaves the reader's library
+  (unsubscribing, the yearly clean-up). Your data's export doesn't include
+  them yet.
 - Each reader's addresses are theirs alone. The address a feed gives is the
   same for everyone who follows it, as its name is.
 
@@ -276,6 +293,12 @@ V1, item 2). Its look gets a refinement round.*
    arrow, choose Comment on their site: its comments open in a new tab, and
    the button says Comment, with "on" and the site under it. Choose Email
    app from the arrow to go back to Write back.
-13. On their page, press Settings and switch **Write back** off: their page
+13. On their page, press the cog at the top right and switch **Write back** off: their page
    has no Write to, and their articles end with no Write back, no paper
    plane, and `w` does nothing. Switch it on: all back, with the address.
+14. Open an article of someone whose address is known: Write back is in
+   the same full ink and size as Write to on their page. Choose Copy from
+   its arrow, then open their page: **Replies you started** lists the
+   article with today's date. Press the bin: "Removed." with Undo; press
+   Undo and it's back. In Settings › Reading switch **Replies you
+   started** off: their page has no list. Switch it on: the line is back.

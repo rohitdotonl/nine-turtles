@@ -1,5 +1,6 @@
 // The reading settings shared across the reader's devices (SPEC section 18):
-// the sort order and whether Unread is on, with this device's copy of Unread so the app opens in it before
+// the sort order, whether Unread is on and whether their pages keep the replies
+// the reader started (decision 0307), with this device's copy of Unread so the app opens in it before
 // the server answers.
 import { getJson, isRecord } from "./http";
 import { deviceText, setDeviceText } from "./device";
@@ -21,6 +22,8 @@ export type Reading = {
    * none of those. Read state is recorded either way (SPEC section 10).
    */
   unread: boolean;
+  /** Replies you started, on a person's page (decision 0307): on unless switched off. */
+  replies: boolean;
 };
 
 /**
@@ -33,19 +36,24 @@ export async function loadSettings(): Promise<Reading> {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
     const unread = !(isRecord(body) && body.unread === false);
+    const replies = !(isRecord(body) && body.replies === false);
     rememberUnread(unread);
     // The lists this device once kept hidden (decision 0105) are no longer read (decision 0187).
     setDeviceText("nine-turtles.hidden", null);
     // The copy of a reader's own keys this device once kept (decision 0110) is no longer read (decision 0170).
     setDeviceText("nine-turtles.keys", null);
-    return { sort, unread };
+    return { sort, unread, replies };
   } catch {
-    return { sort: "newest", unread: lastUnread() };
+    return { sort: "newest", unread: lastUnread(), replies: true };
   }
 }
 
 export function saveSort(sort: Order): Promise<void> {
   return send("/api/settings", { sort });
+}
+
+export function saveReplies(replies: boolean): Promise<void> {
+  return send("/api/settings", { replies });
 }
 
 export async function saveUnread(unread: boolean): Promise<void> {

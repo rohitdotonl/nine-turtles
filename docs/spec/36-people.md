@@ -158,21 +158,28 @@ PLAN.md → V1, item 1.*
     (section 37), and **Change** beside the address, which opens the same
     box as Write back's, filled with it, to correct it (Save, Not now);
   - one card, a grouped list's tone and corners, holding what's yours of
-    them, a hairline between the two (decision 0267):
-  - **Your note** (section 42), "Add a note…" while there's none;
+    them, a hairline between each part (decision 0267):
+  - **Replies you started** (section 37, decision 0307), only once there's
+    one: a paper plane, the article's title (it opens the article) and the
+    day after it, the latest first, at most 20, each with a quiet bin to
+    remove it (Undo in its place), and under them "Noted when you start a
+    reply. nine turtles can't see whether you sent it.";
+  - **Your note** (section 42), "Add a note…" while there's none; once
+    written, with the page that is a note everywhere beside it;
   - **Your highlights**, the words you highlighted in their writing (the
-    newest article first, at most 20; Notes has them all), each as at an
-    article's end, with "From {title} · {day}" (the title opens the
+    newest article first, at most 20; Notes has them all), each beside the
+    marker that is a highlight everywhere (decision 0307), with "From {title} · {day}" (the title opens the
     article) and your note on it, an untitled piece by its opening words
     (section 6); with none, "Nothing highlighted yet." and "Words you
     highlight in their writing gather here."; if they can't be loaded, one
     quiet line says "Your highlights from their writing couldn't be loaded.
     Open the page again to try once more." (decision 0211). There is no
-    Lately: their list already shows their newest (decision 0215);
-  - last, one row built as Settings' own rows are: the cog, **Settings**
-    and ›, which opens their settings. Screen readers and voice control
-    know it as "Settings for Tomas Berg", so it isn't taken for the app's
-    own Settings.
+    Lately: their list already shows their newest (decision 0215).
+  - **Their settings** are the cog at the top right (decision 0307,
+    replacing 0267's row at the page's end): on a computer beside the ×, on
+    a phone at the right end of the line with ‹ Back. Screen readers and
+    voice control know it as "Settings for Tomas Berg", so it isn't taken
+    for the app's own Settings; its tooltip shows its key, `e`.
 - **Their picture** (decision 0285): a circle above an article's byline
   and before their name at the top of their list (40px, 32px on a phone;
   section 7, decision 0289) and at the top of their page (72px), nowhere else. It
@@ -198,8 +205,7 @@ PLAN.md → V1, item 1.*
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
   above the title (a very long name there ends in "…"); the browser's tab
   says "Settings for Tomas Berg". That and Escape go back to their page as
-  it was left, with nothing loading again, the keyboard on its Settings
-  row, in view; on a computer the **×** stays at
+  it was left, with nothing loading again, the keyboard on its cog; on a computer the **×** stays at
   the bar's right end, titled just "Close" (Escape belongs to ‹ there), and
   goes back to their list (or Everyone you follow, as above). The keyboard starts on
   the title, and Tab goes to Name. Each setting changes the moment it's
@@ -290,11 +296,11 @@ PLAN.md → V1, item 1.*
 3. Press a person's name at the top of their list: their page opens alone
    in the window (on a phone, as its own screen), with **Write to …** (outlined) under
    their name and their sources, one card with Your note and Your
-   highlights, then one row, **Settings ›**, and no muted line. Press that
-   row: their settings open in its place, titled Settings, with
+   highlights, the cog at the top right, and no muted line. Press the cog:
+   their settings open in its place, titled Settings, with
    **‹ their name** above; the tab says "Settings for" their name. Press
    it, or Escape: their page again, as it was, with the keyboard on the
-   Settings row and the row in view.
+   cog.
 4. In their settings, choose **This is: A publication**: the
    row moves under Publications at once, and on their page Write to has gone.
 5. In their settings, press **+ Add their newsletter, videos or podcast** and choose someone in another folder:

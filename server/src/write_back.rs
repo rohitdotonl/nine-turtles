@@ -29,12 +29,14 @@ use crate::{
 };
 
 pub(crate) mod site;
+pub mod started;
 mod unfollowed;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/api/feeds/{id}/write-to", post(set_address))
         .merge(site::routes())
+        .merge(started::routes())
         .merge(unfollowed::routes())
 }
 

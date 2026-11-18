@@ -1,5 +1,6 @@
 //! Each reader's settings shared across their devices (SPEC section 18): the
-//! sort order and whether Unread is on (SPEC section 10). Reader controls such
+//! sort order, whether Unread is on (SPEC section 10), and whether a person's
+//! page keeps the replies the reader started (SPEC section 37, decision 0307). Reader controls such
 //! as the page, font and text size belong to each device and stay in its browser.
 //! The sidebar always shows every list now (decision 0187): a `hidden` row
 //! saved before is left in place and never read.
@@ -31,6 +32,9 @@ struct Settings {
     /// off (none of those). Read state is recorded either way. Nothing
     /// stored means on.
     unread: bool,
+    /// Replies you started on a person's page (on, the default) or off (no
+    /// new lines, and the list hidden). Nothing stored means on.
+    replies: bool,
 }
 
 /// A change: only the settings named are saved, so a tab that changes the
@@ -39,12 +43,13 @@ struct Settings {
 struct Change {
     sort: Option<Order>,
     unread: Option<bool>,
+    replies: Option<bool>,
 }
 
 async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
     let rows: Vec<(String, String)> = sqlx::query_as(
         "SELECT name, value FROM person_settings
-         WHERE person_id = ? AND name IN ('sort', 'unread')",
+         WHERE person_id = ? AND name IN ('sort', 'unread', 'replies')",
     )
     .bind(person)
     .fetch_all(db)
@@ -60,7 +65,12 @@ async fn load(db: &SqlitePool, person: i64) -> Result<Settings, sqlx::Error> {
         _ => Order::Newest,
     };
     let unread = value("unread") != Some("off");
-    Ok(Settings { sort, unread })
+    let replies = value("replies") != Some("off");
+    Ok(Settings {
+        sort,
+        unread,
+        replies,
+    })
 }
 
 async fn read(SignedIn(person): SignedIn, State(state): State<AppState>) -> Response {
@@ -79,10 +89,12 @@ async fn change(
         Order::Newest => "newest",
         Order::Oldest => "oldest",
     });
-    let unread = change.unread.map(|on| if on { "on" } else { "off" });
+    let on_off = |on: bool| if on { "on" } else { "off" };
+    let unread = change.unread.map(on_off);
+    let replies = change.replies.map(on_off);
     let saved = async {
         let mut transaction = state.db.begin().await?;
-        for (name, value) in [("sort", sort), ("unread", unread)] {
+        for (name, value) in [("sort", sort), ("unread", unread), ("replies", replies)] {
             if let Some(value) = value {
                 sqlx::query(
                     "INSERT INTO person_settings (person_id, name, value) VALUES (?, ?, ?)

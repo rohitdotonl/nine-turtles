@@ -466,3 +466,77 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   await expect(line).not.toContainText("the wrong app");
   await expect(line.getByRole("button")).toHaveText(["Copy their address"]);
 });
+
+test("A way back pressed is listed on their page under Replies you started, removed with Undo, and switched off in Settings", async ({ page }) => {
+  const name = `replied-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "replied@replied.example" } });
+  expect(kept.ok()).toBe(true);
+  const who = whoPage(page, `Blog ${name}`);
+  const theirPage = async () => {
+    await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
+    await appReady(page);
+    await expect(who.getByRole("heading", { level: 2, name: `Blog ${name}` })).toBeVisible();
+  };
+  // Nothing started yet: no list at all, not an empty one.
+  await theirPage();
+  await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
+
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  const title = (await pane(page).getByRole("heading", { level: 2 }).textContent())!.trim();
+  // In the full ink at the usual size, as Write to is (decision 0307).
+  const write = pane(page).getByRole("link", { name: `Write back to Blog ${name}` });
+  const [writeLook, titleColor] = await Promise.all([
+    write.evaluate((button) => ({ color: getComputedStyle(button).color, size: getComputedStyle(button).fontSize })),
+    pane(page).getByRole("heading", { level: 2 }).evaluate((heading) => getComputedStyle(heading).color),
+  ]);
+  expect(writeLook.color).toBe(titleColor);
+  expect(writeLook.size).toBe(await page.evaluate(() => getComputedStyle(document.body).fontSize));
+  // Copying their address is a way back: it's noted, with the day, never what was written.
+  await pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` }).click();
+  await pane(page).getByRole("menu").getByRole("menuitemradio", { name: "Copy replied@replied.example" }).click();
+  await expect(pane(page).locator(".write-back").getByText("Copied.", { exact: true })).toBeVisible();
+
+  await theirPage();
+  const replies = who.getByRole("region", { name: "Replies you started" });
+  await expect(replies.getByRole("listitem")).toHaveCount(1);
+  await expect(replies.getByRole("button", { name: title, exact: true })).toBeVisible();
+  await expect(replies).toContainText("nine turtles can't see whether you sent it.");
+  // Its settings are the cog beside Close now, not a row at the page's end (decision 0307).
+  await expect(page.locator(".reading-bar").getByRole("link", { name: `Settings for Blog ${name}`, exact: true })).toBeVisible();
+
+  // Removed, with Undo in its place, which brings it back.
+  await replies.getByRole("button", { name: `Remove ${title} from Replies you started` }).click();
+  const undo = replies.getByRole("button", { name: "Undo", exact: true });
+  await expect(undo).toBeFocused();
+  await undo.click();
+  await expect(replies.getByRole("button", { name: title, exact: true })).toBeVisible();
+  await expect(replies.getByRole("button", { name: `Remove ${title} from Replies you started` })).toBeFocused();
+  // The title opens the article.
+  await replies.getByRole("button", { name: title, exact: true }).click();
+  await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
+
+  // Switched off in Settings: their page shows no list; back on, it's there again.
+  const settingsSwitch = page.getByRole("switch", { name: "Replies you started" });
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await expect(settingsSwitch).toBeChecked();
+  await settingsSwitch.click();
+  await expect(settingsSwitch).not.toBeChecked();
+  await expect(page.getByText("Nothing is noted, and their pages show no list.")).toBeVisible();
+  await theirPage();
+  await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await appReady(page);
+  await settingsSwitch.click();
+  await expect(settingsSwitch).toBeChecked();
+  await theirPage();
+  await expect(who.getByRole("region", { name: "Replies you started" }).getByRole("listitem")).toHaveCount(1);
+});

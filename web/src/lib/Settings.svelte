@@ -66,6 +66,8 @@
     loaded,
     unread,
     onUnread,
+    replies,
+    onReplies,
     heading = $bindable(),
     version,
     owner = false,
@@ -93,6 +95,10 @@
     unread: boolean;
     /** Switches Unread on or off; fails if it couldn't be saved. */
     onUnread: (unread: boolean) => Promise<void>;
+    /** Whether a person's page keeps the replies the reader started (decision 0307). */
+    replies: boolean;
+    /** Switches that on or off; fails if it couldn't be saved. */
+    onReplies: (replies: boolean) => Promise<void>;
     heading?: HTMLHeadingElement;
     version: string;
     /** Only the owner sees Readers. */
@@ -197,6 +203,15 @@
       await onUnread(next);
     } catch {
       unreadMessage = "Unread couldn't be switched. Try again in a moment.";
+    }
+  }
+
+  async function chooseReplies(next: boolean) {
+    unreadMessage = "";
+    try {
+      await onReplies(next);
+    } catch {
+      unreadMessage = "Replies you started couldn't be switched. Try again in a moment.";
     }
   }
 
@@ -313,6 +328,30 @@
                 checked={unread}
                 disabled={!loaded}
                 onchange={(event) => chooseUnread(event.currentTarget.checked)}
+              />
+            </label>
+          </div>
+          <!-- Replies you started (decision 0307): a line on their page for each article you pressed a way back at; never what you wrote. -->
+          <div class="inset-row setting">
+            <div class="setting-label">
+              {@render icon("send")}
+              <div class="setting-words">
+                <p id="replies-name" class="setting-name" aria-hidden="true">Replies you started</p>
+                <p id="replies-hint" class="setting-hint">
+                  {replies ? "Their page lists what you started a reply to, never what you wrote." : "Nothing is noted, and their pages show no list."}
+                </p>
+              </div>
+            </div>
+            <label class="switch-target -my-2 -mr-2">
+              <input
+                type="checkbox"
+                role="switch"
+                class="switch"
+                aria-label="Replies you started"
+                aria-describedby="replies-hint"
+                checked={replies}
+                disabled={!loaded}
+                onchange={(event) => chooseReplies(event.currentTarget.checked)}
               />
             </label>
           </div>

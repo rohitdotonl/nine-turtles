@@ -334,3 +334,127 @@ async fn write_back_is_switched_off_and_its_way_chosen_for_the_whole_person() {
         .await;
     assert_eq!(way(letters).await, Value::Null);
 }
+
+#[tokio::test]
+async fn replies_started_are_listed_on_the_persons_page_and_are_the_readers_alone() {
+    let (base, state) = common::start_with_state(common::config()).await;
+    let reader = Reader {
+        cookie: common::signed_in(&base).await,
+        base: base.clone(),
+        publisher: publisher().await,
+    };
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let beta = reader.follow("beta.xml").await;
+    let get = async |cookie: &str, path: String| {
+        let response = Client::new()
+            .get(format!("{base}{path}"))
+            .header("cookie", cookie)
+            .send()
+            .await
+            .unwrap();
+        serde_json::from_str::<Value>(&response.text().await.unwrap()).unwrap()
+    };
+    let first = async |feed: i64| {
+        get(&reader.cookie, format!("/api/articles?feed={feed}")).await["articles"][0]["id"]
+            .as_i64()
+            .unwrap()
+    };
+    let (on_blog, on_letters) = (first(blog).await, first(letters).await);
+    // Alpha's two places are one person.
+    let _ = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    let listed = async |cookie: &str, feed: i64| {
+        get(cookie, format!("/api/feeds/{feed}/replies")).await["replies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|reply| {
+                (
+                    reply["article"]["id"].as_i64().unwrap(),
+                    reply["started_at"].as_i64().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+
+    // A way back pressed on an article of each of Alpha's places: both are on Alpha's page, from either place, and not on Beta's.
+    for article in [on_blog, on_letters, on_blog] {
+        let (status, _) = reader
+            .post(&format!("/api/articles/{article}/reply-started"), json!({}))
+            .await;
+        assert_eq!(status, StatusCode::NO_CONTENT);
+    }
+    let alpha = listed(&reader.cookie, letters).await;
+    assert_eq!(alpha.len(), 2, "one line per article: {alpha:?}");
+    assert_eq!(listed(&reader.cookie, blog).await, alpha);
+    assert!(listed(&reader.cookie, beta).await.is_empty());
+
+    // Removed, it's gone; Undo brings it back with the day it had, never a day later than now.
+    let day = alpha.iter().find(|(id, _)| *id == on_blog).unwrap().1;
+    let (status, _) = reader
+        .post(
+            &format!("/api/articles/{on_blog}/reply-started/delete"),
+            json!({}),
+        )
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(listed(&reader.cookie, blog).await.len(), 1);
+    let _ = reader
+        .post(
+            &format!("/api/articles/{on_blog}/reply-started"),
+            json!({ "at": day - 86_400 }),
+        )
+        .await;
+    assert!(
+        listed(&reader.cookie, blog)
+            .await
+            .contains(&(on_blog, day - 86_400))
+    );
+
+    // An article the reader doesn't have is refused.
+    let (status, _) = reader
+        .post("/api/articles/99999/reply-started", json!({}))
+        .await;
+    assert_eq!(status, StatusCode::NOT_FOUND);
+
+    // Another reader who follows Alpha sees none of these, and can't note one on an article they don't have.
+    let (_, other) = common::another_reader(&state).await;
+    let theirs = Reader {
+        cookie: other.clone(),
+        base: base.clone(),
+        publisher: reader.publisher.clone(),
+    };
+    let their_blog = theirs.follow("alpha.xml").await;
+    assert!(listed(&other, their_blog).await.is_empty());
+
+    // Switched off in Settings: the list is hidden and nothing new is noted; back on, what was kept is back.
+    let _ = reader
+        .post("/api/settings", json!({ "replies": false }))
+        .await;
+    assert_eq!(
+        get(&reader.cookie, "/api/settings".to_owned()).await["replies"],
+        json!(false)
+    );
+    assert!(listed(&reader.cookie, blog).await.is_empty());
+    let _ = reader
+        .post(
+            &format!("/api/articles/{on_letters}/reply-started/delete"),
+            json!({}),
+        )
+        .await;
+    let _ = reader
+        .post(
+            &format!("/api/articles/{on_letters}/reply-started"),
+            json!({}),
+        )
+        .await;
+    let _ = reader
+        .post("/api/settings", json!({ "replies": true }))
+        .await;
+    assert_eq!(
+        listed(&reader.cookie, blog).await,
+        vec![(on_blog, day - 86_400)]
+    );
+}

@@ -7,10 +7,10 @@
 // One is made for each signed-in screen (Shell.svelte), never shared, so
 // nothing of one reader's is left for the next to see.
 
-import { lastUnread, loadSettings, saveSort, saveUnread, type Order, type Reading } from "./reading";
+import { lastUnread, loadSettings, saveReplies, saveSort, saveUnread, type Order, type Reading } from "./reading";
 import { savedInOrder } from "./inorder";
 
-const SETTINGS = ["unread", "sort"] as const;
+const SETTINGS = ["unread", "sort", "replies"] as const;
 type Setting = (typeof SETTINGS)[number];
 
 export class ReadingSettings {
@@ -18,6 +18,8 @@ export class ReadingSettings {
   unread: boolean = $state(lastUnread());
   /** The reader's sort order, shared across their devices; unknown until the server answers. */
   sort: Order | undefined = $state();
+  /** Whether a person's page keeps the replies the reader started (decision 0307); on until the server says. */
+  replies: boolean = $state(true);
 
   // The server's first answer, and what the reader did while it was on its
   // way. Settings › Reading waits for that answer (its choices are disabled
@@ -29,6 +31,7 @@ export class ReadingSettings {
   #saved = new Set<Setting>();
 
   #unreadSaves = savedInOrder(this.#saving("unread", saveUnread), (next: boolean) => (this.unread = next));
+  #repliesSaves = savedInOrder(this.#saving("replies", saveReplies), (next: boolean) => (this.replies = next));
   #sortSaves = savedInOrder<Order | undefined>(
     this.#saving("sort", (next) => saveSort(next as Order)),
     (next) => (this.sort = next),
@@ -52,6 +55,10 @@ export class ReadingSettings {
 
   changeUnread(next: boolean): Promise<void> {
     return this.#change("unread", this.#unreadSaves(next, this.unread));
+  }
+
+  changeReplies(next: boolean): Promise<void> {
+    return this.#change("replies", this.#repliesSaves(next, this.replies));
   }
 
   changeSort(next: Order): Promise<void> {
@@ -81,6 +88,7 @@ export class ReadingSettings {
 
   #show(setting: Setting, answer: Reading) {
     if (setting === "unread") this.unread = answer.unread;
+    else if (setting === "replies") this.replies = answer.replies;
     else this.sort = answer.sort;
   }
 }
