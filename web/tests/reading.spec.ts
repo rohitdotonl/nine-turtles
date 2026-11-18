@@ -77,7 +77,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Enter");
     await expect(feedsProblem).toHaveCount(0);
     await expect(page.locator("#sidebar a").first()).toBeFocused();
-    await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Reading/ }).first()).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: /^Asha/ }).first()).toBeVisible();
   });
 
   test("no layout buttons: the sidebar and the list have none, and f does nothing (decisions 0275 and 0282)", async ({ page }) => {
@@ -181,11 +181,12 @@ test.describe("on a wide window", () => {
 
     // Credit: the source, with the author and time. Someone followed: their name opens their list (decision 0289),
     // a link that wraps as text does (decision 0260).
-    const writer = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
-    await expect(writer).toHaveAttribute("title", "Everything by Reading Room");
+    const writer = article(page).locator(".article-byline").getByRole("link", { name: "Asha Rao" });
+    await expect(writer).toHaveAttribute("title", "Everything by Asha Rao");
     await expect(writer).toHaveAttribute("href", /^\/(?:[a-z0-9-]+-)?[0-9]+$/);
     expect((await writer.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-    await expect(article(page).getByText("Asha Rao")).toBeVisible();
+    // The author is who the source is called by, so their name is said once (decision 0308).
+    await expect(article(page).locator(".article-byline").getByText("Asha Rao")).toHaveCount(1);
     // Marked with its language, for screen readers.
     await expect(article(page).locator("article")).toHaveAttribute("lang", "en-gb");
 
@@ -217,10 +218,10 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
-    await expect(page.getByRole("region", { name: "Reading Room" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Asha Rao" })).toBeVisible();
     // One page title, then a heading for the list.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
-    await expect(page.getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Asha Rao" })).toBeVisible();
     // j chooses a row: it says it's the current one.
     await page.keyboard.press("j");
     await expect(page.locator('[aria-current="true"]')).toHaveCount(1);
@@ -267,7 +268,7 @@ test.describe("on a wide window", () => {
       .locator(".reading-bar")
       .locator("a[aria-label], button[aria-label]")
       .evaluateAll((controls) => controls.map((control) => control.getAttribute("aria-label")));
-    expect(order).toEqual(["Back to Reading Room", "View original", "Save", "More actions"]);
+    expect(order).toEqual(["Back to Asha Rao", "View original", "Save", "More actions"]);
     expect((await original.innerText()).trim()).toBe("");
     await expect(article(page).getByRole("button", { name: "Save", exact: true }).first()).toHaveAttribute("title", "Save (S)");
     await expect(original).toHaveAttribute("title", "View original (V)");
@@ -276,7 +277,7 @@ test.describe("on a wide window", () => {
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark unread/, /Add a note/, /Info about Reading Room/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark unread/, /Add a note/, /Info about Asha Rao/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -529,26 +530,26 @@ test.describe("on a wide window", () => {
   test("the controls stay calm: a one-line search box, and you can always see where the keyboard is", async ({ page }) => {
     await openRoom(page);
     // At rest, the field says "Search articles", so it isn't mistaken for the sidebar's find field (decision 0217).
-    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Remove in: Asha Rao" })).toHaveCount(0);
     // At rest the field waits behind Search, beside More (decision 0242); opened, its name is "Search articles" (decision 0217).
     await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Search", exact: true }).click();
     // In the search, the scope chip sits in the box without making it taller (decision 0025).
-    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove in: Asha Rao" })).toBeVisible();
     // Shift+Tab reaches the chip's Remove button, and the chip stays while it has the keyboard.
     await page.keyboard.press("Shift+Tab");
-    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeFocused();
+    await expect(page.getByRole("button", { name: "Remove in: Asha Rao" })).toBeFocused();
     // Leaving an empty search puts the field back at rest, still open until Search or Escape.
     await page.locator("#list-heading").focus();
-    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Remove in: Asha Rao" })).toHaveCount(0);
     // A click on the words "Search articles" opens the search without removing its scope.
     await page.getByRole("textbox", { name: "Search articles", exact: true }).click({ position: { x: 60, y: 20 } });
-    await expect(page.getByRole("button", { name: "Remove in: Reading Room" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove in: Asha Rao" })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Search articles", exact: true })).toBeFocused();
     const box = (await page.locator(".search-box").boundingBox())!;
     expect(box.height).toBeLessThanOrEqual(48);
     // The chip's remove button is small to look at but a full 44px to press.
-    const remove = (await page.getByRole("button", { name: "Remove in: Reading Room" }).boundingBox())!;
+    const remove = (await page.getByRole("button", { name: "Remove in: Asha Rao" }).boundingBox())!;
     expect(Math.min(remove.width, remove.height)).toBeGreaterThanOrEqual(44);
     // Before anything is selected, Tab reaches the first row and draws the
     // keyboard's outline just inside its edge. The selected row keeps the
@@ -622,7 +623,7 @@ test.describe("on a wide window", () => {
     await expect(heading).toBeFocused();
     await expect(heading).toHaveCSS("outline-style", "none");
     await page.keyboard.press("Tab");
-    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Reading Room" });
+    const publisher = article(page).locator(".article-byline").getByRole("link", { name: "Asha Rao" });
     await expect(publisher).toBeFocused();
     await expect(publisher).toHaveCSS("outline-style", "solid");
   });
@@ -779,7 +780,7 @@ test.describe("on a wide window", () => {
     await expect(byline).toHaveCSS("font-size", /^(15|17)px$/);
     await expect(byline).toHaveCSS("text-align", "center");
     await expect(byline).toHaveCSS("font-family", /Literata/);
-    const publisher = byline.getByRole("link", { name: "Reading Room" });
+    const publisher = byline.getByRole("link", { name: "Asha Rao" });
     await expect(publisher).toHaveCSS("font-weight", "400");
     await expect(byline.locator(".by").first()).toHaveText("by");
     await expect(byline.locator(".by").first()).toHaveCSS("font-style", "italic");
@@ -1284,11 +1285,11 @@ test("on a phone, an article fills the screen and the back button returns to the
 
   await row(page, "The pleasure of a slow letter").click();
   await expect(title(page, "The pleasure of a slow letter")).toBeFocused();
-  await expect(page.getByRole("region", { name: "Reading Room" })).toBeHidden();
+  await expect(page.getByRole("region", { name: "Asha Rao" })).toBeHidden();
   // A heading's first step is smaller on a phone, so it stays clearly under even a long title (1.6 times): 1.35 times 18px (decision 0295).
   await expect(article(page).locator(".article-text h2").first()).toHaveCSS("font-size", "24.3px");
 
-  await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
+  await article(page).getByRole("button", { name: "Back to Asha Rao" }).click();
   await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
   await expect(article(page)).toBeHidden();
 });

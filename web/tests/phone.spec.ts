@@ -6,7 +6,7 @@ import { appReady, follow, openAppearance, signIn, tabTo } from "./screens";
 // updated" line of section 18, "How to check it", done by a browser.
 
 const sidebar = (page: Page) => page.getByRole("navigation", { name: "Sidebar" });
-const list = (page: Page) => page.getByRole("region", { name: "Reading Room" });
+const list = (page: Page) => page.getByRole("region", { name: "Asha Rao" });
 const article = (page: Page) => page.getByRole("region", { name: "Article", exact: true });
 const title = (page: Page, name: string) => article(page).getByRole("heading", { level: 2, name });
 const row = (page: Page, name: string) => list(page).getByRole("button", { name: new RegExp(name) });
@@ -86,14 +86,14 @@ test.describe("on a phone", () => {
     await expect(sidebar(page).locator("[aria-current]")).toHaveCount(0);
     await expect(sidebar(page).locator("[data-here]")).toHaveCount(0);
     await expect(sidebar(page).getByRole("link", { name: "Unread", exact: true }).locator("svg")).toHaveCount(2);
-    const room = sidebar(page).getByRole("link", { name: /^Reading Room/ });
+    const room = sidebar(page).getByRole("link", { name: /^Asha Rao/ });
     await expect(room.locator("svg")).toHaveCount(1);
     const [chevron, roomBox] = [(await room.locator("svg").boundingBox())!, (await room.boundingBox())!];
     expect(roomBox.x + roomBox.width - (chevron.x + chevron.width)).toBeLessThan(24);
 
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await expect(sidebar(page)).toBeHidden();
-    await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
+    await expect(list(page).getByRole("heading", { level: 2, name: "Asha Rao" })).toBeVisible();
     await expect(list(page).getByRole("button", { name: "Back to Home" })).toBeVisible();
     const listBack = (await list(page).getByRole("button", { name: "Back to Home" }).locator("svg").boundingBox())!;
     // One quiet More (…) beside the list's title; Refresh and "Info about …" are in its menu (decision 0038).
@@ -104,7 +104,7 @@ test.describe("on a phone", () => {
     expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
     await more.click();
     await expect(page.getByRole("menuitem", { name: "Refresh" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Info about Reading Room" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Info about Asha Rao" })).toBeVisible();
     await more.click();
     await expect(page.getByRole("menu")).toHaveCount(0);
 
@@ -114,16 +114,16 @@ test.describe("on a phone", () => {
     // The browser tab names the article open on screen, and the list's name again once back (decision 0231).
     await expect(page).toHaveTitle("The pleasure of a slow letter · nine turtles");
     // The back button says where it goes, in words as well as for screen readers.
-    const back = article(page).getByRole("button", { name: "Back to Reading Room" });
+    const back = article(page).getByRole("button", { name: "Back to Asha Rao" });
     await expect(back).toBeVisible();
-    await expect(back).toHaveText("Reading Room");
+    await expect(back).toHaveText("Asha Rao");
     // The back button stays in one place from screen to screen, as on iOS (decision 0043).
     const articleBack = (await back.locator("svg").boundingBox())!;
     expect(Math.abs(articleBack.x - listBack.x)).toBeLessThan(1);
     expect(Math.abs(articleBack.y + articleBack.height / 2 - (listBack.y + listBack.height / 2))).toBeLessThan(1);
 
     // The back arrows go back one step each time.
-    await article(page).getByRole("button", { name: "Back to Reading Room" }).click();
+    await article(page).getByRole("button", { name: "Back to Asha Rao" }).click();
     await expect(row(page, "The pleasure of a slow letter")).toBeFocused();
     await list(page).getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
@@ -132,7 +132,7 @@ test.describe("on a phone", () => {
 
   test("the system back gesture goes back one step, and forward again", async ({ page }) => {
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await row(page, "The pleasure of a slow letter").click();
     await expect(title(page, "The pleasure of a slow letter")).toBeVisible();
 
@@ -161,7 +161,7 @@ test.describe("on a phone", () => {
 
   test("arriving straight at a list, its back arrow still leads to the feeds", async ({ page }) => {
     await openHome(page);
-    const link = sidebar(page).getByRole("link", { name: /^Reading Room/ });
+    const link = sidebar(page).getByRole("link", { name: /^Asha Rao/ });
     await page.goto(new URL((await link.getAttribute("href")) ?? "/", FEEDS_APP).href);
     await appReady(page);
     await list(page).getByRole("button", { name: "Back to Home" }).click();
@@ -170,7 +170,7 @@ test.describe("on a phone", () => {
 
   test("the article's toolbar sits at the bottom as quiet icons; back and view original sit at the top", async ({ page }) => {
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
     // Five icons only, each with its name for screen readers; Text and page and Mark unread are in More (decision 0293); Write back ends the article instead (decision 0298).
@@ -187,7 +187,7 @@ test.describe("on a phone", () => {
     // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Reading Room/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*Text and page\s*$/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Asha Rao/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*Text and page\s*$/]);
     expect(await menu.getByRole("menuitem").evaluateAll((rows) => rows.every((row) => row.querySelector("svg")))).toBe(true);
     await expect(menu.getByRole("menuitem").last()).toBeFocused();
     // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
@@ -271,7 +271,7 @@ test.describe("on a phone", () => {
 
   test("Text and page opens the reading panel as a sheet along the bottom; Close gives the place back to More", async ({ page }) => {
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await row(page, "The pleasure of a slow letter").click();
 
     const more = toolbar(page).getByRole("button", { name: "More actions" });
@@ -305,10 +305,10 @@ test.describe("on a phone", () => {
     await openHome(page);
     // Other tests add feeds and folders here, so find it by name first.
     await tabTo(page, sidebar(page).getByRole("searchbox"));
-    await page.keyboard.type("Reading Room");
-    await tabTo(page, sidebar(page).getByRole("link", { name: /^Reading Room/ }));
+    await page.keyboard.type("Asha Rao");
+    await tabTo(page, sidebar(page).getByRole("link", { name: /^Asha Rao/ }));
     await page.keyboard.press("Enter");
-    await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeFocused();
+    await expect(list(page).getByRole("heading", { level: 2, name: "Asha Rao" })).toBeFocused();
 
     await tabTo(page, row(page, "The pleasure of a slow letter"));
     // The row's ring, 2px inside the pill, passes clear of where an unread dot hangs: the dot
@@ -374,44 +374,44 @@ test.describe("on a phone", () => {
 
   test("their page is a screen of its own, with ‹ back to their list, and its settings a screen one press on", async ({ page }) => {
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await list(page).getByRole("button", { name: "More", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Info about Reading Room" }).click();
+    await page.getByRole("menuitem", { name: "Info about Asha Rao" }).click();
     await expect(page).toHaveURL(/\/about$/);
     // In the list's place, its back button saying where it goes.
-    await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Asha Rao", exact: true })).toBeVisible();
     await expect(page.locator(".item-row")).toHaveCount(0);
-    const back = page.getByRole("button", { name: "Reading Room", exact: true });
+    const back = page.getByRole("button", { name: "Asha Rao", exact: true });
     await expect(back).toBeVisible();
     expect((await back.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
     // Its settings are one row on (decision 0267), a screen of their own: no Edit, X or Done, and nothing runs off the side.
-    await expect(page.getByRole("button", { name: /^(Edit Reading Room|Done|Cancel)$/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^(Edit Asha Rao|Done|Cancel)$/ })).toHaveCount(0);
     await expect(page.getByRole("textbox", { name: "Name", exact: true })).toHaveCount(0);
-    const settingsRow = page.getByRole("region", { name: "About Reading Room" }).getByRole("link", { name: "Settings for Reading Room", exact: true });
+    const settingsRow = page.getByRole("region", { name: "About Asha Rao" }).getByRole("link", { name: "Settings for Asha Rao", exact: true });
     expect((await settingsRow.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await settingsRow.click();
     await expect(page).toHaveURL(/\/settings$/);
-    const settings = page.getByRole("region", { name: "Settings for Reading Room" });
+    const settings = page.getByRole("region", { name: "Settings for Asha Rao" });
     await expect(settings.getByRole("heading", { level: 2, name: "Settings", exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Unsubscribe from Reading Room" }).scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Unsubscribe from Asha Rao" }).scrollIntoViewIfNeeded();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     // A new name is kept as the field is left, and the way back to their page takes it.
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room, renamed");
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Asha Rao, renamed");
     await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
-    await expect(page.getByRole("button", { name: "Back to Reading Room, renamed", exact: true })).toBeVisible();
-    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Reading Room");
+    await expect(page.getByRole("button", { name: "Back to Asha Rao, renamed", exact: true })).toBeVisible();
+    await page.getByRole("textbox", { name: "Name", exact: true }).fill("Asha Rao");
     await page.getByRole("textbox", { name: "Name", exact: true }).press("Enter");
     // ‹ their name goes back to their page, a step back, so the phone's own Back doesn't reopen their settings.
-    const toThem = page.getByRole("button", { name: "Back to Reading Room", exact: true });
+    const toThem = page.getByRole("button", { name: "Back to Asha Rao", exact: true });
     await expect(toThem).toBeVisible();
     expect((await toThem.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await toThem.click();
     await expect(page).toHaveURL(/\/about$/);
-    await expect(page.getByRole("heading", { level: 2, name: "Reading Room", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Asha Rao", exact: true })).toBeVisible();
 
     await back.click();
-    await expect(list(page).getByRole("heading", { level: 2, name: "Reading Room" })).toBeVisible();
+    await expect(list(page).getByRole("heading", { level: 2, name: "Asha Rao" })).toBeVisible();
     await expect(page.locator(".item-row").first()).toBeVisible();
   });
 
@@ -569,7 +569,7 @@ test.describe("on a phone", () => {
     // The list keeps a gutter for its unread dot, as Books and Mail do on iOS (decision 0054): its title,
     // search field and row titles start 28px in, and an unread row's dot 10px from the screen's edge. A person's
     // title starts with their picture (decision 0289).
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     near((await page.locator("#list-heading .portrait").boundingBox())!.x, 28);
     await page.getByRole("button", { name: "Search", exact: true }).click();
     near((await list(page).locator(".search-box").boundingBox())!.x, 28);
@@ -612,7 +612,7 @@ test.describe("on a phone", () => {
 
   test("the search field waits behind a Search button beside More, so the list starts under its title (decision 0060)", async ({ page }) => {
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     const search = page.getByRole("button", { name: "Search", exact: true });
     const field = page.locator("#search-field");
     await expect(search).toBeVisible();
@@ -634,10 +634,10 @@ test.describe("on a phone", () => {
     await expect(field).toBeFocused();
     await expect(search).toHaveAttribute("aria-expanded", "true");
     await page.keyboard.type("slow");
-    await expect(page.locator("#list-heading")).toHaveText("Results in Reading Room");
+    await expect(page.locator("#list-heading")).toHaveText("Results in Asha Rao");
     // It never goes away on its own, so nothing moves under a finger: emptied, it stays.
     await field.fill("");
-    await expect(page.locator("#list-heading")).toHaveAttribute("title", "Reading Room");
+    await expect(page.locator("#list-heading")).toHaveAttribute("title", "Asha Rao");
     await page.locator("#list-heading").focus();
     await expect(field).toBeVisible();
     // The button again, with nothing searched, puts it away.
@@ -649,7 +649,7 @@ test.describe("on a phone", () => {
   test("with text at twice its size on a small phone, the summary note wraps rather than running off the screen", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await openHome(page);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await row(page, "Only the first page").click();
     const note = article(page).locator(".article-note");
     await expect(note).toBeVisible();
@@ -679,7 +679,7 @@ test.describe("on a phone", () => {
           .map(({ element }) => element.textContent?.trim() || element.outerHTML.slice(0, 60)),
       );
     expect(await tooSmall()).toEqual([]);
-    await sidebar(page).getByRole("link", { name: /^Reading Room/ }).click();
+    await sidebar(page).getByRole("link", { name: /^Asha Rao/ }).click();
     await expect(row(page, "The pleasure of a slow letter")).toBeVisible();
     expect(await tooSmall()).toEqual([]);
     await row(page, "The pleasure of a slow letter").click();

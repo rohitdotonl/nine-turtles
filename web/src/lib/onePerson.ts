@@ -12,7 +12,7 @@ export type Alike = {
   site: string;
 };
 
-/** Every pair still to ask about, in the order they were followed; none if they can't be read. */
+/** Every pair still to ask about, the newest first; none if they can't be read. */
 export async function listAlike(): Promise<Alike[]> {
   try {
     const body = await getJson("/api/writers/alike");

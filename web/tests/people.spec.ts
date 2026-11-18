@@ -349,3 +349,42 @@ test("+ Add a source with a site's address that offers several feeds shows the c
   await expect(line(page)).toContainText(`Blog ${jo} is one person now`);
   await expect(rowsNamed(page, `Blog ${kit}`)).toHaveCount(0);
 });
+
+test("two follows on one website are asked about once at the top of Everyone you follow: Join them with Undo, then Keep apart", async ({ page }) => {
+  const kai = unique("pp-kai");
+  await openPlaces(page, [`/blog/${kai}/feed.xml`, `/blog/${kai}/comments.xml`]);
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
+  // The newest pair is asked about first (decision 0308).
+  const asked = page.getByRole("group", { name: "One person?" });
+  await expect(asked).toContainText(`share one website, ${kai}.example.`);
+  await asked.getByRole("button", { name: "Join them" }).click();
+  await expect(line(page)).toContainText("is one person now");
+  await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
+  // Undo puts them apart again, and asks again.
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(asked).toContainText(`${kai}.example`);
+  // Keep apart: never asked about those two again, after a reload too.
+  await asked.getByRole("button", { name: "Keep apart" }).click();
+  await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
+  await page.reload();
+  await appReady(page);
+  await expect(page.getByRole("heading", { level: 2, name: "Everyone you follow" })).toBeVisible();
+  await expect(page.getByRole("group", { name: "One person?" }).filter({ hasText: `${kai}.example` })).toHaveCount(0);
+});
+
+test("following someone on a website already followed asks One person? in Add, and Join them opens them as one", async ({ page }) => {
+  const lena = unique("pp-lena");
+  await openPlaces(page, [`/blog/${lena}/feed.xml`]);
+  await page.keyboard.press("a");
+  const sheet = page.getByRole("dialog");
+  await sheet.getByLabel("Their website's address").fill(`${FEED_SITE}/blog/${lena}/comments.xml`);
+  await page.keyboard.press("Enter");
+  const asked = sheet.getByRole("group", { name: "One person?" });
+  await expect(asked).toContainText(`share one website, ${lena}.example.`);
+  await asked.getByRole("button", { name: "Join them" }).click();
+  await expect(sheet).toHaveCount(0);
+  // One row for them in the sidebar, holding both.
+  await expect(rowsNamed(page, `Blog ${lena}`)).toHaveCount(1);
+  await expect(page.getByText("is one person now")).toBeVisible();
+});

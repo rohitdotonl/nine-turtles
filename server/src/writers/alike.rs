@@ -106,7 +106,7 @@ struct Row {
 }
 
 /// Every pair of the reader's follows that share a website and haven't
-/// been kept apart, in the order they were followed.
+/// been kept apart, the one followed last first.
 pub async fn alike(
     connection: &mut SqliteConnection,
     person: i64,
@@ -185,6 +185,8 @@ pub async fn alike(
             });
         }
     }
+    // The newest first: the pair the reader just made is the one to ask about.
+    found.reverse();
     Ok(found)
 }
 
