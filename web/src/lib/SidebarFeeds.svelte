@@ -572,7 +572,7 @@
     </ul>
   {/if}
   {@render yours?.()}
-  {@render looseList("person", people, redesign === "now" ? "People" : "Not in a folder")}
+  {@render looseList("person", people, redesign === "now" ? "People" : (L?.looseName ?? "Not in a folder"))}
   {@render looseList("publication", publications, "Publications")}
 {/if}
 

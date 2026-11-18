@@ -42,6 +42,8 @@ export type Look = {
   topAll: boolean;
   /** Round six: how an open folder's people hang from it: the live app's straight line, or branches off it. */
   tree: "none" | "line" | "elbow" | "round" | "tick";
+  /** What the card of people in no folder is called. */
+  looseName: string;
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -56,7 +58,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false, cardNames: "no", pinAlways: false, plainPlaces: false, polish: false, topAll: false, tree: "none" };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false, cardNames: "no", pinAlways: false, plainPlaces: false, polish: false, topAll: false, tree: "none", looseName: "Not in a folder" };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -117,6 +119,8 @@ export const LOOKS: Record<string, Look> = {
   g3: { ...e1(), topAll: true, tree: "elbow" },
   g4: { ...e1(), topAll: true, tree: "round", headIcons: "all" },
   g5: { ...e1(), topAll: true, tree: "tick" },
+  // Rohit's choice: g3, the last two cards "People" and "Publications" with their signs.
+  final: { ...e1(), topAll: true, tree: "elbow", headIcons: "all", looseName: "People" },
   d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
 function e1(): Look {
