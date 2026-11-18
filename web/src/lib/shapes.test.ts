@@ -36,3 +36,18 @@ describe("a post with no title (SPEC section 6)", () => {
     expect(untitledOpening(toArticle({ ...base, title: "Herons", opening: "Saw the first heron." }))).toBeUndefined();
   });
 });
+
+describe("a row in Notes (decision 0308)", () => {
+  const base = { id: 1, feed_id: 2, feed_title: "Mira", title: "Herons", link: null, at: 0, whose: 2 };
+
+  it("brings its marks, each kept only as text, and none that's empty", () => {
+    expect(toArticle({ ...base, marks: [{ quote: "the first heron", note: "Ask her where" }, { quote: null, note: "Read again" }, { quote: " ", note: 7 }, "stray"] }).marks).toEqual([
+      { quote: "the first heron", note: "Ask her where" },
+      { quote: null, note: "Read again" },
+    ]);
+  });
+
+  it("has none outside Notes", () => {
+    expect(toArticle(base).marks).toBeUndefined();
+  });
+});

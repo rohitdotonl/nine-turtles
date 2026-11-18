@@ -112,6 +112,16 @@ describe("Unread, by person (decisions 0271 and 0278)", () => {
     expect(headsOf([...pageOne, ...pageTwo]).map((head) => head?.name)).toEqual(["Alpha", undefined, undefined, "Beta"]);
   });
 
+  it("in Notes, names each person alone: no day, no People or Publications (decision 0308)", () => {
+    const marks = [{ quote: "a line", note: null }];
+    const noted = (id: number, whose: number, feedTitle: string, publication = false) => ({ ...by(id, whose, feedTitle, publication), marks });
+    expect(headsOf([noted(1, 5, "Garden Letters", true), noted(2, -7, "Alpha"), noted(3, -7, "Alpha")])).toEqual([
+      { name: "Garden Letters", people: false, publications: false },
+      { name: "Alpha", people: false, publications: false },
+      undefined,
+    ]);
+  });
+
   it("names nobody in a list that isn't by person", () => {
     expect(headsOf([article(1), article(2)])).toEqual([undefined, undefined]);
   });

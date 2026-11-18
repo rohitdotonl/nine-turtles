@@ -6,7 +6,7 @@ import { appReady, choose, follow, signIn, tabTo } from "./screens";
 // chosen in an article are highlighted from the small menu beside them, a
 // note is written on the whole article with N, both show at the
 // article's end and stay after a reload; Notes, always in the sidebar,
-// lists the article with its highlight; search finds it by the note's words;
+// lists the article under who wrote it with its marks; search finds it by the note's words;
 // without a connection a highlight is still made, with the quiet line until
 // it's sent; a person's page takes a note on them; and unsubscribing asks
 // whether to keep what was saved.
@@ -80,7 +80,13 @@ test("highlights and a note stay with the article, and Notes and search find the
   const notes = sidebar(page).getByRole("link", { name: "Notes", exact: true });
   await expect(notes).toBeVisible();
   await notes.click();
-  await expect(page.getByText("Highlighted · made-up summary").first()).toBeVisible();
+  // Notes lists it under the name of who wrote it, with the marks, the newest first, in place of a date (decision 0308).
+  const row = page.locator(".item-list .item-row").filter({ hasText: "Ask about the hedgerow survey" });
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText(/Your note: Ask about the hedgerow survey\. +Highlighted: for article\. +Highlighted: made-up summary\. +In On keeping/);
+  await expect(row.locator("time")).toHaveCount(0);
+  await expect(page.locator(".item-list .list-name time")).toHaveCount(0);
+  await expect(page.locator(".item-list li").filter({ hasText: "Ask about the hedgerow survey" }).getByRole("heading", { level: 4 })).toBeVisible();
 
   // Search finds the article by its note's words.
   await page.keyboard.press("/");

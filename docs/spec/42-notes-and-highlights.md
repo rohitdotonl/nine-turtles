@@ -96,10 +96,24 @@ anywhere or counted.
 
 **Notes**
 - **Notes** in the sidebar, under Saved, lists every article the reader
-  highlighted or wrote a note on, in the reader's order, each with its first
-  highlight ("Highlighted · …") or its note ("Your note · …") under the
-  title. The row is there from the first day (decision 0222): before any
-  highlight or note, its list says "No notes yet." and how to make one.
+  highlighted or wrote a note on, grouped by person, as Unread is (decision
+  0308): each person's name once, a heading, with no day; the person with
+  the newest mark first, and under them their articles, the newest mark
+  first. A publication is named as it is in Unread, mixed in by the same
+  order, with no "People" or "Publications" over them. The Sort setting
+  doesn't change it.
+- Each article's row shows the reader's marks on it, newest first, then its
+  title in quiet small type on the words' edge; no date, no unread dot, no
+  "Mark all as read". A highlight is the **highlight** icon and its words in
+  the reading serif (four lines at most), with the note on it under it
+  beside the page icon; the note on the whole article is the page icon and
+  the note (three lines at most). Screen readers hear "Highlighted:" and
+  "Your note:" where the icons are, and "In" before the title. Pressing the
+  row opens the article, as in any list; its own menu is the same.
+- The list comes whole, in one go: it's the reader's own marks, and pages
+  would split a person. The row is there from the first day (decision
+  0222): before any highlight or note, its list says "No notes yet." and
+  how to make one.
 - A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).
 

@@ -152,11 +152,19 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     let (_, opened) = ask(&base, &cookie, &format!("/api/articles/{}", ids[1])).await;
     assert_eq!(opened["article"]["notes"][0]["note"], "Try with leeks");
 
-    // The Notes list: both articles, newest first, with what to show under each.
+    // The Notes list: both articles, the newest mark first, each with its marks, whole.
     let (_, page) = ask(&base, &cookie, "/api/articles?view=notes").await;
-    assert_eq!(titles(&page), ["Soup 2", "Soup 4"]);
-    assert_eq!(page["articles"][0]["highlighted"], "A warm soup");
-    assert_eq!(page["articles"][1]["noted"], "Grandma's, with barley");
+    assert_eq!(titles(&page), ["Soup 4", "Soup 2"]);
+    assert_eq!(
+        page["articles"][0]["marks"],
+        json!([{ "quote": null, "note": "Grandma's, with barley" }])
+    );
+    assert_eq!(
+        page["articles"][1]["marks"],
+        json!([{ "quote": "A warm soup", "note": "Try with leeks" }])
+    );
+    assert_eq!(page["articles"][0]["whose"], page["articles"][1]["whose"]);
+    assert_eq!(page["next"], Value::Null);
 
     // Search finds the reader's own words, and says they're theirs.
     let (_, found) = ask(&base, &cookie, "/api/search?q=barley").await;
@@ -238,6 +246,58 @@ async fn highlights_and_notes_are_kept_listed_found_and_exported() {
     assert_eq!(removed["was"]["quote"], "A warm soup");
     let (_, page) = ask(&base, &cookie, "/api/articles?view=notes").await;
     assert_eq!(titles(&page), ["Soup 4"]);
+}
+
+#[tokio::test]
+async fn notes_are_grouped_by_person_the_newest_mark_first() {
+    let base = common::start(common::config()).await;
+    let cookie = common::signed_in(&base).await;
+    let (_, first) = follow(&base, &cookie, &publisher().await).await;
+    let (_, second) = follow(&base, &cookie, &publisher().await).await;
+    let mark = |article: i64, quote: &'static str| {
+        let (base, cookie) = (base.clone(), cookie.clone());
+        async move {
+            let path = format!("/api/articles/{article}/highlights");
+            let (status, _) = send(&base, &cookie, &path, json!({ "quote": quote })).await;
+            assert_eq!(status, StatusCode::CREATED);
+        }
+    };
+    // The first blog's Soup 5, then the second's Soup 1, then the first's Soup 3 and,
+    // twice, Soup 5 again: the first blog is newest, and so is its Soup 5.
+    mark(first[4], "soup").await;
+    mark(second[0], "warm").await;
+    mark(first[2], "number").await;
+    mark(first[4], "warm").await;
+    let (_, page) = ask(&base, &cookie, "/api/articles?view=notes").await;
+    let shown: Vec<(i64, String)> = page["articles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|article| {
+            (
+                article["whose"].as_i64().unwrap(),
+                article["title"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    let (one, other) = (shown[0].0, shown[2].0);
+    assert_ne!(one, other);
+    assert_eq!(
+        shown,
+        [
+            (one, "Soup 5".to_owned()),
+            (one, "Soup 3".to_owned()),
+            (other, "Soup 1".to_owned()),
+        ]
+    );
+    // An article's marks, newest first.
+    let quotes: Vec<&str> = page["articles"][0]["marks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|mark| mark["quote"].as_str().unwrap())
+        .collect();
+    assert_eq!(quotes, ["warm", "soup"]);
 }
 
 #[tokio::test]

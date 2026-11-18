@@ -113,14 +113,11 @@ pub struct ArticleRow {
     pub episode: bool,
     /// How long the episode plays, in seconds, if its feed says.
     pub episode_seconds: Option<i64>,
-    /// Only in Notes: the reader's first highlight on it, and their note on
-    /// the whole article, which the list shows under the title.
-    #[sqlx(default)]
+    /// Only in Notes (`notes_list`): the reader's highlights and notes on
+    /// it, newest first, which the list shows in place of a date.
+    #[sqlx(skip)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub highlighted: Option<String>,
-    #[sqlx(default)]
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub noted: Option<String>,
+    pub marks: Option<Vec<super::Mark>>,
     /// Who wrote it, for a publication's article (`publication_writer!`).
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -136,8 +133,9 @@ pub struct ArticleRow {
         skip_serializing_if = "Option::is_none"
     )]
     pub untitled_body: Option<String>,
-    /// Only in Unread, listed by person (`by_person`): who it's listed
-    /// under, whether they're a publication, and the time that placed them.
+    /// Only in Unread and Notes, listed by person (`by_person`,
+    /// `notes_list`): who it's listed under, whether they're a publication
+    /// (Unread only), and the time that placed them.
     #[sqlx(default)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub whose: Option<i64>,
@@ -442,46 +440,13 @@ macro_rules! list_query {
     };
 }
 
-/// The Notes list: the reader's highlighted or noted articles, read through
-/// their notes (a short list), then each one's entry,
-/// sorted on the spot. Takes the reader, then the cursor and the limit.
-macro_rules! notes_query {
-    ($past:literal, $order:literal) => {
-        concat!(
-            "SELECT ",
-            article_row!(),
-            ",
-                    (SELECT quote FROM notes AS first WHERE first.person_id = entries.person_id
-                         AND first.article_id = entries.article_id AND first.quote IS NOT NULL
-                     ORDER BY first.made_at, first.id LIMIT 1) AS highlighted,
-                    (SELECT note FROM notes AS whole WHERE whole.person_id = entries.person_id
-                         AND whole.article_id = entries.article_id AND whole.quote IS NULL) AS noted
-             FROM (SELECT DISTINCT person_id, article_id FROM notes WHERE person_id = ?) AS marked
-                 CROSS JOIN entries ON entries.person_id = marked.person_id
-                     AND entries.article_id = marked.article_id
-                 CROSS JOIN articles ON articles.id = entries.article_id
-                 CROSS JOIN subscriptions ON subscriptions.person_id = entries.person_id
-                     AND subscriptions.feed_id = entries.feed_id
-                 LEFT JOIN writers ON writers.id = subscriptions.writer_id
-             WHERE (entries.sort_at, entries.article_id) ",
-            $past,
-            " (?, ?)
-             ORDER BY entries.sort_at ",
-            $order,
-            ", entries.article_id ",
-            $order,
-            " LIMIT ?"
-        )
-    };
-}
-
-/// The question for a list in an order, none for Unread, which is listed
-/// by person (`by_person`). Every question takes the reader first; a feed's
+/// The question for a list in an order, none for Unread and Notes, which
+/// are listed by person (`by_person`, `notes_list`). Every question takes the reader first; a feed's
 /// or folder's then its ID, and a folder's the reader again (it must be
 /// theirs); every question then takes the cursor (time, id) and the limit.
 pub const fn list_sql(list: List, order: Order) -> Option<&'static str> {
     Some(match (list, order) {
-        (List::Unread, _) => return None,
+        (List::Unread | List::Notes, _) => return None,
         (List::All, Order::Newest) => list_query!(
             "entries.muted = 0 AND subscriptions.unsubscribed_at IS NULL AND",
             "<",
@@ -528,15 +493,13 @@ pub const fn list_sql(list: List, order: Order) -> Option<&'static str> {
             ">",
             "ASC"
         ),
-        (List::Notes, Order::Newest) => notes_query!("<", "DESC"),
-        (List::Notes, Order::Oldest) => notes_query!(">", "ASC"),
     })
 }
 
 /// One page of reader `person`'s list, starting after `after` (from the
 /// start when absent), using the list's index; Unread's by person
-/// (`by_person`). One extra row is asked for, to know whether another page
-/// exists.
+/// (`by_person`), and Notes whole (`notes_list`). One extra row is asked
+/// for, to know whether another page exists.
 pub async fn page(
     db: &sqlx::SqlitePool,
     person: i64,
@@ -544,6 +507,9 @@ pub async fn page(
     order: Order,
     after: Option<Cursor>,
 ) -> Result<(Vec<ArticleRow>, Option<Cursor>), sqlx::Error> {
+    if list == List::Notes {
+        return Ok((super::notes_list(db, person).await?, None));
+    }
     let Some(sql) = list_sql(list, order) else {
         let after = after.and_then(|cursor| Some((cursor.at, cursor.id, cursor.place?)));
         let (rows, next) = by_person::unread_by_person(db, person, order, after).await?;
