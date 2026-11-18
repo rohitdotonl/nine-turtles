@@ -36,8 +36,9 @@ related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 Closed Add before pressing it? The address you typed is still there next
 time. **Cancel** clears it.
 
-When a blog signs every article with one writer's name, nine turtles calls
-them by that name, with the blog's title under it on their page. Otherwise
+When the posts on a blog that carry a writer's name all carry the same
+one, nine turtles calls them by that name, with the blog's title under it
+on their page. Otherwise
 it uses the blog's own name, without the words around it that only say it's
 a feed: "Blog – Pete's Site » Latest Posts" becomes "Pete's Site". Want a
 different name? Change it in **Name**, in their settings (the cog at the top right of their page); yours always stays.

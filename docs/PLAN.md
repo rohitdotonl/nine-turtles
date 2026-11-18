@@ -28,7 +28,7 @@ until the owner says so.
 | Live payments, after Dodo approves the live site | ⏳ The owner applies once the site, price and legal pages are final | SPEC section 29, decision 0094, `docs/operations/dodo-application.md` |
 | The milestones to launch, below | 🔨 Brand steps being built (the owner's yes for steps 1 to 5, 2 November 2026) | This file, `docs/BRAND.md` |
 | The core path: adding, reading, writing back, their page, Edit, folders (points 1 to 15), then the keys (16 and 17) | 🔨 Points 1 to 15 shipped; keys being shipped | Decision 0183, SPEC sections 3, 6, 7, 15, 36, 37 |
-| What we agreed after the second whole-app critique: their page (Replies you started, the cog, icons) and Write back in full ink, then Replies you started in Your data's export; then Notes by person; then names and "One person?"; then a design round on Home | 🔨 The first part shipped; Notes by person shipping (the owner's "ship it", 18 November 2026) | Decisions 0307 and 0308, SPEC sections 36, 37, 42 |
+| What we agreed after the second whole-app critique: their page (Replies you started, the cog, icons) and Write back in full ink, then Replies you started in Your data's export; then Notes by person; then names and "One person?"; then a design round on Home | 🔨 The first part and Notes by person shipped; names and "One person?" shipping (the owner's yes, 18 November 2026, decision 0309) | Decisions 0307, 0308 and 0309, SPEC sections 3, 15, 36, 37, 42 |
 | The open questions (privacy policy and terms, prices, trial) | ⏳ The owner's answers | [`planning/questions.md`](planning/questions.md) |
 
 ## Milestones to launch

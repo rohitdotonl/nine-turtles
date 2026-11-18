@@ -15,7 +15,7 @@ import type { Article, Feed, Person, PlaceKind } from "./shapes";
 export const PLACE_NAMES: Record<PlaceKind, string> = { blog: "Blog", video: "Video", newsletter: "Newsletter", podcast: "Podcast" };
 
 /** A place before a join or a separation, as the server answers it, for Undo: everything the join or separation changed, so Undo gives each back (the note on them, Write back's switch and way too). */
-type Before = {
+export type Before = {
   feed: number;
   writer: number | null;
   name: string | null;

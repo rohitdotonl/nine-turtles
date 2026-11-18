@@ -256,10 +256,10 @@ export const SCREENS: Screen[] = [
     signedIn: true,
     library: true,
     open: async (page) => {
-      await feedsShown(page, "**/api/feeds", couldBeEither(/^Reading Room$/));
+      await feedsShown(page, "**/api/feeds", couldBeEither(/^Asha Rao$/));
       await openReadingRoom(page, { unread: libraryApp() !== FEEDS_APP });
       await page.keyboard.press("Enter");
-      const asked = page.getByRole("group", { name: "Is Reading Room someone you might write back to?" });
+      const asked = page.getByRole("group", { name: "Is Asha Rao someone you might write back to?" });
       await asked.scrollIntoViewIfNeeded();
       await expect(asked).toBeVisible();
     },

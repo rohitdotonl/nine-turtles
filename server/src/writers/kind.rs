@@ -23,10 +23,10 @@
 //! 6. A folder it came in says which ("Friends", "News"): that.
 //! 7. Anything else: could be either.
 //!
-//! A person is called by their name (owner's plan, step 2): when every
-//! article is signed by the same one author, that's what the person is called,
-//! not the blog's title ("Tomas Berg", not "Notes from Tomas"). A name the
-//! reader gave them stays.
+//! A person is called by their name (owner's plan, step 2, decision 0309):
+//! when the articles that carry a name all carry the same one, that's what
+//! the person is called, not the blog's title ("Tomas Berg", not "Notes from
+//! Tomas"). A name the reader gave them stays.
 
 use reqwest::Url;
 use serde::Deserialize;
@@ -530,8 +530,9 @@ pub async fn fill(
 /// `who` is one reader whose place was just guessed a person; `None` is
 /// every follower still waiting for a name since structure change 35
 /// (`name_pending`), at the feed's check, once its title is fresh.
-/// Named only when every article is signed by that one name: an unsigned
-/// one may be someone else's.
+/// Named when the articles that carry a name all carry the same one, even if
+/// some carry none (decision 0309): a blog that signs only some posts is
+/// still one person's.
 pub async fn name_by_author(
     connection: &mut SqliteConnection,
     feed: i64,
@@ -556,14 +557,7 @@ pub async fn name_by_author(
     .bind(feed)
     .fetch_all(&mut *connection)
     .await?;
-    let all_signed: bool = sqlx::query_scalar(
-        "SELECT NOT EXISTS (SELECT 1 FROM articles
-             WHERE feed_id = ? AND trim(COALESCE(author, '')) = '')",
-    )
-    .bind(feed)
-    .fetch_one(&mut *connection)
-    .await?;
-    if let (true, Some(name)) = (all_signed, one_author(&authors)) {
+    if let Some(name) = one_author(&authors) {
         sqlx::query(
             "UPDATE subscriptions SET title = ?1
              WHERE feed_id = ?2 AND (person_id = ?3 OR (?3 IS NULL AND name_pending))

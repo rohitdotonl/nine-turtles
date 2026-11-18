@@ -391,7 +391,8 @@ async fn an_article_opens_with_its_cleaned_content_language_and_credit() {
 
     let whole = &reader.get(&format!("/api/articles/{}", id(0))).await["article"];
     assert_eq!(whole["title"], "Whole");
-    assert_eq!(whole["feed_title"], "Full Notes");
+    // The one name its signed articles carry is who it's credited to (decision 0309).
+    assert_eq!(whole["feed_title"], "Asha");
     assert_eq!(whole["site_url"], "https://full.example/");
     assert_eq!(whole["link"], "https://full.example/whole");
     assert_eq!(whole["language"], "en-gb");

@@ -13,7 +13,8 @@
 //!
 //! A person's list is any of their places' lists: `GET /api/articles?feed=3`
 //! for a place of a person with two or more places lists all of them
-//! (`widen`). nine turtles never joins places by itself.
+//! (`widen`). nine turtles never joins places by itself; it asks once when
+//! two share a website (`alike`, decision 0309).
 
 use axum::{
     Json, Router,
@@ -34,6 +35,7 @@ use crate::{
     now, refused,
 };
 
+pub mod alike;
 pub mod kind;
 
 pub fn routes() -> Router<AppState> {
@@ -43,6 +45,7 @@ pub fn routes() -> Router<AppState> {
         .route("/api/writers/separate", post(separate_place))
         .route("/api/folders/{id}/person", post(folder_to_person))
         .route("/api/writers/unsubscribe", post(unsubscribe_person))
+        .merge(alike::routes())
 }
 
 /// The people the reader has joined places into, A to Z, each with at least

@@ -22,8 +22,8 @@ test("Print prints the open article alone, with where it came from", async ({ pa
   await expect(article.getByRole("heading", { level: 2, name: "The pleasure of a slow letter" })).toBeVisible();
   await expect(credit).toBeVisible();
   // The names are set apart, so a right-to-left one keeps the line in order.
-  await expect(credit).toHaveAttribute("data-credit", /^From \u2068Reading Room\u2069, by \u2068Asha Rao\u2069, .*[0-9]{4}\. The original: https?:\/\/\S+$/);
-  expect(await credit.evaluate((element) => getComputedStyle(element, "::before").content)).toMatch(/^"From \u2068Reading Room/);
+  await expect(credit).toHaveAttribute("data-credit", /^From \u2068Asha Rao\u2069, .*[0-9]{4}\. The original: https?:\/\/\S+$/);
+  expect(await credit.evaluate((element) => getComputedStyle(element, "::before").content)).toMatch(/^"From \u2068Asha Rao/);
   // Nothing of the app's own: no sidebar, list, toolbar or Write back.
   await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeHidden();
   await expect(page.getByRole("button", { name: /The pleasure of a slow letter/ })).toBeHidden();
