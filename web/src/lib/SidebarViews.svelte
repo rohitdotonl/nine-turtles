@@ -35,6 +35,7 @@
     unreadOff,
     welcoming = false,
     waiting = false,
+    part = "every",
   }: {
     route: Route;
     follow: (event: MouseEvent, next: Route) => void;
@@ -45,16 +46,19 @@
     welcoming?: boolean;
     /** Something unread anywhere: Unread's dot shows. */
     waiting?: boolean;
+    /** Home redesign, design round: which of its rows this one draws (Unread and All; Saved and Notes; Everyone you follow; or all of them, as now). */
+    part?: "every" | "top" | "yours" | "everyone";
   } = $props();
 
   const ICONS = { unread: "dot", starred: "bookmark", notes: "note", all: "layers" } as const;
 
-  let views = $derived(sidebarViews(unreadOff));
+  const PARTS = { every: ["unread", "starred", "notes", "all"], top: ["unread", "all"], yours: ["starred", "notes"], everyone: [] } as const;
+  let views = $derived(sidebarViews(unreadOff).filter((view) => (PARTS[part] as readonly string[]).includes(view)).sort((a, b) => (PARTS[part] as readonly string[]).indexOf(a) - (PARTS[part] as readonly string[]).indexOf(b)));
   const everyone: Route = { kind: "your-feeds" };
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
-<ul>
+<ul class={part === "yours" ? "sidebar-gap" : part === "everyone" ? "sidebar-last" : undefined}>
   {#each views as view (view)}
     {@const current = !phone && !welcoming && route.kind === "view" && route.view === view}
     <li>
@@ -76,6 +80,7 @@
       {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}
     </li>
   {/each}
+  {#if part === "every" || part === "everyone"}
   <li>
     <a
       href={pathFor(everyone)}
@@ -86,9 +91,20 @@
       >{#if phone}<span class="-mr-1 shrink-0 text-muted"><Icon name="chevron-right" /></span>{/if}</a
     >
   </li>
+  {/if}
 </ul>
 
 <style>
+  /* Home redesign: Saved and Notes, a group with no heading, parted from the folders above by space alone. */
+  .sidebar-gap {
+    margin-top: 1rem;
+  }
+  /* Everyone you follow, the last row on Home: housekeeping, under one hairline. */
+  .sidebar-last {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--line);
+  }
   /*
     Unread's dot (decision 0242): the list's unread dot (app.css
     .unread-dot: 6px, round, CanvasText in forced colors) in the full

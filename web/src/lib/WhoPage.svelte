@@ -27,6 +27,7 @@
   import ChoosePicture from "./ChoosePicture.svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
+  import { home as homeDesign, PIN_LIMIT, togglePin } from "./homeStyle.svelte";
   import PausedLine from "./PausedLine.svelte";
   import PersonNote from "./PersonNote.svelte";
   import WriteBack from "./WriteBack.svelte";
@@ -138,6 +139,8 @@
   let repliesReady = $state(false);
 
   /** Their settings, a page of its own (decision 0267). */
+  /** Home redesign, design round: nine are pinned already. */
+  let alertFull = $state(false);
   let theirSettings: Route = $derived({ kind: "about", id: feed.id, settings: true });
 
   /*
@@ -160,7 +163,14 @@
 
 <!-- Their settings: the cog at the top right, across from ‹ (decision 0307), named for them so it isn't taken for the app's own Settings; the keyboard comes back to it from their settings. -->
 {#snippet cog()}
+  <span class="flex shrink-0 items-center">
+  {#if homeDesign.style !== "now"}
+    {@const on = homeDesign.pins.includes(feed.id)}
+    <!-- Home redesign, design round: pin them to the top of Home (up to nine). -->
+    <button type="button" aria-pressed={on} onclick={() => { if (!togglePin(feed.id)) alertFull = true; }} class={["btn-quiet btn-icon shrink-0", on ? "text-ink" : "text-ink-2"]} aria-label="Pin {name} to Home" title={on ? "Pinned to Home: press to unpin" : alertFull ? `${PIN_LIMIT} are pinned already: unpin someone first` : "Pin to Home"}><Icon name="pin" size="alone" filled={on} /></button>
+  {/if}
   <a href={addressFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" class="btn-quiet btn-icon -mr-2 shrink-0 md:mr-0" aria-label="Settings for {name}" title={tip("Settings", "edit")}><Icon name="settings" size="alone" /></a>
+  </span>
 {/snippet}
 
 <section aria-label={route.settings ? `Settings for ${name}` : `About ${name}`} class="who-page flex min-w-0 flex-1 flex-col bg-paper">

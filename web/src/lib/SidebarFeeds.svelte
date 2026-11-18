@@ -42,6 +42,10 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import Icon from "./Icon.svelte";
+  import Portrait from "./Portrait.svelte";
+  import { home as homeDesign } from "./homeStyle.svelte";
+  import { chosenPicture } from "./portrait";
+  import type { Snippet } from "svelte";
   import KeepOrRemove from "./KeepOrRemove.svelte";
   import { keptAny, keptFrom, type Kept } from "./keeping";
   import { droppedOn, listenForDrops } from "./linkDrop.svelte";
@@ -67,6 +71,7 @@
     onLeft,
     onBack,
     onLink,
+    yours,
   }: {
     /** The reader's people and folders, and the ways to arrange them. */
     library: LoadedLibrary;
@@ -86,7 +91,13 @@
     onBack: () => void;
     /** A web address was dropped on nine turtles: "Follow <name>?" opens for it. */
     onLink: (address: string) => void;
+    /** Home redesign, design round: Saved and Notes, drawn after the folders. Given, Home is in the new order. */
+    yours?: Snippet;
   } = $props();
+
+  /** Home redesign, design round: "safe" keeps the headings, "bold" lets each row's mark say what it is. */
+  let redesign = $derived(yours ? homeDesign.style : "now");
+  let bold = $derived(redesign === "bold");
 
   let feeds: Feed[] = $derived(library.rows ?? []);
   let folders: Folder[] = $derived(library.folders);
@@ -288,7 +299,8 @@
   let found = $derived(findByName({ feeds, folders }, search));
   let loose = $derived(feeds.filter((feed) => feed.folders.length === 0));
   /** Someone or something (decision 0163): the rows in no folder, under two headings. */
-  let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
+  let pinned = $derived(redesign === "now" ? [] : homeDesign.pins.map((id) => feeds.find((feed) => feed.id === id)).filter((feed): feed is Feed => !!feed));
+  let people = $derived(loose.filter((feed) => feed.kind !== "publication" && !pinned.includes(feed)));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
   function isHere(place: Route): boolean {
@@ -328,7 +340,18 @@
 {/snippet}
 
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
-{#snippet feedRow(feed: Feed, from: number | null)}
+{#snippet mark(feed: Feed)}
+  {#if redesign !== "now"}
+    <!-- Home redesign: every row has the same icon column. Safe leaves a person's empty; bold shows their face (only a picture the reader chose, never one fetched from their site). -->
+    {#if bold}
+      <span class={["mark", feed.kind === "publication" && "mark-square"]}><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={feed.kind !== "publication"} tiny /></span>
+    {:else}
+      <span class="mark" aria-hidden="true"></span>
+    {/if}
+  {/if}
+{/snippet}
+
+{#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
   {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
@@ -343,11 +366,11 @@
         "place mx-2 flex min-h-11 pointer-fine:min-h-8 items-center gap-3 text-ui",
         // Indent means inside (decision 0225): a folder's people start a step in, on the names' edge;
         // people and publications in no folder start at the margin, as folders do. Found by name, all on the names' edge.
-        from === null && !searching ? "pl-3" : "pl-10",
+        redesign !== "now" ? (from === null || searching ? "pl-3" : "pl-10") : from === null && !searching ? "pl-3" : "pl-10",
         editing ? "pr-12" : "pr-3",
         here ? "font-semibold text-ink" : "text-ink",
       ]}
-      >{@render name(plainSourceName(feed.title))}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
+      >{@render mark(feed)}{@render name(plainSourceName(feed.title))}{#if dot && !unreadOff && feed.unread > 0}<span class="sidebar-dot unread-dot" aria-hidden="true"></span><span class="sr-only">, something new</span>{/if}{#if feed.waiting}<!-- Brought from a file, not checked yet (decision 0249): said in words, never a spinner. --><span class="shrink-0 text-meta text-muted"><span class="sr-only">,{" "}</span>checking…</span>{/if}{@render leadsOn()}</a
     >
     {@render personHandle(feed)}
   </li>
@@ -375,7 +398,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{@render name(folder.name)}{@render leadsOn()}</a
+    >{#if redesign !== "now"}<span class={isHere(place) ? "text-ink" : "text-muted"}><Icon name="folder" /></span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -387,8 +410,8 @@
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
-  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press", rows.length === 0 && "drop-empty"]}>
-    <h2 class="sidebar-section label -mx-2">{heading}</h2>
+  <div data-drop-loose={who} class={["drop-area mx-2 rounded-press", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
+    <h2 class={["sidebar-section label -mx-2", bold && "sr-only"]}>{heading}</h2>
     {@render refused(who)}
     {#if rows.length > 0}
       <ul class="-mx-2">
@@ -435,10 +458,21 @@
     ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
+  {#if pinned.length > 0}
+    <!-- Home redesign: the people the reader pinned, up to nine, never filled by the app; each with a dot while something of theirs is new. -->
+    <div class={[bold && "bold-group"]}>
+      <h2 class={["sidebar-section label flex items-center gap-3", bold && "sr-only"]}><span class="text-ink"><Icon name="pin" /></span>Pinned</h2>
+      <ul>
+        {#each pinned as feed (feed.id)}
+          {@render feedRow(feed, null, true)}
+        {/each}
+      </ul>
+    </div>
+  {/if}
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
-    <div class="sidebar-section-row">
-      <h2 class="sidebar-section label">Folders</h2>
+    <div class={["sidebar-section-row", bold && "bold-edit"]}>
+      <h2 class={["sidebar-section label", bold && "sr-only"]}>Folders</h2>
       <button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>
     </div>
     <ul data-folder-list class="relative">
@@ -494,7 +528,8 @@
       {/each}
     </ul>
   {/if}
-  {@render looseList("person", people, "People")}
+  {@render yours?.()}
+  {@render looseList("person", people, redesign === "now" ? "People" : "Not in a folder")}
   {@render looseList("publication", publications, "Publications")}
 {/if}
 
@@ -558,6 +593,47 @@
     inset-block: 0.25rem;
     left: 21px;
     border-left: 1px solid var(--line);
+  }
+  /* Home redesign: the line falls from the middle of the folder's icon. */
+  :global(html:not([data-home="now"])) .folder-feeds::before {
+    left: 28px;
+  }
+  /* Home redesign: the icon column, the same 16px on every row, so every name starts on one edge. */
+  .mark {
+    display: inline-flex;
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+  @media (pointer: coarse) {
+    .mark {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
+  /* Bold: a publication's face is a rounded square, a person's a circle. */
+  .mark-square :global(.portrait) {
+    border-radius: 4px;
+  }
+  /* Bold: no headings; space alone parts one kind of row from the next. */
+  .bold-group {
+    margin-top: 1rem;
+  }
+  .bold-edit {
+    margin-top: 0.5rem;
+  }
+  .bold-edit .sidebar-edit {
+    margin-left: auto;
+  }
+  /* A pinned person's dot: Unread's own, in the same place at the row's end. */
+  .sidebar-dot {
+    position: static;
+    background-color: var(--accent);
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
   }
   /* With a mouse or keyboard the arrow hides until it's wanted: made see-through rather than hidden. On a touch screen it always shows. */
   @media not (pointer: coarse) {

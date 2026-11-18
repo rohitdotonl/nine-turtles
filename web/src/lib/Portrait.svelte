@@ -16,6 +16,7 @@
     person = true,
     large = false,
     beside = false,
+    tiny = false,
   }: {
     name: string;
     pictures: string[];
@@ -23,6 +24,8 @@
     large?: boolean;
     /** Beside a line of text (the byline): it reaches into the room above and below, so the line, and all under it, stays where it was. */
     beside?: boolean;
+    /** Home redesign, design round: the size of an icon beside a word, in the sidebar's icon column. */
+    tiny?: boolean;
   } = $props();
 
   let tried = $state(0);
@@ -52,7 +55,7 @@
   }
 </script>
 
-<span aria-hidden="true" class={["portrait", large && "large", beside && "beside"]}>
+<span aria-hidden="true" class={["portrait", large && "large", beside && "beside", tiny && "tiny"]}>
   {#if filled}
     <img src={filled} alt="" referrerpolicy="no-referrer" />
   {:else if trying}
@@ -126,5 +129,16 @@
   }
   .large .initials {
     font-size: var(--text-heading);
+  }
+  /* Home redesign: as big as the icon column, with one initial, as an icon is one sign. */
+  .portrait.tiny {
+    width: 100%;
+    height: 100%;
+  }
+  .tiny .initials {
+    font-family: var(--font-ui, inherit);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0;
   }
 </style>

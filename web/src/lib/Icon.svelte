@@ -5,7 +5,7 @@
   word beside an icon, or the label of an icon-only button, says what it does.
 -->
 <script lang="ts" module>
-  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments" | "copy" | "highlight"
+  export type IconName = "refresh" | "check" | "edit" | "open" | "link" | "share" | "close" | "back" | "search" | "bookmark" | "plus" | "settings" | "sort" | "keyboard" | "dot" | "layers" | "chevron-up" | "chevron-down" | "alert" | "aa" | "more" | "grip" | "chevron-right" | "download" | "sign-out" | "headphones" | "video" | "note" | "person" | "newspaper" | "send" | "comments" | "copy" | "highlight" | "pin" | "folder"
     // Settings' rows (decision 0120).
     | "page-new" | "palette" | "feed" | "phone-download" | "newsletter" | "eye-off" | "robot" | "key" | "lock" | "people" | "card" | "envelope" | "person-at" | "archive-box" | "trash"
     // What went wrong with a feed that isn't working (decision 0279).
@@ -244,6 +244,13 @@
     <!-- A highlight (decision 0307): a marker's tip over the line it leaves, so it's never taken for Rename's pencil. -->
     <path d="m11.75 3.75 4.5 4.5-6.5 6.5H5.25v-4.5z" />
     <path d="M3 17.25h8" />
+  {:else if name === "pin"}
+    <!-- Pinned (Home redesign, design round): a push pin, its head, its collar and its point. -->
+    <path d="M7.75 2.75h4.5v4.5l2.5 3.5h-9.5l2.5-3.5z" fill={filled ? "currentColor" : "none"} />
+    <path d="M10 10.75v6.5" />
+  {:else if name === "folder"}
+    <!-- A folder (Home redesign, design round): a tab on its top left edge. -->
+    <path d="M2.75 5.25a1 1 0 0 1 1-1h3.5l1.75 2h7.25a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3.75a1 1 0 0 1-1-1z" />
   {:else if name === "person"}
     <!-- A person (Add's question, the owner's core path, point 1): one head and shoulders, the Readers icon's single figure. -->
     <circle cx="10" cy="6.75" r="3" />

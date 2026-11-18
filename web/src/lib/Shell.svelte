@@ -40,6 +40,7 @@
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import SidebarFoot from "./SidebarFoot.svelte";
   import SidebarViews from "./SidebarViews.svelte";
+  import { home as homeDesign } from "./homeStyle.svelte";
   import StarterFeeds from "./StarterFeeds.svelte";
   import { partlyAdded, type Starter } from "./starters";
   import { untitledOpening, type Article, type Feed, type Folder, type Source } from "./shapes";
@@ -114,6 +115,10 @@
    * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
   let shared = $state(parsed.kind === "add-feed" ? sharedAddress(location.search) : "");
   let sharedName = $state("");
+  // Home redesign, design round: which version shows, for the sidebar's styles.
+  $effect(() => {
+    document.documentElement.dataset.home = homeDesign.style;
+  });
   $effect(() => {
     if (route.kind !== "add-feed") untrack(() => (shared = ""));
   });
@@ -845,9 +850,11 @@
         />
       </div>
       {/if}
-      <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} waiting={!!library.feeds?.some((feed) => feed.unread > 0)} />
+      {#snippet yours()}<SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} part="yours" />{/snippet}
+      <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} waiting={!!library.feeds?.some((feed) => feed.unread > 0)} part={homeDesign.style === "now" ? "every" : "top"} />
       {#if library.feeds}
         <SidebarFeeds
+          yours={homeDesign.style === "now" ? undefined : yours}
           bind:this={sidebarFeeds}
           {library}
           {route}
@@ -860,6 +867,9 @@
       {/if}
       {#if library.feedsFailed}
         <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-meta">Your feeds couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
+      {/if}
+      {#if homeDesign.style !== "now" && !search.trim()}
+        <SidebarViews {route} {follow} {phone} {unreadOff} {welcoming} part="everyone" />
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />
