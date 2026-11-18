@@ -56,10 +56,11 @@ test("their page shows the words you highlighted in their writing, each one pres
   await expect(card.getByRole("button", { name: "Add a note…" })).toBeVisible();
   await expect(card.getByRole("region", { name: "Your highlights" })).toBeVisible();
   expect((await row.boundingBox())!.y + (await row.boundingBox())!.height).toBeLessThan((await who.getByRole("heading", { level: 2, name: `Blog ${name}` }).boundingBox())!.y);
-  // Beside Close, at the bar's right end.
-  const close = who.getByRole("button", { name: "Close" });
-  expect((await row.boundingBox())!.x).toBeLessThan((await close.boundingBox())!.x);
-  expect(Math.abs((await row.boundingBox())!.y - (await close.boundingBox())!.y)).toBeLessThan(2);
+  // At the bar's right end, across from ‹ back to their list on its left, as an article's bar has them (decision 0307).
+  const back = who.getByRole("button", { name: `Back to Blog ${name}`, exact: true });
+  await expect(who.getByRole("button", { name: "Close" })).toHaveCount(0);
+  expect((await back.boundingBox())!.x).toBeLessThan((await row.boundingBox())!.x);
+  expect(Math.abs((await row.boundingBox())!.y - (await back.boundingBox())!.y)).toBeLessThan(2);
 
   // The title in Your highlights opens the article.
   await highlights.getByRole("button", { name: title }).click();
@@ -172,8 +173,9 @@ test("their settings change the moment they're touched, with no Edit, Cancel or 
   await row.click();
   await expect(renamed.getByRole("switch", { name: "Pause for a while" })).not.toBeChecked();
 
-  // The X at the bar's right end goes back to their list, from their settings as from their page.
-  await renamed.getByRole("button", { name: "Close" }).click();
+  // ‹ goes back to their page from their settings, and ‹ at the bar's left end from there to their list.
+  await renamed.getByRole("button", { name: `Back to Mira ${name}` }).click();
+  await theirs.getByRole("button", { name: `Back to Mira ${name}` }).click();
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
   // Beside their list the sidebar shows again (their settings had the window, decision 0275), with the new name.
   await expect(page.getByRole("navigation", { name: "Sidebar" }).getByRole("link", { name: new RegExp(`Mira ${name}`) })).toBeVisible();
@@ -210,7 +212,7 @@ test("back from their settings, the cog has the keyboard and is in view, and not
   // The cog is named for them, so it isn't mistaken for the app's own Settings; its tooltip says "Settings" and its key.
   const row = who.getByRole("link", { name: `Settings for Blog ${name}`, exact: true });
   await expect(row).toHaveAttribute("title", "Settings (E)");
-  if (!isMobile) await expect(who.getByRole("button", { name: "Close" })).toHaveAttribute("title", "Close (Esc)");
+  if (!isMobile) await expect(who.getByRole("button", { name: `Back to Blog ${name}`, exact: true })).toHaveAttribute("title", `Back to Blog ${name} (Esc)`);
   const scroller = page.locator(".who-page > div").first();
   const inView = async () => {
     const [shown, area] = [(await row.boundingBox())!, (await scroller.boundingBox())!];
@@ -224,7 +226,8 @@ test("back from their settings, the cog has the keyboard and is in view, and not
     await expect(settings.getByRole("heading", { level: 2, name: "Settings" })).toBeFocused();
     await expect(page).toHaveTitle(`Settings for Blog ${name} · nine turtles`);
     // Escape belongs to ‹ their name here, so the × says only Close.
-    if (!isMobile) await expect(settings.getByRole("button", { name: "Close" })).toHaveAttribute("title", "Close");
+    // Their settings have only ‹ their name: no second way out in the bar.
+    await expect(settings.getByRole("button", { name: "Close" })).toHaveCount(0);
     if (way === "Escape") await page.keyboard.press("Escape");
     else await settings.getByRole("button", { name: `Back to Blog ${name}` }).click();
     await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
@@ -304,8 +307,8 @@ test("with nothing yet, their page says so; the × and Escape go back to their l
   await expect(who.getByRole("region", { name: "Your highlights" })).toContainText("Nothing highlighted yet.");
   await expect(who.getByRole("button", { name: "Add a note…" })).toBeVisible();
 
-  // The × by keyboard.
-  await tabTo(page, who.getByRole("button", { name: "Close" }));
+  // ‹ by keyboard.
+  await tabTo(page, who.getByRole("button", { name: `Back to Blog ${name}`, exact: true }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 

@@ -94,7 +94,7 @@
     <p class="label">Your note</p>
     {#if note}
       <!-- The page that is a note everywhere (decision 0307), beside it. -->
-      <div class="flex items-start gap-3 text-base"><span class="mt-0.5 shrink-0 text-ink-2" aria-hidden="true"><Icon name="note" /></span><div class="min-w-0"><NoteText {note} /></div></div>
+      <div class="flex items-start gap-3 text-base"><span class="mt-1 shrink-0 text-ink-2" aria-hidden="true"><Icon name="note" /></span><div class="min-w-0"><NoteText {note} /></div></div>
       <button type="button" class="text-link self-start text-meta" bind:this={opener} onclick={write}>Edit note</button>
     {:else}
       <button type="button" class="text-link self-start text-meta" bind:this={opener} onclick={write}>Add a note…</button>

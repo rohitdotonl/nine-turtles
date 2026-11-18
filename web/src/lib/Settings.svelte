@@ -211,7 +211,7 @@
     try {
       await onReplies(next);
     } catch {
-      unreadMessage = "Replies you started couldn't be switched. Try again in a moment.";
+      unreadMessage = "Record replies couldn't be switched. Try again in a moment.";
     }
   }
 
@@ -336,9 +336,9 @@
             <div class="setting-label">
               {@render icon("send")}
               <div class="setting-words">
-                <p id="replies-name" class="setting-name" aria-hidden="true">Replies you started</p>
+                <p id="replies-name" class="setting-name" aria-hidden="true">Record replies</p>
                 <p id="replies-hint" class="setting-hint">
-                  {replies ? "Their page lists what you started a reply to, never what you wrote." : "Nothing is noted, and their pages show no list."}
+                  {replies ? "Their page lists what you started a reply to." : "Nothing is recorded, and their pages show no list."}
                 </p>
               </div>
             </div>
@@ -347,7 +347,7 @@
                 type="checkbox"
                 role="switch"
                 class="switch"
-                aria-label="Replies you started"
+                aria-label="Record replies"
                 aria-describedby="replies-hint"
                 checked={replies}
                 disabled={!loaded}

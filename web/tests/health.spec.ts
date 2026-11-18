@@ -224,9 +224,9 @@ test("their page opened from Everyone you follow closes back there, even after a
   await page.getByRole("link", { name: `Settings for ${title}`, exact: true }).click();
   await page.getByRole("button", { name: `Back to ${title}` }).click();
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
-  // On a computer, ×; on a phone, ‹ says where it goes.
+  // ‹ says where it goes: in words on a phone, to screen readers and in its tooltip on a computer.
   if (isMobile) await page.getByRole("button", { name: "Everyone you follow", exact: true }).click();
-  else await page.getByRole("button", { name: "Close", exact: true }).click();
+  else await page.getByRole("button", { name: "Back to Everyone you follow", exact: true }).click();
   await expect(page).toHaveURL(/\/following$/);
   await expect(page.locator("#health-summary")).toHaveAttribute("aria-expanded", "true");
 });

@@ -467,7 +467,7 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   await expect(line.getByRole("button")).toHaveText(["Copy their address"]);
 });
 
-test("A way back pressed is listed on their page under Replies you started, removed with Undo, and switched off in Settings", async ({ page }) => {
+test("A way back pressed is listed on their page under Replies you started, removed with Undo, and switched off with Record replies in Settings", async ({ page }) => {
   const name = `replied-${test.info().workerIndex}-${Date.now()}`;
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: FEEDS_APP });
@@ -508,9 +508,11 @@ test("A way back pressed is listed on their page under Replies you started, remo
   const replies = who.getByRole("region", { name: "Replies you started" });
   await expect(replies.getByRole("listitem")).toHaveCount(1);
   await expect(replies.getByRole("button", { name: title, exact: true })).toBeVisible();
-  await expect(replies).toContainText("nine turtles can't see whether you sent it.");
-  // Its settings are the cog beside Close now, not a row at the page's end (decision 0307).
+  // Its heading says only that it was started: no line under it (the owner's choice).
+  await expect(replies.locator("p.text-muted")).toHaveCount(0);
+  // Its settings are the cog at the bar's right, across from ‹, not a row at the page's end (decision 0307).
   await expect(page.locator(".reading-bar").getByRole("link", { name: `Settings for Blog ${name}`, exact: true })).toBeVisible();
+  await expect(page.locator(".reading-bar").getByRole("button", { name: `Back to Blog ${name}`, exact: true })).toBeVisible();
 
   // Removed, with Undo in its place, which brings it back.
   await replies.getByRole("button", { name: `Remove ${title} from Replies you started` }).click();
@@ -524,13 +526,14 @@ test("A way back pressed is listed on their page under Replies you started, remo
   await expect(pane(page).getByRole("heading", { level: 2, name: title })).toBeVisible();
 
   // Switched off in Settings: their page shows no list; back on, it's there again.
-  const settingsSwitch = page.getByRole("switch", { name: "Replies you started" });
+  const settingsSwitch = page.getByRole("switch", { name: "Record replies" });
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
   await expect(settingsSwitch).toBeChecked();
+  await expect(page.getByText("Their page lists what you started a reply to.", { exact: true })).toBeVisible();
   await settingsSwitch.click();
   await expect(settingsSwitch).not.toBeChecked();
-  await expect(page.getByText("Nothing is noted, and their pages show no list.")).toBeVisible();
+  await expect(page.getByText("Nothing is recorded, and their pages show no list.")).toBeVisible();
   await theirPage();
   await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
   await page.goto(new URL("/settings", FEEDS_APP).href);

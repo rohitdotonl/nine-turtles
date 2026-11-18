@@ -228,15 +228,16 @@ V1, item 2). Its look gets a refinement round.*
   address, Comment) notes the article and the day, so the person's page
   can list it (section 36). One line per article, with the latest day;
   never what was written, and never whether it was sent, which nine
-  turtles can't know: the line under the list says so ("Noted when you
-  start a reply. nine turtles can't see whether you sent it."). Write to on
+  turtles can't know (its heading says only that you started them). Write to on
   their page, with no article, notes nothing. The list shows only once
   there's a line in it. Each line has a quiet **Remove** (the bin), and
   **Undo** in its place brings it back with its day. **Settings › Reading ›
-  Replies you started** (on unless switched off; "Their page lists what you
-  started a reply to, never what you wrote.") switched off notes nothing
-  new and hides the list on every page ("Nothing is noted, and their pages
-  show no list."); what was noted is kept for when it's switched on again.
+  Record replies** (on unless switched off; "Their page lists what you
+  started a reply to.") is one switch for every person, as whether to keep
+  a record is the reader's way of working, not a choice about one writer
+  (switching Write back off for someone already stops it for them). Off,
+  nothing new is recorded and the list is hidden on every page ("Nothing
+  is recorded, and their pages show no list."); what was recorded is kept for when it's switched on again.
   A line goes with its article when the article leaves the reader's library
   (unsubscribing, the yearly clean-up). Your data's export doesn't include
   them yet.
@@ -300,5 +301,4 @@ V1, item 2). Its look gets a refinement round.*
    the same full ink and size as Write to on their page. Choose Copy from
    its arrow, then open their page: **Replies you started** lists the
    article with today's date. Press the bin: "Removed." with Undo; press
-   Undo and it's back. In Settings › Reading switch **Replies you
-   started** off: their page has no list. Switch it on: the line is back.
+   Undo and it's back. In Settings › Reading switch **Record replies** off: their page has no list. Switch it on: the line is back.

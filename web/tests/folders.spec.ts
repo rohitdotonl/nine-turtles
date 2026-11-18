@@ -125,10 +125,10 @@ test("a feed put in two folders appears under both", async ({ page }) => {
   await page.getByLabel("New folder").fill(second);
   await page.getByLabel("New folder").press("Enter");
   await expect(page.locator("#list-heading")).toContainText(`Renamed ${blog}`);
-  // Their settings have the window to themselves (decision 0275): ‹ goes to their page, and its × to their list and the sidebar.
+  // Their settings have the window to themselves (decision 0275): ‹ goes to their page, and its ‹ to their list and the sidebar.
   await page.getByRole("button", { name: `Back to Renamed ${blog}` }).click();
   await expect(page).toHaveURL(/\/(?:[a-z0-9-]+-)?[0-9]+\/about$/);
-  await page.getByRole("button", { name: "Close", exact: true }).click();
+  await page.getByRole("button", { name: `Back to Renamed ${blog}` }).click();
   await expect(sidebar(page)).toBeVisible();
 
   // Folders are listed (their unread kept only for the tests). Each one made or chose on their page opened, to show them in it
@@ -532,9 +532,9 @@ test.describe("on a touch screen beside the list", () => {
     await page.getByLabel("New folder").fill(folder);
     await page.getByLabel("New folder").press("Enter");
     await expect(page.getByRole("checkbox", { name: folder })).toBeAttached();
-    // Their settings have the window (decision 0275): ‹ to their page, and its × to their list, beside the sidebar.
+    // Their settings have the window (decision 0275): ‹ to their page, and its ‹ to their list, beside the sidebar.
     await page.getByRole("button", { name: `Back to Blog ${blog}` }).click();
-    await page.getByRole("button", { name: "Close", exact: true }).click();
+    await page.getByRole("button", { name: `Back to Blog ${blog}` }).click();
     const arrow = sidebar(page).getByRole("button", { name: `What's in ${folder}` });
     await expect(arrow).toBeVisible();
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);

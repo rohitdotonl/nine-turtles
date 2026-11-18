@@ -44,7 +44,7 @@ correct it (see <a href="/help/write-back/">Write back to a writer</a>).
 Then, in one card, what's yours of them: the replies you started to them
 (see <a href="/help/write-back/">Write back to a writer</a>), your note, and
 the words you highlighted in their writing. Their settings are the cog at
-the top right. On a computer, the **×** beside it (or <kbd>Esc</kbd>) takes you back to
+the top right. On a computer, **‹** at the top left (or <kbd>Esc</kbd>) takes you back to
 their list.
 
 ## Their picture

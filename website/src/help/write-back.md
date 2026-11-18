@@ -107,9 +107,10 @@ sees what you wrote, or whether you sent it.
 
 - Press the article's title to read it again.
 - Press the bin at the end of a line to remove it; **Undo** brings it back.
-- Don't want the list? In **Settings › Reading**, switch **Replies you
-  started** off. Nothing new is noted, and their pages show no list;
-  switch it on again and what was there comes back.
+- Don't want the list? In **Settings › Reading**, switch **Record
+  replies** off. It's one switch for everyone you follow. Nothing new is
+  recorded, and their pages show no list; switch it on again and what was
+  there comes back.
 
 ## Turn Write back off for someone
 

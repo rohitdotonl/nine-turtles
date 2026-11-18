@@ -103,7 +103,7 @@
   /* The marker that is a highlight everywhere (decision 0307), where the fine line at the left was. */
   .mark {
     flex-shrink: 0;
-    padding-top: 0.3rem;
+    padding-top: 0.25rem;
     color: var(--ink-2);
   }
   .words {

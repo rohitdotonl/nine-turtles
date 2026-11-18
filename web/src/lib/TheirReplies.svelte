@@ -2,7 +2,7 @@
   Replies you started (SPEC section 37, decision 0307), first in what's yours of them on their
   page: a paper plane, the article's title (it opens the article) and the day, the latest first,
   at most 20. A line is noted when the reader presses any way back at an article's end; nine
-  turtles never knows whether anything was sent, and the line under the list says so. Nothing
+  turtles never knows whether anything was sent, so the heading says only that it was started. Nothing
   shows while there are none, or while the reader switched it off in Settings. Each line has a
   quiet Remove (the bin, decision 0305); Undo, in its place, brings it back with its day.
 -->
@@ -80,7 +80,6 @@
         </li>
       {/each}
     </ul>
-    <p class="text-meta text-muted">Noted when you start a reply. nine turtles can't see whether you sent it.</p>
     {#if problem}<p class="flex items-start gap-2 text-meta text-danger" role="alert"><span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}</p>{/if}
   </section>
 {/if}
@@ -102,7 +101,6 @@
     flex: 1;
     min-width: 0;
     margin: 0;
-    padding-top: 0.125rem;
     font-family: var(--font-serif);
     font-size: var(--text-large);
     line-height: 1.4;
@@ -134,7 +132,7 @@
   }
   .remove {
     flex-shrink: 0;
-    margin-top: -0.375rem;
+    margin-top: -0.25rem;
     color: var(--muted);
   }
 </style>

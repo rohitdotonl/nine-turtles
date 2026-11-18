@@ -152,7 +152,7 @@
   });
 </script>
 
-<!-- Their settings: the cog at the top right, beside Close on a computer (decision 0307), named for them so it isn't taken for the app's own Settings; the keyboard comes back to it from their settings. -->
+<!-- Their settings: the cog at the top right, across from ‹ (decision 0307), named for them so it isn't taken for the app's own Settings; the keyboard comes back to it from their settings. -->
 {#snippet cog()}
   <a href={addressFor(theirSettings)} onclick={(event) => follow(event, theirSettings)} data-settings-row="their-settings" class="btn-quiet btn-icon -mr-2 shrink-0 md:mr-0" aria-label="Settings for {name}" title={tip("Settings", "edit")}><Icon name="settings" size="alone" /></a>
 {/snippet}
@@ -161,10 +161,12 @@
   <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
-    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); on its right, where the article's tools end, the way back to their list. -->
-    <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-end pr-2 md:-mx-16">
-      {#if !route.settings}{@render cog()}{/if}
-      <button type="button" class="btn-quiet btn-icon" aria-label="Close" title={route.settings ? "Close" : "Close (Esc)"} onclick={onClose}><Icon name="close" size="alone" /></button>
+    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); ‹ back to their list on its left, as an article's way back is, and their cog on its right, where the article's own tools are (decision 0307). Their settings have ‹ their name under it instead. -->
+    <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-between px-2 md:-mx-16">
+      {#if !route.settings}
+        <button type="button" onclick={onClose} aria-label="Back to {closeTo ?? name}" title="Back to {closeTo ?? name} (Esc)" class="btn-quiet btn-icon nav-back text-ink-2"><Icon name="back" size="alone" /></button>
+        {@render cog()}
+      {/if}
     </div>
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
