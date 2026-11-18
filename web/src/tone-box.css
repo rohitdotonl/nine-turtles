@@ -1,0 +1,30 @@
+/*
+  A box in the page that asks something or says what's wrong (who isn't
+  working, "One person?"): a tone off the page (the grouped lists' grey,
+  12px corners), 16px inside; its title with an icon, then what can be
+  done, side by side, each 44px tall to press, wrapping on a narrow screen.
+*/
+@layer components {
+  .tone-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1rem 0.5rem;
+    border-radius: var(--radius-hold);
+    background-color: var(--list);
+  }
+  .tone-box-title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    line-height: 1.35;
+  }
+  .tone-box-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 1.5rem;
+    row-gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}

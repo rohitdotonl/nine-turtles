@@ -11,7 +11,7 @@ use nine_turtles::assistants::challenge_for;
 use reqwest::{Client, StatusCode, Url};
 use serde_json::{Value, json};
 
-/// A made-up blog whose feed has 5 posts, one by Ada.
+/// A made-up blog whose feed has 5 posts, one by Ada and one by Grace.
 async fn publisher(name: &'static str) -> String {
     let app = Router::new().route("/feed.xml", get(move || async move { feed(name) }));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -23,10 +23,11 @@ async fn publisher(name: &'static str) -> String {
 fn feed(name: &str) -> impl IntoResponse {
     let mut items = String::new();
     for number in (1..=5).rev() {
-        let author = if number == 3 {
-            "<author>ada@quiet.example (Ada Lovelace)</author>"
-        } else {
-            ""
+        // Two writers, so the blog keeps its own name (a lone writer's would name it, decision 0308).
+        let author = match number {
+            3 => "<author>ada@quiet.example (Ada Lovelace)</author>",
+            1 => "<author>grace@quiet.example (Grace Hopper)</author>",
+            _ => "",
         };
         items.push_str(&format!(
             "<item><title>{name} post {number}</title><guid>{name}-{number}</guid>\

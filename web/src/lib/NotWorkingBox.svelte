@@ -89,9 +89,9 @@
 {/snippet}
 
 {#if move || (sick && why && feed.failingSince != null)}
-  <div class="box" role="group" aria-label="Not working">
+  <div class="tone-box box" role="group" aria-label="Not working">
     {#if !move && sick && why}
-      <p class="title font-semibold">
+      <p class="tone-box-title font-semibold">
         <span class="why"><Icon name={why.icon} /></span>
         <span>{subject ? `${subject}: ` : ""}{why.words} {failingFor(sick)}</span>
       </p>
@@ -115,7 +115,7 @@
       }}
     />
     {#if !move}
-      <div class="actions flex flex-wrap items-center" hidden={choosing}>
+      <div class="tone-box-actions" hidden={choosing}>
         {#if first !== "write" || !writing}{@render find()}{/if}
         {#if writing}<WriteBack feedId={feed.id} {library} quiet />{/if}
         {#if first === "write" && writing}{@render find()}{/if}
@@ -135,21 +135,6 @@
 {/if}
 
 <style>
-  /* One box a tone off the page (the grouped lists' grey, 12px corners), 16px inside. */
-  .box {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 1rem 1rem 0.5rem;
-    border-radius: var(--radius-hold);
-    background-color: var(--list);
-  }
-  .title {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    line-height: 1.35;
-  }
   .why {
     display: flex;
     color: var(--ink-2);
@@ -160,11 +145,5 @@
   /* On the box's tone, a new address's choices sit on the page's own color, so they stand apart from it. */
   .box :global(.new-address .feeds-named) {
     --group: var(--paper);
-  }
-  /* What can be done, side by side, each 44px tall to press; on a narrow screen they wrap. */
-  .actions {
-    column-gap: 1.5rem;
-    row-gap: 0.5rem;
-    margin-top: 0.5rem;
   }
 </style>

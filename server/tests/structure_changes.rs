@@ -2351,7 +2351,8 @@ async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
             .unwrap();
     assert_eq!(kept, (7, 14));
 
-    // At the check: only the person still called by their blog's own title takes the author's name.
+    // At the check: only the person still called by their blog's own title takes the author's name,
+    // a half-signed blog's too since decision 0308 (the articles that carry a name all carry hers).
     let mut connection = db.acquire().await.unwrap();
     for feed in 1..=7 {
         nine_turtles::writers::kind::name_by_author(&mut connection, feed, None)
@@ -2368,7 +2369,7 @@ async fn calling_people_by_their_names_keeps_every_name_the_reader_gave() {
         "My friend Tomas",
         "The Gazette",
         "Two of us",
-        "Half signed",
+        "Asha Rao",
         "Site",
         "Notes from Tomas",
     ];
@@ -3040,4 +3041,65 @@ async fn saving_highlights_once_keeps_every_highlight_and_note() {
             (None, Some("Prune in March".to_owned()), None),
         ]
     );
+}
+
+#[tokio::test]
+async fn one_person_asks_and_names_people_again_keeping_every_name() {
+    let data_dir = common::config().data_dir;
+    std::fs::create_dir_all(&data_dir).unwrap();
+
+    // The database just before "One person?" (structure change 54): a person on
+    // their own already named, a publication, and a person joined into "Tomas".
+    let old = SqlitePoolOptions::new()
+        .connect_with(
+            SqliteConnectOptions::new()
+                .filename(nine_turtles::db::path(&data_dir))
+                .create_if_missing(true)
+                .foreign_keys(true),
+        )
+        .await
+        .unwrap();
+    sqlx::migrate!("./migrations")
+        .run_to(54, &old)
+        .await
+        .unwrap();
+    for sql in [
+        "INSERT INTO writers (id, person_id, name, created_at) VALUES (1, 1, 'Tomas', 1)",
+        "INSERT INTO feeds (id, url, url_key, title, added_at) VALUES
+             (1, 'a', 'a', 'Reading Room', 1), (2, 'b', 'b', 'The Gazette', 1),
+             (3, 'c', 'c', 'Notes from Tomas', 1)",
+        "INSERT INTO subscriptions (person_id, feed_id, title, added_at, kind, writer_id) VALUES
+             (1, 1, 'Reading Room', 1, 'person', NULL), (1, 2, 'The Gazette', 1, 'publication', NULL),
+             (1, 3, 'Notes from Tomas', 1, 'person', 1)",
+    ] {
+        sqlx::query(sql).execute(&old).await.unwrap();
+    }
+    old.close().await;
+
+    // Only the person on their own waits for a name; nothing is renamed or removed here.
+    let db = nine_turtles::db::open(&data_dir).await.unwrap();
+    let waiting: Vec<(String, bool)> =
+        sqlx::query_as("SELECT title, name_pending FROM subscriptions ORDER BY feed_id")
+            .fetch_all(&db)
+            .await
+            .unwrap();
+    assert_eq!(
+        waiting,
+        [
+            ("Reading Room".to_owned(), true),
+            ("The Gazette".to_owned(), false),
+            ("Notes from Tomas".to_owned(), false),
+        ]
+    );
+    // Kept apart starts empty, and keeps each pair once, the smaller number first.
+    let pairs: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM kept_apart")
+        .fetch_one(&db)
+        .await
+        .unwrap();
+    assert_eq!(pairs, 0);
+    let backwards =
+        sqlx::query("INSERT INTO kept_apart (person_id, feed_a, feed_b) VALUES (1, 2, 1)")
+            .execute(&db)
+            .await;
+    assert!(backwards.is_err());
 }

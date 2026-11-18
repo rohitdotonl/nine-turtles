@@ -2,7 +2,8 @@
   Everyone you follow (SPEC section 15, decision 0186), opened from its
   row in the sidebar, under All articles (decision 0266): a place of its
   own, so on a computer it has no way back to draw (its row shows where
-  you are) and on a phone "‹ Home". Who isn't working comes first (NotWorking.svelte), then who
+  you are) and on a phone "‹ Home". Who isn't working comes first (NotWorking.svelte), then
+  "One person?" for two follows that share a website (OnePerson.svelte, decision 0308), then who
   could be either, to settle with a tick (SettleList.svelte, decision 0264).
   Then everyone, A to Z, People and Publications apart as in the sidebar, each
   row saying the title of their newest piece and when it came, or "Quiet
@@ -29,6 +30,9 @@
   import { UNDONE } from "./messages";
   import NoteLine from "./NoteLine.svelte";
   import SettleList from "./SettleList.svelte";
+  import OnePerson from "./OnePerson.svelte";
+  import { keepApart, listAlike, type Alike } from "./onePerson";
+  import { join, putBack } from "./people";
   import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
   import { addressFor } from "./router";
@@ -86,6 +90,10 @@
   let editButton: HTMLButtonElement | undefined = $state();
   let undoButton: HTMLButtonElement | undefined = $state();
   let notWorking: NotWorking | undefined = $state();
+  /** Follows that share one website, still to ask about: one at a time, at the top (decision 0308). */
+  let alike: Alike[] = $state([]);
+  /** Why the last answer to "One person?" couldn't be kept. */
+  let alikeProblem = $state("");
 
   let listed = $derived(feeds ?? []);
   /** Ticked as a person in the list to settle: they stay in it, ticked, until the page is left. */
@@ -114,7 +122,7 @@
 
   async function load() {
     try {
-      ({ feeds, folders, kept } = await listTended());
+      [{ feeds, folders, kept }, alike] = await Promise.all([listTended(), listAlike()]);
       failed = false;
     } catch {
       failed = true;
@@ -254,6 +262,37 @@
     });
   }
 
+  /** "One person?": Join them makes them one, under the first one's name, with Undo. */
+  async function joinAlike(pair: Alike) {
+    if (busy) return;
+    busy = true;
+    const { refusal: why, before } = await join(pair.feeds);
+    busy = false;
+    if (why) {
+      alikeProblem = why;
+      return;
+    }
+    alikeProblem = "";
+    await done(`${pair.names[0]} is one person now.`, async () => {
+      if (await putBack(before)) throw "trouble";
+    });
+  }
+
+  /** Keep apart: never asked about again, and the next pair (if any) is asked. */
+  async function keepAlikeApart(pair: Alike) {
+    if (busy) return;
+    busy = true;
+    const why = await keepApart(pair);
+    busy = false;
+    if (why) {
+      alikeProblem = why;
+      return;
+    }
+    [alikeProblem, alike] = ["", alike.filter((each) => each !== pair)];
+    await tick();
+    heading?.focus();
+  }
+
   function openMove() {
     if (picked().length === 0) return;
     moving = true;
@@ -313,6 +352,10 @@
       {:else if feeds}
         {#if listed.length === 0}
           <p class="text-ink-2">You don't follow anyone yet.</p>
+        {/if}
+        {#if alike[0] && !editing}
+          {@const pair = alike[0]}
+          <OnePerson {pair} {busy} problem={alikeProblem} onJoin={() => void joinAlike(pair)} onApart={() => void keepAlikeApart(pair)} />
         {/if}
         {#if settling.length > 0}
           <SettleList rows={settling} {busy} onTick={tick1} onRest={settleRest} />

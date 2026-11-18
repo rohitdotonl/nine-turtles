@@ -47,6 +47,8 @@
   import { followedTogether } from "./several";
   import { runningInstalled } from "./installing.svelte";
   import { join } from "./people";
+  import OnePerson from "./OnePerson.svelte";
+  import { keepApart, listAlike, pairWith, type Alike } from "./onePerson";
   import type { WhoKind } from "./shapes";
   import { addedLine } from "./sorting";
   import { question } from "./youtube";
@@ -132,6 +134,9 @@
   let pausedFor = "";
   /** Just added: "{title} is…" a person or a publication, with nine turtles' guess chosen (decision 0163), before it opens. */
   let asking: Feed | undefined = $state();
+  /** Someone already followed on the same website: "One person?" above the question (decision 0308). */
+  let alike: Alike | undefined = $state();
+  let alikeProblem = $state("");
   /** Their newest title, shown with their site above the question. */
   let latest: string | undefined = $state();
   /** The address that had no feed: perhaps a newsletter that only comes by email (decision 0198). */
@@ -295,6 +300,8 @@
       onAdded(feed, note);
       return;
     }
+    alike = pairWith(await listAlike(), feed.id);
+    alikeProblem = "";
     address = "";
     choices = [];
     asking = feed;
@@ -352,6 +359,30 @@
     busy = false;
     keepDraft("add", undefined);
     onAdded({ ...first.feed, kind: "person" }, [refusal, note].filter(Boolean).join(" ") || undefined);
+  }
+
+  /** "One person?" answered Join them: they're one person at once, with no question left, and they open. */
+  async function joinAlike(pair: Alike) {
+    const feed = asking;
+    if (!feed || busy) return;
+    busy = true;
+    const { refusal } = await join(pair.feeds);
+    busy = false;
+    if (refusal) return void (alikeProblem = refusal);
+    [answering, asking, asked] = [true, undefined, ""];
+    onAdded({ ...feed, kind: "person", open: false }, [note, `${pair.names[0]} is one person now.`].filter(Boolean).join(" "));
+  }
+
+  /** Keep apart: never asked again, and the question about them carries on. */
+  async function keepAlikeApart(pair: Alike) {
+    if (busy) return;
+    busy = true;
+    const refusal = await keepApart(pair);
+    busy = false;
+    if (refusal) return void (alikeProblem = refusal);
+    alike = undefined;
+    await tick();
+    (whoGroup?.querySelector<HTMLInputElement>("input:checked") ?? whoGroup)?.focus();
   }
 
   /** The welcome's Cancel, under the offered feeds: they go, and the keyboard is back in the field. */
@@ -565,6 +596,10 @@
         shape, never by a tint alone. In a sheet the title asks it; in the welcome, its own heading.
       -->
       <div class={["flex flex-col gap-4 self-stretch text-left", !framed && "mt-2"]}>
+        {#if alike}
+          {@const pair = alike}
+          <OnePerson {pair} {busy} problem={alikeProblem} onJoin={() => void joinAlike(pair)} onApart={() => void keepAlikeApart(pair)} />
+        {/if}
         <fieldset bind:this={whoGroup} tabindex="-1" class="flex flex-col gap-4 outline-none">
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}

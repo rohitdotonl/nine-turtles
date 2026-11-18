@@ -3,7 +3,8 @@
 //! one person" on a folder, and Undo for each, tested against a real running
 //! nine turtles and a made-up publisher. Alpha has a blog and a newsletter
 //! on one website; Beta is someone else; the Gazette has several writers;
-//! Tomas Berg signs every article of his blog, "Notes from Tomas".
+//! Tomas Berg signs every article of his blog, "Notes from Tomas"; Asha Rao
+//! signs only some of hers, "Reading Room".
 
 mod common;
 
@@ -36,6 +37,8 @@ fn feed(file: &str) -> Response {
         "gamma.xml" => ("Gamma's pictures", "https://gamma.example/", 4),
         "gazette.xml" => ("The Gazette", "https://gazette.example/", 5),
         "tomas.xml" => ("Notes from Tomas", "https://tomas.example/", 6),
+        "asha.xml" => ("Reading Room", "https://reading.example/", 7),
+        "gazette-sport.xml" => ("Gazette Sport", "https://gazette.example/sport", 8),
         _ => return StatusCode::NOT_FOUND.into_response(),
     };
     let items: String = (1..=3)
@@ -44,6 +47,9 @@ fn feed(file: &str) -> Response {
             let by = match file {
                 "gazette.xml" => format!("<dc:creator>Writer {number}</dc:creator>"),
                 "tomas.xml" => "<dc:creator>Tomas Berg</dc:creator>".to_owned(),
+                // Asha signs some of hers and leaves the last unsigned.
+                "asha.xml" if number < 3 => "<dc:creator>Asha Rao</dc:creator>".to_owned(),
+                "gazette-sport.xml" => format!("<dc:creator>Writer {number}</dc:creator>"),
                 _ => String::new(),
             };
             format!(
@@ -908,4 +914,64 @@ async fn an_import_says_how_it_was_sorted_and_who_could_be_either() {
     let (status, _) = reader.post("/api/opml/note/close", json!({})).await;
     assert_eq!(status, StatusCode::NO_CONTENT);
     assert_eq!(reader.get("/api/feeds").await["import_note"], Value::Null);
+}
+
+#[tokio::test]
+async fn a_person_who_signs_only_some_articles_is_called_by_that_name() {
+    let (reader, _state) = Reader::new().await;
+    // Decision 0308: the articles that carry a name all carry Asha's, so it's hers.
+    let asha = reader.follow("asha.xml").await;
+    let listed = reader.feed(asha).await;
+    assert_eq!(listed["kind"], "person");
+    assert_eq!(listed["title"], "Asha Rao");
+    assert_eq!(listed["site_title"], "Reading Room");
+}
+
+#[tokio::test]
+async fn two_follows_on_one_website_are_asked_about_once() {
+    let (reader, state) = Reader::new().await;
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    reader.follow("beta.xml").await;
+    // Two publications from one site are never asked about.
+    reader.follow("gazette.xml").await;
+    reader.follow("gazette-sport.xml").await;
+    // The person comes first, so joining keeps their name ("Alpha" could be either, decision 0264).
+    let pairs = reader.get("/api/writers/alike").await["pairs"].clone();
+    assert_eq!(
+        pairs,
+        json!([{ "feeds": [letters, blog], "names": ["Alpha's letters", "Alpha"], "site": "alpha.example" }])
+    );
+
+    // Someone else can't keep them apart, nor see them.
+    let (_, other) = common::another_reader(&state).await;
+    let theirs = Client::new()
+        .post(format!("{}/api/writers/apart", reader.base))
+        .header("cookie", &other)
+        .header("sec-fetch-site", "same-origin")
+        .header("content-type", "application/json")
+        .body(json!({ "feeds": [blog, letters] }).to_string())
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(theirs.status(), StatusCode::NOT_FOUND);
+
+    // Keep apart: never asked again.
+    let (status, _) = reader
+        .post("/api/writers/apart", json!({ "feeds": [letters, blog] }))
+        .await;
+    assert_eq!(status, StatusCode::NO_CONTENT);
+    assert_eq!(reader.get("/api/writers/alike").await["pairs"], json!([]));
+}
+
+#[tokio::test]
+async fn joined_follows_on_one_website_are_not_asked_about_again() {
+    let (reader, _state) = Reader::new().await;
+    let blog = reader.follow("alpha.xml").await;
+    let letters = reader.follow("alpha-news.xml").await;
+    let (status, _) = reader
+        .post("/api/writers/join", json!({ "feeds": [blog, letters] }))
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(reader.get("/api/writers/alike").await["pairs"], json!([]));
 }

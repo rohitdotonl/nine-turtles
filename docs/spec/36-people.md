@@ -83,9 +83,9 @@ PLAN.md → V1, item 1.*
   title whose symbols a blog coded twice ("Tom &amp;amp; Jerry",
   "&amp;#8217;") shows them as themselves ("Tom & Jerry", "’"), for
   articles arriving from now on.
-- **Called by their name** (owner's plan, step 2). When a source on its
-  own is first sorted a person by its one name and every one of its articles is signed by
-  the same one author (in any capitalisation), the person is called by that
+- **Called by their name** (owner's plan, step 2; decision 0308). When a source on its
+  own is first sorted a person by its one name, and the articles that carry a name all
+  carry the same one (in any capitalisation; some may carry none), the person is called by that
   name, as the feed writes it ("Tomas Berg", not his blog's title "Notes
   from Tomas"). A role or placeholder ("admin", "editor", "staff" and the
   like) is never taken for a name. When the feed doesn't name one author,
@@ -94,7 +94,9 @@ PLAN.md → V1, item 1.*
   their feed's own title (as the publisher last gave it, never a name brought
   from another app), once, when it first guesses them; people followed
   before this change are renamed the same way, once, at their feed's next
-  check. An Atom feed that names its author once, for all its entries, signs
+  check, and once more after decision 0308 for anyone a half-signed blog had
+  left under its title. In lists their name stands alone, never the blog's
+  title after it (their page says where they publish). An Atom feed that names its author once, for all its entries, signs
   each of them, so it counts as one author for sorting too (an
   organisation named as a feed's only author is sorted a person, unless the
   name is the feed's or the site's own, and their settings fix it). Only "No, a publication" in the question after
@@ -265,8 +267,24 @@ PLAN.md → V1, item 1.*
   sidebar's foot says "Maya Chen is one person now." with Undo, which puts
   each source back as + Add a source's Undo does. For the pointer only; the
   keyboard joins them with + Add a source.
-- **nine turtles never joins sources by itself, and never asks.** Only the
-  reader joins them (decision 0163 removed "Is this the same person?").
+- **"One person?"** (decision 0308; decision 0163 had removed an earlier
+  "Is this the same person?"). nine turtles never joins sources by itself,
+  but when two of the reader's follows share one website (one address
+  without "www.": alpha.example and www.alpha.example/news; on a site many
+  people share, such as Medium, GitHub or a YouTube channel's address, the
+  whole address, so two writers there never count), and at least one of
+  them is a person, it asks once, in one box a tone off the page, as who
+  isn't working: **One person?**, "**Kai Ostrander** and **Low Tide
+  Photos** share one website, low-tide.example.", **Join them** (an
+  outlined button) and **Keep apart** (words). It asks at the top of
+  Everyone you follow (section 15), one pair at a time, and in Add's
+  question when the second is followed (section 3). Join them joins them as
+  + Add a source does, under the person's name (or the one followed first),
+  in every folder either was in: on Everyone you follow with "Kai Ostrander
+  is one person now · Undo", in Add by opening them, the note saying so
+  (Take out undoes it). Keep apart is remembered, and those two are never
+  asked about again; the next pair, if any, is asked. Two publications
+  from one site (a newspaper's sections) are never asked about.
 - **A folder can become a person:** Edit folder has a tick box row, **This
   is one person** ("Joins its feeds into one person, "Alpha", with one page. You
   can undo it."). Saving with it
