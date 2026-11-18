@@ -348,7 +348,7 @@
 {#snippet mark(feed: Feed)}
   {#if redesign !== "now"}
     <!-- Home redesign: every row has the same icon column. Safe leaves a person's empty; bold shows their face (only a picture the reader chose, never one fetched from their site). -->
-    {#if L?.mark === "none"}
+    {#if L?.mark === "none" || L?.mark === "bare"}
     {:else if L?.mark === "glyph"}
       <span class="mark text-muted"><Icon name={feed.kind === "publication" ? "newspaper" : "person"} /></span>
     {:else if L?.mark === "initial"}
@@ -359,10 +359,7 @@
   {/if}
 {/snippet}
 
-{#snippet faceGrid(rows: Feed[])}
-        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
-        <ul class="faces">
-          {#each rows as feed (feed.id)}
+{#snippet faceItem(feed: Feed)}
             {@const place: Route = { kind: "feed", id: feed.id }}
             {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
             <li>
@@ -371,6 +368,13 @@
                 <span class="face-name"><bdi>{plainSourceName(feed.title)}</bdi>{#if !unreadOff && feed.unread > 0}<span class="sr-only">, something new</span>{/if}</span>
               </a>
             </li>
+{/snippet}
+
+{#snippet faceGrid(rows: Feed[])}
+        <!-- Pinned as faces, three to a line, each with its name under it, as a phone's favourites. -->
+        <ul class="faces">
+          {#each rows as feed (feed.id)}
+            {@render faceItem(feed)}
           {/each}
         </ul>
 {/snippet}
@@ -509,7 +513,7 @@
       {#each folders as folder (folder.id)}
         {@const here = isHere({ kind: "folder", id: folder.id })}
         {@const inside = feeds.filter((feed) => feed.folders.includes(folder.id))}
-        {@const shown = !L?.shut && !L?.tiles && (phone || open.includes(folder.id))}
+        {@const shown = !L?.shut && !L?.tiles && (phone || open.includes(folder.id) || (L?.folderCards ?? "no") !== "no")}
         {@const steps = stepsFor(order, folder.id)}
         <li data-folder-item={folder.id}>
           <div class="place folder-row relative mx-2 flex" data-here={here || undefined} data-drag={dragValue({ kind: "folder", id: folder.id })} data-drop-folder={folder.id}>
@@ -526,7 +530,7 @@
                   />
                 </span>
               {/if}
-            {:else if !phone && !L?.shut && !L?.tiles}
+            {:else if !phone && !L?.shut && !L?.tiles && (L?.folderCards ?? "no") === "no"}
               <!--
                 The show-or-hide arrow at the row's right end, shown when the
                 pointer is on the row, the keyboard is on it, or on a touch screen, so the
@@ -546,12 +550,16 @@
             {/if}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && "folder-feeds"]}>
+            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && (L?.folderCards ?? "no") === "no" && "folder-feeds", L?.folderGrid && "faces"]}>
+              {#if L?.folderGrid}
+                {#each inside as feed (feed.id)}{@render faceItem(feed)}{/each}
+              {:else}
               {#each inside as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
               {:else}
                 <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
               {/each}
+              {/if}
             </ul>
           {/if}
         </li>

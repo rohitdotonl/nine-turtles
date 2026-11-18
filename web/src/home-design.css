@@ -114,3 +114,78 @@ html[data-parts="cards-out"] #sidebar .drop-area.home-group {
 html[data-parts="cards-out"] #sidebar .drop-area.home-group > div {
   margin-inline: 0;
 }
+
+/* Round three (d4–d10): each folder its own card. */
+html[data-parts="cards-out"]:is([data-folders="under"], [data-folders="inside"]) #sidebar ul[data-folder-list]:not(.x1, .x2):not(.x3) {
+  margin-inline: 0;
+  padding-block: 0;
+  background: none;
+  border-radius: 0;
+}
+html:is([data-folders="under"], [data-folders="inside"]) #sidebar li[data-folder-item] > ul a.place {
+  padding-left: 0.75rem;
+}
+/* "under": the folder's name is the card's heading, above it, in the one label (still a link to its list). */
+html[data-folders="under"] #sidebar li[data-folder-item] > .folder-row {
+  margin-top: 0.5rem;
+}
+html[data-folders="under"] #sidebar li[data-folder-item] > .folder-row > a {
+  font-size: var(--text-meta);
+  font-weight: 600;
+}
+html[data-folders="under"] #sidebar li[data-folder-item] > .folder-row > a > span:first-child:has(svg) {
+  display: none;
+}
+html[data-folders="under"] #sidebar li[data-folder-item] > ul {
+  margin: 0 0.5rem 0.25rem;
+  padding-block: 0.25rem;
+  border-radius: 12px;
+  background-color: var(--paper);
+}
+html[data-folders="under"] #sidebar li[data-folder-item] > ul.faces {
+  padding: 0.5rem 0.25rem;
+}
+html[data-folders="under"] #sidebar li[data-folder-item] > ul a.place:not(.face) {
+  margin-inline: 0.25rem;
+}
+/* "inside": the whole folder is one card, its name the first row, in semibold. */
+html[data-folders="inside"] #sidebar li[data-folder-item] {
+  margin: 0 0.5rem 0.75rem;
+  padding-block: 0.25rem;
+  border-radius: 12px;
+  background-color: var(--paper);
+}
+html[data-folders="inside"] #sidebar li[data-folder-item] > .folder-row {
+  margin-inline: 0.25rem;
+}
+html[data-folders="inside"] #sidebar li[data-folder-item] > .folder-row > a {
+  font-weight: 600;
+}
+html[data-folders="inside"] #sidebar li[data-folder-item] > ul {
+  margin-bottom: 0;
+}
+html[data-folders="inside"] #sidebar li[data-folder-item] > ul a.place {
+  margin-inline: 0.25rem;
+}
+html[data-folders="inside"][data-sep] #sidebar li[data-folder-item] > ul > li {
+  position: relative;
+}
+html[data-folders="inside"][data-sep] #sidebar li[data-folder-item] > ul > li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* d10: headings large, in the titles' serif, as a magazine's sections. */
+html[data-big] #sidebar :is(.sidebar-section, li[data-folder-item] > .folder-row > a) {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+html[data-big] #sidebar .sidebar-section {
+  padding-top: 1.25rem;
+}

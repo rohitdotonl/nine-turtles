@@ -122,6 +122,9 @@
     root.dataset.home = homeDesign.style;
     root.dataset.parts = look?.parts ?? "";
     root.dataset.mark = look?.mark ?? "";
+    root.dataset.folders = look?.folderCards ?? "";
+    if (look?.bigHeads) root.dataset.big = "";
+    else delete root.dataset.big;
     if (look?.sep) root.dataset.sep = "";
     else delete root.dataset.sep;
     if (look?.serif) root.dataset.serif = "";

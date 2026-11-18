@@ -9,7 +9,7 @@ export type Look = {
   /** Section headings: shown, hidden (screen readers still hear them), or small quiet words (v9). */
   headings: "shown" | "hidden" | "quiet";
   /** A person's or publication's mark in the icon column. */
-  mark: "blank" | "initial" | "glyph" | "none";
+  mark: "blank" | "initial" | "glyph" | "none" | "bare";
   /** How one group is parted from the next. */
   parts: "space" | "hairline" | "cards" | "cards-out" | "row-cards";
   /** Hairlines between the rows inside a card. */
@@ -20,6 +20,12 @@ export type Look = {
   folderFaces: boolean;
   /** The people in no folder as faces too. */
   looseFaces: boolean;
+  /** Each folder its own card: its name as the card's heading above it, or as the card's first row. */
+  folderCards: "no" | "under" | "inside";
+  /** A folder's people as faces. */
+  folderGrid: boolean;
+  /** Headings large, in the titles' serif, as a magazine's sections. */
+  bigHeads: boolean;
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -34,7 +40,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -57,6 +63,17 @@ export const LOOKS: Record<string, Look> = {
   c8: { ...base, parts: "row-cards", shut: true, faces: true },
   c9: { ...base, parts: "cards-out", sep: true, shut: true, faces: true, pair: true, tiles: true, topPair: true },
   c10: { ...base, parts: "cards-out", shut: true, faces: true, pair: true, tiles: true, topPair: true, folderFaces: true, looseFaces: true },
+  // Round three (Rohit: "I like 1 and 2"; no fixed rules, folders open): ten growing out of c1 and c2.
+  d1: { ...base, headings: "shown", parts: "cards-out", mark: "bare", editTop: false },
+  d2: { ...base, parts: "cards-out", mark: "bare" },
+  d3: { ...base, headings: "shown", parts: "cards-out", mark: "bare", sep: true, editTop: false },
+  d4: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", editTop: false },
+  d5: { ...base, parts: "cards-out", mark: "bare", folderCards: "inside", sep: true },
+  d6: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", topPair: true, pair: true, editTop: false },
+  d7: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", faces: true, editTop: false },
+  d8: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", faces: true, topPair: true, pair: true, editTop: false },
+  d9: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, editTop: false },
+  d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
 const ALIASES: Record<string, string> = { safe: "v1", bold: "v2" };
 
