@@ -25,7 +25,7 @@ function later<T>() {
   return { promise, resolve, reject };
 }
 
-const ON_THE_SERVER: Reading = { sort: "oldest", unread: false };
+const ON_THE_SERVER: Reading = { sort: "oldest", unread: false, replies: true };
 
 beforeEach(() => {
   vi.clearAllMocks();

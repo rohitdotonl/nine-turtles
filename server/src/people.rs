@@ -75,6 +75,9 @@ pub const PER_READER_TABLES: &[(&str, &str)] = &[
     // Their highlights and notes point at entries, so they go first
     // (`delete` empties them before anything else, too; decision 0164).
     ("notes", "DELETE FROM notes WHERE person_id = ?"),
+    // The replies they started (decision 0307): they'd go with the entries
+    // anyway, but are named, like every table with a reader's lines.
+    ("replies", "DELETE FROM replies WHERE person_id = ?"),
     // Where they stopped in episodes (decision 0113): it would go with the
     // entries anyway, but is named, like every table with a reader's lines.
     (
@@ -158,6 +161,7 @@ pub async fn delete(db: &SqlitePool, person: i64) -> Result<(), sqlx::Error> {
 /// test (`server/tests/accounts.rs`) fails otherwise.
 pub const DATA_TABLES: &[&str] = &[
     "notes",
+    "replies",
     "episode_progress",
     "entries",
     "pictures",

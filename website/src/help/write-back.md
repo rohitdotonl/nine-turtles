@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-17
+updated: 2026-11-18
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -97,10 +97,25 @@ page shows it under **Write to Tomas Berg**, which opens your email app to
 write to them about anything, with no subject. To change it, press
 **Change** beside the address; **Copy address** copies it.
 
+## Replies you started
+
+Each time you press a way back at the end of an article (Write back,
+Gmail, Outlook.com, Copy address or Comment), their page lists that
+article under **Replies you started**, with the day, so you can see what
+you've talked about. nine turtles notes only that you started: it never
+sees what you wrote, or whether you sent it.
+
+- Press the article's title to read it again.
+- Press the bin at the end of a line to remove it; **Undo** brings it back.
+- Don't want the list? In **Settings › Reading**, switch **Record
+  replies** off. It's one switch for everyone you follow. Nothing new is
+  recorded, and their pages show no list; switch it on again and what was
+  there comes back.
+
 ## Turn Write back off for someone
 
-Some people you read you'll never write to. Open their page, press
-**Settings**, and switch **Write back** off. The button at the end of their
+Some people you read you'll never write to. Open their page, press the
+cog at its top right, and switch **Write back** off. The button at the end of their
 articles, <kbd>W</kbd> and **Write to** on their page all
 go; they stay with your people, and any address nine turtles knows is kept
 for if you switch it on again.

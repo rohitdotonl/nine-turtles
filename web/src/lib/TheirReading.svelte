@@ -1,8 +1,8 @@
 <!--
   Their page's reading (SPEC section 36, decision 0211): under Write to and your note on them,
   "Your highlights", the words you highlighted in their writing (the newest article first, at
-  most 20; Notes has them all), each set as at an article's end: the words in the reading serif
-  with a fine line at the left, "From {title} · {day}" (the title opens the article) and your
+  most 20; Notes has them all), each with the marker that is a highlight everywhere
+  (decision 0307): the words in the reading serif, "From {title} · {day}" (the title opens the article) and your
   note on it. Its label shows at once, with the empty state's room kept while they load, so
   nothing below moves; with none, "Nothing highlighted yet." and how it fills (decision 0254);
   when they can't be loaded, one quiet line says so rather than letting them seem gone. (Lately, their three newest pieces, went in
@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import { getJson, isRecord } from "./http";
+  import Icon from "./Icon.svelte";
   import NoteText from "./NoteText.svelte";
   import { toArticle, untitledOpening, type Article } from "./shapes";
   import { exactly, when } from "./times";
@@ -69,12 +70,15 @@
       <ul class="flex flex-col gap-8">
         {#each highlights as each (each.id)}
           <li class="quote">
-            <p class="font-serif text-ink">{each.quote}</p>
-            <p class="from">
-              From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
-              · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
-            </p>
-            {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
+            <span class="mark" aria-hidden="true"><Icon name="highlight" /></span>
+            <div class="words">
+              <p class="font-serif text-ink">{each.quote}</p>
+              <p class="from">
+                From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
+                · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
+              </p>
+              {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
+            </div>
           </li>
         {/each}
       </ul>
@@ -83,7 +87,7 @@
 {/if}
 
 <style>
-  /* Each highlight: its words in the reading serif, set off by a fine line at the left, as at an article's end. */
+  /* Each highlight: the marker, then its words in the reading serif (decision 0307). */
   /* Their words, where the eye rests: the reading serif a step larger than the interface around it. */
   /* The empty state's own height, kept while loading. */
   .waiting {
@@ -91,12 +95,22 @@
   }
   .quote {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-left: 1.25rem;
-    border-left: 2px solid var(--strong);
+    align-items: flex-start;
+    gap: 0.75rem;
     font-size: var(--text-large);
     line-height: 1.5;
+  }
+  /* The marker that is a highlight everywhere (decision 0307), where the fine line at the left was. */
+  .mark {
+    flex-shrink: 0;
+    padding-top: 0.25rem;
+    color: var(--ink-2);
+  }
+  .words {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
   }
   .from {
     font-size: var(--text-meta);

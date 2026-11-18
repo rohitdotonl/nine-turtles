@@ -4,7 +4,7 @@ description: Each person and publication has a page of their own. When someone h
 groupId: keeping-things-tidy
 order: 2
 spec: 5 and 36
-updated: 2026-11-16
+updated: 2026-11-18
 related: [put-people-in-folders, write-back, unfollow-someone]
 ---
 
@@ -33,7 +33,7 @@ Choose them in the sidebar, then press their name at the top of their list
 ("Alpha ›") or their name under one of their articles' titles, or choose
 **More › Info about Alpha**, or press <kbd>I</kbd> (in any list, it opens the
 page of whoever wrote the chosen article). On a
-computer their page fills the window, with **×** back to their list; on a
+computer their page fills the window, with **‹** back to their list; on a
 phone, it's a screen of its own.
 
 Their page starts with their picture, then their name and, under it, where they publish, each
@@ -41,9 +41,10 @@ place a link to its own website. Under a person's name is **Write to Maya
 Chen**, which opens your own email app to write to them, with their address
 under it once nine turtles knows it, and **Change** beside the address to
 correct it (see <a href="/help/write-back/">Write back to a writer</a>).
-Then, in one card, what's yours of them: your note, and the words you
-highlighted in their writing. Last comes one row, **Settings**. On a
-computer, the **×** at the top right (or <kbd>Esc</kbd>) takes you back to
+Then, in one card, what's yours of them: the replies you started to them
+(see <a href="/help/write-back/">Write back to a writer</a>), your note, and
+the words you highlighted in their writing. Their settings are the cog at
+the top right. On a computer, **‹** at the top left (or <kbd>Esc</kbd>) takes you back to
 their list.
 
 ## Their picture
@@ -62,7 +63,7 @@ way, **Undo** beside the picture puts it back as it was.
 
 ## Their settings
 
-Press **Settings** at the foot of their page, or <kbd>E</kbd> in their
+Press the cog at the top right of their page, or <kbd>E</kbd> in their
 list. Their settings open as a page of their own, with **‹** and their
 name above the title; press it (or <kbd>Esc</kbd>) to go back to their
 page. There's no Edit and no Save: each setting changes the moment you
@@ -95,7 +96,7 @@ joined, as one person.
 
 To join sources you already follow:
 
-1. Open their page and press **Settings**.
+1. Open their page and press the cog at its top right.
 2. Under the settings, press **+ Add their newsletter, videos or podcast**
    (or, for someone with two or more sources already, **+ Add a source**).
 3. Choose someone you already follow, or paste the address of their blog,

@@ -343,7 +343,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     let reader = Reader::new().await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "newest", "unread": true })
+        json!({ "sort": "newest", "unread": true, "replies": true })
     );
 
     let (status, _) = reader
@@ -352,7 +352,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true })
+        json!({ "sort": "oldest", "unread": true, "replies": true })
     );
 
     // Another device, signed in separately, sees the same.
@@ -363,7 +363,10 @@ async fn the_sort_order_is_saved_for_every_device() {
         .await
         .unwrap();
     let other: Value = serde_json::from_str(&other.text().await.unwrap()).unwrap();
-    assert_eq!(other, json!({ "sort": "oldest", "unread": true }));
+    assert_eq!(
+        other,
+        json!({ "sort": "oldest", "unread": true, "replies": true })
+    );
 
     let (status, _) = reader
         .post("/api/settings", json!({ "sort": "sideways" }))
@@ -371,7 +374,7 @@ async fn the_sort_order_is_saved_for_every_device() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true })
+        json!({ "sort": "oldest", "unread": true, "replies": true })
     );
 }
 
@@ -384,7 +387,10 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
         .post("/api/settings", json!({ "unread": false }))
         .await;
     assert_eq!(status, StatusCode::OK);
-    assert_eq!(body, json!({ "sort": "newest", "unread": false }));
+    assert_eq!(
+        body,
+        json!({ "sort": "newest", "unread": false, "replies": true })
+    );
 
     // Changing the sort order alone leaves Unread as it was.
     reader
@@ -392,7 +398,7 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
         .await;
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": false })
+        json!({ "sort": "oldest", "unread": false, "replies": true })
     );
 
     // Read state is still recorded quietly with Unread off, and shows again
@@ -426,7 +432,7 @@ async fn unread_on_or_off_is_saved_on_its_own_and_keeps_read_state() {
     assert!(status.is_client_error());
     assert_eq!(
         reader.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": true })
+        json!({ "sort": "oldest", "unread": true, "replies": true })
     );
 }
 
@@ -481,7 +487,10 @@ async fn a_tab_from_before_saving_settings_now_gone_changes_nothing() {
     for gone in [json!({ "counts": "hidden" }), json!({ "let_go": "week" })] {
         let (status, body) = reader.post("/api/settings", gone).await;
         assert_eq!(status, StatusCode::OK);
-        assert_eq!(body, json!({ "sort": "newest", "unread": true }));
+        assert_eq!(
+            body,
+            json!({ "sort": "newest", "unread": true, "replies": true })
+        );
     }
     let kept: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM person_settings WHERE name LIKE 'let_go%'")

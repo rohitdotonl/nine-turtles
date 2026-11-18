@@ -109,6 +109,7 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Could be either (a feed that doesn't say who writes it, kept with the publications until the reader settles it)
 - A person's own name (from a feed that signs every article with one author)
 - Write back (a `mailto:` link that opens the reader's own email app)
+- Replies you started (Record replies: the articles a reader pressed a way back at, on the person's page)
 - The weekly email (the one email a reader chooses; its stop link)
 - Raw email (RFC 5322 and MIME)
 - Mailing list headers (`List-Id`, `List-Unsubscribe`)

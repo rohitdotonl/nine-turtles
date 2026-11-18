@@ -184,22 +184,25 @@ async fn settings_are_each_readers_own() {
     let (status, _) = owner
         .post(
             "/api/settings",
-            json!({ "sort": "oldest", "unread": false }),
+            json!({ "sort": "oldest", "unread": false, "replies": false }),
         )
         .await;
     assert_eq!(status, StatusCode::OK);
 
     assert_eq!(
         other.get("/api/settings").await,
-        json!({ "sort": "newest", "unread": true })
+        json!({ "sort": "newest", "unread": true, "replies": true })
     );
     let (_, changed) = other
         .post("/api/settings", json!({ "sort": "newest" }))
         .await;
-    assert_eq!(changed, json!({ "sort": "newest", "unread": true }));
+    assert_eq!(
+        changed,
+        json!({ "sort": "newest", "unread": true, "replies": true })
+    );
     assert_eq!(
         owner.get("/api/settings").await,
-        json!({ "sort": "oldest", "unread": false })
+        json!({ "sort": "oldest", "unread": false, "replies": false })
     );
 }
 
