@@ -426,7 +426,7 @@
     data-unread={unreadOff ? undefined : folderUnread(folder, feeds)}
     title={folder.name}
     class={["flex min-h-11 pointer-fine:min-h-8 min-w-0 flex-1 items-center rounded-press pr-3 text-ui", padded ? "gap-3 pl-10" : "gap-3 pl-3", isHere(place) ? "font-semibold text-ink" : "text-ink"]}
-    >{#if redesign !== "now" && L?.mark !== "none"}<span class={[L?.tiles && "flex w-full items-center", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" />{#if L?.folderFaces}<span class="tile-faces">{#each feeds.filter((feed) => feed.folders.includes(folder.id)).slice(0, 3) as feed (feed.id)}<span class="mark mark-small"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>{/each}</span>{/if}</span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
+    >{#if redesign !== "now" && L?.mark !== "none" && (L?.headIcons ?? "no") === "no"}<span class={[L?.tiles && "flex w-full items-center", isHere(place) ? "text-ink" : "text-muted"]}><Icon name="folder" />{#if L?.folderFaces}<span class="tile-faces">{#each feeds.filter((feed) => feed.folders.includes(folder.id)).slice(0, 3) as feed (feed.id)}<span class="mark mark-small"><Portrait name={plainSourceName(feed.title)} pictures={[chosenPicture([feed])].filter((each): each is string => !!each)} person={false} tiny /></span>{/each}</span>{/if}</span>{/if}{@render name(folder.name)}{@render leadsOn()}</a
   >
 {/snippet}
 
@@ -439,7 +439,7 @@
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
   <div data-drop-loose={who} class={["drop-area mx-2 rounded-press home-group", rows.length === 0 && "drop-empty", bold && "bold-group"]}>
-    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>{heading}</h2>
+    <h2 class={["sidebar-section label -mx-2", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", L?.headIcons === "all" && "flex items-center gap-3"]}>{#if L?.headIcons === "all"}<span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{/if}{heading}</h2>
     {@render refused(who)}
     {#if rows.length > 0 && L?.looseFaces}
       <div class="-mx-2">{@render faceGrid(rows)}</div>
@@ -506,7 +506,7 @@
   {#if folders.length > 0}
     <!-- Bold words in full ink (decision 0207), with Edit beside them: quiet, shown with a mouse once the pointer is on the sidebar. -->
     <div class={["sidebar-section-row", bold && "bold-edit"]}>
-      <h2 class={["sidebar-section label", bold && "sr-only", L?.headings === "quiet" && "quiet-heading"]}>Folders</h2>
+      <h2 class={["sidebar-section label", bold && "sr-only", L?.headings === "quiet" && "quiet-heading", (L?.headIcons ?? "no") !== "no" && "flex items-center gap-3"]}>{#if (L?.headIcons ?? "no") !== "no"}<span class="text-ink"><Icon name="folder" /></span>{/if}Folders</h2>
       {#if !L?.editTop}<button type="button" class="sidebar-edit" aria-pressed={editing} onclick={() => ((editing = !editing), (moving = undefined))}>{editing ? "Done" : "Edit"}</button>{/if}
     </div>
     <ul data-folder-list class={["relative home-group", L?.tiles && "tiles"]}>

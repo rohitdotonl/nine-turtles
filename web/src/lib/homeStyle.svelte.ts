@@ -26,6 +26,10 @@ export type Look = {
   folderGrid: boolean;
   /** Headings large, in the titles' serif, as a magazine's sections. */
   bigHeads: boolean;
+  /** A folder icon on the Folders heading (and a sign on the other headings), none on each folder's row. */
+  headIcons: "no" | "folders" | "all";
+  /** Folder names in semibold, so they read as the names of groups. */
+  folderBold: boolean;
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -40,7 +44,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -73,6 +77,17 @@ export const LOOKS: Record<string, Look> = {
   d7: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", faces: true, editTop: false },
   d8: { ...base, headings: "shown", parts: "cards-out", mark: "bare", folderCards: "under", faces: true, topPair: true, pair: true, editTop: false },
   d9: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, editTop: false },
+  // Round four (Rohit: no faces, nothing two lines tall; 1 with the folder icon on "Folders" only).
+  e1: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", editTop: false },
+  e2: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderBold: true, editTop: false },
+  e3: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderBold: true, sep: true, editTop: false },
+  e4: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderCards: "under", editTop: false },
+  e5: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderCards: "inside", sep: true, editTop: false },
+  e6: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "all", folderBold: true, editTop: false },
+  e7: { ...base, headings: "shown", parts: "cards", mark: "bare", headIcons: "all", folderBold: true, editTop: false },
+  e8: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "folders", folderCards: "under", bigHeads: true, editTop: false },
+  e9: { ...base, headings: "shown", parts: "cards-out", mark: "bare", headIcons: "all", folderCards: "under", sep: true, bigHeads: true, editTop: false },
+  e10: { ...base, headings: "shown", parts: "row-cards", mark: "bare", headIcons: "all", folderBold: true, editTop: false },
   d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
 const ALIASES: Record<string, string> = { safe: "v1", bold: "v2" };

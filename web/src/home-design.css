@@ -189,3 +189,12 @@ html[data-big] #sidebar :is(.sidebar-section, li[data-folder-item] > .folder-row
 html[data-big] #sidebar .sidebar-section {
   padding-top: 1.25rem;
 }
+
+/* Round four: folder names in semibold, the names of groups. */
+html[data-fbold] #sidebar li[data-folder-item] > .folder-row > a {
+  font-weight: 600;
+}
+/* Without an icon before them, a folder's people still sit one step in. */
+html[data-folders="no"][data-mark="bare"] #sidebar li[data-folder-item] > ul a.place {
+  padding-left: 1.75rem;
+}

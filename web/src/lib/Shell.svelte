@@ -123,6 +123,8 @@
     root.dataset.parts = look?.parts ?? "";
     root.dataset.mark = look?.mark ?? "";
     root.dataset.folders = look?.folderCards ?? "";
+    if (look?.folderBold) root.dataset.fbold = "";
+    else delete root.dataset.fbold;
     if (look?.bigHeads) root.dataset.big = "";
     else delete root.dataset.big;
     if (look?.sep) root.dataset.sep = "";
