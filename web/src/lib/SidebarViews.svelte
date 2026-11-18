@@ -61,12 +61,18 @@
     everyone: { name: "Following", sign: "feed" },
     every: { name: "", sign: "page" },
   } as const;
-  let views = $derived(sidebarViews(unreadOff).filter((view) => (PARTS[part] as readonly string[]).includes(view)).sort((a, b) => (PARTS[part] as readonly string[]).indexOf(a) - (PARTS[part] as readonly string[]).indexOf(b)));
+  const ALL_TOP = ["starred", "notes", "all", "unread"] as const;
+  let order = $derived<readonly string[]>(look?.topAll ? (part === "top" ? ALL_TOP : []) : PARTS[part]);
+  let views = $derived(sidebarViews(unreadOff).filter((view) => order.includes(view)).sort((a, b) => order.indexOf(a) - order.indexOf(b)));
+  /** Everyone you follow: its own card at the foot, or (round six) the top card's last row. */
+  let withEveryone = $derived(look?.topAll ? part === "top" : part === "every" || part === "everyone");
   const everyone: Route = { kind: "your-feeds" };
   let onEveryone = $derived(!phone && route.kind === "your-feeds");
 </script>
 
-{#if look && look.cardNames !== "no" && part !== "every"}
+{#if look?.topAll && part !== "top"}
+  <!-- Round six: everything is in the top card. -->
+{:else if look && look.cardNames !== "no" && part !== "every"}
   <!-- Home redesign, round five: every card named, with its sign. -->
   <div class={["home-group", part === "top" && "first-card", part === "yours" && "sidebar-gap", part === "everyone" && "sidebar-last"]}>
     <h2 class={["sidebar-section label", look.cardNames === "signs" && "flex items-center gap-3"]}>{#if look.cardNames === "signs"}<span class="text-ink"><Icon name={CARD_NAMES[part].sign} /></span>{/if}{CARD_NAMES[part].name}</h2>
@@ -92,7 +98,7 @@
       {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}
     </li>
   {/each}
-  {#if part === "everyone"}
+  {#if withEveryone}
   <li>
     <a
       href={pathFor(everyone)}
@@ -129,7 +135,7 @@
       {#if view === "unread" && waiting}<span id="unread-waiting" hidden>Something new</span>{/if}
     </li>
   {/each}
-  {#if part === "every" || part === "everyone"}
+  {#if withEveryone}
   <li>
     <a
       href={pathFor(everyone)}

@@ -38,6 +38,10 @@ export type Look = {
   plainPlaces: boolean;
   /** Round five's tidier spacing and nesting inside cards. */
   polish: boolean;
+  /** Round six: one unnamed top card, Saved, Notes, All articles, Unread, Everyone you follow. */
+  topAll: boolean;
+  /** Round six: how an open folder's people hang from it: the live app's straight line, or branches off it. */
+  tree: "none" | "line" | "elbow" | "round" | "tick";
   /** Folders are rows of their own: their people show inside the folder's list, not on Home. */
   shut: boolean;
   /** Pinned people as a grid of faces. */
@@ -52,7 +56,7 @@ export type Look = {
   editTop: boolean;
 };
 
-const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false, cardNames: "no", pinAlways: false, plainPlaces: false, polish: false };
+const base: Look = { headings: "hidden", mark: "initial", parts: "space", shut: false, faces: false, pair: false, tiles: false, serif: false, editTop: true, sep: false, topPair: false, folderFaces: false, looseFaces: false, folderCards: "no", folderGrid: false, bigHeads: false, headIcons: "no", folderBold: false, cardNames: "no", pinAlways: false, plainPlaces: false, polish: false, topAll: false, tree: "none" };
 export const LOOKS: Record<string, Look> = {
   v1: { ...base, headings: "shown", mark: "blank", editTop: false },
   v2: base,
@@ -107,6 +111,12 @@ export const LOOKS: Record<string, Look> = {
   f8: { ...e1(), cardNames: "signs", parts: "cards", bigHeads: true },
   f9: { ...e1(), cardNames: "signs", plainPlaces: true, bigHeads: true, folderCards: "under" },
   f10: { ...e1(), cardNames: "signs", plainPlaces: true, parts: "outline", folderCards: "under" },
+  // Round six (Rohit's layout: one top card; Pinned always; Folders with the live app's line, or branches).
+  g1: { ...e1(), topAll: true, tree: "line" },
+  g2: { ...e1(), topAll: true, tree: "line", headIcons: "all" },
+  g3: { ...e1(), topAll: true, tree: "elbow" },
+  g4: { ...e1(), topAll: true, tree: "round", headIcons: "all" },
+  g5: { ...e1(), topAll: true, tree: "tick" },
   d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
 function e1(): Look {

@@ -127,6 +127,7 @@
     }
     root.dataset.mark = look?.mark ?? "";
     root.dataset.folders = look?.folderCards ?? "";
+    root.dataset.tree = look?.tree ?? "";
     if (look?.folderBold) root.dataset.fbold = "";
     else delete root.dataset.fbold;
     if (look?.bigHeads) root.dataset.big = "";

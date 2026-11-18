@@ -262,3 +262,66 @@ html[data-folders="under"] #sidebar li[data-folder-item] > .folder-row:not(.x1):
     padding-top: 2rem;
   }
 }
+
+/*
+  Round six: an open folder's people hang from it. "line" is the live app's straight line down from
+  the folder's name; "elbow", "round" and "tick" are branches off that line, one to each person.
+  The line falls from under the folder name's first letter (16px into the card); names start 40px in.
+*/
+html:not([data-tree=""], [data-tree="none"]) #sidebar li[data-folder-item] > ul.folder-feeds {
+  position: relative;
+  --tree-x: 1.375rem;
+}
+html:not([data-tree=""], [data-tree="none"]) #sidebar li[data-folder-item] > ul.folder-feeds a.place {
+  padding-left: 2.5rem;
+}
+html:not([data-tree=""], [data-tree="none"]) #sidebar li[data-folder-item] > ul.folder-feeds::before {
+  display: block;
+  content: "";
+  position: absolute;
+  left: var(--tree-x);
+  inset-block: 0 0.25rem;
+  border-left: 1px solid var(--strong);
+}
+html:is([data-tree="elbow"], [data-tree="round"], [data-tree="tick"]) #sidebar li[data-folder-item] > ul.folder-feeds::before {
+  display: none;
+}
+html:is([data-tree="elbow"], [data-tree="round"], [data-tree="tick"]) #sidebar li[data-folder-item] > ul.folder-feeds > li {
+  position: relative;
+}
+/* Each person: a branch from the line to just before their name. */
+html:is([data-tree="elbow"], [data-tree="round"], [data-tree="tick"]) #sidebar li[data-folder-item] > ul.folder-feeds > li::before {
+  content: "";
+  position: absolute;
+  left: var(--tree-x);
+  width: 0.875rem;
+  top: 0;
+  height: 50%;
+  border-left: 1px solid var(--strong);
+  border-bottom: 1px solid var(--strong);
+  pointer-events: none;
+}
+/* The line carries on past everyone but the last, so the tree ends at its last branch. */
+html:is([data-tree="elbow"], [data-tree="round"], [data-tree="tick"]) #sidebar li[data-folder-item] > ul.folder-feeds > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: var(--tree-x);
+  top: 50%;
+  bottom: 0;
+  border-left: 1px solid var(--strong);
+  pointer-events: none;
+}
+html[data-tree="round"] #sidebar li[data-folder-item] > ul.folder-feeds > li::before {
+  border-bottom-left-radius: 8px;
+}
+/* "tick": a straight line all the way, with a short tick out to each person. */
+html[data-tree="tick"] #sidebar li[data-folder-item] > ul.folder-feeds > li::before {
+  width: 0.5rem;
+}
+html[data-tree="tick"] #sidebar li[data-folder-item] > ul.folder-feeds > li:last-child::before {
+  border-bottom-left-radius: 0;
+}
+/* Branches start right under the folder's row, not with a gap. */
+html:not([data-tree=""], [data-tree="none"]) #sidebar li[data-folder-item] > ul.folder-feeds {
+  margin-top: -0.25rem;
+}

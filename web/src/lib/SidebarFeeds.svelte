@@ -555,7 +555,7 @@
             {/if}
           </div>
           {#if shown}
-            <ul id={`folder-${folder.id}`} class={["mb-1", !phone && (L?.folderCards ?? "no") === "no" && "folder-feeds", L?.folderGrid && "faces"]}>
+            <ul id={`folder-${folder.id}`} class={["mb-1", (!phone || (L?.tree ?? "none") !== "none") && (L?.folderCards ?? "no") === "no" && "folder-feeds", L?.folderGrid && "faces"]}>
               {#if L?.folderGrid}
                 {#each inside as feed (feed.id)}{@render faceItem(feed)}{/each}
               {:else}
