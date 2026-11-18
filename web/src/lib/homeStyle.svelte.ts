@@ -121,6 +121,7 @@ export const LOOKS: Record<string, Look> = {
   g5: { ...e1(), topAll: true, tree: "tick" },
   // Rohit's choice: g3, the last two cards "People" and "Publications" with their signs.
   final: { ...e1(), topAll: true, tree: "elbow", headIcons: "all", looseName: "People" },
+  flip: { ...e1(), topAll: true, tree: "elbow", headIcons: "all", looseName: "People" },
   d10: { ...base, headings: "shown", parts: "cards-out", folderCards: "under", faces: true, folderGrid: true, looseFaces: true, topPair: true, pair: true, bigHeads: true, editTop: false },
 };
 function e1(): Look {

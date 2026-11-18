@@ -334,3 +334,13 @@ html[data-home="final"] section:is([aria-labelledby="settings-heading"], [aria-l
 html[data-home="final"] section:is([aria-labelledby="settings-heading"], [aria-label="Settings"]) .inset-group {
   background-color: var(--paper);
 }
+
+/* "flip": the locked Home in today's Settings' look, toned cards on the page's color. */
+html[data-home="flip"] {
+  --page-flip: var(--paper);
+  --card-flip: var(--group, var(--list));
+}
+html[data-home="flip"] #sidebar {
+  background-color: var(--page-flip);
+  --paper: var(--card-flip);
+}
