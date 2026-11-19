@@ -89,7 +89,7 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
     case "already":
       return HAS_ACCOUNT;
     case "too-many":
-      return "Many people have signed up in the last hour. Try this link again in an hour.";
+      return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
       return UNREACHABLE;
   }
@@ -167,7 +167,7 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
     case "already":
       return HAS_ACCOUNT;
     case "too-many":
-      return "Many people have signed up in the last hour. Try this link again in an hour.";
+      return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
       return UNREACHABLE;
   }

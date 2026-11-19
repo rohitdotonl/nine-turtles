@@ -5,10 +5,10 @@
   "Icons"; drawn larger than an icon to hold its figure, DESIGN.md → "The system").
 -->
 <script lang="ts">
-  let { seconds, forward = false, size = 28 }: { seconds: number; forward?: boolean; size?: number } = $props();
+  let { seconds, forward = false }: { seconds: number; forward?: boolean } = $props();
 </script>
 
-<svg aria-hidden="true" class="skip" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+<svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
   >{#if forward}<path d="M20.5 12.5a8.5 8.5 0 1 1-2.5-6" /><path d="M18.25 2.75v3.75h-3.75" />{:else}<path d="M3.5 12.5a8.5 8.5 0 1 0 2.5-6" /><path d="M5.75 2.75v3.75h3.75" />{/if}<text
     x="12"
     y="14.9"

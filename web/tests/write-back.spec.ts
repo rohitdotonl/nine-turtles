@@ -536,14 +536,16 @@ test("A way back pressed is listed on their page under Replies you started, remo
   await appReady(page);
   await expect(settingsSwitch).toBeChecked();
   await expect(page.getByText("Their page lists what you started a reply to.", { exact: true })).toBeVisible();
-  await settingsSwitch.click();
+  // Each switch waits for the server to keep it before leaving Settings, which would cut the save short.
+  const saved = () => page.waitForResponse((response) => response.url().endsWith("/api/settings") && response.request().method() !== "GET");
+  await Promise.all([saved(), settingsSwitch.click()]);
   await expect(settingsSwitch).not.toBeChecked();
   await expect(page.getByText("Nothing is recorded, and their pages show no list.")).toBeVisible();
   await theirPage();
   await expect(who.getByRole("heading", { name: "Replies you started" })).toHaveCount(0);
   await page.goto(new URL("/settings", FEEDS_APP).href);
   await appReady(page);
-  await settingsSwitch.click();
+  await Promise.all([saved(), settingsSwitch.click()]);
   await expect(settingsSwitch).toBeChecked();
   await theirPage();
   await expect(who.getByRole("region", { name: "Replies you started" }).getByRole("listitem")).toHaveCount(1);
@@ -553,5 +555,9 @@ test("A way back pressed is listed on their page under Replies you started, remo
   await theirPage();
   await expect(who).toContainText("Replies you started couldn't be loaded.");
   await expect(who.getByRole("button", { name: "Add a note…" })).toBeVisible();
+  // Try again keeps the keyboard on the group's heading while it asks again, and says so again if it fails.
+  await who.getByRole("region", { name: "Replies you started" }).getByRole("button", { name: "Try again" }).click();
+  await expect(who.getByRole("heading", { name: "Replies you started" })).toBeFocused();
+  await expect(who).toContainText("Replies you started couldn't be loaded.");
   await page.unrouteAll({ behavior: "ignoreErrors" });
 });

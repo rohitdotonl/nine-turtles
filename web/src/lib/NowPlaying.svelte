@@ -33,7 +33,7 @@
   <section aria-label="Now playing" class={["now-playing", bottom && "pb-[env(safe-area-inset-bottom)]"]}>
     <div class="flex items-center gap-1 px-2 py-1">
       <button type="button" class="btn-quiet btn-icon" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={back}>
-        <SkipMark seconds={BACK_SECONDS} size={26} />
+        <SkipMark seconds={BACK_SECONDS} />
       </button>
       <button type="button" class="btn-quiet btn-icon text-ink" aria-label={player.playing ? "Pause" : "Play"} title={player.playing ? "Pause" : "Play"} onclick={toggle}>
         {#if player.playing}

@@ -168,7 +168,7 @@
     {/if}
     <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{@render icon("note")}{highlight?.note ? "Edit note" : "Add a note…"}</button>
     {#if fresh}
-      <button type="button" role="menuitem" class="menu-item" onclick={() => onClose(true)}>{@render icon("check")}Done</button>
+      <button type="button" role="menuitem" class="menu-item" onclick={() => onClose(true)}>{@render icon("close")}Done</button>
     {:else if highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onCopy}>{@render icon("copy")}Copy</button>
       <button type="button" role="menuitem" class="menu-item text-danger" onclick={onRemove}>{@render icon("trash")}Remove highlight</button>

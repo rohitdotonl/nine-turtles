@@ -8,6 +8,7 @@
   from a More (…) button, `RowMenu.svelte` from a row in the article list.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { keyCap } from "./keyboard";
@@ -126,7 +127,7 @@
               <span class="flex w-5 shrink-0 justify-center">{#if item.checked}<Icon name="check" />{/if}</span>
             {/if}
             {#if item.icon}<span class="flex w-5 shrink-0 justify-center text-ink-2"><Icon name={item.icon} /></span>{/if}
-            <span class="min-w-0 flex-1">{item.label}</span>
+            <span class="min-w-0 flex-1"><Addressed text={item.label} /></span>
             {#if item.shortcut}
               <!-- Printed the same on every computer (Shift A, M); screen readers hear the key from aria-keyshortcuts instead (decision 0180). -->
               <kbd aria-hidden="true" class="text-meta text-muted">{keyCap(item.shortcut)}</kbd>

@@ -57,42 +57,38 @@
   }
 </script>
 
-{#if failed}
-  <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
-    <h3 id="their-highlights" tabindex="-1" class="label outline-none">Your highlights</h3>
+<!-- One heading in every state, so Try again can leave the keyboard on it while the list is asked for again. -->
+<section class="flex flex-col gap-3" aria-labelledby="their-highlights">
+  <h3 id="their-highlights" tabindex="-1" class="label outline-none">Your highlights</h3>
+  {#if failed}
     <LoadFailed class="text-meta" words="Your highlights from their writing couldn't be loaded." heading="their-highlights" onRetry={() => (attempt += 1)} />
-  </section>
-{:else}
-  <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
-    <h3 id="their-highlights" class="label">Your highlights</h3>
-    {#if !loaded}
-      <!-- While they load (a moment), the room the empty state takes, so what's below doesn't move when nothing comes. -->
-      <div class="waiting" aria-hidden="true"></div>
-    {:else if highlights.length === 0}
-      <!-- Nothing yet: the fact, then how it fills (BRAND.md → "Empty screens"). -->
-      <div class="waiting flex flex-col gap-2">
-        <p class="font-serif text-ink-2">Nothing highlighted yet.</p>
-        <p class="text-meta text-muted">Words you highlight in their writing gather here.</p>
-      </div>
-    {:else}
-      <ul class="flex flex-col gap-8">
-        {#each highlights as each (each.id)}
-          <li class="quote">
-            <span class="mark" aria-hidden="true"><Icon name="highlight" /></span>
-            <div class="words">
-              <p class="font-serif text-ink">{each.quote}</p>
-              <p class="from">
-                From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
-                · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
-              </p>
-              {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
-            </div>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-  </section>
-{/if}
+  {:else if !loaded}
+    <!-- While they load (a moment), the room the empty state takes, so what's below doesn't move when nothing comes. -->
+    <div class="waiting" aria-hidden="true"></div>
+  {:else if highlights.length === 0}
+    <!-- Nothing yet: the fact, then how it fills (BRAND.md → "Empty screens"). -->
+    <div class="waiting flex flex-col gap-2">
+      <p class="font-serif text-ink-2">Nothing highlighted yet.</p>
+      <p class="text-meta text-muted">Words you highlight in their writing gather here.</p>
+    </div>
+  {:else}
+    <ul class="flex flex-col gap-8">
+      {#each highlights as each (each.id)}
+        <li class="quote">
+          <span class="mark" aria-hidden="true"><Icon name="highlight" /></span>
+          <div class="words">
+            <p class="font-serif text-ink">{each.quote}</p>
+            <p class="from">
+              From <button type="button" class="text-link" onclick={() => onOpen(each.article)}>{titleOf(each.article)}</button>
+              · <time datetime={new Date(each.article.at * 1000).toISOString()} title={exactly(each.article.at)}>{when(each.article.at)}</time>
+            </p>
+            {#if each.note}<div class="text-meta"><NoteText note={each.note} /></div>{/if}
+          </div>
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</section>
 
 <style>
   /* Each highlight: the marker, then its words in the reading serif (decision 0307). */

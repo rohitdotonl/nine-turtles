@@ -514,7 +514,7 @@
         <!-- At an article's end, no line under the button (decision 0298): its name says who it goes to to screen readers, and the address is never printed on the page. On their page with no address yet, nothing to correct or copy. -->
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
-        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
+        <p class="to"><span class="address">{address}</span> <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
       {/if}
       <!-- Always in the page, so screen readers hear "Copied." as it arrives: a polite live line, not a second "status" (the toolbar's line is the pane's one status). -->
       <p class={[copied && !opening ? "to" : "sr-only", copyFailed && "text-danger"]} aria-live="polite">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Addressed text={copied} /></span>{/if}</p>
