@@ -33,9 +33,19 @@ export function verdict(running: string | undefined, answered: string | null, st
 
 export const updates = $state({ ready: false, stranded: false, otherReader: false });
 
-let running: string | undefined;
+/**
+ * This tab's own version: the one the server wrote into the page (decision 0320), so a page
+ * opened from the phone's kept copy knows it's older; else the first answer's.
+ */
+let running: string | undefined = pageVersion();
 
-/** Reads an answer's version; the first one seen is this tab's own. */
+/** The version written into the page, if there is one (none in development). */
+export function pageVersion(): string | undefined {
+  const written = globalThis.document?.querySelector('meta[name="nine-turtles-version"]')?.getAttribute("content");
+  return written ? written : undefined;
+}
+
+/** Reads an answer's version; the first one seen is this tab's own, unless the page said. */
 export function noteAnswer(response: Response) {
   const answered = response.headers.get(VERSION_HEADER);
   running ??= answered ?? undefined;
@@ -93,7 +103,7 @@ export async function api(input: string, init?: RequestInit): Promise<Response> 
       response = await fetch(input, { ...init, headers });
     }
   } catch (problem) {
-    if (noConnection(problem)) lost();
+    if (noConnection(problem)) lost(problem);
     throw problem;
   }
   reached(response);
@@ -145,7 +155,31 @@ export function switchTo(path: string, carried: Carried) {
   } catch {
     // Without it the new version still opens, as a fresh page would.
   }
-  location.assign(path);
+  // The phone's kept page is this older version: the newest is kept first, so the switch opens it (sw.js).
+  void keepNewestPage().finally(() => location.assign(path));
+}
+
+/** Reloads into the server's newest version: the phone's kept page, an older one, is replaced by it first. */
+export function reloadNewest(): void {
+  void keepNewestPage().finally(() => location.reload());
+}
+
+/** The service worker's store (web/public/sw.js names it too). */
+const KEPT_STORE = "nine-turtles-app-1";
+
+/**
+ * Puts the server's page in place of the phone's kept copy, so the next opening (which opens the
+ * kept one, sw.js) is the newest version. Without an answer the kept page stays, so the app still
+ * opens without a connection.
+ */
+export async function keepNewestPage(): Promise<void> {
+  try {
+    const response = await fetch("/", { cache: "no-store" });
+    if (!response.ok || !(await response.clone().text()).includes('name="nine-turtles-version"')) return;
+    await (await globalThis.caches?.open(KEPT_STORE))?.put("/", response);
+  } catch {
+    // No connection, or no store: the kept page stays as it is.
+  }
 }
 
 /** What the page before carried, if this page opened by switching versions. */

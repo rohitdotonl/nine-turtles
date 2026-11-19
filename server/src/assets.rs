@@ -10,6 +10,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use rust_embed::Embed;
+use std::sync::LazyLock;
 
 #[derive(Embed)]
 #[folder = "../web/dist"]
@@ -32,7 +33,7 @@ async fn serve(uri: Uri, asked: HeaderMap) -> Response {
     let path = uri.path().trim_start_matches('/');
 
     match Frontend::get(path) {
-        Some(file) if !path.is_empty() => file_response(path, file, &asked),
+        Some(file) if !path.is_empty() && path != "index.html" => file_response(path, file, &asked),
         // An API address nine turtles doesn't have (perhaps one an older tab
         // still uses after an update) is "not found", never the app's page.
         _ if path == "api" || path.starts_with("api/") => StatusCode::NOT_FOUND.into_response(),
@@ -45,8 +46,8 @@ async fn serve(uri: Uri, asked: HeaderMap) -> Response {
             StatusCode::NOT_FOUND.into_response()
         }
         // Any other address is a screen of the single-page app.
-        _ => match Frontend::get("index.html") {
-            Some(file) => file_response("index.html", file, &asked),
+        _ => match PAGE.as_ref() {
+            Some(page) => page_response(page, &asked),
             None => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "nine turtles was built without its frontend. Run scripts/check.sh.",
@@ -54,6 +55,66 @@ async fn serve(uri: Uri, asked: HeaderMap) -> Response {
                 .into_response(),
         },
     }
+}
+
+/// The app's page, with this program's version written into its
+/// `nine-turtles-version` tag (decision 0320): the app knows its own version
+/// even when the phone opens its kept copy of the page, and so notices when the
+/// server is newer. Its label (`ETag`) names the version too, so a check never
+/// answers "unchanged" with an older version's page.
+struct Page {
+    body: Vec<u8>,
+    label: String,
+}
+
+/// The empty tag in `web/index.html` (as Vite writes it) that the version goes into.
+const VERSION_TAG: &str = r#"<meta name="nine-turtles-version" content="">"#;
+
+static PAGE: LazyLock<Option<Page>> = LazyLock::new(|| {
+    let file = Frontend::get("index.html")?;
+    let page = String::from_utf8_lossy(&file.data).replacen(
+        VERSION_TAG,
+        &format!(
+            r#"<meta name="nine-turtles-version" content="{}">"#,
+            crate::VERSION
+        ),
+        1,
+    );
+    let hash = content_label(&file.metadata.sha256_hash());
+    Some(Page {
+        body: page.into_bytes(),
+        label: format!("\"{}-{}\"", hash.trim_matches('"'), crate::VERSION),
+    })
+});
+
+fn page_response(page: &Page, asked: &HeaderMap) -> Response {
+    let mut response = if is_unchanged(asked, &page.label) {
+        StatusCode::NOT_MODIFIED.into_response()
+    } else {
+        page.body.clone().into_response()
+    };
+    let headers = response.headers_mut();
+    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/html"));
+    headers.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static(CHECK_EACH_TIME),
+    );
+    if let Ok(value) = HeaderValue::from_str(&page.label) {
+        headers.insert(header::ETAG, value);
+    }
+    response
+}
+
+/// Whether the browser's copy (`If-None-Match`) is the one labelled `label`.
+fn is_unchanged(asked: &HeaderMap, label: &str) -> bool {
+    asked
+        .get_all(header::IF_NONE_MATCH)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .flat_map(|value| value.split(','))
+        // A proxy that compresses the file (Cloudflare) may mark the label weak (`W/`).
+        .map(|tag| tag.trim().trim_start_matches("W/"))
+        .any(|tag| tag == label || tag == "*")
 }
 
 fn file_response(path: &str, file: rust_embed::EmbeddedFile, asked: &HeaderMap) -> Response {
@@ -64,16 +125,7 @@ fn file_response(path: &str, file: rust_embed::EmbeddedFile, asked: &HeaderMap) 
         CHECK_EACH_TIME
     };
     let label = content_label(&file.metadata.sha256_hash());
-    let unchanged = asked
-        .get_all(header::IF_NONE_MATCH)
-        .iter()
-        .filter_map(|value| value.to_str().ok())
-        .flat_map(|value| value.split(','))
-        // A proxy that compresses the file (Cloudflare) may mark the label weak (`W/`).
-        .map(|tag| tag.trim().trim_start_matches("W/"))
-        .any(|tag| tag == label || tag == "*");
-
-    let mut response = if unchanged {
+    let mut response = if is_unchanged(asked, &label) {
         StatusCode::NOT_MODIFIED.into_response()
     } else {
         file.data.into_response()

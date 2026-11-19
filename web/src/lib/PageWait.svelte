@@ -6,11 +6,14 @@
   a connection, calmly, when it will open, and it opens by itself once the
   device is back online; otherwise that nine turtles can't be reached, with
   Try again. Both load the page again, because a browser remembers a file it
-  couldn't fetch and won't ask for it twice. The page takes this line's
+  couldn't fetch and won't ask for it twice; Try again with the server's newest
+  page in place of the phone's kept one, which may be an older version whose
+  files are gone (decision 0320). The page takes this line's
   place, and the keyboard goes to its heading (`focusArriving`).
 -->
 <script lang="ts">
   import { away } from "./connection.svelte";
+  import { reloadNewest } from "./updates.svelte";
   import LateLine from "./LateLine.svelte";
   import LoadFailed from "./LoadFailed.svelte";
 
@@ -21,10 +24,13 @@
     class: classes = "min-w-0 flex-1 px-5 pt-5 md:px-10",
   }: { name: string; opens?: string; failed: boolean; class?: string } = $props();
 
+  // Back online: at once, as the same version. Try again: the newest, in case this one's files are gone (decision 0320).
   const again = () => location.reload();
 
+  // On `failed` alone, not on being offline too: the "online" event makes the device online before
+  // this listener's turn, and an effect reading that would take the listener away before it runs.
   $effect(() => {
-    if (!failed || !away().offline) return;
+    if (!failed) return;
     addEventListener("online", again);
     return () => removeEventListener("online", again);
   });
@@ -34,7 +40,7 @@
   {#if failed && away().offline}
     <p role="status">{away().why} {name} {opens} {away().back}.</p>
   {:else if failed}
-    <LoadFailed words={away().why} heading="page-wait" onRetry={again} />
+    <LoadFailed words={away().why} heading="page-wait" onRetry={reloadNewest} />
   {:else}
     <LateLine words={`Loading ${name}…`} />
   {/if}

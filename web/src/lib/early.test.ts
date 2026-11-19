@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { askEarly, forgetEarly, takeEarly } from "./early";
+import { askEarly, forgetEarly, forgetLists, LISTS_KEY, noteList, SLOW_MS, takeEarly } from "./early";
+import { away, connection } from "./connection.svelte";
 
 afterEach(() => {
   forgetEarly();
@@ -61,5 +62,73 @@ describe("opening asks for the first screen all at once (decision 0314)", () => 
     askEarly("/");
     vi.advanceTimersByTime(10_000);
     expect(takeEarly("/api/feeds")).toBeUndefined();
+  });
+});
+
+describe("a slow connection doesn't hold opening up (decision 0320)", () => {
+  it("takes what the page already asked for, instead of asking again", async () => {
+    const asked = answering();
+    const handed = Promise.resolve(new Response('{"from":"page"}'));
+    vi.stubGlobal("nineTurtlesEarly", { "/api/session": handed });
+    askEarly("/settings");
+    expect(asked).not.toContain("/api/session");
+    expect(await (await takeEarly("/api/session"))?.json()).toEqual({ from: "page" });
+  });
+
+  it("notes the list each address opens, for the page to ask for next time", () => {
+    answering();
+    const kept: Record<string, string> = { "nine-turtles.sort": "newest" };
+    vi.stubGlobal("localStorage", { getItem: (key: string) => kept[key] ?? null, setItem: (key: string, value: string) => (kept[key] = value), removeItem: (key: string) => delete kept[key] });
+    askEarly("/folders/7");
+    expect(JSON.parse(kept[LISTS_KEY] ?? "{}")).toEqual({ "/folders/7": "/api/articles?folder=7&order=newest" });
+    noteList("/settings", undefined);
+    expect(Object.keys(JSON.parse(kept[LISTS_KEY] ?? "{}"))).toEqual(["/folders/7"]);
+    // They name the reader's people and folders: gone on signing out, or with another reader.
+    forgetLists();
+    expect(kept[LISTS_KEY]).toBeUndefined();
+  });
+
+  it("on a device with kept copies, gives up waiting after a few seconds, and still hears the answer", async () => {
+    vi.useFakeTimers();
+    let answer: (response: Response) => void = () => {};
+    vi.stubGlobal("fetch", () => new Promise<Response>((resolve) => (answer = resolve)));
+    vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "nine-turtles.reader" ? "3" : null) });
+    askEarly("/settings");
+    const taken = takeEarly("/api/feeds");
+    const failed = expect(taken).rejects.toMatchObject({ name: "TimeoutError" });
+    await vi.advanceTimersByTimeAsync(SLOW_MS);
+    await failed;
+    expect(connection.offline).toBe(true);
+    expect(away().why).toBe("The connection is slow.");
+    answer(new Response("{}"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(connection.offline).toBe(false);
+    expect(connection.slow).toBe(false);
+  });
+
+  it("says nine turtles can't be reached, not that the connection is slow, when the late answer fails instead", async () => {
+    vi.useFakeTimers();
+    let fail: (problem: unknown) => void = () => {};
+    vi.stubGlobal("fetch", () => new Promise<Response>((_, reject) => (fail = reject)));
+    vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "nine-turtles.reader" ? "3" : null) });
+    askEarly("/settings");
+    const failed = expect(takeEarly("/api/feeds")).rejects.toMatchObject({ name: "TimeoutError" });
+    await vi.advanceTimersByTimeAsync(SLOW_MS);
+    await failed;
+    expect(away().why).toBe("The connection is slow.");
+    fail(new TypeError("Failed to fetch"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(connection.offline).toBe(true);
+    expect(away().why).toBe("nine turtles can't be reached right now.");
+  });
+
+  it("waits as long as it takes on a device that has never been signed in (nothing kept to show)", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", () => new Promise<Response>(() => {}));
+    askEarly("/settings");
+    let settled = false;
+    takeEarly("/api/feeds")?.then(() => (settled = true), () => (settled = true));
+    await vi.advanceTimersByTimeAsync(SLOW_MS * 2);
+    expect(settled).toBe(false);
   });
 });

@@ -8,7 +8,7 @@
 // It also keeps how far this device's clock is from the server's, so a mark
 // made offline says when it was made in the server's time (decision 0101).
 
-export const connection = $state({ offline: false });
+export const connection = $state({ offline: false, slow: false });
 
 const backAgain = new Set<() => void>();
 
@@ -24,11 +24,22 @@ export function reached(response: Response) {
   if (Number.isFinite(date)) clockOffset = offsetFrom(date, Date.now(), clockOffset);
   if (!connection.offline) return;
   connection.offline = false;
+  connection.slow = false;
   for (const then of [...backAgain]) then();
 }
 
-/** A request got no answer at all. */
-export function lost() {
+/** A request got no answer at all: too slow to wait for, if it was given up on (decision 0320), else none came. */
+export function lost(problem?: unknown) {
+  connection.offline = true;
+  connection.slow = problem instanceof DOMException && problem.name === "TimeoutError";
+}
+
+/**
+ * Opening found the connection too slow to wait for (decision 0320): the copies
+ * kept on this device show, as without a connection, until an answer arrives.
+ */
+export function tooSlow() {
+  connection.slow = true;
   connection.offline = true;
 }
 
@@ -40,15 +51,17 @@ if (typeof globalThis.addEventListener === "function") {
 
 /**
  * How a line said while nine turtles can't be reached begins and ends (decision 0312):
- * "You're offline." only when the device itself says it has no connection. Otherwise
+ * "You're offline." only when the device itself says it has no connection; "The connection
+ * is slow." when opening didn't wait for an answer that was on its way (decision 0320). Otherwise
  * it's nine turtles that doesn't answer at all (an outage, or a fault between), and
  * blaming the reader's connection wouldn't be true.
  */
 export function away(): { offline: boolean; why: string; back: string } {
   void deviceChanged.count;
-  return globalThis.navigator?.onLine === false
-    ? { offline: true, why: "You're offline.", back: "once you're back online" }
-    : { offline: false, why: "nine turtles can't be reached right now.", back: "once it's back" };
+  if (globalThis.navigator?.onLine === false) return { offline: true, why: "You're offline.", back: "once you're back online" };
+  // Too slow to wait for, not gone: saying so is true, and says it will pass (decision 0320).
+  if (connection.slow) return { offline: false, why: "The connection is slow.", back: "once it's faster" };
+  return { offline: false, why: "nine turtles can't be reached right now.", back: "once it's back" };
 }
 
 /** Whether a failed request failed for want of a connection, rather than being refused. */

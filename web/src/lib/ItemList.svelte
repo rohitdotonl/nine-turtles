@@ -70,8 +70,8 @@
   import ListArriving from "./ListArriving.svelte";
   import type { SortedLine } from "./sorting";
   import { askingEvery, bringsIn, showsArrivals } from "./asking";
-  import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
-  import { connection } from "./connection.svelte";
+  import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, reloadNewest, updates } from "./updates.svelte";
+  import { connection, whenBack } from "./connection.svelte";
   import { END_OF_KEPT, nothingKeptHere, refreshNeedsConnection, showingKept } from "./offline";
 
   let {
@@ -181,7 +181,7 @@
   let reloadPut = $state(false);
   const reload = $derived(!reloadPut && (updates.stranded || updates.otherReader));
   // While the list is off screen, a newer nine turtles is said where the reader is first: nothing else works until a reload.
-  $effect(() => void (note = reload ? { words: updates.otherReader ? OTHER_READER_MESSAGE : STRANDED_MESSAGE, retry: () => location.reload(), retryWord: "Reload", close: () => (reloadPut = true) } : saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
+  $effect(() => void (note = reload ? { words: updates.otherReader ? OTHER_READER_MESSAGE : STRANDED_MESSAGE, retry: reloadNewest, retryWord: "Reload", close: () => (reloadPut = true) } : saying && (selected?.id === noteFor || retryLast) ? { words: line, undo: passing ? undefined : undoLast && (() => undo()), retry: retryLast && retryNow, retryWord, close: () => (closed = true) } : undefined));
   /** The last Mark all as read, made here or carried from the list before (decision 0238). */
   let marking: MarkedAll | undefined = lastMarkAll();
   if (marking) {
@@ -655,6 +655,9 @@
     if (giveBack && index !== undefined) rows[index]?.focus();
   }
 
+  // From the kept copies, or couldn't load for want of a connection: once nine turtles answers again (back online, or a slow answer came), from the server by itself (decisions 0312, 0320).
+  $effect(() => (fromDevice || (problem && connection.offline) ? whenBack(() => void (loaded ? refresh() : load(null))) : undefined));
+
   load(null);
 </script>
 
@@ -765,7 +768,7 @@
     <p class={["flex items-center", !(updates.stranded || updates.otherReader || newWaiting) && "sr-only"]}>
       <span role="status">{updates.otherReader ? OTHER_READER_MESSAGE : updates.stranded ? STRANDED_MESSAGE : newWaiting ? newItemsMessage(touch) : ""}</span>
       {#if updates.stranded || updates.otherReader}
-        <TextButton onclick={() => location.reload()} class="ml-2">Reload</TextButton>
+        <TextButton onclick={reloadNewest} class="ml-2">Reload</TextButton>
       {:else if newWaiting && touch}
         <!-- No r key on a touch screen, and Refresh sits in the More menu: the note offers to show them. -->
         <TextButton onclick={() => refresh()} aria-label="Show new articles" class="ml-2">Show</TextButton>

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { readCarried, switchesOnMove, verdict } from "./updates.svelte";
+import { keepNewestPage, pageVersion, readCarried, switchesOnMove, verdict } from "./updates.svelte";
 
 describe("telling a tab that nine turtles was updated", () => {
   it("says nothing while the versions match, or before the tab knows its own", () => {
@@ -92,3 +92,36 @@ describe("a tab left open when another reader signs in on the browser", () => {
     expect(updates.otherReader).toBe(true);
   });
 });
+
+describe("a page opened from the phone's kept copy knows its own version (decision 0320)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("reads the version the server wrote into the page, and none where it wrote none", () => {
+    const meta = (content: string | null) => ({ querySelector: () => (content === null ? null : { getAttribute: () => content }) });
+    vi.stubGlobal("document", meta("2026-11-19-abc"));
+    expect(pageVersion()).toBe("2026-11-19-abc");
+    vi.stubGlobal("document", meta(""));
+    expect(pageVersion()).toBeUndefined();
+    vi.stubGlobal("document", meta(null));
+    expect(pageVersion()).toBeUndefined();
+  });
+
+  it("puts the server's page in place of the kept one before a reload, and keeps the old one without an answer", async () => {
+    const put = vi.fn();
+    vi.stubGlobal("caches", { open: async () => ({ put }) });
+    vi.stubGlobal("fetch", async () => new Response('<meta name="nine-turtles-version" content="new">'));
+    await keepNewestPage();
+    expect(put).toHaveBeenCalledWith("/", expect.any(Response));
+
+    put.mockClear();
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("offline");
+    });
+    await keepNewestPage();
+    // Not an error page, either: only the app's own page is ever kept.
+    vi.stubGlobal("fetch", async () => new Response("<p>Bad gateway</p>", { status: 200 }));
+    await keepNewestPage();
+    expect(put).not.toHaveBeenCalled();
+  });
+});
+

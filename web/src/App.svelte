@@ -30,12 +30,12 @@
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/articles";
-  import { away, noConnection } from "./lib/connection.svelte";
+  import { away, noConnection, whenBack } from "./lib/connection.svelte";
   import LoadFailed from "./lib/LoadFailed.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
-  import { forgetEarly } from "./lib/early";
+  import { forgetEarly, forgetLists } from "./lib/early";
   import { forgetRecent } from "./lib/recent";
 
   let session: Session | undefined = $state();
@@ -77,6 +77,7 @@
     forgetListening();
     forgetLoaded();
     forgetRecent();
+    forgetLists();
     await forget();
   }
 
@@ -109,6 +110,12 @@
         session = { signedIn: true, reader: 0, ...kept };
         // Opened without a connection: the tab is the reader's who was last signed in here.
         noteTabReader(deviceReader() ?? 0);
+        // Once nine turtles answers (back online, or a slow answer came, decision 0320), it's asked again who is
+        // signed in, so a sign-in that ended meanwhile, or another reader, never keeps the last one's copies.
+        const stop = whenBack(() => {
+          stop();
+          void check();
+        });
       } else unreachable = true;
     }
   }

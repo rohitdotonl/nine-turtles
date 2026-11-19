@@ -54,7 +54,7 @@
   import { HELP_URL, SETTINGS_PAGES, type SettingsPage } from "./router";
   import type { Preferences } from "./preferences";
   import { signOut } from "./session";
-  import { updates } from "./updates.svelte";
+  import { reloadNewest, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
   import { settingsNeedConnection, sendWaiting } from "./offline";
   import { newslettersStatus } from "./newsletters";
@@ -392,10 +392,10 @@
         <h3 id="account-heading" class="settings-head label">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
+            <!-- Never swapped while you read: the new version starts when you reload or go to another place (decision 0320). -->
             <div class="inset-row setting">
               <span class="setting-label">{@render icon("refresh")}<span class="setting-name">A new version is ready.</span></span>
-              <button type="button" onclick={() => location.reload()} class="btn btn-small">Reload</button>
+              <button type="button" onclick={reloadNewest} class="btn btn-small">Reload</button>
             </div>
           {/if}
           {#if planNow}

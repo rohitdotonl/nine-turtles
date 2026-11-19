@@ -28,8 +28,8 @@ export type Reading = {
 
 /**
  * The settings shared across the reader's devices: the sort order and whether
- * Unread is on. Newest first if the server can't say, and Unread as this
- * device last saw it (on, if it never has).
+ * Unread is on. If the server can't say, the order and Unread as this device
+ * last saw them (newest first, and on, if it never has).
  */
 export async function loadSettings(): Promise<Reading> {
   try {
@@ -45,7 +45,8 @@ export async function loadSettings(): Promise<Reading> {
     setDeviceText("nine-turtles.keys", null);
     return { sort, unread, replies };
   } catch {
-    return { sort: "newest", unread: lastUnread(), replies: true };
+    // Opened from the kept copies (no connection, or too slow to wait for): in the order they were last read in.
+    return { sort: lastSort() ?? "newest", unread: lastUnread(), replies: true };
   }
 }
 

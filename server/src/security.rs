@@ -20,12 +20,14 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// a YouTube video loads only when the reader presses Play (decision 0072).
 /// Audio is the other exception: a podcast's episode plays straight from the
 /// publisher's own address, in the browser's own audio element (decision
-/// 0113). Audio can't run code either. One script is written into the page
-/// itself, so the reader's chosen page shows from the first moment (decision
-/// 0260): only that exact script runs, named by its fingerprint (`sha256-…`);
-/// web/src/lib/firstPage.test.ts checks the two still match.
+/// 0113). Audio can't run code either. Two scripts are written into the page
+/// itself: one so the reader's chosen page shows from the first moment
+/// (decision 0260), one that asks for the first screen's answers while the
+/// app's code is on its way (decision 0320). Only those exact scripts run,
+/// named by their fingerprints (`sha256-…`); web/src/lib/firstPage.test.ts
+/// checks they still match.
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; \
-    script-src 'self' 'sha256-m2UlE4HOo+zhdYq1qyxEZ7ZplNJbCgNw3y/4Z350TMk='; \
+    script-src 'self' 'sha256-m2UlE4HOo+zhdYq1qyxEZ7ZplNJbCgNw3y/4Z350TMk=' 'sha256-P5PoHRBDjNxo4cOUujM1H5lGFnSuFc4+U61M5WH3j5o='; \
     style-src 'self'; img-src 'self' data: https: http:; media-src 'self' https: http:; \
     font-src 'self'; connect-src 'self'; \
     frame-src https://www.youtube-nocookie.com; \

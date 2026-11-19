@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { endOfList, markedAllMessage, newItemsMessage, noFurther, notSavedSignedOut, resultCount, withMarks } from "./lists";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { askAhead, listArticles, endOfList, markedAllMessage, newItemsMessage, noFurther, notSavedSignedOut, resultCount, withMarks } from "./lists";
 import type { Article } from "./shapes";
 import { Refused, signedOut } from "./saving";
 
@@ -85,3 +85,36 @@ describe("a list fetched while marks were on their way (decision 0315)", () => {
     expect(withMarks(rows, [], { view: "unread" })).toBe(rows);
   });
 });
+
+describe("a list asked for on the press that opens it (decision 0320)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("asks once as the finger goes down, and the list takes that answer when it opens", async () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (path: string) => {
+      asked.push(path);
+      return new Response(JSON.stringify({ articles: [], next: null, latest: 7 }));
+    });
+    vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "nine-turtles.sort" ? "newest" : null) });
+    askAhead("/folders/7");
+    askAhead("/folders/7");
+    await vi.waitFor(() => expect(asked).toEqual(["/api/articles?folder=7&order=newest"]));
+    const page = await listArticles({ folder: 7 }, "newest", null, true);
+    expect(page.latest).toBe(7);
+    expect(asked).toHaveLength(1);
+  });
+
+  it("asks nothing for a page that isn't a list, or before the device knows the reader's order", () => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (path: string) => {
+      asked.push(path);
+      return new Response("{}");
+    });
+    vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "nine-turtles.sort" ? "newest" : null) });
+    askAhead("/settings");
+    vi.stubGlobal("localStorage", { getItem: () => null });
+    askAhead("/folders/8");
+    expect(asked).toEqual([]);
+  });
+});
+
