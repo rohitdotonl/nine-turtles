@@ -2,7 +2,7 @@
   Settings (SPEC section 18), laid out as Apple Books' settings are: one
   centred column of grouped inset lists, each group with the one label
   above it (decisions 0120, 0244). It fills the list and reading areas while
-  the sidebar stays, so the reader never loses their place. its X, "Close"
+  the sidebar stays, so the reader never loses their place. Its X, "Close"
   (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
@@ -561,7 +561,7 @@
     height: 1.75rem;
     border-radius: var(--radius-mark);
     /* The same edge as the Aa panel's page swatches (decision 0315), so White shows on white. */
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 65%, transparent);
+    box-shadow: inset 0 0 0 1px var(--field-edge);
     /* 12px, under the type scale on purpose: the "A" is part of the drawing, not text to read. */
     font: 600 0.75rem/1 var(--font-serif);
   }

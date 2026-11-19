@@ -27,7 +27,7 @@
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
   At an article's end the button is split (decision 0286): beside Write back, an arrow opens the
-  other ways back, each with its icon: Your email app (with its key), Gmail, Outlook.com, Copy their
+  other ways back, each with its icon: Your email app (with its key), Gmail, Outlook.com, Copy
   address, and, after a rule, Comment on their site (the comments the feed names, else the article
   itself). Choosing one does it at once, and the main button then does that for this person
   ("Copy address", "Comment"), kept for them by the server; where email opens stays this device's

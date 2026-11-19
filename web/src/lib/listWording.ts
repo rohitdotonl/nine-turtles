@@ -27,11 +27,8 @@ export function missingFrom(place: Route, found: Found): Missing | undefined {
   return undefined;
 }
 
-/** The list's heading for a place the reader doesn't have. */
-export const NOT_FOUND: Record<Missing, string> = {
-  feed: "Not found",
-  folder: "Not found",
-};
+/** The list's heading for a place the reader doesn't have, a folder or a person alike; the line under it says which (decision 0315). */
+export const NOT_FOUND = "Not found";
 
 /** The line under that heading, saying why. */
 const NOT_HERE: Record<Missing, string> = {

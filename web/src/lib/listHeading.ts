@@ -36,7 +36,7 @@ export type HeadingScene = {
 
 /** The list's heading. A missing place says so first; results show their own heading. */
 export function headingFor(scene: HeadingScene): string {
-  if (scene.missing) return NOT_FOUND[scene.missing];
+  if (scene.missing) return NOT_FOUND;
   if (scene.results) return resultsTitle(scene.results, scene.names);
   return nameFor(scene.under, scene.placeName);
 }
