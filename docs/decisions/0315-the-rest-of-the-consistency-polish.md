@@ -1,0 +1,17 @@
+# 0315: The rest of the consistency check's polish
+
+**In one line:** The consistency check's last polish items, after 0311: a row's menu starts with its links so Copy link, marking and Info about come in the same order as in an article's More; every switch row is one piece (`SettingSwitch.svelte`); every row's keyboard ring is the softened tone; link underlines sit 4px under the words and 24px titles share one line height; one word each for Write back's ways, "right now" and "Not found"; a shared link to the app shows the website's share picture.
+
+*19 November 2026. The owner liked every suggestion in the consistency check report and asked for each to be built. 0311 shipped the fix-first and worth-fixing items and most of the polish; this note covers what was left.*
+
+**What changes.**
+1. **Menus.** A row's menu runs Open in a new tab and Copy link (on a phone, Share), then Save and Mark as read or unread, then Write back and Info about. An article's More keeps Copy link first (0299), so what the two menus share comes in one order.
+2. **Settings rows.** Every switch row (Unread, Record replies, the weekly email, and a person's Write back, Pause and YouTube switches) is `SettingSwitch.svelte`; the switch's look moves to `switch.css`. Every row that leads on ends in the same `row-glyph` (what it's set to, 8px, then ›). The page swatches in Settings have the Aa panel's edge, the softened text color, so White shows on white.
+3. **The keyboard on rows.** A row that is a button or link, and a tick-box row, ring in the softened text color (`--place-focus`), as the list's rows and a field already did.
+4. **Type.** Interface link underlines sit 4px under the words (an article's own links keep 0.2em, which grows with the text). Titles at the heading size (24px) share one line height, 1.3, so a list's title and a page's title sit the same and a cut title's descenders aren't clipped.
+5. **Words.** Write back's ways say Copy address and Your email app everywhere (with "Use your email app" as the link that switches back). "Couldn't be read right now", as BRAND.md's "can't be reached right now". A place you don't have is "Not found", folder or person alike, with the line under it saying which. Every page's X is "Close". Settings › Your data says "Import a list of feeds (OPML)…", as dropping one does. A "too long" line names the thing and its limit ("That password is too long. Keep it to 1,024 characters.").
+6. **Small things.** Write back's arrow is the 20px size an icon alone in a button has. Follow's sheet spaces its parts 20px apart, as Edit folder and Move do. A shared link to the app shows the website's share picture and words (`web/index.html`). DESIGN.md's type table, YouTube box and opened picture match what ships.
+
+**Considered and not taken.** An installed app's first screen in the reader's own page (Paper or Night): the phone draws it from the one color in the app's install file, shared by every reader, so following each reader's choice needs a separate install file per page, served by the server, and some phones ignore it. Left white for now. Copy link moved down in an article's More instead of a row's links moving up: the owner chose Copy link first there (0299).
+
+**Revisit if** readers press Open in a new tab by mistake from a row's menu, or ask for the installed app to open dark.

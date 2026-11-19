@@ -41,7 +41,7 @@ describe("insteadOfList", () => {
     for (const place of [{ kind: "about", id: 1 }, { kind: "about", id: 1, settings: true }] as const)
       expect(insteadOfList(place, found({ feed: false }))).toBe("You don't follow anyone at this address. It may have been an old one.");
     expect(insteadOfList({ kind: "folder", id: 1 }, found({ folder: false }))).toBe("There's no folder here. It may have been deleted or renamed.");
-    expect(NOT_FOUND.folder).toBe("Folder not found");
+    expect(NOT_FOUND.folder).toBe("Not found");
   });
 });
 

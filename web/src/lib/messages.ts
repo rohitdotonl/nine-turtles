@@ -27,6 +27,9 @@ export const NOTHING_TO_UNDO = "Nothing to undo.";
 /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
 export const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 
+/** A password longer than the server takes (server/src/password.rs, MAXIMUM_LENGTH), said as every "too long" is: the thing, then its limit. */
+export const passwordTooLong = (which = "password") => `That ${which} is too long. Keep it to 1,024 characters.`;
+
 /** An email address that can't be one. */
 export const NOT_AN_EMAIL = "That doesn't look like an email address.";
 

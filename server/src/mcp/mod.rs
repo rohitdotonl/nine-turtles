@@ -279,7 +279,7 @@ async fn call(state: &AppState, person: i64, name: &str, given: Value) -> Answer
         "resubscribe_feed" => changing::resubscribe(state, person, arguments(given)?).await,
         "export_feed_list" => match subscriptions::opml_for(&state.db, person).await {
             Ok(Some(file)) => Ok(json!({ "format": "OPML", "file": file })),
-            Ok(None) => Err("nine turtles couldn't write the list just now.".to_owned()),
+            Ok(None) => Err("nine turtles couldn't write the list right now.".to_owned()),
             Err(error) => Err(database(&error)),
         },
         _ => Err(format!("There's no tool named {name:?}.")),

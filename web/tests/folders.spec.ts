@@ -355,7 +355,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByRole("heading", { level: 2, name: "Your data" })).toBeVisible();
   // The button opens the device's file chooser; the file is then handed
   // over the way a chosen file is.
-  await opensFilePicker(page, () => page.getByRole("button", { name: "Import OPML" }).click());
+  await opensFilePicker(page, () => page.getByRole("button", { name: "Import a list of feeds (OPML)" }).click());
   await page.locator('input[type="file"][accept*="opml"]').evaluate((input: HTMLInputElement, text) => {
     const chosen = new DataTransfer();
     chosen.items.add(new File([text], "made-up.opml", { type: "text/x-opml" }));
@@ -414,7 +414,7 @@ test("import an OPML file from Settings: a plain summary, folders in the sidebar
   await expect(page.getByText(title)).toBeVisible();
 });
 
-test("with only the keyboard: their settings, a new folder, opening it, Edit folder, Unsubscribe, Import OPML, importing stars and the starred export", async ({ page }) => {
+test("with only the keyboard: their settings, a new folder, opening it, Edit folder, Unsubscribe, Import a list of feeds, importing stars and the starred export", async ({ page }) => {
   const blog = unique("keys");
   const folder = unique("Keyboard");
   await openBlogs(page, [blog]);
@@ -476,10 +476,10 @@ test("with only the keyboard: their settings, a new folder, opening it, Edit fol
   await page.keyboard.press("u");
   await expect(sidebar(page).getByRole("link", { name: new RegExp(`^Blog ${blog}`) })).toBeVisible();
 
-  // Import OPML opens the device's file chooser from the keyboard too.
+  // Import a list of feeds opens the device's file chooser from the keyboard too.
   await page.goto(new URL("/settings/data", FEEDS_APP).href);
   await appReady(page);
-  await tabTo(page, page.getByRole("button", { name: "Import OPML" }));
+  await tabTo(page, page.getByRole("button", { name: "Import a list of feeds (OPML)" }));
   await opensFilePicker(page, () => page.keyboard.press("Enter"));
 
   // So does Import starred articles.

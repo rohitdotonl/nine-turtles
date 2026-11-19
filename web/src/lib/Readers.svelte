@@ -29,7 +29,7 @@
   <h3 id="readers-heading" class="label inset-head">Readers</h3>
   <div class="inset-group">
     <a href="/settings/readers/all" onclick={onReaders} data-settings-row="all-readers" class="inset-row inset-action"
-      >All readers<span class="row-glyph flex items-center gap-1"
+      >All readers<span class="row-glyph"
         >{#if people.length > 0}<span class="text-meta">{people.length}</span>{/if}<Icon name="chevron-right" /></span
       ></a
     >

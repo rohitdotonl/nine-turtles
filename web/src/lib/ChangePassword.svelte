@@ -117,7 +117,7 @@
 {:else}
   <section aria-labelledby="list-heading" class="page-sheet">
     <div class="page-sheet-card">
-      <PageHead title="Change password" bind:heading onClose={onCancel} closeLabel="Close" />
+      <PageHead title="Change password" bind:heading onClose={onCancel} />
       <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
         <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
           {@render form()}

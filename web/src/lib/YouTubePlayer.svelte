@@ -359,7 +359,7 @@
   .chapter:hover > :last-child {
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
   }
   @media (forced-colors: active) {
     .video-play {

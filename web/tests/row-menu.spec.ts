@@ -35,7 +35,7 @@ test.describe("on a wide window", () => {
     const first = rows(page).nth(0);
     await first.click({ button: "right" });
     const menu = rowMenu(page);
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Save\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`), /Open in a new tab/, /Copy link/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Open in a new tab/, /Copy link/, /^\s*Save\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`)]);
     // No keys printed: the same actions have theirs elsewhere. Each row has its icon before its words (decision 0311).
     await expect(menu.locator("kbd")).toHaveCount(0);
     for (const item of await menu.getByRole("menuitem").all()) await expect(item.locator("svg")).toHaveCount(1);
@@ -63,7 +63,9 @@ test.describe("on a wide window", () => {
     await expect(rowMenu(page)).toHaveCount(0);
     await second.focus();
     await page.keyboard.press("Shift+F10");
-    await page.keyboard.press("ArrowDown");
+    // Past its links (Open in a new tab, Copy link) and Save to Mark as read.
+    for (const _ of [1, 2, 3]) await page.keyboard.press("ArrowDown");
+    await expect(rowMenu(page).getByRole("menuitem", { name: "Mark as read" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(second.locator(".unread-dot")).toHaveCount(0);
     await expect(page.getByRole("status").filter({ hasText: "Marked as read." })).toBeVisible();

@@ -615,7 +615,7 @@ async fn swap_code(
     };
     Ok(issue(db, connection)
         .await?
-        .ok_or("nine turtles couldn't make tickets just now. Try again."))
+        .ok_or("nine turtles couldn't make tickets right now. Try again."))
 }
 
 async fn swap_refresh(
@@ -645,7 +645,7 @@ async fn swap_refresh(
     }
     Ok(issue(db, connection)
         .await?
-        .ok_or("nine turtles couldn't make tickets just now. Try again."))
+        .ok_or("nine turtles couldn't make tickets right now. Try again."))
 }
 
 /// Proof that a request comes from a connected assistant, and for whom:

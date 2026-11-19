@@ -32,7 +32,7 @@
 
 <a {href} {onclick} data-settings-row={key} aria-label={named} aria-describedby="{id}-opens" class="inset-row inset-action setting">
   <span class="setting-label"><span class="setting-icon" aria-hidden="true"><Icon name={icon} /></span><span class="setting-words"><span class="setting-name">{label}</span></span></span>
-  <span class="row-glyph flex items-center gap-2"
+  <span class="row-glyph"
     >{#if value}<span class="setting-value">{value}</span>{/if}<Icon name="chevron-right" /></span
   >
   <!-- Inside the row, so rows stay side by side for the hairline between them; hidden, so it's never part of the row's name. -->

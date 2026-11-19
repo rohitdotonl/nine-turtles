@@ -289,7 +289,7 @@
     <!-- It goes to Settings › Hiding, with the field set to them: a row that leads on, so it ends in ›. -->
     <button type="button" class="inset-row inset-action setting w-full text-left" onclick={onHide}>
       <span class="setting-name">Hide articles about…</span>
-      <span aria-hidden="true" class="ml-auto text-muted"><Icon name="chevron-right" /></span>
+      <span aria-hidden="true" class="row-glyph"><Icon name="chevron-right" /></span>
     </button>
   </div>
   <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !message && "sr-only"]}>

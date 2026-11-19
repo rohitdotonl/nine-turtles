@@ -257,7 +257,7 @@ export function refusalMessage(refusal: HealthRefusal, doing: "find" | "move"): 
     case "not-found":
       return doing === "find" ? "The site's home page wasn't found either." : "Nothing was found at that address.";
     case "unreachable":
-      return "The site couldn't be read just now. Try again later.";
+      return "The site couldn't be read right now. Try again later.";
     case "blocked":
       return "The site's guard against bots turned nine turtles away, so it couldn't look.";
     case "not-allowed":

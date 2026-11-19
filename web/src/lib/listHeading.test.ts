@@ -33,8 +33,8 @@ describe("headingFor", () => {
   });
 
   it("says a place the reader doesn't have isn't found, even while results show", () => {
-    expect(headingFor(scene({ under: { kind: "folder", id: 9 }, missing: "folder" }))).toBe("Folder not found");
-    expect(headingFor(scene({ under: { kind: "folder", id: 9 }, missing: "folder", results: { kind: "all" } }))).toBe("Folder not found");
+    expect(headingFor(scene({ under: { kind: "folder", id: 9 }, missing: "folder" }))).toBe("Not found");
+    expect(headingFor(scene({ under: { kind: "folder", id: 9 }, missing: "folder", results: { kind: "all" } }))).toBe("Not found");
   });
 
   it("names where a search's results come from", () => {

@@ -1,6 +1,6 @@
 <!--
   OPML import (SPEC section 16), as rows of Settings › Your data (exporting
-  is in Download everything, decision 0251). "Import OPML…" (ending in ›) opens the device's file chooser, reads the chosen file
+  is in Download everything, decision 0251). "Import a list of feeds (OPML)…" (ending in ›) opens the device's file chooser, reads the chosen file
   and says plainly what it did (in `lines`, which Settings shows under the
   group); the feeds' articles then arrive in the background over the next few
   minutes.
@@ -81,7 +81,7 @@
   <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="text-link">{link}</button>
 {:else}
   <button type="button" aria-disabled={busy} onclick={() => !busy && picker?.click()} class="inset-row inset-action"
-    >Import OPML…<span class="row-glyph"><Icon name="chevron-right" /></span></button
+    >Import a list of feeds (OPML)…<span class="row-glyph"><Icon name="chevron-right" /></span></button
   >
   <button type="button" aria-disabled={busy} onclick={() => !busy && youtubePicker?.click()} class="inset-row inset-action"
     >Import YouTube subscriptions…<span class="row-glyph"><Icon name="chevron-right" /></span></button

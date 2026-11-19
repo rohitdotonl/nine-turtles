@@ -44,7 +44,7 @@ V1, item 2). Its look gets a refinement round.*
   end Write back is a split button. Beside it, joined
   to it by a hairline, a 44px square with a downward arrow ("Other ways
   to reply to Maya Chen" to screen readers) opens a small menu like More's,
-  each row with its icon: **Email app**, **Gmail** and **Outlook.com** (a
+  each row with its icon: **Your email app**, **Gmail** and **Outlook.com** (a
   paper plane each; on a computer the one this device writes in shows W,
   its key), **Copy maya@example.com** (two
   overlapping pages; only when an address is known), then, after a
@@ -106,9 +106,9 @@ V1, item 2). Its look gets a refinement round.*
   **Didn't open?** (decision 0265). A press that worked leaves that one
   line and nothing more. Pressing Didn't open? shows the other ways on a
   line under it, as plain underlined links: **Write in Gmail**, **Write in
-  Outlook.com** and **Copy their address**; pressing it again puts them
+  Outlook.com** and **Copy address**; pressing it again puts them
   away, the keyboard stays on it, and screen readers hear whether it's open.
-  Copy their address copies it and says "Copied.": on a computer with no
+  Copy address copies it and says "Copied.": on a computer with no
   email app set up, the press otherwise does nothing you can see. Pressing
   one of the ways puts the keyboard back on Write back, as the button pressed goes.
 - **Write in Gmail or Outlook.com** (decision 0259): on a computer whose
@@ -118,7 +118,7 @@ V1, item 2). Its look gets a refinement round.*
   differ): from then on Write back (and Write to) opens a Gmail draft in a
   new tab instead of the email app, and the line says "Opening Gmail in a
   new tab…" and **Wrong place?**, which opens **Write in your email app**, **Write in
-  Outlook.com** and **Copy their address**. Outlook.com works the same way.
+  Outlook.com** and **Copy address**. Outlook.com works the same way.
   While Gmail or Outlook.com is chosen, a line under the address always says
   so, "Opens Gmail in a new tab.", with **Use your email app**, which goes
   back without writing: the choice is never stuck. On a touch screen, whose
@@ -133,7 +133,7 @@ V1, item 2). Its look gets a refinement round.*
   Write back about this) while that line is off the screen, the same words
   are said where the reader is: the floating note at the reading area's
   foot, as the list's note is shown there (section 8), "Opening your email
-  app…" with **Didn't open?** and a ×; pressed, the note says "Didn't open?" with the three ways, and the keyboard goes to the first of them (on a touch screen, "Opening your email app… Nothing opened?" with Copy their address); after a copy,
+  app…" with **Didn't open?** and a ×; pressed, the note says "Didn't open?" with the three ways, and the keyboard goes to the first of them (on a touch screen, "Opening your email app… Nothing opened?" with Copy address); after a copy,
   "Copied." (or, failing, the same words as the line's, in oxblood). It goes as
   the line does, or with its ×. A copy that fails, here or there, says "The
   address couldn't be copied. It's …: select it and copy it yourself.", with
@@ -286,7 +286,7 @@ V1, item 2). Its look gets a refinement round.*
    Open another article and press Write back: Gmail again, straight away.
    Press **Write in your email app** under it to go back.
 11. Open an article of someone whose address is known and press the
-   arrow beside Write back: Email app (ticked), Gmail, Outlook.com, Copy
+   arrow beside Write back: Your email app (ticked), Gmail, Outlook.com, Copy
    their address, and Comment on their site. Choose Copy: "Copied." under
    it, and the address pastes into a new email. The button now says Copy
    address, on their next article too, and after a reload.

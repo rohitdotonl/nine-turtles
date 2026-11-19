@@ -2,7 +2,7 @@
   Settings (SPEC section 18), laid out as Apple Books' settings are: one
   centred column of grouped inset lists, each group with the one label
   above it (decisions 0120, 0244). It fills the list and reading areas while
-  the sidebar stays, so the reader never loses their place. "Close settings"
+  the sidebar stays, so the reader never loses their place. its X, "Close"
   (on a phone, "‹ Home", decision 0231) or Escape goes back.
 
   Its first page keeps only the everyday settings (decision 0120): Reading
@@ -35,6 +35,7 @@
   import WeeklyEmail from "./WeeklyEmail.svelte";
   import DeleteAccount from "./DeleteAccount.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
+  import SettingSwitch from "./SettingSwitch.svelte";
   import PageRow from "./PageRow.svelte";
   import ImportOpml from "./ImportOpml.svelte";
   import NoteLine from "./NoteLine.svelte";
@@ -295,7 +296,7 @@
     <!-- On a phone Settings is a screen you go into, so it goes back, as every other screen there does (decision 0231). -->
     <PageHead title="Settings" id="settings-heading" bind:heading onBack={onClose} backTo="Home" column="max-w-[35rem]" />
   {:else}
-    <PageHead title="Settings" id="settings-heading" bind:heading {onClose} closeLabel="Close settings" column="max-w-[35rem]" />
+    <PageHead title="Settings" id="settings-heading" bind:heading {onClose} column="max-w-[35rem]" />
   {/if}
   {#key page}
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
@@ -308,53 +309,25 @@
         <h3 id="reading-heading" class="settings-head label">Reading</h3>
         <div class="inset-group">
           <!-- One switch (decision 0172): Unread on is the Unread list, read styling and dots; off, none of them. -->
-          <div class="inset-row setting">
-            <div class="setting-label">
-              {@render icon("page-new")}
-              <div class="setting-words">
-                <p id="unread-name" class="setting-name" aria-hidden="true">Unread</p>
-                <p id="unread-hint" class="setting-hint">
-                  {unread ? "An Unread list and dots on what's new." : "No Unread list. What you've read is still kept."}
-                </p>
-              </div>
-            </div>
-            <label class="switch-target -my-2 -mr-2">
-              <input
-                type="checkbox"
-                role="switch"
-                class="switch"
-                aria-label="Unread"
-                aria-describedby="unread-hint"
-                checked={unread}
-                disabled={!loaded}
-                onchange={(event) => chooseUnread(event.currentTarget.checked)}
-              />
-            </label>
-          </div>
+          <SettingSwitch
+            id="unread"
+            icon="page-new"
+            name="Unread"
+            hint={unread ? "An Unread list and dots on what's new." : "No Unread list. What you've read is still kept."}
+            checked={unread}
+            disabled={!loaded}
+            onchange={chooseUnread}
+          />
           <!-- Replies you started (decision 0307): a line on their page for each article you pressed a way back at; never what you wrote. -->
-          <div class="inset-row setting">
-            <div class="setting-label">
-              {@render icon("send")}
-              <div class="setting-words">
-                <p id="replies-name" class="setting-name" aria-hidden="true">Record replies</p>
-                <p id="replies-hint" class="setting-hint">
-                  {replies ? "Their page lists what you started a reply to." : "Nothing is recorded, and their pages show no list."}
-                </p>
-              </div>
-            </div>
-            <label class="switch-target -my-2 -mr-2">
-              <input
-                type="checkbox"
-                role="switch"
-                class="switch"
-                aria-label="Record replies"
-                aria-describedby="replies-hint"
-                checked={replies}
-                disabled={!loaded}
-                onchange={(event) => chooseReplies(event.currentTarget.checked)}
-              />
-            </label>
-          </div>
+          <SettingSwitch
+            id="replies"
+            icon="send"
+            name="Record replies"
+            hint={replies ? "Their page lists what you started a reply to." : "Nothing is recorded, and their pages show no list."}
+            checked={replies}
+            disabled={!loaded}
+            onchange={chooseReplies}
+          />
         </div>
         <p class="inset-foot">Applies on all your devices.</p>
         <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !unreadMessage && "sr-only"]}>{#if unreadMessage}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{unreadMessage}</p>
@@ -587,7 +560,8 @@
     width: 1.75rem;
     height: 1.75rem;
     border-radius: var(--radius-mark);
-    box-shadow: inset 0 0 0 1px var(--strong);
+    /* The same edge as the Aa panel's page swatches (decision 0315), so White shows on white. */
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 65%, transparent);
     /* 12px, under the type scale on purpose: the "A" is part of the drawing, not text to read. */
     font: 600 0.75rem/1 var(--font-serif);
   }

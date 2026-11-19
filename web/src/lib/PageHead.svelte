@@ -18,7 +18,6 @@
     id = "list-heading",
     heading = $bindable(),
     onClose,
-    closeLabel,
     onBack,
     backTo,
     column = "max-w-2xl",
@@ -28,8 +27,6 @@
     heading?: HTMLHeadingElement;
     /** Leave it out where a Back button already closes the page. */
     onClose?: () => void;
-    /** What the X says to screen readers, e.g. "Close settings". */
-    closeLabel?: string;
     /** A back button above the title, to the page named `backTo` (Escape does the same). */
     onBack?: () => void;
     backTo?: string;
@@ -54,7 +51,7 @@
     <div class={["mx-auto flex min-h-11 w-full items-center justify-between gap-4", column]}>
       <h2 {id} tabindex="-1" bind:this={heading} class="min-w-0 font-display text-heading font-semibold tracking-[-0.01em] wrap-anywhere"><bdi>{title}</bdi></h2>
       {#if onClose}
-        <button type="button" onclick={onClose} aria-label={closeLabel ?? "Close"} title="Close (Esc)" class="btn-quiet btn-icon -mr-3"><Icon name="close" size="alone" /></button>
+        <button type="button" onclick={onClose} aria-label="Close" title="Close (Esc)" class="btn-quiet btn-icon -mr-3"><Icon name="close" size="alone" /></button>
       {/if}
     </div>
   {/if}

@@ -8,7 +8,7 @@
   Why a choice wasn't saved goes to `onProblem`, said under the group.
 -->
 <script lang="ts">
-  import Icon from "./Icon.svelte";
+  import SettingSwitch from "./SettingSwitch.svelte";
   import { explainOften, loadOften, oftenHint, saveOften, type Often } from "./weekly";
   let { onProblem }: { onProblem: (text: string) => void } = $props();
 
@@ -32,24 +32,12 @@
   }
 </script>
 
-<div class="inset-row setting">
-  <div class="setting-label">
-    <span class="setting-icon" aria-hidden="true"><Icon name="envelope" /></span>
-    <div class="setting-words">
-      <p class="setting-name" aria-hidden="true">Weekly email</p>
-      <p id="weekly-hint" class="setting-hint">{oftenHint(often)}</p>
-    </div>
-  </div>
-  <label class="switch-target -my-2 -mr-2">
-    <input
-      type="checkbox"
-      role="switch"
-      class="switch"
-      aria-label="Weekly email"
-      aria-describedby="weekly-hint"
-      checked={often === "weekly"}
-      disabled={often === undefined}
-      onchange={(event) => choose(event.currentTarget.checked ? "weekly" : "off")}
-    />
-  </label>
-</div>
+<SettingSwitch
+  id="weekly"
+  icon="envelope"
+  name="Weekly email"
+  hint={oftenHint(often)}
+  checked={often === "weekly"}
+  disabled={often === undefined}
+  onchange={(on) => choose(on ? "weekly" : "off")}
+/>

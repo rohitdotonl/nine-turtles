@@ -1,5 +1,5 @@
 // The list's heading (SPEC section 6): the place's own name ("Quiet Notes"),
-// "Folder not found" for an address that names a place the reader doesn't
+// "Not found" for an address that names a place the reader doesn't
 // have, or "Results in …" while a search's results show. The screen
 // (`Shell.svelte`) hands over what it has found, so the rules for which words
 // the heading shows are here, in one place, and can be tested without drawing

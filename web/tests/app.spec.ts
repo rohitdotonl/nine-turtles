@@ -666,7 +666,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
   const data = page.getByRole("region", { name: "Your data" });
   const width = Math.round((await data.locator(".inset-group").boundingBox())!.width);
   for (const row of [
-    page.getByRole("button", { name: "Import OPML" }),
+    page.getByRole("button", { name: "Import a list of feeds (OPML)" }),
     page.getByRole("button", { name: "Import YouTube subscriptions" }),
     page.getByRole("button", { name: "Import saved articles" }),
     page.getByRole("link", { name: "Download everything" }),
@@ -679,7 +679,7 @@ test("Settings is one centred column of grouped lists; its rows that act or open
     expect(box.x + box.width - (glyph.x + glyph.width)).toBeLessThan(20);
   }
   // Import opens something, so it ends in "…".
-  await expect(page.getByRole("button", { name: "Import OPML" })).toHaveText("Import OPML…");
+  await expect(page.getByRole("button", { name: "Import a list of feeds (OPML)" })).toHaveText("Import a list of feeds (OPML)…");
   // Google Takeout's YouTube subscriptions come in through the same import (decision 0144); a line that
   // isn't a channel is named, and nothing is fetched from YouTube.
   await expect(page.getByRole("button", { name: "Import YouTube subscriptions" })).toHaveText("Import YouTube subscriptions…");
@@ -741,7 +741,7 @@ test("a tab left open across an update opens the new version at the next place i
   await page.keyboard.press(",");
   await expect(page).toHaveURL(/\/settings$/);
   await expect.poll(samePage).toBe(false);
-  await page.getByRole("button", { name: "Close settings" }).click();
+  await page.getByRole("button", { name: "Close", exact: true }).click();
   await expect(page).toHaveURL(/\/saved$/);
   await expect(sidebar(page)).toBeVisible();
 

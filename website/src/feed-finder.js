@@ -18,13 +18,13 @@ let latest = 0;
 const problems = {
   "not-an-address": "That doesn't look like a website's address. Try something like example.com.",
   "not-allowed": "The finder only looks at public websites.",
-  unreachable: "That site couldn't be read just now. Check the address, or try again later.",
+  unreachable: "That site couldn't be read right now. Check the address, or try again later.",
   blocked: "That site's guard against bots turned the finder away. Look on the site for a link called RSS, Atom or Feed.",
   "not-found": "That site says the page isn't there. Check the address, or try the site's home page.",
   "too-big": "That page is too large to look through. Try the site's home page.",
   "no-feed": "No feed was found on that page or in the usual places. Look on the site for a link called RSS, Atom or Feed. Some sites don't have one.",
-  busy: "The finder is busy just now. Try again in a minute.",
-  "site-busy": "That site has been looked up a lot just now. Try again in half an hour.",
+  busy: "The finder is busy right now. Try again in a minute.",
+  "site-busy": "That site has been looked up a lot. Try again in half an hour.",
 };
 
 form.addEventListener("submit", (event) => {

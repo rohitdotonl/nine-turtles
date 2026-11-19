@@ -12,7 +12,7 @@ import { PASSWORD_MINIMUM, errorOf } from "./readers";
 import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
-import { HAS_ACCOUNT, NOT_AN_EMAIL, PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, passwordTooLong, tooManyTries } from "./messages";
 
 /** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
@@ -182,7 +182,7 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
     case "password-short":
       return `Choose a password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":
-      return "That password is too long.";
+      return passwordTooLong();
     case "unreachable":
       return UNREACHABLE;
   }
@@ -300,7 +300,7 @@ export function explainConfirm(result: Exclude<ConfirmResult, { ok: true }>, fai
     case "password-short":
       return `Choose a new password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":
-      return "That new password is too long.";
+      return passwordTooLong("new password");
     case "unreachable":
       return UNREACHABLE;
     case "plan":

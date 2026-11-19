@@ -337,7 +337,7 @@ test.describe("on a phone", () => {
     await page.keyboard.press("Escape");
     await expect(sidebar(page)).toBeVisible();
     await sidebar(page).getByRole("link", { name: "Settings" }).click();
-    await expect(page.getByRole("button", { name: "Close settings" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close", exact: true })).toHaveCount(0);
     await page.getByRole("button", { name: "Back to Home" }).click();
     await expect(sidebar(page)).toBeVisible();
     // Back from the feeds leaves Settings behind: it doesn't reopen.

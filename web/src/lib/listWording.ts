@@ -1,5 +1,5 @@
 // What the article list says when it has nothing to show (SPEC section 6):
-// an address that names a feed or folder the reader doesn't have ("Folder not found"), a list that couldn't be loaded, and a
+// an address that names a feed or folder the reader doesn't have ("Not found"), a list that couldn't be loaded, and a
 // place with no articles yet. The screen (`Shell.svelte`) hands over what it
 // has found for the place on screen (`Found`), so every rule about which words
 // show is here, in one place, and can be tested without drawing anything.
@@ -30,7 +30,7 @@ export function missingFrom(place: Route, found: Found): Missing | undefined {
 /** The list's heading for a place the reader doesn't have. */
 export const NOT_FOUND: Record<Missing, string> = {
   feed: "Not found",
-  folder: "Folder not found",
+  folder: "Not found",
 };
 
 /** The line under that heading, saying why. */

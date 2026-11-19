@@ -225,7 +225,7 @@
     {/each}
     {#if muted > 0}
       <a href="/settings/hidden" onclick={onMuted} data-settings-row="muted" class="inset-row inset-action"
-        >Hidden articles<span class="row-glyph flex items-center"><Icon name="chevron-right" /></span></a
+        >Hidden articles<span class="row-glyph"><Icon name="chevron-right" /></span></a
       >
     {/if}
   </div>
