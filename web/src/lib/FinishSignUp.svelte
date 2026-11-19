@@ -71,7 +71,8 @@
     if (result.reason === "password-needed") here = "password";
     refused = result.reason === "wrong-password" || result.reason === "wait";
     spent = result.reason === "expired" || result.reason === "already";
-    password = "";
+    // Only a wrong password is typed again; offline or busy, it was right (decision 0318).
+    if (result.reason === "wrong-password") password = "";
     // The form is gone: the keyboard (and a screen reader) goes to why.
     if (spent) tick().then(() => spentMessage?.focus());
   }

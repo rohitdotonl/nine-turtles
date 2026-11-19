@@ -64,11 +64,14 @@ export function markMissing(image: HTMLImageElement, original: string | null | u
   joinRun(missing);
 }
 
-/** What a note stands for in the article: itself, or the paragraph (or link) holding nothing else. */
+/**
+ * What a note stands for in the article: itself, or the paragraph (or link) holding nothing else,
+ * no other words and no other element, so a picture that did load beside it is never taken with it.
+ */
 function unitOf(missing: HTMLElement): Element {
   let unit: Element = missing;
   const words = missing.textContent?.trim();
-  while (unit.parentElement && !unit.parentElement.classList.contains("article-text") && unit.parentElement.textContent?.trim() === words) unit = unit.parentElement;
+  for (let up = unit.parentElement; up && !up.classList.contains("article-text") && up.childElementCount === 1 && up.textContent?.trim() === words; up = up.parentElement) unit = up;
   return unit;
 }
 

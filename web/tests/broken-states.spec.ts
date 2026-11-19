@@ -170,18 +170,72 @@ test.describe("broken states, round 2", () => {
     const problem = page.getByRole("status").filter({ hasText: "The articles couldn't be loaded." });
     await expect(problem).toBeVisible();
     await expect(problem).toHaveClass(/text-danger/);
+    // From the keyboard: the keyboard waits on the list's name while it asks, and the list comes.
     busy = false;
-    await problem.getByRole("button", { name: "Try again" }).click();
+    await tabTo(page, problem.getByRole("button", { name: "Try again" }));
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#list-heading")).toBeFocused();
     await expect(problem).toHaveCount(0);
     await expect(page.locator(".item-row").first()).toBeVisible();
   });
 
-  test("Everyone you follow says once that it couldn't load, not twice", async ({ page }) => {
+  test("the sidebar's Try again keeps the keyboard's place, then puts it on the sidebar", async ({ page, isMobile }) => {
+    test.skip(isMobile, "the sidebar sits beside the list on a computer");
     await signedIn(page);
-    await page.route(/\/api\/(tidy\/feeds|health)$/, (route) => route.fulfill({ status: 500 }));
+    await follow(page, `${FEED_SITE}/blog/side-${test.info().workerIndex}-${Date.now()}/`);
+    let busy = true;
+    await page.route("**/api/feeds", (route) => (busy ? route.fulfill({ status: 503 }) : route.fallback()));
+    await page.goto(new URL("/all", FEEDS_APP).href);
+    const line = page.locator("#sidebar").getByText("Everyone you follow couldn't be loaded.");
+    await expect(line).toBeVisible();
+    const again = page.locator("#sidebar").getByRole("button", { name: "Try again" });
+    await tabTo(page, again);
+    // Still failing: the line and its button stay, and so does the keyboard.
+    const answered = page.waitForResponse("**/api/feeds");
+    await page.keyboard.press("Enter");
+    await answered;
+    await expect(again).toBeFocused();
+    busy = false;
+    await page.keyboard.press("Enter");
+    await expect(line).toHaveCount(0);
+    await expect(page.locator("#sidebar a").first()).toBeFocused();
+  });
+
+  test("Everyone you follow says once that it couldn't load, not twice, even while Try again asks", async ({ page }) => {
+    await signedIn(page);
+    let release: () => void = () => {};
+    const held = new Promise<void>((done) => (release = done));
+    let tries = 0;
+    await page.route(/\/api\/(tidy\/feeds|health)$/, async (route) => {
+      // The second time round, the page's answer comes only when the test says.
+      if (tries++ >= 2 && route.request().url().endsWith("/api/tidy/feeds")) await held;
+      await route.fulfill({ status: 500 });
+    });
     await page.goto(new URL("/following", FEEDS_APP).href);
-    await expect(page.getByText("Everyone you follow couldn't be loaded.").filter({ visible: true })).toHaveCount(1);
+    const main = page.locator("main, [role=main]");
+    await expect(main.getByText("Everyone you follow couldn't be loaded.")).toHaveCount(1);
     await expect(page.getByText("Who isn't working couldn't be checked.")).toHaveCount(0);
+    await main.getByRole("button", { name: "Try again" }).click();
+    await expect(page.getByText("Who isn't working couldn't be checked.")).toHaveCount(0);
+    release();
+    await expect(main.getByText("Everyone you follow couldn't be loaded.")).toHaveCount(1);
+    await expect(page.getByText("Who isn't working couldn't be checked.")).toHaveCount(0);
+  });
+
+  test("Hidden articles without a connection say so calmly, and show by themselves once back", async ({ page, context }) => {
+    await signedIn(page, "/settings/hiding");
+    await context.setOffline(true);
+    await page.evaluate(() => {
+      history.pushState({}, "", "/settings/hidden");
+      dispatchEvent(new PopStateEvent("popstate"));
+    });
+    const calm = page.getByRole("status").filter({ hasText: "You're offline. Hidden articles show once you're back online." });
+    await expect(calm).toBeVisible();
+    await expect(calm).not.toHaveClass(/text-danger/);
+    await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
+    await context.setOffline(false);
+    await expect(calm).toHaveCount(0);
+    await expect(page.getByText("Nothing hidden yet.")).toBeVisible();
   });
 
   test("Connected assistants that couldn't load never says nothing is connected", async ({ page }) => {
@@ -217,6 +271,16 @@ test.describe("broken states, round 2", () => {
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("status")).toHaveText("You're offline. Sign in once you're back online.");
     await expect(page.getByLabel("Password", { exact: true })).toHaveValue("a password typed once");
+    await context.setOffline(false);
+  });
+
+  test("signing up without a connection says you're offline, with what to do", async ({ page, context }) => {
+    await page.goto(new URL("/sign-up", FEEDS_APP).href);
+    await page.getByLabel("Email").fill("someone-new@example.com");
+    await page.getByLabel("Password", { exact: true }).fill("a long enough password");
+    await context.setOffline(true);
+    await page.getByRole("button", { name: "Sign up", exact: true }).click();
+    await expect(page.getByText("You're offline. Try again once you're back online.")).toBeVisible();
     await context.setOffline(false);
   });
 });
