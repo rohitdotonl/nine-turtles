@@ -7,18 +7,18 @@ import { getJson, isRecord } from "./http";
 import { saved, send, worthRetrying } from "./saving";
 import { toArticle, toFullArticle, type Page, type Source } from "./shapes";
 import type { Order } from "./reading";
+import { changesSoFar, noteRecent, recentPage } from "./recent";
+import { listPath, sourceQuery } from "./listPath";
 
-function sourceQuery(source: Source): URLSearchParams {
-  const query = new URLSearchParams();
-  if ("search" in source) for (const [name, value] of Object.entries(source.search)) query.set(name, value);
-  else if ("feed" in source) query.set("feed", String(source.feed));
-  else if ("folder" in source) query.set("folder", String(source.folder));
-  else query.set("view", source.view);
-  return query;
-}
-
-/** A page of a list: from the server, or, without a connection, from the copies kept on this device (all at once). */
-export async function listArticles(source: Source, order: Order, after: string | null): Promise<Page> {
+/**
+ * A page of a list: from the server, or, without a connection, from the copies kept on this device (all at once).
+ * `recent`: a first page fetched in the last minute will do (recent.ts); refreshing never asks for one.
+ */
+export async function listArticles(source: Source, order: Order, after: string | null, recent = false): Promise<Page> {
+  // Without a connection, the kept copies show instead, and say so.
+  const online = !connection.offline && globalThis.navigator?.onLine !== false;
+  const just = recent && online && after === null ? recentPage(listPath(source, order, null)) : undefined;
+  if (just) return { ...just, articles: just.articles.map((article) => ({ ...article })) };
   try {
     return await listFromServer(source, order, after);
   } catch (problem) {
@@ -31,17 +31,19 @@ export async function listArticles(source: Source, order: Order, after: string |
 }
 
 async function listFromServer(source: Source, order: Order, after: string | null): Promise<Page> {
-  const query = sourceQuery(source);
-  query.set("order", order);
-  if (after !== null) query.set("after", after);
   await saved();
-  const body = await getJson(`/api/${"search" in source ? "search" : "articles"}?${query}`);
+  const path = listPath(source, order, after);
+  const asked = changesSoFar();
+  const body = await getJson(path);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
-  return {
+  const page = {
     articles: body.articles.filter(isRecord).map(toArticle),
     next: typeof body.next === "string" ? body.next : null,
     latest: typeof body.latest === "number" ? body.latest : 0,
   };
+  // Copies, so a list that marks its rows never changes the noted page.
+  if (after === null) noteRecent(path, { ...page, articles: page.articles.map((article) => ({ ...article })) }, asked);
+  return page;
 }
 
 /**

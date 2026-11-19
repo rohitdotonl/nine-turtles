@@ -19,8 +19,6 @@
   import AddFeed from "./AddFeed.svelte";
   import FollowPerson from "./FollowPerson.svelte";
   import ArticleView from "./ArticleView.svelte";
-  import CheatSheet from "./CheatSheet.svelte";
-  import EditFolder from "./EditFolder.svelte";
   import PickUp from "./PickUp.svelte";
   import WhoPage from "./WhoPage.svelte";
   import { placeLabels, placesOf, placesWatch } from "./people";
@@ -31,11 +29,7 @@
   import type { ListNote } from "./listNote";
   import PageHead from "./PageHead.svelte";
   import Sheet from "./Sheet.svelte";
-  import Settings from "./Settings.svelte";
-  import YourFeeds from "./YourFeeds.svelte";
   import Welcome from "./Welcome.svelte";
-  import Muted from "./Muted.svelte";
-  import ReadersPage from "./ReadersPage.svelte";
   import SearchBar from "./SearchBar.svelte";
   import SidebarFeeds from "./SidebarFeeds.svelte";
   import SidebarFoot from "./SidebarFoot.svelte";
@@ -71,6 +65,8 @@
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isOver, isWho, listFromOnMove, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type ListFrom, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
+  import { later } from "./later";
+  import { LaterPages } from "./laterPages.svelte";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
   import { topTapScrolls } from "./topTap";
@@ -96,6 +92,9 @@
     passkeys?: string | null;
     onSignedOut: () => void;
   } = $props();
+
+  // Pages most openings never show, in files of their own (decision 0314).
+  const pages = new LaterPages(!isList(parse(location.pathname)), () => placeFocus(route));
 
   /** Whether Unread is on, and the sort order (reading-settings.svelte.ts). */
   const settings = new ReadingSettings();
@@ -341,7 +340,7 @@
     if (switched) arriveSwitched(switched);
     const stopWatching = watchForNewVersions();
     // Reading offline (SPEC section 32): the copies on this device are brought
-    // up to date once the settings are known (below), when the connection
+    // up to date once the settings are known and the first screen is up (below), when the connection
     // comes back, and when nine turtles comes back into view after a while.
     const stopKeeping = keeper.watch();
 
@@ -398,7 +397,8 @@
       });
     });
     void settings.load().then(() => {
-      keeper.now();
+      // After the first screen, so the copies never hold up the reader's first taps (decision 0314).
+      later(async () => keeper.now());
       // This device last saw Unread off, but it's on now (changed on
       // another device): an untouched home opens on Unread after all.
       if (openedHome && pathFor(route) === pathFor(start) && settings.unread && !(route.kind === "view" && route.view === "unread")) {
@@ -877,7 +877,7 @@
         <h1 class="sr-only">nine turtles</h1>
       {/if}
       {#if route.kind === "settings"}
-        <Settings
+        {#if pages.Settings}<pages.Settings
           page={route.page}
           onOpen={(event, page) => follow(event, { kind: "settings", page })}
           onBack={closeSettingsPage} backTo={hidingFrom?.name}
@@ -899,20 +899,20 @@
           people={library.rows ?? []}
           {phone}
           bind:ruleForFeed
-        />
+        />{/if}
       {:else if route.kind === "your-feeds"}
-        <YourFeeds
+        {#if pages.YourFeeds}<pages.YourFeeds
           bind:heading={headings.yourFeeds}
           onBack={phone ? () => steps.back("home") : undefined}
           onOpenPerson={(event, id) => follow(event, { kind: "about", id: library.rowOf(id) })}
           onFeedsChanged={loadFeeds}
           {notice}
           returnTo={cameBackFrom}
-        />
+        />{/if}
       {:else if route.kind === "muted"}
-        <Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />
+        {#if pages.Muted}<pages.Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />{/if}
       {:else if route.kind === "readers"}
-        <ReadersPage bind:heading={headings.readers} onClose={closeSettingsPage} />
+        {#if pages.ReadersPage}<pages.ReadersPage bind:heading={headings.readers} onClose={closeSettingsPage} />{/if}
       {:else if !sheet && editing}
         {@render editor(false)}
       {:else if whoShown && phone}
@@ -1053,7 +1053,7 @@
   <NowPlaying onOpen={openFromOutside} bottom={false} stepAside />
 {/snippet}
 
-<CheatSheet bind:open={cheatSheetOpen} {unreadOff} />
+{#if pages.CheatSheet}<pages.CheatSheet bind:open={cheatSheetOpen} {unreadOff} />{/if}
 
 {#if sheet && tasking}
   <!-- Keyed so one task following the other opens a fresh sheet: the keyboard lands again and no form state lingers. -->
@@ -1090,9 +1090,9 @@
 <!-- The edit screens, drawn once for both places: a sheet over the screen, or on a phone a page in the list's place. -->
 {#snippet editor(inSheet: boolean)}
   {@const at = inSheet ? "sheet" : "list"}
-  {#if route.kind === "edit-folder" && currentFolder}
+  {#if route.kind === "edit-folder" && currentFolder && pages.EditFolder}
     {#key currentFolder.id}
-      <EditFolder
+      <pages.EditFolder
         sheet={inSheet}
         folder={currentFolder}
         bind:heading={headings[at]}

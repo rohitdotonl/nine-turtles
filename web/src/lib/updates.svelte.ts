@@ -13,6 +13,8 @@
 // few minutes while it's in view, so even a tab left open for days notices.
 
 import { lost, noConnection, reached } from "./connection.svelte";
+import { takeEarly } from "./early";
+import { forgetRecent } from "./recent";
 
 export const VERSION_HEADER = "x-nine-turtles-version";
 const READER_HEADER = "x-nine-turtles-reader";
@@ -71,7 +73,11 @@ export class OtherReader extends Error {
 export async function api(input: string, init?: RequestInit): Promise<Response> {
   let response: Response;
   try {
-    if (tabReader === undefined) response = await fetch(input, init);
+    // A change makes every list fetched before it out of date (recent.ts).
+    if ((init?.method ?? "GET") !== "GET") forgetRecent();
+    const early = takeEarly(input, init);
+    if (early) response = await early;
+    else if (tabReader === undefined) response = await fetch(input, init);
     else {
       const headers = new Headers(init?.headers);
       headers.set(READER_HEADER, String(tabReader));

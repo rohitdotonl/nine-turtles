@@ -39,6 +39,8 @@
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
+  import { forgetEarly } from "./lib/early";
+  import { forgetRecent } from "./lib/recent";
 
   let session: Session | undefined = $state();
   let unreachable = $state(false);
@@ -53,6 +55,7 @@
     forgetDrafts();
     forgetListening();
     forgetLoaded();
+    forgetRecent();
     await forget();
   }
 
@@ -66,7 +69,10 @@
         noteReader(now.reader);
         noteTabReader(now.reader);
         keepSession({ version: now.version, owner: now.owner, email: now.email, emailSending: now.emailSending });
-      } else await forgetDevice();
+      } else {
+        forgetEarly();
+        await forgetDevice();
+      }
       session = now;
       unreachable = false;
       path = location.pathname;
@@ -87,6 +93,7 @@
 
   /** Signed out from inside the app: forgotten at once, so a lost connection now can't reopen the signed-in screen. */
   async function signedOut() {
+    forgetEarly();
     await forgetDevice();
     await check();
   }

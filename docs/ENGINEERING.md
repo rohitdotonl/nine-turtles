@@ -82,6 +82,7 @@ The engineering side of "slow app, fast interface." Speed is a requirement with 
 - Interface actions under ~100 ms.
 - A small page download, with a size budget checked automatically: at most 250 KB (compressed) of app code and styles on first visit (raised from 150 KB to 200 KB by the owner on 2 November 2026, decision 0136, and to 250 KB on 14 November 2026, decision 0270), and at most 400 KB of fonts (only the alphabets nine turtles needs, cached after the first visit). The reading faces for Devanagari and Arabic (decision 0227) are downloaded only by readers of those scripts, so each has its own budget instead, at most 150 KB. The build leaves notes for the next agent out of the files it copies from `web/public/` (the service worker, the page, the manifest and the icon), so they don't count against it (`web/vite.config.ts`).
 - No database query that searches without an index.
+- Few round trips: on a slow phone connection a wait is the trips to the server, not the server's work. Opening asks for its first screen all at once; a list fetched in the last minute and an article whose whole text is kept on the device show without asking again; files that are checked on each visit (the page, the fonts) carry a content label, so "unchanged" costs a few bytes; and pages most visits never open are files of their own, fetched after the first screen (decision 0314).
 
 **Test:** Is the speed checked automatically, or are we hoping?
 

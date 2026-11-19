@@ -58,7 +58,21 @@ export function landingFor(place: Route, headings: Headings, scene: LandingScene
  */
 export function focusArriving(place: Route, landing: (place: Route) => HTMLElement | undefined, returnRow: () => string | undefined) {
   const first = landing(place);
-  first?.focus();
+  if (!first) {
+    // A page in a file of its own that hasn't come yet (decision 0314): its heading takes the keyboard's
+    // place when it comes, unless the reader has moved it meanwhile.
+    const was = document.activeElement;
+    let frames = 0;
+    const wait = () => {
+      if (document.activeElement !== was) return;
+      const now = landing(place);
+      if (now) focusArriving(place, landing, returnRow);
+      else if (++frames < 180) requestAnimationFrame(wait);
+    };
+    requestAnimationFrame(wait);
+    return;
+  }
+  first.focus();
   const row = returnRow();
   if (!row || place.kind !== "settings" || settingsRow(row)) return;
   let frames = 0;

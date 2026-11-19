@@ -232,7 +232,7 @@
     let ok = false;
     loadingMore = after !== null;
     try {
-      const page = await listArticles(source, order, after);
+      const page = await listArticles(source, order, after, true);
       // Each article once: Unread by person can bring back someone already passed, with articles already listed (decision 0271).
       const listed = new Set(after === null ? [] : articles.map((article) => article.id));
       articles = [...(after === null ? [] : articles), ...page.articles.filter((article) => !listed.has(article.id))];

@@ -21,6 +21,10 @@ import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";
 import { listenForInstall } from "./lib/installing.svelte";
 import { followSystemText } from "./lib/systemText";
+import { askEarly } from "./lib/early";
+
+// Everything the first screen needs, asked for at once (decision 0314).
+askEarly();
 
 const target = document.getElementById("app");
 if (!target) throw new Error("nine turtles: the #app element is missing from index.html");
