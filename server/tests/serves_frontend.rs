@@ -71,6 +71,21 @@ async fn every_answer_says_which_version_sent_it() {
 }
 
 #[tokio::test]
+async fn the_page_says_its_own_version_and_its_label_names_it() {
+    // Opened from the phone's kept copy, the app still knows which version it
+    // is, so it notices a newer server (decision 0320).
+    let base = start().await;
+    let response = reqwest::get(format!("{base}/unread")).await.unwrap();
+    let label = response.headers()["etag"].to_str().unwrap().to_owned();
+    assert!(label.contains(nine_turtles::VERSION), "{label}");
+    let body = response.text().await.unwrap();
+    assert!(body.contains(&format!(
+        r#"<meta name="nine-turtles-version" content="{}">"#,
+        nine_turtles::VERSION
+    )));
+}
+
+#[tokio::test]
 async fn an_unknown_api_address_is_not_found_not_the_app() {
     // An older tab asking for something a newer nine turtles dropped is told so,
     // and is then asked to reload (SPEC section 18).

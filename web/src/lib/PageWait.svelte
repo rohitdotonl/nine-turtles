@@ -6,11 +6,13 @@
   a connection, calmly, when it will open, and it opens by itself once the
   device is back online; otherwise that nine turtles can't be reached, with
   Try again. Both load the page again, because a browser remembers a file it
-  couldn't fetch and won't ask for it twice. The page takes this line's
+  couldn't fetch and won't ask for it twice; from the server, not the phone's
+  kept page, which may be an older version whose files are gone (decision 0320). The page takes this line's
   place, and the keyboard goes to its heading (`focusArriving`).
 -->
 <script lang="ts">
   import { away } from "./connection.svelte";
+  import { reloadNewest } from "./updates.svelte";
   import LateLine from "./LateLine.svelte";
   import LoadFailed from "./LoadFailed.svelte";
 
@@ -21,7 +23,7 @@
     class: classes = "min-w-0 flex-1 px-5 pt-5 md:px-10",
   }: { name: string; opens?: string; failed: boolean; class?: string } = $props();
 
-  const again = () => location.reload();
+  const again = reloadNewest;
 
   $effect(() => {
     if (!failed || !away().offline) return;

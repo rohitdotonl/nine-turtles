@@ -21,12 +21,13 @@ import { newestView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { away, whenBack } from "./connection.svelte";
 import { later } from "./later";
+import { quiet, untilPressed } from "./presses";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
 export const KEEP_STARRED = 200;
-/** How many articles each request for copies asks for: the server gives at most 50. */
-const AT_ONCE = 25;
+/** How many articles each request for copies asks for (the server gives at most 50): few, so a tap never waits long behind one (decision 0320). */
+export const AT_ONCE = 10;
 /** The pause between those requests, so the app and the server never feel them. */
 const PAUSE_MS = 250;
 
@@ -519,8 +520,10 @@ async function waitingMarks(): Promise<Mark[]> {
 /** How the copies are fetched and marks sent: given by lists.ts, so this file stays free of the server's details. */
 export type Fetchers = {
   /** A page of a list; `size` articles, or the server's usual page. */
-  list: (source: Source, order: Order, after: string | null, size?: number) => Promise<Page>;
-  several: (ids: number[]) => Promise<FullArticle[]>;
+  /** Stops when `signal` says so (the reader pressed something, presses.ts). */
+  list: (source: Source, order: Order, after: string | null, size?: number, signal?: AbortSignal) => Promise<Page>;
+  /** Stops when `signal` says so (the reader pressed something, presses.ts). */
+  several: (ids: number[], signal?: AbortSignal) => Promise<FullArticle[]>;
   sendMark: (
     kind: Mark["kind"],
     ids: number[],
@@ -602,12 +605,27 @@ export async function firstOf(
   do {
     // The usual first page (so opening that list just after shows it at once, recent.ts), then the
     // rest in one (decision 0315).
-    const page: Page = await list(source, order, after, after === null ? undefined : most - rows.length);
+    const page: Page = await givingWay((signal) => list(source, order, after, after === null ? undefined : most - rows.length, signal));
     if (page.kept) throw new NeedsConnection("offline");
     rows.push(...page.articles);
     after = page.next;
   } while (after !== null && rows.length < most);
   return rows.slice(0, most);
+}
+
+/** `fetch`, never while the reader is pressing things: stopped by a press, and asked again once they pause (presses.ts, decision 0320). */
+async function givingWay<T>(fetch: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  for (;;) {
+    await quiet();
+    const press = untilPressed();
+    try {
+      return await fetch(press.signal);
+    } catch (problem) {
+      if (!press.signal.aborted) throw problem;
+    } finally {
+      press.done();
+    }
+  }
 }
 
 async function round(
@@ -649,9 +667,8 @@ async function round(
     });
     for (let start = 0; start < missing.length; start += AT_ONCE) {
       if (!still()) return;
-      const fetched = await using.several(
-        missing.slice(start, start + AT_ONCE),
-      );
+      // Never while the reader is tapping: their answers go first (decision 0320).
+      const fetched = await givingWay((signal) => using.several(missing.slice(start, start + AT_ONCE), signal));
       if (!still()) return;
       await inside(["articles"], "readwrite", (tx) => {
         for (const article of fetched) {

@@ -33,9 +33,19 @@ export function verdict(running: string | undefined, answered: string | null, st
 
 export const updates = $state({ ready: false, stranded: false, otherReader: false });
 
-let running: string | undefined;
+/**
+ * This tab's own version: the one the server wrote into the page (decision 0320), so a page
+ * opened from the phone's kept copy knows it's older; else the first answer's.
+ */
+let running: string | undefined = pageVersion();
 
-/** Reads an answer's version; the first one seen is this tab's own. */
+/** The version written into the page, if there is one (none in development). */
+export function pageVersion(): string | undefined {
+  const written = globalThis.document?.querySelector('meta[name="nine-turtles-version"]')?.getAttribute("content");
+  return written ? written : undefined;
+}
+
+/** Reads an answer's version; the first one seen is this tab's own, unless the page said. */
 export function noteAnswer(response: Response) {
   const answered = response.headers.get(VERSION_HEADER);
   running ??= answered ?? undefined;
@@ -145,7 +155,25 @@ export function switchTo(path: string, carried: Carried) {
   } catch {
     // Without it the new version still opens, as a fresh page would.
   }
-  location.assign(path);
+  // The phone's kept page is this older version: without it, the page comes from the server (sw.js).
+  void forgetKeptPage().finally(() => location.assign(path));
+}
+
+/** Reloads into the server's newest version: the phone's kept page, an older one, is let go first. */
+export function reloadNewest(): void {
+  void forgetKeptPage().finally(() => location.reload());
+}
+
+/** The service worker's store (web/public/sw.js names it too). */
+const KEPT_STORE = "nine-turtles-app-1";
+
+/** Lets go of the phone's kept copy of the page, so the next opening asks the server for it. */
+async function forgetKeptPage(): Promise<void> {
+  try {
+    await (await globalThis.caches?.open(KEPT_STORE))?.delete("/");
+  } catch {
+    // No store (or not allowed): the server's page opens anyway once the kept one is replaced.
+  }
 }
 
 /** What the page before carried, if this page opened by switching versions. */

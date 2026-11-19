@@ -117,6 +117,42 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await expect.poll(() => keptIds(page)).toEqual([]);
 });
 
+test("on a connection too slow to wait for, opening shows the kept copies at once and says so, then carries on (decision 0320)", async ({ page, isMobile, browserName }) => {
+  test.skip(isMobile, "the same on every width");
+  // Playwright can't slow Safari's engine's requests once the service worker is in charge; checked there through a slow proxy instead (decision 0320).
+  test.skip(browserName === "webkit", "page.route misses requests under WebKit's service worker");
+  const name = `slow-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const feed = await follow(page, `${FEED_SITE}/blog/${name}/`);
+  const listed = await (await page.request.get(new URL(`/api/articles?feed=${feed}`, FEEDS_APP).href)).json();
+  const ids: number[] = listed.articles.map((each: { id: number }) => each.id);
+  await page.request.post(new URL("/api/articles/starred", FEEDS_APP).href, { data: { ids, starred: true } });
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await page.goto(new URL(`/${feed}`, FEEDS_APP).href);
+  await appReady(page);
+  await expect.poll(() => keptIds(page), { timeout: 20_000 }).toEqual(expect.arrayContaining(ids));
+
+  // Every answer now takes 8 seconds: the screen doesn't wait for them.
+  await page.route("**/api/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 8_000));
+    await route.continue().catch(() => undefined);
+  });
+  const opened = Date.now();
+  await page.reload();
+  await expect(page.getByText("The connection is slow. Showing the articles kept on this device.")).toBeVisible({ timeout: 6_000 });
+  await expect(page.getByRole("button", { name: new RegExp(NEWEST.replace(/[()]/g, "\\$&")) }).first()).toBeVisible();
+  expect(Date.now() - opened).toBeLessThan(6_000);
+
+  // The answers still come: the line goes, as when a connection comes back.
+  await page.unroute("**/api/**");
+  await expect(page.getByText("The connection is slow. Showing the articles kept on this device.")).toBeHidden({ timeout: 20_000 });
+});
+
 test("another reader signing in on this device never gets the last reader's copies or waiting marks", async ({ page, context, playwright, isMobile }) => {
   test.skip(isMobile, "the same on every width");
   const name = `handover-${test.info().workerIndex}-${Date.now()}`;

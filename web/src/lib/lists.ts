@@ -9,6 +9,8 @@ import { toArticle, toFullArticle, type Article, type Page, type Source } from "
 import type { Order } from "./reading";
 import { changesSoFar, noteRecent, recentPage } from "./recent";
 import { listPath, sourceQuery } from "./listPath";
+import { api } from "./updates.svelte";
+import { listFor } from "./early";
 
 /**
  * A page of a list: from the server, or, without a connection, from the copies kept on this device (all at once).
@@ -17,6 +19,12 @@ import { listPath, sourceQuery } from "./listPath";
 export async function listArticles(source: Source, order: Order, after: string | null, recent = false): Promise<Page> {
   // Without a connection, the kept copies show instead, and say so.
   const online = !connection.offline && globalThis.navigator?.onLine !== false;
+  // Asked for on the press that opened it, a moment ago (decision 0320): that answer.
+  const pressed = recent && online && after === null ? takeAhead(listPath(source, order, null)) : undefined;
+  if (pressed) {
+    const page = await pressed.catch(() => undefined);
+    if (page) return { ...page, articles: page.articles.map((article) => ({ ...article })) };
+  }
   const just = recent && online && after === null ? recentPage(listPath(source, order, null)) : undefined;
   if (just) return { ...just, articles: just.articles.map((article) => ({ ...article })) };
   try {
@@ -30,13 +38,53 @@ export async function listArticles(source: Source, order: Order, after: string |
   }
 }
 
-async function listFromServer(source: Source, order: Order, after: string | null, size?: number): Promise<Page> {
+/** How long a list asked for on a press waits to be opened: a press opens it at once, or never. */
+const AHEAD_MS = 2_000;
+/** Lists asked for ahead, on the press that opens them. */
+const ahead = new Map<string, { page: Promise<Page>; at: number }>();
+
+/** The list at `path` asked for on a press just now, once; none if there isn't one, or it's too old. */
+function takeAhead(path: string): Promise<Page> | undefined {
+  const asked = ahead.get(path);
+  ahead.delete(path);
+  return asked && Date.now() - asked.at < AHEAD_MS ? asked.page : undefined;
+}
+
+/**
+ * Asks for the first page of the list at `address` as the reader presses its link, before they
+ * lift their finger (decision 0320); the list takes that answer when it opens, as it would its own:
+ * it was asked for the same way (marks made since are put in, `listFromServer`), only a moment sooner.
+ */
+export function askAhead(address: string, now = Date.now()): void {
+  if (connection.offline || globalThis.navigator?.onLine === false) return;
+  const list = listFor(address);
+  if (!list) return;
+  const path = listPath(list.source, list.order, null);
+  const asked = ahead.get(path);
+  if ((asked && now - asked.at < AHEAD_MS) || recentPage(path)) return;
+  const page = listFromServer(list.source, list.order, null);
+  page.catch(() => undefined);
+  ahead.set(path, { page, at: now });
+}
+
+/** A press on a link to another list, with nothing else held: its first page is asked for at once. */
+function pressedLink(event: PointerEvent) {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+  if (!(link instanceof HTMLAnchorElement) || link.origin !== location.origin || link.target) return;
+  if (link.pathname === location.pathname) return;
+  askAhead(link.pathname);
+}
+
+if (typeof globalThis.addEventListener === "function") globalThis.addEventListener("pointerdown", pressedLink, { capture: true, passive: true });
+
+async function listFromServer(source: Source, order: Order, after: string | null, size?: number, signal?: AbortSignal): Promise<Page> {
   // Marks don't hold it up: those the server may not have yet are put in after (decision 0315).
   await savedBesidesMarks();
   const path = listPath(source, order, after, size);
   const asked = changesSoFar();
   const start = performance.now();
-  const body = await getJson(path);
+  const body = signal ? await (await answered(path, signal)).json() : await getJson(path);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   const marks = marksSince(start);
   const page = {
@@ -128,11 +176,18 @@ export function markedAllMessage(count: number, place?: string): string {
   return `Marked ${count} ${count === 1 ? "article" : "articles"} as read${place ? ` in ${place}` : ""}.`;
 }
 
+/** The answer at `path`, unless `signal` stops it first; an error answer throws. */
+async function answered(path: string, signal: AbortSignal): Promise<Response> {
+  const response = await api(path, { cache: "no-store", signal });
+  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
+  return response;
+}
+
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).
 useFetchers({
   list: listFromServer,
-  async several(ids) {
-    const body = await getJson(`/api/articles/several?ids=${ids.join(",")}`);
+  async several(ids, signal) {
+    const body: unknown = await (await answered(`/api/articles/several?ids=${ids.join(",")}`, signal ?? new AbortController().signal)).json();
     if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
     return body.articles.filter(isRecord).map(toFullArticle);
   },

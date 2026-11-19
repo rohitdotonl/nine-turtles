@@ -3,9 +3,12 @@
 // home screen. It keeps a copy of the app itself and its fonts. (Articles kept
 // for reading offline are the app's own, in its database, SPEC section 32.)
 //
-// - Opening nine turtles always asks the server first, so you get the newest
-//   version. Without a connection, the kept copy opens instead and says
-//   plainly that nine turtles can't be reached.
+// - Opening nine turtles opens the kept copy of the page at once, and asks
+//   the server for the newest one behind it (decision 0320): a slow or bad
+//   connection never holds the screen up. The page says which version it is,
+//   so the app notices a newer server and moves to it at the next screen
+//   change (decision 0085), letting go of the kept page first. The first
+//   time, and when nothing is kept, the page comes from the server.
 // - The app's code and styles (in /assets/, whose names change with every
 //   version) are kept and used from the copy, the pages it loads later in
 //   files of their own too. Copies no version uses any more are removed when
@@ -38,7 +41,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
   // Downloads such as Download everything are /api/ addresses: never the kept page.
   if (url.pathname.startsWith("/api/")) return;
-  if (request.mode === "navigate") event.respondWith(openApp(request));
+  if (request.mode === "navigate") event.respondWith(serverPage(url.pathname) ? fetch(request) : openApp(event));
   else if (url.pathname.startsWith("/assets/")) event.respondWith(appFile(request));
   else if (url.pathname.startsWith("/fonts/")) event.respondWith(font(event));
 });
@@ -58,22 +61,35 @@ async function font(event) {
   return copy;
 }
 
-/** The page itself: from the server, or the kept copy when there's no connection. */
-async function openApp(request) {
+/** The server's own pages (its status page, the owner's report and the like), and files: never the app's page. */
+function serverPage(path) {
+  return /^\/(status|diagnostics|owner-report|mcp)(\/|$)|^\/(payments|oauth|\.well-known|newsletters|websub)\//.test(path) || /\/[^/]*\.[^/]*$/.test(path);
+}
+
+/** Whether `page` is the app's own page (it names its version, decision 0320). */
+function isApp(page) {
+  return page.includes('name="nine-turtles-version"');
+}
+
+/** The page itself: the kept copy at once, the server's kept behind it for next time; the server's when nothing is kept yet. */
+async function openApp(event) {
   const kept = await caches.open(KEPT);
-  try {
-    const response = await fetch(request);
-    if (response.ok && (response.headers.get("content-type") ?? "").startsWith("text/html")) {
-      const page = await response.clone().text();
-      await kept.put("/", response.clone());
-      await tidy(kept, page);
-    }
+  const copy = await kept.match("/");
+  const fresh = fetch(event.request).then(async (response) => {
+    const page = response.ok ? await response.clone().text() : "";
+    if (isApp(page)) await kept.put("/", response.clone());
+    return { response, page };
+  });
+  if (!copy) {
+    const { response, page } = await fresh;
+    if (isApp(page)) await tidy(kept, page);
     return response;
-  } catch (problem) {
-    const copy = await kept.match("/");
-    if (copy) return copy;
-    throw problem;
   }
+  // Without a connection the quiet check fails; the copy is already on its way.
+  event.waitUntil(fresh.catch(() => undefined));
+  // Only code no longer used by the page now opening goes; what the newer one needs comes when it opens.
+  event.waitUntil(copy.clone().text().then((page) => tidy(kept, page)).catch(() => undefined));
+  return copy;
 }
 
 /** The app's code and styles: their names change with their content, so a kept copy is always right. */
