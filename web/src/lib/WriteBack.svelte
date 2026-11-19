@@ -442,7 +442,7 @@
   their name, it says "Write to {name}".
 -->
 {#snippet label()}
-  {#if article}<span>Write back<span class="sr-only">{" "}to <bdi>{name}</bdi></span></span>{:else}<span>{verb} <bdi>{name}</bdi></span>{/if}
+  {#if article}<span>Write back<span class="sr-only">{" "}to <bdi>{name}</bdi></span></span>{:else}<span class="min-w-0 wrap-anywhere">{verb} <bdi>{name}</bdi></span>{/if}
 {/snippet}
 
 {#if place}

@@ -55,7 +55,7 @@
   import { signOut } from "./session";
   import { updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { SETTINGS_NEED_CONNECTION, sendWaiting } from "./offline";
+  import { settingsNeedConnection, sendWaiting } from "./offline";
   import { newslettersStatus } from "./newsletters";
   import { browserHasPasskeys, passkeysHere } from "./passkeys";
   import { describe, loadPlan } from "./plan";
@@ -302,7 +302,7 @@
     <div class={["mx-auto flex max-w-[35rem] flex-col gap-8", page && "settings-page"]}>
       {#if connection.offline}
         <!-- Without a connection nothing here could be saved, so Settings says so and waits (SPEC section 32). -->
-        <p role="status">{SETTINGS_NEED_CONNECTION}</p>
+        <p role="status">{settingsNeedConnection()}</p>
       {:else if !page}
       <section aria-labelledby="reading-heading">
         <h3 id="reading-heading" class="settings-head label">Reading</h3>

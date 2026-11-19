@@ -53,8 +53,8 @@
               onchange={(event) => ticked(row, event.currentTarget)}
             />
             <span class="flex min-w-0 flex-1 flex-col py-2">
-              <span id={`settle-name-${row.id}`} class="break-words">{row.title}</span>
-              <span id={`settle-line-${row.id}`} class="text-meta text-muted break-words">{settleLine(row)}</span>
+              <span id={`settle-name-${row.id}`} class="wrap-anywhere">{row.title}</span>
+              <span id={`settle-line-${row.id}`} class="text-meta text-muted wrap-anywhere">{settleLine(row)}</span>
             </span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>

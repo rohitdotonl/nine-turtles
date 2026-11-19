@@ -107,9 +107,9 @@
 
 <div bind:this={box} class={["new-address", (said || looking || choices.length > 0) && "showing"]}>
   {#if looking}
-    <p class="break-words text-ink-2"><SlowWait words="Looking on their site" long={UP_TO_A_MINUTE} onStop={stop} /></p>
+    <p class="wrap-anywhere text-ink-2"><SlowWait words="Looking on their site" long={UP_TO_A_MINUTE} onStop={stop} /></p>
   {/if}
-  <p role="status" id={`${id}-said`} class={["break-words text-ink-2", !said && "sr-only"]}><Addressed text={said} /></p>
+  <p role="status" id={`${id}-said`} class={["wrap-anywhere text-ink-2", !said && "sr-only"]}><Addressed text={said} /></p>
   {#if choices.length === 1}
     <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders and articles stay, saved ones too.</p>
     <div class="actions">
@@ -124,7 +124,7 @@
         <label class="inset-row check-row flex-nowrap">
           <input type="radio" name={`${id}-address`} value={choice.url} bind:group={chosen} />
           <span class="flex min-w-0 flex-col py-1">
-            <span class="break-words">{choice.title}</span>
+            <span class="wrap-anywhere">{choice.title}</span>
             <span class="address text-meta break-all text-muted">{choice.url}</span>
           </span>
           <span aria-hidden="true" class="radio-mark shrink-0"></span>

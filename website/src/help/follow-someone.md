@@ -121,8 +121,8 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
   Or ask them for one: press **Write to** under the message.
   nine turtles looks on the site's home page (and its contact page) for their
   email address, and your email app opens with a short note you can change.
-- **"The site didn't answer."** It may be down for a moment. Try again
-  later.
+- **"The site couldn't be read just now."** It may be down for a moment, or
+  it answered with an error. Try again later.
 - **"Their feed is too big for nine turtles to read."** Their feed holds
   more than 10 MB, usually every post they ever wrote. Look on their site for
   a smaller feed, such as one per topic.

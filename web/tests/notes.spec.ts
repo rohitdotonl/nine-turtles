@@ -168,7 +168,8 @@ async function answerLost(page: Page, name: string) {
   });
   await choose(page, "for article");
   await page.keyboard.press("h");
-  await expect(page.getByText("You're offline.", { exact: false })).toBeVisible();
+  // The device is online and only nine turtles' answer was lost, so it says nine turtles can't be reached, not "You're offline." (decision 0312).
+  await expect(page.getByText("nine turtles can't be reached right now. This is kept on this device only", { exact: false })).toBeVisible();
   await page.keyboard.press("Escape");
 }
 
@@ -187,7 +188,7 @@ test.describe("a highlight sent twice is saved once (decision 0255)", () => {
     await reopen(page);
     expect((await again).status()).toBe(201);
     await expect(article(page).locator("mark.highlight")).toHaveCount(1);
-    await expect(page.getByText("You're offline.", { exact: false })).toHaveCount(0);
+    await expect(page.getByText("This is kept on this device only", { exact: false })).toHaveCount(0);
     await reopen(page);
     await expect(article(page).locator("mark.highlight")).toHaveCount(1);
     await expect(article(page).getByRole("list", { name: "Your highlights" }).getByRole("listitem")).toHaveCount(1);

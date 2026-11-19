@@ -152,13 +152,19 @@
     event.preventDefault();
     if (asking) return ask();
     if (busy) return;
+    // An empty field is said in the page's own words, under the fields, never the browser's bubble (the form has novalidate; decision 0312).
     if (email.trim() === "") {
-      message = explain({ ok: false, reason: "email-needed" });
+      message = password === "" ? "Type your email and password." : explain({ ok: false, reason: "email-needed" });
       refused = false;
       emailField?.focus();
       return;
     }
-    if (password === "") return;
+    if (password === "") {
+      message = "Type your password too.";
+      refused = false;
+      document.getElementById("password")?.focus();
+      return;
+    }
     busy = true;
     fix = undefined;
     const result = await signIn(email, password);
@@ -228,7 +234,7 @@
     <!-- Said once, in the text color: where the link went and how long it works; nothing says whether the email has an account. -->
     <div class="flex w-full flex-col items-stretch gap-3 text-center sm:max-w-xs">
       <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
-      <p id="link-sent" role="status" class="break-words">
+      <p id="link-sent" role="status" class="wrap-anywhere">
         If <span class="font-semibold">{sent}</span> has an account here, a link is on its way. It works once, within {SIGN_IN_LINK_MINUTES} minutes.
       </p>
       <SendAgain to={sent} onSend={askAgain} />
@@ -241,7 +247,7 @@
     stands above it, in small second-ink words on its left edge, as in a
     sheet (decision 0122). The email comes first, as password managers expect.
   -->
-  <form class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
+  <form novalidate class="flex w-full flex-col gap-3 sm:max-w-xs" onsubmit={submit}>
     <div class="flex flex-col gap-2">
       <label for="email" class="text-meta text-ink-2">Email</label>
       <!-- svelte-ignore a11y_autofocus: the first thing to do on this page. -->

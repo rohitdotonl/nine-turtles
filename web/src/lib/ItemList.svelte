@@ -72,7 +72,7 @@
   import { askingEvery, bringsIn, showsArrivals } from "./asking";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, updates } from "./updates.svelte";
   import { connection } from "./connection.svelte";
-  import { END_OF_KEPT, NOTHING_KEPT_HERE, REFRESH_NEEDS_CONNECTION, SHOWING_KEPT } from "./offline";
+  import { END_OF_KEPT, nothingKeptHere, refreshNeedsConnection, showingKept } from "./offline";
 
   let {
     source,
@@ -313,7 +313,7 @@
       loadedMore = false;
       fromDevice = page.kept === true;
       loaded = true;
-      if (fromDevice) say(REFRESH_NEEDS_CONNECTION);
+      if (fromDevice) say(refreshNeedsConnection());
       // Asked for and nothing came: it says so (decision 0229), unless an Undo is on offer, which r never clears.
       else if (asked && latest === before) inform(nothingNewSince(since));
     } catch (failure) {
@@ -669,15 +669,15 @@
   <p role="status" class="pt-1 pb-2 text-meta text-muted empty:sr-only">{loaded ? resultCount(articles.length, next !== null) : ""}</p>
 {/if}
 
-{#if fromDevice}
-  <!-- Without a connection: a quiet line above the list says these are the copies kept here (SPEC section 32). -->
-  <p role="status" class="pt-1 pb-2 text-meta text-muted">{SHOWING_KEPT}</p>
+{#if fromDevice && !(loaded && articles.length === 0)}
+  <!-- Without a connection: a quiet line above the list says these are the copies kept here (SPEC section 32); with none kept, the empty list's own line says it all. -->
+  <p role="status" class="pt-1 pb-2 text-meta text-muted">{showingKept()}</p>
 {/if}
 
 {#if (bringingIn || (sorted && showsArrivals(source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
 
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
-  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
+  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? nothingKeptHere() : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class={["item-list", heads.some(Boolean) && "by-person"]}>
     {#each articles as article, index (article.id)}
@@ -732,9 +732,12 @@
   {@const article = menuArticle}
   <RowMenu label={`Actions for ${article.title || "Untitled"}`} at={menuAt} onClose={closeMenu} groups={rowMenu(article, unreadOff, { star: toggleStar, read: markUnread }, rowActions(article))} />
 {/if}
-{#if problem}
-  <!-- Try again only where it's the fix: never without a connection, which says when it works again. -->
-  <p role="status" class="mt-4">{problem}{#if !connection.offline}{" "}<TextButton onclick={retryList}>Try again</TextButton>{/if}</p>
+{#if problem && connection.offline}
+  <!-- Without a connection, calmly, saying when it works again: no Try again, which isn't the fix. -->
+  <p role="status" class="mt-4">{problem}</p>
+{:else if problem}
+  <!-- An error, as every error is: oxblood words after the alert icon, then Try again (BRAND.md → "Messages", decision 0312). -->
+  <p role="status" class="mt-4 flex flex-wrap items-center gap-x-2 text-danger"><span class="shrink-0"><Icon name="alert" /></span>{problem}<TextButton class="px-1" onclick={retryList}>Try again</TextButton></p>
 {/if}
 <!--
   What was just done (with Undo), "New articles · press r", or that nine turtles was

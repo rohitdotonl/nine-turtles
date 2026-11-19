@@ -312,7 +312,8 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await appReady(page);
   await page.locator(".item-row").first().click();
   /** W, from anywhere in the article: Write back is never in a bar (decision 0298). */
-  const plane = { click: async () => { await pane(page).locator(".article-title").focus(); await page.keyboard.press("w"); } };
+  // A post with no title has no visible title (decision 0312), but its heading is still there to start from.
+  const plane = { click: async () => { await pane(page).locator("article.article > h2").focus(); await page.keyboard.press("w"); } };
 
   // With no address known, W opens the box; Escape puts it away, as Not now does, and the keyboard goes back to Write back.
   await plane.click();

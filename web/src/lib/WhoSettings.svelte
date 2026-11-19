@@ -272,7 +272,7 @@
         {#each folders as folder (folder.id)}
           <label class="inset-row check-row nested">
             <input type="checkbox" checked={chosen.includes(folder.id)} onchange={(event) => void toggleFolder(folder.id, event.currentTarget.checked)} />
-            <span class="min-w-0 break-words">{folder.name}</span>
+            <span class="min-w-0 wrap-anywhere">{folder.name}</span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>
         {/each}

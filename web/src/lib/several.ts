@@ -34,7 +34,7 @@ export function followedTogether(urls: string[], results: AddResult[], choices: 
   return together;
 }
 
-/** "Comments couldn't be followed: That site didn't answer. Try again later." */
+/** "Comments couldn't be followed: The site couldn't be read just now. Try again later." */
 function couldNot(titles: string[], problem: Problem | undefined): string {
   const names = titles.length === 1 ? titles[0] : `${titles.slice(0, -1).join(", ")} and ${titles.at(-1)}`;
   return `${names} couldn't be followed${problem ? `: ${explain(problem)}` : "."}`;

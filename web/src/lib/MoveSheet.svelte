@@ -66,13 +66,13 @@
         <div class="inset-group">
           <label class="inset-row check-row">
             <input type="radio" name="destination" value="none" bind:group={destination} />
-            <span class="min-w-0 break-words">No folder</span>
+            <span class="min-w-0 wrap-anywhere">No folder</span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
           <!-- New folder… under No folder, before the folders, as in + Add (decision 0261): found without scrolling past them. -->
           <label class="inset-row check-row">
             <input type="radio" name="destination" value="new" bind:group={destination} />
-            <span class="min-w-0 break-words">New folder…</span>
+            <span class="min-w-0 wrap-anywhere">New folder…</span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
           {#if destination === "new"}
@@ -85,7 +85,7 @@
           {#each folders as folder (folder.id)}
             <label class="inset-row check-row">
               <input type="radio" name="destination" value={String(folder.id)} bind:group={destination} />
-              <span class="min-w-0 break-words">{folder.name}</span>
+              <span class="min-w-0 wrap-anywhere">{folder.name}</span>
               <span aria-hidden="true" class="radio-mark shrink-0"></span>
             </label>
           {/each}

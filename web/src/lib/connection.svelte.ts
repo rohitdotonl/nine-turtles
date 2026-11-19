@@ -32,6 +32,18 @@ export function lost() {
   connection.offline = true;
 }
 
+/**
+ * How a line said while nine turtles can't be reached begins and ends (decision 0312):
+ * "You're offline." only when the device itself says it has no connection. Otherwise
+ * it's nine turtles that can't be reached (a new version going live, an outage), and
+ * blaming the reader's connection wouldn't be true.
+ */
+export function away(): { why: string; back: string } {
+  return globalThis.navigator?.onLine === false
+    ? { why: "You're offline.", back: "once you're back online" }
+    : { why: "nine turtles can't be reached right now.", back: "once it's back" };
+}
+
 /** Whether a failed request failed for want of a connection, rather than being refused. */
 export function noConnection(problem: unknown): boolean {
   if (globalThis.navigator?.onLine === false) return true;

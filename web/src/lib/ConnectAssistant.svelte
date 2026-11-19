@@ -64,7 +64,7 @@
   {#if request?.kind === "ok"}
     {@const name = shortName(request.clientName)}
     <div class="connect flex w-full flex-col gap-5">
-      <h2 bind:this={heading} tabindex="-1" class="text-center font-display text-heading font-semibold tracking-[-0.01em] break-words">
+      <h2 bind:this={heading} tabindex="-1" class="text-center font-display text-heading font-semibold tracking-[-0.01em] wrap-anywhere">
         Connect {name} to nine turtles?
       </h2>
       <div class="flex flex-col gap-2">
@@ -88,7 +88,7 @@
       <div class="flex flex-col gap-2 text-ink-2">
         <p>Feeds it unsubscribes from are kept for 30 days; you can bring them back in Settings.</p>
         <p>You can disconnect it any time in Settings.</p>
-        <p>Afterwards you'll go back to <span class="address font-semibold break-words" translate="no">{request.redirectHost}</span>.</p>
+        <p>Afterwards you'll go back to <span class="address font-semibold wrap-anywhere" translate="no">{request.redirectHost}</span>.</p>
       </div>
       <div class="flex flex-col gap-3">
         <p id="connect-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", !message && "sr-only"]}>

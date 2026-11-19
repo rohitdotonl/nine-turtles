@@ -91,7 +91,7 @@
   style:max-height={top === undefined ? undefined : `calc(100dvh - ${top}px - 1rem)`}
 >
   <div class="flex flex-col gap-5 p-6">
-    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class={["sheet-title break-words", titleHidden && "sr-only"]}>
+    <h2 id="sheet-heading" tabindex="-1" bind:this={heading} class={["sheet-title wrap-anywhere", titleHidden && "sr-only"]}>
       {title}
     </h2>
     {@render children()}

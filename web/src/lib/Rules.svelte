@@ -181,7 +181,7 @@
         {#if forName}
           <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
             <!-- A very long name wraps here, so the page is never wider than the screen. -->
-            <span class="min-w-0 break-words">Only from {forName}</span>
+            <span class="min-w-0 wrap-anywhere">Only from {forName}</span>
             <button type="button" class="btn btn-small" onclick={() => (forFeed = undefined)}>Everyone instead</button>
           </p>
         {/if}
@@ -217,7 +217,7 @@
       {@const line = ruleLine(rule, people, now)}
       <div class="inset-row word-row">
         <span class="flex min-w-0 flex-1 flex-col py-2">
-          <span class="break-words">{wordShown(rule)}</span>
+          <span class="wrap-anywhere">{wordShown(rule)}</span>
           <span class="text-meta text-muted">{line}</span>
         </span>
         <button type="button" data-remove class="btn-quiet btn-icon" aria-label={`Remove ${wordShown(rule)}, ${line}`} title="Remove" onclick={() => remove(rule, index)}><Icon name="trash" size="alone" /></button>

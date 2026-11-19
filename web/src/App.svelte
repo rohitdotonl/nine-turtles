@@ -34,7 +34,9 @@
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/articles";
-  import { noConnection } from "./lib/connection.svelte";
+  import { away, noConnection } from "./lib/connection.svelte";
+  import Icon from "./lib/Icon.svelte";
+  import TextButton from "./lib/TextButton.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
@@ -91,6 +93,28 @@
   }
 
   check();
+
+  /**
+   * Can't be reached (a new version going live, an outage, or no connection): never a dead end.
+   * It asks again by itself every 10 seconds and when the device comes back online, so the app
+   * opens on its own once nine turtles answers; Try again asks at once (decision 0312).
+   */
+  let trying = $state(false);
+  async function tryAgain() {
+    trying = true;
+    await check();
+    trying = false;
+  }
+  $effect(() => {
+    if (!unreachable) return;
+    const again = setInterval(() => void check(), 10_000);
+    const online = () => void check();
+    addEventListener("online", online);
+    return () => {
+      clearInterval(again);
+      removeEventListener("online", online);
+    };
+  });
 
   /** The tab's title on the pages outside the signed-in screen, which names its own (Shell.svelte): what the page is for, so a signed-out tab no longer names the list it showed. */
   let pageTitle = $derived.by(() => {
@@ -155,6 +179,9 @@
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
     <Wordmark />
-    <p>nine turtles can't be reached right now. Reload the page to try again.</p>
+    <p role="status" class="flex flex-wrap items-center justify-center gap-x-2 text-danger">
+      <span class="shrink-0"><Icon name="alert" /></span>{away().why}
+      <TextButton class="px-1" onclick={tryAgain} disabled={trying}>{trying ? "Trying…" : "Try again"}</TextButton>
+    </p>
   </main>
 {/if}

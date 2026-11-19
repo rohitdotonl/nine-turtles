@@ -84,8 +84,10 @@ anywhere or counted.
 - Highlights and notes are still made and shown at once. They're kept on
   this device and sent, in order, as soon as the connection is back. Until
   then one quiet line stays at the article's foot: "You're offline. This is
-  saved on this device only, and reaches your account once you're back
-  online."
+  kept on this device only, and reaches your account once you're back
+  online." (or, with the device online but nine turtles not answering,
+  "nine turtles can't be reached right now. This is kept on this device
+  only, and reaches your account once it's back."; decision 0312)
 - A highlight is saved once, however often it's sent (decision 0255): if
   the page is reloaded or closed the instant a highlight is saving, it's
   sent again when the article is next open, and the server answers the one

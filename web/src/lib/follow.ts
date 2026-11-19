@@ -4,6 +4,7 @@
 // page through the feed finder's lookup without following anything, names
 // who wrote it, and says problems in words that never mention feeds or RSS.
 import { TOO_MANY } from "./messages";
+import { away } from "./connection.svelte";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { PROBLEMS, explain, type Choice, type Problem } from "./feeds";
@@ -98,7 +99,7 @@ export function sayProblem(reason: Problem): string {
     case "plan-ended":
       return "Your free trial or plan has ended. Choose a plan in Settings to follow someone new.";
     case "offline":
-      return "You're offline. Following works again once you're back online.";
+      return `${away().why} Following works again ${away().back}.`;
     case "trouble":
       return "This site couldn't be followed. Try again in a moment.";
     default:

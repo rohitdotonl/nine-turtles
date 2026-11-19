@@ -230,7 +230,7 @@
           </form>
         {:else}
           <div class="inset-row passkey-row">
-            <p class="min-w-0 flex-1 break-words">
+            <p class="min-w-0 flex-1 wrap-anywhere">
               {passkeyName(passkey)}<br /><span class="value text-muted">{passkeyDates(passkey)}</span>
             </p>
             <span class="flex shrink-0 items-center gap-2">

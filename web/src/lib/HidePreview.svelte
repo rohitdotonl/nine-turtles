@@ -65,7 +65,7 @@
     <ul class="-mt-2">
       {#each preview.articles as article (article.id)}
         <li class="preview-row">
-          <span class="block font-serif text-(length:--row-title-size) leading-snug break-words">{untitledOpening(article) ?? article.title}</span>
+          <span class="block font-serif text-(length:--row-title-size) leading-snug wrap-anywhere">{untitledOpening(article) ?? article.title}</span>
           <span class="block text-meta text-muted">{previewWhere(article, preview.inTitle)}</span>
         </li>
       {/each}

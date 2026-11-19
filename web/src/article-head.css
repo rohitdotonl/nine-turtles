@@ -39,6 +39,8 @@
   color: var(--ink);
   text-align: center;
   text-wrap: balance;
+  /* A name with no space to break at (a web address, say) breaks where it must, rather than running off both edges. */
+  overflow-wrap: anywhere;
 }
 
 .article-byline .by {

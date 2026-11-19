@@ -1,7 +1,7 @@
 // The article lists (SPEC sections 6, 8, 9 and 13): pages from the server,
 // or from this device's copies without a connection; whether new articles
 // wait; and the words a list ends with and says after Mark all as read.
-import { connection, noConnection } from "./connection.svelte";
+import { away, connection, noConnection } from "./connection.svelte";
 import { NeedsConnection, keptPage, markSent, useFetchers } from "./offline";
 import { getJson, isRecord } from "./http";
 import { saved, send, worthRetrying } from "./saving";
@@ -70,8 +70,9 @@ export function endOfList(source: Source): string {
 /** What the list says when it couldn't load: without a connection, search says plainly that it needs one. */
 export function couldNotLoad(failure: unknown): string {
   if (failure instanceof NeedsConnection) return failure.message;
-  if (connection.offline) return "You're offline. These articles load once you're back online.";
-  return "The articles couldn't be loaded. Try again in a moment.";
+  if (connection.offline) return `${away().why} These articles load ${away().back}.`;
+  // Try again follows it, so the line needn't say it (BRAND.md → "Messages").
+  return "The articles couldn't be loaded.";
 }
 
 /** "1 result", "12 results", or "50+ results" while older ones are still to load. */

@@ -14,7 +14,7 @@
   time it's playing at, and each time in a note takes the player back there.
 
   Without a connection all of it still works, and one quiet line at the
-  foot of the article says where it's kept (OFFLINE_LINE) until it's sent.
+  foot of the article says where it's kept (offlineLine) until it's sent.
 
   Nothing typed is thrown away (decision 0235): a note left unsaved (by
   Not now, Escape, a press outside its box, or going to another article)
@@ -31,7 +31,7 @@
   import NoteText from "./NoteText.svelte";
   import { keepDraft, keptDraft, keptDrafts, keptWords, worthKeeping } from "./drafts";
   import { isRecord } from "./http";
-  import { Marks, OFFLINE_LINE, type Quote } from "./notes.svelte";
+  import { Marks, offlineLine, type Quote } from "./notes.svelte";
   import { paint, quoteOf, unpaint } from "./highlights";
   import { clock } from "./podcasts";
   import { UNDONE } from "./messages";
@@ -367,7 +367,7 @@
   // Without a connection, the quiet line at the foot is said once as well, for a screen reader.
   let saidOffline = false;
   $effect(() => {
-    if (marks.waits && !saidOffline) say(OFFLINE_LINE);
+    if (marks.waits && !saidOffline) say(offlineLine());
     saidOffline = marks.waits;
   });
 
@@ -534,7 +534,7 @@
       <p>{undoable.said}</p>
       <TextButton bind:element={undoButton} onclick={undo}>Undo</TextButton>
     {/if}
-    {#if marks.waits}<p class="text-ink-2">{OFFLINE_LINE}</p>{/if}
+    {#if marks.waits}<p class="text-ink-2">{offlineLine()}</p>{/if}
   </div>
 {/if}
 

@@ -117,7 +117,7 @@
       <h3 id="follow-lately" class="text-meta text-ink-2">Lately</h3>
       <ul class="flex flex-col gap-1 font-serif">
         {#each person.lately as title, index (index)}
-          <li class="break-words">{title}</li>
+          <li class="wrap-anywhere">{title}</li>
         {/each}
       </ul>
     </section>
