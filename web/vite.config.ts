@@ -12,7 +12,7 @@ const node = globalThis as unknown as { process: { getBuiltinModule(name: "node:
 // copies drop them, and the source keeps them: the service worker loses its
 // one-line comments, blank lines and indents (it has no multi-line strings or
 // comments, so that is safe), the page its comments and line breaks, the web
-// app manifest its spaces and the icon its line breaks.
+// app manifests (one per page, decision 0321) their spaces and the icon its line breaks.
 function trimPublicFiles(): Plugin {
   let dist = "dist";
   return {
@@ -34,8 +34,10 @@ function trimPublicFiles(): Plugin {
       writeFileSync(file, kept.join("\n") + "\n");
       const icon = `${dist}/icons/icon.svg`;
       writeFileSync(icon, readFileSync(icon, "utf8").replace(/\n/g, ""));
-      const manifest = `${dist}/manifest.webmanifest`;
-      writeFileSync(manifest, JSON.stringify(JSON.parse(readFileSync(manifest, "utf8"))));
+      for (const name of ["manifest", "manifest-paper", "manifest-night"]) {
+        const manifest = `${dist}/${name}.webmanifest`;
+        writeFileSync(manifest, JSON.stringify(JSON.parse(readFileSync(manifest, "utf8"))));
+      }
     },
   };
 }
