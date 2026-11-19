@@ -7,8 +7,9 @@
 //   the server for the newest one behind it (decision 0320): a slow or bad
 //   connection never holds the screen up. The page says which version it is,
 //   so the app notices a newer server and moves to it at the next screen
-//   change (decision 0085), letting go of the kept page first. The first
-//   time, and when nothing is kept, the page comes from the server.
+//   change (decision 0085), keeping the newest page first (updates.svelte.ts).
+//   The first time, and when nothing is kept, the page comes from the server;
+//   the server's own pages (its status page and the like) always do.
 // - The app's code and styles (in /assets/, whose names change with every
 //   version) are kept and used from the copy, the pages it loads later in
 //   files of their own too. Copies no version uses any more are removed when
@@ -19,8 +20,8 @@
 //   next opening. The first time, they come from the server.
 // - Everything else, including all of /api/, goes straight to the server.
 //
-// Nothing here swaps the app while it's open: a new version starts the next
-// time nine turtles is opened or reloaded.
+// Nothing here swaps the app while it's open: a new version starts at the
+// app's next move to another place, or a reload for it (updates.svelte.ts).
 
 const KEPT = "nine-turtles-app-1";
 

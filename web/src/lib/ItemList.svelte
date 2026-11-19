@@ -71,7 +71,7 @@
   import type { SortedLine } from "./sorting";
   import { askingEvery, bringsIn, showsArrivals } from "./asking";
   import { OTHER_READER_MESSAGE, STRANDED_MESSAGE, reloadNewest, updates } from "./updates.svelte";
-  import { connection } from "./connection.svelte";
+  import { connection, whenBack } from "./connection.svelte";
   import { END_OF_KEPT, nothingKeptHere, refreshNeedsConnection, showingKept } from "./offline";
 
   let {
@@ -654,6 +654,9 @@
     menuAt = undefined;
     if (giveBack && index !== undefined) rows[index]?.focus();
   }
+
+  // From the kept copies, or couldn't load for want of a connection: once nine turtles answers again (back online, or a slow answer came), from the server by itself (decisions 0312, 0320).
+  $effect(() => (fromDevice || (problem && connection.offline) ? whenBack(() => void (loaded ? refresh() : load(null))) : undefined));
 
   load(null);
 </script>

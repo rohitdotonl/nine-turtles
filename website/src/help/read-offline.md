@@ -4,7 +4,7 @@ description: nine turtles keeps your newest unread and saved articles on each de
 groupId: reading
 order: 6
 spec: 32
-updated: 2026-11-19
+updated: 2026-11-20
 related: [install-the-app, save-an-article, mark-read-or-unread]
 ---
 
@@ -38,6 +38,11 @@ say), it's the same, but the list says **nine turtles
 can't be reached right now.** instead: your own connection is fine. If nothing
 is kept on the device yet, the page says so with **Try again**, and opens by
 itself once nine turtles is back.
+
+On a very slow connection, nine turtles doesn't keep you waiting either: if it
+hasn't heard back within a few seconds of opening, it shows the kept articles,
+and the list says **The connection is slow.** The newest articles come in by
+themselves once the answer arrives.
 
 ## What needs a connection
 

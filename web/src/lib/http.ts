@@ -10,9 +10,9 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Asks for `path` and answers the JSON; throws when the server answers with an error. */
-export async function getJson(path: string): Promise<unknown> {
-  const response = await api(path, { cache: "no-store" });
+/** Asks for `path` and answers the JSON; throws when the server answers with an error. `signal` can stop it. */
+export async function getJson(path: string, signal?: AbortSignal): Promise<unknown> {
+  const response = await api(path, { cache: "no-store", signal });
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   return response.json();
 }

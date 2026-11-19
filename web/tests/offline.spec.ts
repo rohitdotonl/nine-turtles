@@ -148,9 +148,25 @@ test("on a connection too slow to wait for, opening shows the kept copies at onc
   await expect(page.getByRole("button", { name: new RegExp(NEWEST.replace(/[()]/g, "\\$&")) }).first()).toBeVisible();
   expect(Date.now() - opened).toBeLessThan(6_000);
 
-  // The answers still come: the line goes, as when a connection comes back.
+  // The answers still come: the list loads from the server by itself, and never says nine turtles can't be reached.
   await page.unroute("**/api/**");
   await expect(page.getByText("The connection is slow. Showing the articles kept on this device.")).toBeHidden({ timeout: 20_000 });
+  await expect(page.getByText(/can't be reached/)).toHaveCount(0);
+  await expect(page.getByText("That's everything kept on this device.")).toHaveCount(0);
+});
+
+test("the server's own pages never open as the app's kept page (decision 0320)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the same on every width");
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+  await page.goto(new URL("/unread", FEEDS_APP).href);
+  await appReady(page);
+  await page.goto(new URL("/status", FEEDS_APP).href);
+  await expect(page.locator("#app")).toHaveCount(0);
+  await expect(page.getByText(/version/i).first()).toBeVisible();
 });
 
 test("another reader signing in on this device never gets the last reader's copies or waiting marks", async ({ page, context, playwright, isMobile }) => {

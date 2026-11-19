@@ -614,7 +614,7 @@ export async function firstOf(
 }
 
 /** `fetch`, never while the reader is pressing things: stopped by a press, and asked again once they pause (presses.ts, decision 0320). */
-async function givingWay<T>(fetch: (signal: AbortSignal) => Promise<T>): Promise<T> {
+export async function givingWay<T>(fetch: (signal: AbortSignal) => Promise<T>): Promise<T> {
   for (;;) {
     await quiet();
     const press = untilPressed();

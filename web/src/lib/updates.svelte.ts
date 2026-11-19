@@ -103,7 +103,7 @@ export async function api(input: string, init?: RequestInit): Promise<Response> 
       response = await fetch(input, { ...init, headers });
     }
   } catch (problem) {
-    if (noConnection(problem)) lost();
+    if (noConnection(problem)) lost(problem);
     throw problem;
   }
   reached(response);
@@ -155,24 +155,30 @@ export function switchTo(path: string, carried: Carried) {
   } catch {
     // Without it the new version still opens, as a fresh page would.
   }
-  // The phone's kept page is this older version: without it, the page comes from the server (sw.js).
-  void forgetKeptPage().finally(() => location.assign(path));
+  // The phone's kept page is this older version: the newest is kept first, so the switch opens it (sw.js).
+  void keepNewestPage().finally(() => location.assign(path));
 }
 
-/** Reloads into the server's newest version: the phone's kept page, an older one, is let go first. */
+/** Reloads into the server's newest version: the phone's kept page, an older one, is replaced by it first. */
 export function reloadNewest(): void {
-  void forgetKeptPage().finally(() => location.reload());
+  void keepNewestPage().finally(() => location.reload());
 }
 
 /** The service worker's store (web/public/sw.js names it too). */
 const KEPT_STORE = "nine-turtles-app-1";
 
-/** Lets go of the phone's kept copy of the page, so the next opening asks the server for it. */
-async function forgetKeptPage(): Promise<void> {
+/**
+ * Puts the server's page in place of the phone's kept copy, so the next opening (which opens the
+ * kept one, sw.js) is the newest version. Without an answer the kept page stays, so the app still
+ * opens without a connection.
+ */
+export async function keepNewestPage(): Promise<void> {
   try {
-    await (await globalThis.caches?.open(KEPT_STORE))?.delete("/");
+    const response = await fetch("/", { cache: "no-store" });
+    if (!response.ok || !(await response.clone().text()).includes('name="nine-turtles-version"')) return;
+    await (await globalThis.caches?.open(KEPT_STORE))?.put("/", response);
   } catch {
-    // No store (or not allowed): the server's page opens anyway once the kept one is replaced.
+    // No connection, or no store: the kept page stays as it is.
   }
 }
 

@@ -19,7 +19,7 @@ import { homeFor } from "./navigation";
 import { isList, parse } from "./router";
 import { listPath } from "./listPath";
 import { deviceText, setDeviceText } from "./device";
-import { reached, tooSlow } from "./connection.svelte";
+import { lost, reached, tooSlow } from "./connection.svelte";
 
 /** An early answer is used only this soon after opening; later, the screen asks afresh. */
 const FRESH_MS = 10_000;
@@ -72,7 +72,8 @@ export function inTime(answer: Promise<Response>, deadline: number): Promise<Res
     const late = setTimeout(() => {
       tooSlow();
       reject(new DOMException("The connection is too slow to wait for.", "TimeoutError"));
-      answer.then(reached, () => undefined);
+      // When it comes, nine turtles is back; if it fails instead, none came: not slow, gone (`away()`).
+      answer.then(reached, (problem: unknown) => lost(problem));
     }, Math.max(0, deadline - Date.now()));
     answer.then(
       (response) => {
@@ -92,6 +93,11 @@ function pageAsked(): Record<string, Promise<Response>> {
   const asked = (globalThis as { nineTurtlesEarly?: unknown }).nineTurtlesEarly;
   (globalThis as { nineTurtlesEarly?: unknown }).nineTurtlesEarly = undefined;
   return typeof asked === "object" && asked !== null ? (asked as Record<string, Promise<Response>>) : {};
+}
+
+/** Forgets the lists noted for the page (they name the reader's people and folders): signing out, or another reader. */
+export function forgetLists(): void {
+  setDeviceText(LISTS_KEY, null);
 }
 
 /** Notes the list `path` opens, so the page can ask for it next time before the app's code arrives. */

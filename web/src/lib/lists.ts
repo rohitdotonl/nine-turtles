@@ -9,7 +9,6 @@ import { toArticle, toFullArticle, type Article, type Page, type Source } from "
 import type { Order } from "./reading";
 import { changesSoFar, noteRecent, recentPage } from "./recent";
 import { listPath, sourceQuery } from "./listPath";
-import { api } from "./updates.svelte";
 import { listFor } from "./early";
 
 /**
@@ -84,7 +83,7 @@ async function listFromServer(source: Source, order: Order, after: string | null
   const path = listPath(source, order, after, size);
   const asked = changesSoFar();
   const start = performance.now();
-  const body = signal ? await (await answered(path, signal)).json() : await getJson(path);
+  const body = await getJson(path, signal);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
   const marks = marksSince(start);
   const page = {
@@ -176,18 +175,11 @@ export function markedAllMessage(count: number, place?: string): string {
   return `Marked ${count} ${count === 1 ? "article" : "articles"} as read${place ? ` in ${place}` : ""}.`;
 }
 
-/** The answer at `path`, unless `signal` stops it first; an error answer throws. */
-async function answered(path: string, signal: AbortSignal): Promise<Response> {
-  const response = await api(path, { cache: "no-store", signal });
-  if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
-  return response;
-}
-
 // How the copies for reading offline are fetched, and waiting marks sent (offline.ts).
 useFetchers({
   list: listFromServer,
   async several(ids, signal) {
-    const body: unknown = await (await answered(`/api/articles/several?ids=${ids.join(",")}`, signal ?? new AbortController().signal)).json();
+    const body = await getJson(`/api/articles/several?ids=${ids.join(",")}`, signal);
     if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
     return body.articles.filter(isRecord).map(toFullArticle);
   },

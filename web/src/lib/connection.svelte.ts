@@ -28,9 +28,10 @@ export function reached(response: Response) {
   for (const then of [...backAgain]) then();
 }
 
-/** A request got no answer at all. */
-export function lost() {
+/** A request got no answer at all: too slow to wait for, if it was given up on (decision 0320), else none came. */
+export function lost(problem?: unknown) {
   connection.offline = true;
+  connection.slow = problem instanceof DOMException && problem.name === "TimeoutError";
 }
 
 /**

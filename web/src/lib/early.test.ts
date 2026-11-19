@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { askEarly, forgetEarly, LISTS_KEY, noteList, SLOW_MS, takeEarly } from "./early";
+import { askEarly, forgetEarly, forgetLists, LISTS_KEY, noteList, SLOW_MS, takeEarly } from "./early";
 import { away, connection } from "./connection.svelte";
 
 afterEach(() => {
@@ -83,6 +83,9 @@ describe("a slow connection doesn't hold opening up (decision 0320)", () => {
     expect(JSON.parse(kept[LISTS_KEY] ?? "{}")).toEqual({ "/folders/7": "/api/articles?folder=7&order=newest" });
     noteList("/settings", undefined);
     expect(Object.keys(JSON.parse(kept[LISTS_KEY] ?? "{}"))).toEqual(["/folders/7"]);
+    // They name the reader's people and folders: gone on signing out, or with another reader.
+    forgetLists();
+    expect(kept[LISTS_KEY]).toBeUndefined();
   });
 
   it("on a device with kept copies, gives up waiting after a few seconds, and still hears the answer", async () => {
@@ -101,6 +104,22 @@ describe("a slow connection doesn't hold opening up (decision 0320)", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(connection.offline).toBe(false);
     expect(connection.slow).toBe(false);
+  });
+
+  it("says nine turtles can't be reached, not that the connection is slow, when the late answer fails instead", async () => {
+    vi.useFakeTimers();
+    let fail: (problem: unknown) => void = () => {};
+    vi.stubGlobal("fetch", () => new Promise<Response>((_, reject) => (fail = reject)));
+    vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "nine-turtles.reader" ? "3" : null) });
+    askEarly("/settings");
+    const failed = expect(takeEarly("/api/feeds")).rejects.toMatchObject({ name: "TimeoutError" });
+    await vi.advanceTimersByTimeAsync(SLOW_MS);
+    await failed;
+    expect(away().why).toBe("The connection is slow.");
+    fail(new TypeError("Failed to fetch"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(connection.offline).toBe(true);
+    expect(away().why).toBe("nine turtles can't be reached right now.");
   });
 
   it("waits as long as it takes on a device that has never been signed in (nothing kept to show)", async () => {

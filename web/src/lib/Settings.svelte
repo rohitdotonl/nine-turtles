@@ -392,7 +392,7 @@
         <h3 id="account-heading" class="settings-head label">Account</h3>
         <div class="inset-group">
           {#if updates.ready}
-            <!-- Never swapped while you read: the new version starts when you reload, go to another place, or next time you open nine turtles. -->
+            <!-- Never swapped while you read: the new version starts when you reload or go to another place (decision 0320). -->
             <div class="inset-row setting">
               <span class="setting-label">{@render icon("refresh")}<span class="setting-name">A new version is ready.</span></span>
               <button type="button" onclick={reloadNewest} class="btn btn-small">Reload</button>
