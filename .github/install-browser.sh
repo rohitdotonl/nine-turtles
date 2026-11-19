@@ -38,6 +38,9 @@ debs=("$BROWSER_DEBS"/*.deb)
 if [ ${#debs[@]} -gt 0 ]; then
   echo "Installing the browser's ${#debs[@]} system pieces from the kept copies."
   if ! sudo apt-get install -y --no-install-recommends "${debs[@]}"; then
+    # The fresh copies aren't saved: the workflow saves only when it found
+    # nothing under its key. Runs stay on this slower path until GitHub's
+    # image changes (about weekly) or the web app's libraries do.
     echo "The kept copies didn't install; fetching them again."
     rm -rf "$BROWSER_DEBS"
     fetch_from_ubuntu
