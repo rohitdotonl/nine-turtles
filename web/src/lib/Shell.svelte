@@ -66,6 +66,7 @@
   import { homeFor, isOver, isWho, listFromOnMove, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type ListFrom, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
   import PageWait from "./PageWait.svelte";
+  import { placeInSight } from "./sidebarSteps";
   import { LaterPages } from "./laterPages.svelte";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -289,10 +290,7 @@
   let sidebarPlace = $derived(!phone && panes.sidebar && library.feeds !== undefined ? pathFor(route) : "");
   $effect(() => {
     if (sidebarPlace === "") return;
-    untrack(() => {
-      const row = sidebar?.querySelector(".scroller [aria-current='page']");
-      row?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
-    });
+    untrack(() => placeInSight(sidebar));
   });
 
   // An article counts as read once it's open (SPEC section 8), never while their page has the window; only a newly shown one, so `m` on it keeps it unread until you move away and back.
@@ -907,7 +905,7 @@
           onFeedsChanged={loadFeeds}
           {notice}
           returnTo={cameBackFrom}
-        />{:else}<PageWait name="Everyone you follow" failed={pages.failed} />{/if}
+        />{:else}<PageWait name="Everyone you follow" opens="shows" failed={pages.failed} />{/if}
       {:else if route.kind === "muted"}
         {#if pages.Muted}<pages.Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />{:else}<PageWait name="Muted" failed={pages.failed} />{/if}
       {:else if route.kind === "readers"}

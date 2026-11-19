@@ -315,3 +315,26 @@ async fn a_page_position_of_the_wrong_kind_is_refused() {
         assert_eq!(response.status(), StatusCode::BAD_REQUEST, "{query}");
     }
 }
+
+#[tokio::test]
+async fn a_bigger_page_can_be_asked_for_up_to_200_for_the_offline_copies() {
+    let library = library().await;
+    with_dee(&library).await;
+    let count = |page: &Value| page["articles"].as_array().unwrap().len();
+    // Unread (by person) and All both take the size asked for.
+    let unread = library.get("/api/articles?view=unread&size=60").await;
+    assert_eq!(count(&unread), 60);
+    let whole = library.get("/api/articles?view=unread&size=70").await;
+    assert_eq!(count(&whole), 64);
+    assert!(whole["next"].is_null());
+    let all = library.get("/api/articles?view=all&size=10").await;
+    assert_eq!(count(&all), 10);
+    assert!(all["next"].is_string());
+    // Never more than 200, nor fewer than 1.
+    let most = library.get("/api/articles?view=all&size=100000").await;
+    let at_most = library.get("/api/articles?view=all&size=200").await;
+    assert!(count(&most) > 50);
+    assert_eq!(count(&most), count(&at_most));
+    let least = library.get("/api/articles?view=all&size=0").await;
+    assert_eq!(count(&least), 1);
+}

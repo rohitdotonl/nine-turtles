@@ -97,3 +97,32 @@ describe("saving a mark again", () => {
     for (const status of [400, 401, 404, 413, 500]) expect(worthRetrying(new Refused(status))).toBe(false);
   });
 });
+
+describe("lists and marks on their way (decision 0315)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("a list waits for other changes, never for a mark, and knows which marks it may not show", async () => {
+    let answer!: () => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>((resolve) => (answer = () => resolve(new Response(null, { status: 200 }))))),
+    );
+    const { markRead, marksSince, savedBesidesMarks, saved } = await load();
+    const before = performance.now();
+    const saving = markRead([7], true);
+    let besides = false;
+    let all = false;
+    void savedBesidesMarks().then(() => (besides = true));
+    void saved().then(() => (all = true));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(besides).toBe(true);
+    expect(all).toBe(false);
+    expect(marksSince(before)).toEqual([{ kind: "read", ids: [7], value: true }]);
+    answer();
+    await saving;
+    expect(all).toBe(true);
+    // Saved now: a list asked for from here on has it from the server.
+    expect(marksSince(performance.now() + 1)).toEqual([]);
+    expect(marksSince(before)).toHaveLength(1);
+  });
+});

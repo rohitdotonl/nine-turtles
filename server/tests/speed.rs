@@ -10,7 +10,8 @@ use std::time::{Duration, Instant};
 use nine_turtles::{
     checking::DUE,
     feeds::{
-        Cursor, FEEDS, LATEST, List, NOTES_SQL, Order, by_person_sql, list_sql, new_sql, page,
+        Cursor, FEEDS, LATEST, List, NOTES_SQL, Order, PAGE_SIZE, by_person_sql, list_sql, new_sql,
+        page,
     },
     marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
@@ -245,7 +246,9 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
     let mut timings = Vec::new();
     let mut time = async |what: &'static str, list: List, order: Order, after| {
         let started = Instant::now();
-        let (articles, next) = page(&db, READER, list, order, after).await.unwrap();
+        let (articles, next) = page(&db, READER, list, order, after, PAGE_SIZE)
+            .await
+            .unwrap();
         timings.push((what, started.elapsed()));
         (articles, next)
     };
@@ -313,7 +316,7 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
 
     // The second reader's lists hold only their ten feeds, with their marks.
     let started = Instant::now();
-    let (theirs, _) = page(&db, OTHER, List::All, Order::Newest, None)
+    let (theirs, _) = page(&db, OTHER, List::All, Order::Newest, None, PAGE_SIZE)
         .await
         .unwrap();
     timings.push(("the other reader's first page", started.elapsed()));
@@ -325,20 +328,20 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             .all(|article| article.feed_title.starts_with("Their ")
                 && article.read == (article.id % 3 == 0))
     );
-    let (their_starred, _) = page(&db, OTHER, List::Starred, Order::Newest, None)
+    let (their_starred, _) = page(&db, OTHER, List::Starred, Order::Newest, None, PAGE_SIZE)
         .await
         .unwrap();
     assert!(their_starred.iter().all(|article| article.id % 7 == 0));
-    let (their_folder, _) = page(&db, OTHER, List::Folder(4), Order::Newest, None)
+    let (their_folder, _) = page(&db, OTHER, List::Folder(4), Order::Newest, None, PAGE_SIZE)
         .await
         .unwrap();
     assert!(their_folder.iter().all(|article| article.feed_id == 250));
     // Nor can either reader see the other's folder.
-    let (not_mine, _) = page(&db, OTHER, List::Folder(1), Order::Newest, None)
+    let (not_mine, _) = page(&db, OTHER, List::Folder(1), Order::Newest, None, PAGE_SIZE)
         .await
         .unwrap();
     assert!(not_mine.is_empty());
-    let (not_theirs, _) = page(&db, READER, List::Folder(4), Order::Newest, None)
+    let (not_theirs, _) = page(&db, READER, List::Folder(4), Order::Newest, None, PAGE_SIZE)
         .await
         .unwrap();
     assert!(not_theirs.is_empty());
@@ -371,11 +374,15 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
         ("oldest unread, nothing read", Order::Oldest),
     ] {
         let started = Instant::now();
-        let (rows, next) = page(&db, READER, List::Unread, order, None).await.unwrap();
+        let (rows, next) = page(&db, READER, List::Unread, order, None, PAGE_SIZE)
+            .await
+            .unwrap();
         timings.push((what, started.elapsed()));
         assert_eq!(rows.len(), 50);
         let started = Instant::now();
-        page(&db, READER, List::Unread, order, next).await.unwrap();
+        page(&db, READER, List::Unread, order, next, PAGE_SIZE)
+            .await
+            .unwrap();
         timings.push((what, started.elapsed()));
     }
     // It reads only the reader's unread entries, through an index.

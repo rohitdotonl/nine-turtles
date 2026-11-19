@@ -131,12 +131,14 @@ pub const fn by_person_sql(order: Order) -> &'static str {
 
 /// One page of Unread by person, from the start or from where the last one
 /// ended (`after`: that page's last article's time and number, and its
-/// place). One extra row is asked for, to know whether another page exists.
+/// place); `size` articles at most. One extra row is asked for, to know
+/// whether another page exists.
 pub(super) async fn unread_by_person(
     db: &sqlx::SqlitePool,
     person: i64,
     order: Order,
     after: Option<(i64, i64, Place)>,
+    size: i64,
 ) -> Result<(Vec<ArticleRow>, Option<(i64, i64, Place)>), sqlx::Error> {
     let (at, id, place) = match after {
         Some(after) => after,
@@ -165,10 +167,10 @@ pub(super) async fn unread_by_person(
         .bind(place.whose)
         .bind(at)
         .bind(id)
-        .bind(super::PAGE_SIZE + 1)
+        .bind(size + 1)
         .fetch_all(db)
         .await?;
-    let next = if rows.len() > usize::try_from(super::PAGE_SIZE).unwrap_or(usize::MAX) {
+    let next = if rows.len() > usize::try_from(size).unwrap_or(usize::MAX) {
         rows.pop();
         rows.last().map(|last| {
             let place = Place {

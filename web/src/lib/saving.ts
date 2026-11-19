@@ -6,12 +6,27 @@ import { noConnection, serverNow } from "./connection.svelte";
 import { markSent, noteMark, sending } from "./offline";
 
 // Marks are sent one after another, in the order they were made, so an undo
-// can never overtake the mark it undoes. Lists and counts wait for them, so
-// a list opened next already shows them; articles themselves never wait, so
-// a slow save can't hold up reading. While nine turtles is out of reach and
-// marks are waiting to try again, nothing waits for them: lists would fail
-// anyway, and say so, rather than hang.
+// can never overtake the mark it undoes. Counts wait for them, so the next
+// ones already show them. Lists don't wait for marks (decision 0315): a list
+// fetched while marks are on their way shows them anyway (`marksSince`), and
+// waits only for other changes (a setting, a mute). Articles themselves never
+// wait, so a slow save can't hold up reading. While nine turtles is out of
+// reach and marks are waiting to try again, nothing waits for them: lists
+// would fail anyway, and say so, rather than hang.
 let writes: Promise<unknown> = Promise.resolve();
+/** The last change other than a mark, once it's saved (or failed). */
+let others: Promise<unknown> = Promise.resolve();
+
+/** A mark made lately: when it was saved, or failed (`undefined` while on its way). */
+export type Made = { kind: "read" | "starred"; ids: number[]; value: boolean; savedAt?: number };
+/** Marks made lately, oldest first; each is forgotten a minute after it's saved. */
+const made: Made[] = [];
+const MADE_KEPT_MS = 60_000;
+
+/** The marks a list fetched since `start` (`performance.now()`) might not show yet: those still on their way, or saved since. */
+export function marksSince(start: number): Made[] {
+  return made.filter((mark) => mark.savedAt === undefined || mark.savedAt >= start);
+}
 
 /** How many marks are still on their way: not yet saved, and not yet failed. A tab only switches to a new version once there are none. */
 let unsavedMarks = 0;
@@ -25,8 +40,17 @@ export function marksUnsaved(): boolean {
 let retrying = false;
 const waitingForSaves = new Set<() => void>();
 
-/** Waits until every mark sent so far has been saved (or has failed), or until saving has to wait to try again. */
+/** Waits until every change sent so far has been saved (or has failed), or until saving has to wait to try again. */
 export function saved(): Promise<unknown> {
+  return waitFor(writes);
+}
+
+/** The same, for every change but marks (`marksSince` covers those). */
+export function savedBesidesMarks(): Promise<unknown> {
+  return waitFor(others);
+}
+
+function waitFor(chain: Promise<unknown>): Promise<unknown> {
   if (retrying) return Promise.resolve();
   return new Promise((resolve) => {
     const done = () => {
@@ -34,7 +58,7 @@ export function saved(): Promise<unknown> {
       resolve(undefined);
     };
     waitingForSaves.add(done);
-    writes.then(done);
+    chain.then(done);
   });
 }
 
@@ -76,7 +100,8 @@ export function signedOut(problem: unknown): boolean {
   return problem instanceof Refused && problem.status === 401;
 }
 
-export function send(path: string, body: unknown): Promise<void> {
+/** Sends a change after the ones before it, trying again while nine turtles is out of reach. `mark`: a read or saved mark. */
+export function send(path: string, body: unknown, mark = false): Promise<void> {
   // Now, not when its turn comes after the writes before it.
   changed();
   const giveUpAt = Date.now() + KEEP_TRYING_FOR;
@@ -112,6 +137,7 @@ export function send(path: string, body: unknown): Promise<void> {
   const settled = () => void unsavedMarks--;
   sent.then(settled, settled);
   writes = sent.catch(() => undefined);
+  if (!mark) others = writes;
   return sent;
 }
 
@@ -139,8 +165,15 @@ function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: n
   const body = kind === "read" ? { ids, read: value, at } : { ids, starred: value, at };
   const offline = globalThis.navigator?.onLine === false;
   const done = sending(kind, ids, at);
-  const sent = offline ? Promise.reject(new TypeError("offline")) : send(path, body);
+  const sent = offline ? Promise.reject(new TypeError("offline")) : send(path, body, true);
   sent.then(done, done);
+  const mark: Made = { kind, ids, value };
+  made.push(mark);
+  const over = () => {
+    mark.savedAt = performance.now();
+    while (made[0]?.savedAt !== undefined && mark.savedAt - made[0].savedAt > MADE_KEPT_MS) made.shift();
+  };
+  sent.then(over, over);
   return sent.then(
     async () => {
       await noted;

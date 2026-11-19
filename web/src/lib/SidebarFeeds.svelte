@@ -54,6 +54,7 @@
   import { UNDO_FAILED, UNDONE } from "./messages";
   import { addressFor, pathFor, type Route } from "./router";
   import { dragValue, sidebarDrag, type Dragged, type Over } from "./sidebarDrag";
+  import { afterPaint, FIRST_ROWS, MORE_ROWS, placeInSight, rowsDrawn } from "./sidebarSteps";
 
   let {
     library,
@@ -292,6 +293,27 @@
   let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
+  // Drawn in steps (sidebarSteps.ts, decision 0315): the rows on screen first, the rest just after.
+  let room = $state(FIRST_ROWS);
+  let shownFolders = $derived(folders.filter((folder) => phone || open.includes(folder.id)));
+  let inFolders = $derived(shownFolders.map((folder) => feeds.filter((feed) => feed.folders.includes(folder.id)).length));
+  let drawn = $derived(rowsDrawn([pinned.length, ...inFolders, people.length, publications.length], room));
+  /** How many of a folder's rows are drawn so far. */
+  const drawnIn = (folder: number) => drawn.counts[1 + shownFolders.findIndex((each) => each.id === folder)] ?? Infinity;
+  let arranging: HTMLElement | undefined = $state();
+  $effect(() => {
+    // Once every row is drawn, rows opened later (a folder) are drawn at once, and none goes again.
+    if (drawn.all) {
+      if (room !== Infinity) room = Infinity;
+      return;
+    }
+    return afterPaint(() => {
+      room += MORE_ROWS;
+      // The last step: where you are comes into sight, as it would have at once.
+      if (rowsDrawn([pinned.length, ...inFolders, people.length, publications.length], room).all) void tick().then(() => placeInSight(arranging?.closest("nav")));
+    });
+  });
+
   function isHere(place: Route): boolean {
     // The phone's feeds screen shows no selection: you're at the root, not in a place.
     return !phone && pathFor(place) === pathFor(route);
@@ -387,21 +409,23 @@
 
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
-{#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
+{#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string, count: number)}
   <div data-drop-loose={who} class={["drop-area rounded-press", rows.length === 0 && "drop-empty"]}>
     <h2 class="home-heading label"><span class="text-ink"><Icon name={whoIcon(who)} /></span>{heading}</h2>
     {@render refused(who)}
     <ul class="home-card">
-      {#each rows as feed (feed.id)}
+      {#each rows.slice(0, count) as feed (feed.id)}
         {@render feedRow(feed, null)}
-      {:else}
-        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
       {/each}
+      {#if rows.length === 0}
+        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
+      {/if}
     </ul>
   </div>
 {/snippet}
 
 <div
+  bind:this={arranging}
   use:sidebarDrag={{ accepts, drop, refuse, ghostText }}
   class="arranging"
   data-editing={editing || undefined}
@@ -491,19 +515,20 @@
           </div>
           {#if shown}
             <ul id={`folder-${folder.id}`} class="folder-feeds">
-              {#each inside as feed (feed.id)}
+              {#each inside.slice(0, drawnIn(folder.id)) as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
-              {:else}
-                <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
               {/each}
+              {#if inside.length === 0}
+                <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
+              {/if}
             </ul>
           {/if}
         </li>
       {/each}
     </ul>
   {/if}
-  {@render looseList("person", people, "People")}
-  {@render looseList("publication", publications, "Publications")}
+  {@render looseList("person", people, "People", drawn.counts.at(-2) ?? people.length)}
+  {@render looseList("publication", publications, "Publications", drawn.counts.at(-1) ?? publications.length)}
 {/if}
 
 <!--

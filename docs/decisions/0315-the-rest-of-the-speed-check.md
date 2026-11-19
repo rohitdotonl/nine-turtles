@@ -1,0 +1,16 @@
+# 0315: The rest of the speed check
+
+**In one line:** The speed check's remaining fixes: a list opened while a read or saved mark is still on its way no longer waits for it (the mark is put into the list's rows instead), the sign-in, sign-up and emailed-link pages are a file of their own, each name's fitted width is remembered, the offline copies ask for their lists in two rounds instead of eight, and a long sidebar or Home is drawn in steps.
+
+*19 November 2026. The owner liked every suggestion in the speed report of 18 November and asked for all of them; decision 0314 shipped most, this ships the rest.*
+
+**What changes.**
+1. **Lists don't wait for marks** (`lists.ts`, `saving.ts`). Before, a list waited until every mark sent so far was saved, so opening a list just after reading an article waited a round trip for the "read" mark. Now it waits only for other changes (a setting, a mute: `savedBesidesMarks`). Each mark is remembered until a minute after it's saved; a list fetched while one was on its way (`marksSince`) shows it: the row is read or saved as marked, and in Unread or Saved a row the mark took out of that list is left out (`withMarks`). A row a mark would add (marking one unread just before opening Unread) comes with the next refresh. Such a page is never remembered as "just fetched" (decision 0314). Counts (`feeds.ts`) still wait for marks.
+2. **The pages outside the signed-in screen** (`Doors.svelte`): sign-in, sign-up, the emailed links' pages and where an assistant asks to connect are one file, fetched at once when one is likely (nobody signed in on this device yet, or the address is one of them), otherwise once the first screen is up. Until it's here, "Loading nine turtles…" after half a second. A signed-in reader's first screen went from 177 KB to 169 KB of code (compressed).
+3. **Names measured once** (`hug.ts`): a cut-short name's width is remembered by its font, its room and its text, so a list opened again measures nothing; forgotten when a font arrives.
+4. **The offline copies' lists** (`offline.ts`): Unread's and Saved's are asked for at the same time, each as its usual first page, then the rest in one page (the list address takes `size`, at most 200, `feeds/lists.rs`). Two rounds instead of eight; the first pages are still the ones that open those lists at once.
+5. **A long sidebar or Home in steps** (`sidebarSteps.ts`, `SidebarFeeds.svelte`): 40 rows first, then 60 more each time the screen has been painted, until every row is there. Once all are drawn, a folder opened later draws at once and no row ever goes. When the last step is drawn, where you are scrolls into sight, as it would have at once.
+
+**Considered and not taken.** Showing the device's copy of every list at once and then the server's: rows would change under the reader's eyes (SPEC section 13). Fetching the sign-in page only once the server says nobody is signed in: a new visitor would wait a round trip more.
+
+**Revisit if** a reader sees a list that's missing a row they just marked unread (the one case `withMarks` can't add), or rows appearing late at the foot of a long sidebar get in the way of finding someone.

@@ -11,21 +11,17 @@
   the reader never sees the wrong one. Without a connection, a device that
   keeps articles for reading offline opens the signed-in screen as it last
   saw it (SPEC section 32); being signed out deletes those copies, and stops
-  and empties the podcast player (SPEC section 35).
+  and empties the podcast player (SPEC section 35). The pages outside the
+  signed-in screen are drawn by Doors.svelte, in a file of their own
+  (decision 0315).
 -->
 <script lang="ts">
   import Wordmark from "./lib/Wordmark.svelte";
   import Shell from "./lib/Shell.svelte";
   import SwipeBack from "./lib/SwipeBack.svelte";
-  import SignIn from "./lib/SignIn.svelte";
-  import SignUp from "./lib/SignUp.svelte";
-  import ResetPassword from "./lib/ResetPassword.svelte";
-  import ConfirmEmail from "./lib/ConfirmEmail.svelte";
-  import FinishSignUp from "./lib/FinishSignUp.svelte";
-  import SignInLink from "./lib/SignInLink.svelte";
-  import WeeklyEmailStop from "./lib/WeeklyEmailStop.svelte";
+  import LateLine from "./lib/LateLine.svelte";
+  import { later } from "./lib/later";
   import { WEEKLY_PAGE } from "./lib/weekly";
-  import ConnectAssistant from "./lib/ConnectAssistant.svelte";
   import { CONNECT_PAGE } from "./lib/assistants";
   import NotFound from "./lib/NotFound.svelte";
   import { knownPath } from "./lib/router";
@@ -43,6 +39,26 @@
   import { forgetRecent } from "./lib/recent";
 
   let session: Session | undefined = $state();
+
+  /** The emailed links' pages, shown to whoever is signed in. */
+  const EMAILED = [RESET_PAGE, CONFIRM_PAGE, FINISH_SIGN_UP_PAGE, SIGN_IN_LINK_PAGE, WEEKLY_PAGE];
+  /** Whether `path` shows one of the pages outside the signed-in screen (Doors.svelte). */
+  const atDoor = (now: Session, at: string) => EMAILED.includes(at) || (now.signedIn ? at === CONNECT_PAGE : true);
+
+  /**
+   * Those pages, in a file of their own (decision 0315): fetched at once when one is likely
+   * (nobody signed in on this device yet, or an emailed link), otherwise once the first screen is up.
+   */
+  let Doors: typeof import("./lib/Doors.svelte").default | undefined = $state.raw();
+  let doorsAsked = false;
+  function fetchDoors(now: boolean) {
+    if (doorsAsked) return;
+    doorsAsked = true;
+    later(async () => {
+      Doors = (await import("./lib/Doors.svelte")).default;
+    }, now);
+  }
+  fetchDoors(deviceReader() === undefined || EMAILED.includes(location.pathname) || location.pathname === CONNECT_PAGE);
   let unreachable = $state(false);
   /** Which page the address asks for, outside the signed-in screen. */
   let path = $state(location.pathname);
@@ -75,6 +91,7 @@
       }
       session = now;
       unreachable = false;
+      if (!now.signedIn) fetchDoors(true);
       path = location.pathname;
       // Signed in: the sign-in and sign-up pages open nine turtles itself, rather than "Wrong turn?".
       if (session.signedIn && signedInPath(path) !== path) {
@@ -146,18 +163,12 @@
 </script>
 
 <!-- An emailed link's page shows whoever is signed in: the link is what was asked for. -->
-{#if session && path === RESET_PAGE}
-  <ResetPassword onSignedIn={check} />
-{:else if session && path === CONFIRM_PAGE}
-  <ConfirmEmail onSignedIn={check} />
-{:else if session && path === FINISH_SIGN_UP_PAGE}
-  <FinishSignUp onSignedIn={check} />
-{:else if session && path === SIGN_IN_LINK_PAGE}
-  <SignInLink onSignedIn={check} />
-{:else if session && path === WEEKLY_PAGE}
-  <WeeklyEmailStop onDone={check} />
-{:else if session?.signedIn && path === CONNECT_PAGE}
-  <ConnectAssistant onSignedOut={signedOut} />
+{#if session && atDoor(session, path)}
+  {#if Doors}
+    <Doors {session} {path} onSignedIn={check} onSignedOut={signedOut} onSignUp={() => (path = location.pathname)} />
+  {:else}
+    <main class="flex min-h-screen flex-col items-center justify-center px-6"><LateLine words="Loading nine turtles…" /></main>
+  {/if}
 {:else if session?.signedIn && !knownPath(path)}
   <!-- An address that isn't one of nine turtles' places: "Wrong turn?" (SPEC section 4). -->
   <NotFound
@@ -176,15 +187,6 @@
     onSignedOut={signedOut}
   />
   <SwipeBack />
-{:else if session && path === SIGN_UP_PAGE}
-  <SignUp onSignedIn={check} />
-{:else if session}
-  <SignIn
-    onSignedIn={check}
-    emailSending={session.emailSending}
-    passkeys={session.passkeys}
-    onSignUp={() => (path = location.pathname)}
-  />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
     <Wordmark id="wordmark" />
