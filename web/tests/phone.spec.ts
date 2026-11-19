@@ -718,7 +718,7 @@ test.describe("adding nine turtles to the home screen", () => {
     expect(registered).toMatch(/\/sw\.js$/);
   });
 
-  test("without a connection, the kept copy opens and says nine turtles can't be reached", async ({ page, context }) => {
+  test("without a connection, the kept copy opens and says the device is offline (decision 0312)", async ({ page, context }) => {
     await page.goto("/");
     await appReady(page);
     await page.evaluate(async () => {
@@ -729,7 +729,7 @@ test.describe("adding nine turtles to the home screen", () => {
     await appReady(page);
     await context.setOffline(true);
     await page.reload();
-    await expect(page.getByText("nine turtles can't be reached right now. Reload the page to try again.")).toBeVisible();
+    await expect(page.getByText("You're offline. nine turtles opens once you're back online.")).toBeVisible();
     await context.setOffline(false);
   });
 });

@@ -31,8 +31,8 @@ Just open nine turtles. The list says **You're offline. Showing the articles
 kept on this device.** You can read, mark articles read or unread, save them and
 undo, as usual. Everything you do is sent as soon as you're back online.
 
-If your device is online but nine turtles isn't answering (for a moment while
-a new version goes live, say), it's the same, but the list says **nine turtles
+If your device is online but nine turtles doesn't answer at all (an outage,
+say), it's the same, but the list says **nine turtles
 can't be reached right now.** instead: your own connection is fine. If nothing
 is kept on the device yet, the page says so with **Try again**, and opens by
 itself once nine turtles is back.

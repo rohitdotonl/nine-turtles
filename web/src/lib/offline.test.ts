@@ -253,7 +253,7 @@ describe("what a line says while nine turtles can't be reached (decision 0312)",
     expect(searchNeedsConnection()).toBe("You're offline. Search works again once you're back online.");
   });
 
-  it("otherwise says nine turtles can't be reached, as during a new version going live", () => {
+  it("otherwise says nine turtles can't be reached, as during an outage", () => {
     online(true);
     expect(showingKept()).toBe("nine turtles can't be reached right now. Showing the articles kept on this device.");
     expect(nothingKeptHere()).toBe("nine turtles can't be reached right now. Nothing here is kept on this device; it shows once it's back.");

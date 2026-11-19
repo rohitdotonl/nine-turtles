@@ -9,13 +9,17 @@
 
   let { retry }: { retry: () => void } = $props();
 
-  let signedOut = $state(false);
-  // Asked only once it failed, and only when there's a connection to ask over.
-  if (!connection.offline) currentSession().then((now) => (signedOut = !now.signedIn), () => {});
+  // Asked only once it failed, and only when there's a connection to ask over. Nothing is said
+  // until the answer comes, so a screen reader never hears a line that's about to change.
+  const asking = !connection.offline;
+  let signedOut: boolean | undefined = $state(asking ? undefined : false);
+  if (asking) currentSession().then((now) => (signedOut = !now.signedIn), () => (signedOut = false));
 </script>
 
-<p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
-  {#if connection.offline}{notKept()}{:else if signedOut}You're signed out, so the article couldn't be loaded.
-    <TextButton onclick={() => location.reload()}>Sign in</TextButton>{:else}This article couldn't be loaded.
-    <TextButton onclick={retry}>Try again</TextButton>{/if}
-</p>
+{#if connection.offline || signedOut !== undefined}
+  <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
+    {#if connection.offline}{notKept()}{:else if signedOut}You're signed out, so the article couldn't be loaded.
+      <TextButton onclick={() => location.reload()}>Sign in</TextButton>{:else}This article couldn't be loaded.
+      <TextButton onclick={retry}>Try again</TextButton>{/if}
+  </p>
+{/if}

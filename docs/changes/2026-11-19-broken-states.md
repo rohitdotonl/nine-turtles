@@ -1,6 +1,6 @@
 ## 19 November 2026: Broken states say what's true
 
-- "You're offline." now shows only when your device has no connection. When nine turtles itself can't be reached (for a moment while a new version goes live), it says "nine turtles can't be reached right now." instead, and still shows the articles kept on the device.
+- "You're offline." now shows only when your device has no connection. When nine turtles itself doesn't answer (an outage), it says "nine turtles can't be reached right now." instead, and still shows the articles kept on the device.
 - The page you see when nine turtles can't be reached and nothing is kept is no longer a dead end: it has Try again, tries by itself every 10 seconds, and opens once nine turtles answers.
 - A post with no title opens without a big "Untitled"; the byline leads.
 - If your sign-in ends while you read, the article says so with Sign in, instead of a Try again that couldn't work.

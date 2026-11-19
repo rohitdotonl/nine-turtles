@@ -55,6 +55,7 @@
   import { CHOOSE_FIRST, NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
   import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
+  import LoadFailed from "./LoadFailed.svelte";
   import LateLine from "./LateLine.svelte";
   import { lastMarkAll, rememberMarkAll, type MarkedAll } from "./lastMarkAll";
   import { endOfList, listArticles, markedAllMessage, newItemsMessage, newItemsWaiting, noFurther, notSavedSignedOut, couldNotLoad, resultCount } from "./lists";
@@ -325,12 +326,6 @@
     if (focusWasInList && !rows.some((row) => row === document.activeElement)) {
       queueMicrotask(() => (rows[selectedIndex] ?? rows[0])?.focus());
     }
-  }
-
-  /** Try again after the list couldn't load: it's asked for again from the top, and the keyboard waits on the list's heading as the button goes. */
-  function retryList() {
-    document.getElementById("list-heading")?.focus({ preventScroll: true });
-    void refresh();
   }
 
   /** Asks the server, quietly, whether new items are waiting for this list. */
@@ -737,7 +732,7 @@
   <p role="status" class="mt-4">{problem}</p>
 {:else if problem}
   <!-- An error, as every error is: oxblood words after the alert icon, then Try again (BRAND.md → "Messages", decision 0312). -->
-  <p role="status" class="mt-4 flex flex-wrap items-center gap-x-2 text-danger"><span class="shrink-0"><Icon name="alert" /></span>{problem}<TextButton class="px-1" onclick={retryList}>Try again</TextButton></p>
+  <LoadFailed words={problem} heading="list-heading" onRetry={refresh} class="mt-4" />
 {/if}
 <!--
   What was just done (with Undo), "New articles · press r", or that nine turtles was

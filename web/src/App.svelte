@@ -35,8 +35,7 @@
   import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/articles";
   import { away, noConnection } from "./lib/connection.svelte";
-  import Icon from "./lib/Icon.svelte";
-  import TextButton from "./lib/TextButton.svelte";
+  import LoadFailed from "./lib/LoadFailed.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
@@ -95,9 +94,10 @@
   check();
 
   /**
-   * Can't be reached (a new version going live, an outage, or no connection): never a dead end.
-   * It asks again by itself every 10 seconds and when the device comes back online, so the app
-   * opens on its own once nine turtles answers; Try again asks at once (decision 0312).
+   * Can't be reached (an outage, or no connection): never a dead end. It asks again by itself
+   * every 10 seconds while the tab is in view, on coming back into view and when the device
+   * comes back online, so the app opens on its own once nine turtles answers; Try again asks
+   * at once, its line going meanwhile, so a second failure is heard again (decision 0312).
    */
   let trying = $state(false);
   async function tryAgain() {
@@ -107,12 +107,14 @@
   }
   $effect(() => {
     if (!unreachable) return;
-    const again = setInterval(() => void check(), 10_000);
-    const online = () => void check();
-    addEventListener("online", online);
+    const ask = () => void (document.hidden || check());
+    const again = setInterval(ask, 10_000);
+    addEventListener("online", ask);
+    document.addEventListener("visibilitychange", ask);
     return () => {
       clearInterval(again);
-      removeEventListener("online", online);
+      removeEventListener("online", ask);
+      document.removeEventListener("visibilitychange", ask);
     };
   });
 
@@ -178,10 +180,12 @@
   />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-    <Wordmark />
-    <p role="status" class="flex flex-wrap items-center justify-center gap-x-2 text-danger">
-      <span class="shrink-0"><Icon name="alert" /></span>{away().why}
-      <TextButton class="px-1" onclick={tryAgain} disabled={trying}>{trying ? "Trying…" : "Try again"}</TextButton>
-    </p>
+    <Wordmark id="wordmark" />
+    {#if away().offline}
+      <!-- The device's own connection: calmly, as every offline line (SPEC section 32); it opens by itself once back. -->
+      <p role="status">You're offline. nine turtles opens once you're back online.</p>
+    {:else if !trying}
+      <LoadFailed words={away().why} heading="wordmark" onRetry={tryAgain} class="justify-center" />
+    {/if}
   </main>
 {/if}
