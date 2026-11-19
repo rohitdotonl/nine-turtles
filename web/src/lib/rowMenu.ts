@@ -23,7 +23,7 @@ export type RowAround = { before?: MenuGroup[]; after?: MenuGroup[] };
  * Each with its icon, as every menu has (decision 0311): the groups `before`, then Save or Remove from Saved and Mark as read
  * or unread (none with Unread off: nothing shows it), then the groups `after`, leaving out any with nothing in them. The links
  * come first and the writer last, so what a row's menu shares with an article's More (Copy link, marking, Info about) comes in
- * the same order in both (decision 0315).
+ * the same order in both (decision 0316).
  */
 export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, { before = [], after = [] }: RowAround = {}): MenuGroup[] {
   const own: MenuItem[] = [{ label: article.starred ? "Remove from Saved" : "Save", icon: "bookmark", onSelect: () => hands.star(article) }];

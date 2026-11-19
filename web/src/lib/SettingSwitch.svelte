@@ -1,5 +1,5 @@
 <!--
-  The one switch row (decision 0315): its name with a short description
+  The one switch row (decision 0316): its name with a short description
   under it, as Settings' rows are (decision 0120), its icon before them in
   Settings, and the switch at the row's end. It changes the moment it's
   switched; the page saves it. Settings' Unread and Record replies, the

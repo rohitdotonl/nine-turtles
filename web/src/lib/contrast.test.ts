@@ -294,7 +294,7 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
   it("is the softened text color, at 3 : 1 or more against the field and every surface a field sits on", () => {
     expect(css).toMatch(/\.field:focus-visible \{\s*outline: 2px solid var\(--place-focus\);/);
     expect(css).toMatch(/\.inset-row:has\(> \.inset-input:focus-visible\) \{\s*outline: 2px solid var\(--place-focus\);/);
-    // A row that is a button or link, and a tick-box row, ring in the same tone (decision 0315).
+    // A row that is a button or link, and a tick-box row, ring in the same tone (decision 0316).
     expect(css).toMatch(/\.inset-action:focus-visible \{\s*outline-color: var\(--place-focus\);/);
     expect(css).toMatch(/\.check-row:has\(> input:focus-visible\) \{\s*outline: 2px solid var\(--place-focus\);/);
     const ring = Number(css.match(/--place-focus: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;

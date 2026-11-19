@@ -147,7 +147,7 @@ body {
 /*
   A row of a grouped list rings just inside its edge, since the group's
   rounded corners clip anything drawn outside it, in the softened text color
-  every row's ring has (--place-focus, decision 0315); a text box that is a row
+  every row's ring has (--place-focus, decision 0316); a text box that is a row
   ("New folder…") lets its row draw the ring (decision 0042). Outside the
   components layer, so they win over the outline above.
 */

@@ -1,4 +1,4 @@
-# 0315: The rest of the consistency check's polish
+# 0316: The rest of the consistency check's polish
 
 **In one line:** The consistency check's last polish items, after 0311: a row's menu starts with its links so Copy link, marking and Info about come in the same order as in an article's More; every switch row is one piece (`SettingSwitch.svelte`); every row's keyboard ring is the softened tone; link underlines sit 4px under the words and 24px titles share one line height; one word each for Write back's ways, "right now" and "Not found"; a shared link to the app shows the website's share picture.
 

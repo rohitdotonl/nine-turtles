@@ -1,6 +1,6 @@
 @layer components {
   /*
-    A switch (decision 0315: SettingSwitch.svelte's rows and Newsletters' addresses), as Apple draws one: a
+    A switch (decision 0316: SettingSwitch.svelte's rows and Newsletters' addresses), as Apple draws one: a
     capsule track with a round knob. On, the track is filled in the text
     color and the knob sits at the right; off, the track is empty with a
     muted edge and the knob at the left, so the knob's side says which as
