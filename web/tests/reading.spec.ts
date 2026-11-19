@@ -218,6 +218,8 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await expect(page.getByRole("main")).toHaveCount(1);
     await expect(page.getByRole("navigation", { name: "Sidebar" })).toBeVisible();
+    // On a computer the sidebar sits beside the main content, so "jump to main" goes past it (decision 0313).
+    if (test.info().project.name !== "phone") await expect(page.getByRole("main").getByRole("navigation", { name: "Sidebar" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Asha Rao" })).toBeVisible();
     // One page title, then a heading for the list.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("nine turtles");
@@ -318,6 +320,10 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Enter");
     await expect(panel).toBeVisible();
     await expect(panel.getByRole("button", { name: "Smaller text" })).toBeFocused();
+    // Tab past its last choice: the panel closes, so the keyboard never lands on something under it (decision 0313).
+    for (let press = 0; press < 8 && (await panel.count()) > 0; press++) await page.keyboard.press("Tab");
+    await expect(panel).toHaveCount(0);
+    await openAppearance(page);
     // Escape gives the keyboard back to More.
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
@@ -831,6 +837,8 @@ test.describe("on a wide window", () => {
     const note = article(page).locator('.article-text sup > a[href^="#article-"]').first();
     await expect(note).toHaveCSS("text-decoration-line", "underline");
     expect((await note.evaluate((element) => parseFloat(getComputedStyle(element).paddingLeft))) > 0).toBe(true);
+    // On a touch screen it has an unseen 44px place to press around it (decision 0313).
+    if (test.info().project.name === "phone") expect(await note.evaluate((element) => parseFloat(getComputedStyle(element, "::after").height))).toBeGreaterThanOrEqual(44);
     // A writer's highlighting is a soft tone of the ink, never the browser's yellow; keys are key caps; a term is semibold; a table's figures line up.
     const mark = words.locator("mark");
     await expect(mark).not.toHaveCSS("background-color", "rgb(255, 255, 0)");
@@ -1081,7 +1089,7 @@ test.describe("on a wide window", () => {
 
     const fillsWindow = () =>
       page.evaluate(() => {
-        const main = document.querySelector("main")!.getBoundingClientRect();
+        const main = document.querySelector("[role=main]")!.getBoundingClientRect();
         return {
           pageScroll: window.scrollY,
           pageTaller: document.documentElement.scrollHeight > window.innerHeight,
@@ -1437,7 +1445,8 @@ test.describe("your place in an article (decision 0060)", () => {
     await appReady(page);
     await expect(page.getByRole("heading", { level: 2, name: "Add a person or publication" })).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.locator(".item-row").first()).toBeVisible();
+    // Where the app opens, Saved (decision 0310), which may hold nothing yet: its title shows it's there.
+    await expect(page.locator("#list-heading")).toBeVisible();
     await expect(page.locator("#list-pane")).not.toContainText("You were reading");
     await away();
     await page.reload();

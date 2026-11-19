@@ -91,10 +91,10 @@
 {#if move || (sick && why && feed.failingSince != null)}
   <div class="tone-box box" role="group" aria-label="Not working">
     {#if !move && sick && why}
-      <p class="tone-box-title font-semibold">
+      <h3 class="tone-box-title font-semibold">
         <span class="why"><Icon name={why.icon} /></span>
         <span>{subject ? `${subject}: ` : ""}{why.words} {failingFor(sick)}</span>
-      </p>
+      </h3>
       <p class="what text-meta text-ink-2">
         {explain(sick.problem, sick.youtube)}
         {#if person && sick.state === "dead" && !youTubeRefusing(sick)}They may not know.{/if}

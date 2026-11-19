@@ -53,7 +53,7 @@
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch.
            The heading holds it centred (flex), so their picture, once loaded, never moves the line off the bar's centre. -->
       <button type="button" onclick={onAbout} title={tip(`Info about ${text}`, "about")} aria-describedby="list-heading-about" class="list-title-link inline-flex min-h-11 max-w-full items-center text-left"
-        >{#if face}<span class="mr-3 flex shrink-0"><Portrait name={text} pictures={face.pictures} person={face.person} beside /></span>{/if}<span class="truncate">{text}</span><span aria-hidden="true" class="ml-2 flex shrink-0 text-muted"><Icon name="chevron-right" size="alone" /></span></button
+        >{#if face}<span class="list-face mr-3 flex shrink-0"><Portrait name={text} pictures={face.pictures} person={face.person} beside /></span>{/if}<span class="truncate">{text}</span><span aria-hidden="true" class="ml-2 flex shrink-0 text-muted"><Icon name="chevron-right" size="alone" /></span></button
       >
     {:else}
       {text}

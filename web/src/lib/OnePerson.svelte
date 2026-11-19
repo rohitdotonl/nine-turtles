@@ -48,9 +48,9 @@
 </script>
 
 <div bind:this={box} tabindex="-1" class="tone-box outline-none" role="group" aria-labelledby={`${id}-title`} aria-describedby={`${id}-what`}>
-  <p id={`${id}-title`} class="tone-box-title font-semibold">
+  <h3 id={`${id}-title`} class="tone-box-title font-semibold">
     <span class="icon"><Icon name="person" /></span>One person?
-  </p>
+  </h3>
   <p id={`${id}-what`} class="what text-meta text-ink-2">
     <bdi class="font-semibold text-ink">{pair.names[0]}</bdi> and <bdi class="font-semibold text-ink">{pair.names[1]}</bdi> share one website, <bdi class="address break-all">{pair.site}</bdi>.
   </p>

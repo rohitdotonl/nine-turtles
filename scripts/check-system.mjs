@@ -9,7 +9,8 @@
 //    small lift under a segmented control's chosen side). Rings drawn with a
 //    shadow and inset lines are lines, not shadows, so they pass.
 // 3. Text sizes: a size that isn't one of the named ones. Sizes in `em`
-//    follow the reader's own text size (Aa), so they pass.
+//    follow the reader's own text size (Aa), so they pass, and so does one
+//    capped by the window's width, `min(2em, 10vw)` (decision 0313).
 // 4. Labels: small spaced capitals; a group's name is the one label (.label).
 //    One named exception in the reading face: an article's end (decision 0300).
 // 5. Icons: an icon size other than "word" (16px) or "alone" (20px), and the
@@ -91,7 +92,7 @@ function split(value, separator) {
 const CORNERS = new Set(["var(--radius-press)", "var(--radius-hold)", "var(--radius-mark)", "999px", "9999px", "50%", "0", "inherit"]);
 const ROUNDED = /(?<![\w-])rounded(?:-(?:t|r|b|l|s|e|tl|tr|br|bl|ss|se|es|ee))?(?:-([\w.[\]%()-]+))?(?![\w-])/g;
 const ROUNDED_OK = new Set(["press", "hold", "mark", "full", "none"]);
-const TEXT_OK = /^(var\(--text-[a-z-]+\)|var\(--reading-size\)|calc\(var\(--reading-size\)[^;]*\)|[\d.]+em|inherit|100%)$/;
+const TEXT_OK = /^(var\(--text-[a-z-]+\)|var\(--reading-size\)|calc\(var\(--reading-size\)[^;]*\)|[\d.]+em|min\([\d.]+em, [\d.]+vw\)|inherit|100%)$/;
 const SCALE_PX = new Set([0, 4, 8, 12, 16, 20, 24, 32, 40, 44, 48, 64, 96, 192]);
 const TW_SCALE = new Set(["0", "1", "2", "3", "4", "5", "6", "8", "10", "11", "12", "16", "24", "48", "px", "auto"]);
 // Tailwind's spacing utilities (padding, margin, gaps, space between).

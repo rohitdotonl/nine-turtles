@@ -197,7 +197,7 @@ test("a link dropped on a folder opens Follow, and once followed they're in that
 test("a link dropped anywhere else opens Follow; Not now follows nothing", async ({ page }) => {
   await aBlog(page, "drop-else");
   const blog = unique("not-now");
-  await dropLink(page, page.getByRole("region", { name: "Article", exact: true }).or(page.locator("main")).first(), `${FEED_SITE}/blog/${blog}/`);
+  await dropLink(page, page.getByRole("region", { name: "Article", exact: true }).or(page.locator("main, [role=main]")).first(), `${FEED_SITE}/blog/${blog}/`);
   await expect(page.getByText(/They'll go in/)).toHaveCount(0);
   await page.getByRole("button", { name: "Not now" }).click();
   await expect(row(page, `Blog ${blog}`)).toHaveCount(0);
@@ -215,7 +215,7 @@ test("a link held over a text field, or while a sheet is open, or one of nine tu
   // While the shortcut list is open.
   await page.getByRole("button", { name: "Keyboard shortcuts" }).click();
   await expect(page.locator("dialog[open]")).toHaveCount(1);
-  await page.locator("main").first().dispatchEvent("dragover", { dataTransfer: data });
+  await page.locator("main, [role=main]").first().dispatchEvent("dragover", { dataTransfer: data });
   await expect(html).not.toHaveAttribute("data-dragging");
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog[open]")).toHaveCount(0);
@@ -240,7 +240,7 @@ test("a list of feeds (OPML) dropped on nine turtles is imported, and Undo takes
     transfer.items.add(new File([text], "from-another-app.opml", { type: "text/xml" }));
     return transfer;
   }, opml);
-  const target = page.locator("main").first();
+  const target = page.locator("main, [role=main]").first();
   await target.dispatchEvent("dragover", { dataTransfer: data });
   await expect(page.locator("html")).toHaveAttribute("data-dragging", "file");
   await expect(sidebar(page).getByText("Drop a list of feeds (OPML) to import it.")).toBeVisible();

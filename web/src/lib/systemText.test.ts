@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { textScale } from "./systemText";
+import { isLarge, textScale } from "./systemText";
 
 describe("textScale", () => {
   it("leaves the app as designed at the iPhone's default size", () => {
@@ -17,5 +17,19 @@ describe("textScale", () => {
   it("ignores a size it can't read", () => {
     expect(textScale(Number.NaN)).toBe(1);
     expect(textScale(0)).toBe(1);
+  });
+});
+
+describe("isLarge", () => {
+  it("is the usual layout at the usual size and a little above it", () => {
+    expect(isLarge(16)).toBe(false);
+    expect(isLarge(20)).toBe(false);
+  });
+  it("is large text from one and a half times the usual size", () => {
+    expect(isLarge(24)).toBe(true);
+    expect(isLarge(32)).toBe(true);
+  });
+  it("ignores a size it can't read", () => {
+    expect(isLarge(Number.NaN)).toBe(false);
   });
 });

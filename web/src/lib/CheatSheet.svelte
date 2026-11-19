@@ -100,7 +100,7 @@
               {@const index = SHORTCUT_GROUPS.indexOf(group)}
               <section aria-labelledby={`keys-${index}`}>
                 <h3 id={`keys-${index}`} class="mb-2 text-base font-semibold text-ink">{group}</h3>
-                <table class="w-full text-left text-meta">
+                <table class="keys-table w-full text-left text-meta">
                   <tbody>
                     {#each shown.filter((each) => each.group === group) as shortcut (shortcut.action)}
                       <tr class="h-7">

@@ -4,6 +4,7 @@
 // window and the layout steps down, rather than anything overlapping.
 // `ScreenLayout` (below) holds the signed-in screen's arrangement.
 
+import { rootPixels } from "./systemText";
 import { deviceText, setDeviceText } from "./device";
 
 export type Width = "wide" | "medium" | "narrow";
@@ -48,8 +49,8 @@ export function watchWidth(changed: (next: Width) => void): () => void {
 }
 
 const SIDEBAR_WIDTH_KEY = "nine-turtles.sidebar-width";
-/** The sidebar's usual width, in pixels, until the reader drags it. */
-const SIDEBAR_USUAL = 256;
+/** The sidebar's usual width, in rem, until the reader drags it: wider when the reader's text is larger (decision 0313). */
+const SIDEBAR_USUAL = 16;
 
 /**
  * The signed-in screen's arrangement: the window's width step, which areas
@@ -97,7 +98,15 @@ export class ScreenLayout {
 
   /** The sidebar's width in pixels: dragged, or usual. */
   get sidebarPx(): number {
-    return this.sidebarWidth ?? SIDEBAR_USUAL;
+    return this.sidebarWidth ?? SIDEBAR_USUAL * rootPixels();
+  }
+
+  /** The narrowest and widest the reader can drag the sidebar to, following their text size as its usual width does. */
+  get sidebarMin(): number {
+    return Math.round(12.5 * rootPixels());
+  }
+  get sidebarMax(): number {
+    return Math.round(25 * rootPixels());
   }
 
   storeSidebarWidth() {

@@ -781,7 +781,7 @@
 {/snippet}
 
 <!--
-  The whole app is the page's main content; the sidebar and areas inside are its named parts.
+  The app's frame: on a computer the list and article are "main", the sidebar beside it; on a phone, the whole frame (decision 0313).
   It is exactly the window's height and never lets anything out: only the areas inside scroll,
   each on its own, so the page itself never moves (a hidden screen-reader line once stretched it).
   So every scrolling area here and in the screens it shows is `relative`: it holds its own hidden
@@ -790,16 +790,12 @@
 <!-- Coming back to the app on the phone's feeds screen: its dots catch up as it opens (SPEC section 13). -->
 <svelte:document onvisibilitychange={() => !document.hidden && phone && panes.sidebar && library.catchUp()} />
 <!-- While an episode plays, the "now playing" bar takes its own room at the foot, never covering the panes; on a phone reading, above the toolbar (SPEC 35). -->
-<main class="reading-width relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
+<div role={phone ? "main" : undefined} class="reading-width relative flex h-dvh flex-col overflow-hidden" style:--sidebar-w={`${layout.sidebarPx}px`}>
   {#if skipShown}
     <!-- First in the Tab order (SPEC section 19), out of sight until the keyboard reaches it: past the sidebar to the chosen article, or the first. -->
     <a href="#list-pane" class="skip-link" onclick={skipToArticles}>Skip to articles</a>
   {/if}
   <div class="relative flex min-h-0 flex-1 overflow-hidden">
-  {#if !panes.sidebar}
-    <!-- The wordmark is the page's main heading; with the sidebar away (an article, a person's page), screen readers still find it. -->
-    <h1 class="sr-only">nine turtles</h1>
-  {/if}
   <nav
     id="sidebar"
     aria-label="Sidebar"
@@ -866,8 +862,8 @@
       <PaneResizer
         label="Resize the sidebar"
         bind:width={layout.sidebarWidth}
-        min={200}
-        max={400}
+        min={layout.sidebarMin}
+        max={layout.sidebarMax}
         pane={sidebar}
         onDone={() => layout.storeSidebarWidth()}
       />
@@ -875,7 +871,11 @@
   </nav>
 
   {#if panes.list || panes.article}
-    <div class="relative flex min-w-0 flex-1">
+    <div role={phone ? undefined : "main"} class="relative flex min-w-0 flex-1">
+      {#if !panes.sidebar}
+        <!-- The wordmark is the page's main heading; with the sidebar away (an article, a person's page), screen readers still find it. -->
+        <h1 class="sr-only">nine turtles</h1>
+      {/if}
       {#if route.kind === "settings"}
         <Settings
           page={route.page}
@@ -1047,7 +1047,7 @@
   {#if !(phone && reading && panes.article && selected)}
     <NowPlaying onOpen={openFromOutside} stepAside={phone} />
   {/if}
-</main>
+</div>
 
 {#snippet nowPlayingAboveToolbar()}
   <NowPlaying onOpen={openFromOutside} bottom={false} stepAside />

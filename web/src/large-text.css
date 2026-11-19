@@ -1,0 +1,147 @@
+/*
+  Large text (decision 0313). A reader who sets their phone's or their
+  browser's text size to one and a half times the usual or more (systemText.ts
+  marks the page `data-text="large"`; an iPhone's largest sizes make nine
+  turtles twice its size) gets screens laid out for it: rows stack, buttons
+  and choices wrap their words, and nothing runs off the screen's edge, so
+  every feature still works (the first floor: "at 200% text size"; WCAG 1.4.4).
+  The two rules just below are always on and change nothing at the usual
+  sizes; everything under `data-text="large"` applies only to large text.
+*/
+
+/*
+  A switch's row: its words keep at least 9rem, so when the text grows the
+  switch drops under them rather than squeezing them to a word a line. At the
+  usual sizes the switch always fits at the right end.
+*/
+.setting:has(> .switch-target) {
+  flex-wrap: wrap;
+}
+.setting:has(> .switch-target) > :is(.setting-label, .setting-words) {
+  flex: 1 1 9rem;
+}
+
+:root[data-text="large"] {
+  /*
+    Titles grow less than the words they head, as a phone's own apps do, so
+    a title's longest word still fits beside its buttons: never "Note / s".
+  */
+  --text-heading: min(1.5rem, 9vw);
+  --text-display: min(3rem, 13vw);
+
+  /* The page's and a group's side margins stay near their usual width, so the room goes to the words. */
+  & .scroller.px-5 {
+    padding-inline: 0.75rem;
+  }
+  & .inset-row {
+    padding-inline: 0.75rem;
+  }
+
+  /* A list keeps a narrower gutter for its unread dot, so its title has the room. */
+  & .list-pane.phone {
+    --list-start: 1rem;
+    --list-end: 0.75rem;
+    --pill-inset: 0.25rem;
+  }
+
+  /*
+    A row's words, or a field, keep at least 9rem: a button beside them moves
+    under them rather than squeezing them to a letter a line.
+  */
+  & :is(.inset-row, .note-line, .field-row) {
+    flex-wrap: wrap;
+  }
+  & :is(.inset-row, .note-line, .field-row) > .flex-1,
+  & .inset-input {
+    flex: 1 1 9rem;
+  }
+  /* An icon beside words grows with them, as a phone's own apps draw theirs. */
+  & svg.word {
+    width: 1em;
+    height: 1em;
+  }
+  /* With a mouse, one alone in a button grows too (a touch screen's are already a rem and more). */
+  @media (pointer: fine) {
+    & svg.alone {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  /* An icon's button keeps its 44px width, as a phone's own bars do, so a title beside it gets the room. */
+  & .btn-icon {
+    width: 44px;
+    min-height: 44px;
+    height: 44px;
+  }
+
+  /* A button's words wrap inside it rather than pushing it past the edge. */
+  & :is(.btn, .btn-primary, .btn-quiet) {
+    flex-shrink: 1;
+    white-space: normal;
+    text-align: center;
+  }
+  /* Except the way back at a screen's top, which keeps its one line and ends in "…" (DESIGN.md → "The top of a phone screen"). */
+  & .nav-back {
+    white-space: nowrap;
+    text-align: start;
+  }
+
+  /* A segmented choice: as many even columns as fit, two or one, each choice's words wrapping. */
+  & .choices,
+  & .choices.setting-control {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+  }
+  & .choice {
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* Text and page: each setting's name over its choices, which wrap; the size's name shares its line. */
+  & .aa-line {
+    flex-wrap: wrap;
+  }
+  & .aa-name {
+    width: 100%;
+  }
+  & .swatches {
+    flex-wrap: wrap;
+  }
+  & .sizes .step {
+    width: auto;
+    min-width: 44px;
+    padding-inline: 0.5rem;
+  }
+  & .sizes-name {
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* A list's title wraps onto a second line rather than shortening to "No…". */
+  & #list-heading.truncate,
+  & #list-heading .truncate {
+    min-width: 0;
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* A person's name on their page, their page's one big title, is capped as every big title is. */
+  & .who-name {
+    font-size: var(--text-display);
+  }
+
+  /* A writer's list leaves their small picture out of its title, so their name has the room. */
+  & .list-face {
+    display: none;
+  }
+
+  /* Keyboard shortcuts: each action on its own line, its keys under it. */
+  & .keys-table :is(tr, td) {
+    white-space: normal;
+    display: block;
+    height: auto;
+    text-align: start;
+  }
+}

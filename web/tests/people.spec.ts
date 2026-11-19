@@ -359,6 +359,8 @@ test("two follows on one website are asked about once at the top of Everyone you
   // The newest pair is asked about first (decision 0309).
   const asked = page.getByRole("group", { name: "One person?" });
   await expect(asked).toContainText(`share one website, ${kai}.example.`);
+  // Its title is a heading, so a screen reader can jump to it (decision 0313).
+  await expect(asked.getByRole("heading", { level: 3, name: "One person?" })).toBeVisible();
   await tabTo(page, asked.getByRole("button", { name: "Join them" }));
   await page.keyboard.press("Enter");
   await expect(line(page)).toContainText("is one person now");

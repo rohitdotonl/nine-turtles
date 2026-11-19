@@ -19,8 +19,34 @@ export function textScale(bodyPixels: number): number {
   return Math.min(MOST, Math.round((bodyPixels / DEFAULT_BODY) * 1000) / 1000);
 }
 
+/** From this much of the usual size up (24px for the usual 16px), screens lay out for large text (large-text.css). */
+const LARGE = 1.5;
+
+/** Whether text this many pixels across, at the page's root, is large text. */
+export function isLarge(rootPixels: number): boolean {
+  return Number.isFinite(rootPixels) && rootPixels >= 16 * LARGE;
+}
+
+/**
+ * Marks the page as set in large text, whichever way it got there: the phone's
+ * own text size (below) or a browser's own font size setting. large-text.css
+ * then lets rows stack and words wrap rather than run off the screen (decision 0313).
+ */
+function markLargeText(): void {
+  const root = document.documentElement;
+  if (isLarge(rootPixels())) root.dataset.text = "large";
+  else delete root.dataset.text;
+}
+
+/** One rem in pixels now: the page's root text size, 16 at the usual size (the sidebar's widths follow it too). */
+export function rootPixels(): number {
+  const size = typeof document === "undefined" ? Number.NaN : Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return Number.isFinite(size) && size > 0 ? size : 16;
+}
+
 /** Follows the system's text size where the device has one, now and each time the reader comes back to the app. */
 export function followSystemText(): void {
+  markLargeText();
   // Only Apple's browsers know this font, and only touch devices have the setting.
   if (!globalThis.CSS?.supports?.("font", "-apple-system-body") || !matchMedia("(pointer: coarse)").matches) return;
   const probe = document.createElement("span");
@@ -31,6 +57,7 @@ export function followSystemText(): void {
     const scale = textScale(parseFloat(getComputedStyle(probe).fontSize));
     probe.remove();
     document.documentElement.style.fontSize = scale === 1 ? "" : `${scale * 100}%`;
+    markLargeText();
   };
   measure();
   document.addEventListener("visibilitychange", () => {

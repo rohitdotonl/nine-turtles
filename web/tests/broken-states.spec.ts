@@ -87,7 +87,7 @@ test.describe("the same on every width", () => {
     await expect(page.getByRole("button", { name: "Try again" })).toHaveCount(0);
     await context.setOffline(false);
     await expect(calm).toHaveCount(0);
-    await expect(page.locator("main").getByText(`Blog ${name}`, { exact: true }).first()).toBeVisible();
+    await expect(page.locator("main, [role=main]").getByText(`Blog ${name}`, { exact: true }).first()).toBeVisible();
   });
 
   test("a post with no title opens without a big Untitled; screen readers still hear its opening as its heading", async ({ page }) => {
