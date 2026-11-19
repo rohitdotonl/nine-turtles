@@ -65,7 +65,7 @@ export function linkItems(article: Article, address: string, say: (message: stri
   if (sharing) return link ? [{ label: "Share", icon: "share", onSelect: () => void shareOriginal(article) }] : [];
   return [
     { label: "Open in a new tab", icon: "open", onSelect: () => openInNewTab(address) },
-    ...(link ? [{ label: "Copy link", icon: "link" as const, onSelect: () => void copyOriginal(link).then(say) }] : []),
+    ...(link ? [{ label: "Copy link", icon: "share" as const, onSelect: () => void copyOriginal(link).then(say) }] : []),
   ];
 }
 

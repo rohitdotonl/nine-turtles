@@ -195,7 +195,7 @@
     {
       items: [
         // On a computer Share (Copy link where there's no share menu) waits here, first (decision 0299); a phone has it in its bottom bar.
-        ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: sharing ? ("share" as const) : ("link" as const), shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
+        ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: "share" as const, shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
         { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
         { label: "Mark as unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),

@@ -45,6 +45,7 @@
   until an article is opened or older ones are loaded.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import Icon from "./Icon.svelte";
   import { onMount, tick } from "svelte";
   import type { Article, Source } from "./shapes";
@@ -752,7 +753,7 @@
   >
     <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->
     <p class={["flex items-center gap-x-2", !saying && "sr-only"]}>
-      <span role="status" class="min-w-0 py-2">{line}</span>
+      <span role="status" class="min-w-0 py-2"><Addressed text={line} /></span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
         <TextButton onclick={byButton(retryNow)} class="-mr-2 px-2">{retryWord}</TextButton>
