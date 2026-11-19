@@ -133,6 +133,7 @@ The lessons:
 - **Splitting costs a little download.** A new Svelte component costs about 250 bytes, and the download has a 250 KB budget; prefer a plain `.ts` file for logic, and moves that also delete code.
 - **Svelte drops the spaces at the very start and end of an element, a component's content, or an `{#if}` or `{#each}` block,** so `<span class="sr-only"> (opens in a new tab)</span>` loses its space and "to Theo, </span>" shows as "Theo,hello@…". Write a space that must stay there as `{" "}`; `web/src/lib/spaces.test.ts` finds any written plainly. And never let a size, padding or border class stand beside `sr-only` (write `message ? "w-full" : "sr-only"`): Tailwind puts them after `sr-only`, so they win, and `w-full` stretched a hidden line past the page's edge.
 - **A test that fails now and then is fixed at once**, never retried until it passes (decision 0114): flaky tests cost every later pull request a slow re-run.
+- **One round of checks per change.** Open the pull request once the quick checks pass and let GitHub run every browser test while the reviewer reads it, then push every fix at once; anything the checks download every run is remembered instead (decision 0322).
 
 ---
 

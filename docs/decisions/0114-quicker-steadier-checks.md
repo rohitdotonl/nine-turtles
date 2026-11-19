@@ -2,6 +2,8 @@
 
 **In one line:** Quicker, steadier checks: libraries built optimized for the Rust tests, only the libraries remembered between runs, the browser tests in parts (four, six since November 2026) with the browser remembered between runs, agents run only the browser tests for what they changed before a pull request (GitHub runs them all), and the timing fixed in the tests that failed now and then; no automatic retries; each decision carries its own one line, listed by `scripts/decisions.mjs`, so no shared list clashes
 
+> **Partly replaced:** [0322](0322-faster-rounds-and-side-by-side-threads.md): agents run no browser tests before opening a pull request (only one they are writing or fixing); GitHub runs them all while the reviewer reads the change.
+
 *October 2026.*
 
 **Decision.** Four changes make the checks on each pull request finish
