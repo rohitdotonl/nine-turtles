@@ -59,6 +59,7 @@
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { markPauses } from "./pauses";
+  import { markForScreenReaders } from "./heard";
   import RunningTitle from "./RunningTitle.svelte";
   import { markEmbedded, markMissing, markWide } from "./missing";
   import { Bars } from "./bars.svelte";
@@ -352,10 +353,10 @@
     if (text) markPauses(text, Boolean(full?.content) && !video);
   });
 
-  // The article's own links open in a new tab (cleaned so by nine turtles);
-  // each tells a screen reader so, as every link out of nine turtles does.
+  // What a screen reader hears of it: links out say they open a new tab, and tables that only lay it out read as words (heard.ts).
   $effect(() => {
-    for (const link of text?.querySelectorAll('a[target="_blank"]') ?? []) link.setAttribute("aria-describedby", "new-tab-note");
+    void full?.content;
+    if (text) markForScreenReaders(text);
   });
 
   // Pictures that open larger (decision 0107): one the page shows clearly
@@ -366,8 +367,7 @@
 
   $effect(() => {
     const body = text;
-    void full?.content;
-    void full?.summary;
+    void [full?.content, full?.summary];
     if (!body) return;
     const pictures = () => body.querySelectorAll("img");
     // A table wider than the column says so under it, with a word for a touch screen (decision 0260).

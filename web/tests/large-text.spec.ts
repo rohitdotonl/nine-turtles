@@ -52,5 +52,10 @@ for (const screen of SCREENS) {
     });
     expect(past).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    // A name in the sidebar or Home, or under a list's title, wraps rather than shortening to "Ana Rodri…".
+    const cut = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".place-name, .row-feed-name")].filter((name) => name.scrollWidth > name.clientWidth + 1).map((name) => name.textContent?.trim()),
+    );
+    expect(cut).toEqual([]);
   });
 }

@@ -462,7 +462,7 @@
         </div>
         <p class="inset-foot">{owner ? "It says" : "Each one says"} exactly what goes before anything is removed.</p>
       </section>
-      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
+      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="help-link text-link">Help<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
@@ -572,6 +572,25 @@
   .danger-name {
     color: var(--danger);
     font-weight: 600;
+  }
+  /*
+    Help, one short word, gets an unseen 44px place to press around it on a
+    touch screen, the first floor's size, without moving a letter (as a
+    footnote's number does, article-text.css).
+  */
+  @media (pointer: coarse) {
+    .help-link {
+      position: relative;
+    }
+    .help-link::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
   }
   /* "Only you", beside the owner's own group's header: a small outlined word, never a color. */
   .only-you {
