@@ -82,7 +82,7 @@
   <button
     bind:this={findButton}
     type="button"
-    class={first === "find" ? "btn btn-small" : "text-link text-ui"}
+    class={first === "find" ? "btn btn-small" : "text-link"}
     aria-disabled={busy}
     onclick={() => !busy && finder?.find()}>Find new address</button
   >
@@ -122,7 +122,7 @@
         {#if onUnsubscribe}
           <button
             type="button"
-            class="text-link text-ui text-danger"
+            class="text-link text-danger"
             title="Stops following them and removes their articles; saved, highlighted and noted ones can stay. You can undo it."
             aria-disabled={busy}
             onclick={leave}>Unsubscribe</button

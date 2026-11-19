@@ -486,9 +486,9 @@
     {:else}
       {#snippet email()}
         {#if address}
-          <a class={quiet ? "text-link text-ui" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
+          <a class={quiet ? "text-link" : "btn"} bind:this={written} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} href={composeLink(writesIn, address, subject, quoted)} target={writesIn === "app" ? undefined : "_blank"} rel={writesIn === "app" ? undefined : "noopener noreferrer"} onclick={() => pressed(quoted)}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</a>
         {:else}
-          <button type="button" class={quiet ? "text-link text-ui" : "btn"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</button>
+          <button type="button" class={quiet ? "text-link" : "btn"} bind:this={opener} title={article ? tip(`${verb} ${name}`, "write-back") : undefined} onclick={() => void start()}>{#if !quiet}<Icon name="send" />{/if}{@render label()}</button>
         {/if}
       {/snippet}
       {#if article && !quiet}
