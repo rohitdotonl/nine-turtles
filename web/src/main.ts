@@ -17,6 +17,7 @@ import "./list-column.css";
 import "./tone-box.css";
 import "./cards.css";
 import "./select.css";
+import "./taps.css";
 import "./home.css";
 import "./large-text.css";
 import { mount } from "svelte";

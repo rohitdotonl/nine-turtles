@@ -68,7 +68,7 @@
 //                      name wrapped as "Blog – Messy NAME » Latest Posts",
 //                      a title with its symbols coded twice, and an article
 //                      with a picture that won't load, a map in a frame and
-//                      a table too wide for the column
+//                      a table too wide for the column, and email-style layout tables
 
 import { createServer } from "node:http";
 
@@ -164,7 +164,9 @@ function messyFeed(name, host) {
 <p>And the photo from the walk:</p><img src="${host}/messy/${name}/missing.jpg" alt="The harbour at low tide">
 <p>Three more, with no words:</p>${[1, 2, 3].map((at) => `<p><img src="${host}/messy/${name}/gone-${at}.jpg"></p>`).join("")}
 <p>And one beside a picture that loads:</p><p><img src="${host}/messy/${name}/gone-4.jpg"></p><p><img src="${host}/reading/river.svg" alt="A river"><img src="${host}/messy/${name}/gone-5.jpg"></p>
-<p>The numbers:</p><table><tr>${cells("th")}</tr><tr>${cells("td")}</tr></table><p>The end.</p>`;
+<p>The numbers:</p><table><tr>${cells("th")}</tr><tr>${cells("td")}</tr></table>
+<table width="640"><tr><td width="80">Messy Weekly</td><td width="560"><table><tr><td>by <a href="${home}about">the writer</a></td></tr><tr><td>in Messy Weekly's letters</td></tr></table></td></tr></table>
+<table><tr><td>A note in a box, set as a table of one cell.</td></tr></table><p>The end.</p>`;
   return `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
 <title>Blog – Messy ${name} » Latest Posts</title><link>${home}</link>
 <item><title>Tom &amp;amp; Jerry&amp;#8217;s guide</title><link>${home}guide</link><guid>${home}guide</guid>

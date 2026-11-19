@@ -269,13 +269,21 @@ test("in the installed app, Install the app on any device says it's installed in
   await expect(page.getByRole("group", { name: "Device" })).toBeVisible();
 });
 
-test("the foot of Settings links to Help on the website, in a tab of its own, reached by the keyboard", async ({ page }) => {
+test("the foot of Settings links to Help on the website, in a tab of its own, reached by the keyboard", async ({ page, isMobile }) => {
   // SPEC sections 18 and 40 (decision 0157).
   await openSettings(page);
   const help = page.getByRole("link", { name: "Help (on the nine turtles website, opens in a new tab)" });
   await expect(help).toHaveAttribute("href", "https://nineturtles.app/help/");
   await expect(help).toHaveAttribute("target", "_blank");
   expect((await help.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  // On a touch screen the one short word gets an unseen 44px place to press around it (the first floor).
+  if (isMobile) {
+    await help.scrollIntoViewIfNeeded();
+    const box = (await help.boundingBox())!;
+    const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const pressed = await page.evaluate(({ x, y }) => [x - 21, x + 21].map((at) => document.elementFromPoint(at, y)?.closest("a")?.href ?? ""), middle);
+    expect(pressed).toEqual(["https://nineturtles.app/help/", "https://nineturtles.app/help/"]);
+  }
   await tabTo(page, help);
   await expect(help).toBeFocused();
 });

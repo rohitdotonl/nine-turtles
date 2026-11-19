@@ -118,6 +118,47 @@
     text-align: center;
   }
 
+  /*
+    A name in the sidebar or a phone's Home wraps onto a second line rather
+    than shortening to "Ana Rodri…" (accessibility round 2): at this size most
+    names wouldn't fit one line, and who's who is the row's whole point.
+  */
+  & .place-name {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    padding-block: 0.25rem;
+    line-height: 1.25;
+  }
+
+  /*
+    Who wrote it, under a list's title, shows in full too ("Deepa… · De…"
+    otherwise): the names wrap and the date moves down a line when there's no
+    room. hug.ts finds nothing cut short, so it sets no width.
+  */
+  & .row-meta {
+    flex-wrap: wrap;
+  }
+  & .row-feed-name {
+    overflow: visible;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /*
+    An icon alone in its 44px button grows to 32px, then stops, so it never
+    fills the button edge to edge; and a list's Search and More are pulled
+    toward the edge by their usual 12px, not twice that, so More keeps the
+    page's margin instead of touching the screen's edge.
+  */
+  & .btn-icon svg.alone {
+    width: min(1.375rem, 32px);
+    height: min(1.375rem, 32px);
+  }
+  & .list-tools {
+    margin-right: -12px;
+  }
+
   /* A list's title wraps onto a second line rather than shortening to "No…". */
   & #list-heading.truncate,
   & #list-heading .truncate {

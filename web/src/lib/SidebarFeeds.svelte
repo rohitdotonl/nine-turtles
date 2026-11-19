@@ -331,7 +331,7 @@
 -->
 {#snippet name(text: string)}
   <!-- Devanagari a touch larger, so it sits level with Latin names (decision 0041). -->
-  <span class={["min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}><bdi>{text}</bdi></span>
+  <span class={["place-name min-w-0 flex-1 truncate", inDevanagari(text) && "devanagari"]}><bdi>{text}</bdi></span>
 {/snippet}
 
 {#snippet leadsOn()}
@@ -458,7 +458,7 @@
     type="button"
     onclick={() => searchArticles(search.trim())}
     class="place mx-2 mt-2 flex min-h-11 w-[calc(100%-1rem)] pointer-fine:min-h-8 items-center gap-3 pr-3 pl-3 text-left text-ui text-ink-2"
-    ><span class="text-muted"><Icon name="search" /></span><span class="min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
+    ><span class="text-muted"><Icon name="search" /></span><span class="place-name min-w-0 flex-1 truncate">Search articles for “<bdi>{search.trim()}</bdi>”</span></button
   >
 {:else}
   <!-- Pinned (decision 0310): always there, so pinning is found; empty, one quiet line says how. -->

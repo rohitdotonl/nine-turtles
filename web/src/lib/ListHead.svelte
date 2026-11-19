@@ -61,7 +61,7 @@
   </h2>
   {#if onAbout}<span id="list-heading-about" class="sr-only">Opens the page about them.</span>{/if}
   {#if actions}
-    <div class="-mr-3 flex shrink-0 items-center">
+    <div class="list-tools -mr-3 flex shrink-0 items-center">
       <!-- The way into search, beside More, as an iOS list keeps it (decisions 0060 and 0242): the field waits until asked for. -->
       <button type="button" aria-label="Search" title={tip("Search", "search")} aria-expanded={searchOpen} onclick={onSearch} class="btn-quiet btn-icon"
         ><span class="flex size-8 items-center justify-center"><Icon name="search" size="alone" /></span></button

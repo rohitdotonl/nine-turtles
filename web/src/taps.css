@@ -1,0 +1,22 @@
+/*
+  An unseen 44px place to press (the first floor's size) around something a
+  letter or a word wide, on a touch screen, without moving a letter (decisions
+  0313, 0319): a footnote's number and its way back (↩) in an article, and
+  `.press-room` on a short link (Settings' and Keyboard shortcuts' Help).
+*/
+@media (pointer: coarse) {
+  .press-room,
+  .article-text :is(sup > a, li[id] a)[href^="#article-"] {
+    position: relative;
+  }
+  .press-room::after,
+  .article-text :is(sup > a, li[id] a)[href^="#article-"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}

@@ -94,6 +94,27 @@
 }
 
 /*
+  A table that only lays the article out (heard.ts, decision 0319) is drawn as
+  the blocks it holds, one under another, as an emailed newsletter's are: never
+  wider than the column, no rules, the text's own size.
+*/
+.article-text table[role="presentation"] {
+  overflow-x: visible;
+  font-size: inherit;
+}
+.article-text table[role="presentation"],
+.article-text table[role="presentation"] > :is(tbody, thead, tfoot, tr),
+.article-text table[role="presentation"] > :is(tbody, thead, tfoot) > tr,
+.article-text table[role="presentation"] > tr > :is(td, th),
+.article-text table[role="presentation"] > :is(tbody, thead, tfoot) > tr > :is(td, th) {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+}
+
+/*
   A table starts flush with the text's left edge, its header semibold over a
   fine rule and its rows over fainter ones, never a heavy line (decision 0050).
 */
@@ -208,25 +229,7 @@
 .article-text a[href^="#article-"] {
   font-variant-emoji: text;
 }
-/*
-  On a touch screen a footnote's number and its ↩ are a letter wide, so each
-  gets an unseen 44px place to press around it, the first floor's size,
-  without moving a letter (decision 0313).
-*/
-@media (pointer: coarse) {
-  .article-text :is(sup > a, li[id] a)[href^="#article-"] {
-    position: relative;
-  }
-  .article-text :is(sup > a, li[id] a)[href^="#article-"]::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    transform: translate(-50%, -50%);
-  }
-}
+/* A footnote's number and its ↩ get an unseen 44px place to press on a touch screen: taps.css. */
 
 /*
   A quotation (decision 0296): upright, in the text's full ink, set off by a

@@ -462,7 +462,7 @@
         </div>
         <p class="inset-foot">{owner ? "It says" : "Each one says"} exactly what goes before anything is removed.</p>
       </section>
-      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="text-link">Help<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
+      <p class="inset-foot"><a href={HELP_URL} target="_blank" rel="noopener" class="press-room text-link">Help<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a> · <span translate="no">Version {version}</span></p>
       {:else if page === "data"}
       <section aria-labelledby="settings-heading">
         <div class="inset-group">
