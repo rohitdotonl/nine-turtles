@@ -9,6 +9,7 @@ import {
   Keeper,
   NeedsConnection,
   countsAfter,
+  firstOf,
   inParts,
   keptList,
   nothingKeptHere,
@@ -257,5 +258,20 @@ describe("what a line says while nine turtles can't be reached (decision 0312)",
     online(true);
     expect(showingKept()).toBe("nine turtles can't be reached right now. Showing the articles kept on this device.");
     expect(nothingKeptHere()).toBe("nine turtles can't be reached right now. Nothing here is kept on this device; it shows once it's back.");
+  });
+});
+
+describe("which articles to keep, asked for in two rounds (decision 0315)", () => {
+  it("asks for the usual first page, then the rest in one", async () => {
+    const asked: (number | undefined)[] = [];
+    const list = vi.fn(async (_source, _order, after: string | null, size?: number) => {
+      asked.push(size);
+      const count = size ?? 50;
+      const start = after === null ? 0 : 50;
+      return { articles: Array.from({ length: count }, (_, at) => ({ id: start + at }) as Article), next: after === null ? "50" : "end", latest: 0 };
+    });
+    const rows = await firstOf(list, { view: "unread" }, "newest", KEEP_UNREAD);
+    expect(asked).toEqual([undefined, KEEP_UNREAD - 50]);
+    expect(rows).toHaveLength(KEEP_UNREAD);
   });
 });

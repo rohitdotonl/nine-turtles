@@ -4,8 +4,8 @@
 import { away, connection, noConnection } from "./connection.svelte";
 import { NeedsConnection, keptPage, markSent, useFetchers } from "./offline";
 import { getJson, isRecord } from "./http";
-import { saved, send, worthRetrying } from "./saving";
-import { toArticle, toFullArticle, type Page, type Source } from "./shapes";
+import { marksSince, savedBesidesMarks, send, worthRetrying, type Made } from "./saving";
+import { toArticle, toFullArticle, type Article, type Page, type Source } from "./shapes";
 import type { Order } from "./reading";
 import { changesSoFar, noteRecent, recentPage } from "./recent";
 import { listPath, sourceQuery } from "./listPath";
@@ -30,20 +30,41 @@ export async function listArticles(source: Source, order: Order, after: string |
   }
 }
 
-async function listFromServer(source: Source, order: Order, after: string | null): Promise<Page> {
-  await saved();
-  const path = listPath(source, order, after);
+async function listFromServer(source: Source, order: Order, after: string | null, size?: number): Promise<Page> {
+  // Marks don't hold it up: those the server may not have yet are put in after (decision 0315).
+  await savedBesidesMarks();
+  const path = listPath(source, order, after, size);
   const asked = changesSoFar();
+  const start = performance.now();
   const body = await getJson(path);
   if (!isRecord(body) || !Array.isArray(body.articles)) throw new Error("nine turtles sent an unexpected answer");
+  const marks = marksSince(start);
   const page = {
-    articles: body.articles.filter(isRecord).map(toArticle),
+    articles: withMarks(body.articles.filter(isRecord).map(toArticle), marks, source),
     next: typeof body.next === "string" ? body.next : null,
     latest: typeof body.latest === "number" ? body.latest : 0,
   };
-  // Copies, so a list that marks its rows never changes the noted page.
-  if (after === null) noteRecent(path, { ...page, articles: page.articles.map((article) => ({ ...article })) }, asked);
+  // Copies, so a list that marks its rows never changes the noted page; only one the server fully knew.
+  if (after === null && size === undefined && marks.length === 0) noteRecent(path, { ...page, articles: page.articles.map((article) => ({ ...article })) }, asked);
   return page;
+}
+
+/**
+ * The rows as they are with `marks` (oldest first) made, which the server may
+ * not have had when it answered: each mark's read or saved, and in Unread or
+ * Saved, a row a mark took out of that list goes. (A row a mark would add, as
+ * marking one unread just before opening Unread, comes with the next refresh.)
+ */
+export function withMarks(rows: Article[], marks: Made[], source: Source): Article[] {
+  if (marks.length === 0) return rows;
+  const marked = rows.map((row) => {
+    let now = row;
+    for (const mark of marks) if (mark.ids.includes(row.id)) now = { ...now, [mark.kind]: mark.value };
+    return now;
+  });
+  if ("view" in source && source.view === "unread") return marked.filter((row) => !row.read);
+  if ("view" in source && source.view === "starred") return marked.filter((row) => row.starred);
+  return marked;
 }
 
 /**
@@ -118,7 +139,7 @@ useFetchers({
   refused: (problem) => !worthRetrying(problem),
   async sendMark(kind, ids, value, at) {
     const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
-    await send(path, kind === "read" ? { ids, read: value, at } : { ids, starred: value, at });
+    await send(path, kind === "read" ? { ids, read: value, at } : { ids, starred: value, at }, true);
     await markSent(kind, ids, at);
   },
 });

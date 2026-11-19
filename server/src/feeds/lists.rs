@@ -22,6 +22,10 @@ use crate::{
 
 /// How many articles the list shows before "Show older items" (SPEC section 6).
 pub const PAGE_SIZE: i64 = 50;
+/// The most articles a page may hold when one asks for more (`size`): the
+/// copies kept for reading offline ask for theirs in one page each
+/// (decision 0315).
+pub const MOST_PAGE_SIZE: i64 = 200;
 
 /// Which articles a list shows (SPEC sections 4 and 6).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -89,6 +93,9 @@ pub(super) struct ArticlesQuery {
     /// Where the previous page ended (`Cursor`), for "Show older items"
     /// (or "Show newer items" when the list is oldest first).
     after: Option<String>,
+    /// How many articles a page holds: `PAGE_SIZE` unless asked, at most
+    /// `MOST_PAGE_SIZE`.
+    size: Option<i64>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -252,7 +259,8 @@ pub(super) async fn list_articles(
     let listed = async {
         let latest: i64 = sqlx::query_scalar(LATEST).fetch_one(&state.db).await?;
         let list = crate::writers::widen(&state.db, person, list).await?;
-        let listed = page(&state.db, person, list, query.order, after).await?;
+        let size = query.size.unwrap_or(PAGE_SIZE).clamp(1, MOST_PAGE_SIZE);
+        let listed = page(&state.db, person, list, query.order, after, size).await?;
         Ok::<_, sqlx::Error>((latest, listed))
     }
     .await;
@@ -498,21 +506,22 @@ pub const fn list_sql(list: List, order: Order) -> Option<&'static str> {
 
 /// One page of reader `person`'s list, starting after `after` (from the
 /// start when absent), using the list's index; Unread's by person
-/// (`by_person`), and Notes whole (`notes_list`). One extra row is asked
-/// for, to know whether another page exists.
+/// (`by_person`), and Notes whole (`notes_list`); `size` articles at most.
+/// One extra row is asked for, to know whether another page exists.
 pub async fn page(
     db: &sqlx::SqlitePool,
     person: i64,
     list: List,
     order: Order,
     after: Option<Cursor>,
+    size: i64,
 ) -> Result<(Vec<ArticleRow>, Option<Cursor>), sqlx::Error> {
     if list == List::Notes {
         return Ok((super::notes_list(db, person).await?, None));
     }
     let Some(sql) = list_sql(list, order) else {
         let after = after.and_then(|cursor| Some((cursor.at, cursor.id, cursor.place?)));
-        let (rows, next) = by_person::unread_by_person(db, person, order, after).await?;
+        let (rows, next) = by_person::unread_by_person(db, person, order, after, size).await?;
         let next = next.map(|(at, id, place)| Cursor {
             at,
             id,
@@ -539,10 +548,10 @@ pub async fn page(
     let mut rows: Vec<ArticleRow> = query
         .bind(after_at)
         .bind(after_id)
-        .bind(PAGE_SIZE + 1)
+        .bind(size + 1)
         .fetch_all(db)
         .await?;
-    let next = if rows.len() > usize::try_from(PAGE_SIZE).unwrap_or(usize::MAX) {
+    let next = if rows.len() > usize::try_from(size).unwrap_or(usize::MAX) {
         rows.pop();
         rows.last().map(|last| Cursor::at(last.at, last.id))
     } else {

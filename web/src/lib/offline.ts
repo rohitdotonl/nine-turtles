@@ -518,7 +518,8 @@ async function waitingMarks(): Promise<Mark[]> {
 
 /** How the copies are fetched and marks sent: given by lists.ts, so this file stays free of the server's details. */
 export type Fetchers = {
-  list: (source: Source, order: Order, after: string | null) => Promise<Page>;
+  /** A page of a list; `size` articles, or the server's usual page. */
+  list: (source: Source, order: Order, after: string | null, size?: number) => Promise<Page>;
   several: (ids: number[]) => Promise<FullArticle[]>;
   sendMark: (
     kind: Mark["kind"],
@@ -589,7 +590,8 @@ export function keepUpToDate(order: Order, unread: boolean): Promise<void> {
   return running;
 }
 
-async function firstOf(
+/** The first `most` rows of a list: its usual first page, then the rest in one page (decision 0315). */
+export async function firstOf(
   list: Fetchers["list"],
   source: Source,
   order: Order,
@@ -598,7 +600,9 @@ async function firstOf(
   const rows: Article[] = [];
   let after: string | null = null;
   do {
-    const page: Page = await list(source, order, after);
+    // The usual first page (so opening that list just after shows it at once, recent.ts), then the
+    // rest in one (decision 0315).
+    const page: Page = await list(source, order, after, after === null ? undefined : most - rows.length);
     if (page.kept) throw new NeedsConnection("offline");
     rows.push(...page.articles);
     after = page.next;
@@ -615,18 +619,11 @@ async function round(
   const still = () => mine === generation;
   try {
     await sendWaiting();
-    const first = await firstOf(
-      using.list,
-      { view: newestView(unread) },
-      order,
-      KEEP_UNREAD,
-    );
-    const starred = await firstOf(
-      using.list,
-      { view: "starred" },
-      "newest",
-      KEEP_STARRED,
-    );
+    // Both at once: one round trip, not one after the other.
+    const [first, starred] = await Promise.all([
+      firstOf(using.list, { view: newestView(unread) }, order, KEEP_UNREAD),
+      firstOf(using.list, { view: "starred" }, "newest", KEEP_STARRED),
+    ]);
     if (!still()) return;
     const keep = toKeep(first, starred);
     const waiting = new Map(

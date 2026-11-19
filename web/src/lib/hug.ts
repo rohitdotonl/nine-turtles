@@ -12,7 +12,8 @@
  * Use as `use:hugEllipsis={text}` on an element with `overflow: hidden` and
  * `text-overflow: ellipsis` whose only child is its text. It measures again
  * when the line around it changes width, when its text changes and when the
- * fonts have loaded.
+ * fonts have loaded. Each fit is remembered by its font, room and text, so
+ * the same name in the same room is measured once.
  */
 
 /**
@@ -37,6 +38,9 @@ const fits = new Map<Element, Fit>();
 let observer: ResizeObserver | undefined;
 let fontsHooked = false;
 const ellipsisCache = new Map<string, number>();
+/** Each name's fitted width, by its font, its room and its text: a list opened again measures nothing (decision 0315). */
+const fitCache = new Map<string, number>();
+const FITS_KEPT = 2_000;
 
 // The "…" as CSS draws it: measured on a span with the name's own font, spacing and features.
 function ellipsisWidth(node: HTMLElement): number {
@@ -83,6 +87,10 @@ export function hugEllipsis(node: HTMLElement, _text?: string) {
       const text = node.firstChild;
       // Hidden (one feed's list) or not cut short: nothing to do.
       if (!(text instanceof Text) || node.clientWidth <= 1 || node.scrollWidth <= node.clientWidth) return undefined;
+      const style = getComputedStyle(node);
+      const key = `${style.font}|${style.letterSpacing}|${style.fontFeatureSettings}|${node.clientWidth}|${text.data}`;
+      const known = fitCache.get(key);
+      if (known !== undefined) return known;
       const range = document.createRange();
       const widthOf = (n: number) => {
         if (n === 0) return 0;
@@ -92,7 +100,10 @@ export function hugEllipsis(node: HTMLElement, _text?: string) {
       };
       const ellipsis = ellipsisWidth(node);
       const count = fittingCount(text.length, widthOf, ellipsis, node.clientWidth);
-      return Math.ceil(widthOf(count) + ellipsis);
+      const width = Math.ceil(widthOf(count) + ellipsis);
+      if (fitCache.size >= FITS_KEPT) fitCache.clear();
+      fitCache.set(key, width);
+      return width;
     },
   };
 
@@ -102,10 +113,14 @@ export function hugEllipsis(node: HTMLElement, _text?: string) {
     });
     if (!fontsHooked && document.fonts) {
       fontsHooked = true;
-      void document.fonts.ready.then(() => {
+      const again = () => {
         ellipsisCache.clear();
+        fitCache.clear();
         fitAll([...fits.values()]);
-      });
+      };
+      void document.fonts.ready.then(again);
+      // A face that arrives later (another script's letters) changes widths too.
+      document.fonts.addEventListener?.("loadingdone", again);
     }
     fits.set(line, fit);
     observer.observe(line);

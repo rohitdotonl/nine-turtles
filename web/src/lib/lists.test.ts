@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { endOfList, markedAllMessage, newItemsMessage, noFurther, notSavedSignedOut, resultCount } from "./lists";
+import { endOfList, markedAllMessage, newItemsMessage, noFurther, notSavedSignedOut, resultCount, withMarks } from "./lists";
+import type { Article } from "./shapes";
 import { Refused, signedOut } from "./saving";
 
 describe("mark all as read", () => {
@@ -58,5 +59,29 @@ describe("signed out (decision 0230)", () => {
     expect(signedOut(new Refused(403))).toBe(false);
     expect(signedOut(new Refused(503))).toBe(false);
     expect(signedOut(new TypeError("offline"))).toBe(false);
+  });
+});
+
+describe("a list fetched while marks were on their way (decision 0315)", () => {
+  const row = (id: number, read = false, starred = false) => ({ id, read, starred }) as Article;
+  const rows = [row(1), row(2, false, true), row(3)];
+
+  it("shows each mark, the newest last", () => {
+    const marks = [
+      { kind: "read" as const, ids: [1, 2], value: true },
+      { kind: "read" as const, ids: [2], value: false },
+      { kind: "starred" as const, ids: [3], value: true },
+    ];
+    expect(withMarks(rows, marks, { feed: 4 })).toEqual([row(1, true), row(2, false, true), row(3, false, true)]);
+  });
+
+  it("leaves out of Unread what was just read, and out of Saved what was just taken out", () => {
+    expect(withMarks(rows, [{ kind: "read", ids: [1], value: true }], { view: "unread" }).map((each) => each.id)).toEqual([2, 3]);
+    const saved = [row(1, false, true), row(2, false, true), row(3, true, true)];
+    expect(withMarks(saved, [{ kind: "starred", ids: [2], value: false }], { view: "starred" }).map((each) => each.id)).toEqual([1, 3]);
+  });
+
+  it("changes nothing without marks", () => {
+    expect(withMarks(rows, [], { view: "unread" })).toBe(rows);
   });
 });
