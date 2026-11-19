@@ -78,6 +78,15 @@ test.describe("a messy feed", () => {
     await expect(text).toContainText("Scroll the table sideways to see all 12 columns.");
     await expect(text.getByRole("table")).toHaveAttribute("tabindex", "0");
 
+    // Tables that only lay an email out (decision 0319): the outer one, the one inside it and one of a single cell
+    // are read for their words and drawn as plain blocks, never wide; the table of numbers stays a table.
+    const layout = text.locator("table[role='presentation']");
+    await expect(layout).toHaveCount(3);
+    await expect(text.getByRole("table")).toHaveCount(1);
+    await expect(text.getByText(/in Messy Weekly.s letters/)).toBeVisible();
+    await expect(text.locator("table[role='presentation'][tabindex]")).toHaveCount(0);
+    expect(await layout.first().evaluate((table) => table.scrollWidth <= table.clientWidth + 1)).toBe(true);
+
     // The button says "Write back"; who it's to is said aloud with it, and nothing under it names them or their address (decision 0298).
     const button = pane(page).getByRole("button", { name: `Write back to Messy ${name}` });
     expect(await button.evaluate((element) => {

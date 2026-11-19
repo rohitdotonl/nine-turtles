@@ -75,7 +75,8 @@
 /* An article's row in the list (ItemRow.svelte). */
 /*
   The source, time and bookmark on one line (decision 0048): the source shrinks
-  and ends in "…"; the time and the bookmark keep their room. Figures are
+  and ends in "…"; the time and the bookmark keep their room. With large text
+  the names wrap whole instead (large-text.css, decision 0319). Figures are
   proportional, as in running text, so the digits in a name and a date set
   as tightly as they do in the sidebar.
 */

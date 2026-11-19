@@ -131,7 +131,8 @@ export function wideWords(columns: number, touch: boolean): string {
  * that fits again (the window grew) loses both.
  */
 export function markWide(table: HTMLTableElement, touch: boolean): void {
-  const wide = table.scrollWidth > table.clientWidth + 1;
+  // One that only lays the article out is drawn as plain blocks (heard.ts, decision 0319): never wide, never a stop for the keyboard.
+  const wide = table.getAttribute("role") !== "presentation" && table.scrollWidth > table.clientWidth + 1;
   const next = table.nextElementSibling;
   const noted = next instanceof HTMLElement && next.classList.contains(WIDE_NOTE) ? next : undefined;
   if (!wide) {

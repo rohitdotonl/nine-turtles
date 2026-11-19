@@ -66,7 +66,7 @@
     >
   {/if}
   <!--
-    Always one line (decision 0048): a long source name ends in "…", the time and bookmark never wrap. The "·" hugs the "…" (decision 0051). The whole line
+    One line (decision 0048): a long source name ends in "…", the time and bookmark never wrap; with large text the names wrap whole instead (large-text.css, decision 0319). The "·" hugs the "…" (decision 0051). The whole line
     is 12px, so the title leads: the time a step fainter than muted grey, the publisher's name in muted grey
     (.row-feed, decision 0123) so the credit reads first; on the selected row both are muted grey (AA).
   -->
