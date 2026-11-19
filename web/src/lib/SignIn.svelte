@@ -174,8 +174,8 @@
     } else {
       message = explain(result);
       refused = result.reason === "wrong-password";
-      if (refused) fix = emailFix(email);
-      password = "";
+      // Only a wrong password is typed again; offline or busy, it was right (decision 0318).
+      if (refused) [fix, password] = [emailFix(email), ""];
     }
   }
 

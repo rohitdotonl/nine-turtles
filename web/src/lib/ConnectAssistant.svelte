@@ -13,7 +13,7 @@
   import Wordmark from "./Wordmark.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
-  import { UNREACHABLE } from "./messages";
+  import { unreachable } from "./messages";
   import { answerRequest, connectRequest, shortName, type ConnectRequest } from "./assistants";
 
   let { onSignedOut }: { onSignedOut: () => void } = $props();
@@ -53,7 +53,7 @@
       heading?.focus();
       return;
     }
-    message = UNREACHABLE;
+    message = unreachable();
   }
 
   load();
@@ -108,7 +108,7 @@
       <h2 bind:this={heading} tabindex="-1" class="font-display text-heading font-semibold tracking-[-0.01em]">
         {request.kind === "invalid" ? "This link can't be used" : "Not connected"}
       </h2>
-      <p role="status">{request.kind === "invalid" ? INVALID : UNREACHABLE}</p>
+      <p role="status">{request.kind === "invalid" ? INVALID : unreachable()}</p>
       {#if request.kind === "trouble"}
         <button type="button" onclick={() => location.reload()} class="btn">Try again</button>
       {/if}

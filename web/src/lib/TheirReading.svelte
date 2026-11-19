@@ -61,7 +61,7 @@
 <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
   <h3 id="their-highlights" tabindex="-1" class="label outline-none">Your highlights</h3>
   {#if failed}
-    <LoadFailed class="text-meta" words="Your highlights from their writing couldn't be loaded." heading="their-highlights" onRetry={() => (attempt += 1)} />
+    <LoadFailed class="text-meta" words="Your highlights from their writing couldn't be loaded." heading="their-highlights" shows="Your highlights from their writing show" onRetry={() => (attempt += 1)} />
   {:else if !loaded}
     <!-- While they load (a moment), the room the empty state takes, so what's below doesn't move when nothing comes. -->
     <div class="waiting" aria-hidden="true"></div>

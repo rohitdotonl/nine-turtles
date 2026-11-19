@@ -162,6 +162,8 @@ function messyFeed(name, host) {
   const cells = (tag) => Array.from({ length: 12 }, (_, at) => `<${tag}>${tag === "th" ? "Column" : "Measurement"} ${at + 1}</${tag}>`).join("");
   const body = `<p>Here is the map:</p><iframe src="https://www.maps.example/embed?town=1" width="600" height="400"></iframe>
 <p>And the photo from the walk:</p><img src="${host}/messy/${name}/missing.jpg" alt="The harbour at low tide">
+<p>Three more, with no words:</p>${[1, 2, 3].map((at) => `<p><img src="${host}/messy/${name}/gone-${at}.jpg"></p>`).join("")}
+<p>And one beside a picture that loads:</p><p><img src="${host}/messy/${name}/gone-4.jpg"></p><p><img src="${host}/reading/river.svg" alt="A river"><img src="${host}/messy/${name}/gone-5.jpg"></p>
 <p>The numbers:</p><table><tr>${cells("th")}</tr><tr>${cells("td")}</tr></table><p>The end.</p>`;
   return `<?xml version="1.0"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel>
 <title>Blog – Messy ${name} » Latest Posts</title><link>${home}</link>

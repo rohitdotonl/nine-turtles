@@ -12,7 +12,7 @@ import { PASSWORD_MINIMUM, errorOf } from "./readers";
 import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
-import { HAS_ACCOUNT, NOT_AN_EMAIL, PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, passwordTooLong, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, PASSWORD_FIRST, unreachable, WRONG_PASSWORD, passwordTooLong, tooManyTries } from "./messages";
 
 /** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
@@ -113,7 +113,7 @@ export function explainAsked(result: AskResult, email: string): string {
     case "no-email":
       return "This nine turtles can't send email yet. Ask whoever runs this nine turtles to set a new password for you.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 
@@ -184,7 +184,7 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
     case "password-long":
       return passwordTooLong();
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 
@@ -236,7 +236,7 @@ export function explainChange(result: ChangeResult): string {
     case "no-email":
       return "This nine turtles can't send email yet, so your email can't be changed here.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 
@@ -302,7 +302,7 @@ export function explainConfirm(result: Exclude<ConfirmResult, { ok: true }>, fai
     case "password-long":
       return passwordTooLong("new password");
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
     case "plan":
       return failed;
   }

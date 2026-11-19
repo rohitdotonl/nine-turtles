@@ -60,11 +60,19 @@ test.describe("a messy feed", () => {
 
     // A picture that won't load: what it showed, and where it may still be.
     await expect(text).toContainText("A picture didn't load: The harbour at low tide.");
-    await expect(text.locator("img")).toHaveCount(0);
-    await expect(text.getByRole("link", { name: "See it on the original", exact: true })).toHaveAttribute(
+    // Only the picture that loads is left (a river), whatever failed beside it.
+    await expect(text.locator("img")).toHaveCount(1);
+    await expect(text.getByRole("img", { name: "A river" })).toBeVisible();
+    await expect(text.getByRole("link", { name: "See it on the original", exact: true }).first()).toHaveAttribute(
       "href",
       `https://messy-${name}.example/guide`,
     );
+
+    // Pictures with no words of the writer's, one after another, say so once (decision 0318), whatever order they failed in.
+    await expect(text).toContainText("3 pictures didn't load.");
+    await expect(text.getByRole("link", { name: "See them on the original", exact: true })).toHaveCount(1);
+    // One alone after words, and one sharing a paragraph with a picture that loaded: each its own line, never joined.
+    await expect(text.getByText("A picture didn't load.", { exact: false }).filter({ hasNotText: "harbour" })).toHaveCount(2);
 
     // A table wider than the column says so, and the keyboard can reach it to scroll.
     await expect(text).toContainText("Scroll the table sideways to see all 12 columns.");

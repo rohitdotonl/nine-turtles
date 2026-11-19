@@ -11,7 +11,7 @@
 <script lang="ts">
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
-  import TextButton from "./TextButton.svelte";
+  import LibraryFailed from "./LibraryFailed.svelte";
   import ListHead from "./ListHead.svelte";
   import ListTop from "./ListTop.svelte";
   import PaneResizer from "./PaneResizer.svelte";
@@ -850,9 +850,7 @@
           {searchArticles} onLeft={(row, kept) => { const places = row.places ?? [row.id]; if ((route.kind === "feed" || isWho(route)) && places.includes(route.id)) go(home); else itemList?.letGo(places, kept); }} onBack={() => itemList?.refresh()} onLink={(address) => { shared = address; go({ kind: "add-feed" }); }}
         />
       {/if}
-      {#if library.feedsFailed}
-        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-meta text-danger"><span class="shrink-0"><Icon name="alert" /></span>Everyone you follow couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
-      {/if}
+      {#if library.feedsFailed}<LibraryFailed where="sidebar" onRetry={loadFeeds} />{/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />
     {#if !phone && panes.list}
@@ -998,6 +996,7 @@
                   {addressOf}
                 />
               {/key}
+            {:else if library.feedsFailed}<LibraryFailed where="list" onRetry={loadFeeds} />
             {/if}
           </div>
         </section>

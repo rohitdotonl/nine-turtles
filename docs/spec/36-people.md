@@ -169,8 +169,10 @@ PLAN.md → V1, item 1.*
     remove it (Undo in its place). The card waits for it a moment (at
     most 2 seconds) and then shows whole, so it never arrives later and
     pushes your note and highlights down; if it can't be loaded, one quiet
-    line says "Replies you started couldn't be loaded. Open the page again
-    to try once more.";
+    line says "Replies you started couldn't be loaded." with Try again,
+    or, with no answer at all, calmly "You're offline. Replies you started
+    show once you're back online." and they load by themselves once it's
+    back (section 32, decision 0318);
   - **Your note** (section 42), "Add a note…" while there's none; once
     written, with the page that is a note everywhere beside it;
   - **Your highlights**, the words you highlighted in their writing (the
@@ -179,8 +181,10 @@ PLAN.md → V1, item 1.*
     article) and your note on it, an untitled piece by its opening words
     (section 6); with none, "Nothing highlighted yet." and "Words you
     highlight in their writing gather here."; if they can't be loaded, one
-    quiet line says "Your highlights from their writing couldn't be loaded.
-    Open the page again to try once more." (decision 0211). There is no
+    quiet line says "Your highlights from their writing couldn't be loaded."
+    with Try again (decision 0211), or, with no answer at all, calmly "You're
+    offline. Your highlights from their writing show once you're back
+    online." (decision 0318). There is no
     Lately: their list already shows their newest (decision 0215).
   - **Pin** (decision 0310): just before the cog, a pin button pins them to
     the top of Home, or unpins them (section 5): "Pin Tomas Berg to Home",

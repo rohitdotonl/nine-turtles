@@ -3,7 +3,7 @@
 
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { UNREACHABLE, tooManyTries } from "./messages";
+import { tooManyTries, unreachable } from "./messages";
 import { deviceText, setDeviceText } from "./device";
 
 /**
@@ -119,7 +119,7 @@ export function explain(result: Exclude<SignInResult, { ok: true }>): string {
     case "password-invalid":
       return "The password setting isn't valid. The setup guide explains how to set it again.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable("You're offline. Sign in once you're back online.");
   }
 }
 
