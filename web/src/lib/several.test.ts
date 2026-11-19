@@ -30,8 +30,8 @@ describe("following several of a site's feeds at once (decision 0206)", () => {
       { kind: "problem", reason: "unreachable" },
       { kind: "problem", reason: "not-found" },
     ];
-    expect(followedTogether(urls, results, choices).note).toBe("Comments and Podcast couldn't be followed: The site couldn't be read just now. Try again later.");
-    expect(followedTogether(urls.slice(0, 2), results.slice(0, 2), choices).note).toBe("Comments couldn't be followed: The site couldn't be read just now. Try again later.");
+    expect(followedTogether(urls, results, choices).note).toBe("Comments and Podcast couldn't be followed: The site couldn't be read right now. Try again later.");
+    expect(followedTogether(urls.slice(0, 2), results.slice(0, 2), choices).note).toBe("Comments couldn't be followed: The site couldn't be read right now. Try again later.");
   });
 
   it("with nothing new followed, says the first problem, or goes to one already followed", () => {

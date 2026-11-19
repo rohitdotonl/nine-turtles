@@ -137,7 +137,7 @@ export function ruleRefused(refusal: RuleRefusal, failed = "The word couldn't be
     case "nothing-to-match":
       return "Write a word or phrase to hide articles about.";
     case "too-long":
-      return "That's too long. Keep it to 200 characters.";
+      return "That word or phrase is too long. Keep it to 200 characters.";
     case "no-place":
       return "You no longer follow them.";
     case "bad-days":

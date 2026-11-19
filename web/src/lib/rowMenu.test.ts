@@ -20,13 +20,12 @@ describe("rowMenu", () => {
     expect(labels(rowMenu(article(), true, hands()))).toEqual([["Save"]]);
   });
 
-  it("puts the writer's items and the links in groups of their own, leaving out an empty one", () => {
-    const groups = rowMenu(article(), false, hands(), [
-      { items: [{ label: "Write back", onSelect: () => {} }] },
-      { items: [] },
-      { items: [{ label: "Open in a new tab", onSelect: () => {} }] },
-    ]);
-    expect(labels(groups)).toEqual([["Save", "Mark as read"], ["Write back"], ["Open in a new tab"]]);
+  it("puts the links before and the writer's items after, in groups of their own, leaving out an empty one", () => {
+    const groups = rowMenu(article(), false, hands(), {
+      before: [{ items: [{ label: "Open in a new tab", onSelect: () => {} }] }, { items: [] }],
+      after: [{ items: [{ label: "Write back", onSelect: () => {} }] }],
+    });
+    expect(labels(groups)).toEqual([["Open in a new tab"], ["Save", "Mark as read"], ["Write back"]]);
   });
 
   it("acts on the row's own article", () => {

@@ -97,6 +97,6 @@ describe("a failing feed's line and Find new address (decision 0106)", () => {
     expect(found([one])).toEqual({ kind: "one", choice: one, said: "Use https://blog.example/new.xml instead?" });
     expect(found([one, two])).toMatchObject({ kind: "several", choices: [one, two] });
     expect(found([])).toMatchObject({ kind: "none", said: expect.stringMatching(/doesn't name another feed/) });
-    expect(found({ error: "unreachable" })).toEqual({ kind: "none", said: "The site couldn't be read just now. Try again later." });
+    expect(found({ error: "unreachable" })).toEqual({ kind: "none", said: "The site couldn't be read right now. Try again later." });
   });
 });

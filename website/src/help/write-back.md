@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-18
+updated: 2026-11-19
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -56,7 +56,7 @@ or **Outlook.com** there.
 Press the arrow beside **Write back** at the end of an article. Its menu
 has every way to answer them:
 
-- **Email app**, **Gmail** or **Outlook.com**: writes an email there.
+- **Your email app**, **Gmail** or **Outlook.com**: writes an email there.
 - **Copy** and their address: copies it, to paste into any email. nine
   turtles says "Copied." under the button.
 - **Comment on their site**: opens the article's comments on their site, in

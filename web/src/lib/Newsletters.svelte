@@ -115,8 +115,8 @@
           <p class={["min-w-0 value", !label.on && "text-ink-2"]} translate="no">
             <span class="address">{label.address}</span>{#if !label.on}{" "}<span class="text-muted" translate="yes">Off.</span>{/if}
           </p>
-          <!-- A switch, as Apple draws one, like Rules': on is filled in the text color, off is an empty track. -->
-          <label class="switch-target" title={label.on ? "On: press to turn its email away" : "Off: press to take its email again"}>
+          <!-- A switch, as Apple draws one (switch.css): on is filled in the text color, off is an empty track. -->
+          <label class="switch-target -my-2 -mr-2" title={label.on ? "On: press to turn its email away" : "Off: press to take its email again"}>
             <input
               type="checkbox"
               role="switch"

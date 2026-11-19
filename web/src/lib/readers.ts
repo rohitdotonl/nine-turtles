@@ -7,7 +7,7 @@
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { duration } from "./session";
-import { HAS_ACCOUNT, NOT_AN_EMAIL, UNREACHABLE, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, UNREACHABLE, passwordTooLong, tooManyTries } from "./messages";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -85,7 +85,7 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
     case "password-short":
       return `Choose a password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":
-      return "That password is too long.";
+      return passwordTooLong();
     case "already":
       return HAS_ACCOUNT;
     case "too-many":

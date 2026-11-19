@@ -29,7 +29,7 @@
   background-color: var(--pressed);
 }
 
-/* Words to press (Undo, Try again, Copy their address, a link in a line): the same tone, just around the words. */
+/* Words to press (Undo, Try again, Copy address, a link in a line): the same tone, just around the words. */
 :is(.text-button, .text-link):active {
   border-radius: var(--radius-mark);
   background-color: var(--pressed);

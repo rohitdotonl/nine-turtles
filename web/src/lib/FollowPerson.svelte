@@ -101,7 +101,7 @@
   let held = $derived(busy || looking || stuck);
 </script>
 
-<form onsubmit={follow} class={["flex flex-col gap-4", page && "flex-1"]}>
+<form onsubmit={follow} class={["flex flex-col gap-5", page && "flex-1"]}>
   <div class="flex flex-col gap-1">
     <p class="address break-all text-ink-2">{site}</p>
     {#if into}<p class="text-meta text-ink-2">They'll go in {into.name}.</p>{/if}

@@ -47,7 +47,7 @@
     tabindex="-1"
     bind:this={heading}
     title={text}
-    class={["min-w-0 flex-1 font-display text-heading leading-[1.3] font-semibold tracking-[-0.01em]", onAbout ? "flex items-center" : "truncate"]}
+    class={["min-w-0 flex-1 font-display text-heading font-semibold tracking-[-0.01em]", onAbout ? "flex items-center" : "truncate"]}
   >
     {#if onAbout}
       <!-- The heading's name stays theirs alone; what the button does is its description. The full 44px tall, to touch.

@@ -285,7 +285,7 @@ describe.each(Object.entries(THEMES))("the %s theme's fields", (_name, colors) =
 // A field in use (decision 0055): its edge steps aside for a 2px ring in the
 // softened text color (--place-focus), 1px clear of the field, so the ring is
 // drawn over whatever the field sits on; a "New folder…" row rings just inside
-// its group. The ring must stay at 3 : 1 against that surface and against the
+// its group, as do a row that is a button or link and a tick-box row. The ring must stay at 3 : 1 against that surface and against the
 // field's own fill beside it, in every theme, by day and by night.
 describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (name, selector) => {
   const colors = THEMES[name]!;
@@ -294,6 +294,9 @@ describe.each(Object.entries(SELECTORS))("the %s theme's field focus ring", (nam
   it("is the softened text color, at 3 : 1 or more against the field and every surface a field sits on", () => {
     expect(css).toMatch(/\.field:focus-visible \{\s*outline: 2px solid var\(--place-focus\);/);
     expect(css).toMatch(/\.inset-row:has\(> \.inset-input:focus-visible\) \{\s*outline: 2px solid var\(--place-focus\);/);
+    // A row that is a button or link, and a tick-box row, ring in the same tone (decision 0316).
+    expect(css).toMatch(/\.inset-action:focus-visible \{\s*outline-color: var\(--place-focus\);/);
+    expect(css).toMatch(/\.check-row:has\(> input:focus-visible\) \{\s*outline: 2px solid var\(--place-focus\);/);
     const ring = Number(css.match(/--place-focus: color-mix\(in srgb, var\(--ink\) (\d+)%, transparent\)/)![1]) / 100;
     const fieldShare = Number(css.match(/--field: color-mix\(in srgb, var\(--ink\) (\d+)%, var\(--paper\)\)/)![1]) / 100;
     const fill = mix(colors.ink!, colors.paper!, fieldShare);

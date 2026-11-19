@@ -16,11 +16,20 @@ export type RowHands = {
   read(article: Article, read: boolean): void;
 };
 
-/** Each with its icon, as every menu has (decision 0311): Save or Remove from Saved, then Mark as read or unread (none with Unread off: nothing shows it), then the `others` that have something in them. */
-export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, others: MenuGroup[] = []): MenuGroup[] {
+/** The groups a row's menu wraps its own in: `before` its links, `after` the writer's items. */
+export type RowAround = { before?: MenuGroup[]; after?: MenuGroup[] };
+
+/**
+ * Each with its icon, as every menu has (decision 0311): the groups `before`, then Save or Remove from Saved and Mark as read
+ * or unread (none with Unread off: nothing shows it), then the groups `after`, leaving out any with nothing in them. The links
+ * come first and the writer last, so what a row's menu shares with an article's More (Copy link, marking, Info about) comes in
+ * the same order in both (decision 0316).
+ */
+export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, { before = [], after = [] }: RowAround = {}): MenuGroup[] {
   const own: MenuItem[] = [{ label: article.starred ? "Remove from Saved" : "Save", icon: "bookmark", onSelect: () => hands.star(article) }];
   if (!unreadOff) own.push({ label: article.read ? "Mark as unread" : "Mark as read", icon: article.read ? "dot" : "check", onSelect: () => hands.read(article, !article.read) });
-  return [{ items: own }, ...others.filter((group) => group.items.length > 0)];
+  const some = (groups: MenuGroup[]) => groups.filter((group) => group.items.length > 0);
+  return [...some(before), { items: own }, ...some(after)];
 }
 
 /** What a swipe left on a row can do: its word and icon, shown in the room it opens, and what letting go does. */

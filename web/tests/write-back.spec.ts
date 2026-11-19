@@ -201,29 +201,29 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   };
   await openArticle();
 
-  // The arrow beside Write back holds the other ways, Email app ticked.
+  // The arrow beside Write back holds the other ways, Your email app ticked.
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
   const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
   const ways = pane(page).getByRole("menu");
   // By keyboard: Enter opens it on its first row, the arrows move, Escape closes it and gives the keyboard back to the arrow.
   await arrow.focus();
   await page.keyboard.press("Enter");
-  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toBeFocused();
+  await expect(ways.getByRole("menuitemradio", { name: "Your email app" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(ways.getByRole("menuitemradio", { name: "Gmail" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(ways).toHaveCount(0);
   await expect(arrow).toBeFocused();
   await arrow.click();
-  await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
-  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toHaveAttribute("aria-checked", "true");
+  await expect(ways.getByRole("menuitemradio")).toHaveText([/^\s*Your email app\s+W\s*$/, /^\s*Gmail\s*$/, /^\s*Outlook\.com\s*$/, /^\s*Copy talk@talk\.example\s*$/, /^\s*Comment on their site\s*$/]);
+  await expect(ways.getByRole("menuitemradio", { name: "Your email app" })).toHaveAttribute("aria-checked", "true");
   // No room under the arrow (a short window, at the article's end): it opens upwards, wholly in view, its first row nearest the arrow.
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1280, height: 480 });
   await pane(page).locator(".reading-scroller").evaluate((area) => (area.scrollTop = area.scrollHeight));
   await arrow.click();
-  await expect(ways.getByRole("menuitemradio")).toHaveText([/Comment on their site/, /Copy talk@talk\.example/, /Outlook\.com/, /Gmail/, /Email app/]);
-  await expect(ways.getByRole("menuitemradio", { name: "Email app" })).toBeFocused();
+  await expect(ways.getByRole("menuitemradio")).toHaveText([/Comment on their site/, /Copy talk@talk\.example/, /Outlook\.com/, /Gmail/, /Your email app/]);
+  await expect(ways.getByRole("menuitemradio", { name: "Your email app" })).toBeFocused();
   const [menuBox, arrowBox, areaBox] = await Promise.all([ways.boundingBox(), arrow.boundingBox(), pane(page).locator(".reading-scroller").boundingBox()]);
   expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(arrowBox!.y);
   expect(menuBox!.y).toBeGreaterThanOrEqual(areaBox!.y);
@@ -257,9 +257,9 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(pane(page).getByText(`on ${name}.example`, { exact: true })).toBeVisible();
 
 
-  // Back to email from the arrow: Email app opens it, and Write back is the main button again.
+  // Back to email from the arrow: Your email app opens it, and Write back is the main button again.
   await arrow.click();
-  await ways.getByRole("menuitemradio", { name: "Email app" }).click();
+  await ways.getByRole("menuitemradio", { name: "Your email app" }).click();
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toBeVisible();
   await expect(pane(page).getByText(/^Opening your email app/)).toBeVisible();
 
@@ -344,19 +344,19 @@ test("Write back answers where it was pressed, names a post with no title, and E
   await expect(note).not.toContainText("Opening your email app…");
   await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeFocused();
   await expect(note.getByRole("button", { name: "Write in Outlook.com" })).toBeVisible();
-  await note.getByRole("button", { name: "Copy their address" }).click();
+  await note.getByRole("button", { name: "Copy address" }).click();
   await expect(note).toContainText(/^Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await note.getByRole("button", { name: "Close the note" }).click();
   await expect(note.getByText(/Opening your email app|Copied/)).toHaveCount(0);
 
-  // By keyboard: W says it at the foot, collapsed again; Didn't open? and Copy their address are pressed with Enter, and the keyboard goes back to the article.
+  // By keyboard: W says it at the foot, collapsed again; Didn't open? and Copy address are pressed with Enter, and the keyboard goes back to the article.
   await pane(page).getByRole("heading", { level: 2 }).focus();
   await page.keyboard.press("w");
   await expect(note).toContainText("Opening your email app…");
   await note.getByRole("button", { name: "Didn't open?" }).focus();
   await page.keyboard.press("Enter");
   await expect(note.getByRole("button", { name: "Write in Gmail" })).toBeFocused();
-  await note.getByRole("button", { name: "Copy their address" }).focus();
+  await note.getByRole("button", { name: "Copy address" }).focus();
   await page.keyboard.press("Enter");
   await expect(note).toContainText(/Copied\.|The address couldn't be copied\. It's notes@notes\.example/);
   await expect(pane(page).getByRole("heading", { level: 2 })).toBeFocused();
@@ -405,7 +405,7 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await page.keyboard.press("Enter");
   await expect(more).toHaveAttribute("aria-expanded", "true");
   await expect(more).toBeFocused();
-  await expect(line.getByRole("button")).toHaveText(["Didn't open?", "Write in Gmail", "Write in Outlook.com", "Copy their address"]);
+  await expect(line.getByRole("button")).toHaveText(["Didn't open?", "Write in Gmail", "Write in Outlook.com", "Copy address"]);
   await page.keyboard.press("Enter");
   await expect(line.getByRole("button")).toHaveText(["Didn't open?"]);
   await page.keyboard.press("Enter");
@@ -443,7 +443,7 @@ test("Write in Gmail: chosen once under Write back, it opens a Gmail draft in a 
   await expect(pane(page)).not.toContainText("Opens Gmail in a new tab.");
 });
 
-test("On a touch screen, whose email app always answers, the line offers only Copy their address", async ({ page }) => {
+test("On a touch screen, whose email app always answers, the line offers only Copy address", async ({ page }) => {
   const name = `wbtouch${test.info().workerIndex}x${Date.now()}`;
   // A touch screen: no fine pointer.
   await page.addInitScript(() => {
@@ -465,7 +465,7 @@ test("On a touch screen, whose email app always answers, the line offers only Co
   const line = pane(page).locator(".write-back .opening-line");
   await expect(line).toContainText("Nothing opened?");
   await expect(line).not.toContainText("the wrong app");
-  await expect(line.getByRole("button")).toHaveText(["Copy their address"]);
+  await expect(line.getByRole("button")).toHaveText(["Copy address"]);
 });
 
 test("A way back pressed is listed on their page under Replies you started, removed with Undo, and switched off with Record replies in Settings", async ({ page }) => {

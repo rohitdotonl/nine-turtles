@@ -18,7 +18,7 @@ related: [follow-someone, download-everything, questions]
 1. In your old reader, look for **Export** or **OPML** (often under
    Settings, Import/Export or Account). Save the file it gives you.
 2. In nine turtles, open **Settings › Your data** and press **Import
-   OPML…**
+   a list of feeds (OPML)…**
 3. Choose the file.
 
 nine turtles says how many it added, for example "Added 120 feeds and 8

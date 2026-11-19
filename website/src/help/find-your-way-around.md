@@ -73,8 +73,8 @@ list: mark it all as read, refresh it, or sort it oldest first. In a
 person's or publication's list it also has **Info about …**, their page, which
 opens too when you press their name at the top of the list. Each article
 has a menu of its own too: right-click it (on a phone, press and hold it)
-to save it, mark it read or unread, write back, see the writer's page,
-open it in a new tab or copy its link (on a phone, share it).
+to open it in a new tab or copy its link (on a phone, share it), save it,
+mark it read or unread, write back, or see the writer's page.
 While the menu is open, the article it belongs to stays shaded, so you can
 see which one you're about to change.
 

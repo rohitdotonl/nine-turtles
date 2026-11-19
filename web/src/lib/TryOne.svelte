@@ -91,7 +91,7 @@
   .try-word {
     text-decoration: underline;
     text-decoration-thickness: 1px;
-    text-underline-offset: 3px;
+    text-underline-offset: 4px;
     text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
   }
   .group:hover .try-word {

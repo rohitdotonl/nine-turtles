@@ -174,7 +174,7 @@
     first group does, and Save sits at the screen's foot.
   -->
   <div class="page-sheet-card">
-    <PageHead title="Edit folder" bind:heading onClose={cancel} closeLabel="Close" />
+    <PageHead title="Edit folder" bind:heading onClose={cancel} />
     <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
       <div class="mx-auto flex w-full max-w-xl flex-1 flex-col">
         {@render form()}

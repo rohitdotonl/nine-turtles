@@ -9,6 +9,7 @@ import "./reading-column.css";
 import "./scripts.css";
 import "./pressed.css";
 import "./unavailable.css";
+import "./switch.css";
 import "./print.css";
 import "./opening.css";
 import "./swipes.css";

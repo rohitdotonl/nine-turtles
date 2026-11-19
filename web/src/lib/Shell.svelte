@@ -109,7 +109,7 @@
   const front = articleIn(location.pathname).list.replace(/\/+/g, "") === ""; // "/": Saved, or the welcome while you follow no one.
   const start = homeFor(asked, untrack(() => settings.unread));
   let route: Route = $state(start);
-  /** Where Escape and "Close settings" go back to: the last list you were on. */
+  /** Where Escape and Settings' X go back to: the last list you were on. */
   let lastPlace: Route = $state(isList(start) ? start : home);
   /** A page shared here (/add-feed?url=…, decisions 0104, 0138), read before the address is tidied, for
    * "Follow this person?" (`sharedName`: who it's by); leaving clears it, so Add a feed opens empty after. */
@@ -603,7 +603,7 @@
   /** × on their page (Escape, and ‹ on a phone): back where it was opened from (`whoClosesTo`). */
   const closeWho = () => isWho(route) && ((to) => (to === "back" ? steps.goBack() : go(to, undefined, to.kind !== "your-feeds")))(whoClosesTo(whoFrom, route));
 
-  /** Close settings, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
+  /** Settings' X, and Escape on Settings or Add a feed: on a phone, back one step to the feeds. */
   function closePage() {
     // "New to feeds?" opens from the welcome on the list's screen: on a phone its X goes back there.
     if (phone && route.kind === "new-to-feeds" && steps.cameFrom("list")) steps.goBack();
@@ -925,7 +925,7 @@
               arrow and no Cancel.
             -->
             <div class="page-sheet-card">
-              <PageHead title={taskTitle} bind:heading={headings.list} onClose={closePage} closeLabel="Close" />
+              <PageHead title={taskTitle} bind:heading={headings.list} onClose={closePage} />
               <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
                 <!-- 20px under the top line as Settings is: + Add's line on what to paste, the field, then Add the full width at the screen's foot. -->
                 <div class="mx-auto flex w-full max-w-xl flex-1 flex-col gap-5">
@@ -991,10 +991,10 @@
                   results={searching.shown !== undefined}
                   oneFeed={under.kind === "feed" && !searching.shown && placeLabels(currentPlaces)}
                   {unreadOff}
-                  rowActions={(article) => [
-                    { items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), open(), void tick().then(() => articleView?.act("write-back"))) }) },
-                    { items: linkItems(article, addressOf(article), (message) => itemList?.inform(message)) },
-                  ]}
+                  rowActions={(article) => ({
+                    before: [{ items: linkItems(article, addressOf(article), (message) => itemList?.inform(message)) }],
+                    after: [{ items: writerItems(article, library, { go, writeBack: (it) => ((selected = it), open(), void tick().then(() => articleView?.act("write-back"))) }) }],
+                  })}
                   {addressOf}
                 />
               {/key}

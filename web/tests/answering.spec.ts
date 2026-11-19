@@ -146,7 +146,7 @@ test("Write back says the email app is opening, and offers the address if nothin
   if (!isMobile)
     await article(page).getByRole("button", { name: "Didn't open?" }).click();
   await article(page)
-    .getByRole("button", { name: "Copy their address" })
+    .getByRole("button", { name: "Copy address" })
     .click();
   await expect(
     article(page).getByText("Copied.", { exact: true }),

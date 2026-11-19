@@ -27,7 +27,7 @@
   "Write in Gmail" or "Write in Outlook.com" is pressed under it, a new draft there in a new tab.
 
   At an article's end the button is split (decision 0286): beside Write back, an arrow opens the
-  other ways back, each with its icon: Email app (with its key), Gmail, Outlook.com, Copy their
+  other ways back, each with its icon: Your email app (with its key), Gmail, Outlook.com, Copy
   address, and, after a rule, Comment on their site (the comments the feed names, else the article
   itself). Choosing one does it at once, and the main button then does that for this person
   ("Copy address", "Comment"), kept for them by the server; where email opens stays this device's
@@ -205,12 +205,12 @@
       words: computer ? question : `Opening ${where}… ${question}`,
       also: others.map((other) => ({ word: `Write in ${MAIL_NAMES[other]}`, press: () => void writeIn(other) })),
       retry: () => void copyAddress(),
-      retryWord: "Copy their address",
+      retryWord: "Copy address",
       close,
     };
   }
 
-  /** Copy their address, saying how it went here, or in the note at the reading area's foot when that's where it was pressed. */
+  /** Copy address, saying how it went here, or in the note at the reading area's foot when that's where it was pressed. */
   async function copyAddress(fromLine = false) {
     started();
     const done = await navigator.clipboard.writeText(address ?? "").then(
@@ -256,7 +256,7 @@
     {
       items: [
         ...(["app", "gmail", "outlook"] as const).map((other) => ({
-          label: other === "app" ? "Email app" : MAIL_NAMES[other],
+          label: other === "app" ? "Your email app" : MAIL_NAMES[other],
           icon: "send" as const,
           shortcut: other === writesIn && computer ? keyFor("write-back") : undefined,
           checked: way === "email" && writesIn === other,
@@ -502,7 +502,7 @@
             {@render email()}
           {/if}
           <MoreMenu id={`ways-back-${article.id}`} label={`Other ways to reply to ${name}`} groups={menu} look="btn split-arrow">
-            {#snippet face()}<Icon name="chevron-down" />{/snippet}
+            {#snippet face()}<Icon name="chevron-down" size="alone" />{/snippet}
           </MoreMenu>
         </div>
       {:else}
@@ -529,7 +529,7 @@
             >{#each others as other (other)}<button type="button" class="text-link" onclick={() => void writeIn(other, true)}>Write in {MAIL_NAMES[other]}</button>{/each}<button
               type="button"
               class="text-link"
-              onclick={() => void copyAddress(true)}>Copy their address</button
+              onclick={() => void copyAddress(true)}>Copy address</button
             ></span
           >
         {/snippet}

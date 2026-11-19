@@ -64,8 +64,7 @@
   import { exactly, nothingNewSince, when } from "./times";
   import ItemRow from "./ItemRow.svelte";
   import RowMenu from "./RowMenu.svelte";
-  import { rowMenu, rowSwipes } from "./rowMenu";
-  import type { MenuGroup } from "./MoreMenu.svelte";
+  import { rowMenu, rowSwipes, type RowAround } from "./rowMenu";
   import { listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
   import ListArriving from "./ListArriving.svelte";
@@ -88,7 +87,7 @@
     results = false,
     oneFeed = false,
     unreadOff = false,
-    rowActions = () => [],
+    rowActions = () => ({}),
     addressOf = () => "",
     note = $bindable(),
     place,
@@ -116,8 +115,8 @@
     oneFeed?: OneSource;
     /** Unread off (SPEC section 10): every row looks the same, read or not; read state is still recorded. */
     unreadOff?: boolean;
-    /** A row's menu, after Save and read: writing back and the page about its writer, then its links (`rowMenu.ts`, `articleLinks.ts`). */
-    rowActions?: (article: Article) => MenuGroup[];
+    /** A row's menu around Save and read: its links before, writing back and the page about its writer after (`rowMenu.ts`, `articleLinks.ts`). */
+    rowActions?: (article: Article) => RowAround;
     /** An article's own address (decision 0233), for Command-click and a middle click on its row. */
     addressOf?: (article: Article) => string;
     /** The note, for the reading area to show while the list isn't on screen (decision 0229). */
