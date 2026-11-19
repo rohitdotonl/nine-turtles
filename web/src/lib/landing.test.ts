@@ -139,6 +139,28 @@ describe("arriving back", () => {
     expect((page.activeElement as Spot).name).toBe("settings");
   });
 
+  it("waits for a page in a file of its own, then lands on its heading, unless the reader moved (decision 0314)", () => {
+    arrive({ kind: "muted" }, () => undefined);
+    let heading: Spot | undefined;
+    const land = () => heading as unknown as HTMLElement | undefined;
+    focusArriving({ kind: "muted" }, land, () => undefined);
+    expect(page.activeElement).toBeNull();
+    frame();
+    heading = new Spot("muted");
+    frame();
+    expect((page.activeElement as Spot).name).toBe("muted");
+    expect(frames).toHaveLength(0);
+
+    arrive({ kind: "muted" }, () => undefined);
+    heading = undefined;
+    focusArriving({ kind: "muted" }, land, () => undefined);
+    page.activeElement = new Spot("elsewhere");
+    heading = new Spot("muted");
+    frame();
+    expect((page.activeElement as Spot).name).toBe("elsewhere");
+    expect(frames).toHaveLength(0);
+  });
+
   it("waits only for a Settings row", () => {
     const go = arrive({ kind: "your-feeds" }, () => "rules");
     go(computer);

@@ -1,9 +1,10 @@
 // The first page of each list fetched in the last minute (decision 0314), so
 // opening a list nine turtles has only just fetched (Unread and Saved are
 // fetched as the app opens, for reading offline) shows at once instead of
-// asking the server again. Any change the reader sends (a mark, a setting, a
-// follow) forgets them all, so a list never shows what was true before it;
-// refreshing a list always asks the server.
+// asking the server again. Any change the reader makes (a mark, a setting, a
+// follow; sent, or waiting on the device to be sent) forgets them all
+// (`changed`), so a list never shows what was true before it; refreshing a
+// list always asks the server.
 
 import type { Page } from "./shapes";
 
@@ -33,7 +34,7 @@ export function noteRecent(path: string, page: Page, asked: number, now = Date.n
   if (asked === changes) pages.set(path, { page, at: now });
 }
 
-/** A change was sent (or the reader changed): no page fetched before it is shown again. */
+/** A change was made (or the reader changed): no page fetched before it is shown again. */
 export function forgetRecent(): void {
   changes++;
   pages.clear();

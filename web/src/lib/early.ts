@@ -37,7 +37,7 @@ export function takeEarly(path: string, init?: RequestInit): Promise<Response> |
   return answer && Date.now() - askedAt < FRESH_MS ? answer : undefined;
 }
 
-/** Nobody is signed in (or someone signs out): no early answer is used. */
+/** Nobody is signed in (or someone signs out), or the reader changed something: no early answer is used. */
 export function forgetEarly(): void {
   early.clear();
 }

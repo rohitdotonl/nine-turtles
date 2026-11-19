@@ -2,7 +2,8 @@
 // Muted, Readers, a folder's edit sheet, the keys sheet), in files of their
 // own (decision 0314): the first screen doesn't wait for them. They're fetched
 // once it's up, or at once when the address opens one, and each shows as soon
-// as it's here. The service worker keeps them for opening offline.
+// as it's here; until then its place says so (PageWait.svelte). The service
+// worker keeps them for opening offline.
 
 import { tick } from "svelte";
 import { later } from "./later";
@@ -14,6 +15,8 @@ export class LaterPages {
   ReadersPage: typeof import("./ReadersPage.svelte").default | undefined = $state.raw();
   EditFolder: typeof import("./EditFolder.svelte").default | undefined = $state.raw();
   CheatSheet: typeof import("./CheatSheet.svelte").default | undefined = $state.raw();
+  /** The last try to fetch them failed (no connection): they're fetched again once it's back. */
+  failed = $state(false);
 
   /**
    * Fetches them after the first screen, or at once if `now` (the address opens one of them);
@@ -21,6 +24,7 @@ export class LaterPages {
    */
   constructor(now: boolean, arrived: () => HTMLElement | undefined) {
     later(async () => {
+      this.failed = false;
       [this.Settings, this.YourFeeds, this.Muted, this.ReadersPage, this.EditFolder, this.CheatSheet] = await Promise.all([
         import("./Settings.svelte").then((file) => file.default),
         import("./YourFeeds.svelte").then((file) => file.default),
@@ -28,7 +32,10 @@ export class LaterPages {
         import("./ReadersPage.svelte").then((file) => file.default),
         import("./EditFolder.svelte").then((file) => file.default),
         import("./CheatSheet.svelte").then((file) => file.default),
-      ]);
+      ]).catch((problem: unknown) => {
+        this.failed = true;
+        throw problem;
+      });
       await tick();
       if (document.activeElement === document.body || document.activeElement === null) arrived()?.focus();
     }, now);

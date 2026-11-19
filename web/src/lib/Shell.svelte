@@ -65,7 +65,7 @@
   import { startingStep, stepOf, type Screen } from "./steps";
   import { homeFor, isOver, isWho, listFromOnMove, moveTo, Opener, opensFromHere, Steps, underSheet, whoClosesTo, whoFromOnGo, whoFromOnPop, type ListFrom, type WhoFrom } from "./navigation";
   import { Keeper, keepUpToDate } from "./offline";
-  import { later } from "./later";
+  import PageWait from "./PageWait.svelte";
   import { LaterPages } from "./laterPages.svelte";
   import NowPlaying from "./NowPlaying.svelte";
   import { ADDRESS_GONE, linkItems } from "./articleLinks";
@@ -397,8 +397,7 @@
       });
     });
     void settings.load().then(() => {
-      // After the first screen, so the copies never hold up the reader's first taps (decision 0314).
-      later(async () => keeper.now());
+      keeper.soon();
       // This device last saw Unread off, but it's on now (changed on
       // another device): an untouched home opens on Unread after all.
       if (openedHome && pathFor(route) === pathFor(start) && settings.unread && !(route.kind === "view" && route.view === "unread")) {
@@ -899,7 +898,7 @@
           people={library.rows ?? []}
           {phone}
           bind:ruleForFeed
-        />{/if}
+        />{:else}<PageWait name="Settings" opens="open" failed={pages.failed} />{/if}
       {:else if route.kind === "your-feeds"}
         {#if pages.YourFeeds}<pages.YourFeeds
           bind:heading={headings.yourFeeds}
@@ -908,11 +907,11 @@
           onFeedsChanged={loadFeeds}
           {notice}
           returnTo={cameBackFrom}
-        />{/if}
+        />{:else}<PageWait name="Everyone you follow" failed={pages.failed} />{/if}
       {:else if route.kind === "muted"}
-        {#if pages.Muted}<pages.Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />{/if}
+        {#if pages.Muted}<pages.Muted bind:heading={headings.muted} onClose={closeSettingsPage} onChanged={loadFeeds} />{:else}<PageWait name="Muted" failed={pages.failed} />{/if}
       {:else if route.kind === "readers"}
-        {#if pages.ReadersPage}<pages.ReadersPage bind:heading={headings.readers} onClose={closeSettingsPage} />{/if}
+        {#if pages.ReadersPage}<pages.ReadersPage bind:heading={headings.readers} onClose={closeSettingsPage} />{:else}<PageWait name="Readers" failed={pages.failed} />{/if}
       {:else if !sheet && editing}
         {@render editor(false)}
       {:else if whoShown && phone}
@@ -1102,5 +1101,5 @@
         onPerson={(name) => personFrom({ ...currentFolder!, name })}
       />
     {/key}
-  {/if}
+  {:else if route.kind === "edit-folder" && !inSheet}<PageWait name="the folder" failed={pages.failed} />{/if}
 {/snippet}

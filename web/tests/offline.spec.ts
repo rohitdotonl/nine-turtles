@@ -99,6 +99,10 @@ test("articles kept on the device open, mark and star offline, and the marks are
   await expect(page.getByText("You're offline. Showing the articles kept on this device.")).toBeVisible();
   await expect(row(NEWEST)).toBeVisible();
   await expect(row(MIDDLE)).toHaveCount(0);
+  // Settings, in a file of its own (decision 0314), was kept too: its page opens and says why it waits.
+  await page.goto(new URL("/settings", FEEDS_APP).href);
+  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeVisible();
+  await expect(page.getByText("You're offline. Settings open once you're back online.")).toBeVisible();
 
   // Back online: the waiting marks are sent, and the server has them.
   await context.setOffline(false);
