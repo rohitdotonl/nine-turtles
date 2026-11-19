@@ -4,7 +4,7 @@ description: Move everything you follow, and your folders, from another feed rea
 groupId: getting-started
 order: 3
 spec: 13, 16 and 36
-updated: 2026-11-16
+updated: 2026-11-19
 related: [follow-someone, download-everything, questions]
 ---
 
@@ -26,7 +26,7 @@ folders." Their articles arrive over the next few minutes, and you can
 watch them come: Unread says "Bringing in your list: 40 feeds still to
 check." and fills in by itself as each feed is read, and in the sidebar
 each one still waiting says **checking…** after its name. Once you open an
-article, new ones wait for you to press **r** (or Show), as usual.
+article, new ones wait for you to press <kbd>R</kbd> (or Show), as usual.
 
 When the last one is checked, the line says how they were sorted: "Your
 list is in: 18 people and 4 publications. 8 could be either." Some feeds

@@ -4,7 +4,7 @@ description: When a blog or site seems quiet, Everyone you follow says what's wr
 groupId: keeping-things-tidy
 order: 5
 spec: 15
-updated: 2026-11-16
+updated: 2026-11-19
 related: [unfollow-someone, follow-someone, one-person-several-places]
 ---
 
@@ -62,11 +62,11 @@ new address.
   once an hour to once a day. When a site asks it to slow down, it does.
 - Some sites put a guard in front of them to keep bots out, and it can
   turn nine turtles away too. Then it says "Blocked by the site", and
-  on their page, "The site's guard against bots keeps nine turtles out." Only the site can let it in: if it's a person,
+  on their page, "The site's guard against bots turns nine turtles away. Only the site can let it in." So if it's a person,
   **Write to** them and say so. nine turtles never sneaks past a guard.
 - YouTube sometimes stops sending a channel's videos to nine turtles, even
   though the channel is still there. Then it says "YouTube not sending", and on
-  their page, "YouTube isn't sending these for now." nine turtles keeps
+  their page, "YouTube isn't sending these videos to nine turtles at the moment." nine turtles keeps
   asking, a few times a day at different times, and the videos arrive
   once YouTube sends them again.
 - Quiet isn't broken: some people write once a year. In **Everyone you

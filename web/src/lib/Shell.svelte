@@ -315,7 +315,7 @@
       searching: searching.shown !== undefined,
       sort: settings.sort,
       feed: currentFeed?.id,
-      feedName: placeName,
+      feedName: placeName, feedKind: library.shownAs(currentFeed)?.kind,
       folder: currentFolder?.id,
     };
   }

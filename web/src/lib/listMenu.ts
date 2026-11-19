@@ -8,6 +8,7 @@ import type { Action } from "./keyboard";
 import type { MenuGroup } from "./MoreMenu.svelte";
 import type { Order } from "./reading";
 import type { Route } from "./router";
+import { whoIcon, type WhoKind } from "./shapes";
 
 /** The list as it is when its More menu is drawn. */
 export type MenuScene = {
@@ -19,8 +20,9 @@ export type MenuScene = {
   sort?: Order;
   /** The feed or folder whose list this is. */
   feed?: number;
-  /** The person's or publication's name, for "Info about Alpha". */
+  /** The person's or publication's name, for "Info about Alpha", and which they are, for its icon. */
   feedName?: string;
+  feedKind?: WhoKind;
   folder?: number;
 };
 
@@ -46,11 +48,11 @@ export type MenuHands = {
  */
 export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   const key = hands.shortcut;
-  const refresh = { label: "Refresh", shortcut: key("refresh"), onSelect: () => hands.refresh() };
+  const refresh = { label: "Refresh", icon: "refresh" as const, shortcut: key("refresh"), onSelect: () => hands.refresh() };
   const groups: MenuGroup[] = [
     {
       items: [
-        ...(scene.unreadOff ? [] : [{ label: "Mark all as read", shortcut: key("mark-all-read"), onSelect: () => hands.markAllRead() }]),
+        ...(scene.unreadOff ? [] : [{ label: "Mark all as read", icon: "check" as const, shortcut: key("mark-all-read"), onSelect: () => hands.markAllRead() }]),
         ...(scene.searching ? [] : [refresh]),
       ],
     },
@@ -66,8 +68,8 @@ export function listMenu(scene: MenuScene, hands: MenuHands): MenuGroup[] {
   if (scene.searching) return groups;
   const { feed, folder } = scene;
   // The way to their page (and from it, Edit), the same words for a person and a publication (decision 0163).
-  if (feed !== undefined) groups.push({ items: [{ label: `Info about ${scene.feedName ?? "them"}`, shortcut: key("about"), onSelect: () => hands.go({ kind: "about", id: feed }) }] });
-  else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", shortcut: key("edit"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
+  if (feed !== undefined) groups.push({ items: [{ label: `Info about ${scene.feedName ?? "them"}`, icon: whoIcon(scene.feedKind), shortcut: key("about"), onSelect: () => hands.go({ kind: "about", id: feed }) }] });
+  else if (folder !== undefined) groups.push({ items: [{ label: "Edit folder…", icon: "edit" as const, shortcut: key("edit"), onSelect: () => hands.go({ kind: "edit-folder", id: folder }) }] });
   return groups;
 }
 

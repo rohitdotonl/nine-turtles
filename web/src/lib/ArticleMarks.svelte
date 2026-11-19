@@ -310,7 +310,7 @@
     const was = keptDraft(name);
     keepDraft(name, undefined);
     undoable = {
-      said: "Note discarded",
+      said: "Note discarded.",
       undo: () => {
         keepDraft(name, was);
         back();
@@ -351,7 +351,7 @@
   async function remove(highlight: Note) {
     close();
     const { was, problem } = await marks.remove(highlight.id);
-    undoable = was && { said: "Highlight removed", undo: async () => say((await marks.restore(was)) ?? UNDONE) };
+    undoable = was && { said: "Highlight removed.", undo: async () => say((await marks.restore(was)) ?? UNDONE) };
     say(problem ?? "Highlight removed.");
     // Its buttons are gone: the keyboard goes to Undo.
     await tick();

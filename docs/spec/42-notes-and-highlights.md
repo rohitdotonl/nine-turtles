@@ -10,7 +10,7 @@ anywhere or counted.
 
 **Highlighting words in an article**
 - Choosing words in an article's text (with the mouse, a finger, or the
-  keyboard where the browser allows it) opens a small menu beside them:
+  keyboard where the browser allows it) opens a small menu beside them, each row with its icon before its words (decision 0311):
   **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
   article, **Write back about this** under a hairline (section 37,
   decision 0205).

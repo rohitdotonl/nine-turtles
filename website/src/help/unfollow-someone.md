@@ -1,19 +1,19 @@
 ---
-title: Unfollow someone
+title: Unsubscribe from someone
 description: Stop following a person or a publication, and what's kept when you do.
 groupId: keeping-things-tidy
 order: 3
 spec: 5, 15, 23, 36 and 42
-updated: 2026-11-18
+updated: 2026-11-19
 related: [put-people-in-folders, save-an-article, highlight-and-take-notes]
 ---
 
 <p class="lede">
-  Unfollowing takes someone out of your sidebar and their articles out of
+  Unsubscribing takes someone out of your sidebar and their articles out of
   your lists. Anything you saved or highlighted can stay.
 </p>
 
-## Unfollow
+## Unsubscribe
 
 1. Choose them in the sidebar, and open their settings: press their name
    at the top of their list, then the cog at the top right of their page.
@@ -54,7 +54,7 @@ If they have several sources (a blog and a channel, say), Unsubscribe leaves
 them all. To let go of one source only, press **Take out** on its row
 under **Sources** in their settings, and unsubscribe from that one.
 
-## Unfollow many at once
+## Unsubscribe from many at once
 
 Open **Everyone you follow**, press **Choose…**, tick everyone
 you'd like to let go, and press **Unsubscribe**, alone at the left of the bar at the bottom. One **Undo** brings them

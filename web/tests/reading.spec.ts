@@ -980,7 +980,7 @@ test.describe("on a wide window", () => {
     await title(page, "A third, shorter note").focus();
     await tabTo(page, picture, 20);
 
-    // A click opens it: alone, its alt text under it, an X and Open in new tab.
+    // A click opens it: alone, its alt text under it, an X and Open in a new tab.
     await picture.click();
     const sheet = page.getByRole("dialog", { name: "Picture: Two hills at dusk, drawn in greys" });
     await expect(sheet).toBeVisible();
@@ -994,7 +994,7 @@ test.describe("on a wide window", () => {
     const closeBox = await close.boundingBox();
     expect(closeBox!.width).toBeGreaterThanOrEqual(44);
     expect(closeBox!.height).toBeGreaterThanOrEqual(44);
-    const link = sheet.getByRole("link", { name: "Open in new tab" });
+    const link = sheet.getByRole("link", { name: "Open in a new tab" });
     await expect(link).toHaveAttribute("href", /\/reading\/hills\.svg$/);
     await expect(link).toHaveAttribute("rel", "noopener noreferrer");
     await expect(link).toHaveAttribute("target", "_blank");
@@ -1313,7 +1313,7 @@ test("on a phone, a tap opens a big picture larger, inside the screen, and the X
   expect(opened!.x).toBeGreaterThanOrEqual(0);
   expect(opened!.x + opened!.width).toBeLessThanOrEqual(viewport.width);
   expect(opened!.y + opened!.height).toBeLessThanOrEqual(viewport.height);
-  await expect(sheet.getByRole("link", { name: "Open in new tab" })).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Open in a new tab" })).toBeVisible();
   const close = sheet.getByRole("button", { name: "Close" });
   const closeBox = await close.boundingBox();
   expect(closeBox!.width).toBeGreaterThanOrEqual(44);

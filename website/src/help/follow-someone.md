@@ -4,7 +4,7 @@ description: Paste the address of a blog, a website, a podcast or a YouTube chan
 groupId: getting-started
 order: 2
 spec: 2, 3, 36 and 38
-updated: 2026-11-18
+updated: 2026-11-19
 related: [bring-your-feeds, one-person-several-places, put-people-in-folders]
 ---
 
@@ -99,7 +99,7 @@ You can follow a site you're looking at without copying its address:
 - **A computer:** in **Settings › Install the app on any device**, on the
   **Computer** tab, drag the **Add to nine turtles** button to your
   bookmarks bar, then press it on any blog. No bookmarks bar? Press
-  **Command Shift B** on a Mac, or **Ctrl Shift B** elsewhere. Can't drag?
+  <kbd>Command</kbd> <kbd>Shift</kbd> <kbd>B</kbd> on a Mac, or <kbd>Ctrl</kbd> <kbd>Shift</kbd> <kbd>B</kbd> elsewhere. Can't drag?
   Paste the blog's address into **+ Add**.
 
 - **Drop a link:** on a computer, drag a page's address from another
@@ -111,7 +111,7 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
 
 ## If it doesn't work
 
-- **"This site doesn't seem to offer a feed."** nine turtles has already
+- **"nine turtles couldn't find a way to follow this site."** nine turtles has already
   looked on the page, the site's home page and the usual feed addresses.
   Some sites don't have one. Look on the site for a link marked RSS, Atom or
   Feed, and paste that.
@@ -121,7 +121,7 @@ nine turtles asks "Follow…?" first, and follows only when you say so.
   Or ask them for one: press **Write to** under the message.
   nine turtles looks on the site's home page (and its contact page) for their
   email address, and your email app opens with a short note you can change.
-- **"That site didn't answer."** It may be down for a moment. Try again
+- **"The site didn't answer."** It may be down for a moment. Try again
   later.
 - **"Their feed is too big for nine turtles to read."** Their feed holds
   more than 10 MB, usually every post they ever wrote. Look on their site for

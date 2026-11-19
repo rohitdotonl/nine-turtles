@@ -62,12 +62,12 @@ export async function shareOriginal(article: Article) {
 /** A row menu's ways out (decision 0233): Open in a new tab and Copy link, or on a phone Share. */
 export function linkItems(article: Article, address: string, say: (message: string) => void): MenuItem[] {
   const link = article.link;
-  if (sharing) return link ? [{ label: "Share", onSelect: () => void shareOriginal(article) }] : [];
+  if (sharing) return link ? [{ label: "Share", icon: "share", onSelect: () => void shareOriginal(article) }] : [];
   return [
-    { label: "Open in a new tab", onSelect: () => openInNewTab(address) },
-    ...(link ? [{ label: "Copy link", onSelect: () => void copyOriginal(link).then(say) }] : []),
+    { label: "Open in a new tab", icon: "open", onSelect: () => openInNewTab(address) },
+    ...(link ? [{ label: "Copy link", icon: "link" as const, onSelect: () => void copyOriginal(link).then(say) }] : []),
   ];
 }
 
 /** An article's address that can't be opened (deleted with the yearly clean-up, unfollowed, or out of reach) says so (decision 0233). */
-export const ADDRESS_GONE = "That article couldn't be opened. It may be gone, or nine turtles can't be reached just now.";
+export const ADDRESS_GONE = "That article couldn't be opened. It may be gone, or nine turtles can't be reached right now.";

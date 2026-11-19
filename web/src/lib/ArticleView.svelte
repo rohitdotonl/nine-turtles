@@ -49,7 +49,7 @@
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
-  import type { Article, FullArticle } from "./shapes";
+  import { whoIcon, type Article, type FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
   import { date, exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
@@ -195,7 +195,7 @@
     {
       items: [
         // On a computer Share (Copy link where there's no share menu) waits here, first (decision 0299); a phone has it in its bottom bar.
-        ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: "share" as const, shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
+        ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: sharing ? ("share" as const) : ("link" as const), shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
         { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
         { label: "Mark as unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
@@ -203,7 +203,7 @@
     },
     // Who wrote it, apart: the page about them, and hiding articles about them (decision 0289).
     ...(followed ? [{ items: [
-      { label: `Info about ${article.feedTitle}`, icon: "person" as const, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
+      { label: `Info about ${article.feedTitle}`, icon: whoIcon(library.feeds?.find((feed) => feed.id === article.feedId)?.kind), shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
       { label: "Hide articles about…", icon: "eye-off" as const, onSelect: () => onHide(article.feedId) },
     ] }] : []),
   ]);
