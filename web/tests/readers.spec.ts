@@ -147,6 +147,6 @@ test("when All readers couldn't load, the line says so in oxblood, and Try again
   await problem.getByRole("button", { name: "Try again" }).focus();
   await page.keyboard.press("Enter");
   await expect(problem).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "This nine turtles" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "This nine turtles", exact: true })).toBeVisible();
   await expect(page.locator("#readers-page-heading")).toBeFocused();
 });
