@@ -179,22 +179,20 @@
   <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
-    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); ‹ back to their list on its left, as an article's way back is, and their cog on its right, where the article's own tools are (decision 0307). Their settings have "‹ their name" in it, at the top as every page's way back is (consistency check, round 2), on the cards' grey. -->
-    <div class={["reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-between px-2 md:-mx-16", route.settings && "on-cards"]}>
-      {#if route.settings}
-        <button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button>
-      {:else}
+    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); ‹ back to their list on its left, as an article's way back is, and their cog on its right, where the article's own tools are (decision 0307). Their settings have no bar: "‹ their name" is their first line, above the title, as one of Settings' own pages has (consistency check, round 2). -->
+    {#if !route.settings}
+      <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-between px-2 md:-mx-16">
         <button type="button" onclick={onClose} aria-label="Back to {closeTo ?? name}" title="Back to {closeTo ?? name} (Esc)" class="btn-quiet btn-icon nav-back text-ink-2"><Icon name="back" size="alone" /></button>
         {@render cog()}
-      {/if}
-    </div>
+      </div>
+    {/if}
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
   <div class={phone ? "contents" : ["reading-column", !route.settings && "pt-8 md:pt-12"]}>
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if route.settings}
-      <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120); on a computer it's in the bar above. -->
-      {#if phone}<div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>{/if}
+      <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
+      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
       <h2 bind:this={settingsHeading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
       <div class="mt-4">
         <WhoSettings {feed} {library} {onSaved} {onFolders} {onHide} {onUnsubscribe}>
@@ -253,10 +251,6 @@
   /* The bar is solid, in the page's own color (decision 0040). */
   .reading-bar {
     background-color: var(--paper);
-  }
-  /* Their settings' bar is in the cards' grey, as the page under it is. */
-  .reading-bar.on-cards {
-    background-color: var(--color-sidebar);
   }
   /*
     Their name, the one large thing on the screen, set as an article's title

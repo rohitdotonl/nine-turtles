@@ -66,7 +66,7 @@
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
         <!-- As every list that couldn't load says so (consistency check, round 2). -->
-        <LoadFailed words="The readers couldn't be loaded." heading="readers-page-heading" onRetry={() => ((failed = false), load())} />
+        <LoadFailed words="The readers couldn't be loaded. Only whoever runs this nine turtles can see them." heading="readers-page-heading" onRetry={() => ((failed = false), load())} />
       {:else if overview}
         <section aria-labelledby="readers-totals-heading">
           <h3 id="readers-totals-heading" class="label inset-head">This nine turtles</h3>

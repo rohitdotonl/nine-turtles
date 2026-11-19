@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import appCss from "../app.css?raw";
 import themesCss from "../themes.css?raw";
 import pressedCss from "../pressed.css?raw";
+import selectCss from "../select.css?raw";
 import html from "../../index.html?raw";
 import readingPanel from "./ReadingPanel.svelte?raw";
 import articleMarks from "./ArticleMarks.svelte?raw";
@@ -83,9 +84,11 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     expect(contrast(colors["ink-2"]!, colors.paper!)).toBeGreaterThanOrEqual(7);
   });
 
-  it("has the destructive red (Unsubscribe, Delete) at AA on the sheet and the page", () => {
+  it("has the destructive red (Unsubscribe, Delete) at AA on the sheet, the page and Settings' grey", () => {
     expect(contrast(colors.danger!, colors.paper!)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(colors.danger!, colors.list!)).toBeGreaterThanOrEqual(4.5);
+    // A failure line sits straight on the cards' grey (.on-cards: All readers, Hidden articles, a person's settings).
+    expect(contrast(colors.danger!, colors.sidebar!)).toBeGreaterThanOrEqual(4.5);
   });
 
   // Paper's accent is drawn only as the unread dot and a search's faint tone,
@@ -510,5 +513,14 @@ describe.each(Object.entries(THEMES))("the %s theme's highlight", (_name, colors
     expect(found).not.toBeNull();
     const line = mix(colors.ink!, colors.paper!, Number(found![1]) / 100);
     expect(contrast(line, colors.paper!)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+// A dropdown's chevron is a picture, which can't read a color variable, so select.css keeps a copy of
+// each page's second ink (decision 0317). They must stay the same as themes.css's.
+describe("the dropdown's chevron", () => {
+  const arrows = [...selectCss.matchAll(/stroke='%23([0-9a-f]{6})'/g)].map((found) => `#${found[1]}`);
+  it("is each page's second ink", () => {
+    expect(arrows).toEqual([THEMES.white!["ink-2"], THEMES.paper!["ink-2"], THEMES.night!["ink-2"]]);
   });
 });

@@ -1,0 +1,32 @@
+/* A list to choose from, drawn as a field (decision 0317). Kept out of app.css, which is at its size limit. */
+@layer components {
+  /*
+    A list to choose from is a field like any other: the same 44px, edge and corners in every
+    browser (Safari otherwise draws its own short grey control), with the chevron-down icon at its
+    right end in the second ink, from the icon set (consistency check, round 2). A picture can't
+    read a color variable, so each page tone has its own copy of that tone's --ink-2 (themes.css);
+    contrast.test.ts checks they match.
+  */
+  select.field {
+    appearance: none;
+    padding-inline-end: 2.5rem;
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1rem 1rem;
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%233c3c40' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 8 4.5 4.5L14.5 8'/%3E%3C/svg%3E");
+  }
+  :root[data-theme="paper"][data-mode="light"] select.field {
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%233d362c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 8 4.5 4.5L14.5 8'/%3E%3C/svg%3E");
+  }
+  :root[data-mode="dark"] select.field {
+    --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23c4c4c6' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5.5 8 4.5 4.5L14.5 8'/%3E%3C/svg%3E");
+  }
+  @media (forced-colors: active) {
+    select.field {
+      appearance: auto;
+      background-image: none;
+      padding-inline-end: 0.75rem;
+    }
+  }
+}

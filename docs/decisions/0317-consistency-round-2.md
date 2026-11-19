@@ -5,11 +5,11 @@
 *19 November 2026. The owner approved building and shipping every suggestion of this round in advance.*
 
 **What changes.**
-1. **Dropdowns.** Safari drew the three lists to choose from (sign-up's "How did you hear…", Add's folder, Add a source's person) in its own short grey control. `select.field` now has no browser look: the field's 44px, edge and corners, with the chevron-down icon from the set in the second ink (one drawing per page tone; the browser's own control comes back in high-contrast mode).
-2. **Cards.** Settings' look from decision 0310 (white groups on the sidebar's grey) moves to a shared class, `.on-cards`, worn by Settings, All readers, Hidden articles and a person's or publication's settings.
-3. **A person's settings on a computer.** "‹ their name" sits in the bar at the top, as every page's way back does, instead of under an empty bar.
+1. **Dropdowns** (`select.css`). Safari drew the three lists to choose from (sign-up's "How did you hear…", Add's folder, Add a source's person) in its own short grey control. `select.field` now has no browser look: the field's 44px, edge and corners, with the chevron-down icon from the set in the second ink (one drawing per page tone, a copy of each tone's second ink that `contrast.test.ts` holds to `themes.css`; the browser's own control comes back in high-contrast mode).
+2. **Cards.** Settings' look from decision 0310 (white groups on the sidebar's grey) moves to a shared class, `.on-cards` (`cards.css`), worn by Settings, All readers, Hidden articles and a person's or publication's settings.
+3. **A person's settings on a computer.** The empty bar above them is gone, so "‹ their name" is the page's first line, as on Settings' own pages (and a very long name still ends in "…").
 4. **After an emailed link.** "Open nine turtles" on the weekly email's page and the sign-in link's page is the edged button, as Sign in and Continue are on the other pages an emailed link opens.
-5. **All readers failing to load** shows the one failure line (`LoadFailed`: the alert, the words, Try again) instead of grey words.
+5. **All readers failing to load** shows the one failure line (`LoadFailed`: the alert, the words, Try again) instead of grey words, still saying only whoever runs this nine turtles can see them.
 6. **Question boxes.** Keep apart, the second Find new address, Write to and Unsubscribe in One person? and a not-working person's box are the small size, as the outlined button beside them is.
 7. **Who isn't working.** Its summary names each reason, then how many ("Feed gone: 4 · Site not answering: 3"), so it never reads "4 feed gone".
 
