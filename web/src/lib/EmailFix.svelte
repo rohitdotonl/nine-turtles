@@ -26,7 +26,7 @@
 
 <div {id} aria-live="polite" class={["flex flex-wrap items-center gap-x-2 text-meta", centred && "justify-center text-center", !fix && "sr-only"]}>
   {#if fix}
-    <span class="min-w-0 break-words">Did you mean <span class="font-semibold">{fix}</span>?</span>
+    <span class="min-w-0 wrap-anywhere">Did you mean <span class="font-semibold">{fix}</span>?</span>
     <TextButton onclick={() => onUse(fix)}>Use that</TextButton>
   {/if}
 </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Article, Feed } from "./shapes";
-import { befores, headsOf, placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
+import { befores, byName, headsOf, placeLabels, writerOf, placeShownAs, placesOf, placesWatch, rowFor, rowsOf, siteName, sourceOf } from "./people";
 
 function place(id: number, title: string, more: Partial<Feed> = {}): Feed {
   return { id, title, siteUrl: null, unread: 0, folders: [], person: null, place: "blog", addedAt: id, ...more };
@@ -132,5 +132,12 @@ describe("Undo of a join or a separation", () => {
     const given = [{ feed: 3, writer: 9, name: "Alpha", folders: [1], write_to: "a@alpha.example", write_back_off: true, write_back_way: "comment", note: "Met at the fair.", pinned_at: 1700000000 }];
     expect(befores(given)).toEqual(given);
     expect(befores([{ feed: 4 }])).toEqual([{ feed: 4, writer: null, name: null, folders: [], write_to: null, write_back_off: false, write_back_way: null, note: null, pinned_at: null }]);
+  });
+});
+
+describe("names in order (decision 0312)", () => {
+  it("go A to Z ignoring case, counting numbers as numbers", () => {
+    const rows = ["Blog 10", "blog 2", "Blog 1", "Apple"].map((title, id) => ({ title, id }));
+    expect(rows.sort(byName).map((row) => row.title)).toEqual(["Apple", "Blog 1", "blog 2", "Blog 10"]);
   });
 });

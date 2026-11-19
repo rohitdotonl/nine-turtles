@@ -9,6 +9,7 @@ import { isRecord, sendChange } from "./http";
 import { dayOrToday } from "./times";
 import { readKept, type Kept } from "./recentlyUnsubscribed";
 import { toWhy, type Why } from "./sorting";
+import { byName } from "./people";
 
 /** One row: a person with every place they were joined from, or a place on its own. */
 export type Tended = {
@@ -104,7 +105,7 @@ export function foldPeople(places: Place[]): Tended[] {
       places: theirs.map((each) => ({ id: each.id, folders: each.folders })),
     });
   }
-  return rows.sort((one, other) => one.title.localeCompare(other.title, undefined, { sensitivity: "base" }) || one.id - other.id);
+  return rows.sort(byName);
 }
 
 const DAY = 24 * 60 * 60;

@@ -432,7 +432,7 @@ test("a YouTube video asks \"Follow {channel}?\" over one row, and Follow by key
   await tabTo(page, followButton);
   await page.keyboard.press("Enter");
   await expect.poll(() => sent).toEqual(["https://www.youtube.com/watch?v=aircAruvnKk", CHANNEL]);
-  await expect(page.locator("#feed-address-status")).toHaveText("The site didn't answer. Try again later.");
+  await expect(page.locator("#feed-address-status")).toHaveText("The site couldn't be read just now. Try again later.");
 });
 
 // A playlist offers only the playlist first, chosen, then every video (decision 0213).
@@ -533,7 +533,7 @@ test("following several, one that can't be followed is named in the list's line,
   await page.getByRole("button", { name: "Follow", exact: true }).click();
   // One followed: it's asked about as a single feed is, then opens with the note.
   await page.getByRole("button", { name: "Done" }).click();
-  await expect(page.getByText(/couldn't be followed: The site didn't answer\. Try again later\./)).toBeVisible();
+  await expect(page.getByText(/couldn't be followed: The site couldn't be read just now\. Try again later\./)).toBeVisible();
 });
 
 test("on a phone, the welcome's offered feeds sit on a grouped card a tone off the page, with Follow the list's full width", async ({ page }) => {

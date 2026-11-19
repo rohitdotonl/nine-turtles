@@ -34,7 +34,8 @@
   import { currentSession, deviceReader, noteReader, readerChanged, type Session } from "./lib/session";
   import { noteTabReader } from "./lib/updates.svelte";
   import { forgetLoaded } from "./lib/articles";
-  import { noConnection } from "./lib/connection.svelte";
+  import { away, noConnection } from "./lib/connection.svelte";
+  import LoadFailed from "./lib/LoadFailed.svelte";
   import { forget, keepSession, keptSession } from "./lib/offline";
   import { forgetDrafts } from "./lib/drafts";
   import { forgetListening } from "./lib/player.svelte";
@@ -91,6 +92,31 @@
   }
 
   check();
+
+  /**
+   * Can't be reached (an outage, or no connection): never a dead end. It asks again by itself
+   * every 10 seconds while the tab is in view, on coming back into view and when the device
+   * comes back online, so the app opens on its own once nine turtles answers; Try again asks
+   * at once, its line going meanwhile, so a second failure is heard again (decision 0312).
+   */
+  let trying = $state(false);
+  async function tryAgain() {
+    trying = true;
+    await check();
+    trying = false;
+  }
+  $effect(() => {
+    if (!unreachable) return;
+    const ask = () => void (document.hidden || check());
+    const again = setInterval(ask, 10_000);
+    addEventListener("online", ask);
+    document.addEventListener("visibilitychange", ask);
+    return () => {
+      clearInterval(again);
+      removeEventListener("online", ask);
+      document.removeEventListener("visibilitychange", ask);
+    };
+  });
 
   /** The tab's title on the pages outside the signed-in screen, which names its own (Shell.svelte): what the page is for, so a signed-out tab no longer names the list it showed. */
   let pageTitle = $derived.by(() => {
@@ -154,7 +180,12 @@
   />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-    <Wordmark />
-    <p>nine turtles can't be reached right now. Reload the page to try again.</p>
+    <Wordmark id="wordmark" />
+    {#if away().offline}
+      <!-- The device's own connection: calmly, as every offline line (SPEC section 32); it opens by itself once back. -->
+      <p role="status">You're offline. nine turtles opens once you're back online.</p>
+    {:else if !trying}
+      <LoadFailed words={away().why} heading="wordmark" onRetry={tryAgain} class="justify-center" />
+    {/if}
   </main>
 {/if}

@@ -3,7 +3,7 @@
 // and the words the screens say about them.
 import type { Route, View } from "./router";
 import { api } from "./updates.svelte";
-import { noConnection } from "./connection.svelte";
+import { away, noConnection } from "./connection.svelte";
 import { keepLibrary, keptLibrary } from "./offline";
 import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
@@ -308,7 +308,7 @@ export function explain(reason: Problem): string {
     case "not-allowed":
       return "nine turtles can't visit that address.";
     case "unreachable":
-      return "The site didn't answer. Try again later.";
+      return "The site couldn't be read just now. Try again later.";
     case "blocked":
       return BLOCKED_ADDING;
     case "not-found":
@@ -322,7 +322,7 @@ export function explain(reason: Problem): string {
     case "plan-ended":
       return PLAN_ENDED;
     case "offline":
-      return "You're offline. Adding a feed works again once you're back online.";
+      return `${away().why} Adding a feed works again ${away().back}.`;
     case "trouble":
       return "The feed couldn't be added. Try again in a moment.";
   }

@@ -73,7 +73,12 @@ export function rowsOf(feeds: Feed[], people: Person[]): Feed[] {
       places: places.map((place) => place.id),
     });
   }
-  return rows.sort((one, other) => one.title.localeCompare(other.title, undefined, { sensitivity: "base" }) || one.id - other.id);
+  return rows.sort(byName);
+}
+
+/** A to Z by name, ignoring case and counting numbers as numbers ("Blog 2" before "Blog 10"), as a person would (decision 0312). */
+export function byName(one: { title: string; id: number }, other: { title: string; id: number }): number {
+  return one.title.localeCompare(other.title, undefined, { sensitivity: "base", numeric: true }) || one.id - other.id;
 }
 
 /** The row that stands for the place numbered `id`: its person's, or its own. */

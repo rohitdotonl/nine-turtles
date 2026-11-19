@@ -19,7 +19,7 @@ import { placesOf } from "./people";
 import type { Article, FullArticle, Library, Page, Source } from "./shapes";
 import { newestView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
-import { whenBack } from "./connection.svelte";
+import { away, whenBack } from "./connection.svelte";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
@@ -59,24 +59,29 @@ export type KeptSession = {
 
 // ---- The words the screens say ------------------------------------------
 
-export const SHOWING_KEPT =
-  "You're offline. Showing the articles kept on this device.";
-export const NOTHING_KEPT_HERE =
-  "You're offline. Nothing here is kept on this device; it shows once you're back online.";
+// Each starts with why: the device is offline, or nine turtles itself can't be
+// reached (`away`, decision 0312), and ends with when it works again.
+
+export const showingKept = () =>
+  `${away().why} Showing the articles kept on this device.`;
+export const nothingKeptHere = () =>
+  `${away().why} Nothing here is kept on this device; it shows ${away().back}.`;
 export const END_OF_KEPT = "That's everything kept on this device.";
-export const NOT_KEPT =
-  "You're offline. This article isn't kept on this device; it opens once you're back online.";
-export const SEARCH_NEEDS_CONNECTION =
-  "You're offline. Search works again once you're back online.";
-export const REFRESH_NEEDS_CONNECTION =
-  "You're offline. This is what's kept on this device.";
-export const NOTES_NEED_CONNECTION =
-  "You're offline. Notes show once you're back online.";
+export const notKept = () =>
+  `${away().why} This article isn't kept on this device; it opens ${away().back}.`;
+export const searchNeedsConnection = () =>
+  `${away().why} Search works again ${away().back}.`;
+export const refreshNeedsConnection = () =>
+  `${away().why} This is what's kept on this device.`;
+export const notesNeedConnection = () =>
+  `${away().why} Notes show ${away().back}.`;
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
-export const EPISODE_OFFLINE =
-  "The episode plays here once you're back online.";
-export const SETTINGS_NEED_CONNECTION =
-  "You're offline. Settings open once you're back online.";
+export const episodeOffline = () =>
+  `The episode plays here ${away().back}.`;
+/** And a video, where its player would be (SPEC section 32). */
+export const videoOffline = () => `The video plays here ${away().back}.`;
+export const settingsNeedConnection = () =>
+  `${away().why} Settings open ${away().back}.`;
 
 /** Thrown for what can't be done without a connection; its message says so. */
 export class NeedsConnection extends Error {}
@@ -155,10 +160,10 @@ export function keptList(
   order: Order,
   library?: Library,
 ): Article[] {
-  if ("search" in source) throw new NeedsConnection(SEARCH_NEEDS_CONNECTION);
+  if ("search" in source) throw new NeedsConnection(searchNeedsConnection());
   // Notes isn't kept on the device (SPEC section 42).
   if ("view" in source && source.view === "notes")
-    throw new NeedsConnection(NOTES_NEED_CONNECTION);
+    throw new NeedsConnection(notesNeedConnection());
   const feeds = feedsOf(source, library);
   const view = "view" in source ? source.view : undefined;
   const shown = kept.filter((article) => {

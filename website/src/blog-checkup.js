@@ -18,7 +18,7 @@ let latest = 0;
 const problems = {
   "not-an-address": "That doesn't look like a blog's address. Try something like example.com.",
   "not-allowed": "The checkup only looks at public websites.",
-  unreachable: "That blog didn't answer. Check the address, or try again later.",
+  unreachable: "That blog couldn't be read just now. Check the address, or try again later.",
   blocked: "That blog's guard against bots turned the checkup away, and it may turn feed readers away too. The page for publishers on nineturtles.app says how to let them in.",
   "not-found": "That site says the page isn't there. Check the address, or try your blog's home page.",
   "too-big": "That page is too large to look through. Try your blog's home page.",

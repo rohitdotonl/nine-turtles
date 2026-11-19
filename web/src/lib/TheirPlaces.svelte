@@ -69,7 +69,7 @@
         <div class="inset-row setting source-row">
           <!-- Its name over its kind, as a setting's name over its description. -->
           <span class="setting-words min-w-0">
-            <span class="setting-name break-words">{placeShownAs(place)}</span>
+            <span class="setting-name wrap-anywhere">{placeShownAs(place)}</span>
             <span class="setting-hint">{PLACE_NAMES[place.place ?? "blog"]}</span>
           </span>
           <button type="button" class="text-link shrink-0" aria-disabled={busy} title="It becomes a person or publication of its own. You can undo it." onclick={() => void takeOut(place)}>Take out<span class="sr-only">{" "}{placeShownAs(place)} of {name}</span></button>

@@ -32,6 +32,25 @@ export function lost() {
   connection.offline = true;
 }
 
+/** Bumped when the device goes on or off line, so a line already showing changes its reason (`away()` reads it). */
+const deviceChanged = $state({ count: 0 });
+if (typeof globalThis.addEventListener === "function") {
+  for (const name of ["online", "offline"]) globalThis.addEventListener(name, () => deviceChanged.count++);
+}
+
+/**
+ * How a line said while nine turtles can't be reached begins and ends (decision 0312):
+ * "You're offline." only when the device itself says it has no connection. Otherwise
+ * it's nine turtles that doesn't answer at all (an outage, or a fault between), and
+ * blaming the reader's connection wouldn't be true.
+ */
+export function away(): { offline: boolean; why: string; back: string } {
+  void deviceChanged.count;
+  return globalThis.navigator?.onLine === false
+    ? { offline: true, why: "You're offline.", back: "once you're back online" }
+    : { offline: false, why: "nine turtles can't be reached right now.", back: "once it's back" };
+}
+
 /** Whether a failed request failed for want of a connection, rather than being refused. */
 export function noConnection(problem: unknown): boolean {
   if (globalThis.navigator?.onLine === false) return true;

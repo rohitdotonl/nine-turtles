@@ -29,7 +29,7 @@
   import { rightToLeft, scriptFamily } from "./scripts";
   import Icon from "./Icon.svelte";
   import ArticleSwipe from "./ArticleSwipe.svelte";
-  import TextButton from "./TextButton.svelte";
+  import ArticleLoadFailed from "./ArticleLoadFailed.svelte";
   import LateLine from "./LateLine.svelte";
   import AwayNote from "./AwayNote.svelte";
   import type { ListNote } from "./listNote";
@@ -49,13 +49,13 @@
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
-  import { whoIcon, type Article, type FullArticle } from "./shapes";
+  import { untitledOpening, whoIcon, type Article, type FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
   import { date, exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { articleOpened, placeKept } from "./resume.svelte";
   import { connection } from "./connection.svelte";
-  import { EPISODE_OFFLINE, NOT_KEPT } from "./offline";
+  import { episodeOffline, videoOffline } from "./offline";
   import PictureSheet from "./PictureSheet.svelte";
   import { OPENABLE, markPicture } from "./pictures";
   import { markPauses } from "./pauses";
@@ -120,6 +120,9 @@
     }
   });
   let followed = $derived(library.feeds?.some((feed) => feed.id === article.feedId) ?? false);
+  /** A post with no title (a short note) has no big heading: the byline leads and the words follow, as its row shows its opening (decision 0312). Screen readers still hear a heading: its opening words. */
+  let untitled = $derived(!article.title.trim());
+  let titleWords = $derived(untitledOpening(article) ?? article.title);
   let source = $derived(library.feeds?.find((feed) => feed.id === article.feedId));
   /** Someone to write back to: a person followed, never a publication (decision 0192). */
   let writable = $derived(writesBack(library.feeds?.find((feed) => feed.id === article.feedId)));
@@ -539,7 +542,7 @@
           {#if !article.link && !titleGone}
             <p class="truncate px-2 text-meta text-muted">This article has no link to its original.</p>
           {/if}
-          <RunningTitle title={heading} area={scroller} words={article.title || "Untitled"} bind:gone={titleGone} />
+          <RunningTitle title={heading} area={scroller} words={titleWords} bind:gone={titleGone} />
         </div>
         <div class="bar-side justify-end">
           <!-- A toggle keeps one name for screen readers ("Save", pressed or not); the filled bookmark shows its state. -->
@@ -553,7 +556,7 @@
     <!-- Right-to-left writing (Arabic, Hebrew…) reads right to left, its text on the right edge; the title and byline stay centred (decisions 0223, 0294). -->
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
       <!-- With room above it (32px, 48px from 48rem wide, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
-      <h2 tabindex="-1" bind:this={heading} class={["article-title", titleLength(article.title || "Untitled")]} dir={rtl ? "rtl" : undefined}>{article.title || "Untitled"}</h2>
+      <h2 tabindex="-1" bind:this={heading} class={untitled ? "sr-only" : ["article-title", titleLength(article.title)]} dir={rtl ? "rtl" : undefined}>{titleWords}</h2>
       <!-- Under the title, centred, as on a book's title page: their picture, "by" and their name, then the day, small and faint (decision 0294). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="article-credit">
@@ -578,14 +581,14 @@
 
       {#if video && connection.offline}
         <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 32). -->
-        <p class="article-note mt-6" lang="en">The video plays here once you're back online.</p>
+        <p class="article-note mt-6" lang="en">{videoOffline()}</p>
       {:else if video}
         {#key article.id}
           <YouTubePlayer
             bind:this={youtube}
             id={article.id}
             {video}
-            title={article.title || "Untitled"}
+            title={titleWords}
             tall={full?.videoKind === "short" || article.link?.includes("/shorts/")}
             chapters={chapters(full?.content)}
           />
@@ -593,7 +596,7 @@
       {/if}
       {#if episode && connection.offline && !(player.current?.article.id === article.id)}
         <!-- Without a connection there's nothing to play from: the episode waits, as a video does (SPEC section 32). -->
-        <p role="status" class="article-note mt-6" lang="en">{EPISODE_OFFLINE}</p>
+        <p role="status" class="article-note mt-6" lang="en">{episodeOffline()}</p>
       {:else if episode}
         <!-- A podcast's episode plays here, from the publisher's own file (SPEC section 35, decision 0113). -->
         {#key article.id}
@@ -634,10 +637,7 @@
           <hr aria-hidden="true" class="article-end" />
         {/if}
       {:else if problem}
-        <p role="status" class="mt-6 flex flex-wrap items-center gap-x-2" lang="en">
-          {#if connection.offline}{NOT_KEPT}{:else}This article couldn't be loaded.
-            <TextButton onclick={retryArticle}>Try again</TextButton>{/if}
-        </p>
+        <ArticleLoadFailed retry={retryArticle} />
       {:else}
         <!-- Its text still on its way: after half a second a line says so, under the byline (decision 0230). -->
         {#key article.id}<LateLine class="mt-6 font-serif text-muted" words="Loading the article…" />{/key}

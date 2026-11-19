@@ -536,8 +536,8 @@
         <div class={["inset-group self-stretch text-left", framed && "mb-2"]}>
           <div id="feed-only-choice" class="inset-row flex-nowrap">
             <span class="flex min-w-0 flex-col py-3">
-              <span class="break-words">{only.title}</span>
-              {#if only.latest}<span class="mt-1 font-serif break-words text-ink-2">{only.latest}</span>{/if}
+              <span class="wrap-anywhere">{only.title}</span>
+              {#if only.latest}<span class="mt-1 font-serif wrap-anywhere text-ink-2">{only.latest}</span>{/if}
               <span class={["mt-1 truncate text-meta text-muted", !only.place && "address"]}>{only.place ?? only.url}</span>
             </span>
           </div>
@@ -557,8 +557,8 @@
                 <input type="checkbox" name="feed-choice" value={choice.url} bind:group={ticked} />
               {/if}
               <span class="flex min-w-0 flex-col py-3">
-                <span class="break-words">{choice.title}</span>
-                {#if choice.latest}<span class="mt-1 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
+                <span class="wrap-anywhere">{choice.title}</span>
+                {#if choice.latest}<span class="mt-1 font-serif wrap-anywhere text-ink-2">{choice.latest}</span>{/if}
                 <span class={["mt-1 truncate text-meta text-muted", !choice.place && "address"]} title={choice.url}>{choice.place ?? choice.url}</span>
               </span>
               {#if oneOnly}
@@ -595,11 +595,11 @@
           <OnePerson bind:this={onePerson} {pair} onJoined={() => joined(pair)} onKeptApart={() => void keptApart()} />
         {/if}
         <fieldset bind:this={whoGroup} tabindex="-1" class="flex flex-col gap-4 outline-none">
-        <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
+        <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold wrap-anywhere text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
             {#if siteName(asking.siteUrl)}<span class="address text-meta break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
-            {#if latest}<span class="font-serif break-words text-ink">{latest}</span>{/if}
+            {#if latest}<span class="font-serif wrap-anywhere text-ink">{latest}</span>{/if}
           </div>
         {/if}
         <div class="tiles">

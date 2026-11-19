@@ -8,10 +8,11 @@
 
 **Without a connection**
 - nine turtles opens as usual, signed in (on an iPhone, reliably once it's added to the home screen: in a Safari tab the phone may clear the copies after about a week without a visit).
-- Unread, Saved, All articles, each feed and each folder list the kept articles, with a quiet line above the list: "You're offline. Showing the articles kept on this device." Such a list ends with "That's everything saved on this device."; one with nothing kept says "Nothing here is saved on this device. It will show when you're back online." The sidebar shows the feeds and folders as they were last seen, Unread's dot following what's marked here.
-- Articles open from their copy. One that isn't kept says "This article isn't kept on this device. It opens when you're back online."
+- Unread, Saved, All articles, each feed and each folder list the kept articles, with a quiet line above the list: "You're offline. Showing the articles kept on this device." Such a list ends with "That's everything kept on this device."; one with nothing kept says only "You're offline. Nothing here is kept on this device; it shows once you're back online." The sidebar shows the feeds and folders as they were last seen, Unread's dot following what's marked here.
+- Articles open from their copy. One that isn't kept says "You're offline. This article isn't kept on this device; it opens once you're back online."
 - **Reading, marking read or unread, and saving work as usual**, with nothing said: each mark waits on the device and is sent once the connection is back. Each says when it was made, and **the latest mark wins**: a mark made offline at 10:00 doesn't undo one made on another device at 11:00. Undo works too.
-- **What waits for a connection says so:** each starts "You're offline." (BRAND.md → "Messages"): search ("You're offline. Search works again once you're back online."), adding a feed ("You're offline. Adding a feed works again once you're back online."), Settings ("You're offline. Settings open once you're back online."), Refresh ("You're offline. This is what's saved on this device.").
+- **What waits for a connection says so:** each starts with why (BRAND.md → "Messages"): search ("You're offline. Search works again once you're back online."), adding a feed ("You're offline. Adding a feed works again once you're back online."), Settings ("You're offline. Settings open once you're back online."), Refresh ("You're offline. This is what's kept on this device."). Everyone you follow says "You're offline. Everyone you follow shows once you're back online." and shows them by itself once the connection is back; Not working says nothing until then.
+- **Online, but nine turtles doesn't answer at all** (an outage, or a fault on the way; a "busy" answer isn't this, and a list then says it couldn't be loaded, with Try again): the same, with the kept articles, but every line starts "nine turtles can't be reached right now." and ends "…once it's back" instead, because the reader's connection is fine (decision 0312). "You're offline." is said only when the device itself says it has no connection.
 
 **Always on, and privacy**
 - Keeping articles is always on, on phones and computers alike, with no switch (decision 0187; it was Settings › Your data › Keep articles for reading offline). Without a connection, Settings shows only its line.
@@ -24,6 +25,7 @@
 2. Open Unread and Saved: the line says "You're offline. Showing the articles kept on this device." and your articles are there. Open one: its words are there, with a short line where each image was.
 3. Read one, save another, mark one unread. Nothing complains.
 4. Try search, + Add, Settings and Refresh: each says you're offline and what that means there.
+5. In a computer's browser, block nine turtles' address in its developer tools (the device stays online) and reload a list: it says "nine turtles can't be reached right now. Showing the articles kept on this device.", never "You're offline.".
 5. Close nine turtles and open it again, still in airplane mode: it opens with the same articles.
 6. Switch airplane mode off. On another device (or after a reload), the marks from step 3 are there.
 7. Sign out, then switch airplane mode on and open nine turtles: it says it can't be reached, because the copies are gone.

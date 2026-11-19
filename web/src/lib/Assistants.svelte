@@ -173,7 +173,7 @@
     {#each assistants ?? [] as assistant, index (assistant.id)}
       {@const name = shortName(assistant.name)}
       <div class="inset-row item-row">
-        <p class="min-w-0 flex-1 break-words">
+        <p class="min-w-0 flex-1 wrap-anywhere">
           {name}<br /><span class="text-meta text-muted"
             >{`Connected ${date(assistant.connectedAt)} · ${assistant.lastUsedAt === null ? "Not used yet" : `Last used ${date(assistant.lastUsedAt)}`}`}</span
           >

@@ -2,20 +2,21 @@
 // open article, their note on the whole of it, and how each change reaches
 // the server. Without a connection a change is kept on this device and sent
 // once the connection is back, in the order it was made; until then the
-// article says so in one quiet line (OFFLINE_LINE). A highlight made offline
+// article says so in one quiet line (offlineLine). A highlight made offline
 // has a number below 0 until the server gives it its own. Each new highlight
 // carries a key made here, so one sent twice (its first answer never came,
 // say the page was reloaded meanwhile) is saved once (decision 0255).
 
 import { isRecord, sendChange } from "./http";
-import { connection, whenBack } from "./connection.svelte";
+import { away, connection, whenBack } from "./connection.svelte";
 import { deviceJson, setDeviceText } from "./device";
 import { renameDraft } from "./drafts";
 import { currentTabReader } from "./updates.svelte";
 import { toNote, type FullArticle, type Note } from "./shapes";
 import { UNDO_FAILED } from "./messages";
 
-export const OFFLINE_LINE = "You're offline. This is kept on this device only, and reaches your account once you're back online.";
+/** Said under a highlight or note that waits on this device (decision 0312: offline, or nine turtles can't be reached). */
+export const offlineLine = () => `${away().why} This is kept on this device only, and reaches your account ${away().back}.`;
 
 /** The longest note the server keeps (server/src/notes.rs → LONGEST_NOTE). */
 export const LONGEST_NOTE = 5000;

@@ -18,7 +18,7 @@ let latest = 0;
 const problems = {
   "not-an-address": "That doesn't look like a website's address. Try something like example.com.",
   "not-allowed": "The finder only looks at public websites.",
-  unreachable: "That site didn't answer. Check the address, or try again later.",
+  unreachable: "That site couldn't be read just now. Check the address, or try again later.",
   blocked: "That site's guard against bots turned the finder away. Look on the site for a link called RSS, Atom or Feed.",
   "not-found": "That site says the page isn't there. Check the address, or try the site's home page.",
   "too-big": "That page is too large to look through. Try the site's home page.",

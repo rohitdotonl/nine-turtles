@@ -190,7 +190,7 @@
         {#each asking.folders as id (id)}
           <label class="inset-row check-row">
             <input type="checkbox" value={id} bind:group={keep} />
-            <span class="min-w-0 break-words">{library.folders.find((folder) => folder.id === id)?.name ?? "A folder"}</span>
+            <span class="min-w-0 wrap-anywhere">{library.folders.find((folder) => folder.id === id)?.name ?? "A folder"}</span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>
         {/each}
@@ -203,7 +203,7 @@
           <label class="inset-row check-row flex-nowrap">
             <input type="radio" name="add-place-choice" value={choice.url} bind:group={picked} />
             <span class="flex min-w-0 flex-col py-1">
-              <span class="break-words">{choice.title}</span>
+              <span class="wrap-anywhere">{choice.title}</span>
               <span class="address truncate text-meta text-muted" title={choice.url}>{choice.url}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>

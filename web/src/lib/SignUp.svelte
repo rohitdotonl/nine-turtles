@@ -115,7 +115,7 @@
     <!-- Said once, in the text color: where the link went and how long it works. -->
     <div class="flex w-full flex-col items-stretch gap-3 text-center sm:max-w-xs">
       <h2 bind:this={sentHeading} tabindex="-1" class="font-semibold">Check your email</h2>
-      <p role="status" class="break-words">
+      <p role="status" class="wrap-anywhere">
         A link is on its way to <span class="font-semibold">{sent}</span>. Open it within 24 hours to finish signing up.
       </p>
       <SendAgain to={sent} onSend={signUpAgain} />

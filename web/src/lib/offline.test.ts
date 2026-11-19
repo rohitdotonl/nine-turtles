@@ -11,6 +11,9 @@ import {
   countsAfter,
   inParts,
   keptList,
+  nothingKeptHere,
+  searchNeedsConnection,
+  showingKept,
   toKeep,
   withMark,
   type Kept,
@@ -238,5 +241,21 @@ describe("when the copies are brought up to date", () => {
     lost();
     reached(new Response());
     expect(kept).toHaveLength(3);
+  });
+});
+
+describe("what a line says while nine turtles can't be reached (decision 0312)", () => {
+  const online = (value: boolean) => Object.defineProperty(globalThis.navigator, "onLine", { value, configurable: true });
+
+  it("says you're offline only when the device says so", () => {
+    online(false);
+    expect(showingKept()).toBe("You're offline. Showing the articles kept on this device.");
+    expect(searchNeedsConnection()).toBe("You're offline. Search works again once you're back online.");
+  });
+
+  it("otherwise says nine turtles can't be reached, as during an outage", () => {
+    online(true);
+    expect(showingKept()).toBe("nine turtles can't be reached right now. Showing the articles kept on this device.");
+    expect(nothingKeptHere()).toBe("nine turtles can't be reached right now. Nothing here is kept on this device; it shows once it's back.");
   });
 });

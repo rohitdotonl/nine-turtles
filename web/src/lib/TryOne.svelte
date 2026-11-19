@@ -54,7 +54,7 @@
         <a
           href={addressFor({ kind: "feed", id: feed.id })}
           onclick={(event) => follow(event, { kind: "feed", id: feed.id })}
-          class="font-display text-heading leading-tight font-semibold break-words text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
+          class="font-display text-heading leading-tight font-semibold wrap-anywhere text-ink underline decoration-1 underline-offset-4 [text-decoration-color:color-mix(in_srgb,currentColor_65%,transparent)] hover:[text-decoration-color:currentColor]">{latest}</a
         >
       {/if}
       <p class="text-meta text-ink-2">You're following {feed.title}. New writing will show up here.</p>
@@ -69,7 +69,8 @@
           <li class="try-row">
             <button type="button" aria-disabled={busy !== ""} onclick={() => press(example)} class="group flex min-h-14 w-full cursor-pointer items-center gap-4 py-2 text-left">
               <span class="w-24 shrink-0 text-meta text-muted">{example.kind}</span>
-              <span class="address min-w-0 flex-1 break-all text-ink">{example.address}</span>
+              <!-- A long address breaks after its "/", so a narrow phone never leaves one letter on a line of its own; past that, anywhere it must. -->
+              <span class="address min-w-0 flex-1 wrap-anywhere text-ink">{#each example.address.split("/") as part, index (index)}{#if index > 0}/<wbr />{/if}{part}{/each}</span>
               <span class="try-word shrink-0 text-meta text-ink-2">{busy === example.address ? "Adding…" : "Try"}</span>
             </button>
           </li>

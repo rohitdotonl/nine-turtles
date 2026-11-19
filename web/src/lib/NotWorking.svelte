@@ -18,6 +18,7 @@
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
+  import { connection, whenBack } from "./connection.svelte";
   import { byReason, listSick, reason, type Sick } from "./health";
   import { addressFor } from "./router";
 
@@ -44,6 +45,8 @@
 
   let first: Promise<void> | undefined;
   onMount(() => void (first = reload()));
+  // Couldn't check for want of a connection: checked again once it's back; meanwhile the page's own line says why (YourFeeds, decision 0312).
+  $effect(() => whenBack(() => void (failed && reload())));
   /** Once who isn't working is first listed, so the keyboard can go back to a row in it. */
   export const listed = () => first;
 
@@ -62,7 +65,9 @@
   });
 </script>
 
-{#if failed}
+{#if failed && connection.offline}
+  <!-- Nothing: Everyone you follow says once, calmly, that nine turtles can't be reached. -->
+{:else if failed}
   <LoadFailed words="Who isn't working couldn't be checked." heading="your-feeds-heading" onRetry={() => ((failed = false), reload())} />
 {:else if dead.length + troubled.length > 0}
   <section aria-labelledby="health-summary">
@@ -72,7 +77,7 @@
           <span class="why"><Icon name="alert" /></span>
           <span class="flex min-w-0 flex-1 flex-col py-2">
             <span>{dead.length > 0 ? `${dead.length} ${dead.length === 1 ? "feed isn't" : "feeds aren't"} working` : `${troubled.length} having trouble`}</span>
-            <span class="text-meta text-muted break-words">{summary}</span>
+            <span class="text-meta text-muted wrap-anywhere">{summary}</span>
           </span>
           <span class="row-glyph"><Icon name={showing ? "chevron-up" : "chevron-down"} /></span>
         </button>
@@ -83,7 +88,7 @@
           <li class="contents">
             <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpen(event, feed.id)} class="inset-row inset-action">
               <span class="why"><Icon name={why.icon} /></span>
-              <span class="min-w-0 flex-1 py-2 break-words">{feed.title}</span>
+              <span class="min-w-0 flex-1 py-2 wrap-anywhere">{feed.title}</span>
               <span class="said text-meta text-muted text-right">{why.words}</span>
               <span class="row-glyph"><Icon name="chevron-right" /></span>
             </a>

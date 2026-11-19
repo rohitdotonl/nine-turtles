@@ -34,6 +34,7 @@
   import { putBack, type Before } from "./people";
   import { settle, type Why } from "./sorting";
   import LoadFailed from "./LoadFailed.svelte";
+  import { away, connection, whenBack } from "./connection.svelte";
   import { addressFor } from "./router";
   import {
     folderNames,
@@ -116,6 +117,9 @@
   function count(how: number, one: string, many: string): string {
     return `${how} ${how === 1 ? one : many}`;
   }
+
+  // Couldn't load for want of a connection: loaded again by itself once it's back (decision 0312).
+  $effect(() => whenBack(() => void (failed && load())));
 
   async function load() {
     try {
@@ -327,7 +331,10 @@
       <!-- What the last action did, with its Undo, until the next one: first, above who isn't working, so it's seen. -->
       <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />
       <NotWorking bind:this={notWorking} onOpen={onOpenPerson} />
-      {#if failed}
+      {#if failed && connection.offline}
+        <!-- Without nine turtles, calmly, as every other screen says it (decision 0312): no error, and no Try again that can't work. -->
+        <p role="status" class="text-ink-2">{away().why} Everyone you follow shows {away().back}.</p>
+      {:else if failed}
         <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
       {:else if feeds}
         {#if listed.length === 0}
@@ -362,16 +369,16 @@
                     <label class="inset-row check-row tended">
                       <input type="checkbox" value={feed.id} bind:group={chosen} />
                       <span class="flex min-w-0 flex-1 flex-col py-2">
-                        <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words">{line}</span>
+                        <span class="wrap-anywhere">{feed.title}</span>
+                        <span class="text-meta text-muted wrap-anywhere">{line}</span>
                       </span>
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
                   {:else}
                     <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
                       <span class="flex min-w-0 flex-1 flex-col py-2">
-                        <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words">{line}</span>
+                        <span class="wrap-anywhere">{feed.title}</span>
+                        <span class="text-meta text-muted wrap-anywhere">{line}</span>
                       </span>
                       <span class="row-glyph"><Icon name="chevron-right" /></span>
                     </a>

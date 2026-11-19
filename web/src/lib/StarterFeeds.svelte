@@ -72,7 +72,7 @@
               pressing anywhere else in the row ticks.
             -->
             <a href={starter.site} target="_blank" rel="noopener" class="relative z-10 flex min-h-11 flex-col justify-center self-start">
-              <span class="break-words underline decoration-1 underline-offset-[3px]">{starter.name}</span>
+              <span class="wrap-anywhere underline decoration-1 underline-offset-[3px]">{starter.name}</span>
               <span class="address text-meta break-all text-ink-2">{siteName(starter.site)}<span class="sr-only">{" "}(their website, opens in a new tab)</span></span>
             </a>
             <span class="text-meta text-muted">{starter.about}</span>
