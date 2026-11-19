@@ -109,11 +109,11 @@
     aria-disabled={busy}
     aria-label="Delete {folder.name}"
     aria-describedby="delete-folder-help"
-    title="Its feeds stay; they just leave this folder. You can undo it."
+    title="Everyone in it stays; they just leave this folder. You can undo it."
     onclick={remove}
     class={look}>Delete</button
   >
-  <span id="delete-folder-help" class="sr-only">Its feeds stay; they just leave this folder. You can undo it.</span>
+  <span id="delete-folder-help" class="sr-only">Everyone in it stays; they just leave this folder. You can undo it.</span>
 {/snippet}
 
 {#snippet form()}

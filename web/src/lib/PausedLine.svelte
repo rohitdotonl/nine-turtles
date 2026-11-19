@@ -7,7 +7,6 @@
   named. Resumed, the line says so until the reader goes elsewhere.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { editFeed } from "./feeds";
@@ -62,7 +61,7 @@
     {#each paused as place (place.id)}
       <p class="text-meta text-ink-2">
         {#if places.length > 1}<span class="text-ink">{placeShownAs(place)}</span>:{/if}
-        <Dated text={pausedSince(place.pausedAt ?? 0, new Date(), "since")} />
+        {pausedSince(place.pausedAt ?? 0, new Date(), "since")}
         {places.length > 1 ? "Its" : "Their"} new articles arrive already read.
         <button type="button" class="text-link resume" aria-disabled={busy} onclick={() => resume(place)}
           >Resume<span class="sr-only">{places.length > 1 ? ` ${placeShownAs(place)}` : ""}</span></button

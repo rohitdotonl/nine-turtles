@@ -99,7 +99,7 @@ test("a mark refused because the reader is signed out says so, with Sign in", as
   await expect(
     page
       // Another test may have saved this article already, so either way round.
-      .getByText(/^You're signed out, so the article wasn't (saved|taken out of Saved)\.$/)
+      .getByText(/^You're signed out, so the article wasn't (saved|removed from Saved)\.$/)
       .locator("visible=true"),
   ).toBeVisible();
   const signInButton = page
@@ -130,7 +130,7 @@ test("following someone says so, with Undo", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(
-    page.getByText(`You're no longer following Blog ${name}.`, {
+    page.getByText("Undone.", {
       exact: true,
     }),
   ).toBeVisible();

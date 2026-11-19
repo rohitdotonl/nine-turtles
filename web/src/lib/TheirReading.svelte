@@ -10,6 +10,7 @@
   a list does (decision 0196). No counts, no color.
 -->
 <script lang="ts">
+  import LoadFailed from "./LoadFailed.svelte";
   import { getJson, isRecord } from "./http";
   import Icon from "./Icon.svelte";
   import NoteText from "./NoteText.svelte";
@@ -24,7 +25,11 @@
   let failed = $state(false);
   let loaded = $state(false);
 
+  /** Try again asks once more: the list below is fetched afresh. */
+  let attempt = $state(0);
+
   $effect(() => {
+    void attempt;
     const id = feed;
     highlights = [];
     failed = false;
@@ -53,7 +58,10 @@
 </script>
 
 {#if failed}
-  <p class="text-meta text-ink-2">Your highlights from their writing couldn't be loaded. Open the page again to try once more.</p>
+  <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
+    <h3 id="their-highlights" tabindex="-1" class="label outline-none">Your highlights</h3>
+    <LoadFailed class="text-meta" words="Your highlights from their writing couldn't be loaded." heading="their-highlights" onRetry={() => (attempt += 1)} />
+  </section>
 {:else}
   <section class="flex flex-col gap-3" aria-labelledby="their-highlights">
     <h3 id="their-highlights" class="label">Your highlights</h3>

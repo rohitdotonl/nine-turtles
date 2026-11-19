@@ -15,6 +15,8 @@
   (the browser's passkey autofill).
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
+  import Wordmark from "./Wordmark.svelte";
   import Waiting from "./Waiting.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
@@ -219,7 +221,7 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5 py-8">
   <div class="flex flex-col items-center text-center">
-    <h1 class="font-serif text-display">nine turtles</h1>
+    <Wordmark />
     <p class="mt-3 font-serif text-large text-muted">Read people. Write back.</p>
   </div>
   {#if asking && sent}
@@ -230,7 +232,7 @@
         If <span class="font-semibold">{sent}</span> has an account here, a link is on its way. It works once, within {SIGN_IN_LINK_MINUTES} minutes.
       </p>
       <SendAgain to={sent} onSend={askAgain} />
-      <a href="/" class="btn" onclick={(event) => switchTo(event, false)}>Back to sign in</a>
+      <p><a href="/" class="text-link" onclick={(event) => switchTo(event, false)}>Back to sign in</a></p>
     </div>
   {:else}
   <!--
@@ -300,7 +302,7 @@
     -->
     <div class={["flex flex-col gap-3", asking ? "min-h-[8.5rem]" : offered ? "min-h-[13.75rem]" : "min-h-[10.5rem]"]}>
       <p id="sign-in-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta", "text-danger", !message && "sr-only"]}>
-        {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
+        {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span><Addressed text={message} />{/if}
       </p>
       <!-- After "That email and password don't match.", a likely slip in the email, in the text color, centred under it. -->
       <EmailFix id="sign-in-fix" centred {fix} onUse={useFix} />

@@ -15,7 +15,6 @@
   back (RecentlyUnsubscribed.svelte, decision 0240).
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { onMount, tick } from "svelte";
   import { edge } from "./edge";
   import Icon from "./Icon.svelte";
@@ -344,7 +343,7 @@
         {#each groups as group, index (group.id)}
           <section aria-labelledby={`following-${group.id}`} aria-describedby={`following-${group.id}-how`}>
             <div class="flex min-h-11 items-center justify-between gap-3">
-              <h3 id={`following-${group.id}`} class="inset-head mb-0">{group.name}</h3>
+              <h3 id={`following-${group.id}`} class="label inset-head mb-0">{group.name}</h3>
               {#if index === 0}
                 <div class="flex items-center gap-2">
                   {#if editing}
@@ -364,7 +363,7 @@
                       <input type="checkbox" value={feed.id} bind:group={chosen} />
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words"><Dated text={line} /></span>
+                        <span class="text-meta text-muted break-words">{line}</span>
                       </span>
                       <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
                     </label>
@@ -372,7 +371,7 @@
                     <a href={addressFor({ kind: "about", id: feed.id })} onclick={(event) => onOpenPerson(event, feed.id)} class="inset-row inset-action tended">
                       <span class="flex min-w-0 flex-1 flex-col py-2">
                         <span class="break-words">{feed.title}</span>
-                        <span class="text-meta text-muted break-words"><Dated text={line} /></span>
+                        <span class="text-meta text-muted break-words">{line}</span>
                       </span>
                       <span class="row-glyph"><Icon name="chevron-right" /></span>
                     </a>
@@ -391,15 +390,15 @@
           <!-- Unsubscribe at the far left, apart from Move to… at the right, so a slip can't land on it (decision 0217). -->
           <button
             type="button"
-            class="btn-danger text-meta"
-            title="Stops following them and removes their articles; saved ones stay. You can undo it."
+            class={["btn-danger text-meta", chosen.length === 0 && "unavailable"]}
+            title="Stops following them and removes their articles; saved, highlighted and noted ones can stay. You can undo it."
             aria-describedby="your-feeds-unsubscribe-help"
             aria-disabled={chosen.length === 0 || busy}
             onclick={leave}>Unsubscribe</button
           >
           <p class="text-meta text-ink-2" aria-live="polite">{chosen.length === 0 ? "Choose who" : `${chosen.length} chosen`}</p>
-          <button type="button" class="btn-primary" data-focus="move" aria-disabled={chosen.length === 0 || busy} onclick={openMove}>Move to…</button>
-          <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; saved ones stay. You can undo it.</span>
+          <button type="button" class={["btn-primary", chosen.length === 0 && "unavailable"]} data-focus="move" aria-disabled={chosen.length === 0 || busy} onclick={openMove}>Move to…</button>
+          <span id="your-feeds-unsubscribe-help" class="sr-only">Removes their articles; saved, highlighted and noted ones can stay. You can undo it.</span>
         </div>
       {:else}
         <div class="pb-16"></div>

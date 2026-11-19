@@ -48,7 +48,7 @@ describe("a search's count", () => {
 describe("signed out (decision 0230)", () => {
   it("names the real reason a mark wasn't saved", () => {
     expect(notSavedSignedOut("starred", true, 1)).toBe("You're signed out, so the article wasn't saved.");
-    expect(notSavedSignedOut("starred", false, 1)).toBe("You're signed out, so the article wasn't taken out of Saved.");
+    expect(notSavedSignedOut("starred", false, 1)).toBe("You're signed out, so the article wasn't removed from Saved.");
     expect(notSavedSignedOut("read", false, 1)).toBe("You're signed out, so the article wasn't marked as unread.");
     expect(notSavedSignedOut("read", true, 12)).toBe("You're signed out, so the 12 articles weren't marked as read.");
   });

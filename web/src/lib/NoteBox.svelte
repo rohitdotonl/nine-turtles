@@ -92,9 +92,10 @@
     {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
   </p>
   <p class={small ? "text-meta text-muted" : "text-meta text-ink-2"}>{help}</p>
-  <div class="flex flex-wrap gap-2">
+  <!-- Not now, then the main action at the right end, as in a sheet. -->
+  <div class="sheet-actions">
+    <button type="button" class="btn" onclick={onNotNow}>Not now</button>
     <button type="submit" class="btn-primary" aria-disabled={busy}><Waiting {busy} word={message ? "Try again" : "Save note"} doing="Saving…" /></button>
-    <button type="button" class="btn-quiet" onclick={onNotNow}>Not now</button>
   </div>
 </form>
 

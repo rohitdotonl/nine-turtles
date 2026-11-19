@@ -344,7 +344,7 @@ test("a name that couldn't be saved stays as typed, with why, and Enter keeps th
   await page.route(`**/api/feeds/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
   await field.fill(`Kept ${name}`);
   await field.press("Enter");
-  await expect(who).toContainText("That couldn't be saved. Try again in a moment.");
+  await expect(who).toContainText("Their settings couldn't be saved. Try again in a moment.");
   await expect(field).toBeFocused();
   await expect(field).toHaveValue(`Kept ${name}`);
   await expect(who).not.toContainText("feed");

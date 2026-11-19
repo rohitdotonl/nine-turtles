@@ -381,7 +381,7 @@
           </div>
         </div>
         <!-- Text size and font are only in Text and page, the reading panel in an article's More (decisions 0241, 0293). -->
-        <p class="inset-foot">This device only. Text size and font are in any article’s More.</p>
+        <p class="inset-foot">This device only. Text size and font are in any article's More › Text and page.</p>
       </section>
 
       <section aria-labelledby="library-heading">
@@ -434,7 +434,7 @@
               {@render icon("person-at")}
               <div class="setting-words">
                 <p class="setting-name">Email</p>
-                <p class="setting-hint">{email ?? "No email yet"}</p>
+                <p class={["setting-hint", email && "address"]}>{email ?? "No email yet"}</p>
               </div>
             </div>
             {#if emailSending && email}
@@ -462,12 +462,12 @@
         <p role="status" class={["inset-foot text-ink", !accountNote && "sr-only"]}>{accountNote}</p>
         <p role="status" class={["inset-foot flex items-start gap-2 text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
         {#if email && !emailSending}
-          <p class="inset-foot">Changing your email needs the app's owner to set up email first.</p>
+          <p class="inset-foot">Changing your email needs whoever runs this nine turtles to set up email first.</p>
         {/if}
         {#if !owner}
           <!-- Readers are told what the owner's Readers page shows of them (decision 0093). -->
           <p class="inset-foot">
-            The app's owner sees your email, join date, feed count{paymentsOn ? ", last visit and plan" : " and last visit"}.
+            Whoever runs this nine turtles sees your email, join date, feed count{paymentsOn ? ", last visit and plan" : " and last visit"}.
             Never what you follow or read.
           </p>
         {/if}

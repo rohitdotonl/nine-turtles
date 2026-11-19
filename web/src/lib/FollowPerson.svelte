@@ -20,6 +20,7 @@
   under the site, and once followed they're filed in that folder.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import Waiting from "./Waiting.svelte";
   import { onMount } from "svelte";
   import Icon from "./Icon.svelte";
@@ -102,11 +103,11 @@
 
 <form onsubmit={follow} class={["flex flex-col gap-4", page && "flex-1"]}>
   <div class="flex flex-col gap-1">
-    <p class="break-all text-ink-2">{site}</p>
+    <p class="address break-all text-ink-2">{site}</p>
     {#if into}<p class="text-meta text-ink-2">They'll go in {into.name}.</p>{/if}
     <!-- Screen readers hear each new line here without moving the keyboard's place: the question again once the name is known, since the keyboard reached the title before it was. -->
     <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2"]}>
-      {#if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
+      {#if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span><Addressed text={problem} />{:else if name}<span class="sr-only">Follow {name}?</span>{/if}
     </p>
   </div>
 

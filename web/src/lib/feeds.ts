@@ -9,7 +9,7 @@ import { getJson, isRecord, sendChange } from "./http";
 import { deviceJson, setDeviceText } from "./device";
 import { saved } from "./saving";
 import { fold } from "./search";
-import { NOT_AN_ADDRESS, UNDO_FAILED } from "./messages";
+import { NOT_AN_ADDRESS, TOO_MANY, UNDO_FAILED } from "./messages";
 import { toSorted, type Why } from "./sorting";
 import { toFeed, toPerson, type Feed, type Folder, type Library, type VideoSettings, type WhoKind } from "./shapes";
 import { pinnedRows } from "./pins";
@@ -318,7 +318,7 @@ export function explain(reason: Problem): string {
     case "no-feed":
       return "nine turtles couldn't find a way to follow this site. You could write to them and ask if they have a feed or a newsletter.";
     case "too-many":
-      return "You follow 1,000 feeds, as many as one reader can. Unsubscribe from one to add another.";
+      return TOO_MANY;
     case "plan-ended":
       return PLAN_ENDED;
     case "offline":

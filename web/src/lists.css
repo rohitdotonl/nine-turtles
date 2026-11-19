@@ -126,9 +126,9 @@
   keeps at least 12rem and three fifths of the row; otherwise it goes
   under the title, 8px down, as in every other list: on a narrow phone, at
   large text, in a narrow list. "People" over the first person's name and
-  "Publications" over the first publication's, quiet: the meta size,
-  regular, in the dates' grey; 16px under the list's top or 48px under the
-  group before, 8px over the name.
+  "Publications" over the first publication's, in the one label (the meta
+  size, semibold, full ink, as every group's name); 16px under the list's top
+  or 48px under the group before, 8px over the name.
 */
 .by-person .list-name,
 .by-person .list-label {
@@ -148,10 +148,6 @@
 }
 .by-person .list-label {
   padding-top: 3rem;
-  font-size: var(--text-meta);
-  line-height: 1.4;
-  font-weight: 400;
-  color: var(--faint);
 }
 .by-person li:first-child .list-label {
   padding-top: 1rem;

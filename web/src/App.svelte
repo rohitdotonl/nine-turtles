@@ -14,6 +14,7 @@
   and empties the podcast player (SPEC section 35).
 -->
 <script lang="ts">
+  import Wordmark from "./lib/Wordmark.svelte";
   import Shell from "./lib/Shell.svelte";
   import SwipeBack from "./lib/SwipeBack.svelte";
   import SignIn from "./lib/SignIn.svelte";
@@ -134,7 +135,7 @@
   />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-    <h1 class="font-serif text-display">nine turtles</h1>
+    <Wordmark />
     <p>nine turtles can't be reached right now. Reload the page to try again.</p>
   </main>
 {/if}

@@ -7,7 +7,6 @@
   checkout, which sends the reader back here (decision 0094).
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import Icon from "./Icon.svelte";
   import { type PlanStatus, Refused, PAYMENTS_UNREACHABLE, billingAddress, canSubscribe, checkoutAddress, describe, loadPlan } from "./plan";
 
@@ -39,10 +38,10 @@
 {#if status.on && status.plan.standing !== "free"}
   {@const shown = describe(status.plan)}
   <section aria-labelledby="plan-heading">
-    <h3 id="plan-heading" class="inset-head">Your plan</h3>
+    <h3 id="plan-heading" class="label inset-head">Your plan</h3>
     <div class="inset-group">
       <div class="inset-row">
-        <p class="min-w-0">{shown.title}<br /><span class="detail text-muted"><Dated text={shown.detail} /></span></p>
+        <p class="min-w-0">{shown.title}<br /><span class="detail text-muted">{shown.detail}</span></p>
       </div>
       {#if canSubscribe(status.plan)}
         <button type="button" aria-disabled={busy} onclick={() => go(() => checkoutAddress("monthly"))} class="inset-row inset-action"

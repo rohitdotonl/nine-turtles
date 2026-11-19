@@ -62,10 +62,10 @@ export type KeptSession = {
 export const SHOWING_KEPT =
   "You're offline. Showing the articles kept on this device.";
 export const NOTHING_KEPT_HERE =
-  "Nothing here is kept on this device. It will show when you're back online.";
+  "You're offline. Nothing here is kept on this device; it shows once you're back online.";
 export const END_OF_KEPT = "That's everything kept on this device.";
 export const NOT_KEPT =
-  "This article isn't kept on this device. It opens when you're back online.";
+  "You're offline. This article isn't kept on this device; it opens once you're back online.";
 export const SEARCH_NEEDS_CONNECTION =
   "You're offline. Search works again once you're back online.";
 export const REFRESH_NEEDS_CONNECTION =
@@ -74,7 +74,7 @@ export const NOTES_NEED_CONNECTION =
   "You're offline. Notes show once you're back online.";
 /** What an episode in an article kept for reading offline says where its player would be (decision 0113). */
 export const EPISODE_OFFLINE =
-  "The episode plays here when you're back online.";
+  "The episode plays here once you're back online.";
 export const SETTINGS_NEED_CONNECTION =
   "You're offline. Settings open once you're back online.";
 

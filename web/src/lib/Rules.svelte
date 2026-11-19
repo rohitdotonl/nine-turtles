@@ -174,7 +174,7 @@
 </script>
 
 <section aria-labelledby="rules-heading">
-  <h3 id="rules-heading" tabindex="-1" class="inset-head">Hiding</h3>
+  <h3 id="rules-heading" tabindex="-1" class="label inset-head">Hiding</h3>
   <div class="inset-group">
     <form class="inset-row hide-form" novalidate onsubmit={add}>
       <div class="flex w-full flex-col gap-3">
@@ -220,7 +220,7 @@
           <span class="break-words">{wordShown(rule)}</span>
           <span class="text-meta text-muted">{line}</span>
         </span>
-        <button type="button" data-remove class="btn btn-small btn-icon" aria-label={`Remove ${wordShown(rule)}, ${line}`} title="Remove" onclick={() => remove(rule, index)}><Icon name="trash" size="alone" /></button>
+        <button type="button" data-remove class="btn-quiet btn-icon" aria-label={`Remove ${wordShown(rule)}, ${line}`} title="Remove" onclick={() => remove(rule, index)}><Icon name="trash" size="alone" /></button>
       </div>
     {/each}
     {#if muted > 0}

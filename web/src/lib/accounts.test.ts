@@ -29,7 +29,7 @@ describe("the messages about email", () => {
 
   it("say calmly when nine turtles can't send email", () => {
     expect(explainAsked("no-email", "")).toBe(
-      "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.",
+      "This nine turtles can't send email yet. Ask whoever runs this nine turtles to set a new password for you.",
     );
     expect(explainChange({ ok: false, reason: "no-email" })).toContain("can't send email yet");
   });

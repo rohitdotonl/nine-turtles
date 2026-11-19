@@ -551,7 +551,7 @@ test("A way back pressed is listed on their page under Replies you started, remo
   // When the list can't be loaded, one quiet line says so, rather than letting it seem gone.
   await page.route("**/api/feeds/*/replies", (route) => route.fulfill({ status: 500, body: "{}" }));
   await theirPage();
-  await expect(who).toContainText("Replies you started couldn't be loaded. Open the page again to try once more.");
+  await expect(who).toContainText("Replies you started couldn't be loaded.");
   await expect(who.getByRole("button", { name: "Add a note…" })).toBeVisible();
   await page.unrouteAll({ behavior: "ignoreErrors" });
 });

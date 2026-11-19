@@ -7,6 +7,8 @@
   quiet Remove (the bin, decision 0305); Undo, in its place, brings it back with its day.
 -->
 <script lang="ts">
+  import LoadFailed from "./LoadFailed.svelte";
+  import TextButton from "./TextButton.svelte";
   import { tick } from "svelte";
   import { getJson, isRecord } from "./http";
   import Icon from "./Icon.svelte";
@@ -36,7 +38,11 @@
   let undoButtons: Record<number, HTMLButtonElement | undefined> = $state({});
   let removers: Record<number, HTMLButtonElement | undefined> = $state({});
 
+  /** Try again asks once more: the list below is fetched afresh. */
+  let attempt = $state(0);
+
   $effect(() => {
+    void attempt;
     const id = feed;
     replies = [];
     problem = "";
@@ -71,7 +77,7 @@
 
   async function remove(reply: Reply) {
     problem = "";
-    if (!(await forgetReply(reply.article.id))) return void (problem = "That line couldn't be removed. Try again in a moment.");
+    if (!(await forgetReply(reply.article.id))) return void (problem = "The reply couldn't be removed. Try again in a moment.");
     reply.removed = true;
     await tick();
     undoButtons[reply.article.id]?.focus();
@@ -79,7 +85,7 @@
 
   async function undo(reply: Reply) {
     problem = "";
-    if (!(await restoreReply(reply.article.id, reply.at))) return void (problem = "That line couldn't be brought back. Try again in a moment.");
+    if (!(await restoreReply(reply.article.id, reply.at))) return void (problem = "The reply couldn't be brought back. Try again in a moment.");
     reply.removed = false;
     await tick();
     removers[reply.article.id]?.focus();
@@ -87,7 +93,10 @@
 </script>
 
 {#if failed}
-  <p class="text-meta text-ink-2">Replies you started couldn't be loaded. Open the page again to try once more.</p>
+  <section class="flex flex-col gap-3" aria-labelledby="their-replies">
+    <h3 id="their-replies" tabindex="-1" class="label outline-none">Replies you started</h3>
+    <LoadFailed class="text-meta" words="Replies you started couldn't be loaded." heading="their-replies" onRetry={() => (attempt += 1)} />
+  </section>
 {:else if replies.length > 0}
   <section class="flex flex-col gap-3" aria-labelledby="their-replies">
     <h3 id="their-replies" class="label">Replies you started</h3>
@@ -96,7 +105,7 @@
         <li class="line">
           {#if reply.removed}
             <p class="removed text-meta text-ink-2" role="status">Removed.</p>
-            <button type="button" class="btn-quiet -mr-2" bind:this={undoButtons[reply.article.id]} onclick={() => void undo(reply)}>Undo</button>
+            <TextButton bind:element={undoButtons[reply.article.id]} onclick={() => void undo(reply)}>Undo</TextButton>
           {:else}
             <span class="mark" aria-hidden="true"><Icon name="send" /></span>
             <p class="what">

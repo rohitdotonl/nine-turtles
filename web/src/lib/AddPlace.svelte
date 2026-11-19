@@ -12,6 +12,7 @@
   newsletter, videos or podcast" (decision 0241).
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import SlowWait from "./SlowWait.svelte";
@@ -203,7 +204,7 @@
             <input type="radio" name="add-place-choice" value={choice.url} bind:group={picked} />
             <span class="flex min-w-0 flex-col py-1">
               <span class="break-words">{choice.title}</span>
-              <span class="truncate text-meta text-muted" title={choice.url}>{choice.url}</span>
+              <span class="address truncate text-meta text-muted" title={choice.url}>{choice.url}</span>
             </span>
             <span aria-hidden="true" class="radio-mark shrink-0"></span>
           </label>
@@ -248,7 +249,7 @@
     </div>
     {/if}
     <p role="status" class={["flex items-start gap-2 text-meta", message ? "text-danger" : busy ? "text-muted" : "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{:else if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if busy}Joining…{/if}
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span><Addressed text={message} />{:else if looking}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{:else if busy}Joining…{/if}
     </p>
     <button type="button" class="btn-quiet self-start" onclick={hide}>Not now</button>
   </div>

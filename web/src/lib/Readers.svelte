@@ -26,7 +26,7 @@
 </script>
 
 <section aria-labelledby="readers-heading">
-  <h3 id="readers-heading" class="inset-head">Readers</h3>
+  <h3 id="readers-heading" class="label inset-head">Readers</h3>
   <div class="inset-group">
     <a href="/settings/readers/all" onclick={onReaders} data-settings-row="all-readers" class="inset-row inset-action"
       >All readers<span class="row-glyph flex items-center gap-1"

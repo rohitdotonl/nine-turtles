@@ -7,6 +7,7 @@
   outlined button, as the way into the app.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import { addressFor, type Route } from "./router";
@@ -68,7 +69,7 @@
           <li class="try-row">
             <button type="button" aria-disabled={busy !== ""} onclick={() => press(example)} class="group flex min-h-14 w-full cursor-pointer items-center gap-4 py-2 text-left">
               <span class="w-24 shrink-0 text-meta text-muted">{example.kind}</span>
-              <span class="min-w-0 flex-1 break-all text-ink">{example.address}</span>
+              <span class="address min-w-0 flex-1 break-all text-ink">{example.address}</span>
               <span class="try-word shrink-0 text-meta text-ink-2">{busy === example.address ? "Adding…" : "Try"}</span>
             </button>
           </li>
@@ -76,7 +77,7 @@
       </ul>
     </section>
   {/if}
-  <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}</p>
+  <p role="status" class={["flex items-start gap-2 text-meta", problem ? "text-danger" : "text-ink-2", !message && "sr-only"]}>{#if message && problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Addressed text={message} /></p>
 </div>
 
 <style>

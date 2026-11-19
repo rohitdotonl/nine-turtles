@@ -8,6 +8,7 @@
   be open on one page.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import Icon from "./Icon.svelte";
   import SlowWait from "./SlowWait.svelte";
   import { UP_TO_A_MINUTE } from "./messages";
@@ -100,11 +101,12 @@
     />
   </div>
   <p id={`${id}-message`} role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
-    {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
+    {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span><Addressed text={message} />{/if}
   </p>
-  <div class="flex flex-wrap gap-2">
+  <!-- Not now, then the main action at the right end, as in a sheet. -->
+  <div class="sheet-actions">
+    <button type="button" class="btn" onclick={onNotNow}>Not now</button>
     <button type="submit" class={quiet ? "btn" : "btn-primary"} aria-disabled={busy}>{submit}</button>
-    <button type="button" class="btn-quiet" onclick={onNotNow}>Not now</button>
   </div>
   <p class="text-meta text-ink-2">{foot}</p>
 </form>

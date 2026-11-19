@@ -192,7 +192,7 @@
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if route.settings}
       <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
-      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
+      <div class="top-back"><button type="button" onclick={onBack} aria-label="Back to {name}" title="Back to {name} (Esc)" data-behind="list-pane" class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" /><bdi>{name}</bdi></button></div>
       <h2 bind:this={settingsHeading} tabindex="-1" class="top-title font-display text-heading font-semibold tracking-[-0.01em]">Settings</h2>
       <div class="mt-4">
         <WhoSettings {feed} {library} {onSaved} {onFolders} {onHide} {onUnsubscribe}>
@@ -204,7 +204,7 @@
     <div class={route.settings ? "hidden" : "contents"}>
     {#if phone}
       <!-- One top (DESIGN.md → "The system"): Back in the top line's height. -->
-      <div class="top-back justify-between gap-2"><button type="button" onclick={onClose} class="btn-quiet nav-back -ml-2 text-ink-2"><Icon name="back" size="alone" /><bdi>{closeTo ?? name}</bdi></button>{@render cog()}</div>
+      <div class="top-back justify-between gap-2"><button type="button" onclick={onClose} class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" /><bdi>{closeTo ?? name}</bdi></button>{@render cog()}</div>
     {/if}
 
     <!-- Who they are: their name, where they publish, and the one thing to do, write to them. -->

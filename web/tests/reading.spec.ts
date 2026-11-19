@@ -70,7 +70,7 @@ test.describe("on a wide window", () => {
       feedsFailing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback(),
     );
     await page.reload();
-    const feedsProblem = page.getByRole("status").filter({ hasText: "Your feeds couldn't be loaded." });
+    const feedsProblem = page.getByRole("status").filter({ hasText: "Everyone you follow couldn't be loaded." });
     await expect(feedsProblem).toBeVisible();
     feedsFailing = false;
     await tabTo(page, feedsProblem.getByRole("button", { name: "Try again" }));
@@ -277,8 +277,8 @@ test.describe("on a wide window", () => {
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark unread/, /Add a note/, /Info about Asha Rao/, /Hide articles about/]);
-    await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toHaveAttribute("aria-keyshortcuts", "m");
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark as unread/, /Add a note/, /Info about Asha Rao/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem", { name: "Mark as unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
     await expect(more).toBeFocused();
@@ -305,7 +305,7 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await openFirst(page);
     const more = article(page).getByRole("button", { name: "More actions" });
-    const panel = page.getByRole("dialog", { name: "Reading appearance" });
+    const panel = page.getByRole("dialog", { name: "Text and page" });
     const menu = page.getByRole("menu", { name: "More actions" });
     // With only a keyboard: Enter on More, the first row is Copy link, the next Text and page, and Enter opens the panel on its first control.
     await more.focus();
@@ -452,7 +452,7 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("g");
     await page.keyboard.press(",");
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "White", exact: true })).toBeChecked();
-    await expect(page.getByText("This device only. Text size and font are in any article’s More.")).toBeVisible();
+    await expect(page.getByText("This device only. Text size and font are in any article's More › Text and page.")).toBeVisible();
     await expect(page.getByRole("region", { name: "Look and feel" }).getByRole("radio", { name: "Atkinson Hyperlegible" })).toHaveCount(0);
   });
 

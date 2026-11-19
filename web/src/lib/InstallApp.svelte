@@ -44,7 +44,7 @@
 </script>
 
 <section aria-labelledby="install-heading" class="flex flex-col gap-8">
-  <h3 id="install-heading" class="inset-head">Install the app on any device</h3>
+  <h3 id="install-heading" class="label inset-head">Install the app on any device</h3>
   <p class="lead">
     Installed, nine turtles has its own icon and window, like any other app, with nothing to download from an app
     store. Sign in once on each device; what you follow and what you've read are the same everywhere.
@@ -60,7 +60,7 @@
   </div>
 
   <div>
-    <h4 class="inset-head">{own ? `On this ${guide.where}` : `On ${chosen === "computer" ? "a" : "an"} ${guide.where}`}</h4>
+    <h4 class="label inset-head">{own ? `On this ${guide.where}` : `On ${chosen === "computer" ? "a" : "an"} ${guide.where}`}</h4>
     {#if own}
       <!-- Always here, so screen readers hear it the moment it's filled in. -->
       <p bind:this={answer} tabindex="-1" role="status" class={said ? "inset-group inset-row done" : "sr-only"}>
@@ -97,7 +97,7 @@
   </div>
 
   <div>
-    <h4 class="inset-head">Follow the blog you're on</h4>
+    <h4 class="label inset-head">Follow the blog you're on</h4>
     <div class="inset-group">
       {#if chosen === "computer"}
         <div class="inset-row drag">

@@ -41,7 +41,7 @@
     if (!refusal) await library.loadFeeds();
     busy = false;
     if (refusal) {
-      away = { words: "That couldn't be saved. Try again in a moment.", refusal: true, close: () => (away = undefined) };
+      away = { words: "Your answer couldn't be saved. Try again in a moment.", refusal: true, close: () => (away = undefined) };
       return;
     }
     away = {

@@ -485,7 +485,7 @@
                 onclick={() => toggle(folder.id)}
                 class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-press text-muted"
               >
-                <Icon name={shown ? "chevron-down" : "chevron-right"} />
+                <Icon name={shown ? "chevron-up" : "chevron-down"} />
               </button>
             {/if}
           </div>

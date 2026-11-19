@@ -322,7 +322,7 @@ export const SCREENS: Screen[] = [
         state: "screens",
       });
       await page.goto(api(`/oauth/authorize?${query}`));
-      await expect(page.getByRole("heading", { level: 1, name: "Connect Claude to nine turtles?" })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 2, name: "Connect Claude to nine turtles?" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Connect" })).toBeVisible();
     },
   },
@@ -640,7 +640,7 @@ export function couldBeEither(title: RegExp | number) {
 export async function openAppearance(page: Page, within: Locator = page.getByRole("region", { name: "Article", exact: true })): Promise<Locator> {
   await within.getByRole("button", { name: "More actions" }).first().click();
   await page.getByRole("menuitem", { name: "Text and page" }).click();
-  const panel = page.getByRole("dialog", { name: "Reading appearance" });
+  const panel = page.getByRole("dialog", { name: "Text and page" });
   await expect(panel).toBeVisible();
   return panel;
 }

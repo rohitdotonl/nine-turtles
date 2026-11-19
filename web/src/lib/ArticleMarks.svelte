@@ -23,6 +23,7 @@
   article."; Discard throws them away, with Undo.
 -->
 <script lang="ts">
+  import TextButton from "./TextButton.svelte";
   import { onDestroy, tick } from "svelte";
   import HighlightMenu from "./HighlightMenu.svelte";
   import Icon from "./Icon.svelte";
@@ -531,7 +532,7 @@
   <div class="foot floating" lang="en">
     {#if undoable}
       <p>{undoable.said}</p>
-      <button type="button" class="btn-quiet" bind:this={undoButton} onclick={undo}>Undo</button>
+      <TextButton bind:element={undoButton} onclick={undo}>Undo</TextButton>
     {/if}
     {#if marks.waits}<p class="text-ink-2">{OFFLINE_LINE}</p>{/if}
   </div>

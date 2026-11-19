@@ -112,7 +112,7 @@ anywhere or counted.
   row opens the article, as in any list; its own menu is the same.
 - The list comes whole, in one go: it's the reader's own marks, and pages
   would split a person. The row is there from the first day (decision
-  0222): before any highlight or note, its list says "No notes yet." and
+  0222): before any highlight or note, its list says "Nothing in Notes yet." and
   how to make one.
 - A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).

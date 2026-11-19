@@ -52,13 +52,13 @@
     <span class="icon"><Icon name="person" /></span>One person?
   </p>
   <p id={`${id}-what`} class="what text-meta text-ink-2">
-    <bdi class="font-semibold text-ink">{pair.names[0]}</bdi> and <bdi class="font-semibold text-ink">{pair.names[1]}</bdi> share one website, <bdi class="break-all">{pair.site}</bdi>.
+    <bdi class="font-semibold text-ink">{pair.names[0]}</bdi> and <bdi class="font-semibold text-ink">{pair.names[1]}</bdi> share one website, <bdi class="address break-all">{pair.site}</bdi>.
   </p>
   <div class="tone-box-actions">
     <button type="button" class="btn btn-small" aria-disabled={busy} onclick={() => void answer(true)}>Join them</button>
     <button type="button" class="text-link text-ui" aria-disabled={busy} onclick={() => void answer(false)}>Keep apart</button>
   </div>
-  <p role="status" class={["text-meta text-danger", !problem && "sr-only"]}>{problem}</p>
+  <p role="status" class={["flex items-start gap-2 text-meta text-danger", !problem && "sr-only"]}>{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{/if}</p>
 </div>
 
 <style>

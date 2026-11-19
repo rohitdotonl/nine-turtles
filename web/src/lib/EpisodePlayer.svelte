@@ -21,6 +21,7 @@
 
 -->
 <script lang="ts">
+  import SkipMark from "./SkipMark.svelte";
   import { untrack } from "svelte";
   import type { Article } from "./shapes";
   import SlowWait from "./SlowWait.svelte";
@@ -106,9 +107,7 @@
     <!-- Back, Play and Forward in the middle, under the title and byline, as every player centres them (decision 0301). -->
     <div class="episode-middle">
     <button type="button" class="episode-button" aria-label="Back {BACK_SECONDS} seconds" title="Back {BACK_SECONDS} seconds" onclick={() => goTo(position - BACK_SECONDS)}>
-      <svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M3.5 12.5a8.5 8.5 0 1 0 2.5-6" /><path d="M5.75 2.75v3.75h3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">15</text></svg
-      >
+      <SkipMark seconds={BACK_SECONDS} />
     </button>
     <!-- The one round, filled mark, in the text color: Play or Pause, by its shape and its name. -->
     <button type="button" class="episode-play" aria-label={playing ? "Pause" : "Play"} title={playing ? "Pause" : "Play"} onclick={pressPlay}>
@@ -119,9 +118,7 @@
       {/if}
     </button>
     <button type="button" class="episode-button" aria-label="Forward {FORWARD_SECONDS} seconds" title="Forward {FORWARD_SECONDS} seconds" onclick={() => goTo(position + FORWARD_SECONDS)}>
-      <svg aria-hidden="true" class="skip" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-        ><path d="M20.5 12.5a8.5 8.5 0 1 1-2.5-6" /><path d="M18.25 2.75v3.75h-3.75" /><text x="12" y="14.9" text-anchor="middle" font-size="7.5">30</text></svg
-      >
+      <SkipMark seconds={FORWARD_SECONDS} forward />
     </button>
     </div>
     <button
@@ -165,17 +162,11 @@
     border: 1px solid var(--line);
     border-radius: var(--radius-hold);
     background-color: var(--fill);
-    font-family: var(--font-dates);
+    font-family: var(--font-sans);
     font-size: var(--text-meta);
     color: var(--ink-2);
   }
   /* The 15 and 30 sit inside their circle with room to spare, in the interface's face (decision 0300, the owner's fix: they touched their arrows). */
-  .skip text {
-    stroke: none;
-    fill: currentColor;
-    font-family: var(--font-dates);
-    font-weight: 600;
-  }
   /* Three columns: the length on the left, Back, Play and Forward truly in the middle, the speed on the right (decision 0301). */
   .episode-controls {
     display: grid;

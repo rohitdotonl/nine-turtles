@@ -119,7 +119,7 @@ export const SHORTCUTS: Shortcut[] = [
   ),
   shortcut("Reading", "Write back", [["write-back", "w", { kind: "write-back" }]]),
   shortcut("Reading", "Open article", [["open-enter", "Enter", { kind: "open" }]]),
-  shortcut("Reading", "Save / unsave", [["star", "s", { kind: "star" }]]),
+  shortcut("Reading", "Save, or remove from Saved", [["star", "s", { kind: "star" }]]),
   shortcut("Reading", "Highlight chosen words", [["highlight", "h", { kind: "highlight" }]]),
   shortcut("Reading", "Add a note", [["note", "n", { kind: "note" }]]),
   shortcut("Reading", "View original", [["open-original", "v", { kind: "open-original" }]]),
@@ -165,7 +165,7 @@ export const SHORTCUTS: Shortcut[] = [
   shortcut("Getting around", "Info about this person", [["about", "i", { kind: "about" }]]),
   shortcut("Getting around", "Add a person or publication", [["add-feed", "a", { kind: "add-feed" }]]),
   shortcut("Tidying up", "Mark all as read", [["mark-all-read", "Shift+A", { kind: "mark-all-read" }]]),
-  shortcut("Tidying up", "Mark unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
+  shortcut("Tidying up", "Mark as unread", [["mark-unread", "m", { kind: "mark-unread" }]]),
   // Command Z (Ctrl Z off a Mac) as well as U: the undo every app has (decision 0231).
   shortcut("Tidying up", "Undo", [
     ["undo", "u", { kind: "undo" }],

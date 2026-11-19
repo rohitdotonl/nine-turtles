@@ -9,7 +9,6 @@
   then the browser's own sheet makes the passkey.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import NoteLine from "./NoteLine.svelte";
@@ -148,7 +147,7 @@
       await stopRename(passkey.id);
       return;
     }
-    say(result === "name-long" ? "That name is too long. Keep it under 100 characters." : "The name couldn't be saved. Try again in a moment.", true);
+    say(result === "name-long" ? "That name is too long. Keep it to 100 characters." : "The name couldn't be saved. Try again in a moment.", true);
   }
 
   async function remove(passkey: PasskeyRow) {
@@ -202,7 +201,7 @@
 
 {#if shown}
   <section aria-labelledby="passkeys-heading">
-    <h3 id="passkeys-heading" tabindex="-1" class="inset-head">Passkeys</h3>
+    <h3 id="passkeys-heading" tabindex="-1" class="label inset-head">Passkeys</h3>
     <div class="inset-group">
       {#each passkeys as passkey (passkey.id)}
         {#if renaming === passkey.id}
@@ -232,16 +231,16 @@
         {:else}
           <div class="inset-row passkey-row">
             <p class="min-w-0 flex-1 break-words">
-              {passkeyName(passkey)}<br /><span class="value text-muted"><Dated text={passkeyDates(passkey)} /></span>
+              {passkeyName(passkey)}<br /><span class="value text-muted">{passkeyDates(passkey)}</span>
             </p>
             <span class="flex shrink-0 items-center gap-2">
-              <button id={`rename-passkey-${passkey.id}`} type="button" class="btn btn-small btn-icon" aria-label="Rename {passkeyName(passkey)}" title="Rename" onclick={() => startRename(passkey)}
+              <button id={`rename-passkey-${passkey.id}`} type="button" class="btn-quiet btn-icon" aria-label="Rename {passkeyName(passkey)}" title="Rename" onclick={() => startRename(passkey)}
                 ><Icon name="edit" size="alone" /></button
               >
               <!-- Red words: this removes something, so it stays a word (decision 0305). What it removes is in its name, and Undo follows. -->
               <button
                 type="button"
-                class="btn btn-small text-danger"
+                class="btn-danger text-meta"
                 title="Your password still works."
                 aria-disabled={busy}
                 onclick={() => remove(passkey)}>Remove<span class="sr-only">{" "}{passkeyName(passkey)}</span></button

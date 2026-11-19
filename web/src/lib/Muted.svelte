@@ -74,12 +74,12 @@
         <LoadFailed words="The hidden articles couldn't be loaded." heading="muted-heading" onRetry={() => ((failed = false), load())} />
       {:else if rows && rows.length === 0}
         <div role="status">
-          <p class="text-ink">Nothing is hidden.</p>
+          <p class="font-serif text-ink-2">Nothing hidden yet.</p>
           <p class="mt-1 text-meta text-muted">When an article is hidden, it's kept here, and search still finds it.</p>
         </div>
       {:else if rows}
         <section aria-labelledby="muted-list-heading">
-          <h3 id="muted-list-heading" class="inset-head">{count === 1 ? "1 hidden article" : `${count} hidden articles`}</h3>
+          <h3 id="muted-list-heading" class="label inset-head">{count === 1 ? "1 hidden article" : `${count} hidden articles`}</h3>
           <ul class="inset-group">
             {#each rows as row (row.article.id)}
               {@const opening = untitledOpening(row.article)}

@@ -55,12 +55,12 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
 export type EmptyWords = { fact: string; how?: string; wider?: () => void };
 
 export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {
-  if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from this feed yet." } : { fact: "Nothing from this feed yet.", how: lastChecked(checkedAt, now) };
+  if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from them yet." } : { fact: "Nothing from them yet.", how: lastChecked(checkedAt, now) };
   if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
   if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread.", how: "New writing will show up here." };
   if (place.kind === "view" && place.view === "starred") return { fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." };
-  if (place.kind === "view" && place.view === "notes") return { fact: "No notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
-  return { fact: "No articles yet." };
+  if (place.kind === "view" && place.view === "notes") return { fact: "Nothing in Notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
+  return { fact: "Nothing here yet." };
 }
 
 /** A search that found nothing says what it looked for and where: "Nothing found for “walking” in Saved." */

@@ -50,16 +50,16 @@ describe("emptyText", () => {
     expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread.", how: "New writing will show up here." });
     expect(emptyText({ kind: "folder", id: 2 })).toEqual({ fact: "Nothing in this folder yet." });
     expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." });
-    expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "No articles yet." });
+    expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "Nothing here yet." });
   });
 
   it("says when an empty feed was last checked, and nothing more until it has been", () => {
     const now = new Date(2026, 10, 2, 18, 0);
     const today = new Date(2026, 10, 2, 14, 20).getTime() / 1000;
     const earlier = new Date(2026, 9, 3, 9, 0).getTime() / 1000;
-    expect(emptyText({ kind: "feed", id: 1 }, today, now)).toEqual({ fact: "Nothing from this feed yet.", how: "Last checked today at 14:20." });
-    expect(emptyText({ kind: "feed", id: 1 }, earlier, now)).toEqual({ fact: "Nothing from this feed yet.", how: "Last checked on 3 Oct." });
-    expect(emptyText({ kind: "feed", id: 1 }, null, now)).toEqual({ fact: "Nothing from this feed yet." });
+    expect(emptyText({ kind: "feed", id: 1 }, today, now)).toEqual({ fact: "Nothing from them yet.", how: "Last checked today at 14:20." });
+    expect(emptyText({ kind: "feed", id: 1 }, earlier, now)).toEqual({ fact: "Nothing from them yet.", how: "Last checked on 3 Oct." });
+    expect(emptyText({ kind: "feed", id: 1 }, null, now)).toEqual({ fact: "Nothing from them yet." });
   });
 });
 

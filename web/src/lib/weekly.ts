@@ -42,7 +42,7 @@ export async function saveOften(often: Often): Promise<Often | { refusal: OftenR
 
 /** Why a choice wasn't saved, said under the group. */
 export function explainOften(refusal: OftenRefusal): string {
-  if (refusal === "no-email") return "The weekly email needs nine turtles to send email; whoever runs it can set that up.";
+  if (refusal === "no-email") return "The weekly email needs nine turtles to send email; whoever runs this nine turtles can set that up.";
   if (refusal === "no-address") return "The weekly email needs an email address on your account.";
   if (refusal === "unconfirmed")
     return "The weekly email goes only to a confirmed address. Signing in once with an emailed link (Forgot? on the sign-in page) confirms yours.";

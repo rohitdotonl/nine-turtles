@@ -1,8 +1,10 @@
 /*
   A box in the page that asks something or says what's wrong (who isn't
-  working, "One person?"): a tone off the page (the grouped lists' grey,
-  12px corners), 16px inside; its title with an icon, then what can be
+  working, "One person?", "Keep what you saved?"): a tone off the page (the
+  grouped lists' grey, by night too, 12px corners), 16px inside; its title with an icon, then what can be
   done, side by side, each 44px tall to press, wrapping on a narrow screen.
+  A small form in the page (a note, an address, a source) is outlined
+  instead: its fields need the page behind them.
 */
 @layer components {
   .tone-box {
@@ -11,7 +13,7 @@
     gap: 0.25rem;
     padding: 1rem 1rem 0.5rem;
     border-radius: var(--radius-hold);
-    background-color: var(--list);
+    background-color: var(--group, var(--list));
   }
   .tone-box-title {
     display: flex;

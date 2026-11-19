@@ -28,7 +28,7 @@ pub struct Article {
 }
 
 /// The subject every weekly email has.
-pub const SUBJECT: &str = "New from the people you read";
+pub const SUBJECT: &str = "New from the people you read on nine turtles";
 
 /// The line, said once, to a reader who had chosen twice a week before it
 /// became once a week (decision 0184).
@@ -38,7 +38,7 @@ pub const MOVED: &str = "This email now comes once a week, on Saturday mornings,
 /// `stop` is the link that turns the email off.
 pub fn compose(people: &[Person], moved: bool, home: &str, stop: &str) -> String {
     let mut body =
-        String::from("Here's what's new from the people you read that you haven't read yet.\n");
+        String::from("Hello,\n\nHere's what's new from the people you read that you haven't read yet.\n");
     if moved {
         body.push('\n');
         body.push_str(MOVED);
@@ -74,7 +74,7 @@ pub fn compose(people: &[Person], moved: bool, home: &str, stop: &str) -> String
     }
     body.push_str(&format!(
         "\nRead them in nine turtles: {home}\n\n\
-         You turned this email on in Settings. To stop it, open this link and press Stop:\n\
+         You turned this email on in Settings. To stop it, open this link and press Stop the weekly email:\n\
          {stop}"
     ));
     body.push_str(crate::email::SIGN_OFF);
@@ -140,7 +140,7 @@ mod tests {
             "https://app.test/",
             "https://app.test/weekly-email#ticket=ab",
         );
-        assert!(body.starts_with("Here's what's new from the people you read that you haven't read yet.\n\nAlpha\n\n  On walking\n  I walked to the sea.\n  https://alpha.example/walking\n"), "{body}");
+        assert!(body.starts_with("Hello,\n\nHere's what's new from the people you read that you haven't read yet.\n\nAlpha\n\n  On walking\n  I walked to the sea.\n  https://alpha.example/walking\n"), "{body}");
         assert!(
             body.contains("Read them in nine turtles: https://app.test/"),
             "{body}"
@@ -158,7 +158,7 @@ mod tests {
         let body = compose(&[], true, "h", "s");
         assert!(
             body.starts_with(&format!(
-                "Here's what's new from the people you read that you haven't read yet.\n\n{MOVED}\n"
+                "Hello,\n\nHere's what's new from the people you read that you haven't read yet.\n\n{MOVED}\n"
             )),
             "{body}"
         );

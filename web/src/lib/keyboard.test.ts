@@ -371,7 +371,7 @@ describe("the cheat sheet with Unread off", () => {
       expect(on).toContain(action);
       expect(off).not.toContain(action);
     }
-    expect(off).toContain("Mark unread");
+    expect(off).toContain("Mark as unread");
     expect(off.length).toBe(on.length - unreadOnly.length);
   });
 });

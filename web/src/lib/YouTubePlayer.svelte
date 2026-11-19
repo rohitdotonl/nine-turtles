@@ -351,7 +351,7 @@
     flex: none;
     min-width: 3.25rem;
     text-align: right;
-    font-family: var(--font-dates);
+    font-family: var(--font-sans);
     font-size: var(--text-meta);
     font-variant-numeric: tabular-nums;
     color: var(--muted);

@@ -31,8 +31,8 @@
     {#if href}<h3 class="label">If it's a newsletter</h3>{/if}
     <p class="text-ink-2">Sign up with your own nine turtles address, and each issue arrives here instead of your inbox.</p>
     <div class="flex gap-2">
-      <input readonly value={address} translate="no" aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="field min-w-0 flex-1 text-ink" />
-      <button type="button" onclick={copy} aria-label="Copy address" title="Copy address" class="btn btn-icon"><Icon name="copy" size="alone" /></button>
+      <input readonly value={address} translate="no" aria-label="Your nine turtles address" onfocus={(event) => event.currentTarget.select()} class="address field min-w-0 flex-1 text-ink" />
+      <button type="button" onclick={copy} aria-label="Copy address" title="Copy address" class="btn-quiet btn-icon"><Icon name="copy" size="alone" /></button>
     </div>
     <p role="status" class={["text-meta text-ink-2", !message && "sr-only"]}>{message}</p>
     {#if href}<a {href} target="_blank" rel="noopener" class="text-link self-start">Open their site to sign up<span class="sr-only">{" "}(opens in a new tab)</span></a>{/if}

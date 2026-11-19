@@ -134,7 +134,7 @@ export const NOTE_NOT_SAVED = "The note couldn't be saved, so your words are sti
 
 /** Why a change wasn't kept, in plain words (shown, never silently dropped). */
 function notKept(refusal: string, kind: Waiting["kind"]): string {
-  if (refusal === "too-long") return "That note is too long. Make it shorter.";
+  if (refusal === "too-long") return "That note is too long. Keep it to 5,000 characters.";
   if (refusal === "no-quote") return "Those words couldn't be highlighted. Choose fewer.";
   if (refusal === "gone") return "That article or highlight is no longer here, so it couldn't be saved.";
   if (kind === "change" || kind === "article-note") return NOTE_NOT_SAVED;
