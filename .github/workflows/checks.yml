@@ -149,18 +149,29 @@ jobs:
 
       # Kept until the web app's libraries change (Playwright among them),
       # rather than downloaded every time; a slow download sometimes took
-      # over 3 minutes (decision 0114).
+      # over 3 minutes (decision 0114). The system pieces it needs are kept
+      # too, until GitHub's computer image changes (decision 0322).
       - name: Remember the browser used by the tests
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
 
+      - name: Name this computer's image
+        id: image
+        run: echo "name=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Remember the browser's system pieces
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/browser-debs
+          key: browser-debs-${{ steps.image.outputs.name }}-${{ hashFiles('web/package-lock.json') }}
+
       - name: Install the browser used by the tests
         working-directory: web
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          BROWSER_DEBS="$HOME/browser-debs" ../.github/install-browser.sh
 
       - name: Run the browser tests
         env:
@@ -218,18 +229,29 @@ jobs:
 
       # Kept until the web app's libraries change (Playwright among them),
       # rather than downloaded every time; a slow download sometimes took
-      # over 3 minutes (decision 0114).
+      # over 3 minutes (decision 0114). The system pieces it needs are kept
+      # too, until GitHub's computer image changes (decision 0322).
       - name: Remember the browser used by the tests
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
 
+      - name: Name this computer's image
+        id: image
+        run: echo "name=$ImageOS-$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Remember the browser's system pieces
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/browser-debs
+          key: browser-debs-${{ steps.image.outputs.name }}-${{ hashFiles('web/package-lock.json') }}
+
       - name: Install the browser used by the check
         working-directory: web
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          BROWSER_DEBS="$HOME/browser-debs" ../.github/install-browser.sh
 
       - name: Run the website checks
         run: scripts/check.sh website

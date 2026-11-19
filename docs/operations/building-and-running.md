@@ -69,9 +69,10 @@ scripts/check.sh
 Or one part at a time: `scripts/check.sh frontend`, `scripts/check.sh rust`
 or `scripts/check.sh browser`. Before opening a pull request, an agent runs
 the quick parts (`scripts/check.sh docs frontend rust`, and `website` if it
-changed) and only the browser tests for what it changed, for example
+changed) and leaves the browser tests to GitHub, which runs all of them on
+every pull request (decisions 0114, 0322): on a cloud computer the whole set
+takes 25 minutes or more, on GitHub's six computers about 7. While writing or
+fixing a browser test, run just that one, for example
 `NINE_TURTLES_BROWSER_TESTS="tests/folders.spec.ts" scripts/check.sh browser`.
-GitHub runs every browser test on every pull request (decision 0114): on a
-cloud computer the whole set takes about 10 minutes, on GitHub about 4.
 
 See [checks.md](checks.md).

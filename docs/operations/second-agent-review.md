@@ -7,7 +7,9 @@ decision 0021).
 
 ## For the agent that built the change
 
-These steps keep each change to as few rounds of checks as it needs (decision 0253).
+These steps keep each change to one round of checks where they can
+(decisions 0253, 0322): everything that could need a fix (the checks and the
+review) runs at once, and every fix goes in one push.
 
 If the change needs no review (see "Which review" below), skip steps 3 to 5.
 
@@ -16,7 +18,10 @@ If the change needs no review (see "Which review" below), skip steps 3 to 5.
    change: the floors first (contrast in every state, including while
    hovered, pressed or held; the keyboard's place after every step), then
    missing tests and documents. What you find now costs no extra round.
-2. Open the pull request and let the automatic checks run. If GitHub says it
+   Run the quick checks (`scripts/check.sh docs frontend rust`), not the
+   browser tests: those are GitHub's job, on six computers at once.
+2. Open the pull request as soon as the change is built and the quick checks
+   pass, and let the automatic checks run. If GitHub says it
    has a conflict, it runs no checks at all until that's fixed: fix it
    straight away.
 3. Straight away, while the checks run (they don't need each other), start
@@ -33,7 +38,9 @@ If the change needs no review (see "Which review" below), skip steps 3 to 5.
    again every 5 minutes, about how long the checks take, never longer.
 5. For each finding: fix it, or reply on the pull request explaining why
    not. Fix them all, together with anything the checks found, and push
-   once: each push runs every check again. A decision number another change
+   once: each push runs every check again. Wait for both the checks and
+   the review before pushing, unless one of them takes more than about 15
+   minutes longer than the other. A decision number another change
    took in the meantime is renumbered in that same push, never in a push of
    its own (`docs/decisions/README.md`). Then tell the owner the review is
    done and what changed.
