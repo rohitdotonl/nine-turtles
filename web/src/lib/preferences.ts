@@ -2,7 +2,7 @@
 // device, not to the reader's account: a phone and a laptop often want
 // different sizes. So they're kept in the browser's own storage, and nothing
 // is lost if that storage is unavailable: nine turtles simply uses the defaults.
-import { LOOKS, isPage, showing, type Page } from "./themes";
+import { LOOKS, isPage, showing, type Page, type Theme } from "./themes";
 import { deviceStorage } from "./device";
 import { isRecord } from "./http";
 
@@ -102,5 +102,25 @@ export function apply(preferences: Preferences, root: HTMLElement = document.doc
   // (index.html starts with White's by day and Night's by night).
   for (const meta of root.ownerDocument?.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]') ?? []) {
     meta.content = LOOKS[theme].page.toUpperCase();
+  }
+  // What the browser paints before the styles arrive: the reader's page, or the device's for Match device.
+  const scheme = root.ownerDocument?.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
+  if (scheme) scheme.content = preferences.page === "auto" ? "light dark" : LOOKS[theme].mode;
+  launchAs(theme, root.ownerDocument);
+}
+
+/**
+ * The page the home-screen app opens on: its launch screen (iPhone and iPad's
+ * pictures, Android's from the web app manifest) takes the showing page's
+ * color, so Night never opens white (decision 0321). The phone reads them when
+ * the app is added, so they follow the reader's latest choice. index.html's
+ * first script does the same before anything else.
+ */
+export function launchAs(theme: Theme, page: Document | null | undefined): void {
+  if (!page) return;
+  const manifest = page.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+  if (manifest) manifest.href = theme === "white" ? "/manifest.webmanifest" : `/manifest-${theme}.webmanifest`;
+  for (const link of page.querySelectorAll<HTMLLinkElement>('link[rel="apple-touch-startup-image"]')) {
+    link.href = (link.getAttribute("href") ?? "").replace(/[a-z]+(\/[0-9x]+\.png)$/, `${theme}$1`);
   }
 }

@@ -91,4 +91,25 @@ describe("reader preferences", () => {
     expect([root.dataset.theme, root.dataset.mode]).toEqual(["white", "light"]);
   });
 
+  it("opens the home-screen app on the page showing, and paints it before the styles (decision 0321)", () => {
+    const manifest = { href: "/manifest.webmanifest" };
+    const scheme = { content: "light dark" };
+    const launch = ["/launch/white/1320x2868.png"].map((href) => {
+      const link = { href, getAttribute: () => link.href };
+      return link;
+    });
+    const ownerDocument = {
+      querySelector: (selector: string) => (selector.includes("manifest") ? manifest : selector.includes("color-scheme") ? scheme : null),
+      querySelectorAll: (selector: string) => (selector.includes("startup") ? launch : []),
+    };
+    const root = { dataset: {} as DOMStringMap, style: { setProperty: () => {} }, ownerDocument };
+    const page = root as unknown as HTMLElement;
+    apply({ ...DEFAULTS, page: "night" }, page, false);
+    expect([manifest.href, launch[0]?.href, scheme.content]).toEqual(["/manifest-night.webmanifest", "/launch/night/1320x2868.png", "dark"]);
+    apply({ ...DEFAULTS, page: "paper" }, page, true);
+    expect([manifest.href, launch[0]?.href, scheme.content]).toEqual(["/manifest-paper.webmanifest", "/launch/paper/1320x2868.png", "light"]);
+    apply(DEFAULTS, page, false);
+    expect([manifest.href, launch[0]?.href, scheme.content]).toEqual(["/manifest.webmanifest", "/launch/white/1320x2868.png", "light dark"]);
+  });
+
 });

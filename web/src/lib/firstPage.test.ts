@@ -11,20 +11,28 @@ const script = scripts[0] ?? "";
 /** The second: the first screen's answers, asked for while the app's code is on its way (decision 0320). */
 const asking = scripts[1] ?? "";
 
-/** Runs the script as the browser would, with this saved page; answers what it set. */
-function run(saved: string | null) {
+/** Runs the script as the browser would, with this saved page (and a dark or light device); answers what it set. */
+function run(saved: string | null, deviceDark = false) {
   const dataset: Record<string, string> = {};
   const metas = [{ content: "#FFFFFF" }, { content: "#121212" }];
+  const scheme = { content: "light dark" };
+  const manifest = { href: "/manifest.webmanifest" };
+  const startup = ["/launch/white/1320x2868.png", "/launch/white/2752x2064.png"].map((href) => {
+    const link = { href, getAttribute: () => link.href };
+    return link;
+  });
   let later: (() => void) | undefined;
   const opening = { hidden: true };
   const document = {
     documentElement: { dataset },
-    querySelectorAll: () => metas,
+    querySelector: (selector: string) => (selector.includes("color-scheme") ? scheme : selector.includes("manifest") ? manifest : null),
+    querySelectorAll: (selector: string) => (selector.includes("startup") ? startup : metas),
     getElementById: (id: string) => (id === "opening" ? opening : null),
   };
   const localStorage = { getItem: () => saved };
-  new Function("document", "localStorage", "setTimeout", script)(document, localStorage, (then: () => void) => (later = then));
-  return { dataset, metas, opening, later };
+  const matchMedia = () => ({ matches: deviceDark });
+  new Function("document", "localStorage", "setTimeout", "matchMedia", script)(document, localStorage, (then: () => void) => (later = then), matchMedia);
+  return { dataset, metas, scheme, manifest, launch: startup.map((link) => link.href), opening, later };
 }
 
 describe("the page's first moment", () => {
@@ -49,6 +57,22 @@ describe("the page's first moment", () => {
       const theme = showing(value, false);
       expect(dataset).toEqual({ theme, mode: LOOKS[theme].mode });
       for (const meta of metas) expect(meta.content).toBe(LOOKS[theme].page.toUpperCase());
+    }
+  });
+
+  it("opens the home-screen app on the page showing: its launch screens and manifest (decision 0321)", () => {
+    for (const [saved, dark, theme] of [
+      ["night", false, "night"],
+      ["paper", true, "paper"],
+      ["white", true, "white"],
+      ["auto", true, "night"],
+      ["auto", false, "white"],
+      [null, true, "night"],
+    ] as const) {
+      const { manifest, launch, scheme, dataset } = run(saved && JSON.stringify({ page: saved }), dark);
+      expect(manifest.href).toBe(theme === "white" ? "/manifest.webmanifest" : `/manifest-${theme}.webmanifest`);
+      expect(launch).toEqual([`/launch/${theme}/1320x2868.png`, `/launch/${theme}/2752x2064.png`]);
+      expect(scheme.content).toBe(saved && saved !== "auto" ? (dataset.mode ?? "") : "light dark");
     }
   });
 

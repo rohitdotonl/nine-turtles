@@ -27,7 +27,7 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// named by their fingerprints (`sha256-…`); web/src/lib/firstPage.test.ts
 /// checks they still match.
 pub const CONTENT_SECURITY_POLICY: &str = "default-src 'self'; \
-    script-src 'self' 'sha256-m2UlE4HOo+zhdYq1qyxEZ7ZplNJbCgNw3y/4Z350TMk=' 'sha256-P5PoHRBDjNxo4cOUujM1H5lGFnSuFc4+U61M5WH3j5o='; \
+    script-src 'self' 'sha256-mVUvVEGNrBw9ZlIg8xIxFSi/n+jjx70GLVY3pMJ0XNI=' 'sha256-P5PoHRBDjNxo4cOUujM1H5lGFnSuFc4+U61M5WH3j5o='; \
     style-src 'self'; img-src 'self' data: https: http:; media-src 'self' https: http:; \
     font-src 'self'; connect-src 'self'; \
     frame-src https://www.youtube-nocookie.com; \
