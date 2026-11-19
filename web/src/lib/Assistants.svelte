@@ -188,7 +188,8 @@
         >
       </div>
     {:else}
-      {#if assistants !== undefined}
+      <!-- Only once the list has loaded: when it couldn't, nobody knows (the line under the group says so, decision 0318). -->
+      {#if assistants !== undefined && !failed}
         <p class="inset-row text-muted">Nothing connected yet.</p>
       {/if}
     {/each}
@@ -217,7 +218,7 @@
     </p>
   {/if}
   {#if failed}
-    <LoadFailed class="inset-foot" words="The connected assistants couldn't be loaded." heading="assistants-heading" onRetry={() => ((failed = false), load())} />
+    <LoadFailed class="inset-foot" words="The connected assistants couldn't be loaded." heading="assistants-heading" shows="Connected assistants show" onRetry={() => ((failed = false), load())} />
   {/if}
   <p class="inset-foot">
     Let an assistant like Claude or ChatGPT find, sort and tidy for you: add the server address above as a connector

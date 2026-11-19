@@ -43,8 +43,12 @@ export type Overview = {
   awayAfterDays: number;
 };
 
+/** Thrown when the reader isn't the one who runs this nine turtles: only they can see the readers. */
+export const OWNER_ONLY = "owner-only";
+
 export async function loadOverview(): Promise<Overview> {
   const response = await api("/api/admin", { cache: "no-store" });
+  if (response.status === 403) throw OWNER_ONLY;
   if (!response.ok) throw new Error(`nine turtles answered ${response.status}`);
   return toOverview(await response.json());
 }

@@ -330,12 +330,12 @@
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
       <!-- What the last action did, with its Undo, until the next one: first, above who isn't working, so it's seen. -->
       <NoteLine announce {message} {refusal} {busy} bind:undoButton onUndo={undo ? takeBack : undefined} onClose={closeNote} />
-      <NotWorking bind:this={notWorking} onOpen={onOpenPerson} />
+      <NotWorking bind:this={notWorking} onOpen={onOpenPerson} quiet={failed} />
       {#if failed && connection.offline}
         <!-- Without nine turtles, calmly, as every other screen says it (decision 0312): no error, and no Try again that can't work. -->
         <p role="status" class="text-ink-2">{away().why} Everyone you follow shows {away().back}.</p>
       {:else if failed}
-        <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), load())} />
+        <LoadFailed words="Everyone you follow couldn't be loaded." heading="your-feeds-heading" onRetry={() => ((failed = false), notWorking?.reload(), load())} />
       {:else if feeds}
         {#if listed.length === 0}
           <p class="text-ink-2">You don't follow anyone yet.</p>

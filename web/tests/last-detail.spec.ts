@@ -66,6 +66,11 @@ test.describe("a messy feed", () => {
       `https://messy-${name}.example/guide`,
     );
 
+    // Pictures with no words of the writer's, one after another, say so once (decision 0318), whatever order they failed in.
+    await expect(text).toContainText("3 pictures didn't load.");
+    await expect(text.getByRole("link", { name: "See them on the original", exact: true })).toHaveCount(1);
+    await expect(text.getByText("A picture didn't load.", { exact: true })).toHaveCount(0);
+
     // A table wider than the column says so, and the keyboard can reach it to scroll.
     await expect(text).toContainText("Scroll the table sideways to see all 12 columns.");
     await expect(text.getByRole("table")).toHaveAttribute("tabindex", "0");

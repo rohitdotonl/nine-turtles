@@ -104,7 +104,7 @@
   <section class="flex flex-col gap-3" aria-labelledby="their-replies">
     <h3 id="their-replies" tabindex="-1" class="label outline-none">Replies you started</h3>
     {#if failed}
-      <LoadFailed class="text-meta" words="Replies you started couldn't be loaded." heading="their-replies" onRetry={() => ((retried = true), (attempt += 1))} />
+      <LoadFailed class="text-meta" words="Replies you started couldn't be loaded." heading="their-replies" shows="Replies you started show" onRetry={() => ((retried = true), (attempt += 1))} />
     {:else if ready && replies.length === 0}
       <p class="font-serif text-ink-2">Nothing started yet.</p>
     {/if}

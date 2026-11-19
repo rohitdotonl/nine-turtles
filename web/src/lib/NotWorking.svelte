@@ -24,9 +24,12 @@
 
   let {
     onOpen,
+    quiet = false,
   }: {
     /** A row was chosen: their page opens. */
     onOpen: (event: MouseEvent, id: number) => void;
+    /** The page's own list couldn't load either: its one line says so, and its Try again asks for this too. */
+    quiet?: boolean;
   } = $props();
 
   let feeds: Sick[] | undefined = $state();
@@ -66,8 +69,8 @@
   });
 </script>
 
-{#if failed && connection.offline}
-  <!-- Nothing: Everyone you follow says once, calmly, that nine turtles can't be reached. -->
+{#if failed && (connection.offline || quiet)}
+  <!-- Nothing: Everyone you follow says once what's wrong (calmly, when nine turtles can't be reached; decision 0318). -->
 {:else if failed}
   <LoadFailed words="Who isn't working couldn't be checked." heading="your-feeds-heading" onRetry={() => ((failed = false), reload())} />
 {:else if dead.length + troubled.length > 0}

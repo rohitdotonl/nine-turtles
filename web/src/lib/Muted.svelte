@@ -71,7 +71,7 @@
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
-        <LoadFailed words="The hidden articles couldn't be loaded." heading="muted-heading" onRetry={() => ((failed = false), load())} />
+        <LoadFailed words="The hidden articles couldn't be loaded." heading="muted-heading" shows="Hidden articles show" onRetry={() => ((failed = false), load())} />
       {:else if rows && rows.length === 0}
         <div role="status">
           <p class="font-serif text-ink-2">Nothing hidden yet.</p>

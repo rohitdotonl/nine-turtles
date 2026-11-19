@@ -42,6 +42,8 @@ function out(address: string, words: string, arrow: Element | null | undefined):
 export function missingNote(image: HTMLImageElement, original: string | null | undefined, arrow?: Element | null): HTMLElement {
   const missing = note();
   const alt = image.alt.trim();
+  // A picture with no words of the writer's can join the ones beside it (`joinRun`).
+  if (!alt) missing.dataset.pictures = "1";
   missing.append(alt ? "A picture didn't load: " : "A picture didn't load.");
   if (alt) {
     const what = document.createElement("i");
@@ -55,9 +57,51 @@ export function missingNote(image: HTMLImageElement, original: string | null | u
   return missing;
 }
 
-/** Swaps a picture that failed to load (with its `<picture>`, if it's in one) for its note. */
+/** Swaps a picture that failed to load (with its `<picture>`, if it's in one) for its note, joined to the notes beside it. */
 export function markMissing(image: HTMLImageElement, original: string | null | undefined, arrow?: Element | null): void {
-  (image.closest("picture") ?? image).replaceWith(missingNote(image, original, arrow));
+  const missing = missingNote(image, original, arrow);
+  (image.closest("picture") ?? image).replaceWith(missing);
+  joinRun(missing);
+}
+
+/** What a note stands for in the article: itself, or the paragraph (or link) holding nothing else. */
+function unitOf(missing: HTMLElement): Element {
+  let unit: Element = missing;
+  const words = missing.textContent?.trim();
+  while (unit.parentElement && !unit.parentElement.classList.contains("article-text") && unit.parentElement.textContent?.trim() === words) unit = unit.parentElement;
+  return unit;
+}
+
+/** The note without the writer's words next to `missing` that way, with nothing but space between, if there is one. */
+function besideIt(missing: HTMLElement, step: -1 | 1): HTMLElement | undefined {
+  let node = step < 0 ? unitOf(missing).previousSibling : unitOf(missing).nextSibling;
+  while (node && node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()) node = step < 0 ? node.previousSibling : node.nextSibling;
+  if (!(node instanceof Element)) return undefined;
+  const found = node.matches(".offline-image[data-pictures]") ? node : node.querySelector(".offline-image[data-pictures]");
+  return found instanceof HTMLElement && unitOf(found) === node ? found : undefined;
+}
+
+/**
+ * Pictures that didn't load one after another, with nothing between, say so once (decision 0318):
+ * "11 pictures didn't load. See them on the original", not eleven lines the same. Pictures fail
+ * in any order, so a note joins the one before it and the one after it.
+ */
+function joinRun(missing: HTMLElement): void {
+  if (missing.dataset.pictures === undefined) return;
+  let first = missing;
+  for (const step of [-1, 1] as const) {
+    const other = besideIt(first, step);
+    if (!other) continue;
+    const [kept, gone] = step < 0 ? [other, first] : [first, other];
+    kept.dataset.pictures = String(Number(kept.dataset.pictures) + Number(gone.dataset.pictures));
+    unitOf(gone).remove();
+    first = kept;
+  }
+  const count = Number(first.dataset.pictures);
+  if (count < 2) return;
+  first.firstChild!.textContent = `${count} pictures didn't load.`;
+  const link = first.querySelector("a");
+  if (link?.firstChild) link.firstChild.textContent = "See them on the original";
 }
 
 /**

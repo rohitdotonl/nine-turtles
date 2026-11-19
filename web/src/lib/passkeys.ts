@@ -8,7 +8,7 @@
 import { duration } from "./session";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
-import { UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
+import { unreachable, WRONG_PASSWORD, tooManyTries } from "./messages";
 import { date, dateOrToday } from "./times";
 
 /** One of the reader's passkeys. `name` is null for "Passkey added <the day>". */
@@ -214,7 +214,7 @@ export function explainAdd(result: Exclude<AddResult, { ok: true }>): string {
       return "That took too long. Try again.";
     case "off":
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 
@@ -297,7 +297,7 @@ export function explainPasskeySignIn(result: PasskeySignIn): string {
     case "expired":
       return "That took too long. Try again.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 

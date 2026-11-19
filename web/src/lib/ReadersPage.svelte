@@ -14,7 +14,7 @@
   import PageHead from "./PageHead.svelte";
   import { SETTINGS_PAGES } from "./router";
   import { label } from "./plan";
-  import { backupDay, count, loadOverview, plural, size, type Overview } from "./admin";
+  import { OWNER_ONLY, backupDay, count, loadOverview, plural, size, type Overview } from "./admin";
   import { date, dateOrToday, dayAndTime } from "./times";
 
   let {
@@ -27,11 +27,13 @@
 
   let overview: Overview | undefined = $state();
   let failed = $state(false);
+  /** It wasn't a fault: this reader doesn't run this nine turtles (decision 0318). */
+  let notOwner = $state(false);
 
   function load() {
     loadOverview()
       .then((found) => (overview = found))
-      .catch(() => (failed = true));
+      .catch((why) => ((failed = true), (notOwner = why === OWNER_ONLY)));
   }
   $effect(load);
 
@@ -64,9 +66,11 @@
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div use:edge tabindex="0" role="region" aria-label="Readers and how this nine turtles is doing" class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
-      {#if failed}
-        <!-- As every list that couldn't load says so (consistency check, round 2). -->
-        <LoadFailed words="The readers couldn't be loaded. Only whoever runs this nine turtles can see them." heading="readers-page-heading" onRetry={() => ((failed = false), load())} />
+      {#if failed && notOwner}
+        <p class="text-ink-2">Only whoever runs this nine turtles sees Readers.</p>
+      {:else if failed}
+        <!-- As every list that couldn't load says so (consistency check, round 2), and calmly without a connection (decision 0318). -->
+        <LoadFailed words="The readers couldn't be loaded." shows="All readers shows" heading="readers-page-heading" onRetry={() => ((failed = false), load())} />
       {:else if overview}
         <section aria-labelledby="readers-totals-heading">
           <h3 id="readers-totals-heading" class="label inset-head">This nine turtles</h3>

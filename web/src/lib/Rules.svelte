@@ -237,7 +237,7 @@
     <NoteLine {message} {refusal} {busy} onUndo={undo ? runUndo : undefined} onClose={closeNote} />
   </div>
   {#if failed}
-    <LoadFailed class="inset-foot" words="What's hidden couldn't be loaded." heading="rules-heading" onRetry={() => ((failed = false), reload())} />
+    <LoadFailed class="inset-foot" words="What's hidden couldn't be loaded." heading="rules-heading" shows="What's hidden shows" onRetry={() => ((failed = false), reload())} />
   {/if}
   <p class="inset-foot">Hidden articles are kept, and search still finds them.</p>
 </section>

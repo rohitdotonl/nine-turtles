@@ -7,7 +7,7 @@
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { duration } from "./session";
-import { HAS_ACCOUNT, NOT_AN_EMAIL, UNREACHABLE, passwordTooLong, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, unreachable, passwordTooLong, tooManyTries } from "./messages";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -91,7 +91,7 @@ export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): stri
     case "too-many":
       return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 
@@ -169,7 +169,7 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
     case "too-many":
       return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
-      return UNREACHABLE;
+      return unreachable();
   }
 }
 

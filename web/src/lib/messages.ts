@@ -2,8 +2,18 @@
 // house style (BRAND.md → "Messages", decision 0199): one copy of each, so
 // the same thing is always said the same way.
 
+import { away } from "./connection.svelte";
+
 /** When nine turtles' own server can't be reached. */
 export const UNREACHABLE = "nine turtles can't be reached right now. Try again in a moment.";
+
+/**
+ * A request that got no answer at all: "You're offline." when the device itself has no
+ * connection (decision 0312), saying what to do once it's back; otherwise UNREACHABLE (decision 0318).
+ */
+export function unreachable(offline = "You're offline. Try again once you're back online."): string {
+  return away().offline ? offline : UNREACHABLE;
+}
 
 /** A successful Undo, everywhere. */
 export const UNDONE = "Undone.";
