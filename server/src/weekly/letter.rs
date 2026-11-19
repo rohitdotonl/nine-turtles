@@ -37,8 +37,9 @@ pub const MOVED: &str = "This email now comes once a week, on Saturday mornings,
 /// The email's words. `moved` adds `MOVED`; `home` opens nine turtles;
 /// `stop` is the link that turns the email off.
 pub fn compose(people: &[Person], moved: bool, home: &str, stop: &str) -> String {
-    let mut body =
-        String::from("Hello,\n\nHere's what's new from the people you read that you haven't read yet.\n");
+    let mut body = String::from(
+        "Hello,\n\nHere's what's new from the people you read that you haven't read yet.\n",
+    );
     if moved {
         body.push('\n');
         body.push_str(MOVED);

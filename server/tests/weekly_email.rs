@@ -181,7 +181,10 @@ async fn the_weekly_email_names_the_people_with_something_new_and_stops_in_one_p
     assert_eq!(send(&state, at).await, 1);
     let sent = mail();
     assert_eq!(sent.len(), 1);
-    assert_eq!(sent[0].subject, "New from the people you read on nine turtles");
+    assert_eq!(
+        sent[0].subject,
+        "New from the people you read on nine turtles"
+    );
     let body = &sent[0].body;
     for expected in [
         "Here's what's new from the people you read that you haven't read yet.",
