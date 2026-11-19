@@ -9,7 +9,6 @@
   reads.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { edge } from "./edge";
   import PageHead from "./PageHead.svelte";
   import { SETTINGS_PAGES } from "./router";
@@ -64,10 +63,10 @@
   <div use:edge tabindex="0" role="region" aria-label="Readers and how this nine turtles is doing" class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">
       {#if failed}
-        <p role="status" class="text-ink-2">The readers couldn't be loaded. Only the owner can see them; if that's you, try again in a moment.</p>
+        <p role="status" class="text-ink-2">The readers couldn't be loaded. Only whoever runs this nine turtles can see them; if that's you, try again in a moment.</p>
       {:else if overview}
         <section aria-labelledby="readers-totals-heading">
-          <h3 id="readers-totals-heading" class="inset-head">This nine turtles</h3>
+          <h3 id="readers-totals-heading" class="label inset-head">This nine turtles</h3>
           <dl class="inset-group">
             <div class="inset-row"><dt>Readers</dt><dd class="figure">{count(overview.totals.readers)}</dd></div>
             <div class="inset-row"><dt>Feeds</dt><dd class="figure">{count(overview.totals.feeds)}</dd></div>
@@ -89,7 +88,7 @@
         </section>
 
         <section aria-labelledby="readers-needs-heading">
-          <h3 id="readers-needs-heading" class="inset-head">Needs a look</h3>
+          <h3 id="readers-needs-heading" class="label inset-head">Needs a look</h3>
           <ul class="inset-group">
             {#each needs as line (line)}
               <li class="inset-row text-row">{line}</li>
@@ -115,16 +114,16 @@
         </section>
 
         <section aria-labelledby="readers-list-heading">
-          <h3 id="readers-list-heading" class="inset-head">{plural(overview.readers.length, "reader", "readers")}</h3>
+          <h3 id="readers-list-heading" class="label inset-head">{plural(overview.readers.length, "reader", "readers")}</h3>
           <ul class="inset-group">
             {#each overview.readers as reader (reader.id)}
               <li class="inset-row text-row">
                 <span class="flex min-w-0 flex-col">
-                  <span class="value">{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted">{" "}(you)</span>{/if}</span>
+                  <span class={["value", reader.email && "address"]}>{reader.email ?? "No email yet"}{#if reader.owner}<span class="text-muted">{" "}(you)</span>{/if}</span>
                   <span class="text-meta text-muted"
-                    ><Dated text={`Joined ${date(reader.createdAt)} · ${plural(reader.feeds, "feed", "feeds")}`} /></span
+                    >{`Joined ${date(reader.createdAt)} · ${plural(reader.feeds, "feed", "feeds")}`}</span
                   >
-                  <span class="text-meta text-muted"><Dated text={`Last here ${dateOrToday(reader.lastHere)}`} /></span>
+                  <span class="text-meta text-muted">{`Last here ${dateOrToday(reader.lastHere)}`}</span>
                   {#if reader.feeds >= overview.mostFeeds}
                     <span class="text-meta text-ink-2">Follows as many feeds as one reader can.</span>
                   {/if}

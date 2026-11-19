@@ -74,6 +74,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/*
+  Its arrow sits on the page's edge, 8px out from the title (the button's own
+  padding). The 8px it gives back at its end keeps its width whole, so a name
+  that fits is never cut short ("‹ Ho…" was, when the offset was the button's
+  own negative margin).
+*/
+.top-back .nav-back {
+  margin-inline: -0.5rem 0.5rem;
+}
 
 /*
   A computer's bar in three parts (decision 0299): the way back and the way to the publisher on the left, Save

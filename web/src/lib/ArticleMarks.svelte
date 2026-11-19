@@ -23,6 +23,7 @@
   article."; Discard throws them away, with Undo.
 -->
 <script lang="ts">
+  import TextButton from "./TextButton.svelte";
   import { onDestroy, tick } from "svelte";
   import HighlightMenu from "./HighlightMenu.svelte";
   import Icon from "./Icon.svelte";
@@ -309,7 +310,7 @@
     const was = keptDraft(name);
     keepDraft(name, undefined);
     undoable = {
-      said: "Note discarded",
+      said: "Note discarded.",
       undo: () => {
         keepDraft(name, was);
         back();
@@ -350,7 +351,7 @@
   async function remove(highlight: Note) {
     close();
     const { was, problem } = await marks.remove(highlight.id);
-    undoable = was && { said: "Highlight removed", undo: async () => say((await marks.restore(was)) ?? UNDONE) };
+    undoable = was && { said: "Highlight removed.", undo: async () => say((await marks.restore(was)) ?? UNDONE) };
     say(problem ?? "Highlight removed.");
     // Its buttons are gone: the keyboard goes to Undo.
     await tick();
@@ -531,7 +532,7 @@
   <div class="foot floating" lang="en">
     {#if undoable}
       <p>{undoable.said}</p>
-      <button type="button" class="btn-quiet" bind:this={undoButton} onclick={undo}>Undo</button>
+      <TextButton bind:element={undoButton} onclick={undo}>Undo</TextButton>
     {/if}
     {#if marks.waits}<p class="text-ink-2">{OFFLINE_LINE}</p>{/if}
   </div>

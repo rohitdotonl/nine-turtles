@@ -315,7 +315,7 @@
       searching: searching.shown !== undefined,
       sort: settings.sort,
       feed: currentFeed?.id,
-      feedName: placeName,
+      feedName: placeName, feedKind: library.shownAs(currentFeed)?.kind,
       folder: currentFolder?.id,
     };
   }
@@ -858,7 +858,7 @@
         />
       {/if}
       {#if library.feedsFailed}
-        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-meta">Your feeds couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
+        <p role="status" class="flex flex-wrap items-center gap-x-2 px-4 pt-4 text-meta text-danger"><span class="shrink-0"><Icon name="alert" /></span>Everyone you follow couldn't be loaded.<TextButton onclick={() => loadFeeds().then(() => document.querySelector<HTMLElement>("#sidebar a")?.focus())}>Try again</TextButton></p>
       {/if}
     </div>
     <SidebarFoot {route} {follow} {phone} bind:keysOpen={cheatSheetOpen} />

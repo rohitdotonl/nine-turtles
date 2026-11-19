@@ -50,7 +50,7 @@
     bind:value
     aria-describedby={describedby}
     aria-invalid={invalid ? "true" : undefined}
-    class="field w-full pr-[4.5rem]"
+    class="address field w-full pr-[4.5rem]"
   />
   <button
     type="button"

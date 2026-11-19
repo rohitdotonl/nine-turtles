@@ -12,7 +12,6 @@
   kept for 30 days under Recently unsubscribed in Everyone you follow (decision 0240), as the reader's own is.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import Icon from "./Icon.svelte";
   import LoadFailed from "./LoadFailed.svelte";
   import NoteLine from "./NoteLine.svelte";
@@ -151,22 +150,22 @@
 </script>
 
 <section bind:this={section} aria-labelledby="assistants-heading">
-  <h3 bind:this={heading} id="assistants-heading" tabindex="-1" class="inset-head">Connected assistants</h3>
+  <h3 bind:this={heading} id="assistants-heading" tabindex="-1" class="label inset-head">Connected assistants</h3>
   <div class="inset-group">
     <div class="inset-row">
       <p class="min-w-0">
-        Server address<br /><span class="value text-muted" translate="no">{address}</span>
+        Server address<br /><span class="address value text-muted" translate="no">{address}</span>
       </p>
-      <button type="button" class="btn btn-small btn-icon" aria-label="Copy server address" title="Copy server address" onclick={() => copy(address, "Server address")}
+      <button type="button" class="btn-quiet btn-icon" aria-label="Copy server address" title="Copy server address" onclick={() => copy(address, "Server address")}
         ><Icon name="copy" size="alone" /></button
       >
     </div>
     {#if key}
       <div class="inset-row">
         <p class="min-w-0">
-          Assistant key<br /><span class="value text-muted" translate="no">{key}</span>
+          Assistant key<br /><span class="address value text-muted" translate="no">{key}</span>
         </p>
-        <button bind:this={copyKey} type="button" class="btn btn-small btn-icon" aria-label="Copy assistant key" title="Copy assistant key" onclick={() => copy(key, "Assistant key")}
+        <button bind:this={copyKey} type="button" class="btn-quiet btn-icon" aria-label="Copy assistant key" title="Copy assistant key" onclick={() => copy(key, "Assistant key")}
           ><Icon name="copy" size="alone" /></button
         >
       </div>
@@ -176,7 +175,7 @@
       <div class="inset-row item-row">
         <p class="min-w-0 flex-1 break-words">
           {name}<br /><span class="text-meta text-muted"
-            ><Dated text={`Connected ${date(assistant.connectedAt)} · ${assistant.lastUsedAt === null ? "Not used yet" : `Last used ${date(assistant.lastUsedAt)}`}`} /></span
+            >{`Connected ${date(assistant.connectedAt)} · ${assistant.lastUsedAt === null ? "Not used yet" : `Last used ${date(assistant.lastUsedAt)}`}`}</span
           >
         </p>
         <button
@@ -190,7 +189,7 @@
       </div>
     {:else}
       {#if assistants !== undefined}
-        <p class="inset-row text-muted">No assistants connected.</p>
+        <p class="inset-row text-muted">Nothing connected yet.</p>
       {/if}
     {/each}
     <form class="inset-row" onsubmit={make}>

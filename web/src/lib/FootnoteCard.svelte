@@ -48,7 +48,7 @@
 >
   <!-- The note as the article has it, cleaned before it was stored (server/src/feed/clean.rs), after its number on the same line, set as the article's text is. -->
   <div class="footnote-words article-text"><span class="footnote-number" aria-hidden="true">{note.number}</span>{@html note.html}</div>
-  <button type="button" class="btn-quiet btn-icon footnote-close" aria-label="Close" title="Close" onclick={() => onclose(true)}><Icon name="close" size="alone" /></button>
+  <button type="button" class="btn-quiet btn-icon footnote-close" aria-label="Close" title="Close (Esc)" onclick={() => onclose(true)}><Icon name="close" size="alone" /></button>
 </div>
 
 <style>

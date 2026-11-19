@@ -64,10 +64,11 @@ test("each person is named once, as a heading over their titles, people before p
   const nameBox = (await list(page).locator(".list-name bdi").first().boundingBox())!;
   const whenBox = (await when.boundingBox())!;
   expect(whenBox.x - (nameBox.x + nameBox.width)).toBeLessThan(24);
-  // The labels are quiet: regular, not the ink.
+  // The labels are the one label every group's name has (decision 0311): semibold, in the ink.
   const label = list(page).locator(".list-label").first();
-  await expect(label).toHaveCSS("font-weight", "400");
-  expect(await label.evaluate((each) => getComputedStyle(each).color)).not.toBe(await list(page).locator(".list-name").first().evaluate((each) => getComputedStyle(each).color));
+  await expect(label).toHaveCSS("font-weight", "600");
+  await expect(label).toHaveClass(/\blabel\b/);
+  expect(await label.evaluate((each) => getComputedStyle(each).color)).toBe(await list(page).locator(".list-name").first().evaluate((each) => getComputedStyle(each).color));
   // Under each name, that person's three titles, with no day shown (decision 0277), though a screen reader still hears it.
   for (const name of [...people, publication]) {
     const items = list(page).locator("li").filter({ has: named(page, name) });

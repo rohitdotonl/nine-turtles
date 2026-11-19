@@ -14,6 +14,7 @@
   and empties the podcast player (SPEC section 35).
 -->
 <script lang="ts">
+  import Wordmark from "./lib/Wordmark.svelte";
   import Shell from "./lib/Shell.svelte";
   import SwipeBack from "./lib/SwipeBack.svelte";
   import SignIn from "./lib/SignIn.svelte";
@@ -90,6 +91,25 @@
   }
 
   check();
+
+  /** The tab's title on the pages outside the signed-in screen, which names its own (Shell.svelte): what the page is for, so a signed-out tab no longer names the list it showed. */
+  let pageTitle = $derived.by(() => {
+    if (!session) return unreachable ? "nine turtles" : undefined;
+    const own: Record<string, string> = {
+      [RESET_PAGE]: "Choose a new password",
+      [CONFIRM_PAGE]: "Confirm your email",
+      [FINISH_SIGN_UP_PAGE]: "Finish signing up",
+      [SIGN_IN_LINK_PAGE]: "Sign in",
+      [WEEKLY_PAGE]: "The weekly email",
+    };
+    if (own[path]) return `${own[path]} · nine turtles`;
+    if (session.signedIn) return path === CONNECT_PAGE ? "Connect an assistant · nine turtles" : undefined;
+    return path === SIGN_UP_PAGE ? "Sign up · nine turtles" : "Sign in · nine turtles";
+  });
+
+  $effect(() => {
+    if (pageTitle) document.title = pageTitle;
+  });
 </script>
 
 <!-- An emailed link's page shows whoever is signed in: the link is what was asked for. -->
@@ -134,7 +154,7 @@
   />
 {:else if unreachable}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-    <h1 class="font-serif text-display">nine turtles</h1>
+    <Wordmark />
     <p>nine turtles can't be reached right now. Reload the page to try again.</p>
   </main>
 {/if}

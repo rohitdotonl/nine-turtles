@@ -293,19 +293,22 @@ h1 + .byline {
   align-items: center;
   min-height: 44px;
 }
-/* The one main action, a steady fill in the text color, as in the app. */
+/* The one main action, as in the app: the text color softened a little, its full ink under the pointer, 8px corners and 44px tall. */
 .button {
   padding: 0 20px;
-  border-radius: 10px;
-  background: var(--ink);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ink) 88%, var(--paper));
   color: var(--paper);
   font-weight: 600;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  min-height: 48px;
+  min-height: 44px;
   font-family: var(--sans);
   font-size: 1.0625rem;
+}
+.button:hover {
+  background: var(--ink);
 }
 
 /* The feed finder (SPEC section 30): one field and its button, as the app
@@ -351,19 +354,19 @@ h1 + .byline {
 .found .copy {
   min-height: 44px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   font: inherit;
   cursor: pointer;
 }
-/* The one main action, a steady fill in the text color. */
+/* The one main action, as .button and the app have it. */
 .finder button {
   padding: 0 20px;
-  background: var(--ink);
+  background: color-mix(in srgb, var(--ink) 88%, var(--paper));
   color: var(--paper);
   font-weight: 600;
 }
 .finder button:hover {
-  background: color-mix(in srgb, var(--ink) 88%, var(--paper));
+  background: var(--ink);
 }
 .found .copy {
   padding: 0 14px;

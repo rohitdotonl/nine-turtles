@@ -111,7 +111,7 @@ test.describe("on a computer", () => {
 
     await page.goto(new URL(`${list}/gone-999999999`, FEEDS_APP).href);
     await appReady(page);
-    await expect(page.getByText("That article couldn't be opened. It may be gone, or nine turtles can't be reached just now.")).toBeVisible();
+    await expect(page.getByText("That article couldn't be opened. It may be gone, or nine turtles can't be reached right now.")).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${list}$`));
   });
 

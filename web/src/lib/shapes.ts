@@ -75,6 +75,9 @@ export const PLACE_KINDS: PlaceKind[] = ["blog", "video", "newsletter", "podcast
 /** Someone or something you follow (decision 0163). */
 export type WhoKind = "person" | "publication";
 
+/** Its drawing, wherever it stands for them: the sidebar's headings and "Info about…" in every menu. */
+export const whoIcon = (kind: WhoKind | undefined): "newspaper" | "person" => (kind === "publication" ? "newspaper" : "person");
+
 export function toPerson(person: Record<string, unknown>): Person {
   return { id: Number(person.id), name: String(person.name ?? "") };
 }

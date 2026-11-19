@@ -8,7 +8,6 @@
   described by the sentence under it; each tick is named by who it is.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import Icon from "./Icon.svelte";
   import { settleLine, type Tended } from "./tidy";
 
@@ -38,7 +37,7 @@
 
 <section aria-labelledby="settle-heading">
   <div class="flex min-h-11 items-center">
-    <h3 id="settle-heading" class="inset-head mb-0">{open > 0 ? `${open} could be either` : "Could be either"}</h3>
+    <h3 id="settle-heading" class="label inset-head mb-0">{open > 0 ? `${open} could be either` : "Could be either"}</h3>
   </div>
   <p id="settle-how" class="inset-foot mt-0 mb-3">Their feeds don't say who writes them. Tick the people, anyone you might write back to. The rest stay with Publications.</p>
   <div role="group" aria-labelledby="settle-heading" aria-describedby="settle-how">
@@ -55,7 +54,7 @@
             />
             <span class="flex min-w-0 flex-1 flex-col py-2">
               <span id={`settle-name-${row.id}`} class="break-words">{row.title}</span>
-              <span id={`settle-line-${row.id}`} class="text-meta text-muted break-words"><Dated text={settleLine(row)} /></span>
+              <span id={`settle-line-${row.id}`} class="text-meta text-muted break-words">{settleLine(row)}</span>
             </span>
             <span aria-hidden="true" class="check-mark shrink-0"><Icon name="check" size="tick" /></span>
           </label>
@@ -64,7 +63,7 @@
     </ul>
   </div>
   {#if open > 0}
-    <button type="button" class="btn mt-3" aria-disabled={busy} onclick={onRest}>The rest are publications</button>
+    <button type="button" class="btn btn-small mt-3" aria-disabled={busy} onclick={onRest}>The rest are publications</button>
   {/if}
 </section>
 

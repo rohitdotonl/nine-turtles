@@ -42,7 +42,7 @@ function out(address: string, words: string, arrow: Element | null | undefined):
 export function missingNote(image: HTMLImageElement, original: string | null | undefined, arrow?: Element | null): HTMLElement {
   const missing = note();
   const alt = image.alt.trim();
-  missing.append(alt ? "A picture didn’t load: " : "A picture didn’t load.");
+  missing.append(alt ? "A picture didn't load: " : "A picture didn't load.");
   if (alt) {
     const what = document.createElement("i");
     // The writer's own words for it, in their language and direction.

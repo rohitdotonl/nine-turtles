@@ -4,7 +4,7 @@ description: Connect your own AI assistant, such as Claude or ChatGPT, so it can
 groupId: bringing-more-in
 order: 3
 spec: 33
-updated: 2026-11-18
+updated: 2026-11-19
 related: [search-everything, unfollow-someone, questions]
 ---
 
@@ -28,7 +28,7 @@ ChatGPT works the same way, as a custom connector in its developer mode.
 ## What it can and can't do
 
 It can read what you follow, your articles, saved articles and rules; mark articles
-read or save them; and follow, rename, move and unfollow, and make folders and
+read or save them; and follow, rename, move and unsubscribe, and make folders and
 rules.
 
 It can't see your password or email, see or change your plan, or change or
@@ -42,8 +42,8 @@ brings it straight back, with no need to connect it again.
 
 ## Good to know
 
-- If an assistant unfollows someone, they're kept for 30 days, listed under
+- If an assistant unsubscribes from someone, they're kept for 30 days, listed under
   **Recently unsubscribed** in **Everyone you follow** with
-  **Bring back**, as your own unfollows are.
+  **Bring back**, as those you unsubscribe from yourself are.
 - For an assistant that can't open the Connect page, press **Make an
   assistant key** and give it that key instead. It's shown once.

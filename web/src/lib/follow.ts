@@ -3,6 +3,7 @@
 // 0104) is one question, "Follow <name>?", and one press. This looks at the
 // page through the feed finder's lookup without following anything, names
 // who wrote it, and says problems in words that never mention feeds or RSS.
+import { TOO_MANY } from "./messages";
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { PROBLEMS, explain, type Choice, type Problem } from "./feeds";
@@ -93,7 +94,7 @@ export function sayProblem(reason: Problem): string {
     case "no-feed":
       return "This site doesn't offer a way to follow it from here.";
     case "too-many":
-      return "You already follow 1,000 sites, as many as one reader can. Unsubscribe from one to follow another.";
+      return TOO_MANY;
     case "plan-ended":
       return "Your free trial or plan has ended. Choose a plan in Settings to follow someone new.";
     case "offline":

@@ -10,7 +10,7 @@ anywhere or counted.
 
 **Highlighting words in an article**
 - Choosing words in an article's text (with the mouse, a finger, or the
-  keyboard where the browser allows it) opens a small menu beside them:
+  keyboard where the browser allows it) opens a small menu beside them, each row with its icon before its words (decision 0311):
   **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
   article, **Write back about this** under a hairline (section 37,
   decision 0205).
@@ -112,7 +112,7 @@ anywhere or counted.
   row opens the article, as in any list; its own menu is the same.
 - The list comes whole, in one go: it's the reader's own marks, and pages
   would split a person. The row is there from the first day (decision
-  0222): before any highlight or note, its list says "No notes yet." and
+  0222): before any highlight or note, its list says "Nothing in Notes yet." and
   how to make one.
 - A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).

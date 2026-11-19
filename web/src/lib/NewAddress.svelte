@@ -16,7 +16,7 @@
   or the chosen feed, and back to the place's button on Cancel.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
+  import Addressed from "./Addressed.svelte";
   import SlowWait from "./SlowWait.svelte";
   import { UP_TO_A_MINUTE } from "./messages";
   import { tick } from "svelte";
@@ -109,7 +109,7 @@
   {#if looking}
     <p class="break-words text-ink-2"><SlowWait words="Looking on their site" long={UP_TO_A_MINUTE} onStop={stop} /></p>
   {/if}
-  <p role="status" id={`${id}-said`} class={["break-words text-ink-2", !said && "sr-only"]}><Dated text={said} /></p>
+  <p role="status" id={`${id}-said`} class={["break-words text-ink-2", !said && "sr-only"]}><Addressed text={said} /></p>
   {#if choices.length === 1}
     <p id={`${id}-keeps`} class="text-meta text-muted">Its name, folders and articles stay, saved ones too.</p>
     <div class="actions">
@@ -125,7 +125,7 @@
           <input type="radio" name={`${id}-address`} value={choice.url} bind:group={chosen} />
           <span class="flex min-w-0 flex-col py-1">
             <span class="break-words">{choice.title}</span>
-            <span class="text-meta break-all text-muted">{choice.url}</span>
+            <span class="address text-meta break-all text-muted">{choice.url}</span>
           </span>
           <span aria-hidden="true" class="radio-mark shrink-0"></span>
         </label>

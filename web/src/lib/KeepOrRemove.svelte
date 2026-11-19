@@ -18,12 +18,13 @@
   onMount(() => first?.focus());
 </script>
 
-<div role="group" aria-labelledby="keep-question" aria-describedby="keep-what" class="keep flex flex-col gap-3" lang="en">
+<div role="group" aria-labelledby="keep-question" aria-describedby="keep-what" class="tone-box keep gap-3" lang="en">
   <p id="keep-question" class="text-base font-semibold text-ink">Keep what you saved from {name}?</p>
   <p id="keep-what" class="text-meta text-ink-2">{keptWords(kept)}</p>
-  <div class="flex flex-wrap gap-2">
+  <!-- Cancel, then the main action at the right end, as in a sheet. -->
+  <div class="sheet-actions">
+    <button type="button" class="btn" onclick={onCancel}>Cancel</button>
     <button type="button" bind:this={first} class="btn-primary" aria-disabled={busy} onclick={() => onChoose(false)}>Keep them</button>
-    <button type="button" class="btn-quiet" onclick={onCancel}>Cancel</button>
   </div>
   <!-- Apart, under a hairline: the one answer that removes something, saying exactly what. -->
   <div class="remove flex flex-col items-start gap-2">
@@ -34,9 +35,7 @@
 
 <style>
   .keep {
-    padding: 1rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-hold);
+    padding-bottom: 1rem;
   }
   .remove {
     padding-top: 0.75rem;

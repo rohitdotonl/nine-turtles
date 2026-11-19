@@ -85,7 +85,7 @@
     if (refusal === "no-name") return "Give them a name.";
     if (refusal === "already") return "There's already a folder with that name.";
     if (refusal === "gone") return "You don't follow them any more.";
-    return "That couldn't be saved. Try again in a moment.";
+    return "Their settings couldn't be saved. Try again in a moment.";
   }
 
   /**

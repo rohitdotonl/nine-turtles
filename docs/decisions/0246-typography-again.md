@@ -31,7 +31,8 @@ was left was inside the article, and a few steps nearer a well-set book.
    zero, where it tells 0 from O. A date written inside a sentence ("kept
    until 10 Dec", "Nothing new has arrived since 10:05.") is text, not a
    `<time>`, so its date alone is found and marked `.dated`
-   (`web/src/lib/dated.ts`, `Dated.svelte`) and takes the same face
+   (`dated.ts` and `Dated.svelte`, since replaced by decision 0311's
+   plain zero in every number) and takes the same face
    (Rohit, 10 November: every date, in a small change of its own). The
    words around it keep Atkinson's own zero, as they may hold an address,
    a title or a code. The licence (SIL OFL 1.1, no reserved

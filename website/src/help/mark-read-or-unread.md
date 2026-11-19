@@ -4,7 +4,7 @@ description: How articles become read, how to mark a whole list at once, and how
 groupId: reading
 order: 2
 spec: 8
-updated: 2026-11-16
+updated: 2026-11-19
 related: [unread-on-or-off, save-an-article, find-your-way-around]
 ---
 
@@ -15,7 +15,7 @@ related: [unread-on-or-off, save-an-article, find-your-way-around]
 
 ## Mark one article unread
 
-Open it, then press <kbd>M</kbd>, or choose **More › Mark unread**. It gets
+Open it, then press <kbd>M</kbd>, or choose **More › Mark as unread**. It gets
 its dot back and waits in Unread again.
 
 Or, without opening it: right-click it in the list (on a phone, press and
@@ -52,7 +52,7 @@ its note says which list it was ("Marked 3 articles as read in Reading
 Room.") and follows you to the next list, with **Undo** and <kbd>U</kbd>,
 until you do something else that can be undone.
 
-Undo works for marking read and unread, saving, unfollowing someone and
+Undo works for marking read and unread, saving, unsubscribing and
 deleting a folder.
 
 ## Let old articles go

@@ -27,6 +27,15 @@ export const NOTHING_TO_UNDO = "Nothing to undo.";
 /** An Undo that couldn't reach nine turtles says so, rather than nothing. */
 export const UNDO_FAILED = "That couldn't be undone. Try again in a moment.";
 
+/** An email address that can't be one. */
+export const NOT_AN_EMAIL = "That doesn't look like an email address.";
+
+/** Signing up with an email that already has an account. */
+export const HAS_ACCOUNT = "That email already has an account. Sign in instead.";
+
+/** Following one more past the most one reader can (1,000 sources). */
+export const TOO_MANY = "You follow 1,000 sources, as many as one reader can. Unsubscribe from one to follow another.";
+
 /** Asked for the reader's own password and given none. */
 export const PASSWORD_FIRST = "Type your password first.";
 

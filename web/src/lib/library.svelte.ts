@@ -8,6 +8,7 @@
 // nothing of one reader's is left for the next to see.
 
 import { filedAfter, saveOrder } from "./arranging";
+import { UNDONE } from "./messages";
 import { change, deleteFolder, editFeed, listFeeds, refused, resubscribe, saveOpenFolders, savedOpenFolders, undoRefused, type Notice, type Refusal } from "./feeds";
 import { importMessage, importOpml, undoImport } from "./importing";
 import { newestAnswer } from "./inorder";
@@ -159,7 +160,7 @@ export class LoadedLibrary {
     if (problem && done.length === 0) return refused(problem, "feed");
     return {
       // Some of their sources paused before one couldn't be: Undo still unpauses those.
-      message: problem ? `Paused some of ${name}'s feeds, not all. ${refused(problem, "feed")}` : `Paused ${name}.`,
+      message: problem ? `Paused some of ${name}'s sources, not all. ${refused(problem, "feed")}` : `Paused ${name}.`,
       undo: async () => {
         let back: Refusal | undefined;
         for (const id of done) back ??= await editFeed(id, { paused: false });
@@ -218,7 +219,7 @@ export class LoadedLibrary {
         const { refusal } = await unsubscribeAll(feed.id);
         if (refusal) return refusal;
         await this.loadFeeds();
-        back({ message: `You're no longer following ${name}.` });
+        back({ message: UNDONE });
         return undefined;
       },
     };

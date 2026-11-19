@@ -60,7 +60,7 @@
   <!-- The website's guide for newcomers, in a tab of its own; its words start on the margin. -->
   <a href={GUIDE_URL} target="_blank" rel="noopener" class="text-link self-start">Here's how feeds work<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a>
   <fieldset class="m-0 mt-3 min-w-0 border-0 p-0">
-    <legend class="inset-head">A few to start with</legend>
+    <legend class="label inset-head">A few to start with</legend>
     <div class="inset-group">
       {#each STARTERS as starter (starter.feed)}
         <label class="inset-row check-row flex-nowrap">
@@ -73,7 +73,7 @@
             -->
             <a href={starter.site} target="_blank" rel="noopener" class="relative z-10 flex min-h-11 flex-col justify-center self-start">
               <span class="break-words underline decoration-1 underline-offset-[3px]">{starter.name}</span>
-              <span class="text-meta break-all text-ink-2">{siteName(starter.site)}<span class="sr-only">{" "}(their website, opens in a new tab)</span></span>
+              <span class="address text-meta break-all text-ink-2">{siteName(starter.site)}<span class="sr-only">{" "}(their website, opens in a new tab)</span></span>
             </a>
             <span class="text-meta text-muted">{starter.about}</span>
           </span>

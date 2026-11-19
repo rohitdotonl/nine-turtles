@@ -34,7 +34,7 @@ It applies on all your devices.
 
 - nine turtles still remembers what you've read while Unread is off, so
   nothing is lost when you switch it back on.
-- With Unread off, **Mark unread** (<kbd>M</kbd>) still works, but marking a
+- With Unread off, **Mark as unread** (<kbd>M</kbd>) still works, but marking a
   whole list as read is left out: there's nothing to clear.
 - The switch is for everything at once. To see less from one busy person,
   [hide the topics](/help/hide-topics/) you don't want, or pause them in

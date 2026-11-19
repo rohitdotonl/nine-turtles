@@ -7,7 +7,7 @@
 import { api } from "./updates.svelte";
 import { isRecord } from "./http";
 import { duration } from "./session";
-import { UNREACHABLE, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, UNREACHABLE, tooManyTries } from "./messages";
 
 export type Person = { id: number; email: string | null; owner: boolean; createdAt: number };
 
@@ -81,13 +81,13 @@ export async function signUp(email: string, password: string, heardAbout?: Heard
 export function explainSignUp(result: Exclude<SignUpResult, { ok: true }>): string {
   switch (result.reason) {
     case "email":
-      return "That doesn't look like an email address.";
+      return NOT_AN_EMAIL;
     case "password-short":
       return `Choose a password of at least ${PASSWORD_MINIMUM} characters.`;
     case "password-long":
       return "That password is too long.";
     case "already":
-      return "That email already has an account. Sign in instead.";
+      return HAS_ACCOUNT;
     case "too-many":
       return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
@@ -165,9 +165,9 @@ export function explainFinish(result: Exclude<FinishResult, { ok: true }>): stri
     case "expired":
       return "This link has expired or was already used. Sign up again for a new one.";
     case "already":
-      return "That email already has an account. Sign in instead.";
+      return HAS_ACCOUNT;
     case "too-many":
-      return "Many people have signed up in the last hour. Try this link again in an hour.";
+      return "Many people have signed up in the last hour. Try again in an hour.";
     case "unreachable":
       return UNREACHABLE;
   }

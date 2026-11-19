@@ -27,7 +27,7 @@ where they went.
 In the sidebar, drag a person or publication onto a folder. They move there,
 out of the folder you dragged them from.
 
-- To keep them in both folders, hold **Option** on a Mac (**Ctrl** on
+- To keep them in both folders, hold <kbd>Option</kbd> on a Mac (<kbd>Ctrl</kbd> on
   Windows and Linux) as you let go.
 - To take someone out of a folder, drag them onto the heading **People**
   or **Publications**. Let go on someone's name instead and the two become
@@ -38,7 +38,7 @@ out of the folder you dragged them from.
   it. A quick swipe still scrolls.
 - While you hold someone, the bottom of the sidebar offers **Pause** and
   **Unsubscribe** to drop them on (see
-  <a href="/help/unfollow-someone/">Unfollow someone</a>).
+  <a href="/help/unfollow-someone/">Unsubscribe from someone</a>).
 
 Each move is said at the bottom of the sidebar, with **Undo**.
 
@@ -83,7 +83,7 @@ press **Save**, or press **Delete**. Close it any other way and your
 changes wait there, marked **Not saved yet.**, until you press Save or
 **Cancel**.
 
-Deleting a folder never unfollows anyone: they simply leave the folder.
+Deleting a folder never unsubscribes you from anyone: they simply leave the folder.
 **Undo** brings it back as it was.
 
 ## Good to know

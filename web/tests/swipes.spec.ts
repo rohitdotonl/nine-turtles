@@ -316,7 +316,7 @@ test("with Write back's ways or the Aa sheet open, the stroke that closes it nei
 
   // The same with the Aa sheet open: pulled up past the end, or swiped right, it only closes.
   const actions = pane(page).getByRole("group", { name: "Article actions" });
-  const sheet = page.getByRole("dialog", { name: "Reading appearance" });
+  const sheet = page.getByRole("dialog", { name: "Text and page" });
   await text.evaluate((area) => (area.scrollTop = area.scrollHeight));
   await openAppearance(page, actions);
   const pull = await Finger.down(page, box.x + box.width / 2, box.y + 40);

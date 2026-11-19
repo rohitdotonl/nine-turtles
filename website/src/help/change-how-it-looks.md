@@ -4,7 +4,7 @@ description: Choose a white, warm or dark page, the size of the text and the rea
 groupId: you-and-your-account
 order: 1
 spec: 18
-updated: 2026-11-17
+updated: 2026-11-19
 related: [every-keyboard-key, find-your-way-around, unread-on-or-off]
 ---
 
@@ -20,8 +20,8 @@ this page: text size, the page and the font. To change
 only the size, press <kbd>+</kbd> or <kbd>-</kbd>.
 
 - **Text size:** six steps, from Smaller to Largest.
-- **Font:** **Literata**, **Atkinson** (made to be easy to read), or your
-  device's own serif.
+- **Font:** **Literata**, **Atkinson** (made to be easy to read), or
+  **System serif**, your device's own.
 
 ## In Settings
 

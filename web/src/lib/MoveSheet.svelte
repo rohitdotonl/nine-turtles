@@ -42,7 +42,7 @@
     }
     const naming = destination === "new" ? newFolder.trim() : "";
     if (destination === "new" && !naming) {
-      problem = "Give the new folder a name.";
+      problem = "Name the new folder first.";
       return;
     }
     const folder = folders.find((each) => String(each.id) === destination) ?? null;
@@ -77,9 +77,9 @@
           </label>
           {#if destination === "new"}
             <label class="inset-row">
-              <span class="sr-only">New folder's name</span>
+              <span class="sr-only">The new folder's name</span>
               <!-- svelte-ignore a11y_autofocus -->
-              <input dir="auto" bind:value={newFolder} type="text" autocomplete="off" placeholder="Name" class="inset-input" autofocus />
+              <input dir="auto" bind:value={newFolder} type="text" autocomplete="off" placeholder="The new folder's name" class="inset-input" autofocus />
             </label>
           {/if}
           {#each folders as folder (folder.id)}

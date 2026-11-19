@@ -7,6 +7,7 @@
   Laid out as the other pages an emailed link opens (ConfirmEmail.svelte).
 -->
 <script lang="ts">
+  import Wordmark from "./Wordmark.svelte";
   import Icon from "./Icon.svelte";
   import { ticketFrom } from "./accounts";
   import { stopByTicket, type Pressed } from "./weekly";
@@ -35,7 +36,7 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
   <div class="flex flex-col items-center text-center">
-    <h1 class="font-serif text-display">nine turtles</h1>
+    <Wordmark />
     <p class="mt-3 font-serif text-large text-muted">The weekly email.</p>
   </div>
   <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">
@@ -46,9 +47,9 @@
           : "This link no longer works. If weekly emails still come, turn them off in Settings."}
       </p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
-      <a href="/" onclick={leave} autofocus class="btn">Open nine turtles</a>
+      <a href="/" onclick={leave} autofocus class="btn-primary">Open nine turtles</a>
     {:else}
-      <p id="stop-help">Press Stop to turn the weekly email off.</p>
+      <p id="stop-help">One press turns the weekly email off.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">
         <p id="stop-message" role="status" class={["flex items-start justify-center gap-2 text-center text-meta text-danger", result !== "trouble" && "sr-only"]}>
           {#if result === "trouble"}<span class="mt-px shrink-0"><Icon name="alert" /></span>The weekly email couldn't be turned off. Try again in a moment.{/if}

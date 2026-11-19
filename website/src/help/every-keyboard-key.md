@@ -4,7 +4,7 @@ description: Read, move around and tidy up without a mouse. Every key nine turtl
 groupId: you-and-your-account
 order: 2
 spec: 19
-updated: 2026-11-16
+updated: 2026-11-19
 related: [find-your-way-around, search-everything, change-how-it-looks]
 ---
 
@@ -25,15 +25,15 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | <kbd>J</kbd> / <kbd>K</kbd> | Next / previous article |
 | <kbd>W</kbd> | Write back (a person's article) |
 | <kbd>Shift</kbd> <kbd>F10</kbd> or the Menu key | An article's own menu in the list: save, mark read, write back, their page |
-| <kbd>Enter</kbd> | Open the article |
-| <kbd>S</kbd> | Save, or take out of Saved |
+| <kbd>Enter</kbd> | Open article |
+| <kbd>S</kbd> | Save, or remove from Saved |
 | <kbd>H</kbd> | Highlight chosen words |
 | <kbd>N</kbd> | Add a note, on the words you've chosen or on the whole article |
-| <kbd>V</kbd> | View the original, on the writer's website |
+| <kbd>V</kbd> | View original, on the writer's website |
 | <kbd>Space</kbd> / <kbd>Shift</kbd> <kbd>Space</kbd> | Scroll down / up a screen |
 | <kbd>+</kbd> / <kbd>-</kbd> | Text size |
 | <kbd>C</kbd> | Copy link |
-| <kbd>Esc</kbd> | Back, or close |
+| <kbd>Esc</kbd> | Back / close |
 
 ## Go to: press G, then…
 
@@ -62,9 +62,9 @@ related: [find-your-way-around, search-everything, change-how-it-looks]
 | Key | What it does |
 |---|---|
 | <kbd>Shift</kbd> <kbd>A</kbd> | Mark all as read |
-| <kbd>M</kbd> | Mark unread |
+| <kbd>M</kbd> | Mark as unread |
 | <kbd>U</kbd> or <kbd>Command</kbd> <kbd>Z</kbd> (<kbd>Ctrl</kbd> <kbd>Z</kbd> on Windows and Linux) | Undo |
-| <kbd>R</kbd> | Refresh: show new articles |
+| <kbd>R</kbd> | Refresh (show new articles) |
 
 ## Good to know
 

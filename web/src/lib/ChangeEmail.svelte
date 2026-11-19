@@ -8,6 +8,8 @@
   Send link at the screen's foot.
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
+  import { NOT_AN_EMAIL } from "./messages";
   import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import PageHead from "./PageHead.svelte";
@@ -64,7 +66,7 @@
     if (fix && pause.pauses(email)) return;
     if (!plausibleEmail(email.trim())) {
       refusedField = "email";
-      message = "That doesn't look like an email address.";
+      message = NOT_AN_EMAIL;
       return;
     }
     busy = true;
@@ -124,7 +126,7 @@
     <p id="change-email-help" class="field-help">A link goes to the new email. Your email changes once it's opened.</p>
     </div>
     <p id="change-email-message" role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>
-      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}
+      {#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span><Addressed text={message} />{/if}
     </p>
     {#if sheet}
       <div class="sheet-actions">

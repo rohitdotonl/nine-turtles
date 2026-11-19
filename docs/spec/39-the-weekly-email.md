@@ -31,8 +31,8 @@ V1, item 5; decision 0140). Once a week or off since 5 November 2026
 - **Readers who had chosen Twice a week** have it on Saturday mornings now,
   and their next email says so once, under its first line: "This email now
   comes once a week, on Saturday mornings, instead of twice."
-- **What it says** ("New from the people you read", from nine turtles,
-  signed by Rohit like every email, BRAND.md → Emails): "Here's what's new
+- **What it says** ("New from the people you read on nine turtles", from nine turtles,
+  signed by Rohit like every email, BRAND.md → Emails): "Hello," as every email opens, then "Here's what's new
   from the people you read that you haven't read yet." (it lists only what's unread, so it never says "wrote this week"); then each person or publication with something unread that arrived
   since the last one (never more than a week back), by name, A to Z (a
   person with several sources is one, section 36). Under each name, their
@@ -45,8 +45,8 @@ V1, item 5; decision 0140). Once a week or off since 5 November 2026
 - **Plain text,** no pictures, no tracking, no logo. Its only links are the
   publishers' own, nine turtles' front page, and the stop link.
 - **Off in one press:** the email ends "You turned this email on in
-  Settings. To stop it, open this link and press Stop:" with a link to a
-  page that says "Press Stop to turn the weekly email off." and one button,
+  Settings. To stop it, open this link and press Stop the weekly email:" with a link to a
+  page that says "One press turns the weekly email off." and one button,
   **Stop the weekly email**. Pressed, "The weekly email is off. Turn it back on
   in Settings." It works signed in or not, on
   any device, and shows "Stopping…" while it works. Nothing happens until

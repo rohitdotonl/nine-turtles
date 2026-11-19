@@ -229,11 +229,14 @@
 }
 
 /*
-  A plain zero for dates (--font-dates, app.css): Atkinson's zero with its
-  slash taken out, and nothing else. The slash tells 0 from O in an address
-  or a code; in a date that can't be mixed up, it only made a calm list look
-  like code (Dieter Rams' critique, decision 0246). The font's licence allows
-  a changed copy under its own name.
+  A plain zero for every number in the interface (--font-sans, app.css):
+  Atkinson's zero with its slash taken out, and nothing else. The slash tells
+  0 from O in an address or a code, which keep it (.address, below); in a
+  date, a count or a time it only made a calm screen look like code (Dieter
+  Rams' critique, decisions 0246 and 0311). Its zero is exactly as wide as
+  Atkinson's own. It has no italic and no features: the Atkinson files nine
+  turtles serves have no tabular figures either, so asking for them changes
+  nothing. The font's licence allows a changed copy under its own name.
 */
 
 @font-face {
@@ -399,12 +402,24 @@
 }
 
 /*
-  Dates in the interface take the face with a plain zero (decision 0246): a
-  <time>, or a date inside a sentence, marked .dated (Dated.svelte). It
-  holds one glyph and no features: never ask a <time> for tabular figures,
-  or its zero keeps its own width while the other digits change.
+  A date stays in the interface's face, with its plain zero, even inside a
+  line in the reading serif (decision 0246); an article's own dates keep its
+  font.
 */
-time:not(.article-text *),
-.dated {
-  font-family: var(--font-dates);
+time:not(.article-text *) {
+  font-family: var(--font-sans);
+}
+
+/*
+  Addresses and codes keep Atkinson's crossed zero, which tells 0 from O
+  (decision 0311): a web or email address on its own or inside a sentence
+  (Addressed.svelte), a field one is typed into, a password being shown, an
+  assistant's key.
+*/
+.address,
+input[type="url"],
+input[type="email"],
+input[inputmode="url"],
+input[inputmode="email"] {
+  font-family: var(--font-addresses);
 }

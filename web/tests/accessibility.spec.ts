@@ -67,12 +67,13 @@ test("the wordmark is set in Literata, served by nine turtles", async ({ page })
 
   const wordmark = page.getByRole("heading", { level: 1 });
   await expect(wordmark).toHaveText("nine turtles");
-  // The wordmark's style asks for Literata first…
-  const family = await wordmark.evaluate((element) => getComputedStyle(element).fontFamily);
-  expect(family.split(",")[0]?.replaceAll('"', "").trim()).toBe("Literata");
+  // The wordmark's style asks for Literata's display cut first, semibold, as every title of 24px and more (BRAND.md)…
+  const { family, weight } = await wordmark.evaluate((element) => ({ family: getComputedStyle(element).fontFamily, weight: getComputedStyle(element).fontWeight }));
+  expect(family.split(",")[0]?.replaceAll('"', "").trim()).toBe("Literata Display");
+  expect(weight).toBe("600");
   // …and the browser really loaded a Literata font file to draw it.
   const loaded = await page.evaluate(() =>
-    [...document.fonts].some((face) => face.family.replaceAll('"', "") === "Literata" && face.status === "loaded"),
+    [...document.fonts].some((face) => face.family.replaceAll('"', "") === "Literata Display" && face.status === "loaded"),
   );
   expect(loaded).toBe(true);
   // Every font came from nine turtles itself, never a third-party font service.

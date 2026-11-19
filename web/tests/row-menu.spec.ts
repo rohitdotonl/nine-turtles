@@ -36,8 +36,9 @@ test.describe("on a wide window", () => {
     await first.click({ button: "right" });
     const menu = rowMenu(page);
     await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Save\s*$/, /Mark as read/, /Write back/, new RegExp(`Info about ${name}`), /Open in a new tab/, /Copy link/]);
-    // No keys printed: the same actions have theirs elsewhere.
+    // No keys printed: the same actions have theirs elsewhere. Each row has its icon before its words (decision 0311).
     await expect(menu.locator("kbd")).toHaveCount(0);
+    for (const item of await menu.getByRole("menuitem").all()) await expect(item.locator("svg")).toHaveCount(1);
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
     await menu.getByRole("menuitem", { name: "Save", exact: true }).click();
     await expect(menu).toHaveCount(0);

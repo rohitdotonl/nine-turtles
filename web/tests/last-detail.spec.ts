@@ -59,7 +59,7 @@ test.describe("a messy feed", () => {
     await expect(text.locator(".offline-image").first()).toHaveAttribute("lang", "en");
 
     // A picture that won't load: what it showed, and where it may still be.
-    await expect(text).toContainText("A picture didn’t load: The harbour at low tide.");
+    await expect(text).toContainText("A picture didn't load: The harbour at low tide.");
     await expect(text.locator("img")).toHaveCount(0);
     await expect(text.getByRole("link", { name: "See it on the original", exact: true })).toHaveAttribute(
       "href",

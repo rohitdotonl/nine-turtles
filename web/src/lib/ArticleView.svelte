@@ -49,7 +49,7 @@
   import { chapters, foldable, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
-  import type { Article, FullArticle } from "./shapes";
+  import { whoIcon, type Article, type FullArticle } from "./shapes";
   import { articleNow, readArticle } from "./articles";
   import { date, exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
@@ -197,13 +197,13 @@
         // On a computer Share (Copy link where there's no share menu) waits here, first (decision 0299); a phone has it in its bottom bar.
         ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: "share" as const, shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
         { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
-        { label: "Mark unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
+        { label: "Mark as unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
       ],
     },
     // Who wrote it, apart: the page about them, and hiding articles about them (decision 0289).
     ...(followed ? [{ items: [
-      { label: `Info about ${article.feedTitle}`, icon: "person" as const, shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
+      { label: `Info about ${article.feedTitle}`, icon: whoIcon(library.feeds?.find((feed) => feed.id === article.feedId)?.kind), shortcut: phone ? undefined : keyFor("about"), onSelect: () => onAbout(library.rowOf(article.feedId)) },
       { label: "Hide articles about…", icon: "eye-off" as const, onSelect: () => onHide(article.feedId) },
     ] }] : []),
   ]);
@@ -505,7 +505,7 @@
     <!-- The back button, labeled with the list's name, on the left; the way to the publisher on the right. -->
     <!-- Put away (decision 0242), it's still there for screen readers and Tab, which brings it back. -->
     <div bind:this={topBar} onfocusin={() => bars.show()} class={bars.away ? "sr-only" : "reading-bar pane-bar nav-bar relative z-10 gap-2"}>
-      <button type="button" onclick={back?.onBack} aria-label="Back to {back?.name}" title="Back to {back?.name}" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink"
+      <button type="button" onclick={back?.onBack} aria-label="Back to {back?.name}" title="Back to {back?.name}" data-behind="list-pane" class="btn-quiet nav-back min-w-0 shrink text-ink-2"
         ><Icon name="back" size="alone" /><span class="truncate">{back?.name}</span></button
       >
       <p role="status" class="line-clamp-2 min-w-0 flex-1 text-center text-meta empty:sr-only">{copied}</p>
@@ -578,7 +578,7 @@
 
       {#if video && connection.offline}
         <!-- Without a connection there's no player to load: the video waits, as images do (SPEC section 32). -->
-        <p class="article-note mt-6" lang="en">The video plays here when you're back online.</p>
+        <p class="article-note mt-6" lang="en">The video plays here once you're back online.</p>
       {:else if video}
         {#key article.id}
           <YouTubePlayer

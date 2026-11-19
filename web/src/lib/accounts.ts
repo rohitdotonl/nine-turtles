@@ -12,7 +12,7 @@ import { PASSWORD_MINIMUM, errorOf } from "./readers";
 import { isRecord } from "./http";
 import { duration } from "./session";
 import { api } from "./updates.svelte";
-import { PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
+import { HAS_ACCOUNT, NOT_AN_EMAIL, PASSWORD_FIRST, UNREACHABLE, WRONG_PASSWORD, tooManyTries } from "./messages";
 
 /** The pages an emailed link opens. */
 export const RESET_PAGE = "/reset-password";
@@ -109,9 +109,9 @@ export function explainAsked(result: AskResult, email: string): string {
     case "asked":
       return `If ${email.trim()} has an account here, a link is on its way. It works once, within ${SIGN_IN_LINK_MINUTES} minutes.`;
     case "email":
-      return "That doesn't look like an email address.";
+      return NOT_AN_EMAIL;
     case "no-email":
-      return "This nine turtles can't send email yet. Ask whoever runs it to set a new password for you.";
+      return "This nine turtles can't send email yet. Ask whoever runs this nine turtles to set a new password for you.";
     case "unreachable":
       return UNREACHABLE;
   }
@@ -176,7 +176,7 @@ export function explainLink(result: Exclude<LinkResult, "ok">, page: "reset" | "
         ? "This link has expired or was already used. Change your email again in Settings for a new one."
         : "This link has expired or was already used. Ask for a new one from the sign-in page.";
     case "already":
-      return "That email already has an account. Sign in instead.";
+      return HAS_ACCOUNT;
     case "too-many":
       return "Many people have signed up in the last hour. Try this link again in an hour.";
     case "password-short":
@@ -222,7 +222,7 @@ export function explainChange(result: ChangeResult): string {
   }
   switch (result.reason) {
     case "email":
-      return "That doesn't look like an email address.";
+      return NOT_AN_EMAIL;
     case "same":
       return "That's already your email.";
     case "password-needed":

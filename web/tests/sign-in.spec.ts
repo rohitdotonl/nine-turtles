@@ -186,8 +186,9 @@ test("sign in with the keyboard, stay signed in, sign out", async ({ page }) => 
     await page.keyboard.press("Tab");
   }
   await page.keyboard.press("Enter");
-  // The sign-in page's own field, matched exactly.
+  // The sign-in page's own field, matched exactly; the tab no longer names the page signed out of.
   await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
+  await expect(page).toHaveTitle("Sign in · nine turtles");
 
   await page.reload();
   await appReady(page);

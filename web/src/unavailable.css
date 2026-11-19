@@ -1,0 +1,18 @@
+/*
+  A button with nothing to act on yet (Move to… and Unsubscribe with no one
+  chosen): its words go to the muted grey and a main button loses its ink,
+  as the article's bar fades an arrow it can't use, so it never looks
+  pressable when it isn't. Still named and said "dimmed" to screen readers
+  (aria-disabled), never shown by color alone. Busy isn't this: a button at
+  work keeps its look.
+*/
+.unavailable,
+.unavailable:hover {
+  cursor: default;
+  color: var(--muted);
+}
+.btn-primary.unavailable,
+.btn-primary.unavailable:hover {
+  border-color: transparent;
+  background-color: var(--line);
+}

@@ -1,7 +1,7 @@
 <!--
   A failing feed says so where the reader already is (decision 0106): one
   quiet line in the second ink, "This feed hasn't worked since 12 Oct.",
-  and a text button, Find its new address, that runs Find new address
+  and a text button, Find new address, that runs Find new address
   (NewAddress.svelte), above the feed's own list (SPEC section 6); their
   page has a box of its own (NotWorkingBox, decision 0279). Only
   while Everyone you follow would list it as not working; nothing is
@@ -9,7 +9,6 @@
   has moved, the line says so, and stays until the reader leaves.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
   import { tick, untrack } from "svelte";
   import NewAddress from "./NewAddress.svelte";
   import type { Feed } from "./shapes";
@@ -59,14 +58,14 @@
   <div class={["failing", look]}>
     {#if !moved}
       <p class="text-meta text-ink-2">
-        <Dated text={brokenSince(feed.failingSince ?? 0)} />
+        {brokenSince(feed.failingSince ?? 0)}
         {#if !choosing}
           <button
             bind:this={button}
             type="button"
             class="text-link find"
             aria-disabled={busy}
-            onclick={() => finder?.find()}>Find its new address</button
+            onclick={() => finder?.find()}>Find new address</button
           >
         {/if}
       </p>

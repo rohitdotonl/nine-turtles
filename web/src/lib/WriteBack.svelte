@@ -53,6 +53,8 @@
   instead (SettleAsk, decision 0264).
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
+  import { NOT_AN_EMAIL } from "./messages";
   import { keyFor, tip } from "./keyboard";
   import { tick } from "svelte";
   import AddressBox from "./AddressBox.svelte";
@@ -372,7 +374,7 @@
     message = "";
     // Emptied, it forgets the reader's own, and the one their feed gives (if any) is used again.
     if (typed.trim() && !looksLikeAddress(typed)) {
-      message = "That doesn't look like an email address. Check it and try again.";
+      message = NOT_AN_EMAIL;
       field?.focus();
       return;
     }
@@ -408,7 +410,7 @@
     if (!place || busy) return;
     message = "";
     if (!looksLikeAddress(typed)) {
-      message = typed.trim() ? "That doesn't look like an email address. Check it and try again." : `Type ${name}'s email address first.`;
+      message = typed.trim() ? NOT_AN_EMAIL : `Type ${name}'s email address first.`;
       field?.focus();
       return;
     }
@@ -512,10 +514,10 @@
         <!-- At an article's end, no line under the button (decision 0298): its name says who it goes to to screen readers, and the address is never printed on the page. On their page with no address yet, nothing to correct or copy. -->
       {:else}
         <!-- On their page the address is theirs to correct, where it's shown, and to copy, for writing from somewhere nine turtles can't open. -->
-        <p class="to">{address} <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
+        <p class="to"><span class="address">{address}</span> <button type="button" class="text-link change" bind:this={changer} aria-label="Change {name}'s email address" onclick={() => void change()}>Change</button><button type="button" class="text-link change" onclick={() => void copyAddress()}>Copy address<span class="sr-only">{" "}of <bdi>{name}</bdi></span></button></p>
       {/if}
       <!-- Always in the page, so screen readers hear "Copied." as it arrives: a polite live line, not a second "status" (the toolbar's line is the pane's one status). -->
-      <p class={[copied && !opening ? "to" : "sr-only", copyFailed && "text-danger"]} aria-live="polite">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>{/if}</p>
+      <p class={[copied && !opening ? "to" : "sr-only", copyFailed && "text-danger"]} aria-live="polite">{#if copied && !opening}<span class="inline-flex items-start gap-2">{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Addressed text={copied} /></span>{/if}</p>
       {#if unkept}<p class="to text-danger" role="alert"><span class="inline-flex items-start gap-2"><span class="mt-px shrink-0"><Icon name="alert" /></span>That choice couldn't be kept for {name}. Try again in a moment.</span></p>{/if}
       {#if address && way === "email"}
         {#if writesIn !== "app"}<p class="to">Opens {MAIL_NAMES[writesIn]} in a new tab. <TextButton onclick={() => void useApp()}>Use your email app</TextButton></p>{/if}
@@ -535,7 +537,7 @@
           {#if opening}
             {#if !returned}Opening {where}…{" "}{/if}
             {#if copied}
-              {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{copied}</span>
+              {#if !returned}<br />{/if}<span class={["inline-flex items-start gap-2", copyFailed && "text-danger"]}>{#if copyFailed}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Addressed text={copied} /></span>
             {:else if computer}
               <!-- One line when the press worked: the other ways wait behind the question (decision 0265). -->
               <button type="button" class={["text-link more", !returned && "after-words"]} aria-expanded={asked} onclick={() => (asked = !asked)}>{question}</button>

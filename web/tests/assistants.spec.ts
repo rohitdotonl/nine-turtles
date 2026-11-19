@@ -28,7 +28,7 @@ test("the connect page comes after sign-in, says what the assistant may do, and 
   await page.getByLabel("Password", { exact: true }).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  const heading = page.getByRole("heading", { level: 1, name: "Connect Claude <b>bold</b> to nine turtles?" });
+  const heading = page.getByRole("heading", { level: 2, name: "Connect Claude <b>bold</b> to nine turtles?" });
   await expect(heading).toBeVisible();
   await expect(heading).toBeFocused();
   // The assistant's name is plain words, never markup.
@@ -90,7 +90,7 @@ test("Settings › Connected assistants: the address, each connection, a key sho
   // Disconnect: the row goes, and the keyboard stays in the group.
   await group.getByRole("button", { name: "Disconnect Claude" }).focus();
   await page.keyboard.press("Enter");
-  await expect(group.getByText("No assistants connected.")).toBeVisible();
+  await expect(group.getByText("Nothing connected yet.")).toBeVisible();
   await expect(group.getByRole("status").filter({ hasText: "Claude is disconnected" })).toBeVisible();
 
   // Undo, drawn like every Undo line: the same connection is back (decision 0238).

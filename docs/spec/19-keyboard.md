@@ -29,7 +29,7 @@
   | | `i` | About this person or publication (their page, section 36) | Info about this person |
   | | `a` | Add a person or publication | Add a person or publication |
   | Tidying up | `Shift+A` | Mark all as read | Mark all as read |
-  | | `m` | Mark current item unread | Mark unread |
+  | | `m` | Mark current item unread | Mark as unread |
   | | `u` or `Command Z` (`Ctrl Z` off a Mac) | Undo | Undo |
   | | `r` | Show new articles | Refresh (show new articles) |
   | (not printed) | `?` | Opens this list; its Keys button's tooltip names it | |

@@ -168,7 +168,7 @@ test.describe("on a wide window", () => {
     const savedUnread = page.waitForResponse(
       (response) => response.url().endsWith("/api/articles/read") && response.ok() && response.request().postDataJSON()?.read === false,
     );
-    await page.getByRole("menuitem", { name: "Mark unread" }).click();
+    await page.getByRole("menuitem", { name: "Mark as unread" }).click();
     await page.keyboard.press("Escape");
     await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
 
@@ -631,7 +631,7 @@ test("on a phone, the article's Star button and More's Mark unread work", async 
   await row(page, blog, NEWEST).click();
   await article(page).getByRole("button", { name: "Save", exact: true }).first().click();
   await article(page).getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Mark unread" }).click();
+  await page.getByRole("menuitem", { name: "Mark as unread" }).click();
   await article(page).getByRole("button", { name: `Back to Blog ${blog}`, exact: true }).click();
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, unread/);
   await expect(row(page, blog, NEWEST)).toHaveAccessibleName(/, Saved/);

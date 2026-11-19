@@ -7,6 +7,7 @@
   opens FinishSignUp instead, decision 0154.)
 -->
 <script lang="ts">
+  import Wordmark from "./Wordmark.svelte";
   import Waiting from "./Waiting.svelte";
   import Icon from "./Icon.svelte";
   import { confirmEmail, explainLink, ticketFrom } from "./accounts";
@@ -48,7 +49,7 @@
 
 <main class="flex min-h-screen flex-col items-center justify-center gap-8 px-5">
   <div class="flex flex-col items-center text-center">
-    <h1 class="font-serif text-display">nine turtles</h1>
+    <Wordmark />
     <p class="mt-3 font-serif text-large text-muted">Confirm your email.</p>
   </div>
   <div class="flex w-full flex-col items-center gap-3 text-center sm:max-w-xs">

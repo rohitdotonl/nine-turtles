@@ -14,6 +14,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { keyCap, keyFor } from "./keyboard";
+  import Icon, { type IconName } from "./Icon.svelte";
   import NoteBox from "./NoteBox.svelte";
   import NoteText from "./NoteText.svelte";
   import type { Note } from "./shapes";
@@ -123,6 +124,9 @@
 
 </script>
 
+<!-- Each row's drawing before its words, as in every menu (MenuList.svelte, decision 0311); Remove's is in its oxblood. -->
+{#snippet icon(name: IconName)}<span class="menu-icon"><Icon {name} /></span>{/snippet}
+
 <div
   bind:this={menu}
   bind:offsetHeight={height}
@@ -159,19 +163,19 @@
     {/if}
     {#if !highlight}
       <button type="button" role="menuitem" class="menu-item" onclick={onHighlight}
-        >Highlight{#if !phone}<kbd>{keyCap(keyFor("highlight") ?? "")}</kbd>{/if}</button
+        >{@render icon("highlight")}Highlight{#if !phone}<kbd>{keyCap(keyFor("highlight") ?? "")}</kbd>{/if}</button
       >
     {/if}
-    <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{highlight?.note ? "Edit note" : "Add a note…"}</button>
+    <button type="button" role="menuitem" class="menu-item" onclick={() => void write()}>{@render icon("note")}{highlight?.note ? "Edit note" : "Add a note…"}</button>
     {#if fresh}
-      <button type="button" role="menuitem" class="menu-item" onclick={() => onClose(true)}>Done</button>
+      <button type="button" role="menuitem" class="menu-item" onclick={() => onClose(true)}>{@render icon("close")}Done</button>
     {:else if highlight}
-      <button type="button" role="menuitem" class="menu-item" onclick={onCopy}>Copy</button>
-      <button type="button" role="menuitem" class="menu-item text-danger" onclick={onRemove}>Remove highlight</button>
+      <button type="button" role="menuitem" class="menu-item" onclick={onCopy}>{@render icon("copy")}Copy</button>
+      <button type="button" role="menuitem" class="menu-item text-danger" onclick={onRemove}>{@render icon("trash")}Remove highlight</button>
     {/if}
     {#if onWriteBack && !fresh}
       <hr class="menu-rule" />
-      <button type="button" role="menuitem" class="menu-item" onclick={onWriteBack}>Write back about this</button>
+      <button type="button" role="menuitem" class="menu-item" onclick={onWriteBack}>{@render icon("send")}Write back about this</button>
     {/if}
   {/if}
 </div>
@@ -205,6 +209,16 @@
   }
   .menu-item.text-danger {
     color: var(--danger);
+  }
+  .menu-icon {
+    display: flex;
+    width: 1.25rem;
+    flex-shrink: 0;
+    justify-content: center;
+    color: var(--ink-2);
+  }
+  .text-danger .menu-icon {
+    color: inherit;
   }
   @media (hover: hover) {
     .menu-item:hover {

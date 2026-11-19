@@ -50,7 +50,7 @@ test("Choose moves several to a new folder and unsubscribes from them, each with
   // New folder… under No folder, before the folders (decision 0261).
   await expect(sheet.getByRole("radio").nth(1)).toHaveAccessibleName("New folder…");
   await sheet.getByRole("radio", { name: "New folder" }).check();
-  await sheet.getByRole("textbox", { name: "New folder's name" }).fill(folder);
+  await sheet.getByRole("textbox", { name: "The new folder's name" }).fill(folder);
   await sheet.getByRole("button", { name: "Move" }).click();
   await expect(sheet).toHaveCount(0);
   const status = page.getByRole("status").filter({ hasText: "Moved" });
@@ -153,8 +153,8 @@ test("Recently unsubscribed: Bring back with the keyboard alone, its Undo, and o
   const kept = yours(page).getByRole("region", { name: "Recently unsubscribed" });
   await expect(kept.getByRole("button", { name: `Bring back ${first}` })).toBeVisible();
   await expect(kept.getByText(/^Unsubscribed today · kept until \d+\s\w+/).first()).toBeVisible();
-  // A date inside a sentence has the plain zero too (decision 0246).
-  await expect(kept.getByText(/^Unsubscribed today · kept until/).first().locator(".dated")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
+  // Every number in the interface has the plain zero (decisions 0246, 0311).
+  await expect(kept.getByText(/^Unsubscribed today · kept until/).first()).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next Plain Zero"/);
   await expect(kept.getByText("Kept for 30 days, with their articles, so you can bring them back.")).toBeVisible();
 
   // From the keyboard: Bring back, then the keyboard waits on Undo.

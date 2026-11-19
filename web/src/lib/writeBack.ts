@@ -10,6 +10,7 @@
 // Only people are written back to: a publication is something you read or
 // watch (decision 0192), so it has no Write back anywhere.
 
+import { NOT_AN_EMAIL } from "./messages";
 import { sendChange } from "./http";
 import { placesOf } from "./people";
 import type { Article, Feed } from "./shapes";
@@ -258,7 +259,7 @@ export async function keepAddress(feed: number, address: string): Promise<string
     case undefined:
       return undefined;
     case "not-an-address":
-      return "That doesn't look like an email address. Check it and try again.";
+      return NOT_AN_EMAIL;
     case "gone":
       return "You don't follow them any more, so there's nowhere to keep it.";
     case "trouble":

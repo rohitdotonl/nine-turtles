@@ -7,7 +7,7 @@
 import type { MenuGroup, MenuItem } from "./MoreMenu.svelte";
 import { plainSourceName } from "./feeds";
 import type { Route } from "./router";
-import type { Article, Feed } from "./shapes";
+import { whoIcon, type Article, type Feed } from "./shapes";
 import { writesBack } from "./writeBack";
 
 /** What the list itself does to the article: saving it, and read or unread. */
@@ -16,10 +16,10 @@ export type RowHands = {
   read(article: Article, read: boolean): void;
 };
 
-/** Save or Remove from Saved, then Mark as read or unread (none with Unread off: nothing shows it), then the `others` that have something in them. */
+/** Each with its icon, as every menu has (decision 0311): Save or Remove from Saved, then Mark as read or unread (none with Unread off: nothing shows it), then the `others` that have something in them. */
 export function rowMenu(article: Article, unreadOff: boolean, hands: RowHands, others: MenuGroup[] = []): MenuGroup[] {
-  const own: MenuItem[] = [{ label: article.starred ? "Remove from Saved" : "Save", onSelect: () => hands.star(article) }];
-  if (!unreadOff) own.push({ label: article.read ? "Mark as unread" : "Mark as read", onSelect: () => hands.read(article, !article.read) });
+  const own: MenuItem[] = [{ label: article.starred ? "Remove from Saved" : "Save", icon: "bookmark", onSelect: () => hands.star(article) }];
+  if (!unreadOff) own.push({ label: article.read ? "Mark as unread" : "Mark as read", icon: article.read ? "dot" : "check", onSelect: () => hands.read(article, !article.read) });
   return [{ items: own }, ...others.filter((group) => group.items.length > 0)];
 }
 
@@ -45,7 +45,7 @@ export function writerItems(article: Article, library: Library, hands: { writeBa
   if (!feed) return [];
   const name = plainSourceName(library.shownAs(feed)?.title ?? article.feedTitle);
   return [
-    ...(writesBack(feed) ? [{ label: "Write back", onSelect: () => hands.writeBack(article) }] : []),
-    { label: `Info about ${name}`, onSelect: () => hands.go({ kind: "about", id: library.rowOf(feed.id) }) },
+    ...(writesBack(feed) ? [{ label: "Write back", icon: "send" as const, onSelect: () => hands.writeBack(article) }] : []),
+    { label: `Info about ${name}`, icon: whoIcon(feed.kind), onSelect: () => hands.go({ kind: "about", id: library.rowOf(feed.id) }) },
   ];
 }

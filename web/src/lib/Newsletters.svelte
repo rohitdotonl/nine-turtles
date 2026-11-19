@@ -102,18 +102,18 @@
 
 {#if on}
   <section aria-labelledby="newsletters-heading">
-    <h3 id="newsletters-heading" tabindex="-1" class="inset-head">Newsletters</h3>
+    <h3 id="newsletters-heading" tabindex="-1" class="label inset-head">Newsletters</h3>
     <div class="inset-group">
       <div class="inset-row">
         <p class="min-w-0">
-          Your address<br /><span class="value text-muted" translate="no">{address}</span>
+          Your address<br /><span class="address value text-muted" translate="no">{address}</span>
         </p>
-        <button type="button" class="btn btn-small btn-icon" aria-label="Copy address" title="Copy address" onclick={copy}><Icon name="copy" size="alone" /></button>
+        <button type="button" class="btn-quiet btn-icon" aria-label="Copy address" title="Copy address" onclick={copy}><Icon name="copy" size="alone" /></button>
       </div>
       {#each labels as label (label.label)}
         <div class="inset-row">
           <p class={["min-w-0 value", !label.on && "text-ink-2"]} translate="no">
-            {label.address}{#if !label.on}{" "}<span class="text-muted" translate="yes">Off.</span>{/if}
+            <span class="address">{label.address}</span>{#if !label.on}{" "}<span class="text-muted" translate="yes">Off.</span>{/if}
           </p>
           <!-- A switch, as Apple draws one, like Rules': on is filled in the text color, off is an empty track. -->
           <label class="switch-target" title={label.on ? "On: press to turn its email away" : "Off: press to take its email again"}>
@@ -140,7 +140,7 @@
       where it allows.
     </p>
     <p class="inset-foot">
-      Add a label after a plus sign, like <span translate="no">turtle-…+cooking@…</span>, to turn one sender away
+      Add a label after a plus sign, like <span class="address" translate="no">turtle-…+cooking@…</span>, to turn one sender away
       later. Some forms refuse the plus, and anyone can remove a label to find your plain address. New address stops
       all email to this one, for when spam arrives.
     </p>

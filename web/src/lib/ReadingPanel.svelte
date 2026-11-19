@@ -64,7 +64,7 @@
 
 <div
   role="dialog"
-  aria-label="Reading appearance"
+  aria-label="Text and page"
   tabindex="-1"
   bind:this={panel}
   use:swipeDown={() => onClose(true)}
@@ -86,8 +86,8 @@
 >
   {#if phone}
     <div class="-mt-1 -mr-2 flex items-center justify-between">
-      <p aria-hidden="true" class="text-ui font-semibold">Appearance</p>
-      <button type="button" aria-label="Close" title="Close" onclick={() => onClose(true)} class="btn-quiet btn-icon"><Icon name="close" size="alone" /></button>
+      <p aria-hidden="true" class="text-ui font-semibold">Text and page</p>
+      <button type="button" aria-label="Close" title="Close (Esc)" onclick={() => onClose(true)} class="btn-quiet btn-icon"><Icon name="close" size="alone" /></button>
     </div>
   {/if}
 

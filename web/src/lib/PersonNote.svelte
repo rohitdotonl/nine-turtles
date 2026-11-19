@@ -8,6 +8,7 @@
   reader comes back (decision 0235).
 -->
 <script lang="ts">
+  import TextButton from "./TextButton.svelte";
   import { tick } from "svelte";
   import NoteBox from "./NoteBox.svelte";
   import Icon from "./Icon.svelte";
@@ -60,7 +61,7 @@
 
   async function save(words: string): Promise<string | undefined> {
     const { refusal } = await sendChange(`/api/feeds/${place}/note`, { note: words }, ["too-long"]);
-    if (refusal) return refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That note is too long. Make it shorter." : NOTE_NOT_SAVED;
+    if (refusal) return refusal === "gone" ? "You don't follow them any more, so there's nowhere to keep it." : refusal === "too-long" ? "That note is too long. Keep it to 5,000 characters." : NOTE_NOT_SAVED;
     keepDraft(draftName, undefined);
     await library.loadFeeds();
     await done();
@@ -89,7 +90,7 @@
 
 <div class="flex flex-col gap-2" lang="en">
   {#if writing}
-    <NoteBox bind:this={box} id="person-note" on="page" label="A note on {name}" help="Only you see it. It's kept for all their places, and Your data exports it." bind:words={draft} {kept} onSave={save} onNotNow={done} onDiscard={discard} />
+    <NoteBox bind:this={box} id="person-note" on="page" label="A note on {name}" help="Only you see it. It's kept for all their sources, and Your data exports it." bind:words={draft} {kept} onSave={save} onNotNow={done} onDiscard={discard} />
   {:else}
     <p class="label">Your note</p>
     {#if note}
@@ -102,7 +103,7 @@
     <!-- Discard's Undo, in place, until the box opens again. -->
     <div class={["flex flex-wrap items-center gap-x-3 text-meta", discarded === undefined && "sr-only"]}>
       <p role="status" class={discarded === undefined ? "sr-only" : undefined}>{discarded === undefined ? "" : "Note discarded."}</p>
-      {#if discarded !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
+      {#if discarded !== undefined}<TextButton bind:element={undoButton} onclick={undo}>Undo</TextButton>{/if}
     </div>
   {/if}
 </div>

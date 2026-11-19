@@ -54,7 +54,7 @@
 .article-byline time {
   display: block;
   margin-top: 0.25rem;
-  font-family: var(--font-dates);
+  font-family: var(--font-sans);
   font-size: var(--text-date);
   font-style: normal;
   letter-spacing: 0.01em;

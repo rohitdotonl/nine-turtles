@@ -123,13 +123,13 @@
           <button
             type="button"
             class="text-link text-ui text-danger"
-            title="Stops following them and removes their articles; saved ones stay. You can undo it."
+            title="Stops following them and removes their articles; saved, highlighted and noted ones can stay. You can undo it."
             aria-disabled={busy}
             onclick={leave}>Unsubscribe</button
           >
         {/if}
       </div>
-      <p role="status" class={["text-meta text-danger", !message && "sr-only"]}>{message}</p>
+      <p role="status" class={["flex items-start gap-2 text-meta text-danger", !message && "sr-only"]}>{#if message}<span class="mt-px shrink-0"><Icon name="alert" /></span>{message}{/if}</p>
     {/if}
   </div>
 {/if}

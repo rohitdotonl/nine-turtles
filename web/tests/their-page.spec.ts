@@ -252,8 +252,14 @@ test("when Your highlights can't be loaded, their page says so", async ({ page, 
   await page.goto(new URL(`/${id}/about`, FEEDS_APP).href);
   await appReady(page);
   const who = about(page, `Blog ${name}`);
-  await expect(who).toContainText("Your highlights from their writing couldn't be loaded.");
-  await expect(who.getByRole("region", { name: "Your highlights" })).toHaveCount(0);
+  // The line stands under the group's own heading, in place of the list (decision 0311), never an empty list.
+  const group = who.getByRole("region", { name: "Your highlights" });
+  await expect(group).toContainText("Your highlights from their writing couldn't be loaded.");
+  await expect(group.getByRole("listitem")).toHaveCount(0);
+  // Try again keeps the keyboard on the group's heading while it asks again, and says so again if it fails.
+  await group.getByRole("button", { name: "Try again" }).click();
+  await expect(group.getByRole("heading", { name: "Your highlights" })).toBeFocused();
+  await expect(group).toContainText("Your highlights from their writing couldn't be loaded.");
 });
 
 test("by keyboard alone: Change corrects the address in place, Escape closes the box, and the keyboard goes back to Change", async ({ page, isMobile }) => {
@@ -344,7 +350,7 @@ test("a name that couldn't be saved stays as typed, with why, and Enter keeps th
   await page.route(`**/api/feeds/${id}`, (route) => (route.request().method() === "GET" ? route.continue() : route.fulfill({ status: 500, json: { error: "trouble" } })));
   await field.fill(`Kept ${name}`);
   await field.press("Enter");
-  await expect(who).toContainText("That couldn't be saved. Try again in a moment.");
+  await expect(who).toContainText("Their settings couldn't be saved. Try again in a moment.");
   await expect(field).toBeFocused();
   await expect(field).toHaveValue(`Kept ${name}`);
   await expect(who).not.toContainText("feed");

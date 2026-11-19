@@ -234,8 +234,9 @@ test("Take out, on a source's row in their settings, makes it someone of its own
   ).toHaveCount(0);
   await page.getByRole("region", { name: "Sources" }).getByRole("button", { name: `Take out ${fay}.example of Eli ${eli}` }).click();
   await expect(line(page)).toHaveText(`${fay}.example is on its own now.`);
-  // Only a date takes the face with a plain zero; an address keeps the crossed zero (decision 0246).
-  await expect(line(page).locator(".dated")).toHaveCount(0);
+  // Numbers have a plain zero; an address keeps the crossed zero, which tells 0 from O (decision 0311).
+  await expect(line(page).locator(".address")).toHaveText(`${fay}.example`);
+  await expect(line(page).locator(".address")).toHaveCSS("font-family", /^"Atkinson Hyperlegible Next",/);
   await expect(rowsNamed(page, `Blog ${fay}`)).toHaveCount(1);
 
   await page.getByRole("button", { name: "Undo" }).click();

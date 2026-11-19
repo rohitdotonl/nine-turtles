@@ -8,6 +8,7 @@
   opens the reader's own email app with a short request they can change; nine turtles keeps nothing.
 -->
 <script lang="ts">
+  import { NOT_AN_EMAIL } from "./messages";
   import { tick } from "svelte";
   import AddressBox from "./AddressBox.svelte";
   import Icon from "./Icon.svelte";
@@ -66,7 +67,7 @@
     event.preventDefault();
     message = "";
     if (!looksLikeAddress(typed)) {
-      message = typed.trim() ? "That doesn't look like an email address. Check it and try again." : "Type their email address first.";
+      message = typed.trim() ? NOT_AN_EMAIL : "Type their email address first.";
       field?.focus();
       return;
     }

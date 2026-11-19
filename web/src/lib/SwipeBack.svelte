@@ -14,6 +14,7 @@
   app no back gesture of its own.
 -->
 <script lang="ts">
+  import Icon from "./Icon.svelte";
   import { leftAlone, reach, swipe } from "./swipe";
   import { follow, settle, type Panes } from "./swipeMotion";
 
@@ -67,5 +68,5 @@
 </script>
 
 {#if going}
-  <div aria-hidden="true" class="swipe-card" data-side="back"><strong>‹ {going}</strong></div>
+  <div aria-hidden="true" class="swipe-card" data-side="back"><strong class="flex items-center gap-1"><Icon name="back" />{going}</strong></div>
 {/if}

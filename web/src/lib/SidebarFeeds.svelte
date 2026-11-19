@@ -47,7 +47,7 @@
   import MoreMenu from "./MoreMenu.svelte";
   import MoveSheet from "./MoveSheet.svelte";
   import TextButton from "./TextButton.svelte";
-  import type { Feed, Folder } from "./shapes";
+  import { whoIcon, type Feed, type Folder } from "./shapes";
   import { findByName, folderChoice, folderUnread, inDevanagari, plainSourceName } from "./feeds";
   import { droppedBefore, placeWords, STEP_WORDS, stepped, stepsFor, type Step } from "./arranging";
   import type { LoadedLibrary, Removed } from "./library.svelte";
@@ -389,7 +389,7 @@
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
 {#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
   <div data-drop-loose={who} class={["drop-area rounded-press", rows.length === 0 && "drop-empty"]}>
-    <h2 class="home-heading label"><span class="text-ink"><Icon name={who === "publication" ? "newspaper" : "person"} /></span>{heading}</h2>
+    <h2 class="home-heading label"><span class="text-ink"><Icon name={whoIcon(who)} /></span>{heading}</h2>
     {@render refused(who)}
     <ul class="home-card">
       {#each rows as feed (feed.id)}
@@ -485,7 +485,7 @@
                 onclick={() => toggle(folder.id)}
                 class="disclosure absolute inset-y-0 right-0 flex w-9 pointer-coarse:w-11 items-center justify-center rounded-press text-muted"
               >
-                <Icon name={shown ? "chevron-down" : "chevron-right"} />
+                <Icon name={shown ? "chevron-up" : "chevron-down"} />
               </button>
             {/if}
           </div>

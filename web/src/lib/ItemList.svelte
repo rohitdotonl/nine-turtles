@@ -45,7 +45,7 @@
   until an article is opened or older ones are loaded.
 -->
 <script lang="ts">
-  import Dated from "./Dated.svelte";
+  import Addressed from "./Addressed.svelte";
   import Icon from "./Icon.svelte";
   import { onMount, tick } from "svelte";
   import type { Article, Source } from "./shapes";
@@ -519,7 +519,7 @@
       starred,
       markStarred,
       (each, value) => (each.starred = value),
-      starred ? "The article couldn't be saved." : "The article couldn't be taken out of Saved.",
+      starred ? "The article couldn't be saved." : "The article couldn't be removed from Saved.",
     );
   }
 
@@ -677,7 +677,7 @@
 {#if (bringingIn || (sorted && showsArrivals(source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
 
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
-  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how"><Dated text={empty.how} /></p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
+  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? NOTHING_KEPT_HERE : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
 {:else if articles.length > 0}
   <ul class={["item-list", heads.some(Boolean) && "by-person"]}>
     {#each articles as article, index (article.id)}
@@ -685,7 +685,7 @@
       {@const head = heads[index]}
       <li>
         <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). In Notes, no groups and no day (decision 0308): each name is a heading right under the list's title. None can be pressed, as a row's name can't be today. -->
-        {#if head?.people || head?.publications}<h3 class="list-label">{head.people ? "People" : "Publications"}</h3>{/if}
+        {#if head?.people || head?.publications}<h3 class="label list-label">{head.people ? "People" : "Publications"}</h3>{/if}
         {#if head}<svelte:element this={head.at === undefined ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
         <ItemRow
           bind:row={rows[index]}
@@ -753,7 +753,7 @@
   >
     <!-- The words on the left (wrapping if they must, with room above and below), the buttons on the right, centred beside them. -->
     <p class={["flex items-center gap-x-2", !saying && "sr-only"]}>
-      <span role="status" class="min-w-0 py-2"><Dated text={line} /></span>
+      <span role="status" class="min-w-0 py-2"><Addressed text={line} /></span>
       <span aria-live="polite" class="sr-only">{spoken}</span>
       {#if retryLast}
         <TextButton onclick={byButton(retryNow)} class="-mr-2 px-2">{retryWord}</TextButton>

@@ -19,13 +19,13 @@
 @theme {
   /* Each face is followed by its stand-ins, sized to take the same room while it arrives (fonts.css, decision 0246). */
   --font-serif: "Literata", "Literata stand-in", "Literata stand-in 2", "Noto Serif Devanagari", "Noto Naskh Arabic", Georgia, serif;
-  /* The interface's one typeface on every device, and code's (decision 0141). */
-  --font-sans: "Atkinson Hyperlegible Next", "Atkinson stand-in", "Atkinson stand-in 2", system-ui, sans-serif;
+  /* The interface's one typeface on every device, and code's (decision 0141). Its first face holds only a plain zero, so every number reads calmly (decision 0311). */
+  --font-sans: "Atkinson Hyperlegible Next Plain Zero", var(--font-addresses);
+  /* Addresses and codes: the same face with Atkinson's own crossed zero, which tells 0 from O (fonts.css → .address, decision 0311). */
+  --font-addresses: "Atkinson Hyperlegible Next", "Atkinson stand-in", "Atkinson stand-in 2", system-ui, sans-serif;
   --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, monospace;
   /* Titles of 24px and more: Literata's display cut (decision 0246). */
   --font-display: "Literata Display", var(--font-serif);
-  /* Dates: the interface's face with a plain zero (decision 0246). */
-  --font-dates: "Atkinson Hyperlegible Next Plain Zero", var(--font-sans);
 
   --text-*: initial;
   /* Three interface sizes, each with a touch screen's twin (below). */
@@ -508,17 +508,17 @@ textarea {
     Cancel has no edge, only a faint tone, so the main action is the one
     thing in the row with weight (decision 0042). Its word says what it does.
   */
-  .sheet-actions > .btn {
+  .sheet-actions > .btn:not([type="submit"]) {
     border-color: transparent;
     background-color: var(--fill);
   }
   @media (hover: hover) {
-    .sheet-actions > .btn:hover {
+    .sheet-actions > .btn:not([type="submit"]):hover {
       background-color: var(--line);
     }
   }
   @media (forced-colors: active) {
-    .sheet-actions > .btn {
+    .sheet-actions > .btn:not([type="submit"]) {
       border-color: ButtonText;
     }
   }
@@ -600,11 +600,9 @@ textarea {
     left: 1rem;
     border-top: 1px solid var(--line);
   }
+  /* A group's name over it: the one label (.label), 8px over the group, on the rows' inset. */
   .inset-head {
     margin: 0 0 0.5rem 1rem;
-    color: var(--muted);
-    font-size: var(--text-meta);
-    font-weight: 600;
   }
   .inset-foot {
     margin: 0.5rem 1rem 0;

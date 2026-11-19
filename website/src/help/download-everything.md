@@ -4,7 +4,7 @@ description: Save who you follow, your saved articles and your notes as one fold
 groupId: you-and-your-account
 order: 3
 spec: 23
-updated: 2026-11-16
+updated: 2026-11-19
 related: [bring-your-feeds, save-an-article, delete-your-account]
 ---
 
@@ -30,7 +30,7 @@ the Files app on a phone) and it becomes a folder.
   can import it.
 - **saved.json:** every saved article as a JSON Feed file, which other
   feed readers can import. This includes articles from people you've since
-  unfollowed.
+  unsubscribed from.
 - **notes-and-highlights.md:** your notes on people, and every article you
   highlighted or wrote a note on, as one plain text file any notes app opens.
 

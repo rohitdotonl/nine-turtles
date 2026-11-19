@@ -34,6 +34,7 @@
   (decision 0235).
 -->
 <script lang="ts">
+  import Addressed from "./Addressed.svelte";
   import type { Snippet } from "svelte";
   import AskForFeed from "./AskForFeed.svelte";
   import ByEmail from "./ByEmail.svelte";
@@ -506,11 +507,11 @@
         framed ? !busy && !message && "sr-only" : (busy || message) && "pb-2",
       ]}
     >
-      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : ""}{#if !asking && !progress}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{/if}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}{message}{/if}
+      {#if busy}{asking ? "Saving…" : progress ? `Following… ${progress.done} of ${progress.of} done` : ""}{#if !asking && !progress}<SlowWait words="Looking" long={UP_TO_A_MINUTE} heard={false} />{/if}{:else}{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{/if}<Addressed text={message} />{/if}
     </p>
     {#if slip && !busy}
       <!-- The repair, as an everyday edged button: the reader presses it, nothing is changed for them (decision 0234). -->
-      <button type="button" onclick={useRepair} class={["btn mt-2 max-w-full break-all", framed ? "self-start mb-2" : "mb-2"]}>Use {slip.address}</button>
+      <button type="button" onclick={useRepair} class={["btn mt-2 max-w-full break-all", framed ? "self-start mb-2" : "mb-2"]}>Use <span class="address">{slip.address}</span></button>
     {/if}
 
     {#if choices.length > 0}
@@ -537,7 +538,7 @@
             <span class="flex min-w-0 flex-col py-3">
               <span class="break-words">{only.title}</span>
               {#if only.latest}<span class="mt-1 font-serif break-words text-ink-2">{only.latest}</span>{/if}
-              <span class="mt-1 truncate text-meta text-muted">{only.place ?? only.url}</span>
+              <span class={["mt-1 truncate text-meta text-muted", !only.place && "address"]}>{only.place ?? only.url}</span>
             </span>
           </div>
         </div>
@@ -558,7 +559,7 @@
               <span class="flex min-w-0 flex-col py-3">
                 <span class="break-words">{choice.title}</span>
                 {#if choice.latest}<span class="mt-1 font-serif break-words text-ink-2">{choice.latest}</span>{/if}
-                <span class="mt-1 truncate text-meta text-muted" title={choice.url}>{choice.place ?? choice.url}</span>
+                <span class={["mt-1 truncate text-meta text-muted", !choice.place && "address"]} title={choice.url}>{choice.place ?? choice.url}</span>
               </span>
               {#if oneOnly}
                 <span aria-hidden="true" class="radio-mark shrink-0"></span>
@@ -572,9 +573,9 @@
       {#if !framed}
         <!--
           In the welcome, the list's own row of actions at its foot, 20px under it: Cancel, then
-          Follow at the right end. On a phone, Follow alone, the list's full width.
+          Follow at the right end, as in a sheet (.sheet-actions). On a phone, Follow alone, the list's full width.
         -->
-        <div class={["mt-3 mb-2 flex gap-3 self-stretch", start ? "flex-col" : "justify-end"]}>
+        <div class={["mt-3 mb-2 self-stretch", start ? "flex flex-col gap-3" : "sheet-actions"]}>
           {#if !start}<button type="button" onclick={putAway} class="btn">Cancel</button>{/if}
           <button type="submit" aria-disabled={busy} aria-describedby={single ? "feed-only-choice" : undefined} class="btn-primary">Follow</button>
         </div>
@@ -597,7 +598,7 @@
         <legend class={framed ? "sr-only" : "mb-4 font-display text-heading font-semibold break-words text-ink"}>{asking.title} is…</legend>
         {#if siteName(asking.siteUrl) || latest}
           <div class="found flex flex-col gap-1">
-            {#if siteName(asking.siteUrl)}<span class="text-meta break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
+            {#if siteName(asking.siteUrl)}<span class="address text-meta break-all text-ink-2">{siteName(asking.siteUrl)}</span>{/if}
             {#if latest}<span class="font-serif break-words text-ink">{latest}</span>{/if}
           </div>
         {/if}

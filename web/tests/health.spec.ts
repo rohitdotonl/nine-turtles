@@ -92,7 +92,7 @@ test("who isn't working is one quiet row, then a line each, and their page leads
   }
 });
 
-test("a failing feed says so above its list, and Find its new address moves it with one question", async ({ page }) => {
+test("a failing feed says so above its list, and Find new address moves it with one question", async ({ page }) => {
   // Decision 0106: where the reader already is, not only in Everyone you follow.
   const name = `moving-line-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;
   const title = `Blog ${name}`;
@@ -118,8 +118,8 @@ test("a failing feed says so above its list, and Find its new address moves it w
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}$`));
 
   const list = page.locator("#list-pane");
-  await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find its new address$/)).toBeVisible();
-  const find = list.getByRole("button", { name: "Find its new address" });
+  await expect(list.getByText(/^This feed hasn't worked since (earlier today|\d+ \w+)\. Find new address$/)).toBeVisible();
+  const find = list.getByRole("button", { name: "Find new address" });
   await tabTo(page, find);
   await page.keyboard.press("Enter");
 
@@ -267,7 +267,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
   await page.goto(new URL(`/${id}`, FEEDS_APP).href);
   await appReady(page);
   const list = page.locator("#list-pane");
-  await list.getByRole("button", { name: "Find its new address" }).click();
+  await list.getByRole("button", { name: "Find new address" }).click();
   const choice = list.getByRole("radiogroup", { name: `Feeds on Blog ${several}'s site` });
   await expect(choice.getByRole("radio")).toHaveCount(2);
   await expect(choice.getByRole("radio").first()).toBeChecked();
@@ -280,7 +280,7 @@ test("when the site names several feeds, the list's line offers a choice; when i
   // Cancel puts it back as it was, the keyboard on the button.
   await list.getByRole("button", { name: "Cancel" }).click();
   await expect(choice).toHaveCount(0);
-  await expect(list.getByRole("button", { name: "Find its new address" })).toBeFocused();
+  await expect(list.getByRole("button", { name: "Find new address" })).toBeFocused();
 
   // A feed whose site names nothing new: one plain sentence, on their page too.
   const none = `moving-gone-${test.info().project.name}-${test.info().workerIndex}-${Date.now()}`;

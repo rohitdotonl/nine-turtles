@@ -7,6 +7,8 @@
   undone, in place, as a discarded note can (PersonNote).
 -->
 <script lang="ts">
+  import { UNDO_FAILED } from "./messages";
+  import TextButton from "./TextButton.svelte";
   import { tick } from "svelte";
   import Icon from "./Icon.svelte";
   import MoreMenu, { type MenuGroup } from "./MoreMenu.svelte";
@@ -54,14 +56,14 @@
     return response?.status === 413 ? "full" : !!response?.ok;
   }
 
-  const FAILED = "That didn't work. Try again in a moment.";
+  const FAILED = "The picture couldn't be changed. Try again in a moment.";
 
   async function change(picture: Blob | null, done: string) {
     // The picture there now, so Undo can put it back; without it, nothing changes, so nothing is lost.
     const was = await current();
     const sent = was === undefined ? false : await send(picture);
     if (sent !== true) {
-      said = sent === "full" ? "There’s no room for more pictures. Use the automatic picture for someone else first." : FAILED;
+      said = sent === "full" ? "There's no room for more pictures. Use the automatic picture for someone else first." : FAILED;
       before = undefined;
       return;
     }
@@ -77,7 +79,7 @@
     if (!file) return;
     const small = await madeSmall(file);
     if (!small) {
-      said = "nine turtles couldn't open that file. Try a photo saved as JPEG, PNG or WebP.";
+      said = "nine turtles couldn't open that file. Try another photo.";
       before = undefined;
       return;
     }
@@ -89,7 +91,7 @@
     if (picture === undefined) return;
     if ((await send(picture)) !== true) {
       // Undo stays, to try again.
-      said = FAILED;
+      said = UNDO_FAILED;
       return;
     }
     said = undefined;
@@ -111,7 +113,7 @@
   <input bind:this={input} type="file" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true" onchange={picked} />
   <div class={["flex flex-wrap items-center gap-x-3 text-meta", said === undefined && "sr-only"]}>
     <p role="status">{said ?? ""}</p>
-    {#if said !== undefined && before !== undefined}<button type="button" class="btn-quiet -ml-3" bind:this={undoButton} onclick={undo}>Undo</button>{/if}
+    {#if said !== undefined && before !== undefined}<TextButton bind:element={undoButton} onclick={undo}>Undo</TextButton>{/if}
   </div>
 </div>
 

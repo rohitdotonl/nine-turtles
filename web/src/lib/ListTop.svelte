@@ -30,11 +30,11 @@
 {#if phone || toArticle}
   <div class="pane-bar nav-bar">
     {#if toArticle}
-      <button type="button" onclick={toArticle} aria-label="Back to the article" title="Back to the article" class={["btn-quiet nav-back", !phone && "text-ink-2"]}
+      <button type="button" onclick={toArticle} aria-label="Back to the article" title="Back to the article" class="btn-quiet nav-back text-ink-2"
         ><Icon name="back" size="alone" />Article</button
       >
     {:else}
-      <button type="button" onclick={onHome} aria-label="Back to Home" data-behind="sidebar" class="btn-quiet nav-back"><Icon name="back" size="alone" />Home</button>
+      <button type="button" onclick={onHome} aria-label="Back to Home" data-behind="sidebar" class="btn-quiet nav-back text-ink-2"><Icon name="back" size="alone" />Home</button>
     {/if}
   </div>
 {/if}

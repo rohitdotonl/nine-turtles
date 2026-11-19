@@ -187,14 +187,14 @@ test.describe("on a phone", () => {
     // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Asha Rao/, /^\s*Add a note/, /^\s*Mark unread/, /^\s*Text and page\s*$/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Asha Rao/, /^\s*Add a note/, /^\s*Mark as unread/, /^\s*Text and page\s*$/]);
     expect(await menu.getByRole("menuitem").evaluateAll((rows) => rows.every((row) => row.querySelector("svg")))).toBe(true);
     await expect(menu.getByRole("menuitem").last()).toBeFocused();
     // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
     // Enter opens on the nearest row, and the arrows on More open on the row nearest (up) or furthest (down).
     const more = toolbar(page).getByRole("button", { name: "More actions" });
     await page.keyboard.press("ArrowUp");
-    await expect(menu.getByRole("menuitem", { name: "Mark unread" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Mark as unread" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(more).toBeFocused();
     await page.keyboard.press("Enter");
