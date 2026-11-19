@@ -210,7 +210,7 @@ test("with nothing found, nothing offers j", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.getByText(`Nothing found for “zzyzxquux” in Blog ${blog}.`)).toBeVisible();
   await expect(reading).toHaveCount(0);
-  await expect(page.locator("main")).not.toContainText(/press j/i);
+  await expect(page.locator("main, [role=main]")).not.toContainText(/press j/i);
 });
 
 test("a search from Saved finds only starred ones: the place is the filter (decision 0241)", async ({ page }) => {

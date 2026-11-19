@@ -740,7 +740,8 @@
   .toolbar > :global(*) {
     display: flex;
     flex: 1 1 0;
-    min-width: 2.75rem;
+    /* In pixels, not rem: the floor is 44px, and at a large text size (decision 0313) five 88px places would push Next off the screen. */
+    min-width: 44px;
     min-height: 3.25rem;
     align-items: center;
     justify-content: center;

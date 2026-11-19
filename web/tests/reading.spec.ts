@@ -1081,7 +1081,7 @@ test.describe("on a wide window", () => {
 
     const fillsWindow = () =>
       page.evaluate(() => {
-        const main = document.querySelector("main")!.getBoundingClientRect();
+        const main = document.querySelector("[role=main]")!.getBoundingClientRect();
         return {
           pageScroll: window.scrollY,
           pageTaller: document.documentElement.scrollHeight > window.innerHeight,

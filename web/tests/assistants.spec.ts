@@ -32,7 +32,7 @@ test("the connect page comes after sign-in, says what the assistant may do, and 
   await expect(heading).toBeVisible();
   await expect(heading).toBeFocused();
   // The assistant's name is plain words, never markup.
-  await expect(page.locator("main b")).toHaveCount(0);
+  await expect(page.locator("main b, [role=main] b")).toHaveCount(0);
   expect(asked).toBe(QUERY);
   await expect(page.getByText("Afterwards you'll go back to claude.ai.")).toBeVisible();
   await expect(page.getByText("Feeds it unsubscribes from are kept for 30 days; you can bring them back in Settings.")).toBeVisible();

@@ -891,14 +891,14 @@ textarea {
   }
 
   /*
-    A row that is a text box (Edit feed's "New folder…"): no edge or fill of
-    its own, its words where a row's name sits; the keyboard's outline rings
-    the whole row, just inside its edge.
+    A row that is a text box (Edit feed's "New folder…"): no edge or fill of its own, its words
+    where a row's name sits, the row's whole 44px to press; the keyboard's outline rings the row.
   */
   .inset-input {
     flex: 1 1 auto;
     min-width: 0;
-    min-height: 2rem;
+    min-height: 2.75rem;
+    margin-block: -0.5rem;
     border: 0;
     background: transparent;
     color: var(--ink);

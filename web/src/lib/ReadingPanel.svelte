@@ -53,6 +53,17 @@
   });
 </script>
 
+<!--
+  Tab past the panel's last choice leaves the page before it comes back in at
+  the top, so the panel never hears the keyboard go: wherever the keyboard lands
+  outside it, it closes then (WCAG 2.4.11, decision 0313).
+-->
+<svelte:document
+  onfocusin={(event) => {
+    if (panel && !panel.contains(event.target as Node)) onClose(false);
+  }}
+/>
+
 <svelte:window
   onresize={measure}
   onpointerdown={(event) => {

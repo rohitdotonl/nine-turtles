@@ -82,31 +82,36 @@
   overflow-wrap: break-word;
 }
 
+/*
+  Each size is capped by the window's width (decision 0313), so at a large
+  text size a long word still fits its line whole, never "pleasur / e". At
+  the usual text sizes the cap never bites.
+*/
 .article-title.short {
-  font-size: 3.2em;
+  font-size: min(3.2em, 14vw);
   line-height: 1;
 }
 
 .article-title.medium {
-  font-size: 2.5em;
+  font-size: min(2.5em, 12vw);
   line-height: 1.08;
 }
 
 .article-title.long {
-  font-size: 2em;
+  font-size: min(2em, 10vw);
   line-height: 1.16;
   letter-spacing: -0.012em;
 }
 
 @media (max-width: 40rem) {
   .article-title.short {
-    font-size: 2.5em;
+    font-size: min(2.5em, 14vw);
   }
   .article-title.medium {
-    font-size: 2em;
+    font-size: min(2em, 12vw);
   }
   .article-title.long {
-    font-size: 1.6em;
+    font-size: min(1.6em, 10vw);
     line-height: 1.18;
   }
 }

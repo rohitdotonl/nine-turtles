@@ -324,7 +324,7 @@
 
 </script>
 
-<section aria-labelledby="your-feeds-heading" class="lines-up flex flex-1 flex-col bg-paper">
+<section aria-labelledby="your-feeds-heading" class="lines-up flex min-w-0 flex-1 flex-col bg-paper">
   <PageHead title="Everyone you follow" id="your-feeds-heading" bind:heading {onBack} backTo="Home" column="max-w-[35rem]" />
   <div use:edge class="scroller relative flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pt-5 md:px-10">
     <div class="mx-auto flex w-full max-w-[35rem] flex-1 flex-col gap-5">
@@ -349,7 +349,7 @@
         {/if}
         {#each groups as group, index (group.id)}
           <section aria-labelledby={`following-${group.id}`} aria-describedby={`following-${group.id}-how`}>
-            <div class="flex min-h-11 items-center justify-between gap-3">
+            <div class="flex min-h-11 flex-wrap items-center justify-between gap-3">
               <h3 id={`following-${group.id}`} class="label inset-head mb-0">{group.name}</h3>
               {#if index === 0}
                 <div class="flex items-center gap-2">
@@ -439,6 +439,16 @@
     padding-block: 0.75rem calc(0.75rem + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);
     background-color: var(--paper);
+  }
+  /*
+    In a very short window (a computer zoomed to 400%, a phone on its side at a large text
+    size), a bar that stays put would leave no room for the rows, so it sits at the list's
+    end instead (WCAG 1.4.10, decision 0313).
+  */
+  @media (height < 30rem) {
+    .tidy-bar {
+      position: static;
+    }
   }
   /* Unsubscribe alone at the left; the count sits beside Move to… at the right. */
   .tidy-bar > .btn-danger {

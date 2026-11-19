@@ -251,7 +251,7 @@ test("shortcuts don't fire while typing in a field", async ({ page }) => {
   await page.evaluate(() => {
     const field = document.createElement("input");
     field.setAttribute("aria-label", "Test field");
-    document.querySelector("main")?.append(field);
+    document.querySelector("main, [role=main]")?.append(field);
   });
   await page.getByLabel("Test field").focus();
   await page.keyboard.type("[?gs");
