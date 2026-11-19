@@ -501,7 +501,7 @@ test("the quiet row says how many aren't working, and what went wrong with each,
   await page.reload();
   await appReady(page);
   const summary = page.locator("#health-summary");
-  await expect(summary).toHaveText(/^\s*3 feeds aren't working\s*2 site not answering · 1 feed gone · 1 having trouble\s*$/);
+  await expect(summary).toHaveText(/^\s*3 feeds aren't working\s*Site not answering: 2 · Feed gone: 1 · 1 having trouble\s*$/);
   await summary.click();
   // Alike ones together, each reason where its longest failing feed was; those having trouble after.
   const section = summary.locator("xpath=ancestor::section[1]");

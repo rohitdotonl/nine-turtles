@@ -56,7 +56,7 @@
   </p>
   <div class="tone-box-actions">
     <button type="button" class="btn btn-small" aria-disabled={busy} onclick={() => void answer(true)}>Join them</button>
-    <button type="button" class="text-link text-ui" aria-disabled={busy} onclick={() => void answer(false)}>Keep apart</button>
+    <button type="button" class="text-link" aria-disabled={busy} onclick={() => void answer(false)}>Keep apart</button>
   </div>
   <p role="status" class={["flex items-start gap-2 text-meta text-danger", !problem && "sr-only"]}>{#if problem}<span class="mt-px shrink-0"><Icon name="alert" /></span>{problem}{/if}</p>
 </div>

@@ -15,6 +15,8 @@ import "./opening.css";
 import "./swipes.css";
 import "./list-column.css";
 import "./tone-box.css";
+import "./cards.css";
+import "./select.css";
 import "./home.css";
 import "./large-text.css";
 import { mount } from "svelte";

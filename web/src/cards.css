@@ -1,0 +1,15 @@
+/* Settings' cards on the sidebar's grey (decisions 0310, 0317). Kept out of app.css, which is at its size limit. */
+@layer components {
+  /*
+    Settings in Home's look (decision 0310): its groups white cards on the sidebar's grey, so a card
+    looks the same in both. Every settings-like page wears it: Settings and its pages, the pages they
+    open (All readers, Hidden articles) and a person's or publication's own settings (consistency
+    check, round 2).
+  */
+  .on-cards {
+    background-color: var(--color-sidebar);
+  }
+  .on-cards .inset-group {
+    background-color: var(--paper);
+  }
+}

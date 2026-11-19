@@ -1,8 +1,8 @@
 <!--
   Who isn't working, at the top of Everyone you follow (SPEC section 15,
   decisions 0186 and 0279): one quiet row, "8 feeds aren't working", with
-  what went wrong in a few words under it ("4 feed gone · 3 site not
-  answering · 3 having trouble"). Pressed, it shows them in place, alike
+  what went wrong in a few words under it ("Feed gone: 4 · Site not
+  answering: 3 · 3 having trouble"). Pressed, it shows them in place, alike
   ones together, those not working before those having trouble: the icon for
   what went wrong, their name, the same few words, and ›. Each opens their
   page, which leads with what went wrong and what can be done (NotWorkingBox).
@@ -52,14 +52,15 @@
 
   let dead = $derived(byReason((feeds ?? []).filter((feed) => feed.state === "dead")));
   let troubled = $derived(byReason((feeds ?? []).filter((feed) => feed.state !== "dead")));
-  /** What went wrong, how many of each, in the order they're listed: "4 feed gone · 3 site not answering · 3 having trouble". */
+  /** What went wrong, how many of each, in the order they're listed: "Feed gone: 4 · Site not answering: 3 · 3 having trouble". */
   let summary = $derived.by(() => {
     const counts = new Map<string, number>();
     for (const feed of dead) {
       const words = reason(feed).words;
       counts.set(words, (counts.get(words) ?? 0) + 1);
     }
-    const parts = [...counts].map(([words, count]) => `${count} ${words.startsWith("YouTube") ? words : words.charAt(0).toLowerCase() + words.slice(1)}`);
+    // Each reason as its row says it, then how many: "Feed gone: 4", never "4 feed gone" (consistency check, round 2).
+    const parts = [...counts].map(([words, count]) => `${words}: ${count}`);
     if (troubled.length > 0) parts.push(dead.length > 0 ? `${troubled.length} having trouble` : "Usually back soon");
     return parts.join(" · ");
   });

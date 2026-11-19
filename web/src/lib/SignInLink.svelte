@@ -95,7 +95,7 @@
       </div>
       {#if lapsed}
         <p bind:this={lapsedMessage} tabindex="-1" class="text-center">{message}</p>
-        <a href="/" onclick={leave} class="btn-primary">Open nine turtles</a>
+        <a href="/" onclick={leave} class="btn">Open nine turtles</a>
       {:else}
         <form class="flex flex-col gap-3" onsubmit={choose}>
           <div class="flex flex-col gap-2">

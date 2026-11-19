@@ -47,7 +47,7 @@
           : "This link no longer works. If weekly emails still come, turn them off in Settings."}
       </p>
       <!-- svelte-ignore a11y_autofocus: the only thing to do now. -->
-      <a href="/" onclick={leave} autofocus class="btn-primary">Open nine turtles</a>
+      <a href="/" onclick={leave} autofocus class="btn">Open nine turtles</a>
     {:else}
       <p id="stop-help">One press turns the weekly email off.</p>
       <div class="flex w-full min-h-[6rem] flex-col gap-3">

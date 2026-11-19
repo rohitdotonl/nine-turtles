@@ -66,7 +66,7 @@
   }
 </script>
 
-<section aria-labelledby="muted-heading" class="lines-up flex min-w-0 flex-1 flex-col bg-paper">
+<section aria-labelledby="muted-heading" class="lines-up flex min-w-0 flex-1 flex-col on-cards">
   <PageHead title="Hidden articles" id="muted-heading" bind:heading onBack={onClose} backTo={SETTINGS_PAGES.hiding} column="max-w-[35rem]" />
   <div use:edge class="scroller relative min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-16 md:px-10">
     <div class="mx-auto flex max-w-[35rem] flex-col gap-8">

@@ -216,8 +216,9 @@ PLAN.md → V1, item 1.*
   own, where their page was, titled **Settings** with **‹ Tomas Berg**
   above the title (a very long name there ends in "…"); the browser's tab
   says "Settings for Tomas Berg". That and Escape go back to their page as
-  it was left, with nothing loading again, the keyboard on its cog; on a computer the bar above is empty there, so
-  ‹ their name is the one way back. The keyboard starts on
+  it was left, with nothing loading again, the keyboard on its cog; on a computer there is no bar above it (the
+  page starts with ‹ their name, as Settings' own pages do), so ‹ their
+  name is the one way back. The page is Settings' grey with white cards. The keyboard starts on
   the title, and Tab goes to Name. Each setting changes the moment it's
   touched, with no Save, Cancel or Done (decision 0254). Top to bottom:
     - **Name**, kept on Enter (the keyboard stays in the field) or on

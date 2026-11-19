@@ -228,6 +228,12 @@ test("back from their settings, the cog has the keyboard and is in view, and not
     // Escape belongs to ‹ their name here, so the × says only Close.
     // Their settings have only ‹ their name: no second way out in the bar.
     await expect(settings.getByRole("button", { name: "Close" })).toHaveCount(0);
+    // On a computer there's no bar over their settings: ‹ their name is the first line, as on Settings' own pages (decision 0317).
+    if (!isMobile) {
+      await expect(page.locator(".who-page .reading-bar")).toHaveCount(0);
+      const [back, area] = [(await settings.getByRole("button", { name: `Back to Blog ${name}` }).boundingBox())!, (await scroller.boundingBox())!];
+      expect(back.y - area.y).toBeLessThan(16);
+    }
     if (way === "Escape") await page.keyboard.press("Escape");
     else await settings.getByRole("button", { name: `Back to Blog ${name}` }).click();
     await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));

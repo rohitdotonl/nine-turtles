@@ -128,3 +128,25 @@ test("the owner's email is changed like everyone's, not on the Readers page", as
   await expect(page.getByLabel("Your email")).toHaveCount(0);
   await expect(page.getByLabel("Your password")).toHaveCount(0);
 });
+
+test("when All readers couldn't load, the line says so in oxblood, and Try again loads it", async ({ page }) => {
+  // The one failure line every list has (decision 0317), with the keyboard waiting on the title.
+  await page.goto("/settings");
+  await appReady(page);
+  await signIn(page);
+  let failing = true;
+  await page.route(/\/api\/admin/, (route) => (failing && route.request().method() === "GET" ? route.fulfill({ status: 500 }) : route.fallback()));
+  await page.goto("/settings/readers/all");
+  await appReady(page);
+  const problem = page.getByRole("status").filter({ hasText: "The readers couldn't be loaded." });
+  await expect(problem).toBeVisible();
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toBeVisible();
+  failing = false;
+  await problem.getByRole("button", { name: "Try again" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(problem).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "This nine turtles", exact: true })).toBeVisible();
+  await expect(page.locator("#readers-page-heading")).toBeFocused();
+});

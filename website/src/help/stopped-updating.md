@@ -17,7 +17,7 @@ related: [unfollow-someone, follow-someone, one-person-several-places]
 
 Open **Everyone you follow**, in the sidebar under All articles (on a phone, on Home). If anything isn't working, the page starts with one
 row, such as **8 feeds aren't working**, and under it in a few words what
-went wrong ("4 feed gone · 3 site not answering"). Press it to see them:
+went wrong ("Feed gone: 4 · Site not answering: 3"). Press it to see them:
 one line each, with a small picture and a few words for what went wrong,
 such as "Feed gone" or "Site not answering". Press it again to fold them
 away.

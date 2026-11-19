@@ -289,7 +289,7 @@
 {/if}
 {#if !(task && phone)}
 <!-- On one of its pages, the page itself is the region named after it, inside Settings. -->
-<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="settings-page lines-up flex min-w-0 flex-1 flex-col">
+<section aria-labelledby={page ? undefined : "settings-heading"} aria-label={page ? "Settings" : undefined} class="settings-page on-cards lines-up flex min-w-0 flex-1 flex-col">
   {#if page}
     <PageHead title={SETTINGS_PAGES[page]} id="settings-heading" bind:heading onBack={onBack} {backTo} column="max-w-[35rem]" />
   {:else if phone}
@@ -524,13 +524,6 @@
 {/if}
 
 <style>
-  /* Settings in Home's look (decision 0310): its groups white cards on the sidebar's grey, so a card looks the same in both. */
-  .settings-page {
-    background-color: var(--color-sidebar);
-  }
-  .settings-page :global(.inset-group) {
-    background-color: var(--paper);
-  }
   /* Each segmented choice shares its control evenly, but is never narrower than its own word (decision 0120). */
   .choices.setting-control {
     display: grid;

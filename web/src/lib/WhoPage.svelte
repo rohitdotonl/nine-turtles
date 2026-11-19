@@ -175,20 +175,20 @@
   </span>
 {/snippet}
 
-<section aria-label={route.settings ? `Settings for ${name}` : `About ${name}`} class="who-page flex min-w-0 flex-1 flex-col bg-paper">
+<section aria-label={route.settings ? `Settings for ${name}` : `About ${name}`} class={["who-page flex min-w-0 flex-1 flex-col", route.settings ? "on-cards" : "bg-paper"]}>
   <!-- On a phone, a hairline under the top once the page has scrolled (decision 0040). -->
   <div use:edge bind:this={scroller} class={["relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto", phone ? "scroller px-5 pb-12" : "scroll-gutter px-5 pb-16 md:px-16"]}>
   {#if !phone}
-    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); ‹ back to their list on its left, as an article's way back is, and their cog on its right, where the article's own tools are (decision 0307). Their settings have ‹ their name under it instead. -->
-    <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-between px-2 md:-mx-16">
-      {#if !route.settings}
+    <!-- The reading area's own bar, as an article's: its first line, scrolling away with it (decision 0263); ‹ back to their list on its left, as an article's way back is, and their cog on its right, where the article's own tools are (decision 0307). Their settings have no bar: "‹ their name" is their first line, above the title, as one of Settings' own pages has (consistency check, round 2). -->
+    {#if !route.settings}
+      <div class="reading-bar pane-bar over-text relative z-10 -mx-5 shrink-0 justify-between px-2 md:-mx-16">
         <button type="button" onclick={onClose} aria-label="Back to {closeTo ?? name}" title="Back to {closeTo ?? name} (Esc)" class="btn-quiet btn-icon nav-back text-ink-2"><Icon name="back" size="alone" /></button>
         {@render cog()}
-      {/if}
-    </div>
+      </div>
+    {/if}
   {/if}
   <!-- On a computer, the article's own column: its left edge and first line (decision 0219); the page's own text keeps to 36rem, so its lines stay short at large text sizes. -->
-  <div class={phone ? "contents" : "reading-column pt-8 md:pt-12"}>
+  <div class={phone ? "contents" : ["reading-column", !route.settings && "pt-8 md:pt-12"]}>
   <div class="flex w-full max-w-[36rem] flex-col font-sans text-base">
     {#if route.settings}
       <!-- Their settings: Back to their page above the title, as one of Settings' own pages has (decision 0120). -->
