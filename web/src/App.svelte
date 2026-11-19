@@ -19,7 +19,7 @@
   import Wordmark from "./lib/Wordmark.svelte";
   import Shell from "./lib/Shell.svelte";
   import SwipeBack from "./lib/SwipeBack.svelte";
-  import LateLine from "./lib/LateLine.svelte";
+  import PageWait from "./lib/PageWait.svelte";
   import { later } from "./lib/later";
   import { WEEKLY_PAGE } from "./lib/weekly";
   import { CONNECT_PAGE } from "./lib/assistants";
@@ -42,23 +42,28 @@
 
   /** The emailed links' pages, shown to whoever is signed in. */
   const EMAILED = [RESET_PAGE, CONFIRM_PAGE, FINISH_SIGN_UP_PAGE, SIGN_IN_LINK_PAGE, WEEKLY_PAGE];
-  /** Whether `path` shows one of the pages outside the signed-in screen (Doors.svelte). */
-  const atDoor = (now: Session, at: string) => EMAILED.includes(at) || (now.signedIn ? at === CONNECT_PAGE : true);
+  /** Whether `at` shows one of the pages outside the signed-in screen (Doors.svelte), signed in or not. */
+  const atDoor = (signedIn: boolean, at: string) => EMAILED.includes(at) || (signedIn ? at === CONNECT_PAGE : true);
 
   /**
    * Those pages, in a file of their own (decision 0315): fetched at once when one is likely
-   * (nobody signed in on this device yet, or an emailed link), otherwise once the first screen is up.
+   * (nobody signed in on this device yet, or the address is one of them), otherwise once the
+   * first screen is up. If it can't be fetched, its place says so (PageWait.svelte).
    */
   let Doors: typeof import("./lib/Doors.svelte").default | undefined = $state.raw();
+  let doorsFailed = $state(false);
   let doorsAsked = false;
   function fetchDoors(now: boolean) {
     if (doorsAsked) return;
     doorsAsked = true;
     later(async () => {
-      Doors = (await import("./lib/Doors.svelte")).default;
+      Doors = await import("./lib/Doors.svelte").then(
+        (file) => file.default,
+        () => ((doorsFailed = true), undefined),
+      );
     }, now);
   }
-  fetchDoors(deviceReader() === undefined || EMAILED.includes(location.pathname) || location.pathname === CONNECT_PAGE);
+  fetchDoors(deviceReader() === undefined || atDoor(true, location.pathname));
   let unreachable = $state(false);
   /** Which page the address asks for, outside the signed-in screen. */
   let path = $state(location.pathname);
@@ -163,11 +168,14 @@
 </script>
 
 <!-- An emailed link's page shows whoever is signed in: the link is what was asked for. -->
-{#if session && atDoor(session, path)}
+{#if session && atDoor(session.signedIn, path)}
   {#if Doors}
     <Doors {session} {path} onSignedIn={check} onSignedOut={signedOut} onSignUp={() => (path = location.pathname)} />
   {:else}
-    <main class="flex min-h-screen flex-col items-center justify-center px-6"><LateLine words="Loading nine turtles…" /></main>
+    <main class="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
+      <Wordmark id="wordmark" />
+      <PageWait name="nine turtles" failed={doorsFailed} class="text-center" />
+    </main>
   {/if}
 {:else if session?.signedIn && !knownPath(path)}
   <!-- An address that isn't one of nine turtles' places: "Wrong turn?" (SPEC section 4). -->

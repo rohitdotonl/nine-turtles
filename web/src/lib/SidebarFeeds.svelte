@@ -54,7 +54,7 @@
   import { UNDO_FAILED, UNDONE } from "./messages";
   import { addressFor, pathFor, type Route } from "./router";
   import { dragValue, sidebarDrag, type Dragged, type Over } from "./sidebarDrag";
-  import { afterPaint, FIRST_ROWS, MORE_ROWS, placeInSight, rowsDrawn } from "./sidebarSteps";
+  import { afterPaint, FIRST_ROWS, MORE_ROWS, rowsDrawn, rowsUpTo } from "./sidebarSteps";
 
   let {
     library,
@@ -293,26 +293,30 @@
   let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
-  // Drawn in steps (sidebarSteps.ts, decision 0315): the rows on screen first, the rest just after.
-  let room = $state(FIRST_ROWS);
+  // Drawn in steps (sidebarSteps.ts, decision 0315): the rows on screen first, and always down to
+  // where you are, so it's in sight at once and nothing moves by itself; the rest just after.
   let shownFolders = $derived(folders.filter((folder) => phone || open.includes(folder.id)));
-  let inFolders = $derived(shownFolders.map((folder) => feeds.filter((feed) => feed.folders.includes(folder.id)).length));
-  let drawn = $derived(rowsDrawn([pinned.length, ...inFolders, people.length, publications.length], room));
+  let parts = $derived([pinned, ...shownFolders.map((folder) => feeds.filter((feed) => feed.folders.includes(folder.id))), people, publications]);
+  let room = $state(FIRST_ROWS);
+  let toHere = $derived(rowsUpTo(parts, isHereRow));
+  let drawn = $derived(rowsDrawn(parts.map((part) => part.length), Math.max(room, toHere + FIRST_ROWS)));
   /** How many of a folder's rows are drawn so far. */
   const drawnIn = (folder: number) => drawn.counts[1 + shownFolders.findIndex((each) => each.id === folder)] ?? Infinity;
-  let arranging: HTMLElement | undefined = $state();
   $effect(() => {
     // Once every row is drawn, rows opened later (a folder) are drawn at once, and none goes again.
     if (drawn.all) {
       if (room !== Infinity) room = Infinity;
       return;
     }
-    return afterPaint(() => {
-      room += MORE_ROWS;
-      // The last step: where you are comes into sight, as it would have at once.
-      if (rowsDrawn([pinned.length, ...inFolders, people.length, publications.length], room).all) void tick().then(() => placeInSight(arranging?.closest("nav")));
-    });
+    // Rows drawn for where you are stay when you move elsewhere.
+    if (toHere + FIRST_ROWS > room) room = toHere + FIRST_ROWS;
+    return afterPaint(() => (room += MORE_ROWS));
   });
+
+  /** Whether someone's row is where you are (their list, or their page). */
+  function isHereRow(feed: Feed): boolean {
+    return !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id);
+  }
 
   function isHere(place: Route): boolean {
     // The phone's feeds screen shows no selection: you're at the root, not in a place.
@@ -353,7 +357,7 @@
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
 {#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
-  {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
+  {@const here = isHereRow(feed)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
     <a
       href={addressFor(place)}
@@ -425,7 +429,6 @@
 {/snippet}
 
 <div
-  bind:this={arranging}
   use:sidebarDrag={{ accepts, drop, refuse, ghostText }}
   class="arranging"
   data-editing={editing || undefined}

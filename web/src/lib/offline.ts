@@ -590,7 +590,8 @@ export function keepUpToDate(order: Order, unread: boolean): Promise<void> {
   return running;
 }
 
-async function firstOf(
+/** The first `most` rows of a list: its usual first page, then the rest in one page (decision 0315). */
+export async function firstOf(
   list: Fetchers["list"],
   source: Source,
   order: Order,

@@ -10,8 +10,8 @@ use std::time::{Duration, Instant};
 use nine_turtles::{
     checking::DUE,
     feeds::{
-        Cursor, FEEDS, LATEST, List, NOTES_SQL, Order, PAGE_SIZE, by_person_sql, list_sql, new_sql,
-        page,
+        Cursor, FEEDS, LATEST, List, MOST_PAGE_SIZE, NOTES_SQL, Order, PAGE_SIZE, by_person_sql,
+        list_sql, new_sql, page,
     },
     marks::{FEED_READ, WRITER_READ},
     search::{Search, find},
@@ -384,6 +384,19 @@ async fn the_item_list_is_fast_with_500_feeds_and_a_year_of_articles() {
             .await
             .unwrap();
         timings.push((what, started.elapsed()));
+    }
+    // The offline copies' bigger pages (decision 0315): the most a page
+    // holds, of Unread by person and of All, in the same time.
+    for (what, list) in [
+        ("biggest unread page", List::Unread),
+        ("biggest page", List::All),
+    ] {
+        let started = Instant::now();
+        let (rows, _) = page(&db, READER, list, Order::Newest, None, MOST_PAGE_SIZE)
+            .await
+            .unwrap();
+        timings.push((what, started.elapsed()));
+        assert_eq!(rows.len(), 200);
     }
     // It reads only the reader's unread entries, through an index.
     for order in [Order::Newest, Order::Oldest] {

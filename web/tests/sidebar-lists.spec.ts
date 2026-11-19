@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FEED_SITE, FEEDS_APP } from "../playwright.config";
-import { appReady, follow, signIn } from "./screens";
+import { appReady, feedsShown, follow, signIn } from "./screens";
 
 // SPEC sections 5 and 18 (decisions 0174 and 0187), "How to check it", done
 // by a browser: the sidebar's lists, the same for everyone. On a wide window
@@ -114,4 +114,26 @@ test("Home opens on Saved, and the pin on someone's page pins them to Home and b
   await pinFromTheirPage("false");
   await expect(pinnedCard.locator(`a[href$="-${id}"]`)).toHaveCount(0);
   await expect(nav.locator(`[data-drop-loose='person'] a[href$="-${id}"]`)).toBeVisible();
+});
+
+test("a long sidebar shows where you are at once, then every row (decision 0315)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the sidebar is the computer's");
+  const blog = `long-${test.info().workerIndex}-${Date.now()}`;
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(new URL("/all", FEEDS_APP).href);
+  await appReady(page);
+  await signIn(page);
+  const id = await follow(page, `${FEED_SITE}/blog/${blog}/`);
+  // 120 made-up people before them, as the server would list them (nothing shared changes).
+  await feedsShown(page, "**/api/feeds", (body) => {
+    const mine = body.feeds.find((feed) => feed.id === id)!;
+    const others = Array.from({ length: 120 }, (_, at) => ({ ...mine, id: 900_000 + at, title: `Aaa row ${String(at).padStart(3, "0")}`, folders: [], places: undefined, unread: 0 }));
+    body.feeds = [...others, ...body.feeds.filter((feed) => feed.id !== id), { ...mine, title: `Zzz ${blog}`, folders: [] }];
+  });
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  const here = sidebar(page).locator("a[aria-current='page']");
+  await expect(here).toBeInViewport();
+  await expect(sidebar(page).getByRole("link", { name: /^Aaa row / })).toHaveCount(120);
+  // Nothing moved by itself: where you are is still in sight once every row is there.
+  await expect(here).toBeInViewport();
 });
