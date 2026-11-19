@@ -50,7 +50,7 @@
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import { untitledOpening, whoIcon, type Article, type FullArticle } from "./shapes";
-  import { articleNow, readArticle } from "./articles";
+  import { articleNow, onFresher, readArticle } from "./articles";
   import { date, exactly, when } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { articleOpened, placeKept } from "./resume.svelte";
@@ -162,6 +162,9 @@
 
   /** A YouTube video plays above the text, in YouTube's own player, once you press Play (decision 0072). */
   let video = $derived(youtubeVideo(article.link));
+
+  // Opened from this device's copy: the server's answer, with any highlight made elsewhere, shows when it comes.
+  $effect(() => onFresher(() => arrivals++));
 
   let full: FullArticle | undefined = $derived.by(() => {
     void arrivals;

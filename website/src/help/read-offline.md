@@ -23,7 +23,9 @@ Only the words are kept. Pictures, videos and podcast episodes show a line
 saying they'll appear when you're back online.
 
 The copies are brought up to date whenever you open the app, when the
-connection comes back, and when you refresh.
+connection comes back, and when you refresh. They also make reading quicker on
+a slow connection: a kept article without pictures opens straight from your
+device.
 
 ## Reading offline
 

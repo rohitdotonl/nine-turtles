@@ -8,10 +8,13 @@ export function edge(node: HTMLElement) {
     if (node.scrollTop > 0) node.dataset.scrolled = "";
     else delete node.dataset.scrolled;
   };
-  update();
+  // Checked just before the next frame, not while the screen is still being built: reading
+  // the scroll place then would make the browser lay the page out an extra time (decision 0314).
+  const first = requestAnimationFrame(update);
   node.addEventListener("scroll", update, { passive: true });
   return {
     destroy() {
+      cancelAnimationFrame(first);
       node.removeEventListener("scroll", update);
     },
   };

@@ -80,3 +80,41 @@ async fn an_unknown_api_address_is_not_found_not_the_app() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn an_unchanged_font_or_page_is_not_sent_again() {
+    let base = start().await;
+    let client = reqwest::Client::new();
+    for path in ["/fonts/literata-400-latin.woff2", "/"] {
+        let first = client.get(format!("{base}{path}")).send().await.unwrap();
+        let label = first.headers()["etag"].to_str().unwrap().to_owned();
+        assert!(label.starts_with('"') && label.ends_with('"'), "{label}");
+
+        let again = client
+            .get(format!("{base}{path}"))
+            .header("if-none-match", &label)
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(again.status(), StatusCode::NOT_MODIFIED, "{path}");
+        assert_eq!(again.headers()["etag"], label.as_str());
+        assert!(again.bytes().await.unwrap().is_empty());
+
+        // As Cloudflare passes it on after compressing: a weak label still matches.
+        let weak = client
+            .get(format!("{base}{path}"))
+            .header("if-none-match", format!("W/{label}"))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(weak.status(), StatusCode::NOT_MODIFIED, "{path}");
+
+        let other = client
+            .get(format!("{base}{path}"))
+            .header("if-none-match", "\"something-else\"")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(other.status(), StatusCode::OK, "{path}");
+    }
+}

@@ -20,6 +20,7 @@ import type { Article, FullArticle, Library, Page, Source } from "./shapes";
 import { newestView, type Order } from "./reading";
 import { currentTabReader } from "./updates.svelte";
 import { away, whenBack } from "./connection.svelte";
+import { later } from "./later";
 
 /** At most this many unread articles, and this many starred ones, are kept (the owner's limit). */
 export const KEEP_UNREAD = 200;
@@ -712,6 +713,9 @@ export class Keeper {
     this.#last = this.#clock();
     this.#keep();
   };
+
+  /** Brings them up to date after the first screen, so they never hold up the reader's first taps (decision 0314). */
+  soon = () => later(async () => this.now());
 
   /** A refresh brought new articles: they're kept too, at most once a minute. */
   refreshed = () => {

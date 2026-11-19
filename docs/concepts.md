@@ -145,6 +145,8 @@ Agents add to it whenever a change brings in a new one (see `AGENTS.md`).
 - Single-page app (SPA)
 - Vite (build tool)
 - Bundle and bundle size
+- Code splitting: pages in files of their own, loaded later (`laterPages.svelte.ts`)
+- Round trips: why a slow connection waits (`early.ts`, `recent.ts`)
 - Tailwind CSS
 - Node.js and npm
 - Progressive web app (PWA)

@@ -732,6 +732,32 @@ test.describe("adding nine turtles to the home screen", () => {
     await expect(page.getByText("You're offline. nine turtles opens once you're back online.")).toBeVisible();
     await context.setOffline(false);
   });
+  test("a kept font comes from the device at once, without waiting for the server", async ({ page, context }) => {
+    await page.goto("/");
+    await appReady(page);
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
+    // Open once more under the service worker, so it keeps a copy of the fonts.
+    await page.reload();
+    await appReady(page);
+    await expect
+      .poll(() => page.evaluate(async () => !!(await (await caches.open("nine-turtles-app-1")).match("/fonts/literata-400-latin.woff2"))))
+      .toBe(true);
+    // A slow server: the font still arrives at once, from the kept copy.
+    await context.route("**/fonts/literata-400-latin.woff2", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+      await route.continue().catch(() => undefined);
+    });
+    const took = await page.evaluate(async () => {
+      const start = performance.now();
+      const response = await fetch("/fonts/literata-400-latin.woff2");
+      await response.arrayBuffer();
+      return performance.now() - start;
+    });
+    expect(took).toBeLessThan(2_000);
+    await context.unrouteAll({ behavior: "ignoreErrors" });
+  });
 });
 
 test("a tab left open across an update is told to reload, switches on the next move, and Settings offers the new version", async ({ page, isMobile }) => {

@@ -7,10 +7,13 @@
 //   version. Without a connection, the kept copy opens instead and says
 //   plainly that nine turtles can't be reached.
 // - The app's code and styles (in /assets/, whose names change with every
-//   version) are kept and used from the copy. Copies no version uses any
-//   more are removed when nine turtles is next opened.
-// - The fonts (in /fonts/) come from the server, and from the copy only
-//   without a connection, so articles read offline keep their typeface.
+//   version) are kept and used from the copy, the pages it loads later in
+//   files of their own too. Copies no version uses any more are removed when
+//   nine turtles is next opened.
+// - The fonts (in /fonts/) come from the copy at once, so text never waits
+//   for them or changes face as they arrive; the server is asked quietly
+//   behind it ("unchanged?", a few bytes), so a new font is used from the
+//   next opening. The first time, they come from the server.
 // - Everything else, including all of /api/, goes straight to the server.
 //
 // Nothing here swaps the app while it's open: a new version starts the next
@@ -37,21 +40,22 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
   if (request.mode === "navigate") event.respondWith(openApp(request));
   else if (url.pathname.startsWith("/assets/")) event.respondWith(appFile(request));
-  else if (url.pathname.startsWith("/fonts/")) event.respondWith(font(request));
+  else if (url.pathname.startsWith("/fonts/")) event.respondWith(font(event));
 });
 
-/** A font: from the server, or the kept copy when there's no connection. */
-async function font(request) {
+/** A font: the kept copy at once, brought up to date behind it; the server's when there's no copy yet. */
+async function font(event) {
+  const request = event.request;
   const kept = await caches.open(KEPT);
-  try {
-    const response = await fetch(request);
+  const fresh = fetch(request).then(async (response) => {
     if (response.ok) await kept.put(request, response.clone());
     return response;
-  } catch (problem) {
-    const copy = await kept.match(request);
-    if (copy) return copy;
-    throw problem;
-  }
+  });
+  const copy = await kept.match(request);
+  if (!copy) return fresh;
+  // Without a connection the quiet check fails; the copy is already on its way.
+  event.waitUntil(fresh.catch(() => undefined));
+  return copy;
 }
 
 /** The page itself: from the server, or the kept copy when there's no connection. */
@@ -82,9 +86,14 @@ async function appFile(request) {
   return response;
 }
 
-/** Removes kept code and styles the current page no longer uses. */
+/** Removes kept code and styles the current page no longer uses, nor its code loads later (its pages in files of their own). */
 async function tidy(kept, page) {
   const used = new Set(page.match(/\/assets\/[^"'\s)]+/g) ?? []);
+  for (const path of [...used]) {
+    if (!path.endsWith(".js")) continue;
+    const code = await (await kept.match(path))?.text();
+    for (const named of code?.match(/assets\/[^"'\s)`]+/g) ?? []) used.add(`/${named}`);
+  }
   for (const request of await kept.keys()) {
     const path = new URL(request.url).pathname;
     if (path.startsWith("/assets/") && !used.has(path)) await kept.delete(request);

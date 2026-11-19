@@ -35,6 +35,7 @@ export async function loadSettings(): Promise<Reading> {
   try {
     const body = await getJson("/api/settings");
     const sort = isRecord(body) && body.sort === "oldest" ? "oldest" : "newest";
+    rememberSort(sort);
     const unread = !(isRecord(body) && body.unread === false);
     const replies = !(isRecord(body) && body.replies === false);
     rememberUnread(unread);
@@ -48,8 +49,9 @@ export async function loadSettings(): Promise<Reading> {
   }
 }
 
-export function saveSort(sort: Order): Promise<void> {
-  return send("/api/settings", { sort });
+export async function saveSort(sort: Order): Promise<void> {
+  await send("/api/settings", { sort });
+  rememberSort(sort);
 }
 
 export function saveReplies(replies: boolean): Promise<void> {
@@ -62,6 +64,17 @@ export async function saveUnread(unread: boolean): Promise<void> {
 }
 
 const UNREAD_KEY = "nine-turtles.unread";
+const SORT_KEY = "nine-turtles.sort";
+
+/** The sort order this device last saw, so opening can ask for the first list at once (early.ts); none until it has seen one. */
+export function lastSort(): Order | undefined {
+  const sort = deviceText(SORT_KEY);
+  return sort === "newest" || sort === "oldest" ? sort : undefined;
+}
+
+function rememberSort(sort: Order) {
+  setDeviceText(SORT_KEY, sort);
+}
 
 /**
  * Whether Unread was on when this device last saw, so the app opens as it

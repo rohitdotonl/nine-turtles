@@ -14,6 +14,20 @@ async function openSettings(page: Page, path = "/settings") {
   await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible();
 }
 
+test("while Settings' own file is on its way, its place says so, and the keyboard lands on its heading when it comes (decision 0314)", async ({ page }) => {
+  await page.goto("/settings");
+  await appReady(page);
+  await signIn(page);
+  await page.route("**/assets/Settings-*.js", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+    await route.continue();
+  });
+  await page.reload();
+  await expect(page.getByText("Loading Settings…")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings", level: 2 })).toBeFocused({ timeout: 10_000 });
+  await expect(page.getByText("Loading Settings…")).toHaveCount(0);
+});
+
 
 test("Settings' first page keeps the everyday settings, and the rest are rows that open pages", async ({ page }) => {
   await openSettings(page);

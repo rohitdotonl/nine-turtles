@@ -13,6 +13,8 @@
 // few minutes while it's in view, so even a tab left open for days notices.
 
 import { lost, noConnection, reached } from "./connection.svelte";
+import { forgetEarly, takeEarly } from "./early";
+import { forgetRecent } from "./recent";
 
 export const VERSION_HEADER = "x-nine-turtles-version";
 const READER_HEADER = "x-nine-turtles-reader";
@@ -67,11 +69,24 @@ export class OtherReader extends Error {
   }
 }
 
+/**
+ * The reader changed something, sent or still waiting to be (a mark made
+ * offline): every list and early answer fetched before it is out of date
+ * (recent.ts, early.ts), so none is shown again.
+ */
+export function changed(): void {
+  forgetRecent();
+  forgetEarly();
+}
+
 /** `fetch`, for nine turtles' own server, noting each answer's version, and whether the connection is there. */
 export async function api(input: string, init?: RequestInit): Promise<Response> {
   let response: Response;
   try {
-    if (tabReader === undefined) response = await fetch(input, init);
+    if ((init?.method ?? "GET") !== "GET") changed();
+    const early = takeEarly(input, init);
+    if (early) response = await early;
+    else if (tabReader === undefined) response = await fetch(input, init);
     else {
       const headers = new Headers(init?.headers);
       headers.set(READER_HEADER, String(tabReader));

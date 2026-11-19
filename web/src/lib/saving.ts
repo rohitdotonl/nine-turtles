@@ -1,7 +1,7 @@
 // Saving the reader's marks and settings one after another, in the order
 // they were made, and trying again while nine turtles is out of reach (SPEC
 // section 32, decision 0101).
-import { OtherReader, api } from "./updates.svelte";
+import { OtherReader, api, changed } from "./updates.svelte";
 import { noConnection, serverNow } from "./connection.svelte";
 import { markSent, noteMark, sending } from "./offline";
 
@@ -77,6 +77,8 @@ export function signedOut(problem: unknown): boolean {
 }
 
 export function send(path: string, body: unknown): Promise<void> {
+  // Now, not when its turn comes after the writes before it.
+  changed();
   const giveUpAt = Date.now() + KEEP_TRYING_FOR;
   const once = async () => {
     const response = await api(path, {
@@ -130,6 +132,8 @@ export function markStarred(ids: number[], starred: boolean): Promise<void> {
  * being taken back. Without a connection, nothing is tried until then.
  */
 function sendMark(kind: "read" | "starred", ids: number[], value: boolean, at: number): Promise<void> {
+  // Even when it waits on this device: lists fetched before it are out of date.
+  changed();
   const noted = noteMark(kind, ids, value, at);
   const path = kind === "read" ? "/api/articles/read" : "/api/articles/starred";
   const body = kind === "read" ? { ids, read: value, at } : { ids, starred: value, at };
