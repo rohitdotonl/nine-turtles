@@ -24,6 +24,18 @@ test("a new browser sees only the email and password fields", async ({ page }) =
   await expect(page.locator("#sidebar")).toHaveCount(0);
 });
 
+test("if the sign-in page's own file can't be fetched, it says so with Try again, never a dead end (decision 0315)", async ({ page }) => {
+  let refuse = true;
+  await page.route("**/assets/Doors-*.js", (route) => (refuse ? route.abort() : route.continue()));
+  await page.goto("/");
+  const retry = page.getByRole("button", { name: "Try again" });
+  await expect(retry).toBeVisible();
+  await expect(page.getByLabel("Email")).toHaveCount(0);
+  refuse = false;
+  await retry.click();
+  await expect(page.getByLabel("Email")).toBeVisible();
+});
+
 test("sign-in is one centred column, at the phone's one 20px margin, each field named above it", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/");

@@ -13,10 +13,11 @@ export function sourceQuery(source: Source): URLSearchParams {
   return query;
 }
 
-/** The server's address for a page of a list. */
-export function listPath(source: Source, order: Order, after: string | null): string {
+/** The server's address for a page of a list: `size` articles, or the server's usual page (50). */
+export function listPath(source: Source, order: Order, after: string | null, size?: number): string {
   const query = sourceQuery(source);
   query.set("order", order);
   if (after !== null) query.set("after", after);
+  if (size !== undefined) query.set("size", String(size));
   return `/api/${"search" in source ? "search" : "articles"}?${query}`;
 }

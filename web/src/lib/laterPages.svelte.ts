@@ -15,7 +15,7 @@ export class LaterPages {
   ReadersPage: typeof import("./ReadersPage.svelte").default | undefined = $state.raw();
   EditFolder: typeof import("./EditFolder.svelte").default | undefined = $state.raw();
   CheatSheet: typeof import("./CheatSheet.svelte").default | undefined = $state.raw();
-  /** The last try to fetch them failed (no connection): they're fetched again once it's back. */
+  /** They couldn't be fetched: their place says so, and loads the app again (PageWait.svelte). */
   failed = $state(false);
 
   /**
@@ -24,7 +24,6 @@ export class LaterPages {
    */
   constructor(now: boolean, arrived: () => HTMLElement | undefined) {
     later(async () => {
-      this.failed = false;
       [this.Settings, this.YourFeeds, this.Muted, this.ReadersPage, this.EditFolder, this.CheatSheet] = await Promise.all([
         import("./Settings.svelte").then((file) => file.default),
         import("./YourFeeds.svelte").then((file) => file.default),
@@ -32,10 +31,12 @@ export class LaterPages {
         import("./ReadersPage.svelte").then((file) => file.default),
         import("./EditFolder.svelte").then((file) => file.default),
         import("./CheatSheet.svelte").then((file) => file.default),
-      ]).catch((problem: unknown) => {
+      ]).catch(() => {
+        // Not asked for again: the browser would give the same failure (PageWait.svelte).
         this.failed = true;
-        throw problem;
+        return [];
       });
+      if (this.failed) return;
       await tick();
       if (document.activeElement === document.body || document.activeElement === null) arrived()?.focus();
     }, now);

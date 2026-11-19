@@ -54,6 +54,7 @@
   import { UNDO_FAILED, UNDONE } from "./messages";
   import { addressFor, pathFor, type Route } from "./router";
   import { dragValue, sidebarDrag, type Dragged, type Over } from "./sidebarDrag";
+  import { afterPaint, FIRST_ROWS, MORE_ROWS, rowsDrawn, rowsUpTo } from "./sidebarSteps";
 
   let {
     library,
@@ -292,6 +293,31 @@
   let people = $derived(loose.filter((feed) => feed.kind !== "publication"));
   let publications = $derived(loose.filter((feed) => feed.kind === "publication"));
 
+  // Drawn in steps (sidebarSteps.ts, decision 0315): the rows on screen first, and always down to
+  // where you are, so it's in sight at once and nothing moves by itself; the rest just after.
+  let shownFolders = $derived(folders.filter((folder) => phone || open.includes(folder.id)));
+  let parts = $derived([pinned, ...shownFolders.map((folder) => feeds.filter((feed) => feed.folders.includes(folder.id))), people, publications]);
+  let room = $state(FIRST_ROWS);
+  let toHere = $derived(rowsUpTo(parts, isHereRow));
+  let drawn = $derived(rowsDrawn(parts.map((part) => part.length), Math.max(room, toHere + FIRST_ROWS)));
+  /** How many of a folder's rows are drawn so far. */
+  const drawnIn = (folder: number) => drawn.counts[1 + shownFolders.findIndex((each) => each.id === folder)] ?? Infinity;
+  $effect(() => {
+    // Once every row is drawn, rows opened later (a folder) are drawn at once, and none goes again.
+    if (drawn.all) {
+      if (room !== Infinity) room = Infinity;
+      return;
+    }
+    // Rows drawn for where you are stay when you move elsewhere.
+    if (toHere + FIRST_ROWS > room) room = toHere + FIRST_ROWS;
+    return afterPaint(() => (room += MORE_ROWS));
+  });
+
+  /** Whether someone's row is where you are (their list, or their page). */
+  function isHereRow(feed: Feed): boolean {
+    return !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id);
+  }
+
   function isHere(place: Route): boolean {
     // The phone's feeds screen shows no selection: you're at the root, not in a place.
     return !phone && pathFor(place) === pathFor(route);
@@ -331,7 +357,7 @@
 <!-- A person's row (SPEC section 36): one per person, however many places they have; it's where you are on any of them. `from` is the folder it's listed under. -->
 {#snippet feedRow(feed: Feed, from: number | null, dot = false)}
   {@const place: Route = { kind: "feed", id: feed.id }}
-  {@const here = !phone && (route.kind === "feed" || route.kind === "about") && (feed.places ?? [feed.id]).includes(route.id)}
+  {@const here = isHereRow(feed)}
   <li class="relative" data-drag={dragValue({ kind: "person", id: feed.id, from })}>
     <a
       href={addressFor(place)}
@@ -387,16 +413,17 @@
 
 <!-- People, then Publications: each a place to drop someone, to take them out of a folder or change which they are. -->
 <!-- An empty one shows only while someone is being dragged, so there's always somewhere to drop them. -->
-{#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string)}
+{#snippet looseList(who: "person" | "publication", rows: Feed[], heading: string, count: number)}
   <div data-drop-loose={who} class={["drop-area rounded-press", rows.length === 0 && "drop-empty"]}>
     <h2 class="home-heading label"><span class="text-ink"><Icon name={whoIcon(who)} /></span>{heading}</h2>
     {@render refused(who)}
     <ul class="home-card">
-      {#each rows as feed (feed.id)}
+      {#each rows.slice(0, count) as feed (feed.id)}
         {@render feedRow(feed, null)}
-      {:else}
-        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
       {/each}
+      {#if rows.length === 0}
+        <li class="min-h-11 px-3 py-2 text-meta text-muted">Drop someone here.</li>
+      {/if}
     </ul>
   </div>
 {/snippet}
@@ -491,19 +518,20 @@
           </div>
           {#if shown}
             <ul id={`folder-${folder.id}`} class="folder-feeds">
-              {#each inside as feed (feed.id)}
+              {#each inside.slice(0, drawnIn(folder.id)) as feed (feed.id)}
                 {@render feedRow(feed, folder.id)}
-              {:else}
-                <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
               {/each}
+              {#if inside.length === 0}
+                <li class="py-2 pr-5 pl-12 text-meta text-muted">No one in this folder yet.</li>
+              {/if}
             </ul>
           {/if}
         </li>
       {/each}
     </ul>
   {/if}
-  {@render looseList("person", people, "People")}
-  {@render looseList("publication", publications, "Publications")}
+  {@render looseList("person", people, "People", drawn.counts.at(-2) ?? people.length)}
+  {@render looseList("publication", publications, "Publications", drawn.counts.at(-1) ?? publications.length)}
 {/if}
 
 <!--
