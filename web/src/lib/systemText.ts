@@ -34,8 +34,14 @@ export function isLarge(rootPixels: number): boolean {
  */
 function markLargeText(): void {
   const root = document.documentElement;
-  if (isLarge(parseFloat(getComputedStyle(root).fontSize))) root.dataset.text = "large";
+  if (isLarge(rootPixels())) root.dataset.text = "large";
   else delete root.dataset.text;
+}
+
+/** One rem in pixels now: the page's root text size, 16 at the usual size (the sidebar's widths follow it too). */
+export function rootPixels(): number {
+  const size = typeof document === "undefined" ? Number.NaN : Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return Number.isFinite(size) && size > 0 ? size : 16;
 }
 
 /** Follows the system's text size where the device has one, now and each time the reader comes back to the app. */

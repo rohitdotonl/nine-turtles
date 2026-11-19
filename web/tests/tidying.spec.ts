@@ -122,6 +122,23 @@ test("with the keyboard alone: Choose, tick, Move to… and Escape closes only t
   await expect(page).toHaveURL(/\/following$/);
 });
 
+test("Choose's bar stays at the foot of the screen, except in a window both short and narrow, as at 400% zoom (decision 0313)", async ({ page, isMobile }) => {
+  // On a phone, whose one-screen-at-a-time layout every size below stays in.
+  test.skip(!isMobile, "the phone's layout holds at every size tried here");
+  await twoBlogs(page);
+  await page.goto(new URL("/following", FEEDS_APP).href);
+  await appReady(page);
+  await page.getByRole("button", { name: "Choose…" }).click();
+  const bar = page.locator(".tidy-bar");
+  await expect(bar).toHaveCSS("position", "sticky");
+  // A phone on its side: short but wide, so the bar stays in view.
+  await page.setViewportSize({ width: 844, height: 390 });
+  await expect(bar).toHaveCSS("position", "sticky");
+  // A computer at 400%: 320 by 200, so the bar sits at the list's end and never covers the rows.
+  await page.setViewportSize({ width: 320, height: 200 });
+  await expect(bar).toHaveCSS("position", "static");
+});
+
 test("when everyone you follow couldn't load, Try again loads them, keeping the keyboard's place", async ({ page }) => {
   await page.goto(new URL("/following", FEEDS_APP).href);
   await appReady(page);

@@ -30,7 +30,8 @@
 .article-text :where(h1, h2) {
   margin-top: 2.4em;
   margin-bottom: 0.4em;
-  font-size: 1.55em;
+  /* Capped by the window's width a step under the title's own cap (article-head.css), so at large text a heading never outweighs it (decision 0313). */
+  font-size: min(1.55em, 9vw);
   line-height: 1.15;
   letter-spacing: -0.012em;
 }
@@ -38,7 +39,7 @@
 .article-text h3 {
   margin-top: 1.9em;
   margin-bottom: 0.35em;
-  font-size: 1.2em;
+  font-size: min(1.2em, 8vw);
   line-height: 1.25;
 }
 
@@ -53,7 +54,7 @@
 */
 @media (max-width: 40rem) {
   .article-text :where(h1, h2) {
-    font-size: 1.35em;
+    font-size: min(1.35em, 9vw);
   }
 }
 
@@ -213,10 +214,10 @@
   without moving a letter (decision 0313).
 */
 @media (pointer: coarse) {
-  .article-text a[href^="#article-"] {
+  .article-text :is(sup > a, li[id] a)[href^="#article-"] {
     position: relative;
   }
-  .article-text a[href^="#article-"]::after {
+  .article-text :is(sup > a, li[id] a)[href^="#article-"]::after {
     content: "";
     position: absolute;
     top: 50%;

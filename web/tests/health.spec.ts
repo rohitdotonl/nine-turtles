@@ -59,6 +59,8 @@ test("who isn't working is one quiet row, then a line each, and their page leads
   await expect(page).toHaveURL(new RegExp(`/(?:[a-z0-9-]+-)?${id}/about$`));
   const box = page.getByRole("group", { name: "Not working" });
   await expect(box).toContainText("Feed gone since earlier today");
+  // Its title is a heading, so a screen reader can jump to it (decision 0313).
+  await expect(box.getByRole("heading", { level: 3 })).toContainText("Feed gone since earlier today");
   await expect(box).toContainText("The site says the feed isn't there any more. It may have moved.");
   const find = box.getByRole("button", { name: "Find new address", exact: true });
   await expect(find).toHaveClass(/\bbtn\b/);

@@ -25,10 +25,10 @@
 /*
   The column's width in pixels, for what lines up with it without being set
   in the reading face (decision 0277): the list's column, Settings' and the
-  article's bar. Worked out once on the whole screen (Shell's <main>), at the
+  article's bar. Worked out once on the whole screen (Shell's frame, `.reading-width`), at the
   reader's text size, so it follows Aa; registered as a length, so it's
   passed down as pixels, not as an "em" of whatever size it lands in. Every
-  child of <main> goes back to the interface's size.
+  child of the frame goes back to the interface's size.
 */
 @property --reading-width {
   syntax: "<length>";

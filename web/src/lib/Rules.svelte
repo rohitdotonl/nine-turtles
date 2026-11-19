@@ -185,7 +185,7 @@
             <button type="button" class="btn btn-small" onclick={() => (forFeed = undefined)}>Everyone instead</button>
           </p>
         {/if}
-        <div class="flex w-full items-center gap-2">
+        <div class="field-row flex w-full items-center gap-2">
           <label for="hide-word" class="sr-only">{forName ? `Hide articles from ${forName} about` : "Hide articles about"}</label>
           <input
             id="hide-word"

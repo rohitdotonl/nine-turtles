@@ -5,7 +5,8 @@
   turtles twice its size) gets screens laid out for it: rows stack, buttons
   and choices wrap their words, and nothing runs off the screen's edge, so
   every feature still works (the first floor: "at 200% text size"; WCAG 1.4.4).
-  At the usual sizes nothing here changes a pixel.
+  The two rules just below are always on and change nothing at the usual
+  sizes; everything under `data-text="large"` applies only to large text.
 */
 
 /*
@@ -47,14 +48,11 @@
     A row's words, or a field, keep at least 9rem: a button beside them moves
     under them rather than squeezing them to a letter a line.
   */
-  & .inset-row,
-  & .note-line,
-  & .flex:has(> input.flex-1) {
+  & :is(.inset-row, .note-line, .field-row) {
     flex-wrap: wrap;
   }
-  & :is(.inset-row, .note-line) > .flex-1,
-  & .inset-input,
-  & input.flex-1 {
+  & :is(.inset-row, .note-line, .field-row) > .flex-1,
+  & .inset-input {
     flex: 1 1 9rem;
   }
   /* An icon beside words grows with them, as a phone's own apps draw theirs. */
@@ -73,12 +71,20 @@
   /* An icon's button keeps its 44px width, as a phone's own bars do, so a title beside it gets the room. */
   & .btn-icon {
     width: 44px;
+    min-height: 44px;
+    height: 44px;
   }
 
   /* A button's words wrap inside it rather than pushing it past the edge. */
   & :is(.btn, .btn-primary, .btn-quiet) {
+    flex-shrink: 1;
     white-space: normal;
     text-align: center;
+  }
+  /* Except the way back at a screen's top, which keeps its one line and ends in "…" (DESIGN.md → "The top of a phone screen"). */
+  & .nav-back {
+    white-space: nowrap;
+    text-align: start;
   }
 
   /* A segmented choice: as many even columns as fit, two or one, each choice's words wrapping. */
@@ -121,13 +127,19 @@
     overflow-wrap: break-word;
   }
 
+  /* A person's name on their page, their page's one big title, is capped as every big title is. */
+  & .who-name {
+    font-size: var(--text-display);
+  }
+
   /* A writer's list leaves their small picture out of its title, so their name has the room. */
   & .list-face {
     display: none;
   }
 
   /* Keyboard shortcuts: each action on its own line, its keys under it. */
-  & table:has(td.text-right.whitespace-nowrap) :is(tr, td) {
+  & .keys-table :is(tr, td) {
+    white-space: normal;
     display: block;
     height: auto;
     text-align: start;

@@ -52,7 +52,7 @@
   import { listMenu, type MenuHands, type MenuScene } from "./listMenu";
   import { writerItems } from "./rowMenu";
   import { keyListener, type KeyHands, type KeyScene } from "./shortcuts";
-  import { currentWidth, remPx, ScreenLayout, watchWidth } from "./layout.svelte";
+  import { currentWidth, ScreenLayout, watchWidth } from "./layout.svelte";
   import { apply, load, save } from "./preferences";
   import { device } from "./appearance.svelte";
   import { addressFor, articleIn, isList, nameFor, ownClick, parentOf, parse, pathFor, sidebarViews, titleFor, type Route } from "./router";
@@ -862,8 +862,8 @@
       <PaneResizer
         label="Resize the sidebar"
         bind:width={layout.sidebarWidth}
-        min={Math.round(12.5 * remPx())}
-        max={Math.round(25 * remPx())}
+        min={layout.sidebarMin}
+        max={layout.sidebarMax}
         pane={sidebar}
         onDone={() => layout.storeSidebarWidth()}
       />

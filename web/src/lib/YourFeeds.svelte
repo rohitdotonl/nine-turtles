@@ -441,11 +441,11 @@
     background-color: var(--paper);
   }
   /*
-    In a very short window (a computer zoomed to 400%, a phone on its side at a large text
-    size), a bar that stays put would leave no room for the rows, so it sits at the list's
-    end instead (WCAG 1.4.10, decision 0313).
+    In a window both short and narrow (a computer zoomed to 400%), a bar that stays put
+    would leave no room for the rows, so it sits at the list's end instead (WCAG 1.4.10,
+    decision 0313). A phone on its side is wider, and keeps it in view.
   */
-  @media (height < 30rem) {
+  @media (height < 30rem) and (width < 40rem) {
     .tidy-bar {
       position: static;
     }
