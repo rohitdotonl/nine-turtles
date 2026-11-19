@@ -37,7 +37,12 @@ shopt -s nullglob
 debs=("$BROWSER_DEBS"/*.deb)
 if [ ${#debs[@]} -gt 0 ]; then
   echo "Installing the browser's ${#debs[@]} system pieces from the kept copies."
-  if ! sudo apt-get install -y --no-install-recommends "${debs[@]}"; then
+  # Pointed at the kept folder as its download cache, apt finds every piece
+  # already there; --no-download makes it fail rather than reach for Ubuntu
+  # if one is missing. (Given the files by name instead, apt still downloads
+  # any whose version Ubuntu's list also has, slowly: seen on 19 November.)
+  if ! sudo apt-get install -y --no-install-recommends --no-download \
+    -o Dir::Cache::Archives="$BROWSER_DEBS" "${debs[@]}"; then
     # The fresh copies aren't saved: the workflow saves only when it found
     # nothing under its key. Runs stay on this slower path until GitHub's
     # image changes (about weekly) or the web app's libraries do.
