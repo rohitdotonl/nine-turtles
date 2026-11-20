@@ -75,6 +75,7 @@
     feedId,
     library,
     quotes = () => [],
+    aboutALine,
     quiet = false,
     within,
     away = $bindable(),
@@ -88,6 +89,8 @@
     library: LoadedLibrary;
     /** The words the reader highlighted in the article: the email starts with them quoted (decision 0205). */
     quotes?: () => string[];
+    /** In an article whose words can be chosen: "Write back about a line…" heads the arrow's menu and says how (decision 0326). */
+    aboutALine?: () => void;
     /** In a row of plain links (the box of who isn't working, decision 0279): Write to is a plain link among them, the address with Change and what follows it takes a line of its own straight after it, and the address box's own button is bordered, not the solid one. */
     quiet?: boolean;
     /** The article's scroller, to tell whether this is on screen. */
@@ -253,6 +256,7 @@
 
   /** The arrow's ways (decision 0286), the one the main button does ticked. On a computer, the email app's row shows its key. */
   let menu: MenuGroup[] = $derived([
+    ...(aboutALine ? [{ items: [{ label: "Write back about a line…", icon: "highlight" as const, onSelect: aboutALine }] }] : []),
     {
       items: [
         ...(["app", "gmail", "outlook"] as const).map((other) => ({

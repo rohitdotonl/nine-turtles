@@ -182,19 +182,19 @@ test.describe("on a phone", () => {
     const order = await toolbar(page).locator(":scope > *").evaluateAll((places) => places.map((place) => place.getAttribute("aria-label") ?? place.className));
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
-    // More opens upwards, over the article, reading from the button outwards (decision 0243): Text and page nearest
-    // the finger, then Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0293).
+    // More opens upwards, over the article, reading from the button outwards (decision 0243): Highlight… nearest
+    // the finger (decision 0326), then Text and page, Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0293).
     // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Asha Rao/, /^\s*Add a note/, /^\s*Mark as unread/, /^\s*Text and page\s*$/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/^\s*Hide articles about/, /^\s*Info about Asha Rao/, /^\s*Add a note/, /^\s*Mark as unread/, /^\s*Text and page\s*$/, /^\s*Highlight…\s*$/]);
     expect(await menu.getByRole("menuitem").evaluateAll((rows) => rows.every((row) => row.querySelector("svg")))).toBe(true);
     await expect(menu.getByRole("menuitem").last()).toBeFocused();
     // With only a keyboard: the arrow keys move through the rows as drawn, Escape gives the keyboard back to More,
     // Enter opens on the nearest row, and the arrows on More open on the row nearest (up) or furthest (down).
     const more = toolbar(page).getByRole("button", { name: "More actions" });
     await page.keyboard.press("ArrowUp");
-    await expect(menu.getByRole("menuitem", { name: "Mark as unread" })).toBeFocused();
+    await expect(menu.getByRole("menuitem", { name: "Text and page" })).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(more).toBeFocused();
     await page.keyboard.press("Enter");

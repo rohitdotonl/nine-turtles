@@ -279,7 +279,7 @@ test.describe("on a wide window", () => {
     await expect(more).toHaveAttribute("aria-haspopup", "menu");
     await more.click();
     const menu = page.getByRole("menu", { name: "More actions" });
-    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Text and page/, /Mark as unread/, /Add a note/, /Info about Asha Rao/, /Hide articles about/]);
+    await expect(menu.getByRole("menuitem")).toHaveText([/Copy link\s*C/, /Highlight…\s*H/, /Text and page/, /Mark as unread/, /Add a note/, /Info about Asha Rao/, /Hide articles about/]);
     await expect(menu.getByRole("menuitem", { name: "Mark as unread" })).toHaveAttribute("aria-keyshortcuts", "m");
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);
@@ -309,14 +309,18 @@ test.describe("on a wide window", () => {
     const more = article(page).getByRole("button", { name: "More actions" });
     const panel = page.getByRole("dialog", { name: "Text and page" });
     const menu = page.getByRole("menu", { name: "More actions" });
-    // With only a keyboard: Enter on More, the first row is Copy link, the next Text and page, and Enter opens the panel on its first control.
+    // With only a keyboard: Enter on More, the first row is Copy link, then Highlight… (decision 0326), then Text and page, and Enter opens the panel on its first control.
     await more.focus();
     await page.keyboard.press("Enter");
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
     await expect(menu.getByRole("menuitem").first()).toHaveText(/Copy link/);
+    // Highlight… shows once the whole article has come, so wait for it before moving down.
+    await expect(menu.getByRole("menuitem").nth(1)).toHaveText(/Highlight…/);
     await page.keyboard.press("ArrowDown");
-    await expect(menu.getByRole("menuitem").nth(1)).toHaveText(/Text and page/);
     await expect(menu.getByRole("menuitem").nth(1)).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem").nth(2)).toHaveText(/Text and page/);
+    await expect(menu.getByRole("menuitem").nth(2)).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(panel).toBeVisible();
     await expect(panel.getByRole("button", { name: "Smaller text" })).toBeFocused();

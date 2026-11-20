@@ -67,6 +67,7 @@
   import { rowMenu, rowSwipes, type RowAround } from "./rowMenu";
   import { listenForStarring } from "./articleDrag";
   import type { EmptyWords } from "./listWording";
+  import ChoosingWords from "./ChoosingWords.svelte";
   import ListArriving from "./ListArriving.svelte";
   import type { SortedLine } from "./sorting";
   import { askingEvery, bringsIn, showsArrivals } from "./asking";
@@ -674,7 +675,7 @@
 {#if (bringingIn || (sorted && showsArrivals(source))) && !fromDevice}<ListArriving left={checking} nothingYet={loaded && articles.length === 0} {sorted} />{/if}
 
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
-  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? nothingKeptHere() : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}</div>
+  <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? nothingKeptHere() : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}{#if !fromDevice && empty.shows}<ChoosingWords />{/if}</div>
 {:else if articles.length > 0}
   <ul class={["item-list", heads.some(Boolean) && "by-person"]}>
     {#each articles as article, index (article.id)}
