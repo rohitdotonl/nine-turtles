@@ -951,7 +951,7 @@ test.describe("on a wide window", () => {
     await expect(article(page).getByText("View original")).toHaveCount(0);
   });
 
-  test("a writer in someone else's publication: their name on one line, a small italic \"in\" and the publication's under it, both centred; \"by\" heard but unseen (decisions 0323, 0325)", async ({ page }) => {
+  test("a writer in someone else's publication: their name on one line, a quiet italic \"in\" and the publication's under it, both centred; \"by\" heard but unseen (decisions 0323, 0325)", async ({ page }) => {
     // The feed's article answered as written by someone besides Asha Rao, the feed's own name, as a magazine's would be.
     await page.route("**/api/articles/*", async (route) => {
       const response = await route.fetch();
@@ -963,8 +963,8 @@ test.describe("on a wide window", () => {
     await openFirst(page);
     const byline = article(page).locator(".article-byline");
     await expect(byline).not.toContainText("/");
-    const writer = byline.locator(".writer");
-    const word = byline.locator(".by");
+    const writer = byline.locator(".writer bdi");
+    const word = byline.locator(".in");
     const publication = byline.getByRole("link", { name: "Asha Rao" }).locator("bdi");
     const [name, inWord, where, picture] = await Promise.all([writer, word, publication, article(page).locator(".article-credit > .portrait")].map(async (part) => (await part.boundingBox())!));
     // "in" and the publication share the line under the writer's; each line is centred under the picture.
@@ -976,6 +976,18 @@ test.describe("on a wide window", () => {
     // The "in" is quiet: italic, in the second ink.
     await expect(word).toHaveText("in");
     await expect(word).toHaveCSS("font-style", "italic");
+    const [wordColor, secondInk] = await Promise.all([
+      word.evaluate((element) => getComputedStyle(element).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--ink-2)";
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }),
+    ]);
+    expect(wordColor).toBe(secondInk);
     // What a screen reader is given: one sentence, with spaces between the words.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
@@ -986,25 +998,27 @@ test.describe("on a wide window", () => {
     `);
   });
 
-  test("on a narrow window, long names each wrap centred and stay inside the window; a right-to-left name is centred too (decision 0325)", async ({ page }) => {
+  test("on a narrow window, long names (a writer's or a publication's) wrap centred and stay inside the window; a right-to-left name is centred too (decision 0325)", async ({ page }) => {
     let author = "Margaret Elizabeth Okonkwo-Smith of the Longest Name";
     await page.route("**/api/articles/*", async (route) => {
-      const response = await route.fetch();
-      const body = await response.json();
-      if (body?.article) body.article.author = author;
-      await route.fulfill({ response, json: body });
+      // A request still on its way when the page reloads is let go, not failed.
+      const response = await route.fetch().catch(() => undefined);
+      const body = await response?.json().catch(() => undefined);
+      if (!response || !body) return route.abort().catch(() => undefined);
+      if (body.article) body.article.author = author;
+      await route.fulfill({ response, json: body }).catch(() => undefined);
     });
     await openRoom(page, 390);
     await openFirst(page);
     const byline = article(page).locator(".article-byline");
     const picture = (await article(page).locator(".article-credit > .portrait").boundingBox())!;
     const centre = picture.x + picture.width / 2;
-    const writer = byline.locator(".writer");
+    const writer = byline.locator(".writer bdi");
     const check = async () => {
       const line = (await writer.boundingBox())!;
       expect(line.x).toBeGreaterThanOrEqual(0);
       expect(line.x + line.width).toBeLessThanOrEqual(390);
-      // The text inside the writer's line is centred under the picture.
+      // Each line of the writer's name is centred under the picture.
       const text = await writer.evaluate((element) => {
         const range = document.createRange();
         range.selectNodeContents(element);
@@ -1015,6 +1029,18 @@ test.describe("on a wide window", () => {
       return text.length;
     };
     expect(await check()).toBeGreaterThan(1);
+    // A long publication's name wraps too, its lines with "in" centred and inside the window.
+    await byline.locator(".publisher bdi").evaluate((element) => (element.textContent = "The Pleasure of Slow Letters Quarterly and Other Writing"));
+    const lines = await byline.evaluate((element) => {
+      const range = document.createRange();
+      range.setStartBefore(element.querySelector(".in")!);
+      range.setEndAfter(element.querySelector(".publisher")!);
+      return [...range.getClientRects()].map((rect) => ({ left: rect.left, right: rect.right }));
+    });
+    const ys = lines.map((line) => (line.left + line.right) / 2);
+    expect(Math.min(...lines.map((line) => line.left))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...lines.map((line) => line.right))).toBeLessThanOrEqual(390);
+    expect(ys.length).toBeGreaterThan(0);
     author = "سارة الأحمد";
     await page.reload();
     await appReady(page);

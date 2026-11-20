@@ -1,8 +1,8 @@
 # 0325: An author besides the publication goes on their own line, with "in" and the publication under it
 
-**In one line:** When a feed names an author besides the publication, the byline is two centred lines, "{author}" and under it "*in* {publication}" (the "in" small, italic, in the second ink), replacing decision 0323's one-line "{author} / {publication}"; a name alone stays one centred line.
+**In one line:** When a feed names an author besides the publication, the byline is two centred lines, "{author}" and under it "*in* {publication}" (the "in" quiet: italic, in the second ink), replacing decision 0323's one-line "{author} / {publication}"; a name alone stays one centred line.
 
-*20 November 2026. The owner, on "John Gruber / Daring Fireball" live: "Doesn't look symmetrical." Shown real screenshots of today's line, the slash on the centre line (A) and the names stacked (B), with long and short names on a phone and a computer, he liked B and asked "would the user get it that the first row is author name and second is the publication?"; a small italic "in" settles it.*
+*20 November 2026. The owner, on "John Gruber / Daring Fireball" live: "Doesn't look symmetrical." Shown real screenshots of today's line, the slash on the centre line (A) and the names stacked (B), with long and short names on a phone and a computer, he liked B and asked "would the user get it that the first row is author name and second is the publication?"; an italic "in" settles it.*
 
 > **Partly replaces [0323](0323-byline-as-a-path.md):** its slash goes; its hidden "by" for screen readers stays.
 

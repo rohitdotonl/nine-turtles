@@ -48,13 +48,13 @@
 /*
   An author besides the publication (decisions 0323 and 0325): their name on
   its own line, then "in" and the publication's under it, both centred; the
-  "in" small and quiet, in italic and the second ink, as the old "by" was.
+  "in" quiet, in italic and the second ink, as the old "by" was.
 */
 .article-byline .writer {
   display: block;
 }
 
-.article-byline .by {
+.article-byline .in {
   font-style: italic;
   color: var(--ink-2);
 }

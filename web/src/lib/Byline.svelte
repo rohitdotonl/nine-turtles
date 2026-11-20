@@ -43,8 +43,8 @@
   {/if}{/snippet}
 
 <p class="article-byline min-w-0" lang="en" dir="ltr">
-  <!-- "by" is heard, unseen; a small italic "in" leads the publication's line, so it's never mistaken for a second writer. -->
-  <span class="sr-only">by</span>{" "}{#if author}<bdi class="writer">{author}</bdi><span class="by">in</span>{" "}{/if}{@render name()}<span class="sr-only">,</span>
+  <!-- "by" is heard, unseen, on the writer's own line; a quiet italic "in" leads the publication's line, so it's never mistaken for a second writer. -->
+  {#if author}<span class="writer"><span class="sr-only">by</span>{" "}<bdi>{author}</bdi></span><span class="in">in</span>{" "}{:else}<span class="sr-only">by</span>{" "}{/if}{@render name()}<span class="sr-only">,</span>
   <!-- The day on a line of its own, small and faint, so the name leads (decision 0294). -->
   <time datetime={new Date(at * 1000).toISOString()} title={exactly(at)}>{when(at)}</time>
 </p>

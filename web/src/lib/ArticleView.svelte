@@ -565,7 +565,7 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
       <!-- With room above it (32px, 48px from 48rem wide, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={untitled ? "sr-only" : ["article-title", titleLength(article.title)]} dir={rtl ? "rtl" : undefined}>{titleWords}</h2>
-      <!-- Under the title, centred, as on a book's title page: their picture and their name, then the day, small and faint (decisions 0294, 0323). -->
+      <!-- Under the title, centred, as on a book's title page: their picture and their name, then the day, small and faint (decisions 0294, 0323, 0325). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="article-credit">
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
