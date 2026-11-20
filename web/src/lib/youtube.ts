@@ -154,18 +154,50 @@ export function chapters(html: string | null | undefined): Chapter[] {
   return found.length >= 2 ? found : [];
 }
 
-/** The most of a description shown before it's folded: one paragraph, if the rest would add more than this many characters. */
-const FOLD_AFTER = 280;
+/** The chapter playing at a time (in seconds): the last one started by then; undefined before the first. */
+export function chapterAt(list: Chapter[], time: number): Chapter | undefined {
+  return list.filter((chapter) => chapter.at <= time).at(-1);
+}
 
 /**
- * Whether a video's description is long enough to fold behind "Show the
- * full description": more than one paragraph, the rest of them longer than
- * `FOLD_AFTER` characters.
+ * What's open under a video (decision 0324): its chapters, its description,
+ * or neither (the start). Kept on this device, so each video opens the way
+ * the last one was left.
  */
-export function foldable(html: string | null | undefined): boolean {
-  if (!html) return false;
-  const paragraphs = html.split(/<\/p>/i).filter((part) => part.replace(/<[^>]*>/g, "").trim());
-  if (paragraphs.length < 2) return false;
-  const rest = paragraphs.slice(1).join("").replace(/<[^>]*>/g, "").trim();
-  return rest.length > FOLD_AFTER;
+export type VideoOpen = "chapters" | "description" | null;
+export const VIDEO_OPEN_KEY = "nine-turtles.video-open";
+
+/** What this device keeps open under a video, from its text: nothing when none or nothing usable. */
+export function videoOpen(kept: string | null): VideoOpen {
+  return kept === "chapters" || kept === "description" ? kept : null;
+}
+
+/** Whether a feed's site is on YouTube (a channel or a playlist): only there is a video's text its channel's description (decision 0324). */
+export function onYouTube(site: string | null | undefined): boolean {
+  try {
+    return site ? /(^|\.)youtube\.com$/i.test(new URL(site).hostname) : false;
+  } catch {
+    return false;
+  }
+}
+
+/** A link whose words are its own address, such as `https://example.com/s/a-long-code`. */
+const BARE_LINK = /(<a\b[^>]*>)\s*((?:https?:\/\/|www\.)[^\s<]+)\s*(<\/a>)/gi;
+
+/**
+ * A video description with each link whose words are an address shortened
+ * to that address's site ("higgsfield.ai"), as a person says it (decision
+ * 0324). The link still goes where it went; links named with words keep
+ * them. Highlights match words, so one made across a bare address before
+ * this was shortened stays listed but isn't drawn.
+ */
+export function shortLinks(html: string): string {
+  return html.replace(BARE_LINK, (whole, open: string, words: string, close: string) => {
+    try {
+      const host = new URL(/^www\./i.test(words) ? `https://${words.replace(/&amp;/g, "&")}` : words.replace(/&amp;/g, "&")).hostname.replace(/^www\./i, "");
+      return host ? `${open}${host}${close}` : whole;
+    } catch {
+      return whole;
+    }
+  });
 }

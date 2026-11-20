@@ -90,6 +90,7 @@
     --tint-list: #2c2c2c;
     --tint-sidebar: #3b3b3b;
     --surface-raised: #28282a;
+    --video-starting: #242426;
     --raised-edge: rgb(255 255 255 / 0.08);
     --raised-group: color-mix(in srgb, #ffffff 4%, var(--surface-raised));
     --raised-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -262,10 +263,7 @@ body {
   color: var(--ink);
 }
 
-/*
-  No lines between the list's rows (decision 0123): space alone parts one
-  article from the next, as Tufte's "erase non-data ink" asks.
-*/
+/* No lines between the list's rows (decision 0123): space alone parts one article from the next, as Tufte's "erase non-data ink" asks. */
 /*
   A row in the list, like a line of a book's contents (decisions 0123, 0128):
   the list's own pill tint; 22px above, 28px below, the title in the reading

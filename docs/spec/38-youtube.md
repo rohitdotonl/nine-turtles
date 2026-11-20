@@ -56,29 +56,39 @@ you paste.
   its list row's meta line ends with a small screen-and-play mark (screen
   readers hear "Video"). A video counts as read once opened, the same rule as
   every article.
-- **The video page** (section 7): under the byline, the grey Play box with
-  the video's title set large in it (the reading face, semibold, the large
-  size, centred, up to four lines; with large text the box grows taller
-  rather than cut its words), then a round Play mark and **Play video**. Still nothing
-  loads from YouTube until it's pressed (decision 0072). A Short's box stands
-  up (9 : 16, at most 20rem wide); every other video's is 16 : 9. Pressed,
-  the box stays over YouTube's player until the player has loaded, its words
+- **The video page** (section 7, decision 0324): under the byline, a box
+  drawn in ink on the page with only a round Play mark and **Play video**
+  (the title is the page's own, just above). Still nothing loads from
+  YouTube until it's pressed (decision 0072). A Short's box stands
+  up (9 : 16, at most 20rem wide); every other video's is 16 : 9. Either is as large as the window allows
+  while the title, the box and Chapters and Description stay in the first
+  screen, so nothing needs a scroll to start (on a computer up to 5rem past
+  the text on each side; never under 180px tall). Pressed,
+  the box fills charcoal at once (no fade), so the step to YouTube's dark
+  player is dark to dark, and stays over the player until it has loaded, its words
   "Starting the video…" once that takes half a second, so the press shows it worked (decision 0230), and
   "Still starting… YouTube can be slow to answer." after five, its dots breathing (a slow wait, section 25, decision 0287).
-- **Chapters you can press:** when the description lists at least two times,
-  each at the start or end of a line and each later than the one before
-  ("0:00 First light", "The heron – 4:00"), they're listed under the box as
-  **Chapters**, in the reading face, in two columns where there's room, each
-  a 44px row with its time (small, muted, in figures of one width with a plain
-  zero, not underlined) and its name, which underlines under the pointer
-  (decision 0298). Pressing one plays the video from there, or moves the
-  playing video there. Each is named by what it shows ("4:00 The heron"), so
-  voice control finds it.
-- **A long description is folded:** when it has more than one paragraph and
-  the rest add more than 280 characters, only its first paragraph shows,
-  followed by **Show the full description**, which shows the rest and
-  becomes **Show less** (a disclosure button: screen readers hear whether
-  it's open).
+- **Chapters and Description, folded** (decision 0324): under the box, two
+  words, centred: **Chapters** with its count (when the description lists
+  at least two times, each at the start or end of a line and each later
+  than the one before, "0:00 First light", "The heron – 4:00") and
+  **Description** (when there is one), each a 44px disclosure button with
+  the folders' chevron; screen readers hear whether it's open. Both start
+  closed. Pressing one opens it and closes the other; pressing it again
+  closes it. This device remembers which was left open, so the next video
+  opens the same way.
+- **Chapters you can press:** a contents page in the reading face, one
+  column, each a 44px row with its name and, at the end, its time (small,
+  muted, in figures of one width with a plain zero); the name underlines
+  under the pointer. Pressing one plays the video from there, or moves the
+  playing video there. While it plays, the chapter playing is semibold.
+  Each is named by what it shows ("The heron 4:00"), so voice control finds
+  it.
+- **The description,** while open, is the feed's text. A link whose words
+  are an address shows just its site ("higgsfield.ai"), still going where
+  it went; links named with words keep them. Only a channel's own videos
+  fold like this: a blog post linking to a video shows as any article.
+  Offline, with no player, the description simply shows (section 32).
 - **Picking up where you stopped,** on any device: while a video plays,
   YouTube's player tells the page its time, which is kept every 15 seconds,
   on pause and on leaving the video (on the server for each reader, and on
@@ -119,12 +129,13 @@ goes unused for a while (decision 0156).
 4. In Google Takeout, export YouTube's subscriptions; in Settings › Your
    data, choose Import YouTube subscriptions… and pick `subscriptions.csv`:
    the channels appear, and their videos arrive over the next few minutes.
-5. Open a video: the grey box shows its title and Play video, and its
-   chapters (if any) are listed under it. Press a chapter: it plays from
-   there. Watch a minute, open another article, come back: the box says
+5. Open a video: the ink-drawn box shows only Play video, with Chapters
+   and Description closed under it. Open Chapters and press one: it plays
+   from there, and that chapter turns semibold. Watch a minute, open another article, come back: the box says
    Resume from …. Let a video end: the player closes back to the box.
-6. A video with a long description shows its first paragraph and Show the
-   full description.
+6. Open Description: Chapters closes, the description shows, and a long
+   bare link reads as its site. Open another video: Description is open
+   there too, until you close it.
 7. Play a video, choose 1.5× in the player's settings, then open another
    video and press Play: it plays at 1.5×. Turn captions off in one video:
    the next one plays without them.

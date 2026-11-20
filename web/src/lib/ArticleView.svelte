@@ -46,7 +46,8 @@
   import type { LoadedLibrary } from "./library.svelte";
   import { isSomeone, placesOf, siteName } from "./people";
   import { tick, type Snippet } from "svelte";
-  import { chapters, foldable, youtubeVideo } from "./youtube";
+  import { deviceText } from "./device";
+  import { chapters, onYouTube, shortLinks, VIDEO_OPEN_KEY, videoOpen, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import { untitledOpening, whoIcon, type Article, type FullArticle } from "./shapes";
@@ -177,9 +178,12 @@
   let site = $derived(library.feeds?.find((feed) => feed.id === article.feedId)?.siteTitle ?? siteName(full?.siteUrl ?? null) ?? article.feedTitle);
   let author = $derived(authorBesides(full?.author, article.feedTitle));
 
-  /** A long video description shows its first paragraph, the rest behind "Show the full description" (decision 0144). */
-  let unfoldedFor: number | undefined = $state();
-  let folded = $derived(unfoldedFor !== article.id && video !== undefined && foldable(full?.content));
+  /** What's open under a video (decision 0324): its chapters, its description (this article's text), or neither, as this device last left it. */
+  let videoPart = $state(videoOpen(deviceText(VIDEO_OPEN_KEY)));
+  /** Only a video from YouTube's own feed folds its text (its description) behind Description; a blog post linking to one is the writer's words. */
+  let folds = $derived(video !== undefined && onYouTube(full?.siteUrl));
+  /** The description is out of sight while the player, and so its Description word, is there and closed (offline it simply shows, SPEC section 32). */
+  let tucked = $derived(folds && !connection.offline && videoPart !== "description");
 
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
@@ -594,6 +598,8 @@
             title={titleWords}
             tall={full?.videoKind === "short" || article.link?.includes("/shorts/")}
             chapters={chapters(full?.content)}
+            description={folds && Boolean(full?.content)}
+            bind:open={videoPart}
           />
         {/key}
       {/if}
@@ -611,13 +617,9 @@
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
           <!-- Made anew for each article: highlights are drawn into it (ArticleMarks). -->
           {#key full.id}
-            <div bind:this={text} id="article-text" class={["article-text", folded && "folded"]} dir={rtl ? "rtl" : "auto"}>{@html full.content}</div>
+            <!-- A channel's video's is its description: only while Description is open under it, each long bare address shortened to its site (decision 0324). -->
+            <div bind:this={text} id="article-text" class="article-text" dir={rtl ? "rtl" : "auto"} hidden={tucked}>{@html folds ? shortLinks(full.content) : full.content}</div>
           {/key}
-          {#if video && foldable(full.content)}
-            <button type="button" class="text-link" aria-expanded={!folded} aria-controls="article-text" lang="en" onclick={() => (unfoldedFor = folded ? article.id : undefined)}
-              >{folded ? "Show the full description" : "Show less"}</button
-            >
-          {/if}
           {#if footnote}
             <FootnoteCard note={footnote.note} top={footnote.top} onclose={(back) => { if (back) footnote?.link.focus(); footnote = undefined; }} />
           {/if}
@@ -655,6 +657,7 @@
             {text}
             phone={phone !== undefined}
             {media}
+            reveal={() => youtube?.revealDescription()}
             say={(words) => (copied = words)}
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
@@ -792,9 +795,5 @@
     .writer-link:hover {
       text-decoration-color: currentColor;
     }
-  }
-  /* A long video description, folded: its first paragraph only, until "Show the full description" (decision 0144). */
-  .folded > :global(:not(:first-child)) {
-    display: none;
   }
 </style>
