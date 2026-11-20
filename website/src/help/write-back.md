@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-20
+updated: 2026-11-19
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
@@ -72,8 +72,7 @@ from the arrow.
 Something they wrote stayed with you? Choose those words in the article.
 The small menu beside them ends with **Write back about this**. Press it,
 and your email starts with their words, in quotation marks, so they know
-what you're answering. **Write back about a line…**, at the top of the
-arrow's menu, reminds you how.
+what you're answering.
 
 If you've highlighted words in the article, **Write back** starts your
 email with them too, and says so under the button: "Your email starts with

@@ -1,6 +1,6 @@
-# 0326: Finding highlights: Highlight… in More, Write back about a line…, and Notes shows how
+# 0326: Finding highlights: Notes shows how
 
-**In one line:** The article's More menu starts with "Highlight…" (key h on a computer), which highlights the words chosen or, with none, says "Choose any words to highlight them." (as h now does); Write back's arrow menu starts with "Write back about a line…", which says "Choose any words, then press Write back about this."; and Notes, while empty, says "Nothing here yet. Select text in any article to highlight it or add a note." over a still picture of chosen words and their menu, the one empty list with a picture.
+**In one line:** Notes, while empty, says "Nothing here yet." and "Select text in any article to highlight it or add a note." over a still picture of chosen words and their menu, the one empty list with a picture. (The two menu rows that came with it, Highlight… in More and Write back about a line…, were taken out the same day.)
 
 *20 November 2026. From the first-time reader critique: the website promises "highlight a line and write back", but in an article nothing shows how, and the one place that said it (Notes' empty list) is found only by someone who already has notes to look at. The owner turned down a hint line on articles ("too verbose, that too on every article"), chose the two menu rows from mockups, wrote the Notes words himself, asked for the picture of chosen words with Highlight and Add a note… under them, set apart from the page, with a quote of his choosing (Larry David), and said "good, implement this".*
 
@@ -12,5 +12,7 @@
 **The break, on purpose.** It's in DESIGN.md's Exceptions log: a picture in an empty list (BRAND.md's "no picture"), and the drawn menu keeps the real menu's floating shadow though it sits still in the card, so it looks like the menu the reader will meet.
 
 **Why.** Highlighting is the start of writing back, the app's purpose, and it's invisible until someone happens to choose words. Menus are where people look for what an app can do, so both rows are found by looking and never sit in the way of the writing (DESIGN.md: "power is findable, never in the way"). The picture breaks the brand's "no picture" in empty lists on purpose (BRAND.md): a gesture is learned faster by seeing it than by reading it.
+
+**Taken out the same day** (the owner, 20 November 2026): items 1 and 2, the two menu rows, and `h` saying how with nothing chosen. They were built from a misread of which "1 and 2" the owner meant (he meant the critique's two bugs). `h` with nothing chosen does nothing again; only item 3, Notes' picture, stays.
 
 **Revisit if** readers still don't find highlighting, or the picture is taken for something to press.
