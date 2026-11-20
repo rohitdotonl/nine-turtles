@@ -362,7 +362,15 @@ test("New to feeds? keeps its main button in view and on top, on a small phone a
   await expect(sheet).toBeVisible();
   await onTop("Add all five");
   await onTop("Cancel");
-  await sheet.getByRole("link", { name: /^Ava/ }).evaluate((link) => link.scrollIntoView({ block: "end" }));
+  // With the keyboard alone, each row's box comes into view clear of the actions, never under them.
+  const actions = (await page.getByRole("button", { name: "Cancel" }).boundingBox())!;
+  for (let press = 0; press < 12; press++) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate(() => (document.activeElement as HTMLElement).innerText ?? "");
+    if (/Cancel|Add all five/.test(focused)) break;
+    const box = await page.evaluate(() => document.activeElement!.getBoundingClientRect().bottom);
+    expect(box).toBeLessThanOrEqual(actions.y);
+  }
   await onTop("Add all five");
 });
 

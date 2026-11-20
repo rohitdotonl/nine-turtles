@@ -109,6 +109,10 @@
 </form>
 
 <style>
+  /* Tabbing down the list scrolls the next row clear of the actions, never under them (visible focus). */
+  :global(dialog:has(.starters-actions)) {
+    scroll-padding-bottom: 6rem;
+  }
   .starters-actions {
     position: sticky;
     bottom: 0;

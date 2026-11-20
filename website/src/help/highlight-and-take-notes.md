@@ -4,7 +4,7 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-18
+updated: 2026-11-20
 related: [save-an-article, search-everything, download-everything]
 ---
 

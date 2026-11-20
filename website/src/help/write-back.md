@@ -4,7 +4,7 @@ description: Reply to someone you read by email, from the end of their article, 
 groupId: reading
 order: 10
 spec: 7, 36 and 37
-updated: 2026-11-19
+updated: 2026-11-20
 related: [one-person-several-places, share-an-article, newsletters]
 ---
 
