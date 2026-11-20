@@ -226,7 +226,8 @@
     >
       <span class="video-word" aria-hidden="true">
         <span class="video-mark">
-          <svg width="16" height="16" viewBox="0 0 20 20"><path d="M7 4.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L7.9 4.3a.6.6 0 0 0-.9.5z" fill="currentColor" /></svg>
+          <!-- Its balance point (a third in from its flat side) at the circle's centre, as the eye centres a triangle. -->
+          <svg width="18" height="18" viewBox="0 0 20 20"><path d="M7 4.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L7.9 4.3a.6.6 0 0 0-.9.5z" fill="currentColor" /></svg>
         </span>
         {resume > 0 ? `Resume from ${clock(resume)}` : "Play video"}
       </span>
@@ -332,10 +333,6 @@
     border-radius: 999px;
     background-color: var(--ink);
     color: var(--paper);
-  }
-  /* The triangle looks centred a little right of the middle, as a play mark does. */
-  .video-mark svg {
-    margin-left: 2px;
   }
   /*
     The two words under the video (decision 0324): the interface's face,
