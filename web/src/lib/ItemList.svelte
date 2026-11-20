@@ -224,7 +224,7 @@
   let heads = $derived(headsOf(articles));
   // TRIAL (screen refine 1): the looks being tried in Unread.
   let byPerson = $derived(heads.some((head) => head?.at !== undefined));
-  let grouped = $derived(byPerson && (trial.look === "cards" || trial.look === "columns"));
+  let grouped = $derived(byPerson && trial.look === "cards");
   let groups = $derived.by(() => {
     const starts = heads.flatMap((head, index) => (head ? [index] : []));
     return starts.map((start, i) => ({ start, end: starts[i + 1] ?? articles.length }));
@@ -709,10 +709,10 @@
   {#snippet entry(article: Article, index: number)}
     {@const current = index === selectedIndex}
     {@const head = heads[index]}
-    {@const folded = trial.look === "names" && byPerson && !trial.open.includes(ownerAt(index))}
+    {@const folded = (trial.look as string) === "names" && byPerson && !trial.open.includes(ownerAt(index))}
     <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). In Notes, no groups and no day (decision 0308): each name is a heading right under the list's title. None can be pressed, as a row's name can't be today. -->
     {#if !grouped && (head?.people || head?.publications)}<h3 class={["label list-label", head.people && "list-label-people"]}>{head.people ? "People" : "Publications"}</h3>{/if}
-    {#if head && trial.look === "names" && head.at !== undefined}
+    {#if head && (trial.look as string) === "names" && head.at !== undefined}
       <svelte:element this="h4" class="list-name"
         ><button type="button" class="trial-who" aria-expanded={!folded} onclick={() => toggleOpen(head.name)}
           ><bdi>{head.name}</bdi> <time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time><span class="trial-chev" aria-hidden="true"><Icon name={folded ? "chevron-down" : "chevron-up"} /></span></button
@@ -739,7 +739,7 @@
     <ul class="item-list by-person trial-grouped">
       {#each groups as group (articles[group.start]?.id ?? group.start)}
         {@const head = heads[group.start]}
-        {#if head?.publications}<li class="trial-label"><h3 class="label list-label">Publications</h3></li>{/if}
+        {#if head?.people || head?.publications}<li class="trial-label"><h3 class="label list-label">{head.people ? "People" : "Publications"}</h3></li>{/if}
         <li class="trial-group">
           <ul>
             {#each articles.slice(group.start, group.end) as article, i (article.id)}

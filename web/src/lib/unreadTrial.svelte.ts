@@ -4,11 +4,9 @@
 */
 export const LOOKS = [
   ["now", "Today"],
-  ["tidy", "1 Tidy (names above)"],
-  ["margin", "1 Tidy + names in the margin (computer)"],
-  ["columns", "1 Tidy + two columns (computer)"],
-  ["names", "2 Names first"],
-  ["cards", "3 Cards"],
+  ["margin", "Names in the margin, today's spacing"],
+  ["margin-mid", "Names in the margin, a little tighter"],
+  ["cards", "Cards, today's spacing"],
 ] as const;
 export type Look = (typeof LOOKS)[number][0];
 
