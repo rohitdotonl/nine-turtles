@@ -60,8 +60,10 @@ you paste.
   drawn in ink on the page with only a round Play mark and **Play video**
   (the title is the page's own, just above). Still nothing loads from
   YouTube until it's pressed (decision 0072). A Short's box stands
-  up (9 : 16, at most 20rem wide); every other video's is 16 : 9 and, on a computer, as wide as a picture
-  (up to 5rem past the text on each side). Pressed,
+  up (9 : 16, at most 20rem wide); every other video's is 16 : 9. Either is as large as the window allows
+  while the title, the box and Chapters and Description stay in the first
+  screen, so nothing needs a scroll to start (on a computer up to 5rem past
+  the text on each side; never under 180px tall). Pressed,
   the box fills charcoal at once (no fade), so the step to YouTube's dark
   player is dark to dark, and stays over the player until it has loaded, its words
   "Starting the video…" once that takes half a second, so the press shows it worked (decision 0230), and

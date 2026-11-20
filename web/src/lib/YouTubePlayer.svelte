@@ -186,13 +186,39 @@
     };
   });
 
+  /*
+    A video is a screen to look at, not a page to read down (decision 0324):
+    its box takes as much room as the window has under the title, keeping
+    the two words under it in the first screen, so nothing needs a scroll
+    to start. Measured again whenever the window or the column changes.
+  */
+  let holder: HTMLDivElement | undefined = $state();
+  let fit: number | undefined = $state();
+  /** Room kept under the box: the two words' row and a breath. */
+  const UNDER = 80;
+  /** The box never shrinks below this height, on the smallest window. */
+  const LEAST = 180;
+  $effect(() => {
+    const scroller = holder?.closest<HTMLElement>(".reading-scroller");
+    if (!holder || !scroller) return;
+    const measure = () => {
+      const top = holder!.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      fit = Math.max(LEAST, scroller.clientHeight - top - UNDER);
+    };
+    measure();
+    const sizes = new ResizeObserver(measure);
+    sizes.observe(scroller);
+    if (scroller.firstElementChild) sizes.observe(scroller.firstElementChild);
+    return () => sizes.disconnect();
+  });
+
   // Leaving the video while it plays keeps where you are.
   onDestroy(() => {
     if (playing) keep();
   });
 </script>
 
-<div class={["video", tall && "tall"]}>
+<div bind:this={holder} class={["video", tall && "tall"]} style:--fit={fit === undefined ? undefined : `${fit}px`}>
   {#if playing}
     <!--
       YouTube's player refuses to play without knowing which site shows it, so
@@ -271,14 +297,20 @@
     width: 100%;
     --shape: 16 / 9;
   }
-  /* A wide video takes the computer's spare width as a picture does (article-text.css, decision 0324): up to 5rem past the text on each side, as far as the pane has room. */
+  /*
+    A wide video (decision 0324): as wide as the window's height leaves room
+    for (its --fit), up to 5rem past the text on each side where the pane
+    has spare width, as a picture may go; centred on the column.
+  */
   .video:not(.tall) {
-    width: auto;
-    margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
+    --wide: min(100% + 2 * max(0px, min(5rem, (100cqw - 100%) / 2)), var(--fit, 100vh) * 16 / 9);
+    width: var(--wide);
+    margin-inline: calc((100% - var(--wide)) / 2);
   }
-  /* A Short stands up, no wider than a phone's screen, so its whole height fits on a computer too. */
+  /* A Short stands up, no wider than a phone's screen nor taller than the window has room for. */
   .video.tall {
-    width: min(100%, 20rem);
+    width: min(100%, 20rem, var(--fit, 100vh) * 9 / 16);
+    margin-inline: auto;
     --shape: 9 / 16;
   }
   .video > :global(*) {
