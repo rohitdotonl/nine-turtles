@@ -2,7 +2,7 @@
 
 **In one line:** An article's title is centred, as a book opens a chapter, and sized by its length (short titles large and tight, long ones smaller with looser lines); under it, centred, the writer's picture, "by {name}" in the reading face, and the day on its own line, small, in the list's faint grey.
 
-> **Partly replaced by [0323](0323-byline-as-a-path.md):** the byline no longer shows "by" and "in": it reads "{author} / {feed}", or the name alone.
+> **Partly replaced by [0323](0323-byline-as-a-path.md) and [0325](0325-byline-on-two-lines.md):** the byline no longer shows "by": it reads the name alone, or the author on a line of their own with "*in* {feed}" under it.
 
 *17 November 2026. The owner, reviewing the reading experience ("I'm unhappy with how titles look and feel"), chose from ten versions on his own Substack articles: a centred title (version 7) with the length fix first drawn for version 9, then, of ten byline versions, "by Name" in the reading font (5), with the date "even muter" (5c). "titles A, byline 5c … Ship it, merge it."*
 

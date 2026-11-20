@@ -23,6 +23,7 @@
 <script lang="ts">
   import { copyOriginal, shareOriginal, sharing } from "./articleLinks";
   import { authorBesides, titleLength } from "./byline";
+  import Byline from "./Byline.svelte";
   import Portrait from "./Portrait.svelte";
   import { picturesOf } from "./portrait";
   import { edge } from "./edge";
@@ -52,7 +53,7 @@
   import type { Preferences } from "./preferences";
   import { untitledOpening, whoIcon, type Article, type FullArticle } from "./shapes";
   import { articleNow, onFresher, readArticle } from "./articles";
-  import { date, exactly, when } from "./times";
+  import { date } from "./times";
   import { goTo, keepPlace, placeIn, placeOf, type Place } from "./places";
   import { articleOpened, placeKept } from "./resume.svelte";
   import { connection } from "./connection.svelte";
@@ -565,26 +566,18 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
       <!-- With room above it (32px, 48px from 48rem wide, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={untitled ? "sr-only" : ["article-title", titleLength(article.title)]} dir={rtl ? "rtl" : undefined}>{titleWords}</h2>
-      <!-- Under the title, centred, as on a book's title page: their picture and their name, then the day, small and faint (decisions 0294, 0323). -->
+      <!-- Under the title, centred, as on a book's title page: their picture and their name, then the day, small and faint (decisions 0294, 0323, 0325). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="article-credit">
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
-        <!-- Left to right whatever the article's script. "Author / Publication", or the name alone (decision 0323): "by" and "in" are heard, unseen; the slash is only seen. -->
-        <p class="article-byline min-w-0" lang="en" dir="ltr">
-          <span class="sr-only">by</span>{" "}{#if author}<bdi>{author}</bdi>{"\u00a0"}<span class="sr-only">in</span><span class="crumb" aria-hidden="true">/</span><span class="crumb-room">{" "}</span>{/if}{#if followed}
-            <!-- Someone followed: their name opens their list, everything of theirs (decision 0289); the page about them is a press on from there, or More's "Info about …". No "›" here.
-                 A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
-            <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
-              onclick={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}><bdi>{article.feedTitle}</bdi></a
-            ><span id="byline-about" aria-hidden="true" class="sr-only">Opens everything of theirs.</span>
-          {:else if full?.siteUrl}
-            <a href={full.siteUrl} target="_blank" rel="noopener noreferrer" class="publisher hover:underline hover:underline-offset-4"><bdi>{article.feedTitle}</bdi><span class="sr-only">{" "}(opens in a new tab)</span></a>
-          {:else}
-            <span class="publisher"><bdi>{article.feedTitle}</bdi></span>
-          {/if}<span class="sr-only">,</span>
-          <!-- The day on a line of its own, small and faint, so the name leads (decision 0294). -->
-          <time datetime={new Date(article.at * 1000).toISOString()} title={exactly(article.at)}>{when(article.at)}</time>
-        </p>
+        <Byline
+          source={article.feedTitle}
+          {author}
+          theirs={followed ? addressFor({ kind: "feed", id: library.rowOf(article.feedId) }) : undefined}
+          onTheirs={(event) => ownClick(event) && onWriter(library.rowOf(article.feedId))}
+          site={full?.siteUrl ?? undefined}
+          at={article.at}
+        />
       </div>
 
       {#if video && connection.offline}
@@ -780,21 +773,5 @@
   /* Only the arrow fades: the keyboard's outline, if it lands here, stays solid. */
   .toolbar > [aria-disabled="true"] > :global(svg) {
     opacity: 0.35;
-  }
-  /* The writer's name under the title: a 44px target to touch, taller than its line without moving it
-     (an inline link's padding above and below never moves the line, on each line a long name wraps onto). */
-  /* Underlined at rest, as every link is (the 65% edge), so it reads as a way in; the line comes up to the ink under the pointer. */
-  .writer-link {
-    padding-block: calc((2.75rem - 1em) / 2);
-    cursor: pointer;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 4px;
-    text-decoration-color: color-mix(in srgb, currentColor 65%, transparent);
-  }
-  @media (hover: hover) {
-    .writer-link:hover {
-      text-decoration-color: currentColor;
-    }
   }
 </style>
