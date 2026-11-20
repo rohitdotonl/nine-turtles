@@ -271,6 +271,11 @@
     width: 100%;
     --shape: 16 / 9;
   }
+  /* A wide video takes the computer's spare width as a picture does (article-text.css, decision 0324): up to 5rem past the text on each side, as far as the pane has room. */
+  .video:not(.tall) {
+    width: auto;
+    margin-inline: calc(-1 * max(0px, min(5rem, (100cqw - 100%) / 2)));
+  }
   /* A Short stands up, no wider than a phone's screen, so its whole height fits on a computer too. */
   .video.tall {
     width: min(100%, 20rem);
