@@ -27,7 +27,7 @@ function keep(key: string, value: unknown) {
   }
 }
 
-export const trial = $state({ look: read<Look>(KEY, "now"), open: read<string[]>(KEY + "-open", []) });
+export const trial = $state({ look: read<Look>(KEY, "now"), open: read<string[]>(KEY + "-open", []), dayGrouped: false });
 
 export function setLook(look: Look) {
   trial.look = look;

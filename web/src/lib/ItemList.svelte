@@ -221,7 +221,26 @@
 
 
   /** Unread, by person (decisions 0271 and 0278): each name once, above their first article, and "People" and "Publications" where they begin. */
-  let heads = $derived(headsOf(articles));
+  let personHeads = $derived(headsOf(articles));
+  // TRIAL: lists not grouped by person are grouped by day in the margin and cards looks.
+  let dayHeads = $derived(
+    !personHeads.some(Boolean) && trial.look !== "now"
+      ? articles.map((article, index) => {
+          // A person's or publication's own list is grouped by month: a day each would head every title.
+          const group = (at: number) => {
+            if (!oneFeed) return when(at);
+            const date = new Date(at * 1000);
+            return date.toLocaleDateString("en-GB", { month: "long", ...(date.getFullYear() === new Date().getFullYear() ? {} : { year: "numeric" }) });
+          };
+          const day = group(article.at);
+          return index === 0 || group(articles[index - 1]!.at) !== day ? { name: day, at: article.at, people: false, publications: false, day: true } : undefined;
+        })
+      : undefined,
+  );
+  let heads: ({ name: string; at?: number; people: boolean; publications: boolean; day?: boolean } | undefined)[] = $derived(dayHeads ?? personHeads);
+  $effect(() => {
+    trial.dayGrouped = dayHeads !== undefined;
+  });
   // TRIAL (screen refine 1): the looks being tried in Unread.
   let byPerson = $derived(heads.some((head) => head?.at !== undefined));
   let grouped = $derived(byPerson && trial.look === "cards");
@@ -719,7 +738,7 @@
         ></svelte:element
       >
       {#if folded}<p class="trial-first">{article.title}</p>{/if}
-    {:else if head}<svelte:element this={head.at === undefined ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
+    {:else if head}<svelte:element this={head.at === undefined || head.day ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined && !head.day}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
     {#if !folded}
       <ItemRow
         bind:row={rows[index]}
@@ -736,7 +755,7 @@
   {/snippet}
   {#if grouped}
     <!-- TRIAL: each person's titles held together, for Cards and Two columns. -->
-    <ul class="item-list by-person trial-grouped">
+    <ul class={["item-list by-person trial-grouped", dayHeads && "by-day"]}>
       {#each groups as group (articles[group.start]?.id ?? group.start)}
         {@const head = heads[group.start]}
         {#if head?.people || head?.publications}<li class="trial-label"><h3 class="label list-label">{head.people ? "People" : "Publications"}</h3></li>{/if}
@@ -750,7 +769,7 @@
       {/each}
     </ul>
   {:else}
-    <ul class={["item-list", byPerson && "by-person"]} bind:this={listElement}>
+    <ul class={["item-list", byPerson && "by-person", dayHeads && "by-day"]} bind:this={listElement}>
       {#each articles as article, index (article.id)}
         <li>{@render entry(article, index)}</li>
       {/each}

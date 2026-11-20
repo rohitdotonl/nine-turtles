@@ -6,6 +6,7 @@
   the article, is `ItemRow.svelte`'s.
 -->
 <script lang="ts">
+  import { trial } from "./unreadTrial.svelte";
   import Icon from "./Icon.svelte";
   import { untitledOpening, type Article } from "./shapes";
   import { sourceOf, writerOf, type OneSource } from "./people";
@@ -35,7 +36,7 @@
 
   let opening = $derived(untitledOpening(article));
   /** Unread, by person, shows no day: its titles are listed under who wrote them, the newest first (decision 0277). Screen readers still hear it. */
-  let undated = $derived(article.whose !== undefined);
+  let undated = $derived(article.whose !== undefined || trial.dayGrouped);
   /** With no day shown, the kind of article opens the line unless a publication's writer comes before it. */
   let kindFirst = $derived(undated && !writerOf(article));
   let placeFirst = $derived(kindFirst && !kindShown(article));
@@ -73,7 +74,7 @@
   <span class={["row-meta mt-2 text-date tracking-[0.06em]", current ? "text-muted" : "text-[color:var(--faint)]"]}>
     <!-- A publication's writer first, when its feed names one (the owner's core path, point 4). -->
     {#if writerOf(article)}<span class="row-feed"><span class="row-feed-name" use:hugEllipsis={writerOf(article)}>{writerOf(article)}</span><span class={[undated && "sr-only"]}>&nbsp;·</span></span>{/if}
-    <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span>&nbsp;·</span>
+    <span class={oneFeed === true ? "sr-only" : "row-feed"}><span class="row-feed-name" use:hugEllipsis={sourceOf(article, oneFeed)}>{sourceOf(article, oneFeed)}</span><span class={[trial.dayGrouped && "sr-only"]}>&nbsp;·</span></span>
     <time datetime={new Date(article.at * 1000).toISOString()} class={["row-date", undated && "sr-only"]} title={exactly(article.at)}>{when(article.at)}</time>
     <!-- A podcast's episode or a YouTube video says so, in the line's own ink (RowKind.svelte). -->
     <RowKind {article} first={kindFirst} />
