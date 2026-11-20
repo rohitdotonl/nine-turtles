@@ -951,7 +951,7 @@ test.describe("on a wide window", () => {
     await expect(article(page).getByText("View original")).toHaveCount(0);
   });
 
-  test("a writer in someone else's publication reads \"Writer / Publication\": the slash faint and unheard, \"by\" and \"in\" heard but unseen (decision 0323)", async ({ page }) => {
+  test("a writer in someone else's publication: their name on one line, a quiet italic \"in\" and the publication's under it, both centred; \"by\" heard but unseen (decisions 0323, 0325)", async ({ page }) => {
     // The feed's article answered as written by someone besides Asha Rao, the feed's own name, as a magazine's would be.
     await page.route("**/api/articles/*", async (route) => {
       const response = await route.fetch();
@@ -962,14 +962,33 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await openFirst(page);
     const byline = article(page).locator(".article-byline");
-    await expect(byline).toContainText(/by\s*Mina Okafor\s*in\s*\/\s*Asha Rao/);
-    const crumb = byline.locator(".crumb");
-    await expect(crumb).toHaveAttribute("aria-hidden", "true");
-    await expect(crumb).toBeVisible();
-    // Room on each side of it, more than a plain space (Rohit, 20 November 2026).
-    expect(parseFloat(await crumb.evaluate((element) => getComputedStyle(element).marginLeft))).toBeGreaterThanOrEqual(4);
-    expect(parseFloat(await byline.locator(".crumb-room").evaluate((element) => getComputedStyle(element).wordSpacing))).toBeGreaterThanOrEqual(4);
-    // What a screen reader is given: the words with spaces between them, and no slash.
+    await expect(byline).not.toContainText("/");
+    const writer = byline.locator(".writer bdi");
+    const word = byline.locator(".in");
+    const publication = byline.getByRole("link", { name: "Asha Rao" }).locator("bdi");
+    const [name, inWord, where, picture] = await Promise.all([writer, word, publication, article(page).locator(".article-credit > .portrait")].map(async (part) => (await part.boundingBox())!));
+    // "in" and the publication share the line under the writer's; each line is centred under the picture.
+    expect(where!.y).toBeGreaterThan(name!.y + name!.height / 2);
+    expect(Math.abs(inWord!.y - where!.y)).toBeLessThan(4);
+    const centre = picture!.x + picture!.width / 2;
+    expect(Math.abs(name!.x + name!.width / 2 - centre)).toBeLessThan(1.5);
+    expect(Math.abs((inWord!.x + where!.x + where!.width) / 2 - centre)).toBeLessThan(4);
+    // The "in" is quiet: italic, in the second ink.
+    await expect(word).toHaveText("in");
+    await expect(word).toHaveCSS("font-style", "italic");
+    const [wordColor, secondInk] = await Promise.all([
+      word.evaluate((element) => getComputedStyle(element).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--ink-2)";
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }),
+    ]);
+    expect(wordColor).toBe(secondInk);
+    // What a screen reader is given: one sentence, with spaces between the words.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
         - text: by Mina Okafor in
@@ -977,19 +996,56 @@ test.describe("on a wide window", () => {
         - text: ","
         - time: /.+/
     `);
-    const [crumbColor, faint] = await Promise.all([
-      crumb.evaluate((element) => getComputedStyle(element).color),
-      page.evaluate(() => {
-        const probe = document.createElement("span");
-        probe.style.color = "var(--faint)";
-        document.body.append(probe);
-        const color = getComputedStyle(probe).color;
-        probe.remove();
-        return color;
-      }),
-    ]);
-    expect(crumbColor).toBe(faint);
-    await expect(byline.getByRole("link", { name: "Asha Rao" })).toBeVisible();
+  });
+
+  test("on a narrow window, long names (a writer's or a publication's) wrap centred and stay inside the window; a right-to-left name is centred too (decision 0325)", async ({ page }) => {
+    let author = "Margaret Elizabeth Okonkwo-Smith of the Longest Name";
+    await page.route("**/api/articles/*", async (route) => {
+      // A request still on its way when the page reloads is let go, not failed.
+      const response = await route.fetch().catch(() => undefined);
+      const body = await response?.json().catch(() => undefined);
+      if (!response || !body) return route.abort().catch(() => undefined);
+      if (body.article) body.article.author = author;
+      await route.fulfill({ response, json: body }).catch(() => undefined);
+    });
+    await openRoom(page, 390);
+    await openFirst(page);
+    const byline = article(page).locator(".article-byline");
+    const picture = (await article(page).locator(".article-credit > .portrait").boundingBox())!;
+    const centre = picture.x + picture.width / 2;
+    const writer = byline.locator(".writer bdi");
+    const check = async () => {
+      const line = (await writer.boundingBox())!;
+      expect(line.x).toBeGreaterThanOrEqual(0);
+      expect(line.x + line.width).toBeLessThanOrEqual(390);
+      // Each line of the writer's name is centred under the picture.
+      const text = await writer.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const rects = [...range.getClientRects()];
+        return rects.map((rect) => rect.left + rect.width / 2);
+      });
+      for (const middle of text) expect(Math.abs(middle - centre)).toBeLessThan(2);
+      return text.length;
+    };
+    expect(await check()).toBeGreaterThan(1);
+    // A long publication's name wraps too, its lines with "in" centred and inside the window.
+    await byline.locator(".publisher bdi").evaluate((element) => (element.textContent = "The Pleasure of Slow Letters Quarterly and Other Writing"));
+    const lines = await byline.evaluate((element) => {
+      const range = document.createRange();
+      range.setStartBefore(element.querySelector(".in")!);
+      range.setEndAfter(element.querySelector(".publisher")!);
+      return [...range.getClientRects()].map((rect) => ({ left: rect.left, right: rect.right }));
+    });
+    const ys = lines.map((line) => (line.left + line.right) / 2);
+    expect(Math.min(...lines.map((line) => line.left))).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...lines.map((line) => line.right))).toBeLessThanOrEqual(390);
+    expect(ys.length).toBeGreaterThan(0);
+    author = "سارة الأحمد";
+    await page.reload();
+    await appReady(page);
+    await expect(writer).toContainText(author);
+    await check();
   });
 
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {
