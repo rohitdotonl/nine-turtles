@@ -12,7 +12,9 @@ html[data-look^="margin"] .list-pane:not(.phone) [data-margin-room] .by-person .
   font-family: var(--font-serif); font-size: 1.1875rem; line-height: 1.35; font-weight: 600; row-gap: 0.25rem;
 }
 html[data-look="margin-mid"] .list-pane:not(.phone) [data-margin-room] .by-person .list-name { padding-top: 1rem; }
-html[data-look^="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:has(.list-name) { margin-top: 2rem; }
+/* The space between one person and the next stays as today's (131px from title to title), names or not. */
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:has(.list-name) { margin-top: 4.375rem; }
+html[data-look="margin-mid"] .list-pane:not(.phone) [data-margin-room] .by-person li:has(.list-name) { margin-top: 3.75rem; }
 html[data-look^="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:first-child { margin-top: 0; }
 html[data-look^="margin"] .list-pane:not(.phone) [data-margin-room] .by-person .list-label {
   position: absolute; right: 100%; top: -1.5rem; width: 12rem; text-align: right; padding: 0 1.5rem 0 0;
@@ -28,3 +30,5 @@ html[data-look="cards"] .list-pane, html[data-look="cards"] .list-pane .pane-bar
 html[data-look="cards"] .trial-group { background: var(--paper); border-radius: 12px; margin: 0 0 12px; padding: 0 0 8px; }
 html[data-look="cards"] .phone .trial-group { margin: 0 12px 12px; }
 html[data-look="cards"] .trial-group .list-name { padding-top: 1rem !important; }
+/* Only a person's first title gets the 20px under their name; the rest keep 16px, as today. */
+.trial-grouped .trial-group > ul > li:not(:has(.list-name)) .item-row { --row-top: 1rem; }
