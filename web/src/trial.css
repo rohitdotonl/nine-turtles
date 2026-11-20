@@ -1,0 +1,50 @@
+/* TRIAL ONLY (screen refine 1): the Unread looks being tried, switched by TrialPicker. */
+html:not([data-look="now"]) .by-person .list-label-people {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+html:not([data-look="now"]) .by-person li:first-child .list-name { padding-top: 1rem; }
+html:not([data-look="now"]) .by-person .list-name { padding-top: 2rem; }
+html:not([data-look="now"]) .by-person .item-row { --row-top: 0.5rem; padding-bottom: 0.5rem; }
+html:not([data-look="now"]) .by-person li:has(.list-name) .item-row { --row-top: 0.75rem; }
+html:not([data-look="now"]) .phone .by-person .item-row { --row-top: 0.625rem; padding-bottom: 0.625rem; }
+html:not([data-look="now"]) .by-person .item-row > .title { flex: 0 1 auto; }
+html:not([data-look="now"]) .by-person .row-meta { align-self: center; }
+html:not([data-look="now"]) #list-pane:has(.list-empty.finished) .list-tools { display: none; }
+
+/* Names in the margin, on a computer with room beside the column. */
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li { position: relative; }
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person .list-name {
+  position: absolute; right: 100%; top: 0; width: calc(var(--trial-margin) - var(--list-start) - 1rem);
+  padding: 0.75rem 1.5rem 0 0; display: flex; flex-direction: column; align-items: flex-end; text-align: right;
+  font-family: var(--font-serif); font-size: 1.1875rem; line-height: 1.35; font-weight: 600; row-gap: 0.25rem;
+}
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:has(.list-name) { margin-top: 1.75rem; }
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:first-child { margin-top: 0.5rem; }
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person .list-label {
+  position: absolute; right: 100%; top: -1.75rem; width: 12rem; text-align: right; padding: 0 1.5rem 0 0;
+}
+html[data-look="margin"] .list-pane:not(.phone) [data-margin-room] .by-person li:has(.list-label:not(.list-label-people)) { margin-top: 3.5rem; }
+
+/* Names first: each name a row that folds its titles. */
+.trial-who { display: flex; align-items: baseline; column-gap: 0.75rem; width: 100%; min-height: 44px; text-align: left; font: inherit; color: inherit; border-radius: var(--radius-press); }
+.trial-chev { margin-left: auto; align-self: center; color: var(--muted); display: flex; }
+html[data-look="names"] .by-person .list-name { display: block; padding-top: 0.25rem; padding-bottom: 0; }
+html[data-look="names"] .by-person li:first-child .list-name { padding-top: 0.5rem; }
+html[data-look="names"] .by-person .list-label { padding-top: 1.5rem; }
+.trial-first {
+  padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem); margin-top: -0.25rem; padding-bottom: 0.5rem;
+  font-size: var(--text-meta); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Cards and two columns: each person's titles held together. */
+.trial-grouped > li > ul { list-style: none; margin: 0; padding: 0; }
+.trial-grouped .list-label { padding-inline: var(--list-start, 2rem) var(--list-end, 1.5rem); padding-top: 1.5rem; padding-bottom: 0.5rem; }
+html[data-look="cards"] .list-pane, html[data-look="cards"] .list-pane .pane-bar { background: var(--sidebar); }
+html[data-look="cards"] .trial-group { background: var(--paper); border-radius: 12px; margin: 0 0 12px; padding: 0 0 8px; }
+html[data-look="cards"] .phone .trial-group { margin: 0 12px 12px; }
+html[data-look="cards"] .trial-group .list-name { padding-top: 12px !important; }
+html[data-look="columns"] .list-pane:not(.phone) > :is(.pane-bar, .scroller) { --reading-width: 68rem; }
+html[data-look="columns"] .list-pane:not(.phone) .trial-grouped { column-count: 2; column-gap: 3rem; }
+html[data-look="columns"] .list-pane:not(.phone) .trial-group { break-inside: avoid; padding-bottom: 0.75rem; }
+html[data-look="columns"] .list-pane:not(.phone) .trial-label { column-span: all; }
+html[data-look="columns"] .list-pane:not(.phone) .trial-group .list-name { padding-top: 1rem; }

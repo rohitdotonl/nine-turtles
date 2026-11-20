@@ -18,6 +18,7 @@
 <script lang="ts">
   import Wordmark from "./lib/Wordmark.svelte";
   import Shell from "./lib/Shell.svelte";
+  import TrialPicker from "./lib/TrialPicker.svelte";
   import SwipeBack from "./lib/SwipeBack.svelte";
   import PageWait from "./lib/PageWait.svelte";
   import { later } from "./lib/later";
@@ -213,3 +214,5 @@
     {/if}
   </main>
 {/if}
+
+<TrialPicker />

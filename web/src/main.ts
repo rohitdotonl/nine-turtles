@@ -20,6 +20,7 @@ import "./select.css";
 import "./taps.css";
 import "./home.css";
 import "./large-text.css";
+import "./trial.css";
 import { mount } from "svelte";
 import App from "./App.svelte";
 import { apply, load } from "./lib/preferences";

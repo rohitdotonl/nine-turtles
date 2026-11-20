@@ -52,6 +52,7 @@
   import type { Order } from "./reading";
   import { firstShowing, type Notice } from "./feeds";
   import { headsOf, type OneSource } from "./people";
+  import { toggleOpen, trial } from "./unreadTrial.svelte";
   import { CHOOSE_FIRST, NOTHING_TO_UNDO, UNDONE, UNDO_FAILED } from "./messages";
   import type { ListNote } from "./listNote";
   import TextButton from "./TextButton.svelte";
@@ -221,6 +222,34 @@
 
   /** Unread, by person (decisions 0271 and 0278): each name once, above their first article, and "People" and "Publications" where they begin. */
   let heads = $derived(headsOf(articles));
+  // TRIAL (screen refine 1): the looks being tried in Unread.
+  let byPerson = $derived(heads.some((head) => head?.at !== undefined));
+  let grouped = $derived(byPerson && (trial.look === "cards" || trial.look === "columns"));
+  let groups = $derived.by(() => {
+    const starts = heads.flatMap((head, index) => (head ? [index] : []));
+    return starts.map((start, i) => ({ start, end: starts[i + 1] ?? articles.length }));
+  });
+  /** Whose titles an index sits under (the name of the head before it). */
+  function ownerAt(index: number): string {
+    for (let i = index; i >= 0; i--) if (heads[i]) return heads[i]!.name;
+    return "";
+  }
+  let listElement: HTMLUListElement | undefined = $state();
+  // Names in the margin: only while the margin beside the column has room for them.
+  $effect(() => {
+    const scroller = listElement?.closest(".scroller") as HTMLElement | null;
+    if (!scroller) return;
+    const check = () => {
+      const room = parseFloat(getComputedStyle(scroller).paddingLeft);
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      scroller.toggleAttribute("data-margin-room", room >= 14 * rem);
+      scroller.style.setProperty("--trial-margin", `${room}px`);
+    };
+    const watch = new ResizeObserver(check);
+    watch.observe(scroller);
+    check();
+    return () => watch.disconnect();
+  });
   let selectedIndex = $derived(selected ? articles.findIndex((article) => article.id === selected?.id) : -1);
 
   async function load(after: string | null) {
@@ -677,28 +706,56 @@
 {#if loaded && articles.length === 0 && !(bringingIn && !fromDevice)}
   <div class={["list-empty", !fromDevice && "finished"]}><p class="list-empty-fact">{fromDevice ? nothingKeptHere() : empty.fact}</p>{#if !fromDevice && empty.how}<p class="list-empty-how">{empty.how}</p>{/if}{#if !fromDevice && empty.wider}<button type="button" class="btn mt-4" onclick={empty.wider}>Search all articles</button>{/if}{#if !fromDevice && empty.shows}<ChoosingWords />{/if}</div>
 {:else if articles.length > 0}
-  <ul class={["item-list", heads.some(Boolean) && "by-person"]}>
-    {#each articles as article, index (article.id)}
-      {@const current = index === selectedIndex}
-      {@const head = heads[index]}
-      <li>
-        <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). In Notes, no groups and no day (decision 0308): each name is a heading right under the list's title. None can be pressed, as a row's name can't be today. -->
-        {#if head?.people || head?.publications}<h3 class="label list-label">{head.people ? "People" : "Publications"}</h3>{/if}
-        {#if head}<svelte:element this={head.at === undefined ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
-        <ItemRow
-          bind:row={rows[index]}
-          {article} {current} {bold} {unreadOff} {addressOf}
-          oneFeed={article.whose === undefined ? oneFeed : true}
-          tabbable={current || (selectedIndex === -1 && index === 0)}
-          held={menuAt?.index === index}
-          onOpen={(byKeyboard) => (select(index), onChoose(byKeyboard))}
-          onMenu={(x, y) => openMenu(index, x, y)}
-          onStep={(step) => move(step) && focusSelected()}
-          swipes={rowSwipes(article, unreadOff, { star: toggleStar, read: markUnread })}
-        />
-      </li>
-    {/each}
-  </ul>
+  {#snippet entry(article: Article, index: number)}
+    {@const current = index === selectedIndex}
+    {@const head = heads[index]}
+    {@const folded = trial.look === "names" && byPerson && !trial.open.includes(ownerAt(index))}
+    <!-- Real headings, so a screen reader goes name to name: "People" and "Publications" under the list's title, each name under its group, with the day that placed it beside it (decision 0278). In Notes, no groups and no day (decision 0308): each name is a heading right under the list's title. None can be pressed, as a row's name can't be today. -->
+    {#if !grouped && (head?.people || head?.publications)}<h3 class={["label list-label", head.people && "list-label-people"]}>{head.people ? "People" : "Publications"}</h3>{/if}
+    {#if head && trial.look === "names" && head.at !== undefined}
+      <svelte:element this="h4" class="list-name"
+        ><button type="button" class="trial-who" aria-expanded={!folded} onclick={() => toggleOpen(head.name)}
+          ><bdi>{head.name}</bdi> <time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time><span class="trial-chev" aria-hidden="true"><Icon name={folded ? "chevron-down" : "chevron-up"} /></span></button
+        ></svelte:element
+      >
+      {#if folded}<p class="trial-first">{article.title}</p>{/if}
+    {:else if head}<svelte:element this={head.at === undefined ? "h3" : "h4"} class="list-name"><bdi>{head.name}</bdi>{#if head.at !== undefined}{" "}<time class="list-when" datetime={new Date(head.at * 1000).toISOString()} title={exactly(head.at)}>{when(head.at)}</time>{/if}</svelte:element>{/if}
+    {#if !folded}
+      <ItemRow
+        bind:row={rows[index]}
+        {article} {current} {bold} {unreadOff} {addressOf}
+        oneFeed={article.whose === undefined ? oneFeed : true}
+        tabbable={current || (selectedIndex === -1 && index === 0)}
+        held={menuAt?.index === index}
+        onOpen={(byKeyboard) => (select(index), onChoose(byKeyboard))}
+        onMenu={(x, y) => openMenu(index, x, y)}
+        onStep={(step) => move(step) && focusSelected()}
+        swipes={rowSwipes(article, unreadOff, { star: toggleStar, read: markUnread })}
+      />
+    {/if}
+  {/snippet}
+  {#if grouped}
+    <!-- TRIAL: each person's titles held together, for Cards and Two columns. -->
+    <ul class="item-list by-person trial-grouped">
+      {#each groups as group (articles[group.start]?.id ?? group.start)}
+        {@const head = heads[group.start]}
+        {#if head?.publications}<li class="trial-label"><h3 class="label list-label">Publications</h3></li>{/if}
+        <li class="trial-group">
+          <ul>
+            {#each articles.slice(group.start, group.end) as article, i (article.id)}
+              <li>{@render entry(article, group.start + i)}</li>
+            {/each}
+          </ul>
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <ul class={["item-list", byPerson && "by-person"]} bind:this={listElement}>
+      {#each articles as article, index (article.id)}
+        <li>{@render entry(article, index)}</li>
+      {/each}
+    </ul>
+  {/if}
   {#if next !== null}
     <!--
       Reaching this line loads the next 50 by themselves; while they load it says so, in small grey
