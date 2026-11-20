@@ -1,15 +1,16 @@
 /*
   An article's head: its title and the byline under it (SPEC section 7,
-  decisions 0246 and 0294). Split from app.css.
+  decisions 0246, 0294 and 0323). Split from app.css.
 */
 
 /*
   Under the title, centred, as on a book's title page (decision 0294): the
-  writer's picture, then "by" and their name in the reading face, a little
-  at the interface's size, in full ink and regular weight, the "by" in
-  italic and the second ink; then the day on a line of its own, small and in
-  the list's faint grey, so the name leads and the day is there when looked
-  for. A short centred rule closes the block before the text.
+  writer's picture, then their name in the reading face, at the
+  interface's size, in full ink and regular weight ("Author / Publication"
+  when the feed names someone else, the slash faint, decision 0323); then
+  the day on a line of its own, small and in the list's faint grey, so the
+  name leads and the day is there when looked for. A short centred rule
+  closes the block before the text.
 */
 .article-credit {
   display: flex;
@@ -43,9 +44,9 @@
   overflow-wrap: anywhere;
 }
 
-.article-byline .by {
-  font-style: italic;
-  color: var(--ink-2);
+/* Between the author and where they write, a slash as a path is written, in the faint grey so the names lead (decision 0323). */
+.article-byline .crumb {
+  color: var(--faint);
 }
 
 .article-byline .publisher {
