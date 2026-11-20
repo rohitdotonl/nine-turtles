@@ -314,7 +314,10 @@ test.describe("on a wide window", () => {
     await page.keyboard.press("Enter");
     await expect(menu.getByRole("menuitem").first()).toBeFocused();
     await expect(menu.getByRole("menuitem").first()).toHaveText(/Copy link/);
+    // Highlight… shows once the whole article has come, so wait for it before moving down.
+    await expect(menu.getByRole("menuitem").nth(1)).toHaveText(/Highlight…/);
     await page.keyboard.press("ArrowDown");
+    await expect(menu.getByRole("menuitem").nth(1)).toBeFocused();
     await page.keyboard.press("ArrowDown");
     await expect(menu.getByRole("menuitem").nth(2)).toHaveText(/Text and page/);
     await expect(menu.getByRole("menuitem").nth(2)).toBeFocused();
