@@ -966,6 +966,8 @@ test.describe("on a wide window", () => {
     const writer = byline.locator(".writer bdi");
     const word = byline.locator(".in");
     const publication = byline.getByRole("link", { name: "Asha Rao" }).locator("bdi");
+    // The list's copy draws the byline first, without the writer; measure once the whole article has come.
+    await expect(writer).toBeVisible();
     const [name, inWord, where, picture] = await Promise.all([writer, word, publication, article(page).locator(".article-credit > .portrait")].map(async (part) => (await part.boundingBox())!));
     // "in" and the publication share the line under the writer's; each line is centred under the picture.
     expect(where!.y).toBeGreaterThan(name!.y + name!.height / 2);
