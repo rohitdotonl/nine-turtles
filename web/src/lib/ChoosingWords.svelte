@@ -1,7 +1,7 @@
 <!--
   Notes' empty list shows how a highlight starts (decision 0325, the owner's
   choice on 20 November 2026): a still picture, drawn by the app so it takes
-  the reader's page (White, Paper or Night) and text size, of a few words
+  the reader's page (White, Paper or Night) and reading font, at the interface's size, of a few words
   chosen in an article with the small menu that comes beside them,
   Highlight and Add a note…. It sits in a card of the sidebar's tone so it
   reads as a picture, apart from the page. It's only a picture: nothing in
@@ -45,7 +45,7 @@
     background-color: var(--paper);
   }
   .words {
-    font-family: var(--font-serif);
+    font-family: var(--reading-font);
     font-size: var(--text-base);
     line-height: 1.55;
     color: var(--ink);

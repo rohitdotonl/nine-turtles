@@ -525,6 +525,13 @@ test("a new reader finds highlighting: Notes shows how, More has Highlight…, W
   await appReady(page);
   await page.locator(".item-row").first().click();
   await expect(article(page).getByRole("heading", { level: 2 })).toBeVisible();
+  // h with nothing chosen says the same, where it once did nothing.
+  await page.keyboard.press("h");
+  await expect(page.getByText("Choose any words to highlight them.")).toBeVisible();
+  await page.reload();
+  await appReady(page);
+  await expect(article(page).getByRole("heading", { level: 2 })).toBeVisible();
+  await expect(page.getByText("Choose any words to highlight them.")).toHaveCount(0);
   const more = article(page).getByRole("button", { name: /^More/ });
   await more.click();
   const highlight = page.getByRole("menuitem", { name: /^Highlight…/ });

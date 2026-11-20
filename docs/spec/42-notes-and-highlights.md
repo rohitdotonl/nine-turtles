@@ -127,7 +127,8 @@ anywhere or counted.
   still picture under them (decision 0325): a card in the sidebar's tone
   holding a small page with a quote, part of it chosen, and the menu
   beside it (Highlight, with its key on a computer, and Add a note…). It's
-  drawn by the app, so it takes the reader's page and text size; nothing
+  drawn by the app, so it takes the reader's page and reading font (at the
+  interface's size, so it stays small); nothing
   in it can be pressed or reached, and screen readers skip it.
 - A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).
