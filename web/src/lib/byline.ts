@@ -3,7 +3,7 @@
 /**
  * The author, unless they're who the byline already names (Hal Brennan, once).
  * A name spelled a letter or two differently is the same person ("Ana Rodrigues
- * in Ana Rodriguez" says the name once, decision 0298): only names of six
+ * / Ana Rodriguez" says the name once, decision 0298): only names of six
  * letters or more, so two short different names never merge.
  */
 export function authorBesides(author: string | null | undefined, source: string): string | undefined {

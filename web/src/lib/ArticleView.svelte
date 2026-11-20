@@ -566,7 +566,7 @@
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
         <!-- Left to right whatever the article's script. "Author / Publication", or the name alone (decision 0323): "by" and "in" are heard, unseen; the slash is only seen. -->
         <p class="article-byline min-w-0" lang="en" dir="ltr">
-          <span class="sr-only">by{" "}</span>{#if author}<bdi>{author}</bdi><span class="sr-only">{" "}in</span><span class="crumb" aria-hidden="true">{"\u00a0/ "}</span>{/if}{#if followed}
+          <span class="sr-only">by</span>{" "}{#if author}<bdi>{author}</bdi>{"\u00a0"}<span class="sr-only">in</span><span class="crumb" aria-hidden="true">/</span>{" "}{/if}{#if followed}
             <!-- Someone followed: their name opens their list, everything of theirs (decision 0289); the page about them is a press on from there, or More's "Info about …". No "›" here.
                  A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
             <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"

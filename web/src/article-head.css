@@ -9,7 +9,8 @@
   interface's size, in full ink and regular weight ("Author / Publication"
   when the feed names someone else, the slash faint, decision 0323); then
   the day on a line of its own, small and in the list's faint grey, so the
-  name leads and the day is there when looked for. A short centred rule closes the block before the text.
+  name leads and the day is there when looked for. A short centred rule
+  closes the block before the text.
 */
 .article-credit {
   display: flex;

@@ -790,7 +790,7 @@ test.describe("on a wide window", () => {
     await expect(publisher).toHaveCSS("font-weight", "400");
     // The name alone, no "by" to see; screen readers still hear "by" (decision 0323).
     await expect(byline).not.toContainText("/");
-    await expect(byline.locator(".sr-only").first()).toHaveText("by ");
+    await expect(byline.locator(".sr-only").first()).toHaveText("by");
     const time = byline.locator("time");
     await expect(time).toHaveCSS("display", "block");
     await expect(time).toHaveCSS("font-size", "12px");
@@ -952,7 +952,7 @@ test.describe("on a wide window", () => {
   });
 
   test("a writer in someone else's publication reads \"Writer / Publication\": the slash faint and unheard, \"by\" and \"in\" heard but unseen (decision 0323)", async ({ page }) => {
-    // The feed's article answered as written by someone besides Reading Room's own name, as a magazine's would be.
+    // The feed's article answered as written by someone besides Asha Rao, the feed's own name, as a magazine's would be.
     await page.route("**/api/articles/*", async (route) => {
       const response = await route.fetch();
       const body = await response.json();
@@ -966,7 +966,14 @@ test.describe("on a wide window", () => {
     const crumb = byline.locator(".crumb");
     await expect(crumb).toHaveAttribute("aria-hidden", "true");
     await expect(crumb).toBeVisible();
-    for (const word of ["by ", " in"]) await expect(byline.locator(".sr-only", { hasText: new RegExp(`^${word}$`) })).toHaveCount(1);
+    // What a screen reader is given: the words with spaces between them, and no slash.
+    await expect(byline).toMatchAriaSnapshot(`
+      - paragraph:
+        - text: by Mina Okafor in
+        - link "Asha Rao"
+        - text: ","
+        - time: /.+/
+    `);
     const [crumbColor, faint] = await Promise.all([
       crumb.evaluate((element) => getComputedStyle(element).color),
       page.evaluate(() => {
