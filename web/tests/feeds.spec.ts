@@ -330,6 +330,71 @@ test("on a phone, New to feeds? is a page sheet with its X and the main action a
   await expect(page.getByRole("heading", { level: 2, name: "Hello. Who would you like to read?" })).toBeVisible();
 });
 
+test("New to feeds? keeps its main button in view and on top, on a small phone and a short laptop", async ({ page }) => {
+  /** The button is where it's drawn: in the window, and nothing painted over its middle. */
+  async function onTop(name: string) {
+    const button = page.getByRole("button", { name });
+    await expect(button).toBeVisible();
+    const box = (await button.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+    const hit = await button.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    });
+    expect(hit).toBe(true);
+  }
+  // A small phone (iPhone SE): the page's Add all five, with the list scrolled under it.
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto("/unread");
+  await appReady(page);
+  await signIn(page);
+  await page.getByRole("link", { name: "New to feeds? Start here" }).click();
+  await expect(page.getByRole("checkbox")).toHaveCount(5);
+  for (const name of ["James", "Derek Sivers", "Herman Martinus"]) {
+    await page.getByRole("link", { name: new RegExp(`^${name}`) }).evaluate((link) => link.scrollIntoView({ block: "end" }));
+    await onTop("Add all five");
+  }
+  // A 1280×720 laptop: the sheet scrolls, and Cancel and Add all five stay at its foot.
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.getByRole("link", { name: "New to feeds? Start here" }).click();
+  const sheet = page.getByRole("dialog", { name: "New to feeds?" });
+  await expect(sheet).toBeVisible();
+  await onTop("Add all five");
+  await onTop("Cancel");
+  // With the keyboard alone, each row's box comes into view clear of the actions, never under them.
+  const actions = (await page.getByRole("button", { name: "Cancel" }).boundingBox())!;
+  for (let press = 0; press < 12; press++) {
+    await page.keyboard.press("Tab");
+    const focused = await page.evaluate(() => (document.activeElement as HTMLElement).innerText ?? "");
+    if (/Cancel|Add all five/.test(focused)) break;
+    const box = await page.evaluate(() => document.activeElement!.getBoundingClientRect().bottom);
+    expect(box).toBeLessThanOrEqual(actions.y);
+  }
+  await onTop("Add all five");
+});
+
+test("adding the first person on a short laptop: the greeting steps aside so the question and Done stay in view", async ({ page }) => {
+  // A reader of their own, so the welcome is there.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto(new URL("/sign-up", FEEDS_APP).href);
+  await page.getByLabel("Email").fill(`first-person-${test.info().workerIndex}-${Date.now()}@example.com`);
+  await page.getByLabel("Password", { exact: true }).fill("slow mornings, long reads");
+  await page.getByRole("button", { name: "Sign up" }).click();
+  const welcome = page.getByRole("region", { name: "Hello. Who would you like to read?" });
+  await expect(welcome).toBeVisible();
+  await field(page).fill(`${FEED_SITE}/blog/${newBlog()}/`);
+  await field(page).press("Enter");
+  const asked = page.getByRole("group", { name: /is…$/ });
+  await expect(asked).toBeVisible();
+  // The greeting is still there for screen readers (the region keeps its name), but takes no room.
+  await expect(welcome).toBeVisible();
+  expect((await page.locator("div:has(> #welcome-heading)").boundingBox())!.height).toBeLessThanOrEqual(1);
+  await asked.getByRole("radio", { name: "A person", exact: true }).check();
+  const done = (await page.getByRole("button", { name: "Done" }).boundingBox())!;
+  expect(done.y + done.height).toBeLessThanOrEqual(720);
+});
+
 test("a, a website's address and Enter follow it, someone you might write to is asked, and its articles appear", async ({ page }) => {
   await openApp(page, "/all");
   const name = newBlog();

@@ -14,14 +14,6 @@ anywhere or counted.
   **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
   article, **Write back about this** under a hairline (section 37,
   decision 0205).
-- **Finding it** (decision 0326, the owner's choice): the article's More
-  (…) has **Highlight…** first (the highlight icon; on a computer its key,
-  `h`). With words chosen it highlights them, as `h` does; with none it
-  says "Choose any words to highlight them." in the line the article uses
-  for what was just done (the top bar on a phone, the pane's foot on a
-  computer), and so does `h`. Write back's arrow menu (section 37) starts
-  with **Write back about a line…**, which says "Choose any words, then
-  press Write back about this." the same way.
 - Right after highlighting, a small menu beside the words says
   **Highlighted**, with **Add a note…** (the note box opens there) and
   **Done** (the owner, 3 November 2026: a new reader shouldn't have to find

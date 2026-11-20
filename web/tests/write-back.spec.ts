@@ -205,11 +205,9 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
   const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
   const ways = pane(page).getByRole("menu");
-  // By keyboard: Enter opens it on its first row (Write back about a line…, decision 0326), the arrows move, Escape closes it and gives the keyboard back to the arrow.
+  // By keyboard: Enter opens it on its first row, the arrows move, Escape closes it and gives the keyboard back to the arrow.
   await arrow.focus();
   await page.keyboard.press("Enter");
-  await expect(ways.getByRole("menuitem", { name: "Write back about a line…" })).toBeFocused();
-  await page.keyboard.press("ArrowDown");
   await expect(ways.getByRole("menuitemradio", { name: "Your email app" })).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(ways.getByRole("menuitemradio", { name: "Gmail" })).toBeFocused();
@@ -225,7 +223,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await pane(page).locator(".reading-scroller").evaluate((area) => (area.scrollTop = area.scrollHeight));
   await arrow.click();
   await expect(ways.getByRole("menuitemradio")).toHaveText([/Comment on their site/, /Copy talk@talk\.example/, /Outlook\.com/, /Gmail/, /Your email app/]);
-  await expect(ways.getByRole("menuitem", { name: "Write back about a line…" })).toBeFocused();
+  await expect(ways.getByRole("menuitemradio", { name: "Your email app" })).toBeFocused();
   const [menuBox, arrowBox, areaBox] = await Promise.all([ways.boundingBox(), arrow.boundingBox(), pane(page).locator(".reading-scroller").boundingBox()]);
   expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(arrowBox!.y);
   expect(menuBox!.y).toBeGreaterThanOrEqual(areaBox!.y);

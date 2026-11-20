@@ -49,7 +49,11 @@
 </script>
 
 <div class="flex w-full max-w-[26.25rem] flex-col gap-6">
-  <div class={start ? "text-left" : "text-center"}>
+  <!--
+    Once Add has found someone and asks who they are, the greeting steps aside (still read by screen
+    readers), so the question and its Done stay in view on a short window.
+  -->
+  <div class={[start ? "text-left" : "text-center", asked && "sr-only"]}>
     <h2 id="welcome-heading" tabindex="-1" bind:this={heading} class="font-display text-heading font-semibold tracking-[-0.01em]">Hello. <span class="block text-balance">Who would you like to read?</span></h2>
     <p class="mt-3 text-ink-2">Paste the address of someone's blog, newsletter or channel.</p>
   </div>

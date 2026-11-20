@@ -61,7 +61,8 @@
   <a href={GUIDE_URL} target="_blank" rel="noopener" class="text-link self-start">Here's how feeds work<span class="sr-only">{" "}(on the nine turtles website, opens in a new tab)</span></a>
   <fieldset class="m-0 mt-3 min-w-0 border-0 p-0">
     <legend class="label inset-head">A few to start with</legend>
-    <div class="inset-group">
+    <!-- Its own layer, so the names (raised over each row's tick box) never paint over the actions at the foot. -->
+    <div class="inset-group isolate">
       {#each STARTERS as starter (starter.feed)}
         <label class="inset-row check-row flex-nowrap">
           <input type="checkbox" value={starter.feed} bind:group={chosen} aria-label={`${starter.name}: ${starter.about}`} />
@@ -95,10 +96,29 @@
       <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word={addLabel(chosen.length)} doing="Adding…" /></button>
     </div>
   {:else}
-    <!-- The sheet's one row of actions, 20px under what's above it: Cancel, then the main action at the right end. -->
-    <div class="sheet-actions mt-5">
+    <!--
+      The sheet's one row of actions, 20px under what's above it: Cancel, then the main action at the
+      right end. On a short window the sheet scrolls, and the row stays at its foot on the sheet's own
+      surface, with the list passing under it, so Add is always in view.
+    -->
+    <div class="sheet-actions starters-actions">
       <button type="button" onclick={onCancel} class="btn">Cancel</button>
       <button type="submit" aria-disabled={busy} class="btn-primary"><Waiting {busy} word={addLabel(chosen.length)} doing="Adding…" /></button>
     </div>
   {/if}
 </form>
+
+<style>
+  /* Tabbing down the list scrolls the next row clear of the actions, never under them (visible focus). */
+  :global(dialog:has(.starters-actions)) {
+    scroll-padding-bottom: 6rem;
+  }
+  .starters-actions {
+    position: sticky;
+    bottom: 0;
+    margin-top: 0.25rem;
+    margin-bottom: -1.5rem;
+    padding-block: 1rem 1.5rem;
+    background-color: var(--surface-raised, var(--paper));
+  }
+</style>

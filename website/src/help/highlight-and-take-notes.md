@@ -23,9 +23,6 @@ related: [save-an-article, search-everything, download-everything]
 To write a note on them instead, press **Add a note…** (or
 <kbd>N</kbd>), type it and press **Save note**.
 
-Not sure how? **Highlight…** in the article's More menu (**⋯**) says what
-to do, and with words already chosen it highlights them.
-
 Press a highlight to see its note, edit it, copy the words, or remove it.
 From someone you follow, both menus also offer **Write back about this**,
 which starts an email to them with those words quoted
