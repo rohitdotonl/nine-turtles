@@ -1000,6 +1000,37 @@ test.describe("on a wide window", () => {
     await expect(byline.getByRole("link", { name: "Asha Rao" })).toBeVisible();
   });
 
+  test("on a narrow window, long names wrap on their own sides of the slash, which stays on the centre line; a right-to-left name still ends at the slash (decision 0325)", async ({ page }) => {
+    let author = "Margaret Elizabeth Okonkwo-Smith";
+    await page.route("**/api/articles/*", async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (body?.article) body.article.author = author;
+      await route.fulfill({ response, json: body });
+    });
+    await openRoom(page, 390);
+    await openFirst(page);
+    const byline = article(page).locator(".article-byline");
+    const centre = async (part: Locator) => {
+      const box = (await part.boundingBox())!;
+      return box.x + box.width / 2;
+    };
+    const writer = byline.locator(".writer bdi");
+    // Two lines of the author's name, the slash still under the picture, nothing past the window's edges.
+    expect((await writer.boundingBox())!.height).toBeGreaterThan(40);
+    expect(Math.abs((await centre(byline.locator(".crumb"))) - (await centre(article(page).locator(".article-credit > .portrait"))))).toBeLessThan(1.5);
+    const pair = (await byline.locator(".pair").boundingBox())!;
+    expect(pair.x).toBeGreaterThanOrEqual(0);
+    expect(pair.x + pair.width).toBeLessThanOrEqual(390);
+    // A name written right to left still ends at the slash, not at the far edge of its side.
+    author = "سارة الأحمد";
+    await page.reload();
+    await appReady(page);
+    const slash = (await byline.locator(".crumb").boundingBox())!;
+    const name = (await writer.boundingBox())!;
+    expect(slash.x - (name.x + name.width)).toBeLessThan(16);
+  });
+
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {
     await openRoom(page);
     await row(page, "The pleasure of a slow letter").click();

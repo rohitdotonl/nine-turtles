@@ -43,9 +43,12 @@
   {/if}{/snippet}
 
 <p class="article-byline min-w-0" lang="en" dir="ltr">
-  <span class="sr-only">by</span>{" "}{#if author}<span class="pair"
-      ><bdi class="writer">{author}{" "}<span class="sr-only">in</span></bdi><span class="crumb" aria-hidden="true">/</span><span class="where">{@render name()}</span></span
-    >{:else}{@render name()}{/if}<span class="sr-only">,</span>
+  <!-- "by" sits in the writer's cell, on the same line of text as their name, so a screen reader reading by lines says "by Mina Okafor in" together. -->
+  {#if author}<span class="pair"
+      ><span class="writer"><span class="sr-only">by</span>{" "}<bdi>{author}</bdi>{" "}<span class="sr-only">in</span></span><span class="crumb" aria-hidden="true">/</span><span class="where"
+        >{@render name()}</span
+      ></span
+    >{:else}<span class="sr-only">by</span>{" "}{@render name()}{/if}<span class="sr-only">,</span>
   <!-- The day on a line of its own, small and faint, so the name leads (decision 0294). -->
   <time datetime={new Date(at * 1000).toISOString()} title={exactly(at)}>{when(at)}</time>
 </p>

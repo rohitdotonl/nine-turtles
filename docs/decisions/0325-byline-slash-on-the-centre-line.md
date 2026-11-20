@@ -12,6 +12,6 @@
 
 **Why.** Centring the whole line put the slash wherever the names' lengths left it, off the line the picture, the day and the closing rule share; with one short and one long name it read as lopsided.
 
-**Cost.** With a very short name beside a very long one, the short one's side has empty room, and the long one may wrap sooner than a centred line would.
+**Cost.** With a very short name beside a very long one, the short one's side has empty room, and the long one may wrap sooner than a centred line would. Each name has about half the column (some 18 letters on a small phone), so a long single word, such as a web address, breaks inside itself sooner than before.
 
 **Revisit if** wrapped names look awkward on a phone, or readers find the hanging names harder to read than one centred line.
