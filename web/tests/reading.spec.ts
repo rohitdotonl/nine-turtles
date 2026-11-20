@@ -1199,23 +1199,34 @@ test.describe("on a wide window", () => {
     await page.goto(new URL(`/${id}`, page.url()).href);
     await row(page, "A river at dawn").click();
 
-    // The video's description from the feed is its text, under a quiet Play button with its title in it.
+    // The video waits in a box drawn in ink, with Play and nothing else (the title is the page's own, decision 0324).
     const play = article(page).getByRole("button", { name: "Play video: A river at dawn, for an hour" });
     await expect(play).toBeVisible();
-    await expect(play).toContainText("A river at dawn, for an hour");
-    // It waits on a dark screen that says what Play does (decision 0298).
-    await expect(play).toContainText("Nothing loads from YouTube until you press Play.");
+    await expect(play).toHaveText("Play video");
+    // Under it, two closed words: the description and the chapters stay out of the way until asked for.
+    const chaptersWord = article(page).getByRole("button", { name: /^Chapters/ });
+    const descriptionWord = article(page).getByRole("button", { name: "Description" });
+    await expect(chaptersWord).toHaveAttribute("aria-expanded", "false");
+    await expect(descriptionWord).toHaveAttribute("aria-expanded", "false");
+    await expect(article(page).getByText("Nothing happens, slowly.")).toBeHidden();
+    const chapters = article(page).getByRole("list", { name: "Chapters", includeHidden: true });
+    await expect(chapters).toBeHidden();
+    // Chapters opens a contents page: each name, then its time; each a button.
+    await chaptersWord.press("Enter");
+    await expect(chaptersWord).toHaveAttribute("aria-expanded", "true");
+    await expect(chapters.getByRole("button")).toHaveText([/^First light\s*0:00$/, /^The heron\s*4:00$/, /^Mist lifts\s*41:30$/]);
+    await expect(chapters.getByRole("button", { name: "The heron 4:00" })).toBeVisible();
+    // Description swaps them: one open at a time.
+    await descriptionWord.click();
+    await expect(descriptionWord).toHaveAttribute("aria-expanded", "true");
+    await expect(chaptersWord).toHaveAttribute("aria-expanded", "false");
+    await expect(chapters).toBeHidden();
     await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
-    // Its chapters are buttons; its long description is folded after the first paragraph.
-    const chapters = article(page).getByRole("list", { name: "Chapters" });
-    await expect(chapters.getByRole("button")).toHaveText([/^0:00\s*First light$/, /^4:00\s*The heron$/, /^41:30\s*Mist lifts$/]);
-    await expect(chapters.getByRole("button", { name: "4:00 The heron" })).toBeVisible();
-    await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeHidden();
-    const unfold = article(page).getByRole("button", { name: "Show the full description" });
-    await expect(unfold).toHaveAttribute("aria-expanded", "false");
-    await unfold.press("Enter");
     await expect(article(page).getByText("Filmed on one still morning", { exact: false })).toBeVisible();
-    await expect(article(page).getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
+    // Pressed again, it closes; this device remembers it closed.
+    await descriptionWord.click();
+    await expect(article(page).getByText("Nothing happens, slowly.")).toBeHidden();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("nine-turtles.video-open"))).toBeNull();
     const box = await play.boundingBox();
     expect(Math.round((box!.width / box!.height) * 9)).toBe(16);
     expect(asked).toEqual([]);
@@ -1262,7 +1273,8 @@ test.describe("on a wide window", () => {
     await expect(article(page).locator("iframe")).toHaveCount(0);
 
     // A chapter, from the keyboard alone, plays the video from there (and this stand-in ends it there).
-    await article(page).getByRole("list", { name: "Chapters" }).getByRole("button", { name: "4:00 The heron" }).focus();
+    await article(page).getByRole("button", { name: /^Chapters/ }).press("Enter");
+    await article(page).getByRole("list", { name: "Chapters" }).getByRole("button", { name: "The heron 4:00" }).focus();
     const before = asked.length;
     await page.keyboard.press("Enter");
     await expect.poll(() => asked.length).toBe(before + 1);

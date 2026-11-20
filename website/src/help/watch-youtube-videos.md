@@ -4,7 +4,7 @@ description: Follow a YouTube channel and watch its new videos in nine turtles, 
 groupId: reading
 order: 9
 spec: 38
-updated: 2026-11-18
+updated: 2026-11-20
 related: [follow-someone, listen-to-podcasts, one-person-several-places]
 ---
 
@@ -32,8 +32,11 @@ through, the button says where you'll pick up, such as **Resume from 4:00**,
 on any of your devices. Until YouTube's player is ready, the box stays and
 says "Starting the video…".
 
-When the description lists times, they appear as **Chapters**: press one to
-jump there.
+Under the video, **Chapters** and **Description** stay closed until you
+press one; open one and the other closes. nine turtles remembers which you
+left open for the next video on the same device. Press a chapter to jump
+there; while the video plays, the chapter you're in is in bold. In the
+description, a long link shows just its site's name.
 
 ## Speed and captions
 

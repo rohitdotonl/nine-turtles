@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chapters, foldable, playerAddress, playerNews, question, toPlayer, videoSpeed, youtubeVideo } from "./youtube";
+import { chapterAt, chapters, playerAddress, playerNews, question, shortLinks, toPlayer, videoOpen, videoSpeed, youtubeVideo } from "./youtube";
 
 describe("which articles are YouTube videos", () => {
   it("finds the video in every kind of YouTube address", () => {
@@ -103,11 +103,30 @@ describe("a video's description", () => {
     expect(chapters(null)).toEqual([]);
   });
 
-  it("folds a long description after its first paragraph", () => {
-    const long = "word ".repeat(80);
-    expect(foldable(`<p>First.</p><p>${long}</p>`)).toBe(true);
-    expect(foldable(`<p>${long}</p>`)).toBe(false);
-    expect(foldable("<p>First.</p><p>A short second.</p>")).toBe(false);
-    expect(foldable(null)).toBe(false);
+  it("knows which chapter is playing", () => {
+    const list = [{ at: 0, title: "Start" }, { at: 240, title: "The heron" }, { at: 2490, title: "Mist lifts" }];
+    expect(chapterAt(list, 0)?.title).toBe("Start");
+    expect(chapterAt(list, 239.9)?.title).toBe("Start");
+    expect(chapterAt(list, 240)?.title).toBe("The heron");
+    expect(chapterAt(list, 9999)?.title).toBe("Mist lifts");
+    expect(chapterAt([{ at: 30, title: "Late" }, { at: 60, title: "Later" }], 10)).toBeUndefined();
+  });
+
+  it("keeps what's open under a video only when it's one it knows", () => {
+    expect(videoOpen("chapters")).toBe("chapters");
+    expect(videoOpen("description")).toBe("description");
+    expect(videoOpen(null)).toBeNull();
+    expect(videoOpen("everything")).toBeNull();
+  });
+
+  it("shortens a link that's only its own address to its site", () => {
+    expect(shortLinks('<p>Offer: <a href="https://higgsfield.ai/s/mcp-x">https://higgsfield.ai/s/mcp-x</a></p>')).toBe(
+      '<p>Offer: <a href="https://higgsfield.ai/s/mcp-x">higgsfield.ai</a></p>',
+    );
+    expect(shortLinks('<a href="https://www.example.com/a?b=1&amp;c=2">https://www.example.com/a?b=1&amp;c=2</a>')).toBe('<a href="https://www.example.com/a?b=1&amp;c=2">example.com</a>');
+    expect(shortLinks('<a href="https://example.com/x">www.example.com/x</a>')).toBe('<a href="https://example.com/x">example.com</a>');
+    // Words stay words.
+    expect(shortLinks('<a href="https://example.com/course">my course</a>')).toBe('<a href="https://example.com/course">my course</a>');
+    expect(shortLinks("<p>No links here.</p>")).toBe("<p>No links here.</p>");
   });
 });

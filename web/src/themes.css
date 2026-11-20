@@ -46,6 +46,8 @@
   --tint-list: #ececec;
   --tint-sidebar: #dddddf;
   --surface-raised: #ffffff;
+  /* A video's box while YouTube's player loads (decision 0324): charcoal, a step softer than black, tinted to the page; its light words keep at least 7 : 1. */
+  --video-starting: #2f2f30;
 }
 
 /* Paper: a warm cream page with warm-black ink. */
@@ -64,6 +66,7 @@
   --tint-list: #e6e2d9;
   --tint-sidebar: #d5cfc3;
   --surface-raised: #f7f3ea;
+  --video-starting: #38322a;
 }
 
 /* Night: near-black, with soft white words. */
@@ -82,6 +85,7 @@
   --tint-list: #2c2c2c;
   --tint-sidebar: #3b3b3b;
   --surface-raised: #28282a;
+  --video-starting: #242426;
 }
 
 /*

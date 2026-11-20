@@ -1,14 +1,14 @@
 <!--
   A YouTube video, in YouTube's own player (the publisher floor; SPEC
-  sections 7 and 38, decisions 0072 and 0144). Until Play is pressed it is
-  only a quiet box in the page's tone with the video's title set large in it,
-  like a book's title page: nothing loads from YouTube, so YouTube learns
-  nothing about an article you only glanced at. A Short's box is tall
+  sections 7 and 38, decisions 0072, 0144 and 0324). Until Play is pressed it
+  is only a box drawn in ink on the page, with a round Play mark and its word
+  (the title is the page's own, just above): nothing loads from YouTube, so
+  YouTube learns nothing about an article you only glanced at. A Short's box is tall
   (9 : 16), any other video's wide (16 : 9).
 
   Pressing Play swaps the box for YouTube's privacy-enhanced player, in the
   same place and size (nothing else moves); until that player has loaded, the
-  box stays over it, saying "Starting the video…" once that takes half a second (decision 0230), and
+  box stays over it, filled charcoal at once so the step to the player is dark to dark, saying "Starting the video…" once that takes half a second (decision 0230), and
   "Still starting… YouTube can be slow to answer." after five, its dots breathing (decision 0287). The player
   starts at once and takes the keyboard, so Space and its own keys work straight away. Tab leaves it.
 
@@ -21,15 +21,21 @@
   It plays at the speed last chosen in a video on this device: YouTube's
   player remembers captions by itself, but not speed (decision 0156).
 
-  Under it, the chapters its description lists (decision 0144), each a
-  button: pressed, the video plays from there.
+  Under it, two words, each a disclosure button with the sidebar folders'
+  chevron (decision 0324): Chapters (when the description lists them) and
+  Description (when there is one). Both start closed; one opens at a time,
+  and this device remembers which was left open. The chapters are a
+  contents page, each a button that plays the video from there, the one
+  playing in semibold. The description itself is the article's text
+  (ArticleView), shown only while Description is open.
 -->
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
   import SlowWait from "./SlowWait.svelte";
+  import Icon from "./Icon.svelte";
   import { clock, devicePlace, resumeFrom, savePlace, SAVE_EVERY_MS, serverPlace } from "./podcasts";
   import { deviceText, setDeviceText } from "./device";
-  import { PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, VIDEO_SPEED_KEY, videoSpeed, type Chapter } from "./youtube";
+  import { chapterAt, PLAYER_ORIGIN, playerAddress, playerNews, toPlayer, VIDEO_OPEN_KEY, VIDEO_SPEED_KEY, videoSpeed, type Chapter, type VideoOpen } from "./youtube";
 
   let {
     id,
@@ -37,6 +43,8 @@
     title,
     tall = false,
     chapters = [],
+    description = false,
+    open = $bindable(null),
   }: {
     /** The article's number, whose place is kept. */
     id: number;
@@ -45,7 +53,20 @@
     /** A Short: a tall box. */
     tall?: boolean;
     chapters?: Chapter[];
+    /** Whether the video has a description, which ArticleView shows while `open` is "description". */
+    description?: boolean;
+    /** What's open under the video: its chapters, its description, or neither. */
+    open?: VideoOpen;
   } = $props();
+
+  /** What's open, only if this video has it. */
+  let shown: VideoOpen = $derived(open === "chapters" && chapters.length > 0 ? "chapters" : open === "description" && description ? "description" : null);
+
+  /** Opens one of the two (closing the other), or closes it if it's open; this device remembers. */
+  function toggle(which: "chapters" | "description") {
+    open = shown === which ? null : which;
+    setDeviceText(VIDEO_OPEN_KEY, open);
+  }
 
   let playing = $state(false);
   /** YouTube's player has loaded in the frame: until then the box stays over it, saying "Starting the video…" (decision 0230). */
@@ -60,10 +81,10 @@
     if (!playing) resume = resumeFrom(server, devicePlace(id));
   });
 
-  /** What the player last said: its time and length. */
-  let time = 0;
+  /** What the player last said: its time (which marks the chapter playing) and length. */
+  let time = $state(0);
   let duration: number | null = null;
-  let heard = false;
+  let heard = $state(false);
   let lastSaved = 0;
   /** The player's last state: its regular time updates don't repeat it. */
   let playerState: "playing" | "paused" | "ended" | undefined;
@@ -91,6 +112,9 @@
     lastSaved = Date.now();
     savePlace(id, done ? (duration ?? time) : time, duration, done);
   }
+
+  /** The chapter playing, once the player has said where it is. */
+  let current = $derived(playing && heard ? chapterAt(chapters, time) : undefined);
 
   /** Where the video is, in seconds, once it plays here; null before (a note starts with it, SPEC section 42). */
   export function now(): number | null {
@@ -188,7 +212,6 @@
     {#if !started}
       <!-- The box stays, in the player's place and size, until YouTube's player has loaded; after half a second it says so. -->
       <div class="video-play video-starting">
-        <span class="video-title" aria-hidden="true">{title}</span>
         <p class="min-h-6"><SlowWait words="Starting the video" again="Still starting" why="YouTube can be slow to answer." /></p>
       </div>
     {/if}
@@ -201,26 +224,38 @@
       aria-label={resume > 0 ? `Resume from ${clock(resume)}: ${title}` : `Play video: ${title}`}
       onclick={() => play()}
     >
-      <span class="video-title" aria-hidden="true">{title}</span>
       <span class="video-word" aria-hidden="true">
         <span class="video-mark">
           <svg width="16" height="16" viewBox="0 0 20 20"><path d="M7 4.8v10.4a.6.6 0 0 0 .9.5l8.2-5.2a.6.6 0 0 0 0-1L7.9 4.3a.6.6 0 0 0-.9.5z" fill="currentColor" /></svg>
         </span>
         {resume > 0 ? `Resume from ${clock(resume)}` : "Play video"}
       </span>
-      <!-- Said once, quietly: the privacy floor made visible (decision 0072). -->
-      <span class="video-promise">Nothing loads from YouTube until you press Play.</span>
     </button>
   {/if}
 </div>
+{#if chapters.length > 0 || description}
+  <!-- Two words under the video, each opening its own part in place (decision 0324). -->
+  <div class="video-parts">
+    {#if chapters.length > 0}
+      <button type="button" class="video-part" aria-expanded={shown === "chapters"} aria-controls="video-chapters" onclick={() => toggle("chapters")}>
+        Chapters <span class="video-count">{chapters.length}</span><Icon name={shown === "chapters" ? "chevron-up" : "chevron-down"} />
+      </button>
+    {/if}
+    {#if description}
+      <button type="button" class="video-part" aria-expanded={shown === "description"} aria-controls="article-text" onclick={() => toggle("description")}>
+        Description<Icon name={shown === "description" ? "chevron-up" : "chevron-down"} />
+      </button>
+    {/if}
+  </div>
+{/if}
 {#if chapters.length > 0}
-  <!-- The chapters, as the description lists them: each plays the video from there. -->
-  <ol class="chapters" aria-label="Chapters">
+  <!-- The chapters, as the description lists them, like a book's contents: each plays the video from there. -->
+  <ol id="video-chapters" class="chapters" aria-label="Chapters" hidden={shown !== "chapters"}>
     {#each chapters as chapter (chapter.at)}
       <li>
-        <button type="button" class="chapter" onclick={() => jump(chapter.at)}>
-          <span class="chapter-time">{clock(chapter.at)}</span>
+        <button type="button" class="chapter" aria-current={current === chapter ? "time" : undefined} onclick={() => jump(chapter.at)}>
           <span>{chapter.title}</span>
+          <span class="chapter-time">{clock(chapter.at)}</span>
         </button>
       </li>
     {/each}
@@ -244,15 +279,18 @@
     display: block;
     width: 100%;
     aspect-ratio: var(--shape);
-    border: 0;
     border-radius: var(--radius-hold);
   }
+  iframe {
+    border: 0;
+  }
   /*
-    The box before Play (decision 0298, replacing the faint tone of 0072): a
-    dark screen in every theme, as a switched-off screen is, the title in the
-    title's face, then a round light mark and the word, so it reads as a
-    button by its shape and its word, never by color. Its light words keep at
-    least 7 : 1 on the dark.
+    The box before Play (decision 0324, after 0072 and 0298): drawn in ink
+    on the page, as Write back is, with a round ink mark and the word in it,
+    so it reads as a button by its shape and its word, never by color.
+    Pressed, it fills charcoal at once (each theme's --video-starting), so
+    the step to YouTube's dark player is dark to dark, never a flash; its
+    light words keep at least 7 : 1 on it.
   */
   .video-play {
     display: flex;
@@ -261,37 +299,24 @@
     justify-content: center;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    --screen: #1b1b1a;
-    --screen-ink: #f2f2ee;
-    background-color: var(--screen);
-    color: var(--screen-ink);
+    border: 1.5px solid var(--ink);
+    background-color: var(--paper);
+    color: var(--ink);
     font-family: var(--font-sans);
     font-size: var(--text-ui);
     cursor: pointer;
   }
-  /* Over the loading player, the same box, not a button any more. */
+  /* Over the loading player, the same box, filled charcoal and not a button any more. */
   .video-starting {
     position: absolute;
     inset: 0;
     cursor: default;
+    border-color: var(--video-starting);
+    background-color: var(--video-starting);
+    color: #f2f2ee;
   }
   button.video-play:hover {
-    background-color: #2a2a28;
-  }
-  .video-title {
-    max-width: 22ch;
-    font-family: var(--reading-title-font, var(--font-display));
-    font-size: var(--text-heading);
-    font-weight: 400;
-    line-height: 1.2;
-    text-align: center;
-    text-wrap: balance;
-    overflow-wrap: break-word;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
-    overflow: hidden;
+    background-color: var(--fill);
   }
   .video-word {
     display: flex;
@@ -302,43 +327,71 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 999px;
-    background-color: var(--screen-ink);
-    color: var(--screen);
-  }
-  .video-promise {
-    max-width: 30ch;
-    color: #bdbdb7;
-    font-size: var(--text-meta);
-    text-align: center;
-    text-wrap: balance;
+    background-color: var(--ink);
+    color: var(--paper);
   }
   /* The triangle looks centred a little right of the middle, as a play mark does. */
   .video-mark svg {
     margin-left: 2px;
   }
   /*
-    The chapters (decision 0298): in the reading face, like the description
-    under them, two columns where there's room, each time quiet and plain
-    (a plain zero) at its start; the chapter's name underlines under the pointer.
+    The two words under the video (decision 0324): the interface's face,
+    each a 44px disclosure with the folders' chevron; the open one is
+    semibold and its chevron points up, so it's never told by color.
+  */
+  .video-parts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 0.75rem;
+  }
+  .video-part {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .video-part[aria-expanded="true"] {
+    font-weight: 600;
+  }
+  .video-part :global(svg),
+  .video-count {
+    color: var(--muted);
+  }
+  .video-count {
+    font-weight: 400;
+    font-size: var(--text-meta);
+    font-variant-numeric: tabular-nums;
+  }
+  .video-part:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  /*
+    The chapters (decision 0324): a contents page in the reading face, one
+    column, the name first and its time quiet at the end (a plain zero);
+    the one playing is semibold; the name underlines under the pointer.
   */
   .chapters {
-    margin: 1.5rem 0 0;
+    margin: 0.5rem 0 0;
     padding: 0;
     list-style: none;
-    columns: 2 16rem;
-    column-gap: 2.5rem;
     font-family: var(--reading-font);
     font-size: 0.85em;
-  }
-  .chapters li {
-    break-inside: avoid;
   }
   .chapter {
     display: flex;
     align-items: baseline;
+    justify-content: space-between;
     gap: 1rem;
     min-height: 2.75rem;
     width: 100%;
@@ -347,16 +400,17 @@
     color: var(--ink);
     cursor: pointer;
   }
+  .chapter[aria-current] > :first-child {
+    font-weight: 600;
+  }
   .chapter-time {
     flex: none;
-    min-width: 3.25rem;
-    text-align: right;
     font-family: var(--font-sans);
     font-size: var(--text-meta);
     font-variant-numeric: tabular-nums;
     color: var(--muted);
   }
-  .chapter:hover > :last-child {
+  .chapter:hover > :first-child {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 4px;

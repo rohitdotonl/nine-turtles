@@ -59,6 +59,11 @@ describe.each(Object.entries(THEMES))("the %s theme", (_name, colors) => {
     }
   });
 
+  it("has a video's starting box dark enough for its light words at 7 : 1 (decision 0324)", () => {
+    expect(colors["video-starting"], "video-starting").toMatch(/^#/);
+    expect(contrast("#f2f2ee", colors["video-starting"]!)).toBeGreaterThanOrEqual(7);
+  });
+
   it("has muted grey text at AA (4.5 : 1) on every area and on the selected-row tint", () => {
     for (const background of BACKGROUNDS) {
       expect(contrast(colors.muted!, colors[background]!), background).toBeGreaterThanOrEqual(4.5);

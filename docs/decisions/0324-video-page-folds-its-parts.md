@@ -1,0 +1,15 @@
+# 0324: A video's page: an ink-drawn box, and Chapters and Description folded under it
+
+**In one line:** A YouTube video waits in a box drawn in ink on the page (no title, no promise line) that fills charcoal at once when Play is pressed; under it, two disclosure words, "Chapters 9 ⌄" and "Description ⌄", both closed, one open at a time and remembered on the device; the chapters read as a contents page with the one playing in semibold, and a description's bare long links show only their site.
+
+*20 November 2026. The owner, looking at a video's page: "Their descriptions are generally useless stuff. I am thinking of hiding all of that behind a toggle or shutter." From mockups of several folds, open-word styles and box shades, the owner chose the two words with the sidebar folders' chevrons ("the arrows match with the folders and feeds arrows"), the ink-drawn box ("C looks cool") with the charcoal step, and "reduce chrome and copy as much as possible".*
+
+**What changes** (SPEC sections 7 and 38, replacing decision 0144's folded description and 0298's dark box and chapter rows).
+1. **The box** is the page's own color with a 1.5px ink edge and 12px corners, a round ink Play mark and "Play video" (or "Resume from 4:00") in the ink. The title is gone from it (the page's title is just above) and so is "Nothing loads from YouTube until you press Play." (the privacy floor itself stands: nothing loads until Play). Pressed, it fills at once with `--video-starting`, a charcoal tinted to the page (#2f2f30 White, #38322a Paper, #242426 Night), its light words at 7 : 1 or more, so the step to YouTube's dark player is dark to dark, never light to black. No fade.
+2. **Two words under it,** centred, in the interface face: **Chapters** with its count in the muted grey (only when the description lists chapters) and **Description** (only when there is one), each a 44px disclosure button with the folders' 16px chevron in the muted grey, down when closed, up when open; the open word is semibold. Both start closed. Pressing one opens it and closes the other; pressing it again closes it. The device remembers which was left open (`nine-turtles.video-open`), so the next video opens the same way.
+3. **The chapters** are a contents page: one column, each a 44px button with the name in the reading face first and its time at the end, small, muted, in figures of one width with a plain zero. The chapter playing is semibold (`aria-current="time"`), never told by color.
+4. **The description** is the article's text, shown only while Description is open. A link whose words are only its own address shows its site ("higgsfield.ai"); it still goes to the whole address. Links named with words keep their words.
+
+**Why.** On most videos the description is sponsors and links, and it pushed the useful part (the chapters) down, under a title said twice. Folded, the page is the title, the box and two words; the reader opens what they want, and nothing is hidden by guessing.
+
+**Revisit if** readers miss the chapters behind their word, or the outline is taken for an empty frame.
