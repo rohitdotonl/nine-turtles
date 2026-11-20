@@ -966,6 +966,9 @@ test.describe("on a wide window", () => {
     const crumb = byline.locator(".crumb");
     await expect(crumb).toHaveAttribute("aria-hidden", "true");
     await expect(crumb).toBeVisible();
+    // Room on each side of it, more than a plain space (Rohit, 20 November 2026).
+    await expect(crumb).toHaveCSS("margin-left", /^[4-9]\.|^1\d\./);
+    await expect(crumb).toHaveCSS("margin-right", /^[4-9]\.|^1\d\./);
     // What a screen reader is given: the words with spaces between them, and no slash.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
