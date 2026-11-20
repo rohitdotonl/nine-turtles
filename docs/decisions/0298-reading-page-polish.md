@@ -3,6 +3,8 @@
 **In one line:** The article page gets room in three steps, a short section break and a ◆ end mark, pictures and code up to 5rem wider on a computer, a dark video screen, quiet chapters, code that keeps its lines, a top bar of View original ↗, Share, Save and More that stays and names the article, and a softer Write back with no address under it.
 
 > **Partly replaced by [0302](0302-article-top-and-end.md):** the ◆ now sits on its own centred line, and the bar's title rises into place as the reader scrolls instead of fading in.
+>
+> **Partly replaced by [0324](0324-video-page-folds-its-parts.md):** the video waits in a box drawn in ink on the page (no dark screen, no title in it, no promise line), sized to the window, with Chapters and Description folded under it; the chapters are one column, name first.
 
 *17 November 2026. Tracker item 10 ("it doesn't look so polished"). The owner saw ten whole-page versions on nine real articles of every format (essay, notes, a link post, YouTube, a podcast, pictures, an email newsletter, code) and picked these parts one by one; then chose ending A of four.*
 

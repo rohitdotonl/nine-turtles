@@ -85,8 +85,10 @@ you paste.
   Each is named by what it shows ("The heron 4:00"), so voice control finds
   it.
 - **The description,** while open, is the feed's text. A link whose words
-  are only its own address shows just its site ("higgsfield.ai"), still
-  going to the whole address; links named with words keep them.
+  are an address shows just its site ("higgsfield.ai"), still going where
+  it went; links named with words keep them. Only a channel's own videos
+  fold like this: a blog post linking to a video shows as any article.
+  Offline, with no player, the description simply shows (section 32).
 - **Picking up where you stopped,** on any device: while a video plays,
   YouTube's player tells the page its time, which is kept every 15 seconds,
   on pause and on leaving the video (on the server for each reader, and on

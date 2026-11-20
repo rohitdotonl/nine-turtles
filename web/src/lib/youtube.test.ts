@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chapterAt, chapters, playerAddress, playerNews, question, shortLinks, toPlayer, videoOpen, videoSpeed, youtubeVideo } from "./youtube";
+import { chapterAt, chapters, playerAddress, playerNews, onYouTube, question, shortLinks, toPlayer, videoOpen, videoSpeed, youtubeVideo } from "./youtube";
 
 describe("which articles are YouTube videos", () => {
   it("finds the video in every kind of YouTube address", () => {
@@ -117,6 +117,15 @@ describe("a video's description", () => {
     expect(videoOpen("description")).toBe("description");
     expect(videoOpen(null)).toBeNull();
     expect(videoOpen("everything")).toBeNull();
+  });
+
+  it("knows a YouTube channel's or playlist's site from a blog's", () => {
+    expect(onYouTube("https://www.youtube.com/channel/UCslowfilms0000000000000")).toBe(true);
+    expect(onYouTube("https://youtube.com/playlist?list=PL1")).toBe(true);
+    expect(onYouTube("https://daringfireball.net/")).toBe(false);
+    expect(onYouTube("https://notyoutube.com/")).toBe(false);
+    expect(onYouTube(null)).toBe(false);
+    expect(onYouTube("not an address")).toBe(false);
   });
 
   it("shortens a link that's only its own address to its site", () => {

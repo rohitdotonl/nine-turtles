@@ -45,6 +45,7 @@
     media,
     say,
     writeBack,
+    reveal,
   }: {
     article: Article;
     full: FullArticle;
@@ -57,6 +58,8 @@
     say: (words: string) => void;
     /** Write back about some words: the email starts with them quoted. None when the writer is a publication. */
     writeBack?: (quote: string) => void;
+    /** Brings the text into sight when it's folded away (a video's Description, decision 0324). */
+    reveal?: () => void;
   } = $props();
 
   // Each article has its own: the reading area makes this anew for each article it opens.
@@ -372,7 +375,11 @@
   });
 
   /** Shows a highlight in the text, from the list at the article's end. */
-  function show(highlight: Note) {
+  async function show(highlight: Note) {
+    if (text?.hidden) {
+      reveal?.();
+      await tick();
+    }
     const at = text?.querySelector(`[data-highlight="${highlight.id}"]`);
     at?.scrollIntoView({ block: "center" });
   }

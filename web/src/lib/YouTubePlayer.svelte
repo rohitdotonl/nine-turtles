@@ -62,6 +62,11 @@
   /** What's open, only if this video has it. */
   let shown: VideoOpen = $derived(open === "chapters" && chapters.length > 0 ? "chapters" : open === "description" && description ? "description" : null);
 
+  /** Opens the description, if it isn't open: a highlight in it was asked for (ArticleMarks). */
+  export function revealDescription() {
+    if (shown !== "description" && description) toggle("description");
+  }
+
   /** Opens one of the two (closing the other), or closes it if it's open; this device remembers. */
   function toggle(which: "chapters" | "description") {
     open = shown === which ? null : which;

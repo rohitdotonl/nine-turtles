@@ -172,14 +172,24 @@ export function videoOpen(kept: string | null): VideoOpen {
   return kept === "chapters" || kept === "description" ? kept : null;
 }
 
+/** Whether a feed's site is on YouTube (a channel or a playlist): only there is a video's text its channel's description (decision 0324). */
+export function onYouTube(site: string | null | undefined): boolean {
+  try {
+    return site ? /(^|\.)youtube\.com$/i.test(new URL(site).hostname) : false;
+  } catch {
+    return false;
+  }
+}
+
 /** A link whose words are its own address, such as `https://example.com/s/a-long-code`. */
 const BARE_LINK = /(<a\b[^>]*>)\s*((?:https?:\/\/|www\.)[^\s<]+)\s*(<\/a>)/gi;
 
 /**
- * A video description with each link that's only its own long address
- * shortened to its site ("higgsfield.ai"), as a person says it (decision
- * 0324). The link still goes to the whole address; links named with words
- * keep their words.
+ * A video description with each link whose words are an address shortened
+ * to that address's site ("higgsfield.ai"), as a person says it (decision
+ * 0324). The link still goes where it went; links named with words keep
+ * them. Highlights match words, so one made across a bare address before
+ * this was shortened stays listed but isn't drawn.
  */
 export function shortLinks(html: string): string {
   return html.replace(BARE_LINK, (whole, open: string, words: string, close: string) => {

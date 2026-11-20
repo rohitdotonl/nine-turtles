@@ -1244,6 +1244,14 @@ test.describe("on a wide window", () => {
     expect(asked).toHaveLength(1);
     expect(asked[0]).toMatch(PLAYER);
     expect(Math.round((await player.boundingBox())!.height)).toBe(Math.round(box!.height));
+    // The player says it's at 4:00: that chapter is the one playing (semibold, and so heard).
+    await expect(chapters.getByRole("button", { name: "The heron 4:00", includeHidden: true })).toHaveAttribute("aria-current", "time");
+    await expect(chapters.getByRole("button", { name: "First light 0:00", includeHidden: true })).not.toHaveAttribute("aria-current");
+    // The title, the box and the two words all fit in the first screen: nothing needs a scroll to start.
+    expect((await chaptersWord.boundingBox())!.y + 44).toBeLessThanOrEqual(page.viewportSize()!.height);
+    // Description left open is how the next video opens, on this device.
+    await descriptionWord.click();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("nine-turtles.video-open"))).toBe("description");
 
     // A video with no description is just the video, never "Only the title is in the feed".
     await toList(page);
@@ -1264,6 +1272,8 @@ test.describe("on a wide window", () => {
     await row(page, "A river at dawn").click();
     const resume = article(page).getByRole("button", { name: "Resume from 4:00: A river at dawn, for an hour" });
     await expect(resume).toContainText("Resume from 4:00");
+    await expect(article(page).getByRole("button", { name: "Description" })).toHaveAttribute("aria-expanded", "true");
+    await expect(article(page).getByText("Nothing happens, slowly.")).toBeVisible();
     // This stand-in ends at once when started from 4:00, so the frame may already be gone by the time
     // it's looked for: what was asked of YouTube is the proof it started from there.
     await resume.click();

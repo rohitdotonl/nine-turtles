@@ -47,7 +47,7 @@
   import { isSomeone, placesOf, siteName } from "./people";
   import { tick, type Snippet } from "svelte";
   import { deviceText } from "./device";
-  import { chapters, shortLinks, VIDEO_OPEN_KEY, videoOpen, youtubeVideo } from "./youtube";
+  import { chapters, onYouTube, shortLinks, VIDEO_OPEN_KEY, videoOpen, youtubeVideo } from "./youtube";
   import { player, seek } from "./player.svelte";
   import type { Preferences } from "./preferences";
   import { untitledOpening, whoIcon, type Article, type FullArticle } from "./shapes";
@@ -180,6 +180,10 @@
 
   /** What's open under a video (decision 0324): its chapters, its description (this article's text), or neither, as this device last left it. */
   let videoPart = $state(videoOpen(deviceText(VIDEO_OPEN_KEY)));
+  /** Only a video from YouTube's own feed folds its text (its description) behind Description; a blog post linking to one is the writer's words. */
+  let folds = $derived(video !== undefined && onYouTube(full?.siteUrl));
+  /** The description is out of sight while the player, and so its Description word, is there and closed (offline it simply shows, SPEC section 32). */
+  let tucked = $derived(folds && !connection.offline && videoPart !== "description");
 
   /** A podcast's episode (SPEC section 35): its audio, played from the publisher's own address. Copies kept before podcasts have none. */
   let episode = $derived(full?.audio ?? null);
@@ -594,7 +598,7 @@
             title={titleWords}
             tall={full?.videoKind === "short" || article.link?.includes("/shorts/")}
             chapters={chapters(full?.content)}
-            description={Boolean(full?.content)}
+            description={folds && Boolean(full?.content)}
             bind:open={videoPart}
           />
         {/key}
@@ -613,8 +617,8 @@
           <!-- Cleaned by nine turtles before it was stored (server/src/feed/clean.rs). -->
           <!-- Made anew for each article: highlights are drawn into it (ArticleMarks). -->
           {#key full.id}
-            <!-- A video's is its description: only while Description is open under it, each long bare address shortened to its site (decision 0324). -->
-            <div bind:this={text} id="article-text" class="article-text" dir={rtl ? "rtl" : "auto"} hidden={video !== undefined && videoPart !== "description"}>{@html video ? shortLinks(full.content) : full.content}</div>
+            <!-- A channel's video's is its description: only while Description is open under it, each long bare address shortened to its site (decision 0324). -->
+            <div bind:this={text} id="article-text" class="article-text" dir={rtl ? "rtl" : "auto"} hidden={tucked}>{@html folds ? shortLinks(full.content) : full.content}</div>
           {/key}
           {#if footnote}
             <FootnoteCard note={footnote.note} top={footnote.top} onclose={(back) => { if (back) footnote?.link.focus(); footnote = undefined; }} />
@@ -653,6 +657,7 @@
             {text}
             phone={phone !== undefined}
             {media}
+            reveal={() => youtube?.revealDescription()}
             say={(words) => (copied = words)}
             writeBack={writable ? (quote) => void writeBack?.start([quote]) : undefined}
           />
