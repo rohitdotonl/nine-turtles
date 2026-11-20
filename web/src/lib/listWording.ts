@@ -49,14 +49,15 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
  * reader wonders about ("is it broken, or just quiet?").
  */
 /** `wider`: a search in one place found nothing; pressing Search all articles looks everywhere (decision 0212). */
-export type EmptyWords = { fact: string; how?: string; wider?: () => void };
+/** `shows`: a still picture under the words, of what to do (Notes' chosen words and their menu, decision 0325). */
+export type EmptyWords = { fact: string; how?: string; wider?: () => void; shows?: "choosing-words" };
 
 export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {
   if (place.kind === "feed") return checkedAt === null ? { fact: "Nothing from them yet." } : { fact: "Nothing from them yet.", how: lastChecked(checkedAt, now) };
   if (place.kind === "folder") return { fact: "Nothing in this folder yet." };
   if (place.kind === "view" && place.view === "unread") return { fact: "Nothing unread.", how: "New writing will show up here." };
   if (place.kind === "view" && place.view === "starred") return { fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." };
-  if (place.kind === "view" && place.view === "notes") return { fact: "Nothing in Notes yet.", how: "Choose words in any article to highlight them, or add a note from its More menu." };
+  if (place.kind === "view" && place.view === "notes") return { fact: "Nothing here yet.", how: "Select text in any article to highlight it or add a note.", shows: "choosing-words" };
   return { fact: "Nothing here yet." };
 }
 

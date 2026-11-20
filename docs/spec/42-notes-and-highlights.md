@@ -14,6 +14,14 @@ anywhere or counted.
   **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
   article, **Write back about this** under a hairline (section 37,
   decision 0205).
+- **Finding it** (decision 0325, the owner's choice): the article's More
+  (…) has **Highlight…** first (the highlight icon; on a computer its key,
+  `h`). With words chosen it highlights them, as `h` does; with none it
+  says "Choose any words to highlight them." in the line the article uses
+  for what was just done (the top bar on a phone, the pane's foot on a
+  computer), and so does `h`. Write back's arrow menu (section 37) starts
+  with **Write back about a line…**, which says "Choose any words, then
+  press Write back about this." the same way.
 - Right after highlighting, a small menu beside the words says
   **Highlighted**, with **Add a note…** (the note box opens there) and
   **Done** (the owner, 3 November 2026: a new reader shouldn't have to find
@@ -114,8 +122,13 @@ anywhere or counted.
   row opens the article, as in any list; its own menu is the same.
 - The list comes whole, in one go: it's the reader's own marks, and pages
   would split a person. The row is there from the first day (decision
-  0222): before any highlight or note, its list says "Nothing in Notes yet." and
-  how to make one.
+  0222): before any highlight or note, its list says "Nothing here yet."
+  and "Select text in any article to highlight it or add a note.", with a
+  still picture under them (decision 0325): a card in the sidebar's tone
+  holding a small page with a quote, part of it chosen, and the menu
+  beside it (Highlight, with its key on a computer, and Add a note…). It's
+  drawn by the app, so it takes the reader's page and text size; nothing
+  in it can be pressed or reached, and screen readers skip it.
 - A marked article is kept like a saved one: the yearly clean-up and
   unsubscribing leave it (unless the reader chooses otherwise, below).
 

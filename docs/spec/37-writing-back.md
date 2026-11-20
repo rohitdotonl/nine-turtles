@@ -44,7 +44,10 @@ V1, item 2). Its look gets a refinement round.*
   end Write back is a split button. Beside it, joined
   to it by a hairline, a 44px square with a downward arrow ("Other ways
   to reply to Maya Chen" to screen readers) opens a small menu like More's,
-  each row with its icon: **Your email app**, **Gmail** and **Outlook.com** (a
+  each row with its icon: first, in an article whose words can be chosen,
+  **Write back about a line…** (the highlight icon) on its own, which says
+  "Choose any words, then press Write back about this." (section 42,
+  decision 0325); then **Your email app**, **Gmail** and **Outlook.com** (a
   paper plane each; on a computer the one this device writes in shows W,
   its key), **Copy maya@example.com** (two
   overlapping pages; only when an address is known), then, after a

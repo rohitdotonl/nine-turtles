@@ -200,13 +200,14 @@
 
   /**
    * The article's less frequent actions, behind More (…), each with its icon before its words (decision 0293):
-   * the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
+   * Highlight… (says how with no words chosen, decision 0325), the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
    */
   let more: MenuGroup[] = $derived([
     {
       items: [
         // On a computer Share (Copy link where there's no share menu) waits here, first (decision 0299); a phone has it in its bottom bar.
         ...(!phone && article.link ? [{ label: sharing ? "Share" : "Copy link", icon: "share" as const, shortcut: sharing ? undefined : keyFor("copy-link"), onSelect: () => void share() }] : []),
+        ...(full ? [{ label: "Highlight…", icon: "highlight" as const, shortcut: phone ? undefined : keyFor("highlight"), onSelect: () => act("highlight") }] : []),
         { label: "Text and page", icon: "aa" as const, onSelect: () => (panelOpen = true) },
         { label: "Mark as unread", icon: "dot" as const, shortcut: phone ? undefined : keyFor("mark-unread"), onSelect: onMarkUnread },
         ...(full ? [{ label: "Add a note…", icon: "note" as const, shortcut: phone ? undefined : keyFor("note"), onSelect: () => act("note") }] : []),
@@ -663,7 +664,7 @@
           />
         {/key}
         <!-- Outlined, as Mark all as read ends a list: the way on, quieter than the writing (decision 0242); for someone who could be either, the question in its place (WriteBack, decision 0264). -->
-        <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} comments={full?.commentsUrl} {library} quotes={() => marks?.quotes() ?? []} />
+        <WriteBack bind:this={writeBack} bind:away={writeBackNote} within={scroller} {article} comments={full?.commentsUrl} {library} quotes={() => marks?.quotes() ?? []} aboutALine={full ? () => (copied = "Choose any words, then press Write back about this.") : undefined} />
       {/if}
       <!-- Only on paper (print.css, decision 0236): where it came from, as a citation, with the original's address; drawn from data-credit, so it's never a second copy of the byline on screen. -->
       <p class="print-credit" lang="en" data-credit={`From ${apart(article.feedTitle)}${author ? `, by ${apart(author)}` : ""}, ${date(article.at)}.${article.link ? ` The original: ${article.link}` : ""}`}></p>

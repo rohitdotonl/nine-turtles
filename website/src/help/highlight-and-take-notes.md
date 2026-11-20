@@ -4,7 +4,7 @@ description: Highlight words in an article, write notes on articles and on the p
 groupId: reading
 order: 11
 spec: 42
-updated: 2026-11-18
+updated: 2026-11-20
 related: [save-an-article, search-everything, download-everything]
 ---
 
@@ -22,6 +22,9 @@ related: [save-an-article, search-everything, download-everything]
 
 To write a note on them instead, press **Add a note…** (or
 <kbd>N</kbd>), type it and press **Save note**.
+
+Not sure how? **Highlight…** in the article's More menu (**⋯**) says what
+to do, and with words already chosen it highlights them.
 
 Press a highlight to see its note, edit it, copy the words, or remove it.
 From someone you follow, both menus also offer **Write back about this**,

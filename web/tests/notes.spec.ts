@@ -492,3 +492,58 @@ test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
   await expect(page.getByText(`Unsubscribed from Blog ${blog}.`)).toBeVisible();
   await expect(page.getByRole("button", { name: "Undo" })).toBeVisible();
 });
+
+test("a new reader finds highlighting: Notes shows how, More has Highlight…, Write back's arrow has Write back about a line…", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the phone has the same menus; the computer's keys are checked here");
+  // A reader of their own, so Notes is empty (decision 0325).
+  await page.setViewportSize({ width: 1280, height: 1100 });
+  await page.goto(new URL("/sign-up", FEEDS_APP).href);
+  await page.getByLabel("Email").fill(`finding-${test.info().workerIndex}-${Date.now()}@example.com`);
+  await page.getByLabel("Password", { exact: true }).fill("slow mornings, long reads");
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(sidebar(page)).toBeVisible();
+
+  // Someone to read (with no one, the welcome takes the screen).
+  const name = `talk-finding-${test.info().workerIndex}-${Date.now()}`;
+  const id = await follow(page, `${FEED_SITE}/blog/${name}/feed.xml`);
+  const kept = await page.request.post(new URL(`/api/feeds/${id}/write-to`, FEEDS_APP).href, { data: { address: "talk@talk.example" } });
+  expect(kept.ok()).toBe(true);
+  // Notes, empty: the words, and under them a still picture of chosen words and their menu, which nothing can reach.
+  await page.goto(new URL("/notes", FEEDS_APP).href);
+  await appReady(page);
+  await expect(page.getByText("Nothing here yet.")).toBeVisible();
+  await expect(page.getByText("Select text in any article to highlight it or add a note.")).toBeVisible();
+  const picture = page.locator(".choosing");
+  await expect(picture).toBeVisible();
+  await expect(picture).toHaveAttribute("aria-hidden", "true");
+  await expect(picture).toHaveAttribute("inert", "");
+  await expect(picture).toContainText("diamond in the rough");
+  await expect(page.getByRole("menuitem", { name: /Highlight/ })).toHaveCount(0);
+
+  // More in an article starts with Highlight…: with nothing chosen it says how.
+  await page.goto(new URL(`/${id}`, FEEDS_APP).href);
+  await appReady(page);
+  await page.locator(".item-row").first().click();
+  await expect(article(page).getByRole("heading", { level: 2 })).toBeVisible();
+  const more = article(page).getByRole("button", { name: /^More/ });
+  await more.click();
+  const highlight = page.getByRole("menuitem", { name: /^Highlight…/ });
+  await expect(highlight).toContainText("H");
+  await highlight.click();
+  await expect(page.getByText("Choose any words to highlight them.")).toBeVisible();
+  // With words chosen, Highlight… highlights them.
+  await choose(page, "made-up summary");
+  await page.keyboard.press("Escape");
+  await more.click();
+  await page.getByRole("menuitem", { name: /^Highlight…/ }).click();
+  await expect(article(page).locator("mark.highlight")).toHaveText("made-up summary");
+  // Its small menu shows once it's saved; Escape puts it away (another would go back to the list).
+  await expect(page.getByRole("menu", { name: "Highlight" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu", { name: "Highlight" })).toHaveCount(0);
+
+  // Write back's arrow starts with Write back about a line…, which says how.
+  await article(page).getByRole("button", { name: /^Other ways to reply/ }).click();
+  await page.getByRole("menuitem", { name: "Write back about a line…" }).click();
+  await expect(page.getByText("Choose any words, then press Write back about this.")).toBeVisible();
+});

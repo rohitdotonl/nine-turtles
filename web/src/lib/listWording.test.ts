@@ -50,6 +50,7 @@ describe("emptyText", () => {
     expect(emptyText({ kind: "view", view: "unread" })).toEqual({ fact: "Nothing unread.", how: "New writing will show up here." });
     expect(emptyText({ kind: "folder", id: 2 })).toEqual({ fact: "Nothing in this folder yet." });
     expect(emptyText({ kind: "view", view: "starred" })).toEqual({ fact: "Nothing saved yet.", how: "Press Save on any article to keep it here." });
+    expect(emptyText({ kind: "view", view: "notes" })).toEqual({ fact: "Nothing here yet.", how: "Select text in any article to highlight it or add a note.", shows: "choosing-words" });
     expect(emptyText({ kind: "view", view: "all" })).toEqual({ fact: "Nothing here yet." });
   });
 
