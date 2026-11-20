@@ -1,5 +1,5 @@
 <!--
-  Notes' empty list shows how a highlight starts (decision 0325, the owner's
+  Notes' empty list shows how a highlight starts (decision 0326, the owner's
   choice on 20 November 2026): a still picture, drawn by the app so it takes
   the reader's page (White, Paper or Night) and reading font, at the interface's size, of a few words
   chosen in an article with the small menu that comes beside them,

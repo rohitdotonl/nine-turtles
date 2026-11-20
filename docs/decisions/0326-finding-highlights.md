@@ -1,4 +1,4 @@
-# 0325: Finding highlights: Highlight… in More, Write back about a line…, and Notes shows how
+# 0326: Finding highlights: Highlight… in More, Write back about a line…, and Notes shows how
 
 **In one line:** The article's More menu starts with "Highlight…" (key h on a computer), which highlights the words chosen or, with none, says "Choose any words to highlight them." (as h now does); Write back's arrow menu starts with "Write back about a line…", which says "Choose any words, then press Write back about this."; and Notes, while empty, says "Nothing here yet. Select text in any article to highlight it or add a note." over a still picture of chosen words and their menu, the one empty list with a picture.
 

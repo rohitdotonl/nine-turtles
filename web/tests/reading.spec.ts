@@ -309,7 +309,7 @@ test.describe("on a wide window", () => {
     const more = article(page).getByRole("button", { name: "More actions" });
     const panel = page.getByRole("dialog", { name: "Text and page" });
     const menu = page.getByRole("menu", { name: "More actions" });
-    // With only a keyboard: Enter on More, the first row is Copy link, then Highlight… (decision 0325), then Text and page, and Enter opens the panel on its first control.
+    // With only a keyboard: Enter on More, the first row is Copy link, then Highlight… (decision 0326), then Text and page, and Enter opens the panel on its first control.
     await more.focus();
     await page.keyboard.press("Enter");
     await expect(menu.getByRole("menuitem").first()).toBeFocused();

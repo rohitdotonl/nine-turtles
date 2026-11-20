@@ -201,7 +201,7 @@
 
   /**
    * The article's less frequent actions, behind More (…), each with its icon before its words (decision 0293):
-   * Highlight… (says how with no words chosen, decision 0325), the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
+   * Highlight… (says how with no words chosen, decision 0326), the reading panel, marking it unread, a note, and, apart, the writer's page and hiding others like it.
    */
   let more: MenuGroup[] = $derived([
     {

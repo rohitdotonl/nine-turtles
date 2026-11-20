@@ -205,7 +205,7 @@ test("Write back's arrow offers every way back, and the one chosen is kept for t
   await expect(pane(page).getByRole("link", { name: `Write back to Blog ${name}` })).toHaveAttribute("href", /^mailto:talk@talk\.example/);
   const arrow = pane(page).getByRole("button", { name: `Other ways to reply to Blog ${name}` });
   const ways = pane(page).getByRole("menu");
-  // By keyboard: Enter opens it on its first row (Write back about a line…, decision 0325), the arrows move, Escape closes it and gives the keyboard back to the arrow.
+  // By keyboard: Enter opens it on its first row (Write back about a line…, decision 0326), the arrows move, Escape closes it and gives the keyboard back to the arrow.
   await arrow.focus();
   await page.keyboard.press("Enter");
   await expect(ways.getByRole("menuitem", { name: "Write back about a line…" })).toBeFocused();

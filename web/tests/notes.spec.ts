@@ -495,7 +495,7 @@ test("Remove them too leaves them, with Undo", async ({ page, isMobile }) => {
 
 test("a new reader finds highlighting: Notes shows how, More has Highlight…, Write back's arrow has Write back about a line…", async ({ page, isMobile }) => {
   test.skip(isMobile, "the phone has the same menus; the computer's keys are checked here");
-  // A reader of their own, so Notes is empty (decision 0325).
+  // A reader of their own, so Notes is empty (decision 0326).
   await page.setViewportSize({ width: 1280, height: 1100 });
   await page.goto(new URL("/sign-up", FEEDS_APP).href);
   await page.getByLabel("Email").fill(`finding-${test.info().workerIndex}-${Date.now()}@example.com`);

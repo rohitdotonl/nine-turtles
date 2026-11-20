@@ -65,7 +65,7 @@
   // Each article has its own: the reading area makes this anew for each article it opens.
   // svelte-ignore state_referenced_locally
   const marks = new Marks(full);
-  /** What Highlight… (More) and h say with no words chosen (decision 0325). */
+  /** What Highlight… (More) and h say with no words chosen (decision 0326). */
   const CHOOSE_FIRST = "Choose any words to highlight them.";
   onDestroy(() => marks.close());
 
@@ -251,7 +251,7 @@
   }
 
   async function highlightChosen(quote: Quote | undefined = menu?.quote ?? chosen()?.quote) {
-    // Nothing chosen (Highlight… in More, or h): how to choose, said once at the foot (decision 0325).
+    // Nothing chosen (Highlight… in More, or h): how to choose, said once at the foot (decision 0326).
     if (!quote) return say(CHOOSE_FIRST);
     undoable = undefined;
     const from = document.activeElement;

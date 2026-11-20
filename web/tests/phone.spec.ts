@@ -183,7 +183,7 @@ test.describe("on a phone", () => {
     expect(order.findIndex((name) => name.includes("toolbar-rule"))).toBe(order.indexOf("Previous") - 1);
     expect((await toolbar(page).innerText()).trim()).toBe("");
     // More opens upwards, over the article, reading from the button outwards (decision 0243): Highlight… nearest
-    // the finger (decision 0325), then Text and page, Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0293).
+    // the finger (decision 0326), then Text and page, Mark unread, Add a note and, furthest away, Hide articles about…, each with its icon (decision 0293).
     // The keyboard starts on the nearest.
     await toolbar(page).getByRole("button", { name: "More actions" }).click();
     const menu = page.getByRole("menu", { name: "More actions" });

@@ -49,7 +49,7 @@ export function insteadOfList(place: Route, found: Found): string | undefined {
  * reader wonders about ("is it broken, or just quiet?").
  */
 /** `wider`: a search in one place found nothing; pressing Search all articles looks everywhere (decision 0212). */
-/** `shows`: a still picture under the words, of what to do (Notes' chosen words and their menu, decision 0325). */
+/** `shows`: a still picture under the words, of what to do (Notes' chosen words and their menu, decision 0326). */
 export type EmptyWords = { fact: string; how?: string; wider?: () => void; shows?: "choosing-words" };
 
 export function emptyText(place: Route, checkedAt: number | null = null, now: Date = new Date()): EmptyWords {

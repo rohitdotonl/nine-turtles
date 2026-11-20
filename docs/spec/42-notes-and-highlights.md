@@ -14,7 +14,7 @@ anywhere or counted.
   **Highlight** (its key, `h`) and **Add a note…**, then, for a person's
   article, **Write back about this** under a hairline (section 37,
   decision 0205).
-- **Finding it** (decision 0325, the owner's choice): the article's More
+- **Finding it** (decision 0326, the owner's choice): the article's More
   (…) has **Highlight…** first (the highlight icon; on a computer its key,
   `h`). With words chosen it highlights them, as `h` does; with none it
   says "Choose any words to highlight them." in the line the article uses
@@ -124,7 +124,7 @@ anywhere or counted.
   would split a person. The row is there from the first day (decision
   0222): before any highlight or note, its list says "Nothing here yet."
   and "Select text in any article to highlight it or add a note.", with a
-  still picture under them (decision 0325): a card in the sidebar's tone
+  still picture under them (decision 0326): a card in the sidebar's tone
   holding a small page with a quote, part of it chosen, and the menu
   beside it (Highlight, with its key on a computer, and Add a note…). It's
   drawn by the app, so it takes the reader's page and reading font (at the
