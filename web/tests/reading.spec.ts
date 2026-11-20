@@ -951,7 +951,7 @@ test.describe("on a wide window", () => {
     await expect(article(page).getByText("View original")).toHaveCount(0);
   });
 
-  test("a writer in someone else's publication reads \"Writer / Publication\": the slash faint and unheard, \"by\" and \"in\" heard but unseen (decision 0323)", async ({ page }) => {
+  test("a writer in someone else's publication: their name on one line, a small italic \"in\" and the publication's under it, both centred; \"by\" heard but unseen (decisions 0323, 0325)", async ({ page }) => {
     // The feed's article answered as written by someone besides Asha Rao, the feed's own name, as a magazine's would be.
     await page.route("**/api/articles/*", async (route) => {
       const response = await route.fetch();
@@ -962,22 +962,21 @@ test.describe("on a wide window", () => {
     await openRoom(page);
     await openFirst(page);
     const byline = article(page).locator(".article-byline");
-    await expect(byline).toContainText(/by\s*Mina Okafor\s*in\s*\/\s*Asha Rao/);
-    const crumb = byline.locator(".crumb");
-    await expect(crumb).toHaveAttribute("aria-hidden", "true");
-    await expect(crumb).toBeVisible();
-    // On the column's centre line, under the picture, though the names differ in length, with clear room on each side (decision 0325).
-    const box = async (part: Locator) => (await part.boundingBox())!;
-    const [slash, picture, where] = await Promise.all([box(crumb), box(article(page).locator(".article-credit > .portrait")), box(byline.locator(".where a"))]);
-    expect(Math.abs(slash.x + slash.width / 2 - (picture.x + picture.width / 2))).toBeLessThan(1.5);
-    const writerEnds = await byline.locator(".writer").evaluate((element) => {
-      const range = document.createRange();
-      range.selectNodeContents(element.firstChild!);
-      return range.getBoundingClientRect().right;
-    });
-    expect(slash.x - writerEnds).toBeGreaterThanOrEqual(6);
-    expect(where.x - (slash.x + slash.width)).toBeGreaterThanOrEqual(6);
-    // What a screen reader is given: the words with spaces between them, and no slash.
+    await expect(byline).not.toContainText("/");
+    const writer = byline.locator(".writer");
+    const word = byline.locator(".by");
+    const publication = byline.getByRole("link", { name: "Asha Rao" }).locator("bdi");
+    const [name, inWord, where, picture] = await Promise.all([writer, word, publication, article(page).locator(".article-credit > .portrait")].map(async (part) => (await part.boundingBox())!));
+    // "in" and the publication share the line under the writer's; each line is centred under the picture.
+    expect(where!.y).toBeGreaterThan(name!.y + name!.height / 2);
+    expect(Math.abs(inWord!.y - where!.y)).toBeLessThan(4);
+    const centre = picture!.x + picture!.width / 2;
+    expect(Math.abs(name!.x + name!.width / 2 - centre)).toBeLessThan(1.5);
+    expect(Math.abs((inWord!.x + where!.x + where!.width) / 2 - centre)).toBeLessThan(4);
+    // The "in" is quiet: italic, in the second ink.
+    await expect(word).toHaveText("in");
+    await expect(word).toHaveCSS("font-style", "italic");
+    // What a screen reader is given: one sentence, with spaces between the words.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
         - text: by Mina Okafor in
@@ -985,23 +984,10 @@ test.describe("on a wide window", () => {
         - text: ","
         - time: /.+/
     `);
-    const [crumbColor, faint] = await Promise.all([
-      crumb.evaluate((element) => getComputedStyle(element).color),
-      page.evaluate(() => {
-        const probe = document.createElement("span");
-        probe.style.color = "var(--faint)";
-        document.body.append(probe);
-        const color = getComputedStyle(probe).color;
-        probe.remove();
-        return color;
-      }),
-    ]);
-    expect(crumbColor).toBe(faint);
-    await expect(byline.getByRole("link", { name: "Asha Rao" })).toBeVisible();
   });
 
-  test("on a narrow window, long names wrap on their own sides of the slash, which stays on the centre line; a right-to-left name still ends at the slash (decision 0325)", async ({ page }) => {
-    let author = "Margaret Elizabeth Okonkwo-Smith";
+  test("on a narrow window, long names each wrap centred and stay inside the window; a right-to-left name is centred too (decision 0325)", async ({ page }) => {
+    let author = "Margaret Elizabeth Okonkwo-Smith of the Longest Name";
     await page.route("**/api/articles/*", async (route) => {
       const response = await route.fetch();
       const body = await response.json();
@@ -1011,24 +997,29 @@ test.describe("on a wide window", () => {
     await openRoom(page, 390);
     await openFirst(page);
     const byline = article(page).locator(".article-byline");
-    const centre = async (part: Locator) => {
-      const box = (await part.boundingBox())!;
-      return box.x + box.width / 2;
+    const picture = (await article(page).locator(".article-credit > .portrait").boundingBox())!;
+    const centre = picture.x + picture.width / 2;
+    const writer = byline.locator(".writer");
+    const check = async () => {
+      const line = (await writer.boundingBox())!;
+      expect(line.x).toBeGreaterThanOrEqual(0);
+      expect(line.x + line.width).toBeLessThanOrEqual(390);
+      // The text inside the writer's line is centred under the picture.
+      const text = await writer.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const rects = [...range.getClientRects()];
+        return rects.map((rect) => rect.left + rect.width / 2);
+      });
+      for (const middle of text) expect(Math.abs(middle - centre)).toBeLessThan(2);
+      return text.length;
     };
-    const writer = byline.locator(".writer bdi");
-    // Two lines of the author's name, the slash still under the picture, nothing past the window's edges.
-    expect((await writer.boundingBox())!.height).toBeGreaterThan(40);
-    expect(Math.abs((await centre(byline.locator(".crumb"))) - (await centre(article(page).locator(".article-credit > .portrait"))))).toBeLessThan(1.5);
-    const pair = (await byline.locator(".pair").boundingBox())!;
-    expect(pair.x).toBeGreaterThanOrEqual(0);
-    expect(pair.x + pair.width).toBeLessThanOrEqual(390);
-    // A name written right to left still ends at the slash, not at the far edge of its side.
+    expect(await check()).toBeGreaterThan(1);
     author = "سارة الأحمد";
     await page.reload();
     await appReady(page);
-    const slash = (await byline.locator(".crumb").boundingBox())!;
-    const name = (await writer.boundingBox())!;
-    expect(slash.x - (name.x + name.width)).toBeLessThan(16);
+    await expect(writer).toContainText(author);
+    await check();
   });
 
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {

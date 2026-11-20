@@ -1,10 +1,10 @@
 <!--
   An article's byline under its title (SPEC section 7, decisions 0294, 0323
-  and 0325): the source's name alone, or "Author / Publication" with the
-  slash on the column's centre line, the names hanging either side of it, so
-  it sits under the picture and the day whatever the names' lengths. Then the
-  day on a line of its own, small and faint. Left to right whatever the
-  article's script. "by" and "in" are heard, unseen; the slash is only seen.
+  and 0325): the source's name alone, or, when the feed names an author
+  besides, the author on one line and "in" and the publication under it,
+  each centred, so it stays even under the picture whatever the names'
+  lengths. Then the day on a line of its own, small and faint. Left to right
+  whatever the article's script. "by" is heard, unseen.
 -->
 <script lang="ts">
   import { exactly, when } from "./times";
@@ -43,12 +43,8 @@
   {/if}{/snippet}
 
 <p class="article-byline min-w-0" lang="en" dir="ltr">
-  <!-- "by" sits in the writer's cell, on the same line of text as their name, so a screen reader reading by lines says "by Mina Okafor in" together. -->
-  {#if author}<span class="pair"
-      ><span class="writer"><span class="sr-only">by</span>{" "}<bdi>{author}</bdi>{" "}<span class="sr-only">in</span></span><span class="crumb" aria-hidden="true">/</span><span class="where"
-        >{@render name()}</span
-      ></span
-    >{:else}<span class="sr-only">by</span>{" "}{@render name()}{/if}<span class="sr-only">,</span>
+  <!-- "by" is heard, unseen; a small italic "in" leads the publication's line, so it's never mistaken for a second writer. -->
+  <span class="sr-only">by</span>{" "}{#if author}<bdi class="writer">{author}</bdi><span class="by">in</span>{" "}{/if}{@render name()}<span class="sr-only">,</span>
   <!-- The day on a line of its own, small and faint, so the name leads (decision 0294). -->
   <time datetime={new Date(at * 1000).toISOString()} title={exactly(at)}>{when(at)}</time>
 </p>

@@ -6,8 +6,9 @@
 /*
   Under the title, centred, as on a book's title page (decision 0294): the
   writer's picture, then their name in the reading face, at the
-  interface's size, in full ink and regular weight ("Author / Publication"
-  when the feed names someone else, the slash faint, decision 0323); then
+  interface's size, in full ink and regular weight (the author on a line of
+  their own above it when the feed names someone else, decisions 0323 and
+  0325); then
   the day on a line of its own, small and in the list's faint grey, so the
   name leads and the day is there when looked for. A short centred rule
   closes the block before the text.
@@ -45,30 +46,17 @@
 }
 
 /*
-  "Author / Publication" (decisions 0323 and 0325): three columns, the two
-  names' as wide as each other, so the slash sits on the column's centre
-  line, under the picture and above the day, whatever the names' lengths.
-  The author's name ends at the slash and the publication's starts after it;
-  a long one wraps within its own side. The slash is in the faint grey so
-  the names lead, with clear room on each side.
+  An author besides the publication (decisions 0323 and 0325): their name on
+  its own line, then "in" and the publication's under it, both centred; the
+  "in" small and quiet, in italic and the second ink, as the old "by" was.
 */
-.article-byline .pair {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  column-gap: 0.55em;
-  align-items: baseline;
-}
-
 .article-byline .writer {
-  text-align: end;
+  display: block;
 }
 
-.article-byline .where {
-  text-align: start;
-}
-
-.article-byline .crumb {
-  color: var(--faint);
+.article-byline .by {
+  font-style: italic;
+  color: var(--ink-2);
 }
 
 .article-byline .publisher {

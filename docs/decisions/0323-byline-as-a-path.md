@@ -2,6 +2,8 @@
 
 **In one line:** Under an article's title the byline shows "{author} / {publication}" (a faint slash, as a path or breadcrumb is written) or just the name when there's no one besides, instead of "by {author} in {publication}"; screen readers still hear "by" and "in".
 
+> **Partly replaced by [0325](0325-byline-on-two-lines.md):** the slash is gone; an author besides the publication has a line of their own, with "*in* {publication}" under it. The name alone and the hidden "by" stay.
+
 *20 November 2026. The owner, comparing today's "by John Gruber in Daring Fireball" with a breadcrumb ("Guides / Product"): "this would reduce chrome/verbosity a lot. When it's just a name, it would show the name. When it's a name and publication, it would show John Gruber / Daring Fireball."*
 
 **What changes** (SPEC section 7, replacing that part of decision 0294).
