@@ -44,15 +44,31 @@
   overflow-wrap: anywhere;
 }
 
-/* Between the author and where they write, a slash as a path is written, in the faint grey so the names lead, with room on each side so the two names stand apart (decision 0323). */
-.article-byline .crumb {
-  margin-inline-start: 0.3em;
-  color: var(--faint);
+/*
+  "Author / Publication" (decisions 0323 and 0325): three columns, the two
+  names' as wide as each other, so the slash sits on the column's centre
+  line, under the picture and above the day, whatever the names' lengths.
+  The author's name ends at the slash and the publication's starts after it;
+  a long one wraps within its own side. The slash is in the faint grey so
+  the names lead, with clear room on each side.
+*/
+.article-byline .pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 0.55em;
+  align-items: baseline;
 }
 
-/* The room after it is in the space itself, so a line that breaks there drops it and stays centred. */
-.article-byline .crumb-room {
-  word-spacing: 0.3em;
+.article-byline .writer {
+  text-align: end;
+}
+
+.article-byline .where {
+  text-align: start;
+}
+
+.article-byline .crumb {
+  color: var(--faint);
 }
 
 .article-byline .publisher {

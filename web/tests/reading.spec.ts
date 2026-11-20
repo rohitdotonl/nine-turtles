@@ -966,9 +966,17 @@ test.describe("on a wide window", () => {
     const crumb = byline.locator(".crumb");
     await expect(crumb).toHaveAttribute("aria-hidden", "true");
     await expect(crumb).toBeVisible();
-    // Room on each side of it, more than a plain space (Rohit, 20 November 2026).
-    expect(parseFloat(await crumb.evaluate((element) => getComputedStyle(element).marginLeft))).toBeGreaterThanOrEqual(4);
-    expect(parseFloat(await byline.locator(".crumb-room").evaluate((element) => getComputedStyle(element).wordSpacing))).toBeGreaterThanOrEqual(4);
+    // On the column's centre line, under the picture, though the names differ in length, with clear room on each side (decision 0325).
+    const box = async (part: Locator) => (await part.boundingBox())!;
+    const [slash, picture, where] = await Promise.all([box(crumb), box(article(page).locator(".article-credit > .portrait")), box(byline.locator(".where a"))]);
+    expect(Math.abs(slash.x + slash.width / 2 - (picture.x + picture.width / 2))).toBeLessThan(1.5);
+    const writerEnds = await byline.locator(".writer").evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element.firstChild!);
+      return range.getBoundingClientRect().right;
+    });
+    expect(slash.x - writerEnds).toBeGreaterThanOrEqual(6);
+    expect(where.x - (slash.x + slash.width)).toBeGreaterThanOrEqual(6);
     // What a screen reader is given: the words with spaces between them, and no slash.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
