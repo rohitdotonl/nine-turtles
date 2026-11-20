@@ -44,9 +44,15 @@
   overflow-wrap: anywhere;
 }
 
-/* Between the author and where they write, a slash as a path is written, in the faint grey so the names lead (decision 0323). */
+/* Between the author and where they write, a slash as a path is written, in the faint grey so the names lead, with room on each side so the two names stand apart (decision 0323). */
 .article-byline .crumb {
+  margin-inline-start: 0.3em;
   color: var(--faint);
+}
+
+/* The room after it is in the space itself, so a line that breaks there drops it and stays centred. */
+.article-byline .crumb-room {
+  word-spacing: 0.3em;
 }
 
 .article-byline .publisher {
