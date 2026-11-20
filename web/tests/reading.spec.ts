@@ -765,7 +765,7 @@ test.describe("on a wide window", () => {
     expect(await scroller.evaluate((element) => getComputedStyle(element).scrollbarColor)).toMatch(/ transparent$|rgba\(0, 0, 0, 0\)$/);
   });
 
-  test("the title is centred, in the display cut, sized by its length; under it, by and the name lead and the day is small and faint", async ({ page }) => {
+  test("the title is centred, in the display cut, sized by its length; under it, the name leads and the day is small and faint", async ({ page }) => {
     await openRoom(page);
     await openFirst(page);
     const heading = article(page).locator(".article-title");
@@ -788,8 +788,9 @@ test.describe("on a wide window", () => {
     await expect(byline).toHaveCSS("font-family", /Literata/);
     const publisher = byline.getByRole("link", { name: "Asha Rao" });
     await expect(publisher).toHaveCSS("font-weight", "400");
-    await expect(byline.locator(".by").first()).toHaveText("by");
-    await expect(byline.locator(".by").first()).toHaveCSS("font-style", "italic");
+    // The name alone, no "by" to see; screen readers still hear "by" (decision 0323).
+    await expect(byline).not.toContainText("/");
+    await expect(byline.locator(".sr-only").first()).toHaveText("by ");
     const time = byline.locator("time");
     await expect(time).toHaveCSS("display", "block");
     await expect(time).toHaveCSS("font-size", "12px");
@@ -948,6 +949,37 @@ test.describe("on a wide window", () => {
     await expect(note.getByRole("link", { name: "Read it on Reading Room" })).toHaveAttribute("href", "https://reading-room.example/first-page");
     expect(await note.evaluate((element) => element.previousElementSibling?.classList.contains("article-end"))).toBe(true);
     await expect(article(page).getByText("View original")).toHaveCount(0);
+  });
+
+  test("a writer in someone else's publication reads \"Writer / Publication\": the slash faint and unheard, \"by\" and \"in\" heard but unseen (decision 0323)", async ({ page }) => {
+    // The feed's article answered as written by someone besides Reading Room's own name, as a magazine's would be.
+    await page.route("**/api/articles/*", async (route) => {
+      const response = await route.fetch();
+      const body = await response.json();
+      if (body?.article) body.article.author = "Mina Okafor";
+      await route.fulfill({ response, json: body });
+    });
+    await openRoom(page);
+    await openFirst(page);
+    const byline = article(page).locator(".article-byline");
+    await expect(byline).toContainText(/by\s*Mina Okafor\s*in\s*\/\s*Asha Rao/);
+    const crumb = byline.locator(".crumb");
+    await expect(crumb).toHaveAttribute("aria-hidden", "true");
+    await expect(crumb).toBeVisible();
+    for (const word of ["by ", " in"]) await expect(byline.locator(".sr-only", { hasText: new RegExp(`^${word}$`) })).toHaveCount(1);
+    const [crumbColor, faint] = await Promise.all([
+      crumb.evaluate((element) => getComputedStyle(element).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--faint)";
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      }),
+    ]);
+    expect(crumbColor).toBe(faint);
+    await expect(byline.getByRole("link", { name: "Asha Rao" })).toBeVisible();
   });
 
   test("a whole article ends with a small ◆ on a line of its own, centred under its last words, never copied; a summary has none (decisions 0298, 0302)", async ({ page }) => {

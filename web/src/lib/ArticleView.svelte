@@ -560,13 +560,13 @@
     <article bind:this={column} lang={full?.language ?? undefined} data-script={scriptFamily(full?.language)} class={["article relative pt-8 md:pt-12", rtl && "rtl"]}>
       <!-- With room above it (32px, 48px from 48rem wide, decision 0302). Centred, as a book opens a chapter, and sized by its length: a short title large, a long one smaller with looser lines (decision 0294). -->
       <h2 tabindex="-1" bind:this={heading} class={untitled ? "sr-only" : ["article-title", titleLength(article.title)]} dir={rtl ? "rtl" : undefined}>{titleWords}</h2>
-      <!-- Under the title, centred, as on a book's title page: their picture, "by" and their name, then the day, small and faint (decision 0294). -->
+      <!-- Under the title, centred, as on a book's title page: their picture and their name, then the day, small and faint (decisions 0294, 0323). -->
       <!-- Their picture leads the byline (decision 0285): the one the reader chose, else their feed's, else their site's icon, else initials. -->
       <div class="article-credit">
         <Portrait name={article.feedTitle} pictures={picturesOf(source ? placesOf(source, library.feeds ?? []) : [], full?.siteUrl)} person={isSomeone(source)} beside />
-        <!-- Left to right whatever the article's script, as the byline always was. -->
+        <!-- Left to right whatever the article's script. "Author / Publication", or the name alone (decision 0323): "by" and "in" are heard, unseen; the slash is only seen. -->
         <p class="article-byline min-w-0" lang="en" dir="ltr">
-          <span class="by">by</span>{" "}{#if author}<bdi>{author}</bdi>{" "}<span class="by">in</span>{" "}{/if}{#if followed}
+          <span class="sr-only">by{" "}</span>{#if author}<bdi>{author}</bdi><span class="sr-only">{" "}in</span><span class="crumb" aria-hidden="true">{"\u00a0/ "}</span>{/if}{#if followed}
             <!-- Someone followed: their name opens their list, everything of theirs (decision 0289); the page about them is a press on from there, or More's "Info about …". No "›" here.
                  A link, not a button, so a long name wraps as the words around it do and the line stays one sentence (decision 0260). -->
             <a class="publisher writer-link" href={addressFor({ kind: "feed", id: library.rowOf(article.feedId) })} title={`Everything by ${article.feedTitle}`} aria-describedby="byline-about"
