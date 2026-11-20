@@ -967,8 +967,8 @@ test.describe("on a wide window", () => {
     await expect(crumb).toHaveAttribute("aria-hidden", "true");
     await expect(crumb).toBeVisible();
     // Room on each side of it, more than a plain space (Rohit, 20 November 2026).
-    await expect(crumb).toHaveCSS("margin-left", /^[4-9]\.|^1\d\./);
-    await expect(crumb).toHaveCSS("margin-right", /^[4-9]\.|^1\d\./);
+    expect(parseFloat(await crumb.evaluate((element) => getComputedStyle(element).marginLeft))).toBeGreaterThanOrEqual(4);
+    expect(parseFloat(await byline.locator(".crumb-room").evaluate((element) => getComputedStyle(element).wordSpacing))).toBeGreaterThanOrEqual(4);
     // What a screen reader is given: the words with spaces between them, and no slash.
     await expect(byline).toMatchAriaSnapshot(`
       - paragraph:
